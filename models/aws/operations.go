@@ -111,3 +111,18 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 
 	return cluster,nil
 }
+
+func (cloud *AWS) getSSHKey ()( []*ec2.KeyPairInfo, error){
+	if cloud.Client == nil {
+		err := cloud.init()
+		if err != nil {
+			return nil,err
+		}
+	}
+ 	input :=	&ec2.DescribeKeyPairsInput{}
+	keys, err := cloud.Client.DescribeKeyPairs(input)
+	if err != nil{
+		return nil,err
+	}
+	return keys.KeyPairs, nil
+}

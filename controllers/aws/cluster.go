@@ -248,3 +248,42 @@ func (c *AWSClusterController) GetStatus() {
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
+// @Title SSHKeyPair
+// @Description returns ssh key pairs
+// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Success 200 {object} aws.SSHKeyPair
+// @Failure 500 {"error": "internal server error"}
+// @router /sshkeypairs [get]
+func (c *AWSClusterController) GetSSHKeyPairs() {
+
+	beego.Info("AWSNetworkController: FetchExistingVpcs.")
+	credentials := c.Ctx.Input.Header("Authorization")
+
+	if credentials == "" ||
+		strings.Contains(credentials, " ") ||
+		strings.Contains(strings.ToLower(credentials), "bearer") ||
+		strings.Contains(strings.ToLower(credentials), "aws") ||
+		len(strings.Split(credentials, ":")) != 3 {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.ServeJSON()
+		return
+	}
+
+
+	name := c.GetString(":name")
+
+	beego.Info("AWSClusterController: Deploy Cluster. ", name)
+
+	keys , err :=aws.GetSSHKeyPair(credentials)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = keys
+	c.ServeJSON()
+}

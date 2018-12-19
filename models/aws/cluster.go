@@ -9,8 +9,12 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
 	"strings"
+	"github.com/aws/aws-sdk-go/service/ec2"
 )
-
+type SSHKeyPair struct {
+	Name              string `json:"name" bson:"name",omitempty"`
+	FingerPrint    string        `json:"fingerprint" bson:"fingerprint"`
+}
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
@@ -226,4 +230,38 @@ func FetchStatus(clusterName string, credentials string) (Cluster_Def , error){
 		return Cluster_Def{}, err
 	}
 	return c, nil
+}
+func GetSSHKeyPair( credentials string) ([]*SSHKeyPair , error){
+
+
+	splits := strings.Split(credentials, ":")
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err := aws.init()
+	if err != nil {
+		return nil,err
+	}
+
+	keys , e := aws.getSSHKey()
+	k:= fillKeyInfo(keys)
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", err)
+		return nil, e
+	}
+	return  k,nil
+}
+func fillKeyInfo(keys_raw []*ec2.KeyPairInfo)  (keys []*SSHKeyPair) {
+	for _, key := range keys_raw {
+
+			keys = append(keys, &SSHKeyPair{
+				FingerPrint: *key.KeyFingerprint,
+				Name:            *key.KeyName,
+			})
+
+	}
+
+	return keys
 }
