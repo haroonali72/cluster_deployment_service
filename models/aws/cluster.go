@@ -8,19 +8,20 @@ import (
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"strings"
 )
 
-type Cluster struct {
+type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
 	Name             string        `json:"name" bson:"name"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	Subclusters      []*Subcluster `json:"subclusters" bson:"subclusters"`
+	Clusters         []*Cluster `json:"clusters" bson:"clusters"`
 }
 
-type Subcluster struct {
+type Cluster struct {
 	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name      string        `json:"name" bson:"name"`
 	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
@@ -29,20 +30,34 @@ type Subcluster struct {
 type NodePool struct {
 	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name            string        `json:"name" bson:"name"`
-	NodeCount       int32         `json:"node_count" bson:"node_count"`
+	NodeCount       int64         `json:"node_count" bson:"node_count"`
 	MachineType     string        `json:"machine_type" bson:"machine_type"`
 	Ami             Ami           `json:"ami" bson:"ami"`
-	SubnetId        bson.ObjectId `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId bson.ObjectId `json:"security_group_id" bson:"security_group_id"`
+	SubnetId        string		  `json:"subnet_id" bson:"subnet_id"`
+	SecurityGroupId []*string     `json:"security_group_id" bson:"security_group_id"`
+	Nodes 			[]*Node		  `json:"nodes" bson:"nodes"`
+	KeyName 		string 		  `json:"key_name" bson:"key_name"`
+	PoolRole string               `json:"pool_role" bson:"pool_role"`
+}
+type Node struct {
+	CloudId 	 string `json:"cloud_id" bson:"cloud_id,omitempty"`
+	KeyName		 string	`json:"key_name" bson:"key_name,omitempty"`
+	SSHKey 		 string	`json:"ssh_key" bson:"ssh_key,omitempty"`
+	NodeState	 string	`json:"node_state" bson:"node_state,omitempty"`
+	Name 		 string	`json:"name" bson:"name,omitempty"`
+	PrivateIP	 string	`json:"private_ip" bson:"private_ip,omitempty"`
+	PublicIP 	 string	`json:"public_ip" bson:"public_ip,omitempty"`
+	UserName	 string `json:"user_name" bson:"user_name,omitempty"`
 }
 
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name     string        `json:"name" bson:"name"`
+	AmiId string        `json:"ami_id" bson:"ami_id"`
 	Username string        `json:"username" bson:"username"`
 }
 
-func CreateCluster(cluster Cluster) error {
+func CreateCluster(cluster Cluster_Def) error {
 	_, err := GetCluster(cluster.Name)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster '%s' already exists in the database: ", cluster.Name)
@@ -61,11 +76,11 @@ func CreateCluster(cluster Cluster) error {
 	return nil
 }
 
-func GetCluster(clusterName string) (cluster Cluster, err error) {
+func GetCluster(clusterName string) (cluster Cluster_Def, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err1)
-		return Cluster{}, err1
+		return Cluster_Def{}, err1
 	}
 	defer session.Close()
 
@@ -73,13 +88,13 @@ func GetCluster(clusterName string) (cluster Cluster, err error) {
 	err = c.Find(bson.M{"name": clusterName}).One(&cluster)
 	if err != nil {
 		beego.Error(err.Error())
-		return Cluster{}, err
+		return Cluster_Def{}, err
 	}
 
 	return cluster, nil
 }
 
-func GetAllCluster() (clusters []Cluster, err error) {
+func GetAllCluster() (clusters []Cluster_Def, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Cluster model: GetAll - Got error while connecting to the database: ", err1)
@@ -97,7 +112,7 @@ func GetAllCluster() (clusters []Cluster, err error) {
 	return clusters, nil
 }
 
-func UpdateCluster(cluster Cluster) error {
+func UpdateCluster(cluster Cluster_Def) error {
 	oldCluster, err := GetCluster(cluster.Name)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
@@ -132,6 +147,63 @@ func DeleteCluster(clusterName string) error {
 	defer session.Close()
 
 	c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
+	err = c.Remove(bson.M{"name": clusterName})
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+func DeployCluster(cluster Cluster_Def, credentials string) error {
+	splits := strings.Split(credentials, ":")
+
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
+		return err
+	}
+	defer session.Close()
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err = aws.init()
+	if err != nil {
+		return err
+	}
+
+	instances := aws.createCluster(cluster)
+	var updatedCluster Cluster_Def
+	updatedCluster = cluster
+
+	for index, nodepool := range updatedCluster.Clusters[0].NodePools {
+		var updatedNodes []*Node
+		for _, inst := range instances {
+
+			var node Node
+			node.Name=""
+			node.KeyName = *inst.KeyName
+			node.CloudId = *inst.InstanceId
+			node.NodeState = *inst.State.Name
+			node.PrivateIP = *inst.PrivateIpAddress
+			node.PublicIP = *inst.PublicIpAddress
+			node.UserName = nodepool.Ami.Username
+			node.SSHKey = ""
+			updatedNodes = append(updatedNodes, &node)
+		}
+		updatedCluster.Clusters[0].NodePools[index].Nodes = updatedNodes
+	}
+
+	err = UpdateCluster(updatedCluster)
+	if err != nil {
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
+		return err
+	}
+	return nil
+}
+	/*c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
 	err = c.Remove(bson.M{"name": clusterName})
 	if err != nil {
 		beego.Error(err.Error())

@@ -65,13 +65,13 @@ func (c *AWSClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	body	body	aws.Cluster	true	"body for cluster content"
+// @Param	body	body	aws.Cluster_Def	true	"body for cluster content"
 // @Success 201 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster with same name already exists"}
 // @Failure 500 {"error": "internal server error"}
 // @router / [post]
 func (c *AWSClusterController) Post() {
-	var cluster aws.Cluster
+	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	beego.Info("AWSClusterController: Post new cluster with name: ", cluster.Name)
@@ -97,13 +97,13 @@ func (c *AWSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	body	body	aws.Cluster	true	"body for cluster content"
+// @Param	body	body aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
 // @Failure 500 {"error": "internal server error"}
 // @router / [put]
 func (c *AWSClusterController) Patch() {
-	var cluster aws.Cluster
+	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	beego.Info("AWSClusterController: Patch cluster with name: ", cluster.Name)
@@ -157,15 +157,39 @@ func (c *AWSClusterController) Delete() {
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
-// @Title Get AlL Machine Types
-// @Description get all the clusters
-// @Success 200 {object} []aws.Cluster
-// @Failure 500 {"error": "internal server error"}
-// @router /all [get]
-func (c *AWSClusterController) GetAllMachineTypes() {
-	beego.Info("AWSClusterController: GetAll machine types.")
 
-	clusters, err := aws.GetAllCluster()
+// @Title Start
+// @Description starts a  cluster
+// @Param	body	body	aws.Cluster_Def	true	"body for cluster content"
+// @Success 200 {"msg": "cluster created successfully"}
+// @Failure 500 {"error": "internal server error"}
+// @router /startcluster [post]
+func (c *AWSClusterController) StartCluster() {
+
+	beego.Info("AWSNetworkController: FetchExistingVpcs.")
+	credentials := c.Ctx.Input.Header("Authorization")
+
+	if credentials == "" ||
+		strings.Contains(credentials, " ") ||
+		strings.Contains(strings.ToLower(credentials), "bearer") ||
+		strings.Contains(strings.ToLower(credentials), "aws") ||
+		len(strings.Split(credentials, ":")) != 3 {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.ServeJSON()
+		return
+	}
+
+
+	var cluster aws.Cluster_Def
+	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+
+	beego.Info("AWSClusterController: Post new cluster with name: ", cluster.Name)
+	beego.Info("AWSClusterController: JSON Payload: ", cluster)
+
+	beego.Info("AWSClusterController: Deploy Cluster.")
+
+	 err := aws.DeployCluster(cluster,credentials)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
@@ -173,6 +197,6 @@ func (c *AWSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	c.Data["json"] = clusters
+	c.Data["json"] = map[string]string{"msg": "cluster created successfully"}
 	c.ServeJSON()
 }
