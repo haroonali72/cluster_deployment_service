@@ -87,3 +87,27 @@ func (cloud *AWS) init() error {
 
 	return nil
 }
+
+func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
+	if cloud.Client == nil {
+		err := cloud.init()
+		if err != nil {
+			return Cluster_Def{},err
+		}
+	}
+	for in, pool := range cluster.Clusters[0].NodePools {
+		for index, node :=range pool.Nodes {
+			name := "instance-id"
+			ids := []*string{&node.CloudId}
+			request := &ec2.DescribeInstancesInput{Filters: []*ec2.Filter{&ec2.Filter{Name: &name, Values: ids}}}
+			out, err := cloud.Client.DescribeInstances(request)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
+			pool.Nodes[index].NodeState=*out.Reservations[0].Instances[0].State.Name
+		}
+		cluster.Clusters[0].NodePools[in]=pool
+	}
+
+	return cluster,nil
+}

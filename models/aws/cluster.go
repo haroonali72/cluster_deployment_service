@@ -158,18 +158,12 @@ func DeleteCluster(clusterName string) error {
 func DeployCluster(cluster Cluster_Def, credentials string) error {
 	splits := strings.Split(credentials, ":")
 
-	session, err := db.GetMongoSession()
-	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
-		return err
-	}
-	defer session.Close()
 	aws := AWS{
 		AccessKey: splits[0],
 		SecretKey: splits[1],
 		Region:    splits[2],
 	}
-	err = aws.init()
+	err := aws.init()
 	if err != nil {
 		return err
 	}
@@ -203,12 +197,33 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	}
 	return nil
 }
-	/*c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
-	err = c.Remove(bson.M{"name": clusterName})
+func FetchStatus(clusterName string, credentials string) (Cluster_Def , error){
+
+	cluster, err := GetCluster(clusterName)
 	if err != nil {
-		beego.Error(err.Error())
-		return err
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
+		return Cluster_Def{},err
+	}
+	splits := strings.Split(credentials, ":")
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err = aws.init()
+	if err != nil {
+		return Cluster_Def{},err
 	}
 
-	return nil
-}*/
+	c , e := aws.fetchStatus(cluster)
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to get lastest status ", err)
+		return Cluster_Def{}, e
+	}
+	err = UpdateCluster(c)
+	if err != nil {
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
+		return Cluster_Def{}, err
+	}
+	return c, nil
+}
