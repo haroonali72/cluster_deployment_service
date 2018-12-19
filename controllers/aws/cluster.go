@@ -157,3 +157,22 @@ func (c *AWSClusterController) Delete() {
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
+// @Title Get AlL Machine Types
+// @Description get all the clusters
+// @Success 200 {object} []aws.Cluster
+// @Failure 500 {"error": "internal server error"}
+// @router /all [get]
+func (c *AWSClusterController) GetAllMachineTypes() {
+	beego.Info("AWSClusterController: GetAll machine types.")
+
+	clusters, err := aws.GetAllCluster()
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = clusters
+	c.ServeJSON()
+}
