@@ -26,25 +26,28 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) []CreatedPool {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
+			beego.Error(err.Error())
 			return nil
 		}
 	}
 	 var createdPools []CreatedPool
 
 	for _, pool := range cluster.NodePools {
-
+		beego.Info("AWSOperations: looping pools")
 		var createdPool CreatedPool
 		keyMaterial,_,err  := cloud.KeyPairGenerator(pool.KeyName)
 		if err != nil {
 			beego.Warn(err.Error())
 			return nil
 		}
+		beego.Info("AWSOperations ", keyMaterial)
 		input := &ec2.RunInstancesInput{
 			ImageId:          aws.String(pool.Ami.AmiId),
 			SubnetId:         aws.String(pool.SubnetId),
 			SecurityGroupIds: pool.SecurityGroupId,
 			MaxCount:         aws.Int64(pool.NodeCount),
 			KeyName:          aws.String(pool.KeyName),
+			MinCount: aws.Int64(1),
 		}
 
 		result, err := cloud.Client.RunInstances(input)
@@ -65,7 +68,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) []CreatedPool {
 		createdPools = append(createdPools,createdPool)
 	}
 
-	return nil
+	return createdPools
 }
 
 func (cloud *AWS) updateInstanceTags(instance_id * string ,nodepool_name string){
@@ -123,6 +126,9 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 				return Cluster_Def{}, err
 			}
 			pool.Nodes[index].NodeState=*out.Reservations[0].Instances[0].State.Name
+			if out.Reservations[0].Instances[0].PublicIpAddress != nil {
+				pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
+			}
 		}
 		cluster.NodePools[in]=pool
 	}

@@ -169,6 +169,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	}
 	err := aws.init()
 	if err != nil {
+		beego.Error(err.Error())
 		return err
 	}
 
@@ -177,24 +178,33 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	updatedCluster = cluster
 
 	for index, nodepool := range updatedCluster.NodePools {
+		beego.Info("Cluster model: In rawpool" , nodepool.Name)
+
 		var updatedNodes []*Node
 		for _, createdPool := range createdPools {
+			beego.Info("Cluster model: In createdpool" , createdPool.PoolName)
 			if createdPool.PoolName == nodepool.Name {
+				beego.Info("Cluster model: pools matched " )
 				for _, inst := range createdPool.Instances {
 
 					var node Node
-					node.Name = *inst.Tags[0].Value
+					node.Name = ""
 					node.KeyName = *inst.KeyName
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
 					node.PrivateIP = *inst.PrivateIpAddress
-					node.PublicIP = *inst.PublicIpAddress
+					if inst.PublicIpAddress != nil {
+						node.PublicIP = *inst.PublicIpAddress
+					}
 					node.UserName = nodepool.Ami.Username
 					node.SSHKey = createdPool.Key
 					updatedNodes = append(updatedNodes, &node)
+					beego.Info("Cluster model: Instances added")
 				}
+
 			}
 		}
+		beego.Info("Cluster model: update nodes in pools")
 		updatedCluster.NodePools[index].Nodes = updatedNodes
 	}
 

@@ -164,10 +164,10 @@ func (c *AWSClusterController) Delete() {
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 500 {"error": "internal server error"}
-// @router /start [post]
+// @router /start/:name [post]
 func (c *AWSClusterController) StartCluster() {
 
-	beego.Info("AWSNetworkController: FetchExistingVpcs.")
+	beego.Info("AWSNetworkController: StartCluster.")
 	credentials := c.Ctx.Input.Header("Authorization")
 
 	if credentials == "" ||
@@ -187,7 +187,7 @@ func (c *AWSClusterController) StartCluster() {
 	name := c.GetString(":name")
 
 
-	beego.Info("AWSClusterController: Deploy Cluster. ", name)
+	beego.Info("AWSClusterController: Getting Cluster. ", name)
 
 	cluster , err :=aws.GetCluster(name)
 
@@ -197,6 +197,8 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+	beego.Info("AWSClusterController: Creating Cluster. ", name)
+
 	err = aws.DeployCluster(cluster,credentials)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -214,7 +216,7 @@ func (c *AWSClusterController) StartCluster() {
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 500 {"error": "internal server error"}
-// @router /status [get]
+// @router /status/:name [get]
 func (c *AWSClusterController) GetStatus() {
 
 	beego.Info("AWSNetworkController: FetchExistingVpcs.")
@@ -230,7 +232,6 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
 
 	name := c.GetString(":name")
 
