@@ -9,7 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"strconv"
 )
-
+type CreatedPool struct {
+	Instances    []*ec2.Instance
+	KeyName    	 string
+	Key     	 string
+	PoolName string
+}
 type AWS struct {
 	Client    *ec2.EC2
 	AccessKey string
@@ -17,14 +22,23 @@ type AWS struct {
 	Region    string
 }
 
-func (cloud *AWS) createCluster(cluster Cluster_Def ) []*ec2.Instance {
+func (cloud *AWS) createCluster(cluster Cluster_Def ) []CreatedPool {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
 			return nil
 		}
 	}
+	 var createdPools []CreatedPool
+
 	for _, pool := range cluster.Clusters[0].NodePools {
+
+		var createdPool CreatedPool
+		keyMaterial,_,err  := cloud.KeyPairGenerator(pool.KeyName)
+		if err != nil {
+			beego.Warn(err.Error())
+			return nil
+		}
 		input := &ec2.RunInstancesInput{
 			ImageId:          aws.String(pool.Ami.AmiId),
 			SubnetId:         aws.String(pool.SubnetId),
@@ -44,7 +58,11 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) []*ec2.Instance {
 				cloud.updateInstanceTags(instance.InstanceId, pool.Name+"_"+strconv.Itoa(index))
 			}
 		}
-		return result.Instances
+		createdPool.KeyName =pool.KeyName
+		createdPool.Key = keyMaterial
+		createdPool.Instances= result.Instances
+		createdPool.PoolName=pool.Name
+		createdPools = append(createdPools,createdPool)
 	}
 
 	return nil
@@ -125,4 +143,17 @@ func (cloud *AWS) getSSHKey ()( []*ec2.KeyPairInfo, error){
 		return nil,err
 	}
 	return keys.KeyPairs, nil
+}
+
+func (cloud *AWS) KeyPairGenerator(keyName string) ( string ,string, error) {
+	params := &ec2.CreateKeyPairInput{
+		KeyName: aws.String(keyName),
+		DryRun:  aws.Bool(false),
+	}
+	resp, err := cloud.Client.CreateKeyPair(params)
+	if err != nil {
+		return "","" ,err
+	}
+
+	return *resp.KeyMaterial, *resp.KeyFingerprint, nil
 }

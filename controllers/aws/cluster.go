@@ -253,7 +253,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Success 200 {object} aws.SSHKeyPair
 // @Failure 500 {"error": "internal server error"}
-// @router /sshkeypairs [get]
+// @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeyPairs() {
 
 	beego.Info("AWSNetworkController: FetchExistingVpcs.")

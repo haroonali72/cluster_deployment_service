@@ -172,24 +172,28 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
-	instances := aws.createCluster(cluster)
+	createdPools := aws.createCluster(cluster)
 	var updatedCluster Cluster_Def
 	updatedCluster = cluster
 
 	for index, nodepool := range updatedCluster.Clusters[0].NodePools {
 		var updatedNodes []*Node
-		for _, inst := range instances {
+		for _, createdPool := range createdPools {
+			if createdPool.PoolName == nodepool.Name {
+				for _, inst := range createdPool.Instances {
 
-			var node Node
-			node.Name=""
-			node.KeyName = *inst.KeyName
-			node.CloudId = *inst.InstanceId
-			node.NodeState = *inst.State.Name
-			node.PrivateIP = *inst.PrivateIpAddress
-			node.PublicIP = *inst.PublicIpAddress
-			node.UserName = nodepool.Ami.Username
-			node.SSHKey = ""
-			updatedNodes = append(updatedNodes, &node)
+					var node Node
+					node.Name = *inst.Tags[0].Value
+					node.KeyName = *inst.KeyName
+					node.CloudId = *inst.InstanceId
+					node.NodeState = *inst.State.Name
+					node.PrivateIP = *inst.PrivateIpAddress
+					node.PublicIP = *inst.PublicIpAddress
+					node.UserName = nodepool.Ami.Username
+					node.SSHKey = createdPool.Key
+					updatedNodes = append(updatedNodes, &node)
+				}
+			}
 		}
 		updatedCluster.Clusters[0].NodePools[index].Nodes = updatedNodes
 	}
