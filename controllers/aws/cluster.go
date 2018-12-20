@@ -163,6 +163,8 @@ func (c *AWSClusterController) Delete() {
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {"msg": "cluster created successfully"}
+// @Failure 404 {"error": "name is empty"}
+// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /start/:name [post]
 func (c *AWSClusterController) StartCluster() {
@@ -186,6 +188,12 @@ func (c *AWSClusterController) StartCluster() {
 
 	name := c.GetString(":name")
 
+	if name == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	beego.Info("AWSClusterController: Getting Cluster. ", name)
 
@@ -215,6 +223,8 @@ func (c *AWSClusterController) StartCluster() {
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {object} aws.Cluster_Def
+// @Failure 404 {"error": "name is empty"}
+// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /status/:name [get]
 func (c *AWSClusterController) GetStatus() {
@@ -235,6 +245,13 @@ func (c *AWSClusterController) GetStatus() {
 
 	name := c.GetString(":name")
 
+	if name == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	beego.Info("AWSClusterController: Deploy Cluster. ", name)
 
 	cluster , err :=aws.FetchStatus(name,credentials)
@@ -253,6 +270,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Description returns ssh key pairs
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Success 200 {object} aws.SSHKeyPair
+// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeyPairs() {

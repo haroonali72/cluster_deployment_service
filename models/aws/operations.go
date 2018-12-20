@@ -22,25 +22,25 @@ type AWS struct {
 	Region    string
 }
 
-func (cloud *AWS) createCluster(cluster Cluster_Def ) []CreatedPool {
+func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return nil
+			return nil ,err
 		}
 	}
 	 var createdPools []CreatedPool
 
 	for _, pool := range cluster.NodePools {
-		beego.Info("AWSOperations: looping pools")
+		beego.Info("AWSOperations: creating key")
 		var createdPool CreatedPool
 		keyMaterial,_,err  := cloud.KeyPairGenerator(pool.KeyName)
 		if err != nil {
 			beego.Warn(err.Error())
-			return nil
+			return nil , err
 		}
-		beego.Info("AWSOperations ", keyMaterial)
+		beego.Info("AWSOperations creating nodes")
 		input := &ec2.RunInstancesInput{
 			ImageId:          aws.String(pool.Ami.AmiId),
 			SubnetId:         aws.String(pool.SubnetId),
@@ -53,7 +53,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) []CreatedPool {
 		result, err := cloud.Client.RunInstances(input)
 		if err != nil {
 			beego.Warn(err.Error())
-			return nil
+			return nil, err
 		}
 
 		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
@@ -68,7 +68,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) []CreatedPool {
 		createdPools = append(createdPools,createdPool)
 	}
 
-	return createdPools
+	return createdPools,nil
 }
 
 func (cloud *AWS) updateInstanceTags(instance_id * string ,nodepool_name string){
@@ -113,6 +113,8 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
+			beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
+
 			return Cluster_Def{},err
 		}
 	}
@@ -123,6 +125,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 			request := &ec2.DescribeInstancesInput{Filters: []*ec2.Filter{&ec2.Filter{Name: &name, Values: ids}}}
 			out, err := cloud.Client.DescribeInstances(request)
 			if err != nil {
+				beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
 				return Cluster_Def{}, err
 			}
 			pool.Nodes[index].NodeState=*out.Reservations[0].Instances[0].State.Name

@@ -173,18 +173,18 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
-	createdPools := aws.createCluster(cluster)
+	createdPools , err:= aws.createCluster(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
 	var updatedCluster Cluster_Def
 	updatedCluster = cluster
 
 	for index, nodepool := range updatedCluster.NodePools {
-		beego.Info("Cluster model: In rawpool" , nodepool.Name)
-
 		var updatedNodes []*Node
 		for _, createdPool := range createdPools {
-			beego.Info("Cluster model: In createdpool" , createdPool.PoolName)
 			if createdPool.PoolName == nodepool.Name {
-				beego.Info("Cluster model: pools matched " )
 				for _, inst := range createdPool.Instances {
 
 					var node Node
@@ -204,13 +204,13 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 
 			}
 		}
-		beego.Info("Cluster model: update nodes in pools")
+		beego.Info("Cluster model: updated nodes in pools")
 		updatedCluster.NodePools[index].Nodes = updatedNodes
 	}
 
 	err = UpdateCluster(updatedCluster)
 	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return err
 	}
 	return nil
@@ -219,7 +219,7 @@ func FetchStatus(clusterName string, credentials string) (Cluster_Def , error){
 
 	cluster, err := GetCluster(clusterName)
 	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{},err
 	}
 	splits := strings.Split(credentials, ":")
@@ -235,12 +235,12 @@ func FetchStatus(clusterName string, credentials string) (Cluster_Def , error){
 
 	c , e := aws.fetchStatus(cluster)
 	if e != nil {
-		beego.Error("Cluster model: Status - Failed to get lastest status ", err)
+		beego.Error("Cluster model: Status - Failed to get lastest status ", e.Error())
 		return Cluster_Def{}, e
 	}
 	err = UpdateCluster(c)
 	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err)
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", e.Error())
 		return Cluster_Def{}, err
 	}
 	return c, nil
@@ -260,11 +260,12 @@ func GetSSHKeyPair( credentials string) ([]*SSHKeyPair , error){
 	}
 
 	keys , e := aws.getSSHKey()
-	k:= fillKeyInfo(keys)
 	if e != nil {
-		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", err)
+		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", e.Error())
 		return nil, e
 	}
+	k:= fillKeyInfo(keys)
+
 	return  k,nil
 }
 func fillKeyInfo(keys_raw []*ec2.KeyPairInfo)  (keys []*SSHKeyPair) {
