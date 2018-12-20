@@ -17,15 +17,15 @@ type Template struct {
 	Cloud            models.Cloud   `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time      `json:"-" bson:"creation_date"`
 	ModificationDate time.Time      `json:"-" bson:"modification_date"`
-	Subclusters      []*SubclusterT `json:"subclusters" bson:"subclusters"`
+	NodePools []*NodePoolT   `json:"node_pools" bson:"node_pools"`
 }
 
-type SubclusterT struct {
+/*type SubclusterT struct {
 	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name      string        `json:"name" bson:"name"`
 	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
 }
-
+*/
 type NodePoolT struct {
 	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name            string        `json:"name" bson:"name"`
