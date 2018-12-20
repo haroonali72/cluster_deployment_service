@@ -31,7 +31,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) []CreatedPool {
 	}
 	 var createdPools []CreatedPool
 
-	for _, pool := range cluster.Clusters[0].NodePools {
+	for _, pool := range cluster.NodePools {
 
 		var createdPool CreatedPool
 		keyMaterial,_,err  := cloud.KeyPairGenerator(pool.KeyName)
@@ -113,7 +113,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 			return Cluster_Def{},err
 		}
 	}
-	for in, pool := range cluster.Clusters[0].NodePools {
+	for in, pool := range cluster.NodePools {
 		for index, node :=range pool.Nodes {
 			name := "instance-id"
 			ids := []*string{&node.CloudId}
@@ -124,7 +124,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 			}
 			pool.Nodes[index].NodeState=*out.Reservations[0].Instances[0].State.Name
 		}
-		cluster.Clusters[0].NodePools[in]=pool
+		cluster.NodePools[in]=pool
 	}
 
 	return cluster,nil

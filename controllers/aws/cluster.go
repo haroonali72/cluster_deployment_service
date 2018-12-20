@@ -65,7 +65,7 @@ func (c *AWSClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	body	body	aws.Cluster_Def	true	"body for cluster content"
+// @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Success 201 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster with same name already exists"}
 // @Failure 500 {"error": "internal server error"}
@@ -97,7 +97,7 @@ func (c *AWSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	body	body aws.Cluster_Def	true	"body for cluster content"
+// @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
 // @Failure 500 {"error": "internal server error"}
@@ -270,10 +270,7 @@ func (c *AWSClusterController) GetSSHKeyPairs() {
 		return
 	}
 
-
-	name := c.GetString(":name")
-
-	beego.Info("AWSClusterController: Deploy Cluster. ", name)
+	beego.Info("AWSClusterController: Get Keys ")
 
 	keys , err :=aws.GetSSHKeyPair(credentials)
 

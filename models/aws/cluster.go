@@ -22,14 +22,14 @@ type Cluster_Def struct {
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	Clusters         []*Cluster `json:"clusters" bson:"clusters"`
+	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
 }
 
-type Cluster struct {
+/*type Cluster struct {
 	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name      string        `json:"name" bson:"name"`
 	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
-}
+}*/
 
 type NodePool struct {
 	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
@@ -176,7 +176,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	var updatedCluster Cluster_Def
 	updatedCluster = cluster
 
-	for index, nodepool := range updatedCluster.Clusters[0].NodePools {
+	for index, nodepool := range updatedCluster.NodePools {
 		var updatedNodes []*Node
 		for _, createdPool := range createdPools {
 			if createdPool.PoolName == nodepool.Name {
@@ -195,7 +195,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 				}
 			}
 		}
-		updatedCluster.Clusters[0].NodePools[index].Nodes = updatedNodes
+		updatedCluster.NodePools[index].Nodes = updatedNodes
 	}
 
 	err = UpdateCluster(updatedCluster)
