@@ -32,8 +32,8 @@ type NodePoolT struct {
 	NodeCount       int32         `json:"node_count" bson:"node_count"`
 	MachineType     string        `json:"machine_type" bson:"machine_type"`
 	Ami             Ami           `json:"ami" bson:"ami"`
-	SubnetId        bson.ObjectId `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId bson.ObjectId `json:"security_group_id" bson:"security_group_id"`
+	SubnetId        string `json:"subnet_id" bson:"subnet_id"`
+	SecurityGroupId []string `json:"security_group_id" bson:"security_group_id"`
 }
 
 type AmiT struct {
