@@ -48,6 +48,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 			MaxCount:         aws.Int64(pool.NodeCount),
 			KeyName:          aws.String(pool.KeyName),
 			MinCount: aws.Int64(1),
+			InstanceType: aws.String(pool.MachineType),
 		}
 
 		result, err := cloud.Client.RunInstances(input)
