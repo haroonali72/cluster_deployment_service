@@ -188,11 +188,15 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 				for _, inst := range createdPool.Instances {
 
 					var node Node
-					node.Name = ""
+					beego.Info(*inst.Tags[0].Value , *inst.Tags[0].Value)
+					if *inst.Tags[0].Key== "Name" {
+						node.Name = *inst.Tags[0].Value
+					}
 					node.KeyName = *inst.KeyName
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
 					node.PrivateIP = *inst.PrivateIpAddress
+
 					if inst.PublicIpAddress != nil {
 						node.PublicIP = *inst.PublicIpAddress
 					}

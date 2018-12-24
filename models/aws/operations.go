@@ -62,9 +62,23 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 				cloud.updateInstanceTags(instance.InstanceId, pool.Name+"_"+strconv.Itoa(index))
 			}
 		}
+		var latest_instances []*ec2.Instance
+		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
+			for _, instance := range result.Instances {
+				var ids []*string
+				ids = append(ids,aws.String(*instance.InstanceId))
+				instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
+				new_instances , new_err := cloud.Client.DescribeInstances(&instance_input)
+				if new_err != nil {
+					beego.Warn(new_err.Error())
+					return nil, new_err
+				}
+				latest_instances = append(latest_instances,new_instances.Reservations[0].Instances[0])
+			}
+		}
 		createdPool.KeyName =pool.KeyName
 		createdPool.Key = keyMaterial
-		createdPool.Instances= result.Instances
+		createdPool.Instances= latest_instances
 		createdPool.PoolName=pool.Name
 		createdPools = append(createdPools,createdPool)
 	}

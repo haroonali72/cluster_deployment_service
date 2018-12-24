@@ -229,7 +229,7 @@ func (c *AWSClusterController) StartCluster() {
 // @router /status/:name [get]
 func (c *AWSClusterController) GetStatus() {
 
-	beego.Info("AWSNetworkController: FetchExistingVpcs.")
+	beego.Info("AWSNetworkController: FetchStatus.")
 	credentials := c.Ctx.Input.Header("Authorization")
 
 	if credentials == "" ||
@@ -252,7 +252,7 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	beego.Info("AWSClusterController: Deploy Cluster. ", name)
+	beego.Info("AWSClusterController: Fetch Cluster Status. ", name)
 
 	cluster , err :=aws.FetchStatus(name,credentials)
 
