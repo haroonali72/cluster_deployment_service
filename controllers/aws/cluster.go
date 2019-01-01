@@ -207,15 +207,15 @@ func (c *AWSClusterController) StartCluster() {
 	}
 	beego.Info("AWSClusterController: Creating Cluster. ", name)
 
-	err = aws.DeployCluster(cluster,credentials)
-	if err != nil {
+	go aws.DeployCluster(cluster,credentials)
+	/*if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
-	c.Data["json"] = map[string]string{"msg": "cluster created successfully"}
+	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
 // @Title Status

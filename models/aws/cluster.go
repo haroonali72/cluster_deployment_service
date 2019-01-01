@@ -19,6 +19,7 @@ type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
 	Name             string        `json:"name" bson:"name"`
+	Status           string        `json:"status" bson:"status"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -70,7 +71,7 @@ func CreateCluster(cluster Cluster_Def) error {
 	}
 
 	cluster.CreationDate = time.Now()
-
+	cluster.Status = "New"
 	err = db.InsertInMongo(db.MongoAwsClusterCollection, cluster)
 	if err != nil {
 		beego.Error("Cluster model: Create - Got error inserting cluster to the database: ", err)
@@ -173,10 +174,28 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
+
+	publisher := Notifier{}
+	pub_err := publisher.init_notifier()
+	if pub_err != nil {
+		beego.Error(pub_err.Error())
+		return pub_err
+	}
+
 	createdPools , err:= aws.createCluster(cluster)
 	if err != nil {
+
+
 		beego.Error(err.Error())
-		return err
+		cluster.Status = "Cluster creation failed"
+		err = UpdateCluster(cluster)
+		if err != nil {
+			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			publisher.notify(cluster.Name,"Status Available")
+			return err
+		}
+		publisher.notify(cluster.Name,"Status Available")
+
 	}
 	var updatedCluster Cluster_Def
 	updatedCluster = cluster
@@ -211,12 +230,16 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		beego.Info("Cluster model: updated nodes in pools")
 		updatedCluster.NodePools[index].Nodes = updatedNodes
 	}
-
+	updatedCluster.Status = "Cluster Created"
 	err = UpdateCluster(updatedCluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		publisher.notify(cluster.Name,"Status Available")
 		return err
 	}
+
+	publisher.notify(cluster.Name,"Status Available")
+
 	return nil
 }
 func FetchStatus(clusterName string, credentials string) (Cluster_Def , error){

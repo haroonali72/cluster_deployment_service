@@ -61,6 +61,23 @@
   version = "v1.16.8"
 
 [[projects]]
+  digest = "1:424f6593024cdf0f6f90cba81bc69ca98df3758525e6fb248198ef15ead603a9"
+  name = "github.com/go-redis/redis"
+  packages = [
+    ".",
+    "internal",
+    "internal/consistenthash",
+    "internal/hashtag",
+    "internal/pool",
+    "internal/proto",
+    "internal/singleflight",
+    "internal/util",
+  ]
+  pruneopts = "UT"
+  revision = "7f89fbac80bcc62ce920b6dbc6ca60238d7725d1"
+  version = "v6.15.0"
+
+[[projects]]
   branch = "master"
   digest = "1:f14d1b50e0075fb00177f12a96dd7addf93d1e2883c25befd17285b779549795"
   name = "github.com/gopherjs/gopherjs"
@@ -150,6 +167,7 @@
     "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/ec2",
+    "github.com/go-redis/redis",
     "github.com/smartystreets/goconvey/convey",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",
