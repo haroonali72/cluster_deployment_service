@@ -41,10 +41,14 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 			return nil , err
 		}
 		beego.Info("AWSOperations creating nodes")
+		var sgs []*string
+		for _, sg := range pool.PoolSecurityGroups {
+			sgs= append(sgs, &sg.SecurityGroupId)
+		}
 		input := &ec2.RunInstancesInput{
 			ImageId:          aws.String(pool.Ami.AmiId),
-			SubnetId:         aws.String(pool.SubnetId),
-			SecurityGroupIds: pool.SecurityGroupId,
+			SubnetId:         aws.String(pool.PoolSubnet.SubnetId),
+			SecurityGroupIds: sgs,
 			MaxCount:         aws.Int64(pool.NodeCount),
 			KeyName:          aws.String(pool.KeyName),
 			MinCount: aws.Int64(1),

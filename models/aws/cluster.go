@@ -38,8 +38,8 @@ type NodePool struct {
 	NodeCount       int64         `json:"node_count" bson:"node_count"`
 	MachineType     string        `json:"machine_type" bson:"machine_type"`
 	Ami             Ami           `json:"ami" bson:"ami"`
-	SubnetId        string		  `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []*string     `json:"security_group_id" bson:"security_group_id"`
+	PoolSubnet          Subnet		  `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups []*SecurityGroup     `json:"security_group_id" bson:"security_group_id"`
 	Nodes 			[]*Node		  `json:"nodes" bson:"nodes"`
 	KeyName 		string 		  `json:"key_name" bson:"key_name"`
 	PoolRole string               `json:"pool_role" bson:"pool_role"`
@@ -61,6 +61,20 @@ type Ami struct {
 	AmiId string        `json:"ami_id" bson:"ami_id"`
 	Username string        `json:"username" bson:"username"`
 }
+type Subnet struct {
+	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	SubnetId string        `json:"subnet_id" bson:"subnet_id"`
+	Name     string        `json:"name" bson:"name"`
+	CIDR  	 string        `json:"cidr" bson:"cidr"`
+}
+
+type SecurityGroup struct {
+	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	SecurityGroupId string        `json:"security_group_id" bson:"security_group_id"`
+	Name            string        `json:"name" bson:"name"`
+	Description     string        `json:"description" bson:"description"`
+}
+
 
 func CreateCluster(cluster Cluster_Def) error {
 	_, err := GetCluster(cluster.Name)
@@ -184,7 +198,6 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 
 	createdPools , err:= aws.createCluster(cluster)
 	if err != nil {
-
 
 		beego.Error(err.Error())
 		cluster.Status = "Cluster creation failed"
