@@ -185,3 +185,31 @@ func (cloud *AWS) KeyPairGenerator(keyName string) ( string ,string, error) {
 
 	return *resp.KeyMaterial, *resp.KeyFingerprint, nil
 }
+func (cloud *AWS) terminateCluster(cluster Cluster_Def ) ( error){
+	if cloud.Client == nil {
+		err := cloud.init()
+		if err != nil {
+			beego.Error(err.Error())
+			return err
+		}
+	}
+
+	for _, pool := range cluster.NodePools {
+
+		beego.Info("AWSOperations terminating nodes")
+		var instance_ids []*string
+		for _, id := range pool.Nodes {
+			instance_ids= append(instance_ids, &id.CloudId)
+		}
+		input := &ec2.TerminateInstancesInput{
+			InstanceIds:instance_ids,
+		}
+
+		_, err := cloud.Client.TerminateInstances(input)
+		if err != nil {
+			beego.Warn(err.Error())
+			return  err
+		}
+	}
+	return nil
+}

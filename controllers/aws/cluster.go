@@ -303,3 +303,57 @@ func (c *AWSClusterController) GetSSHKeyPairs() {
 	c.Data["json"] = keys
 	c.ServeJSON()
 }
+// @Title Terminate
+// @Description terminates a  cluster
+// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	name	path	string	true	"Name of the cluster"
+// @Success 200 {"msg": "cluster terminated successfully"}
+// @Failure 404 {"error": "name is empty"}
+// @Failure 401 {"error": "exception_message"}
+// @Failure 500 {"error": "internal server error"}
+// @router /terminate/:name [post]
+func (c *AWSClusterController) TerminateCluster() {
+
+	beego.Info("AWSNetworkController: TerminateCluster.")
+	credentials := c.Ctx.Input.Header("Authorization")
+
+	if credentials == "" ||
+		strings.Contains(credentials, " ") ||
+		strings.Contains(strings.ToLower(credentials), "bearer") ||
+		strings.Contains(strings.ToLower(credentials), "aws") ||
+		len(strings.Split(credentials, ":")) != 3 {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.ServeJSON()
+		return
+	}
+
+
+	var cluster aws.Cluster_Def
+
+	name := c.GetString(":name")
+
+	if name == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	beego.Info("AWSClusterController: Getting Cluster. ", name)
+
+	cluster , err :=aws.GetCluster(name)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+	beego.Info("AWSClusterController: Terminating Cluster. ", name)
+
+	go aws.TerminateCluster(cluster,credentials)
+
+	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.ServeJSON()
+}

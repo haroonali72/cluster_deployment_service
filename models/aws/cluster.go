@@ -285,6 +285,63 @@ func FetchStatus(clusterName string, credentials string) (Cluster_Def , error){
 	}
 	return c, nil
 }
+func TerminateCluster(cluster Cluster_Def, credentials string) error {
+
+
+	splits := strings.Split(credentials, ":")
+
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err := aws.init()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+
+	publisher := Notifier{}
+	pub_err := publisher.init_notifier()
+	if pub_err != nil {
+		beego.Error(pub_err.Error())
+		return pub_err
+	}
+
+	if cluster.Status != "Successful" {
+		beego.Error("Cluster model: Cluster is not in created state ", err.Error())
+		publisher.notify(cluster.Name,"Status Available")
+		return err
+	}
+
+	 err = aws.terminateCluster(cluster)
+	if err != nil {
+
+		beego.Error(err.Error())
+		cluster.Status = "Cluster termination failed"
+		err = UpdateCluster(cluster)
+		if err != nil {
+			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			publisher.notify(cluster.Name,"Status Available")
+			return err
+		}
+		publisher.notify(cluster.Name,"Status Available")
+
+	}
+
+	cluster.Status = "Cluster teminated"
+	err = UpdateCluster(cluster)
+	if err != nil {
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		publisher.notify(cluster.Name,"Status Available")
+		return err
+	}
+
+	publisher.notify(cluster.Name,"Status Available")
+
+	return nil
+}
 func GetSSHKeyPair( credentials string) ([]*SSHKeyPair , error){
 
 
