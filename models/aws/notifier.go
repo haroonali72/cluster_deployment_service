@@ -14,7 +14,7 @@ type Notifier struct {
 }
 func (notifier *Notifier)  notify(channel, status string){
 
-	cmd :=notifier.Client.Publish("sadaf","hello from go!")
+	cmd :=notifier.Client.Publish(channel,status)
 	beego.Info(*cmd)
 }
 
