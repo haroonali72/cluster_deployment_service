@@ -29,3 +29,8 @@ func (notifier *Notifier) init_notifier() error {
 
 	return nil
 }
+func (notifier *Notifier)  receiver(channel, status string){
+
+	cmd :=notifier.Client.Publish(channel,status)
+	beego.Info(*cmd)
+}

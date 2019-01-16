@@ -13,7 +13,7 @@ import (
 )
 type SSHKeyPair struct {
 	Name              string `json:"name" bson:"name",omitempty"`
-	FingerPrint    string        `json:"fingerprint" bson:"fingerprint"`
+	FingerPrint    	  string        `json:"fingerprint" bson:"fingerprint"`
 }
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
@@ -23,18 +23,13 @@ type Cluster_Def struct {
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
+	NodePools		 []*NodePool   `json:"node_pools" bson:"node_pools"`
+	NetworkName      string		   `json:"network_name" bson:"network_name"`
 }
 
-/*type Cluster struct {
-	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name      string        `json:"name" bson:"name"`
-	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
-}*/
-
 type NodePool struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name            string        `json:"name" bson:"name"`
+	ID              	bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name           	 string        `json:"name" bson:"name"`
 	NodeCount       int64         `json:"node_count" bson:"node_count"`
 	MachineType     string        `json:"machine_type" bson:"machine_type"`
 	Ami             Ami           `json:"ami" bson:"ami"`
@@ -77,7 +72,7 @@ type SecurityGroup struct {
 
 
 func CreateCluster(cluster Cluster_Def) error {
-	_, err := GetCluster(cluster.Name)
+	_, err := GetCluster(cluster.Name,cluster.EnvironmentId)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster '%s' already exists in the database: ", cluster.Name)
 		beego.Error(text, err)
@@ -95,7 +90,7 @@ func CreateCluster(cluster Cluster_Def) error {
 	return nil
 }
 
-func GetCluster(clusterName string) (cluster Cluster_Def, err error) {
+func GetCluster(clusterName string,envId string ) (cluster Cluster_Def, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err1)
@@ -104,7 +99,7 @@ func GetCluster(clusterName string) (cluster Cluster_Def, err error) {
 	defer session.Close()
 
 	c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
-	err = c.Find(bson.M{"name": clusterName}).One(&cluster)
+	err = c.Find(bson.M{"name": clusterName, "environment_id":envId}).One(&cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
@@ -132,7 +127,7 @@ func GetAllCluster() (clusters []Cluster_Def, err error) {
 }
 
 func UpdateCluster(cluster Cluster_Def) error {
-	oldCluster, err := GetCluster(cluster.Name)
+	oldCluster, err := GetCluster(cluster.Name,cluster.EnvironmentId)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
 		beego.Error(text, err)
@@ -196,6 +191,8 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		return pub_err
 	}
 
+
+
 	createdPools , err:= aws.createCluster(cluster)
 	if err != nil {
 
@@ -255,9 +252,9 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 
 	return nil
 }
-func FetchStatus(clusterName string, credentials string) (Cluster_Def , error){
+func FetchStatus(clusterName string, credentials string,envId string) (Cluster_Def , error){
 
-	cluster, err := GetCluster(clusterName)
+	cluster, err := GetCluster(clusterName,envId)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{},err

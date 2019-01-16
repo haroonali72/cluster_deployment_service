@@ -8,7 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"strconv"
+/*	"antelope/models/utils"
+	"io/ioutil"
+	"encoding/json"*/
 )
+
+var (
+	networkHost    = beego.AppConfig.String("network_url")
+)
+
+type Network struct {
+
+	Name             string        `json:"name" bson:"name"`
+}
+
 type CreatedPool struct {
 	Instances    []*ec2.Instance
 	KeyName    	 string
@@ -212,4 +225,25 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def ) ( error){
 		}
 	}
 	return nil
+}
+
+
+func (cloud *AWS) GetNetworkStatus(cluster Cluster_Def ) ( error){
+
+/*	client := utils.InitReq()
+
+	req , err :=utils.CreateGetRequest(cluster.NetworkName, networkHost)
+
+	response, err := client.SendRequest(req)
+
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		beego.Error("%s", err)
+	}
+
+	json.Unmarshal()*/
+
+	return nil
+
 }

@@ -14,12 +14,15 @@ type AWSClusterController struct {
 
 // @Title Get
 // @Description get cluster
+// @Param	environmentId	path	string	true	"Id of the environment"
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /:name [get]
+// @router /:environmentId/:name [get]
 func (c *AWSClusterController) Get() {
+	envId := c.GetString(":environmentId")
+
 	name := c.GetString(":name")
 
 	beego.Info("AWSClusterController: Get cluster with name: ", name)
@@ -31,7 +34,7 @@ func (c *AWSClusterController) Get() {
 		return
 	}
 
-	cluster, err := aws.GetCluster(name)
+	cluster, err := aws.GetCluster(name,envId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
@@ -161,12 +164,13 @@ func (c *AWSClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	environmentId	path	string	true	"Id of the environment"
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /start/:name [post]
+// @router /start/:environmentId/:name [post]
 func (c *AWSClusterController) StartCluster() {
 
 	beego.Info("AWSNetworkController: StartCluster.")
@@ -186,6 +190,8 @@ func (c *AWSClusterController) StartCluster() {
 
 	var cluster aws.Cluster_Def
 
+	envId := c.GetString(":environmentId")
+
 	name := c.GetString(":name")
 
 	if name == "" {
@@ -197,7 +203,7 @@ func (c *AWSClusterController) StartCluster() {
 
 	beego.Info("AWSClusterController: Getting Cluster. ", name)
 
-	cluster , err :=aws.GetCluster(name)
+	cluster , err :=aws.GetCluster(name,envId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -208,25 +214,21 @@ func (c *AWSClusterController) StartCluster() {
 	beego.Info("AWSClusterController: Creating Cluster. ", name)
 
 	go aws.DeployCluster(cluster,credentials)
-	/*if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
-		c.ServeJSON()
-		return
-	}*/
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
+
 // @Title Status
 // @Description returns status of nodes
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	environmentId	path	string	true	"Id of the environment"
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /status/:name [get]
+// @router /status/:environmentId/:name [get]
 func (c *AWSClusterController) GetStatus() {
 
 	beego.Info("AWSNetworkController: FetchStatus.")
@@ -242,7 +244,7 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
+	envId := c.GetString(":environmentId")
 	name := c.GetString(":name")
 
 	if name == "" {
@@ -254,7 +256,7 @@ func (c *AWSClusterController) GetStatus() {
 
 	beego.Info("AWSClusterController: Fetch Cluster Status. ", name)
 
-	cluster , err :=aws.FetchStatus(name,credentials)
+	cluster , err :=aws.FetchStatus(name,credentials,envId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -306,12 +308,13 @@ func (c *AWSClusterController) GetSSHKeyPairs() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	environmentId	path	string	true	"Id of the environment"
 // @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /terminate/:name [post]
+// @router /terminate/:environmentId/:name [post]
 func (c *AWSClusterController) TerminateCluster() {
 
 	beego.Info("AWSNetworkController: TerminateCluster.")
@@ -331,6 +334,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	var cluster aws.Cluster_Def
 
+	envId := c.GetString(":environmentId")
 	name := c.GetString(":name")
 
 	if name == "" {
@@ -342,7 +346,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	beego.Info("AWSClusterController: Getting Cluster. ", name)
 
-	cluster , err :=aws.GetCluster(name)
+	cluster , err :=aws.GetCluster(name,envId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
