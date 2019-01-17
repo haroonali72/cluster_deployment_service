@@ -15,26 +15,24 @@ type AWSClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	environmentId	path	string	true	"Id of the environment"
-// @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /:environmentId/:name [get]
+// @router /:environmentId/ [get]
 func (c *AWSClusterController) Get() {
 	envId := c.GetString(":environmentId")
 
-	name := c.GetString(":name")
 
-	beego.Info("AWSClusterController: Get cluster with name: ", name)
+	beego.Info("AWSClusterController: Get cluster with environment id: ", envId)
 
-	if name == "" {
+	if envId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "environment id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	cluster, err := aws.GetCluster(name,envId)
+	cluster, err := aws.GetCluster(envId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
@@ -165,12 +163,11 @@ func (c *AWSClusterController) Delete() {
 // @Description starts a  cluster
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Param	environmentId	path	string	true	"Id of the environment"
-// @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /start/:environmentId/:name [post]
+// @router /start/:environmentId [post]
 func (c *AWSClusterController) StartCluster() {
 
 	beego.Info("AWSNetworkController: StartCluster.")
@@ -192,18 +189,17 @@ func (c *AWSClusterController) StartCluster() {
 
 	envId := c.GetString(":environmentId")
 
-	name := c.GetString(":name")
 
-	if name == "" {
+	if envId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "environment id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	beego.Info("AWSClusterController: Getting Cluster. ", name)
+	beego.Info("AWSClusterController: Getting Cluster of environment. ", envId)
 
-	cluster , err :=aws.GetCluster(name,envId)
+	cluster , err :=aws.GetCluster(envId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -211,7 +207,7 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("AWSClusterController: Creating Cluster. ", name)
+	beego.Info("AWSClusterController: Creating Cluster. ", cluster.Name)
 
 	go aws.DeployCluster(cluster,credentials)
 
@@ -223,12 +219,11 @@ func (c *AWSClusterController) StartCluster() {
 // @Description returns status of nodes
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Param	environmentId	path	string	true	"Id of the environment"
-// @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /status/:environmentId/:name [get]
+// @router /status/:environmentId/ [get]
 func (c *AWSClusterController) GetStatus() {
 
 	beego.Info("AWSNetworkController: FetchStatus.")
@@ -245,18 +240,17 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 	envId := c.GetString(":environmentId")
-	name := c.GetString(":name")
 
-	if name == "" {
+	if envId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	beego.Info("AWSClusterController: Fetch Cluster Status. ", name)
+	beego.Info("AWSClusterController: Fetch Cluster Status of environment. ", envId)
 
-	cluster , err :=aws.FetchStatus(name,credentials,envId)
+	cluster , err :=aws.FetchStatus(credentials,envId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -268,6 +262,7 @@ func (c *AWSClusterController) GetStatus() {
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
+
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
@@ -305,16 +300,16 @@ func (c *AWSClusterController) GetSSHKeyPairs() {
 	c.Data["json"] = keys
 	c.ServeJSON()
 }
+
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Param	environmentId	path	string	true	"Id of the environment"
-// @Param	name	path	string	true	"Name of the cluster"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /terminate/:environmentId/:name [post]
+// @router /terminate/:environmentId/ [post]
 func (c *AWSClusterController) TerminateCluster() {
 
 	beego.Info("AWSNetworkController: TerminateCluster.")
@@ -335,18 +330,17 @@ func (c *AWSClusterController) TerminateCluster() {
 	var cluster aws.Cluster_Def
 
 	envId := c.GetString(":environmentId")
-	name := c.GetString(":name")
 
-	if name == "" {
+	if envId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "environment id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	beego.Info("AWSClusterController: Getting Cluster. ", name)
+	beego.Info("AWSClusterController: Getting Cluster of environment. ", envId)
 
-	cluster , err :=aws.GetCluster(name,envId)
+	cluster , err :=aws.GetCluster(envId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -354,7 +348,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("AWSClusterController: Terminating Cluster. ", name)
+	beego.Info("AWSClusterController: Terminating Cluster. ", cluster.Name)
 
 	go aws.TerminateCluster(cluster,credentials)
 

@@ -11,6 +11,12 @@ import (
 /*	"antelope/models/utils"
 	"io/ioutil"
 	"encoding/json"*/
+	"antelope/models/utils"
+	"io/ioutil"
+	"encoding/json"
+	"gopkg.in/mgo.v2/bson"
+	"antelope/models"
+	"time"
 )
 
 var (
@@ -18,8 +24,42 @@ var (
 )
 
 type Network struct {
-
+	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
 	Name             string        `json:"name" bson:"name"`
+	Type             models.Type   `json:"type" bson:"type"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	NetworkStatus    string        `json:"status" bson:"status"`
+	CreationDate     time.Time     `json:"-" bson:"creation_date"`
+	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	Definition       []*Definition `json:"definition" bson:"definition"`
+}
+
+type Definition struct {
+	ID             bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
+	Vpc            Vpc              `json:"vpc" bson:"vpc"`
+	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
+	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
+}
+
+type Vpc struct {
+	ID    bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	VpcId string        `json:"vpc_id" bson:"vpc_id"`
+	Name  string        `json:"name" bson:"name"`
+	CIDR  string        `json:"cidr" bson:"cidr"`
+}
+
+type Subnet struct {
+	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	SubnetId string        `json:"subnet_id" bson:"subnet_id"`
+	Name     string        `json:"name" bson:"name"`
+	CIDR  	 string        `json:"cidr" bson:"cidr"`
+}
+
+type SecurityGroup struct {
+	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	SecurityGroupId string        `json:"security_group_id" bson:"security_group_id"`
+	Name            string        `json:"name" bson:"name"`
+	Description     string        `json:"description" bson:"description"`
 }
 
 type CreatedPool struct {
@@ -28,6 +68,7 @@ type CreatedPool struct {
 	Key     	 string
 	PoolName string
 }
+
 type AWS struct {
 	Client    *ec2.EC2
 	AccessKey string
@@ -36,6 +77,7 @@ type AWS struct {
 }
 
 func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
+
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -43,34 +85,30 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 			return nil ,err
 		}
 	}
+	network , err := cloud.GetNetworkStatus(cluster.EnvironmentId)
+
+	if err != nil {
+		beego.Error(err.Error())
+		return nil ,err
+	}
+
 	 var createdPools []CreatedPool
 
 	for _, pool := range cluster.NodePools {
+
 		beego.Info("AWSOperations: creating key")
 		var createdPool CreatedPool
+
 		keyMaterial,_,err  := cloud.KeyPairGenerator(pool.KeyName)
 		if err != nil {
-			beego.Warn(err.Error())
+			beego.Error(err.Error())
 			return nil , err
 		}
 		beego.Info("AWSOperations creating nodes")
-		var sgs []*string
-		for _, sg := range pool.PoolSecurityGroups {
-			sgs= append(sgs, &sg.SecurityGroupId)
-		}
-		input := &ec2.RunInstancesInput{
-			ImageId:          aws.String(pool.Ami.AmiId),
-			SubnetId:         aws.String(pool.PoolSubnet.SubnetId),
-			SecurityGroupIds: sgs,
-			MaxCount:         aws.Int64(pool.NodeCount),
-			KeyName:          aws.String(pool.KeyName),
-			MinCount: aws.Int64(1),
-			InstanceType: aws.String(pool.MachineType),
-		}
 
-		result, err := cloud.Client.RunInstances(input)
+		result, err :=  cloud.CreateInstance(pool,network)
 		if err != nil {
-			beego.Warn(err.Error())
+			beego.Error(err.Error())
 			return nil, err
 		}
 
@@ -79,20 +117,14 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 				cloud.updateInstanceTags(instance.InstanceId, pool.Name+"_"+strconv.Itoa(index))
 			}
 		}
+
 		var latest_instances []*ec2.Instance
-		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
-			for _, instance := range result.Instances {
-				var ids []*string
-				ids = append(ids,aws.String(*instance.InstanceId))
-				instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
-				new_instances , new_err := cloud.Client.DescribeInstances(&instance_input)
-				if new_err != nil {
-					beego.Warn(new_err.Error())
-					return nil, new_err
-				}
-				latest_instances = append(latest_instances,new_instances.Reservations[0].Instances[0])
-			}
+
+		latest_instances ,err= cloud.GetInstances(result)
+		if err != nil {
+			return nil, err
 		}
+
 		createdPool.KeyName =pool.KeyName
 		createdPool.Key = keyMaterial
 		createdPool.Instances= latest_instances
@@ -151,23 +183,23 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 		}
 	}
 	for in, pool := range cluster.NodePools {
+
 		for index, node :=range pool.Nodes {
-			name := "instance-id"
-			ids := []*string{&node.CloudId}
-			request := &ec2.DescribeInstancesInput{Filters: []*ec2.Filter{&ec2.Filter{Name: &name, Values: ids}}}
-			out, err := cloud.Client.DescribeInstances(request)
+
+			out, err := cloud.GetInstanceStatus(node)
 			if err != nil {
-				beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
 				return Cluster_Def{}, err
 			}
+
 			pool.Nodes[index].NodeState=*out.Reservations[0].Instances[0].State.Name
+
 			if out.Reservations[0].Instances[0].PublicIpAddress != nil {
+
 				pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
 			}
 		}
 		cluster.NodePools[in]=pool
 	}
-
 	return cluster,nil
 }
 
@@ -208,42 +240,145 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def ) ( error){
 	}
 
 	for _, pool := range cluster.NodePools {
-
-		beego.Info("AWSOperations terminating nodes")
-		var instance_ids []*string
-		for _, id := range pool.Nodes {
-			instance_ids= append(instance_ids, &id.CloudId)
-		}
-		input := &ec2.TerminateInstancesInput{
-			InstanceIds:instance_ids,
-		}
-
-		_, err := cloud.Client.TerminateInstances(input)
+		err := cloud.TerminatePool(pool)
 		if err != nil {
-			beego.Warn(err.Error())
 			return  err
 		}
 	}
 	return nil
 }
+func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reservation, error){
 
 
-func (cloud *AWS) GetNetworkStatus(cluster Cluster_Def ) ( error){
+	subnetId := cloud.GetSubnets(pool,network)
+    sgIds := cloud.GetSecurityGroups(pool,network)
 
-/*	client := utils.InitReq()
+	input := &ec2.RunInstancesInput{
+		ImageId:          aws.String(pool.Ami.AmiId),
+		SubnetId:         aws.String(subnetId),
+		SecurityGroupIds: sgIds,
+		MaxCount:         aws.Int64(pool.NodeCount),
+		KeyName:          aws.String(pool.KeyName),
+		MinCount: aws.Int64(1),
+		InstanceType: aws.String(pool.MachineType),
+	}
 
-	req , err :=utils.CreateGetRequest(cluster.NetworkName, networkHost)
+	result, err := cloud.Client.RunInstances(input)
+	if err != nil {
+		beego.Warn(err.Error())
+		return nil, err
+	}
+	return result, nil
+
+}
+func (cloud *AWS) GetSecurityGroups (pool *NodePool, network Network )([]*string) {
+	var sgId []*string
+	for _, definition := range network.Definition{
+		for _, sg := range definition.SecurityGroups {
+			for _, sgName := range  pool.PoolSecurityGroups{
+				if *sgName ==  sg.Name{
+					sgId = append(sgId, &sg.SecurityGroupId)
+				}
+			}
+		}
+	}
+	return sgId
+}
+func (cloud *AWS) GetSubnets (pool *NodePool, network Network )(string) {
+	for _, definition := range network.Definition{
+		for _, subnet := range definition.Subnets {
+			if subnet.Name ==  pool.PoolSubnet{
+				return subnet.SubnetId
+			}
+		}
+	}
+	return ""
+}
+
+func (cloud *AWS) GetInstances (result *ec2.Reservation)(latest_instances []*ec2.Instance,err error){
+
+	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
+
+		var ids []*string
+		for _, instance := range result.Instances {
+			ids = append(ids, aws.String(*instance.InstanceId))
+		}
+
+		instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
+		updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
+
+		if err != nil {
+			beego.Error(err.Error())
+			return nil, err
+		}
+
+		for _, instance := range updated_instances.Reservations[0].Instances{
+			latest_instances = append(latest_instances,instance)
+		}
+		return latest_instances, nil
+	}
+	return nil, nil
+}
+func (cloud *AWS) GetInstanceStatus (node *Node)(output *ec2.DescribeInstancesOutput,err error){
+
+	name := "instance-id"
+	ids := []*string{&node.CloudId}
+
+	request := &ec2.DescribeInstancesInput{Filters: []*ec2.Filter{&ec2.Filter{Name: &name, Values: ids}}}
+	output, err = cloud.Client.DescribeInstances(request)
+
+	if err != nil {
+		beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
+		return nil, err
+	}
+	return output, nil
+}
+func (cloud *AWS) TerminatePool(pool *NodePool ) ( error) {
+
+	beego.Info("AWSOperations terminating nodes")
+	var instance_ids []*string
+
+	for _, id := range pool.Nodes {
+		instance_ids = append(instance_ids, &id.CloudId)
+	}
+
+	input := &ec2.TerminateInstancesInput{
+		InstanceIds: instance_ids,
+	}
+
+	_, err := cloud.Client.TerminateInstances(input)
+	if err != nil {
+
+		beego.Error("Cluster model: Status - Failed to terminate node pool ", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (cloud *AWS) GetNetworkStatus(envId string ) ( Network, error){
+
+	client := utils.InitReq()
+
+	req , err :=utils.CreateGetRequest(envId, networkHost)
 
 	response, err := client.SendRequest(req)
 
 	defer response.Body.Close()
+
+	var network Network
+
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		beego.Error("%s", err)
+		return Network{},err
 	}
 
-	json.Unmarshal()*/
-
-	return nil
+	err = json.Unmarshal(contents,&network)
+	if err != nil {
+		beego.Error("%s", err)
+		return Network{}, err
+	}
+	return network, nil
 
 }

@@ -37,7 +37,7 @@ func CreateGetRequest ( url string, key string) (*http.Request, error){
 	}
 
 	q := req.URL.Query()
-	q.Add("name",key)
+	q.Add("environmentId",key)
 	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("Content-Type", "application/json")
@@ -56,7 +56,8 @@ func (httpReq *HTTPClient) SendRequest (req * http.Request)(*http.Response, erro
 
 func InitReq () HTTPClient{
 
-	var logger HTTPClient
-	logger.client = &http.Client{}
-	return logger
+	var client HTTPClient
+	client.client = &http.Client{}
+	return client
+
 }

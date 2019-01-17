@@ -28,16 +28,16 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID              	bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name           	 string        `json:"name" bson:"name"`
-	NodeCount       int64         `json:"node_count" bson:"node_count"`
-	MachineType     string        `json:"machine_type" bson:"machine_type"`
-	Ami             Ami           `json:"ami" bson:"ami"`
-	PoolSubnet          Subnet		  `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*SecurityGroup     `json:"security_group_id" bson:"security_group_id"`
-	Nodes 			[]*Node		  `json:"nodes" bson:"nodes"`
-	KeyName 		string 		  `json:"key_name" bson:"key_name"`
-	PoolRole string               `json:"pool_role" bson:"pool_role"`
+	ID              	bson.ObjectId 		`json:"_id" bson:"_id,omitempty"`
+	Name           		string       		`json:"name" bson:"name"`
+	NodeCount       	int64        	 	`json:"node_count" bson:"node_count"`
+	MachineType     	string        		`json:"machine_type" bson:"machine_type"`
+	Ami             	Ami           		`json:"ami" bson:"ami"`
+	PoolSubnet          string		  		`json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups 	[]*string           `json:"security_group_id" bson:"security_group_id"`
+	Nodes 				[]*Node		  		`json:"nodes" bson:"nodes"`
+	KeyName 			string 		  		`json:"key_name" bson:"key_name"`
+	PoolRole 			string              `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
 	CloudId 	 string `json:"cloud_id" bson:"cloud_id,omitempty"`
@@ -53,26 +53,13 @@ type Node struct {
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name     string        `json:"name" bson:"name"`
-	AmiId string        `json:"ami_id" bson:"ami_id"`
+	AmiId 	 string        `json:"ami_id" bson:"ami_id"`
 	Username string        `json:"username" bson:"username"`
-}
-type Subnet struct {
-	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SubnetId string        `json:"subnet_id" bson:"subnet_id"`
-	Name     string        `json:"name" bson:"name"`
-	CIDR  	 string        `json:"cidr" bson:"cidr"`
-}
-
-type SecurityGroup struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SecurityGroupId string        `json:"security_group_id" bson:"security_group_id"`
-	Name            string        `json:"name" bson:"name"`
-	Description     string        `json:"description" bson:"description"`
 }
 
 
 func CreateCluster(cluster Cluster_Def) error {
-	_, err := GetCluster(cluster.Name,cluster.EnvironmentId)
+	_, err := GetCluster(cluster.EnvironmentId)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster '%s' already exists in the database: ", cluster.Name)
 		beego.Error(text, err)
@@ -90,7 +77,8 @@ func CreateCluster(cluster Cluster_Def) error {
 	return nil
 }
 
-func GetCluster(clusterName string,envId string ) (cluster Cluster_Def, err error) {
+func GetCluster(envId string ) (cluster Cluster_Def, err error) {
+
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err1)
@@ -99,7 +87,7 @@ func GetCluster(clusterName string,envId string ) (cluster Cluster_Def, err erro
 	defer session.Close()
 
 	c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
-	err = c.Find(bson.M{"name": clusterName, "environment_id":envId}).One(&cluster)
+	err = c.Find(bson.M{ "environment_id":envId}).One(&cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
@@ -127,7 +115,7 @@ func GetAllCluster() (clusters []Cluster_Def, err error) {
 }
 
 func UpdateCluster(cluster Cluster_Def) error {
-	oldCluster, err := GetCluster(cluster.Name,cluster.EnvironmentId)
+	oldCluster, err := GetCluster(cluster.EnvironmentId)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
 		beego.Error(text, err)
@@ -192,7 +180,6 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	}
 
 
-
 	createdPools , err:= aws.createCluster(cluster)
 	if err != nil {
 
@@ -207,13 +194,15 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		publisher.notify(cluster.Name,"Status Available")
 
 	}
-	var updatedCluster Cluster_Def
-	updatedCluster = cluster
 
-	for index, nodepool := range updatedCluster.NodePools {
+	for index, nodepool := range cluster.NodePools {
+
 		var updatedNodes []*Node
+
 		for _, createdPool := range createdPools {
+
 			if createdPool.PoolName == nodepool.Name {
+
 				for _, inst := range createdPool.Instances {
 
 					var node Node
@@ -234,14 +223,14 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 					updatedNodes = append(updatedNodes, &node)
 					beego.Info("Cluster model: Instances added")
 				}
-
 			}
 		}
 		beego.Info("Cluster model: updated nodes in pools")
-		updatedCluster.NodePools[index].Nodes = updatedNodes
+		cluster.NodePools[index].Nodes = updatedNodes
 	}
-	updatedCluster.Status = "Cluster Created"
-	err = UpdateCluster(updatedCluster)
+	cluster.Status = "Cluster Created"
+
+	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		publisher.notify(cluster.Name,"Status Available")
@@ -252,9 +241,9 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 
 	return nil
 }
-func FetchStatus(clusterName string, credentials string,envId string) (Cluster_Def , error){
+func FetchStatus( credentials string,envId string) (Cluster_Def , error){
 
-	cluster, err := GetCluster(clusterName,envId)
+	cluster, err := GetCluster(envId)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{},err
@@ -284,7 +273,6 @@ func FetchStatus(clusterName string, credentials string,envId string) (Cluster_D
 }
 func TerminateCluster(cluster Cluster_Def, credentials string) error {
 
-
 	splits := strings.Split(credentials, ":")
 
 	aws := AWS{
@@ -312,7 +300,8 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
-	 err = aws.terminateCluster(cluster)
+	err = aws.terminateCluster(cluster)
+
 	if err != nil {
 
 		beego.Error(err.Error())
@@ -327,7 +316,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 
 	}
 
-	cluster.Status = "Cluster teminated"
+	cluster.Status = "Cluster terminated"
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
