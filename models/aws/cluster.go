@@ -10,6 +10,7 @@ import (
 	"time"
 	"strings"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"antelope/models/logging"
 )
 type SSHKeyPair struct {
 	Name              string `json:"name" bson:"name",omitempty"`
@@ -179,15 +180,21 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		return pub_err
 	}
 
-
+	logging.SendLog("Creating Cluster : " + cluster.Name,"info",cluster.EnvironmentId)
 	createdPools , err:= aws.createCluster(cluster)
 	if err != nil {
-
 		beego.Error(err.Error())
+
+		logging.SendLog("Cluster creation failed : " + cluster.Name,"error",cluster.EnvironmentId)
+		logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
+
 		cluster.Status = "Cluster creation failed"
+
 		err = UpdateCluster(cluster)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			logging.SendLog("Cluster updation failed in mongo: " + cluster.Name,"error",cluster.EnvironmentId)
+			logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
 			publisher.notify(cluster.Name,"Status Available")
 			return err
 		}
@@ -233,10 +240,12 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		logging.SendLog("Cluster updation failed in mongo: " + cluster.Name,"error",cluster.EnvironmentId)
+		logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
 		publisher.notify(cluster.Name,"Status Available")
 		return err
 	}
-
+	logging.SendLog("Cluster created successfully " + cluster.Name,"info",cluster.EnvironmentId)
 	publisher.notify(cluster.Name,"Status Available")
 
 	return nil
@@ -300,15 +309,24 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
+	logging.SendLog("Terminating cluster: " + cluster.Name,"info",cluster.EnvironmentId)
+
+
 	err = aws.terminateCluster(cluster)
 
 	if err != nil {
 
 		beego.Error(err.Error())
+
+		logging.SendLog("Cluster termination failed: " + cluster.Name,"error",cluster.EnvironmentId)
+		logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
+
 		cluster.Status = "Cluster termination failed"
 		err = UpdateCluster(cluster)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			logging.SendLog("Error in cluster updation in mongo: " + cluster.Name,"error",cluster.EnvironmentId)
+			logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
 			publisher.notify(cluster.Name,"Status Available")
 			return err
 		}
@@ -320,10 +338,12 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		logging.SendLog("Error in cluster updation in mongo: " + cluster.Name,"error",cluster.EnvironmentId)
+		logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
 		publisher.notify(cluster.Name,"Status Available")
 		return err
 	}
-
+	logging.SendLog("Cluster terminated successfully " + cluster.Name,"info",cluster.EnvironmentId)
 	publisher.notify(cluster.Name,"Status Available")
 
 	return nil

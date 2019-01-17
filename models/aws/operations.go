@@ -17,6 +17,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"antelope/models"
 	"time"
+	"antelope/models/logging"
 )
 
 var (
@@ -98,29 +99,38 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 
 		beego.Info("AWSOperations: creating key")
 		var createdPool CreatedPool
+		logging.SendLog("Creating Key " + pool.KeyName,"info",cluster.EnvironmentId)
 
 		keyMaterial,_,err  := cloud.KeyPairGenerator(pool.KeyName)
 		if err != nil {
 			beego.Error(err.Error())
+			logging.SendLog("Error in key creation: " + pool.KeyName,"info",cluster.EnvironmentId)
+			logging.SendLog(err.Error(),"info",cluster.EnvironmentId)
 			return nil , err
 		}
 		beego.Info("AWSOperations creating nodes")
 
 		result, err :=  cloud.CreateInstance(pool,network)
 		if err != nil {
+			logging.SendLog("Error in instances creation: " + err.Error(),"info",cluster.EnvironmentId)
 			beego.Error(err.Error())
 			return nil, err
 		}
 
 		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 			for index, instance := range result.Instances {
-				cloud.updateInstanceTags(instance.InstanceId, pool.Name+"_"+strconv.Itoa(index))
+				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"_"+strconv.Itoa(index))
+				if err != nil {
+					logging.SendLog("Error in instances creation: " + err.Error(),"info",cluster.EnvironmentId)
+					beego.Error(err.Error())
+					return nil, err
+				}
 			}
 		}
 
 		var latest_instances []*ec2.Instance
 
-		latest_instances ,err= cloud.GetInstances(result)
+		latest_instances ,err= cloud.GetInstances(result,cluster.EnvironmentId)
 		if err != nil {
 			return nil, err
 		}
@@ -135,7 +145,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 	return createdPools,nil
 }
 
-func (cloud *AWS) updateInstanceTags(instance_id * string ,nodepool_name string){
+func (cloud *AWS) updateInstanceTags(instance_id * string ,nodepool_name string)(error){
 	var resource []*string
 	resource = append(resource, instance_id)
 
@@ -148,10 +158,12 @@ func (cloud *AWS) updateInstanceTags(instance_id * string ,nodepool_name string)
 	}
 	out, err := cloud.Client.CreateTags(&input)
 	if err != nil {
-		beego.Warn(err.Error())
+		beego.Error(err.Error())
+		return err
 	}
 
-	beego.Warn(out.String())
+	beego.Info(out.String())
+	return nil
 }
 
 func (cloud *AWS) init() error {
@@ -240,7 +252,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def ) ( error){
 	}
 
 	for _, pool := range cluster.NodePools {
-		err := cloud.TerminatePool(pool)
+		err := cloud.TerminatePool(pool, cluster.EnvironmentId)
 		if err != nil {
 			return  err
 		}
@@ -295,7 +307,7 @@ func (cloud *AWS) GetSubnets (pool *NodePool, network Network )(string) {
 	return ""
 }
 
-func (cloud *AWS) GetInstances (result *ec2.Reservation)(latest_instances []*ec2.Instance,err error){
+func (cloud *AWS) GetInstances (result *ec2.Reservation, envId string)(latest_instances []*ec2.Instance,err error){
 
 	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 
@@ -313,6 +325,10 @@ func (cloud *AWS) GetInstances (result *ec2.Reservation)(latest_instances []*ec2
 		}
 
 		for _, instance := range updated_instances.Reservations[0].Instances{
+				logging.SendLog("Instance created successfully: " + *instance.InstanceId ,"info",envId)
+				beego.Error(err.Error())
+				return nil, err
+
 			latest_instances = append(latest_instances,instance)
 		}
 		return latest_instances, nil
@@ -333,7 +349,7 @@ func (cloud *AWS) GetInstanceStatus (node *Node)(output *ec2.DescribeInstancesOu
 	}
 	return output, nil
 }
-func (cloud *AWS) TerminatePool(pool *NodePool ) ( error) {
+func (cloud *AWS) TerminatePool(pool *NodePool, envId string ) ( error) {
 
 	beego.Info("AWSOperations terminating nodes")
 	var instance_ids []*string
@@ -352,7 +368,7 @@ func (cloud *AWS) TerminatePool(pool *NodePool ) ( error) {
 		beego.Error("Cluster model: Status - Failed to terminate node pool ", err.Error())
 		return err
 	}
-
+	logging.SendLog("Cluster pool terminated successfully: " + pool.Name,"info",envId)
 	return nil
 }
 
