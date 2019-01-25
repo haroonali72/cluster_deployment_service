@@ -25,10 +25,10 @@ func CreatePostRequest (request_data []byte, url string) (*http.Request, error){
 	return req , nil
 }
 
-func CreateGetRequest ( url string, key string) (*http.Request, error){
+func CreateGetRequest ( key string, url string) (*http.Request, error){
 
-	beego.Info("requesting ", url)
-
+	beego.Info("requesting", url)
+  url= url +"/"+ key
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
@@ -36,10 +36,10 @@ func CreateGetRequest ( url string, key string) (*http.Request, error){
 		return nil , err
 	}
 
-	q := req.URL.Query()
-	q.Add("environmentId",key)
-	req.URL.RawQuery = q.Encode()
-
+	//q := req.URL.Query()
+//	q.Add("environmentId",key)
+//	req.URL.RawQuery = q.Encode()
+	req.Proto = "HTTP/1.0"
 	req.Header.Set("Content-Type", "application/json")
 	return req , nil
 }
