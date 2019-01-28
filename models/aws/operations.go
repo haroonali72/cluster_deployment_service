@@ -326,9 +326,7 @@ func (cloud *AWS) GetInstances (result *ec2.Reservation, envId string)(latest_in
 
 		for _, instance := range updated_instances.Reservations[0].Instances{
 				logging.SendLog("Instance created successfully: " + *instance.InstanceId ,"info",envId)
-				return nil, err
-
-			latest_instances = append(latest_instances,instance)
+				latest_instances = append(latest_instances,instance)
 		}
 		return latest_instances, nil
 	}
@@ -378,10 +376,7 @@ func (cloud *AWS) GetNetworkStatus(envId string ) ( Network, error){
 	req , err :=utils.CreateGetRequest(envId, networkHost)
 
 	response, err := client.SendRequest(req)
-	beego.Info(response.Request)
-	beego.Info(response.Status)
-	beego.Info(response.Body)
-	beego.Info(response.StatusCode)
+
 	defer response.Body.Close()
 
 	var network Network
@@ -391,7 +386,7 @@ func (cloud *AWS) GetNetworkStatus(envId string ) ( Network, error){
 		beego.Error("%s", err)
 		return Network{},err
 	}
-    beego.Info(string(contents))
+
 	err = json.Unmarshal(contents,&network)
 	if err != nil {
 		beego.Error("%s", err)

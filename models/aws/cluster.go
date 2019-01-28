@@ -67,8 +67,7 @@ func CreateCluster(cluster Cluster_Def) error {
 		return errors.New(text)
 	}
 
-	cluster.CreationDate = time.Now()
-	cluster.Status = "New"
+
 	err = db.InsertInMongo(db.MongoAwsClusterCollection, cluster)
 	if err != nil {
 		beego.Error("Cluster model: Create - Got error inserting cluster to the database: ", err)
@@ -123,7 +122,7 @@ func UpdateCluster(cluster Cluster_Def) error {
 		return errors.New(text)
 	}
 
-	err = DeleteCluster(cluster.Name)
+	err = DeleteCluster(cluster.EnvironmentId)
 	if err != nil {
 		beego.Error("Cluster model: Update - Got error deleting cluster: ", err)
 		return err
@@ -141,7 +140,7 @@ func UpdateCluster(cluster Cluster_Def) error {
 	return nil
 }
 
-func DeleteCluster(clusterName string) error {
+func DeleteCluster(envId string) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		beego.Error("Cluster model: Delete - Got error while connecting to the database: ", err)
@@ -150,7 +149,7 @@ func DeleteCluster(clusterName string) error {
 	defer session.Close()
 
 	c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
-	err = c.Remove(bson.M{"name": clusterName})
+	err = c.Remove(bson.M{"environment_id": envId})
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -182,6 +181,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 
 	logging.SendLog("Creating Cluster : " + cluster.Name,"info",cluster.EnvironmentId)
 	createdPools , err:= aws.createCluster(cluster)
+
 	if err != nil {
 		beego.Error(err.Error())
 
@@ -236,7 +236,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		cluster.NodePools[index].Nodes = updatedNodes
 	}
 	cluster.Status = "Cluster Created"
-
+	beego.Info(cluster.Status + cluster.EnvironmentId)
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())

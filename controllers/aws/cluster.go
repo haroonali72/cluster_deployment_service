@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego"
 	"strings"
 	"antelope/models/aws"
+	"time"
 )
 
 // Operations about AWS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
@@ -78,6 +79,8 @@ func (c *AWSClusterController) Post() {
 	beego.Info("AWSClusterController: Post new cluster with name: ", cluster.Name)
 	beego.Info("AWSClusterController: JSON Payload: ", cluster)
 
+	cluster.CreationDate = time.Now()
+
 	err := aws.CreateCluster(cluster)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -130,24 +133,24 @@ func (c *AWSClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	name	path	string	true	"Name of the cluster"
+// @Param	environmentId	path	string	true	"Environment id of the cluster"
 // @Success 200 {"msg": "cluster deleted successfully"}
-// @Failure 404 {"error": "name is empty"}
+// @Failure 404 {"error": "environment id is empty"}
 // @Failure 500 {"error": "internal server error"}
-// @router /:name [delete]
+// @router /:environmentId [delete]
 func (c *AWSClusterController) Delete() {
-	name := c.GetString(":name")
+	id := c.GetString(":environmentId")
 
-	beego.Info("AWSClusterController: Delete cluster with name: ", name)
+	beego.Info("AWSClusterController: Delete cluster with environment id: ", id)
 
-	if name == "" {
+	if id == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	err := aws.DeleteCluster(name)
+	err := aws.DeleteCluster(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
