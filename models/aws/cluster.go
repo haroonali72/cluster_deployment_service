@@ -303,8 +303,8 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		return pub_err
 	}
 
-	if cluster.Status != "Successful" {
-		beego.Error("Cluster model: Cluster is not in created state ", err.Error())
+	if cluster.Status != "Cluster Created" {
+		beego.Error("Cluster model: Cluster is not in created state ")
 		publisher.notify(cluster.Name,"Status Available")
 		return err
 	}
