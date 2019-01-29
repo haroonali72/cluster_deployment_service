@@ -119,7 +119,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 
 		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 			for index, instance := range result.Instances {
-				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"_"+strconv.Itoa(index))
+				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index))
 				if err != nil {
 					logging.SendLog("Error in instances creation: " + err.Error(),"info",cluster.EnvironmentId)
 					beego.Error(err.Error())

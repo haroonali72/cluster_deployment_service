@@ -19,6 +19,7 @@ type SSHKeyPair struct {
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
+	Kube_Credentials interface{}	`json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name"`
 	Status           string        `json:"status" bson:"status"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
