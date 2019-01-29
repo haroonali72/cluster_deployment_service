@@ -16,6 +16,8 @@ var (
 	MongoDb                    = beego.AppConfig.String("mongo_db")
 	MongoAwsTemplateCollection = beego.AppConfig.String("mongo_aws_template_collection")
 	MongoAwsClusterCollection  = beego.AppConfig.String("mongo_aws_cluster_collection")
+	MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
+	MongoAzureClusterCollection  = beego.AppConfig.String("mongo_azure_cluster_collection")
 )
 
 func GetMongoSession() (session *mgo.Session, err error) {

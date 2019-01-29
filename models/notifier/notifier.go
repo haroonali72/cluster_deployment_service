@@ -1,4 +1,4 @@
-package aws
+package notifier
 
 import (
 	"github.com/go-redis/redis"
@@ -12,13 +12,13 @@ var (
 type Notifier struct {
 	Client *redis.Client
 }
-func (notifier *Notifier)  notify(channel, status string){
+func (notifier *Notifier)  Notify(channel, status string){
 
 	cmd :=notifier.Client.Publish(channel,status)
 	beego.Info(*cmd)
 }
 
-func (notifier *Notifier) init_notifier() error {
+func (notifier *Notifier) Init_notifier() error {
 	if notifier.Client != nil {
 		return nil
 	}
@@ -29,7 +29,7 @@ func (notifier *Notifier) init_notifier() error {
 
 	return nil
 }
-func (notifier *Notifier)  receiver(channel, status string){
+func (notifier *Notifier)  Receiver(channel, status string){
 
 	cmd :=notifier.Client.Publish(channel,status)
 	beego.Info(*cmd)
