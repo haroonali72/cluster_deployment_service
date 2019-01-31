@@ -360,7 +360,7 @@ func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reserva
 		beego.Error(err.Error())
 		return nil, err
 	}
-	iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name),Arn:&profileArn}
+	iamProfile := ec2.IamInstanceProfileSpecification{Arn:&profileArn}
 
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
@@ -498,7 +498,6 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 
 		roleName := name
 
-		iamProfileName := name + "-M-CP-Y"
 
 		raw_policy := docker_master_policy
 		raw_role := []byte(`{
@@ -518,7 +517,7 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 		out, err := cloud.IAMService.CreateRole(&roleInput)
 		if err != nil {
 			beego.Error(err)
-			return iamProfileName, err
+			return "", err
 		}
 
 		beego.Info(out.GoString())
@@ -531,7 +530,7 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 
 		if err_1 != nil {
 			beego.Error(err_1)
-			return iamProfileName,err_1
+			return "",err_1
 		}
 
 		attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
@@ -539,21 +538,21 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 
 		if err_2 != nil {
 			beego.Error(err_2)
-			return iamProfileName, err_2
+			return "", err_2
 		}
 
 		profileInput := iam.CreateInstanceProfileInput{InstanceProfileName: &roleName}
 		outtt, err := cloud.IAMService.CreateInstanceProfile(&profileInput)
 		if err != nil {
 			beego.Error(err)
-			return iamProfileName, err
+			return "", err
 		}
 
 		testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
 		_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
 		if err != nil {
 			beego.Error(err)
-			return iamProfileName,  err
+			return "",  err
 		}
 
 		return  *outtt.InstanceProfile.Arn, nil
