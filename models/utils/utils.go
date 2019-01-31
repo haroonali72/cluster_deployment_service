@@ -36,9 +36,6 @@ func CreateGetRequest ( key string, url string) (*http.Request, error){
 		return nil , err
 	}
 
-	//q := req.URL.Query()
-//	q.Add("environmentId",key)
-//	req.URL.RawQuery = q.Encode()
 	req.Proto = "HTTP/1.0"
 	req.Header.Set("Content-Type", "application/json")
 	return req , nil

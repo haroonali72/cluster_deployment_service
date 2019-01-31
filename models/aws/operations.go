@@ -11,57 +11,12 @@ import (
 /*	"antelope/models/utils"
 	"io/ioutil"
 	"encoding/json"*/
-	"antelope/models/utils"
-	"io/ioutil"
-	"encoding/json"
-	"gopkg.in/mgo.v2/bson"
-	"antelope/models"
-	"time"
 	"antelope/models/logging"
+	"antelope/models/networks"
 )
 
-var (
-	networkHost    = beego.AppConfig.String("network_url")
-)
 
-type Network struct {
-	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
-	Name             string        `json:"name" bson:"name"`
-	Type             models.Type   `json:"type" bson:"type"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
-	NetworkStatus    string        `json:"status" bson:"status"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	Definition       []*Definition `json:"definition" bson:"definition"`
-}
 
-type Definition struct {
-	ID             bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
-	Vpc            Vpc              `json:"vpc" bson:"vpc"`
-	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
-	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
-}
-
-type Vpc struct {
-	ID    bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	VpcId string        `json:"vpc_id" bson:"vpc_id"`
-	Name  string        `json:"name" bson:"name"`
-	CIDR  string        `json:"cidr" bson:"cidr"`
-}
-
-type Subnet struct {
-	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SubnetId string        `json:"subnet_id" bson:"subnet_id"`
-	Name     string        `json:"name" bson:"name"`
-	CIDR  	 string        `json:"cidr" bson:"cidr"`
-}
-
-type SecurityGroup struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SecurityGroupId string        `json:"security_group_id" bson:"security_group_id"`
-	Name            string        `json:"name" bson:"name"`
-	Description     string        `json:"description" bson:"description"`
-}
 
 type CreatedPool struct {
 	Instances    []*ec2.Instance
@@ -86,7 +41,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 			return nil ,err
 		}
 	}
-	network , err := cloud.GetNetworkStatus(cluster.EnvironmentId)
+	network , err := networks.GetNetworkStatus(cluster.EnvironmentId,"aws")
 
 	if err != nil {
 		beego.Error(err.Error())
@@ -259,7 +214,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def ) ( error){
 	}
 	return nil
 }
-func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reservation, error){
+func (cloud *AWS) CreateInstance (pool *NodePool, network networks.AWSNetwork )(*ec2.Reservation, error){
 
 
 	subnetId := cloud.GetSubnets(pool,network)
@@ -283,7 +238,7 @@ func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reserva
 	return result, nil
 
 }
-func (cloud *AWS) GetSecurityGroups (pool *NodePool, network Network )([]*string) {
+func (cloud *AWS) GetSecurityGroups (pool *NodePool, network networks.AWSNetwork )([]*string) {
 	var sgId []*string
 	for _, definition := range network.Definition{
 		for _, sg := range definition.SecurityGroups {
@@ -296,7 +251,7 @@ func (cloud *AWS) GetSecurityGroups (pool *NodePool, network Network )([]*string
 	}
 	return sgId
 }
-func (cloud *AWS) GetSubnets (pool *NodePool, network Network )(string) {
+func (cloud *AWS) GetSubnets (pool *NodePool, network networks.AWSNetwork )(string) {
 	for _, definition := range network.Definition{
 		for _, subnet := range definition.Subnets {
 			if subnet.Name ==  pool.PoolSubnet{
@@ -367,31 +322,4 @@ func (cloud *AWS) TerminatePool(pool *NodePool, envId string ) ( error) {
 	}
 	logging.SendLog("Cluster pool terminated successfully: " + pool.Name,"info",envId)
 	return nil
-}
-
-func (cloud *AWS) GetNetworkStatus(envId string ) ( Network, error){
-
-	client := utils.InitReq()
-
-	req , err :=utils.CreateGetRequest(envId, networkHost)
-
-	response, err := client.SendRequest(req)
-
-	defer response.Body.Close()
-
-	var network Network
-
-	contents, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		beego.Error("%s", err)
-		return Network{},err
-	}
-
-	err = json.Unmarshal(contents,&network)
-	if err != nil {
-		beego.Error("%s", err)
-		return Network{}, err
-	}
-	return network, nil
-
 }

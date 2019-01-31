@@ -5076,7 +5076,10 @@ func (c *EC2) CreatePlacementGroupRequest(input *CreatePlacementGroupInput) (req
 //
 // A cluster placement group is a logical grouping of instances within a single
 // Availability Zone that benefit from low network latency, high network throughput.
-// A spread placement group places instances on distinct hardware.
+// A spread placement group places instances on distinct hardware. A partition
+// placement group places groups of instances in different partitions, where
+// instances in one partition do not share the same hardware with instances
+// in another partition.
 //
 // For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -12001,7 +12004,7 @@ func (c *EC2) DescribeHostReservationOfferingsRequest(input *DescribeHostReserva
 // Describes the Dedicated Host reservations that are available to purchase.
 //
 // The results describe all the Dedicated Host reservation offerings, including
-// offerings that may not match the instance family and region of your Dedicated
+// offerings that may not match the instance family and Region of your Dedicated
 // Hosts. When purchasing an offering, ensure that the instance family and Region
 // of the offering matches that of the Dedicated Hosts with which it is to be
 // associated. For more information about supported instance types, see Dedicated
@@ -12156,7 +12159,7 @@ func (c *EC2) DescribeHostsRequest(input *DescribeHostsInput) (req *request.Requ
 //
 // Describes one or more of your Dedicated Hosts.
 //
-// The results describe only the Dedicated Hosts in the region you're currently
+// The results describe only the Dedicated Hosts in the Region you're currently
 // using. All listed instances consume capacity on your Dedicated Host. Dedicated
 // Hosts that have recently been released are listed with the state released.
 //
@@ -16096,6 +16099,13 @@ func (c *EC2) DescribeSpotInstanceRequestsRequest(input *DescribeSpotInstanceReq
 // the instance ID appears in the response and contains the identifier of the
 // instance. Alternatively, you can use DescribeInstances with a filter to look
 // for instances where the instance lifecycle is spot.
+//
+// We recommend that you set MaxResults to a value between 5 and 1000 to limit
+// the number of results returned. This paginates the output, which makes the
+// list more manageable and returns the results faster. If the list of results
+// exceeds your MaxResults value, then that number of results is returned along
+// with a NextToken value that can be passed to a subsequent DescribeSpotInstanceRequests
+// request to retrieve the remaining results.
 //
 // Spot Instance requests are deleted four hours after they are canceled and
 // their instances are terminated.
@@ -20064,10 +20074,10 @@ func (c *EC2) ExportClientVpnClientConfigurationRequest(input *ExportClientVpnCl
 
 // ExportClientVpnClientConfiguration API operation for Amazon Elastic Compute Cloud.
 //
-// Downloads the contents of the client configuration file for the specified
-// Client VPN endpoint. The client configuration file includes the Client VPN
-// endpoint and certificate information clients need to establish a connection
-// with the Client VPN endpoint.
+// Downloads the contents of the Client VPN endpoint configuration file for
+// the specified Client VPN endpoint. The Client VPN endpoint configuration
+// file includes the Client VPN endpoint and certificate information clients
+// need to establish a connection with the Client VPN endpoint.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22323,8 +22333,8 @@ func (c *EC2) ModifyInstancePlacementRequest(input *ModifyInstancePlacementInput
 // name must be specified in the request. Affinity and tenancy can be modified
 // in the same request.
 //
-// To modify the host ID, tenancy, or placement group for an instance, the instance
-// must be in the stopped state.
+// To modify the host ID, tenancy, placement group, or partition for an instance,
+// the instance must be in the stopped state.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -32215,7 +32225,7 @@ func (s *ClientVpnAuthentication) SetType(v string) *ClientVpnAuthentication {
 
 // Describes the authentication method to be used by a Client VPN endpoint.
 // Client VPN supports Active Directory and mutual authentication. For more
-// information, see Athentication (vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
+// information, see Authentication (vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
 // in the AWS Client VPN Admin Guide.
 type ClientVpnAuthenticationRequest struct {
 	_ struct{} `type:"structure"`
@@ -36469,17 +36479,16 @@ type CreatePlacementGroupInput struct {
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
 	// A name for the placement group. Must be unique within the scope of your account
-	// for the region.
+	// for the Region.
 	//
 	// Constraints: Up to 255 ASCII characters
-	//
-	// GroupName is a required field
-	GroupName *string `locationName:"groupName" type:"string" required:"true"`
+	GroupName *string `locationName:"groupName" type:"string"`
+
+	// The number of partitions. Valid only when Strategy is set to partition.
+	PartitionCount *int64 `type:"integer"`
 
 	// The placement strategy.
-	//
-	// Strategy is a required field
-	Strategy *string `locationName:"strategy" type:"string" required:"true" enum:"PlacementStrategy"`
+	Strategy *string `locationName:"strategy" type:"string" enum:"PlacementStrategy"`
 }
 
 // String returns the string representation
@@ -36492,22 +36501,6 @@ func (s CreatePlacementGroupInput) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CreatePlacementGroupInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CreatePlacementGroupInput"}
-	if s.GroupName == nil {
-		invalidParams.Add(request.NewErrParamRequired("GroupName"))
-	}
-	if s.Strategy == nil {
-		invalidParams.Add(request.NewErrParamRequired("Strategy"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetDryRun sets the DryRun field's value.
 func (s *CreatePlacementGroupInput) SetDryRun(v bool) *CreatePlacementGroupInput {
 	s.DryRun = &v
@@ -36517,6 +36510,12 @@ func (s *CreatePlacementGroupInput) SetDryRun(v bool) *CreatePlacementGroupInput
 // SetGroupName sets the GroupName field's value.
 func (s *CreatePlacementGroupInput) SetGroupName(v string) *CreatePlacementGroupInput {
 	s.GroupName = &v
+	return s
+}
+
+// SetPartitionCount sets the PartitionCount field's value.
+func (s *CreatePlacementGroupInput) SetPartitionCount(v int64) *CreatePlacementGroupInput {
+	s.PartitionCount = &v
 	return s
 }
 
@@ -46521,6 +46520,9 @@ type DescribeInstancesInput struct {
 	//
 	//    * placement-group-name - The name of the placement group for the instance.
 	//
+	//    * placement-partition-number - The partition in which the instance is
+	//    located.
+	//
 	//    * platform - The platform. Use windows if you have Windows instances;
 	//    otherwise, leave blank.
 	//
@@ -47888,7 +47890,7 @@ type DescribePlacementGroupsInput struct {
 	//    * state - The state of the placement group (pending | available | deleting
 	//    | deleted).
 	//
-	//    * strategy - The strategy of the placement group (cluster | spread).
+	//    * strategy - The strategy of the placement group (cluster | spread | partition).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more placement group names.
@@ -50382,6 +50384,15 @@ type DescribeSpotInstanceRequestsInput struct {
 	//    * valid-until - The end date of the request.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
+	// The maximum number of results to return in a single call. Specify a value
+	// between 5 and 1000. To retrieve the remaining results, make another call
+	// with the returned NextToken value.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to request the next set of results. This value is null when there
+	// are no more results to return.
+	NextToken *string `type:"string"`
+
 	// One or more Spot Instance request IDs.
 	SpotInstanceRequestIds []*string `locationName:"SpotInstanceRequestId" locationNameList:"SpotInstanceRequestId" type:"list"`
 }
@@ -50408,6 +50419,18 @@ func (s *DescribeSpotInstanceRequestsInput) SetFilters(v []*Filter) *DescribeSpo
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeSpotInstanceRequestsInput) SetMaxResults(v int64) *DescribeSpotInstanceRequestsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSpotInstanceRequestsInput) SetNextToken(v string) *DescribeSpotInstanceRequestsInput {
+	s.NextToken = &v
+	return s
+}
+
 // SetSpotInstanceRequestIds sets the SpotInstanceRequestIds field's value.
 func (s *DescribeSpotInstanceRequestsInput) SetSpotInstanceRequestIds(v []*string) *DescribeSpotInstanceRequestsInput {
 	s.SpotInstanceRequestIds = v
@@ -50417,6 +50440,10 @@ func (s *DescribeSpotInstanceRequestsInput) SetSpotInstanceRequestIds(v []*strin
 // Contains the output of DescribeSpotInstanceRequests.
 type DescribeSpotInstanceRequestsOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next set of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// One or more Spot Instance requests.
 	SpotInstanceRequests []*SpotInstanceRequest `locationName:"spotInstanceRequestSet" locationNameList:"item" type:"list"`
@@ -50430,6 +50457,12 @@ func (s DescribeSpotInstanceRequestsOutput) String() string {
 // GoString returns the string representation
 func (s DescribeSpotInstanceRequestsOutput) GoString() string {
 	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSpotInstanceRequestsOutput) SetNextToken(v string) *DescribeSpotInstanceRequestsOutput {
+	s.NextToken = &v
+	return s
 }
 
 // SetSpotInstanceRequests sets the SpotInstanceRequests field's value.
@@ -50930,15 +50963,15 @@ type DescribeTransitGatewayAttachmentsInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * association-id - The ID of the association.
+	//    * association.transit-gateway-route-table-id - The ID of the route table
+	//    for the transit gateway.
 	//
-	//    * association-route-table-id - The ID of the route table for the transit
-	//    gateway.
-	//
-	//    * associate-state - The state of the association (associating | associated
+	//    * association.state - The state of the association (associating | associated
 	//    | disassociating).
 	//
 	//    * resource-id - The ID of the resource.
+	//
+	//    * resource-owner - The ID of the AWS account that owns the resource.
 	//
 	//    * resource-type - The resource type (vpc | vpn).
 	//
@@ -51067,13 +51100,13 @@ type DescribeTransitGatewayRouteTablesInput struct {
 	//    * default-propagation-route-table - Indicates whether this is the default
 	//    propagation route table for the transit gateway (true | false).
 	//
+	//    * state - The state of the attachment (pendingAcceptance | pending | available
+	//    | modifying | deleting | deleted | failed | rejected).
+	//
 	//    * transit-gateway-id - The ID of the transit gateway.
 	//
 	//    * transit-gateway-route-table-id - The ID of the transit gateway route
 	//    table.
-	//
-	//    * transit-gateway-route-table-state - The state (pending | available |
-	//    deleting | deleted).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -51184,10 +51217,10 @@ type DescribeTransitGatewayVpcAttachmentsInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * transit-gateway-attachment-id - The ID of the attachment.
+	//    * state - The state of the attachment (pendingAcceptance | pending | available
+	//    | modifying | deleting | deleted | failed | rejected).
 	//
-	//    * transit-gateway-attachment-state - The state of the attachment (pendingAcceptance
-	//    | pending | available | modifying | deleting | deleted | failed | rejected).
+	//    * transit-gateway-attachment-id - The ID of the attachment.
 	//
 	//    * transit-gateway-id - The ID of the transit gateway.
 	//
@@ -51302,23 +51335,36 @@ type DescribeTransitGatewaysInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * amazon-side-asn - The private ASN for the Amazon side of a BGP session.
+	//    * owner-id - The ID of the AWS account that owns the transit gateway.
 	//
-	//    * association-default-route-table-id - The ID of the default association
+	//    * options.propagation-default-route-table-id - The ID of the default propagation
 	//    route table.
 	//
-	//    * default-route-table-association - Indicates whether resource attachments
-	//    are automatically associated with the default association route table
-	//    (enable | disable).
+	//    * options.amazon-side-asn - The private ASN for the Amazon side of a BGP
+	//    session.
 	//
-	//    * default-route-table-propagation - Indicates whether resource attachments
-	//    automatically propagate routes to the default propagation route table
-	//    (enable | disable).
-	//
-	//    * owner-account-id - The ID of the AWS account that owns the transit gateway.
-	//
-	//    * propagation-default-route-table-id - The ID of the default propagation
+	//    * options.association-default-route-table-id - The ID of the default association
 	//    route table.
+	//
+	//    * options.auto-accept-shared-attachments - Indicates whether there is
+	//    automatic acceptance of attachment requests (enable | disable).
+	//
+	//    * options.default-route-table-association - Indicates whether resource
+	//    attachments are automatically associated with the default association
+	//    route table (enable | disable).
+	//
+	//    * options.default-route-table-propagation - Indicates whether resource
+	//    attachments automatically propagate routes to the default propagation
+	//    route table (enable | disable).
+	//
+	//    * options.dns-support - Indicates whether DNS support is enabled (enable
+	//    | disable).
+	//
+	//    * options.vpn-ecmp-support - Indicates whether Equal Cost Multipath Protocol
+	//    support is enabled (enable | disable).
+	//
+	//    * state - The state of the attachment (pendingAcceptance | pending | available
+	//    | modifying | deleting | deleted | failed | rejected).
 	//
 	//    * transit-gateway-id - The ID of the transit gateway.
 	//
@@ -56012,7 +56058,7 @@ func (s *ExportClientVpnClientConfigurationInput) SetDryRun(v bool) *ExportClien
 type ExportClientVpnClientConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// the contents of the client configuration file.
+	// The contents of the Client VPN endpoint configuration file.
 	ClientConfiguration *string `locationName:"clientConfiguration" type:"string"`
 }
 
@@ -58083,8 +58129,6 @@ type GetTransitGatewayRouteTableAssociationsInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// One or more filters. The possible values are:
-	//
-	//    * association-id - The ID of the association.
 	//
 	//    * resource-id - The ID of the resource.
 	//
@@ -66155,7 +66199,8 @@ type ModifyInstancePlacementInput struct {
 
 	// The name of the placement group in which to place the instance. For spread
 	// placement groups, the instance must have a tenancy of default. For cluster
-	// placement groups, the instance must have a tenancy of default or dedicated.
+	// and partition placement groups, the instance must have a tenancy of default
+	// or dedicated.
 	//
 	// To remove an instance from a placement group, specify an empty string ("").
 	GroupName *string `type:"string"`
@@ -66167,6 +66212,9 @@ type ModifyInstancePlacementInput struct {
 	//
 	// InstanceId is a required field
 	InstanceId *string `locationName:"instanceId" type:"string" required:"true"`
+
+	// Reserved for future use.
+	PartitionNumber *int64 `type:"integer"`
 
 	// The tenancy for the instance.
 	Tenancy *string `locationName:"tenancy" type:"string" enum:"HostTenancy"`
@@ -66216,6 +66264,12 @@ func (s *ModifyInstancePlacementInput) SetHostId(v string) *ModifyInstancePlacem
 // SetInstanceId sets the InstanceId field's value.
 func (s *ModifyInstancePlacementInput) SetInstanceId(v string) *ModifyInstancePlacementInput {
 	s.InstanceId = &v
+	return s
+}
+
+// SetPartitionNumber sets the PartitionNumber field's value.
+func (s *ModifyInstancePlacementInput) SetPartitionNumber(v int64) *ModifyInstancePlacementInput {
+	s.PartitionNumber = &v
 	return s
 }
 
@@ -69077,6 +69131,10 @@ type OnDemandOptions struct {
 	// minimum target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
 
+	// Indicates that the fleet launches all On-Demand Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `locationName:"singleAvailabilityZone" type:"boolean"`
+
 	// Indicates that the fleet uses a single instance type to launch all On-Demand
 	// Instances in the fleet.
 	SingleInstanceType *bool `locationName:"singleInstanceType" type:"boolean"`
@@ -69104,6 +69162,12 @@ func (s *OnDemandOptions) SetMinTargetCapacity(v int64) *OnDemandOptions {
 	return s
 }
 
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *OnDemandOptions) SetSingleAvailabilityZone(v bool) *OnDemandOptions {
+	s.SingleAvailabilityZone = &v
+	return s
+}
+
 // SetSingleInstanceType sets the SingleInstanceType field's value.
 func (s *OnDemandOptions) SetSingleInstanceType(v bool) *OnDemandOptions {
 	s.SingleInstanceType = &v
@@ -69125,6 +69189,10 @@ type OnDemandOptionsRequest struct {
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `type:"integer"`
+
+	// Indicates that the fleet launches all On-Demand Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all On-Demand
 	// Instances in the fleet.
@@ -69150,6 +69218,12 @@ func (s *OnDemandOptionsRequest) SetAllocationStrategy(v string) *OnDemandOption
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *OnDemandOptionsRequest) SetMinTargetCapacity(v int64) *OnDemandOptionsRequest {
 	s.MinTargetCapacity = &v
+	return s
+}
+
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *OnDemandOptionsRequest) SetSingleAvailabilityZone(v bool) *OnDemandOptionsRequest {
+	s.SingleAvailabilityZone = &v
 	return s
 }
 
@@ -69319,6 +69393,10 @@ type Placement struct {
 	// is not supported for the ImportInstance command.
 	HostId *string `locationName:"hostId" type:"string"`
 
+	// The number of the partition the instance is in. Valid only if the placement
+	// group strategy is set to partition.
+	PartitionNumber *int64 `locationName:"partitionNumber" type:"integer"`
+
 	// Reserved for future use.
 	SpreadDomain *string `locationName:"spreadDomain" type:"string"`
 
@@ -69362,6 +69440,12 @@ func (s *Placement) SetHostId(v string) *Placement {
 	return s
 }
 
+// SetPartitionNumber sets the PartitionNumber field's value.
+func (s *Placement) SetPartitionNumber(v int64) *Placement {
+	s.PartitionNumber = &v
+	return s
+}
+
 // SetSpreadDomain sets the SpreadDomain field's value.
 func (s *Placement) SetSpreadDomain(v string) *Placement {
 	s.SpreadDomain = &v
@@ -69380,6 +69464,9 @@ type PlacementGroup struct {
 
 	// The name of the placement group.
 	GroupName *string `locationName:"groupName" type:"string"`
+
+	// The number of partitions. Valid only if strategy is set to partition.
+	PartitionCount *int64 `locationName:"partitionCount" type:"integer"`
 
 	// The state of the placement group.
 	State *string `locationName:"state" type:"string" enum:"PlacementGroupState"`
@@ -69401,6 +69488,12 @@ func (s PlacementGroup) GoString() string {
 // SetGroupName sets the GroupName field's value.
 func (s *PlacementGroup) SetGroupName(v string) *PlacementGroup {
 	s.GroupName = &v
+	return s
+}
+
+// SetPartitionCount sets the PartitionCount field's value.
+func (s *PlacementGroup) SetPartitionCount(v int64) *PlacementGroup {
+	s.PartitionCount = &v
 	return s
 }
 
@@ -76845,8 +76938,6 @@ type SearchTransitGatewayRoutesInput struct {
 	//
 	//    * transit-gateway-route-type - The route type (static | propagated).
 	//
-	//    * transit-gateway-route-vpn-connection-id - The ID of the VPN connection.
-	//
 	// Filters is a required field
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list" required:"true"`
 
@@ -77675,7 +77766,7 @@ type SnapshotDiskContainer struct {
 
 	// The format of the disk image being imported.
 	//
-	// Valid values: VHD | VMDK | OVA
+	// Valid values: VHD | VMDK
 	Format *string `type:"string"`
 
 	// The URL to the Amazon S3-based disk image being imported. It can either be
@@ -78280,9 +78371,10 @@ type SpotFleetRequestConfigData struct {
 	// capacity or also attempts to maintain it. When this value is request, the
 	// Spot Fleet only places the required requests. It does not attempt to replenish
 	// Spot Instances if capacity is diminished, nor does it submit requests in
-	// alternative Spot pools if capacity is not available. To maintain a certain
-	// target capacity, the Spot Fleet places the required requests to meet capacity
-	// and automatically replenishes any interrupted instances. Default: maintain.
+	// alternative Spot pools if capacity is not available. When this value is maintain,
+	// the Spot Fleet maintains the target capacity. The Spot Fleet places the required
+	// requests to meet capacity and automatically replenishes any interrupted instances.
+	// Default: maintain. instant is listed but is not used by Spot Fleet.
 	Type *string `locationName:"type" type:"string" enum:"FleetType"`
 
 	// The start date and time of the request, in UTC format (for example, YYYY-MM-DDTHH:MM:SSZ).
@@ -78856,6 +78948,10 @@ type SpotOptions struct {
 	// target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
 
+	// Indicates that the fleet launches all Spot Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `locationName:"singleAvailabilityZone" type:"boolean"`
+
 	// Indicates that the fleet uses a single instance type to launch all Spot Instances
 	// in the fleet.
 	SingleInstanceType *bool `locationName:"singleInstanceType" type:"boolean"`
@@ -78895,6 +78991,12 @@ func (s *SpotOptions) SetMinTargetCapacity(v int64) *SpotOptions {
 	return s
 }
 
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *SpotOptions) SetSingleAvailabilityZone(v bool) *SpotOptions {
+	s.SingleAvailabilityZone = &v
+	return s
+}
+
 // SetSingleInstanceType sets the SingleInstanceType field's value.
 func (s *SpotOptions) SetSingleInstanceType(v bool) *SpotOptions {
 	s.SingleInstanceType = &v
@@ -78921,6 +79023,10 @@ type SpotOptionsRequest struct {
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `type:"integer"`
+
+	// Indicates that the fleet launches all Spot Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all Spot Instances
 	// in the fleet.
@@ -78958,6 +79064,12 @@ func (s *SpotOptionsRequest) SetInstancePoolsToUseCount(v int64) *SpotOptionsReq
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *SpotOptionsRequest) SetMinTargetCapacity(v int64) *SpotOptionsRequest {
 	s.MinTargetCapacity = &v
+	return s
+}
+
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *SpotOptionsRequest) SetSingleAvailabilityZone(v bool) *SpotOptionsRequest {
+	s.SingleAvailabilityZone = &v
 	return s
 }
 
@@ -85042,14 +85154,8 @@ const (
 	// InstanceTypeR54xlarge is a InstanceType enum value
 	InstanceTypeR54xlarge = "r5.4xlarge"
 
-	// InstanceTypeR58xlarge is a InstanceType enum value
-	InstanceTypeR58xlarge = "r5.8xlarge"
-
 	// InstanceTypeR512xlarge is a InstanceType enum value
 	InstanceTypeR512xlarge = "r5.12xlarge"
-
-	// InstanceTypeR516xlarge is a InstanceType enum value
-	InstanceTypeR516xlarge = "r5.16xlarge"
 
 	// InstanceTypeR524xlarge is a InstanceType enum value
 	InstanceTypeR524xlarge = "r5.24xlarge"
@@ -85087,14 +85193,8 @@ const (
 	// InstanceTypeR5d4xlarge is a InstanceType enum value
 	InstanceTypeR5d4xlarge = "r5d.4xlarge"
 
-	// InstanceTypeR5d8xlarge is a InstanceType enum value
-	InstanceTypeR5d8xlarge = "r5d.8xlarge"
-
 	// InstanceTypeR5d12xlarge is a InstanceType enum value
 	InstanceTypeR5d12xlarge = "r5d.12xlarge"
-
-	// InstanceTypeR5d16xlarge is a InstanceType enum value
-	InstanceTypeR5d16xlarge = "r5d.16xlarge"
 
 	// InstanceTypeR5d24xlarge is a InstanceType enum value
 	InstanceTypeR5d24xlarge = "r5d.24xlarge"
@@ -85682,6 +85782,9 @@ const (
 
 	// PlacementStrategySpread is a PlacementStrategy enum value
 	PlacementStrategySpread = "spread"
+
+	// PlacementStrategyPartition is a PlacementStrategy enum value
+	PlacementStrategyPartition = "partition"
 )
 
 const (

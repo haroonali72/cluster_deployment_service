@@ -6,6 +6,8 @@ import (
 	"strings"
 	"encoding/json"
 	"time"
+	"os/exec"
+	"io/ioutil"
 )
 
 // Operations about azure cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
@@ -164,7 +166,7 @@ func (c *AzureClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	environmentId	path	string	true	"Id of the environment"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
@@ -180,9 +182,9 @@ func (c *AzureClusterController) StartCluster() {
 		strings.Contains(credentials, " ") ||
 		strings.Contains(strings.ToLower(credentials), "bearer") ||
 		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 3 {
+		len(strings.Split(credentials, ":")) != 5 {
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
 		c.ServeJSON()
 		return
 	}
@@ -220,7 +222,7 @@ func (c *AzureClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	environmentId	path	string	true	"Id of the environment"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 404 {"error": "name is empty"}
@@ -236,9 +238,9 @@ func (c *AzureClusterController) GetStatus() {
 		strings.Contains(credentials, " ") ||
 		strings.Contains(strings.ToLower(credentials), "bearer") ||
 		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 3 {
+		len(strings.Split(credentials, ":")) != 5 {
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
 		c.ServeJSON()
 		return
 	}
@@ -269,7 +271,7 @@ func (c *AzureClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	environmentId	path	string	true	"Id of the environment"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "name is empty"}
@@ -285,9 +287,9 @@ func (c *AzureClusterController) TerminateCluster() {
 		strings.Contains(credentials, " ") ||
 		strings.Contains(strings.ToLower(credentials), "bearer") ||
 		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 3 {
+		len(strings.Split(credentials, ":")) != 5{
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
 		c.ServeJSON()
 		return
 	}

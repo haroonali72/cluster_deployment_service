@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"errors"
 	"antelope/models/db"
+	"strings"
+	"antelope/models/notifier"
+	"antelope/models/logging"
 )
 type SSHKeyPair struct {
 	Name              string `json:"name" bson:"name",omitempty"`
@@ -30,7 +33,7 @@ type NodePool struct {
 	Name           		string       		`json:"name" bson:"name"`
 	NodeCount       	int64        	 	`json:"node_count" bson:"node_count"`
 	MachineType     	string        		`json:"machine_type" bson:"machine_type"`
-	Ami             	Ami           		`json:"ami" bson:"ami"`
+	Image             	ImageReference      `json:"image_id" bson:"image_id"`
 	PoolSubnet          string		  		`json:"subnet_id" bson:"subnet_id"`
 	PoolSecurityGroups 	[]*string           `json:"security_group_id" bson:"security_group_id"`
 	Nodes 				[]*Node		  		`json:"nodes" bson:"nodes"`
@@ -48,11 +51,13 @@ type Node struct {
 	UserName	 string `json:"user_name" bson:"user_name,omitempty"`
 }
 
-type Ami struct {
-	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name     string        `json:"name" bson:"name"`
-	AmiId 	 string        `json:"ami_id" bson:"ami_id"`
-	Username string        `json:"username" bson:"username"`
+type ImageReference struct {
+	ID      	 bson.ObjectId 	`json:"_id" bson:"_id,omitempty"`
+	Publisher    string 		`json:"publisher" bson:"publisher,omitempty"`
+	Offer        string 		`json:"offer" bson:"offer,omitempty"`
+	Sku       	 string 		`json:"sku" bson:"sku,omitempty"`
+	Version      string 		`json:"version" bson:"version,omitempty"`
+	ImageId   	 string 		`json:"image_id" bson:"image_id,omitempty"`
 }
 
 
@@ -155,6 +160,33 @@ func DeleteCluster(envId string) error {
 	return nil
 }
 func DeployCluster(cluster Cluster_Def, credentials string) error {
+
+	splits := strings.Split(credentials, ":")
+
+	azure := AZURE{
+		ID: splits[0],
+		Key: splits[1],
+		Tenant:    splits[2],
+		Subscription:splits[3],
+		Region:splits[4],
+	}
+	err := azure.init()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+
+	publisher := notifier.Notifier{}
+	pub_err := publisher.Init_notifier()
+	if pub_err != nil {
+		beego.Error(pub_err.Error())
+		return pub_err
+	}
+
+	logging.SendLog("Creating Cluster : " + cluster.Name,"info",cluster.EnvironmentId)
+	createdPools , err:= azure.createCluster(cluster)
+
 
 
 	return nil
