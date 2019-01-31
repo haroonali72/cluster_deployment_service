@@ -8,9 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"strconv"
-/*	"antelope/models/utils"
-	"io/ioutil"
-	"encoding/json"*/
+	"github.com/aws/aws-sdk-go/service/iam"
 	"antelope/models/utils"
 	"io/ioutil"
 	"encoding/json"
@@ -23,7 +21,97 @@ import (
 var (
 	networkHost    = beego.AppConfig.String("network_url")
 )
-
+var docker_master_policy = []byte(`{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "kopsK8sEC2MasterPermsDescribeResources",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeRegions",
+        "ec2:DescribeRouteTables",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVolumes"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "kopsK8sEC2MasterPermsAllResources",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateTags",
+        "ec2:CreateVolume",
+        "ec2:ModifyInstanceAttribute"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "kopsK8sEC2MasterPermsTaggedResources",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AttachVolume",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateRoute",
+        "ec2:DeleteRoute",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteVolume",
+        "ec2:DetachVolume",
+        "ec2:RevokeSecurityGroupIngress"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "kopsMasterCertIAMPerms",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListServerCertificates",
+        "iam:GetServerCertificate"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "kopsK8sS3GetListBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::kops-tests"
+      ]
+    },
+    {
+      "Sid": "kopsK8sELB",
+      "Effect": "Allow",
+      "Action": [
+		"elasticloadbalancing:DescribeTags",
+		"elasticloadbalancing:CreateLoadBalancerListeners",
+		"elasticloadbalancing:ConfigureHealthCheck",
+		"elasticloadbalancing:DeleteLoadBalancerListeners",
+		"elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+		"elasticloadbalancing:DescribeLoadBalancers",
+		"elasticloadbalancing:CreateLoadBalancer",
+		"elasticloadbalancing:DeleteLoadBalancer",
+		"elasticloadbalancing:ModifyLoadBalancerAttributes",
+		"elasticloadbalancing:DescribeLoadBalancerAttributes"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}`)
 type Network struct {
 	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
 	Name             string        `json:"name" bson:"name"`
@@ -71,10 +159,11 @@ type CreatedPool struct {
 }
 
 type AWS struct {
-	Client    *ec2.EC2
-	AccessKey string
-	SecretKey string
-	Region    string
+	Client    	*ec2.EC2
+	IAMService	*iam.IAM
+	AccessKey 	string
+	SecretKey 	string
+	Region   	string
 }
 
 func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
@@ -181,6 +270,7 @@ func (cloud *AWS) init() error {
 	creds := credentials.NewStaticCredentials(cloud.AccessKey, cloud.SecretKey, "")
 
 	cloud.Client = ec2.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
+	cloud.IAMService = iam.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 
 	return nil
 }
@@ -265,6 +355,13 @@ func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reserva
 	subnetId := cloud.GetSubnets(pool,network)
     sgIds := cloud.GetSecurityGroups(pool,network)
 
+	profileArn, err := cloud.createIAMRole(pool.Name)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err
+	}
+	iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name),Arn:&profileArn}
+
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
 		SubnetId:         aws.String(subnetId),
@@ -273,11 +370,12 @@ func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reserva
 		KeyName:          aws.String(pool.KeyName),
 		MinCount: aws.Int64(1),
 		InstanceType: aws.String(pool.MachineType),
+		IamInstanceProfile:&iamProfile,
 	}
 
 	result, err := cloud.Client.RunInstances(input)
 	if err != nil {
-		beego.Warn(err.Error())
+		beego.Error(err.Error())
 		return nil, err
 	}
 	return result, nil
@@ -395,3 +493,70 @@ func (cloud *AWS) GetNetworkStatus(envId string ) ( Network, error){
 	return network, nil
 
 }
+func (cloud *AWS) createIAMRole(name string) (string, error) {
+
+
+		roleName := name
+
+		iamProfileName := name + "-M-CP-Y"
+
+		raw_policy := docker_master_policy
+		raw_role := []byte(`{
+				  "Version": "2012-10-17",
+				  "Statement": [
+				    {
+				      "Effect": "Allow",
+				      "Principal": { "Service": "ec2.amazonaws.com"},
+				      "Action": "sts:AssumeRole"
+				    }
+				  ]
+				}`)
+		role := string(raw_role)
+		policy := string(raw_policy)
+
+		roleInput := iam.CreateRoleInput{AssumeRolePolicyDocument: &role, RoleName: &roleName}
+		out, err := cloud.IAMService.CreateRole(&roleInput)
+		if err != nil {
+			beego.Error(err)
+			return iamProfileName, err
+		}
+
+		beego.Info(out.GoString())
+
+
+		policy_out, err_1 := cloud.IAMService.CreatePolicy(&iam.CreatePolicyInput{
+			PolicyDocument: aws.String(policy),
+			PolicyName:     &roleName,
+		})
+
+		if err_1 != nil {
+			beego.Error(err_1)
+			return iamProfileName,err_1
+		}
+
+		attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
+		_, err_2 := cloud.IAMService.AttachRolePolicy(&attach)
+
+		if err_2 != nil {
+			beego.Error(err_2)
+			return iamProfileName, err_2
+		}
+
+		profileInput := iam.CreateInstanceProfileInput{InstanceProfileName: &roleName}
+		outtt, err := cloud.IAMService.CreateInstanceProfile(&profileInput)
+		if err != nil {
+			beego.Error(err)
+			return iamProfileName, err
+		}
+
+		testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
+		_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
+		if err != nil {
+			beego.Error(err)
+			return iamProfileName,  err
+		}
+
+		return  *outtt.InstanceProfile.Arn, nil
+
+}
+
