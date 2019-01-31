@@ -355,12 +355,12 @@ func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reserva
 	subnetId := cloud.GetSubnets(pool,network)
     sgIds := cloud.GetSecurityGroups(pool,network)
 
-	profileArn, err := cloud.createIAMRole(pool.Name)
+	_, err := cloud.createIAMRole(pool.Name)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err
 	}
-	iamProfile := ec2.IamInstanceProfileSpecification{Arn:&profileArn}
+	iamProfile := ec2.IamInstanceProfileSpecification{Name:aws.String(pool.Name) }
 
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
