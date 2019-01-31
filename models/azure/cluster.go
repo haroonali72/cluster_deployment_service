@@ -11,6 +11,7 @@ import (
 	"strings"
 	"antelope/models/notifier"
 	"antelope/models/logging"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 )
 type SSHKeyPair struct {
 	Name              string `json:"name" bson:"name",omitempty"`
@@ -26,6 +27,7 @@ type Cluster_Def struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools		 []*NodePool   `json:"node_pools" bson:"node_pools"`
 	NetworkName      string		   `json:"network_name" bson:"network_name"`
+	ResourceGroup    string `json:"resource_group" bson:"resource_group"`
 }
 
 type NodePool struct {
@@ -37,7 +39,6 @@ type NodePool struct {
 	PoolSubnet          string		  		`json:"subnet_id" bson:"subnet_id"`
 	PoolSecurityGroups 	[]*string           `json:"security_group_id" bson:"security_group_id"`
 	Nodes 				[]*Node		  		`json:"nodes" bson:"nodes"`
-	KeyName 			string 		  		`json:"key_name" bson:"key_name"`
 	PoolRole 			string              `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
@@ -48,7 +49,9 @@ type Node struct {
 	Name 		 string	`json:"name" bson:"name,omitempty"`
 	PrivateIP	 string	`json:"private_ip" bson:"private_ip,omitempty"`
 	PublicIP 	 string	`json:"public_ip" bson:"public_ip,omitempty"`
-	UserName	 string `json:"user_name" bson:"user_name,omitempty"`
+	AdminUser	 string `json:"user_name" bson:"user_name,omitempty"`
+	AdminPassword	 string `json:"admin_password" bson:"admin_password,omitempty"`
+	VMs *compute.VirtualMachine `json:"virtual_machine" bson:"virtual_machine,omitempty"`
 }
 
 type ImageReference struct {
@@ -186,7 +189,52 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 
 	logging.SendLog("Creating Cluster : " + cluster.Name,"info",cluster.EnvironmentId)
 	createdPools , err:= azure.createCluster(cluster)
+	if err != nil {
+		beego.Error(err.Error())
 
+		logging.SendLog("Cluster creation failed : " + cluster.Name,"error",cluster.EnvironmentId)
+		logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
+
+		cluster.Status = "Cluster creation failed"
+
+		err = UpdateCluster(cluster)
+		if err != nil {
+			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			logging.SendLog("Cluster updation failed in mongo: " + cluster.Name,"error",cluster.EnvironmentId)
+			logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
+			publisher.Notify(cluster.Name,"Status Available")
+			return err
+		}
+		publisher.Notify(cluster.Name,"Status Available")
+		return err
+
+	}
+
+	for index, nodepool := range cluster.NodePools {
+      for node_index, node := range nodepool.Nodes {
+		  for _, createdPool := range createdPools {
+			  if createdPool.PoolName == nodepool.Name {
+				  for _, createdNode := range createdPool.Instances {
+					  if *createdNode.Name == node.Name {
+						  cluster.NodePools[index].Nodes[node_index].VMs = createdNode
+					  }
+				  }
+			  }
+		  }
+	  }
+	}
+	cluster.Status = "Cluster Created"
+	beego.Info(cluster.Status + cluster.EnvironmentId)
+	err = UpdateCluster(cluster)
+	if err != nil {
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		logging.SendLog("Cluster updation failed in mongo: " + cluster.Name,"error",cluster.EnvironmentId)
+		logging.SendLog(err.Error(),"error",cluster.EnvironmentId)
+		publisher.Notify(cluster.Name,"Status Available")
+		return err
+	}
+	logging.SendLog("Cluster created successfully " + cluster.Name,"info",cluster.EnvironmentId)
+	publisher.Notify(cluster.Name,"Status Available")
 
 
 	return nil

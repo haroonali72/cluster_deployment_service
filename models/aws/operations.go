@@ -13,6 +13,7 @@ import (
 	"encoding/json"*/
 	"antelope/models/logging"
 	"antelope/models/networks"
+	"encoding/json"
 )
 
 
@@ -41,8 +42,20 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 			return nil ,err
 		}
 	}
-	network , err := networks.GetNetworkStatus(cluster.EnvironmentId,"aws")
 
+	var awsNetwork networks.AWSNetwork
+	network , err := networks.GetNetworkStatus(cluster.EnvironmentId,"aws")
+	if err != nil {
+		beego.Error(err.Error())
+		return nil ,err
+	}
+	bytes, err := json.Marshal(network)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil ,err
+	}
+
+	err = json.Unmarshal(bytes,&awsNetwork )
 	if err != nil {
 		beego.Error(err.Error())
 		return nil ,err
@@ -65,7 +78,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 		}
 		beego.Info("AWSOperations creating nodes")
 
-		result, err :=  cloud.CreateInstance(pool,network)
+		result, err :=  cloud.CreateInstance(pool,awsNetwork)
 		if err != nil {
 			logging.SendLog("Error in instances creation: " + err.Error(),"info",cluster.EnvironmentId)
 			beego.Error(err.Error())

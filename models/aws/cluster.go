@@ -200,6 +200,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 			return err
 		}
 		publisher.Notify(cluster.Name,"Status Available")
+		return err
 
 	}
 

@@ -12,16 +12,16 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"antelope/models/logging"
 	"strconv"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"strings"
 	"antelope/models/networks"
 	"io/ioutil"
 	"time"
 	"os/exec"
 	"fmt"
+	"encoding/json"
 )
 type CreatedPool struct {
-	Instances    []*ec2.Instance
+	Instances    []*compute.VirtualMachine
 	KeyName    	 string
 	Key     	 string
 	PoolName 	 string
@@ -72,7 +72,16 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 			return nil ,err
 		}
 	}
+
+	var azureNetwork networks.AzureNetwork
 	network , err := networks.GetNetworkStatus(cluster.EnvironmentId,"azure")
+	bytes, err := json.Marshal(network)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil ,err
+	}
+
+	err = json.Unmarshal(bytes,&azureNetwork )
 
 	if err != nil {
 		beego.Error(err.Error())
@@ -83,56 +92,27 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 
 	for _, pool := range cluster.NodePools {
 
-		beego.Info("AWSOperations: creating key")
 		var createdPool CreatedPool
-		logging.SendLog("Creating Key " + pool.KeyName,"info",cluster.EnvironmentId)
 
-		keyResponse,err := cloud.GenerateKeyPair(pool.KeyName)
-		if err != nil {
-			beego.Error(err.Error())
-			logging.SendLog("Error in key creation: " + pool.KeyName,"info",cluster.EnvironmentId)
-			logging.SendLog(err.Error(),"info",cluster.EnvironmentId)
-			return nil , err
-		}
-		beego.Info("AWSOperations creating nodes")
+		beego.Info("AZUREOperations creating nodes")
 
-		result, err :=  cloud.CreateInstance(pool,network)
+		result, err :=  cloud.CreateInstance(pool,azureNetwork, cluster.ResourceGroup)
 		if err != nil {
 			logging.SendLog("Error in instances creation: " + err.Error(),"info",cluster.EnvironmentId)
 			beego.Error(err.Error())
 			return nil, err
 		}
 
-		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
-			for index, instance := range result.Instances {
-				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"_"+strconv.Itoa(index))
-				if err != nil {
-					logging.SendLog("Error in instances creation: " + err.Error(),"info",cluster.EnvironmentId)
-					beego.Error(err.Error())
-					return nil, err
-				}
-			}
-		}
-
-		var latest_instances []*ec2.Instance
-
-		latest_instances ,err= cloud.GetInstances(result,cluster.EnvironmentId)
-		if err != nil {
-			return nil, err
-		}
-
-		createdPool.KeyName =pool.KeyName
-		createdPool.Key = keyResponse.PrivateKey
-		createdPool.Instances= latest_instances
+		createdPool.Instances= result
 		createdPool.PoolName=pool.Name
 		createdPools = append(createdPools,createdPool)
 	}
 
 	return createdPools,nil
 }
-func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNetwork  )(*ec2.Reservation, error){
+func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNetwork , resourceGroup string )([] *compute.VirtualMachine, error){
 
-
+	var vms []*compute.VirtualMachine
 	subnetId := cloud.GetSubnets(pool,networkData)
 	sgIds := cloud.GetSecurityGroups(pool,networkData)
 
@@ -146,6 +126,7 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 		addressClient.Authorizer = cloud.Authorizer
 
 		IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+string(index))
+
 		pipParameters := network.PublicIPAddress{
 			Location: &cloud.Region,
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
@@ -154,45 +135,76 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 				},
 			},
 		}
-		addressClient.CreateOrUpdate(cloud.context,groupName, IPname, pipParameters)
 
+		address, err := addressClient.CreateOrUpdate(cloud.context, resourceGroup, IPname, pipParameters)
+		if err != nil {
+			beego.Error(err)
+			return nil, err
+		} else {
+			err = address.WaitForCompletion(cloud.context, addressClient.Client)
+			if err != nil {
+				beego.Error("Public Ip address creation failed")
+				beego.Error(err)
+				return nil, err
+			}
+		}
 
+		beego.Info("Get public IP address info...")
+		publicIPaddress, err := addressClient.Get(cloud.context, resourceGroup, IPname, "")
+		if err != nil {
+			beego.Error("Getting public ip failed")
+			return nil, err
+		}
 		/*
 		making network interface
 		 */
+
+		interfacesClient := network.NewInterfacesClient(cloud.Subscription)
+		interfacesClient.Authorizer = cloud.Authorizer
+
+		nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+string(index))
 
 		nicParameters := network.Interface{
 			Location: &cloud.Region,
 			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
 				IPConfigurations: &[]network.InterfaceIPConfiguration{
 					{
-						Name: to.StringPtr(fmt.Sprintf("IPconfig-%s",  strings.ToLower(pool.Name)+"-"+string(index))),
+						Name: to.StringPtr(fmt.Sprintf("IPconfig-%s", strings.ToLower(pool.Name)+"-"+string(index))),
 						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 							PrivateIPAllocationMethod: network.Dynamic,
-							Subnet: &network.Subnet{ID: to.StringPtr(subnetId)},
-							PublicIPAddress:
+							Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
+							PublicIPAddress:           &publicIPaddress,
 						},
 					},
 				},
 			},
 		}
-		if sgIds!= nil {
+		if sgIds != nil {
 			nicParameters.InterfacePropertiesFormat.NetworkSecurityGroup = &network.SecurityGroup{
 				ID: (sgIds[0]),
 			}
 		}
-		interfacesClient := network.NewInterfacesClient(cloud.Subscription)
-		interfacesClient.Authorizer = cloud.Authorizer
 
-		nicName := fmt.Sprintf("NIC-%s", pool.Name +"-"+ string (index))
+		future, err := interfacesClient.CreateOrUpdate(cloud.context, resourceGroup, nicName, nicParameters)
+		if err != nil {
+			return nil, err
+		} else {
+			err := future.WaitForCompletion(cloud.context, interfacesClient.Client)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-		interfacesClient.CreateOrUpdate(cloud.context, groupName, nicName, nicParameters)
+		nicParameters, err = interfacesClient.Get(context.Background(), resourceGroup, nicName, "")
+		if err != nil {
+			return nil, err
+		}
 
 		osDisk := &compute.OSDisk{
 			CreateOption: compute.DiskCreateOptionTypesFromImage,
-			Name : to.StringPtr(pool.Name+"-"+string(index)),
+			Name:         to.StringPtr(pool.Name + "-" + string(index)),
 			ManagedDisk: &compute.ManagedDiskParameters{
-				StorageAccountType:compute.StorageAccountTypesStandardSSDLRS,
+				StorageAccountType: compute.StorageAccountTypesStandardSSDLRS,
 			},
 		}
 
@@ -204,11 +216,11 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 			DiskSizeGB:   to.Int32Ptr(int32(1023)),
 		}
 
-		var storage = []compute.DataDisk{}
+		var storage= []compute.DataDisk{}
 		storage = append(storage, disk)
 
-		vm = compute.VirtualMachine{
-			Name:     to.StringPtr(pool.Name+"-"+string(index)),
+		vm := compute.VirtualMachine{
+			Name:     to.StringPtr(pool.Name + "-" + string(index)),
 			Location: to.StringPtr(cloud.Region),
 			VirtualMachineProperties: &compute.VirtualMachineProperties{
 				HardwareProfile: &compute.HardwareProfile{
@@ -216,40 +228,57 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 				},
 				StorageProfile: &compute.StorageProfile{
 					ImageReference: &compute.ImageReference{
-						Offer: 		to.StringPtr(pool.Image.Offer),
-						Sku:		to.StringPtr(pool.Image.Sku),
-						Publisher:	to.StringPtr(pool.Image.Publisher),
-						Version:	to.StringPtr(pool.Image.Version),
+						Offer:     to.StringPtr(pool.Image.Offer),
+						Sku:       to.StringPtr(pool.Image.Sku),
+						Publisher: to.StringPtr(pool.Image.Publisher),
+						Version:   to.StringPtr(pool.Image.Version),
 					},
 					OsDisk:    osDisk,
 					DataDisks: &storage,
 				},
 				OsProfile: &compute.OSProfile{
-					ComputerName:to.StringPtr(pool.Name),
-					AdminUsername:to.StringPtr(""),
-					AdminPassword:to.StringPtr(""),
+					ComputerName:  to.StringPtr(pool.Name),
+					AdminUsername: to.StringPtr(node.AdminUser),
+					AdminPassword: to.StringPtr(node.AdminPassword),
 				},
 				NetworkProfile: &compute.NetworkProfile{
+
 					NetworkInterfaces: &[]compute.NetworkInterfaceReference{
 						{
+							ID: &(*nicParameters.ID),
 							NetworkInterfaceReferenceProperties: &compute.NetworkInterfaceReferenceProperties{
 								Primary: to.BoolPtr(true),
 							},
 						},
 					},
 				},
-
 			},
-
 		}
 
+		vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
+		vmClient.Authorizer = cloud.Authorizer
+		vmFuture, err := vmClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name+"-"+string(index), vm)
+		if err != nil {
+			beego.Error(err)
+			return nil, err
+		} else {
+			err = vmFuture.WaitForCompletion(context.Background(), vmClient.Client)
+			if err != nil {
+				beego.Error("vm creation failed")
+				beego.Error(err)
+				return nil, err
+			}
+		}
 
+		beego.Info("Get VM '%s' by name\n", pool.Name+"-"+string(index))
+		vm, err = vmClient.Get(cloud.context, resourceGroup, pool.Name+"-"+string(index), compute.InstanceView)
+		if err != nil {
+			beego.Error(err)
+			return nil, err
+		}
+		vms= append(vms , &vm)
 	}
-	if err != nil {
-		beego.Warn(err.Error())
-		return nil, err
-	}
-	return result, nil
+	return vms , nil
 
 }
 func (cloud *AZURE) GetSecurityGroups (pool *NodePool, network networks.AzureNetwork )([]*string) {
