@@ -145,12 +145,12 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 		addressClient := network.NewPublicIPAddressesClient(cloud.Subscription)
 		addressClient.Authorizer = cloud.Authorizer
 
-		IPname := fmt.Sprintf("pip-%s", pool.Name+string(index))
+		IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+string(index))
 		pipParameters := network.PublicIPAddress{
 			Location: &cloud.Region,
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 				DNSSettings: &network.PublicIPAddressDNSSettings{
-					DomainNameLabel: to.StringPtr(fmt.Sprintf("%s", strings.ToLower(pool.Name)+string(index))),
+					DomainNameLabel: to.StringPtr(fmt.Sprintf("%s", strings.ToLower(pool.Name)+"-"+string(index))),
 				},
 			},
 		}
@@ -166,10 +166,11 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
 				IPConfigurations: &[]network.InterfaceIPConfiguration{
 					{
-						Name: to.StringPtr(fmt.Sprintf("IPconfig-%s",  strings.ToLower(pool.Name)+string(index))),
+						Name: to.StringPtr(fmt.Sprintf("IPconfig-%s",  strings.ToLower(pool.Name)+"-"+string(index))),
 						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 							PrivateIPAllocationMethod: network.Dynamic,
 							Subnet: &network.Subnet{ID: to.StringPtr(subnetId)},
+							PublicIPAddress:
 						},
 					},
 				},
@@ -183,9 +184,9 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 		interfacesClient := network.NewInterfacesClient(cloud.Subscription)
 		interfacesClient.Authorizer = cloud.Authorizer
 
-		nicName := fmt.Sprintf("NIC-%s", pool.Name + string (index))
+		nicName := fmt.Sprintf("NIC-%s", pool.Name +"-"+ string (index))
 
-		interfaceR, err := interfacesClient.CreateOrUpdate(cloud.context, groupName, nicName, nicParameters)
+		interfacesClient.CreateOrUpdate(cloud.context, groupName, nicName, nicParameters)
 
 		osDisk := &compute.OSDisk{
 			CreateOption: compute.DiskCreateOptionTypesFromImage,
