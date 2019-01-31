@@ -16,11 +16,28 @@ import (
 	"antelope/models"
 	"time"
 	"antelope/models/logging"
+	"strings"
 )
 
 var (
 	networkHost    = beego.AppConfig.String("network_url")
 )
+var testInstanceMap = map[string]string{
+	"us-east-2":      "ami-9686a4f3",
+	"sa-east-1":      "ami-a3e39ecf",
+	"eu-central-1":   "ami-5a922335",
+	"us-west-1":      "ami-2d5c6d4d",
+	"us-west-2":      "ami-ecc63a94",
+	"ap-northeast-2": "ami-0f6fb461",
+	"ca-central-1":   "ami-e59c2581",
+	"eu-west-2":      "ami-e1f2e185",
+	"ap-southeast-1": "ami-e6d3a585",
+	"eu-west-1":      "ami-17d11e6e",
+	"ap-southeast-2": "ami-391ff95b",
+	"ap-northeast-1": "ami-8422ebe2",
+	"us-east-1":      "ami-d651b8ac",
+	"ap-south-1":     "ami-08a5e367"}
+
 var docker_master_policy = []byte(`{
   "Version": "2012-10-17",
   "Statement": [
@@ -360,7 +377,6 @@ func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reserva
 		beego.Error(err.Error())
 		return nil, err
 	}
-	iamProfile := ec2.IamInstanceProfileSpecification{Name:aws.String(pool.Name) }
 
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
@@ -370,7 +386,13 @@ func (cloud *AWS) CreateInstance (pool *NodePool, network Network )(*ec2.Reserva
 		KeyName:          aws.String(pool.KeyName),
 		MinCount: aws.Int64(1),
 		InstanceType: aws.String(pool.MachineType),
-		IamInstanceProfile:&iamProfile,
+	}
+	ok := cloud.checkInstanceProfile(pool.Name)
+	if !ok {
+		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name)}
+		input.IamInstanceProfile = &iamProfile
+	} else {
+		beego.Info("failed in attaching")
 	}
 
 	result, err := cloud.Client.RunInstances(input)
@@ -559,3 +581,42 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 
 }
 
+func (cloud *AWS) checkInstanceProfile(iamProfileName string ) bool {
+
+	iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(iamProfileName)}
+
+	start := time.Now()
+	timeToWait := 60 //seconds
+	retry := true
+
+	region := cloud.Region
+	ami := testInstanceMap[region]
+
+	for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
+
+		//this dummy instance run , to check the success of RunInstance call
+		//this is to ensure that iamProfile is properly propagated
+		_, err :=cloud.Client.RunInstances(&ec2.RunInstancesInput{
+			// An Amazon Linux AMI ID for t2.micro instances in the us-west-2 region
+			ImageId:            aws.String(ami),
+			InstanceType:       aws.String("t2.micro"),
+			MinCount:           aws.Int64(1),
+			MaxCount:           aws.Int64(1),
+			DryRun:             aws.Bool(true),
+			IamInstanceProfile: &iamProfile,
+		})
+
+		beego.Error(err)
+
+		if err != nil && strings.Contains(err.Error(), "DryRunOperation: Request would have succeeded") {
+			retry = false
+		} else {
+			beego.Info("time passed %6.2f sec\n", time.Since(start).Seconds())
+			beego.Info("waiting 5 seconds before retry")
+			time.Sleep(5 * time.Second)
+		}
+
+	}
+	beego.Info("retry", retry)
+	return retry
+}
