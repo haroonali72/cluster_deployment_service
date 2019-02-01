@@ -42,13 +42,6 @@ type NodePool struct {
 	PoolRole 			string              `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
-	CloudId 	 string `json:"cloud_id" bson:"cloud_id,omitempty"`
-	KeyName		 string	`json:"key_name" bson:"key_name,omitempty"`
-	SSHKey 		 string	`json:"ssh_key" bson:"ssh_key,omitempty"`
-	NodeState	 string	`json:"node_state" bson:"node_state,omitempty"`
-	Name 		 string	`json:"name" bson:"name,omitempty"`
-	PrivateIP	 string	`json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP 	 string	`json:"public_ip" bson:"public_ip,omitempty"`
 	AdminUser	 string `json:"user_name" bson:"user_name,omitempty"`
 	AdminPassword	 string `json:"admin_password" bson:"admin_password,omitempty"`
 	VMs *compute.VirtualMachine `json:"virtual_machine" bson:"virtual_machine,omitempty"`
@@ -241,7 +234,35 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 }
 func FetchStatus( credentials string,envId string) (Cluster_Def , error){
 
+	cluster, err := GetCluster(envId)
+	if err != nil {
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		return Cluster_Def{},err
+	}
+	splits := strings.Split(credentials, ":")
+	azure := AZURE{
+		ID: splits[0],
+		Key: splits[1],
+		Tenant:    splits[2],
+		Subscription:splits[3],
+		Region:splits[4],
+	}
+	err = azure.init()
+	if err != nil {
+		return Cluster_Def{},err
+	}
 
+	c , e := azure.fetchStatus(cluster)
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to get lastest status ", e.Error())
+		return Cluster_Def{}, e
+	}
+	err = UpdateCluster(c)
+	if err != nil {
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", e.Error())
+		return Cluster_Def{}, err
+	}
+	return c, nil
 	return Cluster_Def{}, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials string) error {

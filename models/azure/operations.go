@@ -335,3 +335,32 @@ type KeyPairResponse struct {
 	Key_name    string `json:"key_name"`
 	PrivateKey  string `json:"privatekey"`
 }
+func (cloud *AZURE) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
+	if cloud.Authorizer == nil {
+		err := cloud.init()
+		if err != nil {
+			beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
+
+			return Cluster_Def{},err
+		}
+	}
+	for in, pool := range cluster.NodePools {
+
+		for index, node :=range pool.Nodes {
+
+			out, err := cloud.GetInstanceStatus(node)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
+
+			pool.Nodes[index].NodeState=*out.Reservations[0].Instances[0].State.Name
+
+			if out.Reservations[0].Instances[0].PublicIpAddress != nil {
+
+				pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
+			}
+		}
+		cluster.NodePools[in]=pool
+	}
+	return cluster,nil
+}
