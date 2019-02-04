@@ -49,6 +49,8 @@ type Node struct {
 	Name 		 string	`json:"name" bson:"name,omitempty"`
 	PrivateIP	 string	`json:"private_ip" bson:"private_ip,omitempty"`
 	PublicIP 	 string	`json:"public_ip" bson:"public_ip,omitempty"`
+	PublicDNS	 string	`json:"public_dns" bson:"public_dns,omitempty"`
+	PrivateDNS string	`json:"private_dns" bson:"private_dns,omitempty"`
 	UserName	 string `json:"user_name" bson:"user_name,omitempty"`
 }
 

@@ -316,6 +316,12 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 
 				pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
 			}
+			if out.Reservations[0].Instances[0].PrivateDnsName !=  nil {
+				pool.Nodes[index].PrivateDNS = *out.Reservations[0].Instances[0].PrivateDnsName
+			}
+			if out.Reservations[0].Instances[0].PublicDnsName != nil {
+				pool.Nodes[index].PublicDNS = *out.Reservations[0].Instances[0].PublicDnsName
+			}
 		}
 		cluster.NodePools[in]=pool
 	}
