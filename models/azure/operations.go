@@ -348,7 +348,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 
 		for index, node :=range pool.Nodes {
 
-			out, err := cloud.GetInstanceStatus(node)
+			vm, err := cloud.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            GetInstance(node, cluster.ResourceGroup)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
@@ -359,8 +359,22 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 
 				pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
 			}
+			cluster.NodePools[in].Nodes[index].VMs=pool
 		}
-		cluster.NodePools[in]=pool
+
 	}
 	return cluster,nil
+}
+func (cloud *AZURE) GetInstance(node Node, resourceGroup string )(compute.VirtualMachine, error){
+
+	beego.Info("Get VM '%s' by name\n", *node.VMs.Name)
+
+	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
+	vmClient.Authorizer = cloud.Authorizer
+	vm, err := vmClient.Get(cloud.context, resourceGroup, *node.VMs.Name, compute.InstanceView)
+	if err != nil {
+		beego.Error(err)
+		return compute.VirtualMachine{}, err
+	}
+	return vm, nil
 }
