@@ -20,6 +20,7 @@ type SSHKeyPair struct {
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
+	Kube_Credentials interface{}	`json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name"`
 	Status           string        `json:"status" bson:"status"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
@@ -49,6 +50,8 @@ type Node struct {
 	Name 		 string	`json:"name" bson:"name,omitempty"`
 	PrivateIP	 string	`json:"private_ip" bson:"private_ip,omitempty"`
 	PublicIP 	 string	`json:"public_ip" bson:"public_ip,omitempty"`
+	PublicDNS	 string	`json:"public_dns" bson:"public_dns,omitempty"`
+	PrivateDNS string	`json:"private_dns" bson:"private_dns,omitempty"`
 	UserName	 string `json:"user_name" bson:"user_name,omitempty"`
 }
 

@@ -61,6 +61,7 @@
   version = "v1.11.1"
 
 [[projects]]
+  digest = "1:37b118b29f0aadde8458bf796f2dfcc6995f1c10a92dcc83c639042714e0b170"
   digest = "1:0495c1d0decbc1dc34e5f109b0e6aa7423f2fb780f5b3a9a7cf4ca5d5472a2d1"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -94,6 +95,7 @@
     "private/protocol/rest",
     "private/protocol/xml/xmlutil",
     "service/ec2",
+    "service/iam",
     "service/sts",
   ]
   pruneopts = "UT"
@@ -123,6 +125,7 @@
 
 [[projects]]
   digest = "1:ad53d1f710522a38d1f0e5e0a55a194b1c6b2cd8e84313568e43523271f0cf62"
+  digest = "1:ad53d1f710522a38d1f0e5e0a55a194b1c6b2cd8e84313568e43523271f0cf62"
   name = "github.com/go-redis/redis"
   packages = [
     ".",
@@ -131,9 +134,12 @@
     "internal/hashtag",
     "internal/pool",
     "internal/proto",
+    "internal/singleflight",
     "internal/util",
   ]
   pruneopts = "UT"
+  revision = "22be8a3eaf992c828cecb69dc07348313bf08d2e"
+  version = "v6.15.1"
   revision = "22be8a3eaf992c828cecb69dc07348313bf08d2e"
   version = "v6.15.1"
 
@@ -402,6 +408,7 @@
     "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/ec2",
+    "github.com/aws/aws-sdk-go/service/iam",
     "github.com/go-redis/redis",
     "github.com/smartystreets/goconvey/convey",
     "gopkg.in/mgo.v2",
