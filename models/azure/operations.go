@@ -1,39 +1,40 @@
 package azure
 
 import (
-	"github.com/astaxie/beego"
+	"antelope/models/logging"
+	"antelope/models/networks"
+	"context"
+	"encoding/json"
 	"errors"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/adal"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
-	"github.com/Azure/go-autorest/autorest/to"
-	"context"
 	"github.com/Azure/go-autorest/autorest"
-	"antelope/models/logging"
+	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/astaxie/beego"
+	"io/ioutil"
+	"os/exec"
 	"strconv"
 	"strings"
-	"antelope/models/networks"
-	"io/ioutil"
 	"time"
-	"os/exec"
-	"fmt"
-	"encoding/json"
 )
+
 type CreatedPool struct {
-	Instances    []*compute.VirtualMachine
-	KeyName    	 string
-	Key     	 string
-	PoolName 	 string
+	Instances []*compute.VirtualMachine
+	KeyName   string
+	Key       string
+	PoolName  string
 }
 type AZURE struct {
-	Authorizer		*autorest.BearerAuthorizer
-	context         context.Context
-	ID 				string
-	Key 			string
-	Tenant    		string
-	Subscription    string
-	Region 			string
+	Authorizer   *autorest.BearerAuthorizer
+	context      context.Context
+	ID           string
+	Key          string
+	Tenant       string
+	Subscription string
+	Region       string
 }
 
 func (cloud *AZURE) init() error {
@@ -41,7 +42,7 @@ func (cloud *AZURE) init() error {
 		return nil
 	}
 
-	if cloud.ID == "" || cloud.Key == "" || cloud.Tenant == "" || cloud.Subscription== "" || cloud.Region == "" {
+	if cloud.ID == "" || cloud.Key == "" || cloud.Tenant == "" || cloud.Subscription == "" || cloud.Region == "" {
 		text := "invalid cloud credentials"
 		beego.Error(text)
 		return errors.New(text)
@@ -54,8 +55,8 @@ func (cloud *AZURE) init() error {
 
 	spt, err := adal.NewServicePrincipalToken(*oauthConfig, cloud.ID, cloud.Key, "resourceManagerEndpoint")
 	if err != nil {
-		cloud.Authorizer =&autorest.BearerAuthorizer{}
-		return  err
+		cloud.Authorizer = &autorest.BearerAuthorizer{}
+		return err
 	}
 	cloud.context = context.Background()
 	cloud.Authorizer = autorest.NewBearerAuthorizer(spt)
@@ -63,29 +64,29 @@ func (cloud *AZURE) init() error {
 	return nil
 }
 
-func (cloud *AZURE) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
+func (cloud *AZURE) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return nil ,err
+			return nil, err
 		}
 	}
 
 	var azureNetwork networks.AzureNetwork
-	network , err := networks.GetNetworkStatus(cluster.EnvironmentId,"azure")
+	network, err := networks.GetNetworkStatus(cluster.EnvironmentId, "azure")
 	bytes, err := json.Marshal(network)
 	if err != nil {
 		beego.Error(err.Error())
-		return nil ,err
+		return nil, err
 	}
 
-	err = json.Unmarshal(bytes,&azureNetwork )
+	err = json.Unmarshal(bytes, &azureNetwork)
 
 	if err != nil {
 		beego.Error(err.Error())
-		return nil ,err
+		return nil, err
 	}
 
 	var createdPools []CreatedPool
@@ -96,31 +97,31 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def ) ([]CreatedPool , error){
 
 		beego.Info("AZUREOperations creating nodes")
 
-		result, err :=  cloud.CreateInstance(pool,azureNetwork, cluster.ResourceGroup)
+		result, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup)
 		if err != nil {
-			logging.SendLog("Error in instances creation: " + err.Error(),"info",cluster.EnvironmentId)
+			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.EnvironmentId)
 			beego.Error(err.Error())
 			return nil, err
 		}
 
-		createdPool.Instances= result
-		createdPool.PoolName=pool.Name
-		createdPools = append(createdPools,createdPool)
+		createdPool.Instances = result
+		createdPool.PoolName = pool.Name
+		createdPools = append(createdPools, createdPool)
 	}
 
-	return createdPools,nil
+	return createdPools, nil
 }
-func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNetwork , resourceGroup string )([] *compute.VirtualMachine, error){
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string) ([]*compute.VirtualMachine, error) {
 
 	var vms []*compute.VirtualMachine
-	subnetId := cloud.GetSubnets(pool,networkData)
-	sgIds := cloud.GetSecurityGroups(pool,networkData)
+	subnetId := cloud.GetSubnets(pool, networkData)
+	sgIds := cloud.GetSecurityGroups(pool, networkData)
 
 	for index, node := range pool.Nodes {
 
 		/*
-		Making public ip
-		 */
+			Making public ip
+		*/
 
 		addressClient := network.NewPublicIPAddressesClient(cloud.Subscription)
 		addressClient.Authorizer = cloud.Authorizer
@@ -156,8 +157,8 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 			return nil, err
 		}
 		/*
-		making network interface
-		 */
+			making network interface
+		*/
 
 		interfacesClient := network.NewInterfacesClient(cloud.Subscription)
 		interfacesClient.Authorizer = cloud.Authorizer
@@ -172,8 +173,8 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 						Name: to.StringPtr(fmt.Sprintf("IPconfig-%s", strings.ToLower(pool.Name)+"-"+string(index))),
 						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 							PrivateIPAllocationMethod: network.Dynamic,
-							Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
-							PublicIPAddress:           &publicIPaddress,
+							Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
+							PublicIPAddress: &publicIPaddress,
 						},
 					},
 				},
@@ -216,7 +217,7 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 			DiskSizeGB:   to.Int32Ptr(int32(1023)),
 		}
 
-		var storage= []compute.DataDisk{}
+		var storage = []compute.DataDisk{}
 		storage = append(storage, disk)
 
 		vm := compute.VirtualMachine{
@@ -276,17 +277,17 @@ func (cloud *AZURE) CreateInstance (pool *NodePool,networkData networks.AzureNet
 			beego.Error(err)
 			return nil, err
 		}
-		vms= append(vms , &vm)
+		vms = append(vms, &vm)
 	}
-	return vms , nil
+	return vms, nil
 
 }
-func (cloud *AZURE) GetSecurityGroups (pool *NodePool, network networks.AzureNetwork )([]*string) {
+func (cloud *AZURE) GetSecurityGroups(pool *NodePool, network networks.AzureNetwork) []*string {
 	var sgId []*string
-	for _, definition := range network.Definition{
+	for _, definition := range network.Definition {
 		for _, sg := range definition.SecurityGroups {
-			for _, sgName := range  pool.PoolSecurityGroups{
-				if *sgName ==  sg.Name{
+			for _, sgName := range pool.PoolSecurityGroups {
+				if *sgName == sg.Name {
 					sgId = append(sgId, &sg.SecurityGroupId)
 				}
 			}
@@ -294,23 +295,23 @@ func (cloud *AZURE) GetSecurityGroups (pool *NodePool, network networks.AzureNet
 	}
 	return sgId
 }
-func (cloud *AZURE) GetSubnets (pool *NodePool, network networks.AzureNetwork )(string) {
-	for _, definition := range network.Definition{
+func (cloud *AZURE) GetSubnets(pool *NodePool, network networks.AzureNetwork) string {
+	for _, definition := range network.Definition {
 		for _, subnet := range definition.Subnets {
-			if subnet.Name ==  pool.PoolSubnet{
+			if subnet.Name == pool.PoolSubnet {
 				return subnet.SubnetId
 			}
 		}
 	}
 	return ""
 }
-func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse,error) {
+func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse, error) {
 
 	res := KeyPairResponse{}
 
 	t := time.Now().Local()
 	tstamp := t.Format("20060102150405")
-	keyName =keyName + "_" + tstamp
+	keyName = keyName + "_" + tstamp
 
 	cmd := "ssh-keygen"
 	args := []string{"-t", "rsa", "-b", "4096", "-C", "azure@example.com", "-f", keyName}
@@ -328,44 +329,42 @@ func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse,error) {
 	}
 	res.PrivateKey = str
 	res.Key_name = keyName
-	return res,nil
+	return res, nil
 }
 
 type KeyPairResponse struct {
-	Key_name    string `json:"key_name"`
-	PrivateKey  string `json:"privatekey"`
+	Key_name   string `json:"key_name"`
+	PrivateKey string `json:"privatekey"`
 }
-func (cloud *AZURE) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
+
+func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
 
-			return Cluster_Def{},err
+			return Cluster_Def{}, err
 		}
 	}
 	for in, pool := range cluster.NodePools {
 
-		for index, node :=range pool.Nodes {
+		for index, _ := range pool.Nodes {
 
-			vm, err := cloud.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            GetInstance(node, cluster.ResourceGroup)
+			beego.Info("Get VM '%s' by name\n", pool.Name+"-"+string(index))
+			vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
+			vmClient.Authorizer = cloud.Authorizer
+			vm, err := vmClient.Get(cloud.context, cluster.ResourceGroup, pool.Name+"-"+string(index), compute.InstanceView)
 			if err != nil {
+				beego.Error(err)
 				return Cluster_Def{}, err
 			}
-
-			pool.Nodes[index].NodeState=*out.Reservations[0].Instances[0].State.Name
-
-			if out.Reservations[0].Instances[0].PublicIpAddress != nil {
-
-				pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
-			}
-			cluster.NodePools[in].Nodes[index].VMs=pool
+			cluster.NodePools[in].Nodes[index].VMs = &vm
 		}
 
 	}
-	return cluster,nil
+	return cluster, nil
 }
-func (cloud *AZURE) GetInstance(node Node, resourceGroup string )(compute.VirtualMachine, error){
+func (cloud *AZURE) GetInstance(node Node, resourceGroup string) (compute.VirtualMachine, error) {
 
 	beego.Info("Get VM '%s' by name\n", *node.VMs.Name)
 
@@ -377,4 +376,48 @@ func (cloud *AZURE) GetInstance(node Node, resourceGroup string )(compute.Virtua
 		return compute.VirtualMachine{}, err
 	}
 	return vm, nil
+}
+
+func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
+	if cloud.Authorizer == nil {
+		err := cloud.init()
+		if err != nil {
+			beego.Error(err.Error())
+			return err
+		}
+	}
+
+	for _, pool := range cluster.NodePools {
+		for _, node := range pool.Nodes {
+			err := cloud.TerminatePool(node, cluster.EnvironmentId, cluster.ResourceGroup)
+			if err != nil {
+				return err
+			}
+		}
+		logging.SendLog("Node Pool terminated successfully: "+pool.Name, "info", cluster.EnvironmentId)
+	}
+	return nil
+}
+func (cloud *AZURE) TerminatePool(node *Node, envId string, resourceGroup string) error {
+
+	beego.Info("AZUREOperations: terminating nodes")
+
+	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
+	vmClient.Authorizer = cloud.Authorizer
+	future, err := vmClient.Delete(cloud.context, resourceGroup, *node.VMs.Name)
+
+	if err != nil {
+		beego.Error(err)
+		return err
+	} else {
+		err = future.WaitForCompletion(cloud.context, vmClient.Client)
+		if err != nil {
+			beego.Error("vm deletion failed")
+			beego.Error(err)
+			return err
+		}
+		beego.Info("Deleted Node" + *node.VMs.Name)
+	}
+	logging.SendLog("Node terminated successfully: "+*node.VMs.Name, "info", envId)
+	return nil
 }
