@@ -10,19 +10,16 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:675561ba2a61bad93dd77b4a46ff88ce7f3a1492738a1c7cd560e4ed17ea5c4c"
+  digest = "1:f0d1dd0019987a1fbdea9fef7d09218e5d58868a5e3a92f16f50d22d57615247"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/compute/mgmt/2018-04-01/compute",
-    "services/marketplaceordering/mgmt/2015-06-01/marketplaceordering",
     "services/network/mgmt/2018-02-01/network",
-    "services/storage/mgmt/2017-10-01/storage",
-    "storage",
     "version",
   ]
   pruneopts = "UT"
-  revision = "392ea0b046cfb0cb05942ea92baf22af9ff7f9df"
-  version = "v24.1.0"
+  revision = "fb7488208f72a83bc60e921f94262e5bcb74e03a"
+  version = "v25.0.0"
 
 [[projects]]
   digest = "1:a7af58fd4e6dee90094171c293eedfd2631bd8d9e06547b7988fd55a41474708"
@@ -61,8 +58,7 @@
   version = "v1.11.1"
 
 [[projects]]
-  digest = "1:37b118b29f0aadde8458bf796f2dfcc6995f1c10a92dcc83c639042714e0b170"
-  digest = "1:0495c1d0decbc1dc34e5f109b0e6aa7423f2fb780f5b3a9a7cf4ca5d5472a2d1"
+  digest = "1:bf84643632d84a66da7bbae20ea9d22539d2f5b78a5118abbc913270c7287315"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -99,8 +95,8 @@
     "service/sts",
   ]
   pruneopts = "UT"
-  revision = "81f3829f5a9d041041bdf56e55926691309d7699"
-  version = "v1.16.26"
+  revision = "b974aa42e62f8e576fc3e8d793b8e1b2b1f6bbe6"
+  version = "v1.16.28"
 
 [[projects]]
   digest = "1:65b0d980b428a6ad4425f2df4cd5410edd81f044cf527bd1c345368444649e58"
@@ -125,7 +121,6 @@
 
 [[projects]]
   digest = "1:ad53d1f710522a38d1f0e5e0a55a194b1c6b2cd8e84313568e43523271f0cf62"
-  digest = "1:ad53d1f710522a38d1f0e5e0a55a194b1c6b2cd8e84313568e43523271f0cf62"
   name = "github.com/go-redis/redis"
   packages = [
     ".",
@@ -134,12 +129,9 @@
     "internal/hashtag",
     "internal/pool",
     "internal/proto",
-    "internal/singleflight",
     "internal/util",
   ]
   pruneopts = "UT"
-  revision = "22be8a3eaf992c828cecb69dc07348313bf08d2e"
-  version = "v6.15.1"
   revision = "22be8a3eaf992c828cecb69dc07348313bf08d2e"
   version = "v6.15.1"
 
@@ -180,22 +172,6 @@
   pruneopts = "UT"
   revision = "b4936e06046bbecbb94cae9c18127ebe510a2cb9"
   version = "v4.20"
-
-[[projects]]
-  digest = "1:4e878df5f4e9fd625bf9c9aac77ef7cbfa4a74c01265505527c23470c0e40300"
-  name = "github.com/marstr/guid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "8bd9a64bf37eb297b492a4101fb28e80ac0b290f"
-  version = "v1.1.0"
-
-[[projects]]
-  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
-  name = "github.com/satori/go.uuid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
-  version = "v1.2.0"
 
 [[projects]]
   digest = "1:cc1c574c9cb5e99b123888c12b828e2d19224ab6c2244bda34647f230bf33243"
@@ -281,11 +257,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7c3cf8f9e513ba8a0bd2f2c694646397a45e9d7458e61fabd774abb0f6149372"
+  digest = "1:969c44c96e9866e912a16e282a362cf045b64202107424983fe8abc3373d1eab"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "302c3dd5f1cc82baae8e44d9c3178e89b6e2b345"
+  revision = "41f3e6584952bb034a481797859f6ab34b6803bd"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -324,7 +300,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "8ac453e89fca495c0d17f98932642f392e2a11f3"
+  revision = "4b09977fb92221987e99d190c8f88f2c92727a29"
 
 [[projects]]
   digest = "1:9ab5a33d8cb5c120602a34d2e985ce17956a4e8c2edce7e6961568f95e40c09a"
@@ -393,10 +369,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute",
-    "github.com/Azure/azure-sdk-for-go/services/marketplaceordering/mgmt/2015-06-01/marketplaceordering",
     "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network",
-    "github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage",
-    "github.com/Azure/azure-sdk-for-go/storage",
     "github.com/Azure/go-autorest/autorest",
     "github.com/Azure/go-autorest/autorest/adal",
     "github.com/Azure/go-autorest/autorest/azure",
