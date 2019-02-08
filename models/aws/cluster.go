@@ -69,8 +69,8 @@ func CreateCluster(cluster Cluster_Def) error {
 		beego.Error(text, err)
 		return errors.New(text)
 	}
-
-	err = db.InsertInMongo(db.MongoAwsClusterCollection, cluster)
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
 	if err != nil {
 		beego.Error("Cluster model: Create - Got error inserting cluster to the database: ", err)
 		return err
@@ -87,8 +87,8 @@ func GetCluster(envId string) (cluster Cluster_Def, err error) {
 		return Cluster_Def{}, err1
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
 	err = c.Find(bson.M{"environment_id": envId}).One(&cluster)
 	if err != nil {
 		beego.Error(err.Error())
@@ -105,8 +105,8 @@ func GetAllCluster() (clusters []Cluster_Def, err error) {
 		return nil, err1
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
 	err = c.Find(bson.M{}).All(&clusters)
 	if err != nil {
 		beego.Error(err.Error())
@@ -149,8 +149,8 @@ func DeleteCluster(envId string) error {
 		return err
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAwsClusterCollection)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
 	err = c.Remove(bson.M{"environment_id": envId})
 	if err != nil {
 		beego.Error(err.Error())

@@ -8,28 +8,18 @@ import (
 	"net"
 )
 
-var (
-	mongoHost                  = beego.AppConfig.String("mongo_host")
-	mongoUser                  = beego.AppConfig.String("mongo_user")
-	mongoPass                  = beego.AppConfig.String("mongo_pass")
-	mongoAuth, _               = beego.AppConfig.Bool("mongo_auth")
-	MongoDb                    = beego.AppConfig.String("mongo_db")
-	MongoAwsTemplateCollection = beego.AppConfig.String("mongo_aws_template_collection")
-	MongoAwsClusterCollection  = beego.AppConfig.String("mongo_aws_cluster_collection")
-)
-
 func GetMongoSession() (session *mgo.Session, err error) {
-	beego.Info("connecting to mongo host: " + mongoHost + "")
+	conf := GetMongoConf()
+	beego.Info("connecting to mongo host: " + conf.mongoHost)
 
-	if !mongoAuth {
-		session, err = mgo.Dial(mongoHost)
+	if !conf.mongoAuth {
+		session, err = mgo.Dial(conf.mongoHost)
 		return session, err
 	}
-
 	session, err = mgo.DialWithInfo(&mgo.DialInfo{
-		Addrs:    []string{mongoHost},
-		Username: mongoUser,
-		Password: mongoPass,
+		Addrs:    []string{conf.mongoHost},
+		Username: conf.mongoUser,
+		Password: conf.mongoPass,
 		DialServer: func(addr *mgo.ServerAddr) (net.Conn, error) {
 			conf := &tls.Config{
 				InsecureSkipVerify: true,
@@ -42,26 +32,30 @@ func GetMongoSession() (session *mgo.Session, err error) {
 }
 
 func IsMongoAlive() bool {
+
+	conf := GetMongoConf()
 	_, err := GetMongoSession()
 	if err != nil {
-		beego.Error("unable to establish connection to " + mongoHost + " mongo db")
+		beego.Error(err.Error())
+		beego.Error("unable to establish connection to " + conf.mongoHost + " mongo db")
 		return false
 	}
 
-	beego.Info("successfully connected to mongo host: " + mongoHost + "")
+	beego.Info("successfully connected to mongo host: " + conf.mongoHost + "")
 	return true
 }
 
 func InsertInMongo(collection string, data interface{}) error {
+	conf := GetMongoConf()
 	session, err := GetMongoSession()
 	if err != nil {
-		errorText := "unable to establish connection to " + mongoHost + " db"
+		errorText := "unable to establish connection to " + conf.mongoHost + " db"
 		beego.Error(errorText)
 		return errors.New(errorText)
 	}
 	defer session.Close()
 
-	c := session.DB(MongoDb).C(collection)
+	c := session.DB(conf.MongoDb).C(collection)
 	err = c.Insert(data)
 	if err != nil {
 		beego.Error(err.Error())
@@ -69,4 +63,26 @@ func InsertInMongo(collection string, data interface{}) error {
 	}
 
 	return nil
+}
+func GetMongoConf() mongConf {
+
+	var conf mongConf
+	conf.mongoHost = beego.AppConfig.String("mongo_host")
+	conf.mongoUser = beego.AppConfig.String("mongo_user")
+	conf.mongoPass = beego.AppConfig.String("mongo_pass")
+	conf.mongoAuth, _ = beego.AppConfig.Bool("mongo_auth")
+	conf.MongoDb = beego.AppConfig.String("mongo_db")
+	conf.MongoAwsTemplateCollection = beego.AppConfig.String("mongo_aws_template_collection")
+	conf.MongoAwsClusterCollection = beego.AppConfig.String("mongo_aws_cluster_collection")
+	return conf
+}
+
+type mongConf struct {
+	mongoHost                  string
+	mongoUser                  string
+	mongoPass                  string
+	mongoAuth                  bool
+	MongoDb                    string
+	MongoAwsTemplateCollection string
+	MongoAwsClusterCollection  string
 }

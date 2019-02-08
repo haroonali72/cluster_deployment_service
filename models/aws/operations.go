@@ -19,9 +19,9 @@ import (
 	"time"
 )
 
-var (
+/*var (
 	networkHost = beego.AppConfig.String("network_url")
-)
+)*/
 var testInstanceMap = map[string]string{
 	"us-east-2":      "ami-9686a4f3",
 	"sa-east-1":      "ami-a3e39ecf",
@@ -502,8 +502,7 @@ func (cloud *AWS) TerminatePool(pool *NodePool, envId string) error {
 func (cloud *AWS) GetNetworkStatus(envId string) (Network, error) {
 
 	client := utils.InitReq()
-
-	req, err := utils.CreateGetRequest(envId, networkHost)
+	req, err := utils.CreateGetRequest(envId, getNetworkHost())
 
 	response, err := client.SendRequest(req)
 
@@ -626,4 +625,8 @@ func (cloud *AWS) checkInstanceProfile(iamProfileName string) bool {
 	}
 	beego.Info("retry", retry)
 	return retry
+}
+func getNetworkHost() string {
+	return beego.AppConfig.String("network_url")
+
 }
