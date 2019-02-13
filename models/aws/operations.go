@@ -659,9 +659,8 @@ func (cloud *AWS) rootEBSVolume(nodepool NodePool) []*ec2.BlockDeviceMapping {
 
 	var ebs []*ec2.BlockDeviceMapping
 
-	for _, rootEbs := range nodepool.RootEBS {
+	for index, rootEbs := range nodepool.EBSVolume {
 		input := ec2.BlockDeviceMapping{
-			DeviceName:  aws.String(rootEbs.DeviceName),
 			NoDevice:    aws.String(rootEbs.NoDevice),
 			VirtualName: aws.String(rootEbs.VirtualName),
 			Ebs: &ec2.EbsBlockDevice{
@@ -673,7 +672,12 @@ func (cloud *AWS) rootEBSVolume(nodepool NodePool) []*ec2.BlockDeviceMapping {
 				VolumeType:          aws.String(rootEbs.Ebs.VolumeType),
 			},
 		}
-
+		if rootEbs.RootEBS {
+			input.DeviceName = aws.String(rootEbs.DeviceName)
+		} else {
+			name := "dev/xds/" + string(index)
+			input.DeviceName = &name
+		}
 		ebs = append(ebs, &input)
 	}
 	return ebs

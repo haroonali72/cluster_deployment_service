@@ -41,13 +41,14 @@ type NodePool struct {
 	Nodes              []*Node              `json:"nodes" bson:"nodes"`
 	KeyName            string               `json:"key_name" bson:"key_name"`
 	PoolRole           string               `json:"pool_role" bson:"pool_role"`
-	RootEBS            []BlockDeviceMapping `json:"block_device_mapping" bson:"block_device_mapping"`
+	EBSVolume          []BlockDeviceMapping `json:"block_device_mapping" bson:"block_device_mapping"`
 }
 type BlockDeviceMapping struct {
 	DeviceName  string `json:"device_name" bson:"device_name"`
 	NoDevice    string `json:"no_device" bson: "no_device"`
 	VirtualName string `json:"virtual_name" bson: "virtual_name"`
 	Ebs         EBS    `json:"ebs" bson: "ebs"`
+	RootEBS     bool   `json:"root_ebs" bson:"root_ebs"`
 }
 type EBS struct {
 	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination"`
