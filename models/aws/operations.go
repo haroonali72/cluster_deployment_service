@@ -381,6 +381,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 
 	subnetId := cloud.GetSubnets(pool, network)
 	sgIds := cloud.GetSecurityGroups(pool, network)
+	ebs := cloud.rootEBSVolume(*pool)
 
 	_, err := cloud.createIAMRole(pool.Name)
 	if err != nil {
@@ -389,13 +390,14 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	}
 
 	input := &ec2.RunInstancesInput{
-		ImageId:          aws.String(pool.Ami.AmiId),
-		SubnetId:         aws.String(subnetId),
-		SecurityGroupIds: sgIds,
-		MaxCount:         aws.Int64(pool.NodeCount),
-		KeyName:          aws.String(pool.KeyName),
-		MinCount:         aws.Int64(1),
-		InstanceType:     aws.String(pool.MachineType),
+		ImageId:             aws.String(pool.Ami.AmiId),
+		SubnetId:            aws.String(subnetId),
+		SecurityGroupIds:    sgIds,
+		MaxCount:            aws.Int64(pool.NodeCount),
+		KeyName:             aws.String(pool.KeyName),
+		MinCount:            aws.Int64(1),
+		InstanceType:        aws.String(pool.MachineType),
+		BlockDeviceMappings: ebs,
 	}
 	ok := cloud.checkInstanceProfile(pool.Name)
 	if !ok {
@@ -628,5 +630,51 @@ func (cloud *AWS) checkInstanceProfile(iamProfileName string) bool {
 }
 func getNetworkHost() string {
 	return beego.AppConfig.String("network_url")
+}
+func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
+	var amis []*string
+	var ebsVolumes []*ec2.BlockDeviceMapping
+	amis = append(amis, ami)
+	amiInput := &ec2.DescribeImagesInput{ImageIds: amis}
+	res, err := cloud.Client.DescribeImages(amiInput)
+	if err != nil {
+		beego.Error(err)
+		return ebsVolumes, err
+	}
 
+	if len(res.Images) <= 0 {
+		return ebsVolumes, errors.New("AMI not available in selected region or AMI not shared with the user")
+	}
+	for _, ebs := range res.Images[0].BlockDeviceMappings {
+		if ebs.VirtualName == nil {
+			beego.Info(*ebs.DeviceName)
+			ebsVolumes = append(ebsVolumes, ebs)
+		}
+	}
+	beego.Info(res.GoString())
+	return ebsVolumes, nil
+}
+
+func (cloud *AWS) rootEBSVolume(nodepool NodePool) []*ec2.BlockDeviceMapping {
+
+	var ebs []*ec2.BlockDeviceMapping
+
+	for _, rootEbs := range nodepool.RootEBS {
+		input := ec2.BlockDeviceMapping{
+			DeviceName:  aws.String(rootEbs.DeviceName),
+			NoDevice:    aws.String(rootEbs.NoDevice),
+			VirtualName: aws.String(rootEbs.VirtualName),
+			Ebs: &ec2.EbsBlockDevice{
+				DeleteOnTermination: aws.Bool(rootEbs.Ebs.DeleteOnTermination),
+				Encrypted:           aws.Bool(rootEbs.Ebs.Encrypted),
+				Iops:                aws.Int64(rootEbs.Ebs.Iops),
+				SnapshotId:          aws.String(rootEbs.Ebs.SnapshotId),
+				VolumeSize:          aws.Int64(rootEbs.Ebs.VolumeSize),
+				VolumeType:          aws.String(rootEbs.Ebs.VolumeType),
+			},
+		}
+
+		ebs = append(ebs, &input)
+	}
+	return ebs
 }

@@ -31,16 +31,31 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name               string        `json:"name" bson:"name"`
-	NodeCount          int64         `json:"node_count" bson:"node_count"`
-	MachineType        string        `json:"machine_type" bson:"machine_type"`
-	Ami                Ami           `json:"ami" bson:"ami"`
-	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
-	Nodes              []*Node       `json:"nodes" bson:"nodes"`
-	KeyName            string        `json:"key_name" bson:"key_name"`
-	PoolRole           string        `json:"pool_role" bson:"pool_role"`
+	ID                 bson.ObjectId        `json:"_id" bson:"_id,omitempty"`
+	Name               string               `json:"name" bson:"name"`
+	NodeCount          int64                `json:"node_count" bson:"node_count"`
+	MachineType        string               `json:"machine_type" bson:"machine_type"`
+	Ami                Ami                  `json:"ami" bson:"ami"`
+	PoolSubnet         string               `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups []*string            `json:"security_group_id" bson:"security_group_id"`
+	Nodes              []*Node              `json:"nodes" bson:"nodes"`
+	KeyName            string               `json:"key_name" bson:"key_name"`
+	PoolRole           string               `json:"pool_role" bson:"pool_role"`
+	RootEBS            []BlockDeviceMapping `json:"block_device_mapping" bson:"block_device_mapping"`
+}
+type BlockDeviceMapping struct {
+	DeviceName  string `json:"device_name" bson:"device_name"`
+	NoDevice    string `json:"no_device" bson: "no_device"`
+	VirtualName string `json:"virtual_name" bson: "virtual_name"`
+	Ebs         EBS    `json:"ebs" bson: "ebs"`
+}
+type EBS struct {
+	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination"`
+	Encrypted           bool   `json:"encrypted" bson:"encrypted"`
+	Iops                int64  `json:"iops" bson: "iops"`
+	SnapshotId          string `json:"snapshot_id" bson: "snapshot_id"`
+	VolumeSize          int64  `json:"volume_size" bson: "volume_size"`
+	VolumeType          string `json:"volume_type" bson: "volume_type"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id,omitempty"`
