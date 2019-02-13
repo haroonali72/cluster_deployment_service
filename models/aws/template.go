@@ -12,7 +12,7 @@ import (
 
 type Template struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
+	ProjectId        string        `json:"project_id" bson:"project_id"`
 	Name             string        `json:"name" bson:"name"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`

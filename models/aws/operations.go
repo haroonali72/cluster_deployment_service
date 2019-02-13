@@ -131,7 +131,7 @@ var docker_master_policy = []byte(`{
 }`)
 
 type Network struct {
-	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
+	ProjectId        string        `json:"Project_id" bson:"Project_id"`
 	Name             string        `json:"name" bson:"name"`
 	Type             models.Type   `json:"type" bson:"type"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
@@ -193,7 +193,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			return nil, err
 		}
 	}
-	network, err := cloud.GetNetworkStatus(cluster.EnvironmentId)
+	network, err := cloud.GetNetworkStatus(cluster.ProjectId)
 
 	if err != nil {
 		beego.Error(err.Error())
@@ -206,29 +206,29 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 		beego.Info("AWSOperations: creating key")
 		var createdPool CreatedPool
-		logging.SendLog("Creating Key "+pool.KeyName, "info", cluster.EnvironmentId)
+		logging.SendLog("Creating Key "+pool.KeyName, "info", cluster.ProjectId)
 
 		keyMaterial, _, err := cloud.KeyPairGenerator(pool.KeyName)
 		if err != nil {
 			beego.Error(err.Error())
-			logging.SendLog("Error in key creation: "+pool.KeyName, "info", cluster.EnvironmentId)
-			logging.SendLog(err.Error(), "info", cluster.EnvironmentId)
+			logging.SendLog("Error in key creation: "+pool.KeyName, "info", cluster.ProjectId)
+			logging.SendLog(err.Error(), "info", cluster.ProjectId)
 			return nil, err
 		}
 		beego.Info("AWSOperations creating nodes")
 
 		result, err := cloud.CreateInstance(pool, network)
 		if err != nil {
-			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.EnvironmentId)
+			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			beego.Error(err.Error())
 			return nil, err
 		}
 
 		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 			for index, instance := range result.Instances {
-				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.EnvironmentId)
+				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.ProjectId)
 				if err != nil {
-					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.EnvironmentId)
+					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 					beego.Error(err.Error())
 					return nil, err
 				}
@@ -237,7 +237,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 		var latest_instances []*ec2.Instance
 
-		latest_instances, err = cloud.GetInstances(result, cluster.EnvironmentId)
+		latest_instances, err = cloud.GetInstances(result, cluster.ProjectId)
 		if err != nil {
 			return nil, err
 		}
@@ -252,13 +252,13 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 	return createdPools, nil
 }
 
-func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, envId string) error {
+func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, projectId string) error {
 	var resource []*string
 	resource = append(resource, instance_id)
 
 	var tags []*ec2.Tag
 	tag := ec2.Tag{Key: aws.String("Name"), Value: aws.String(nodepool_name)}
-	tag_ := ec2.Tag{Key: aws.String("KubernetesCluster"), Value: aws.String(envId)}
+	tag_ := ec2.Tag{Key: aws.String("KubernetesCluster"), Value: aws.String(projectId)}
 	tags = append(tags, &tag)
 	tags = append(tags, &tag_)
 
@@ -312,20 +312,21 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 			if err != nil {
 				return Cluster_Def{}, err
 			}
+			if out != nil && out.Reservations != nil && out.Reservations[0].Instances != nil {
+				pool.Nodes[index].NodeState = *out.Reservations[0].Instances[0].State.Name
 
-			pool.Nodes[index].NodeState = *out.Reservations[0].Instances[0].State.Name
-
-			if out.Reservations[0].Instances[0].PublicIpAddress != nil {
-				pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
-			}
-			if out.Reservations[0].Instances[0].PrivateDnsName != nil {
-				pool.Nodes[index].PrivateDNS = *out.Reservations[0].Instances[0].PrivateDnsName
-			}
-			if out.Reservations[0].Instances[0].PublicDnsName != nil {
-				pool.Nodes[index].PublicDNS = *out.Reservations[0].Instances[0].PublicDnsName
-			}
-			if out.Reservations[0].Instances[0].PrivateIpAddress != nil {
-				pool.Nodes[index].PrivateIP = *out.Reservations[0].Instances[0].PrivateIpAddress
+				if out.Reservations[0].Instances[0].PublicIpAddress != nil {
+					pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
+				}
+				if out.Reservations[0].Instances[0].PrivateDnsName != nil {
+					pool.Nodes[index].PrivateDNS = *out.Reservations[0].Instances[0].PrivateDnsName
+				}
+				if out.Reservations[0].Instances[0].PublicDnsName != nil {
+					pool.Nodes[index].PublicDNS = *out.Reservations[0].Instances[0].PublicDnsName
+				}
+				if out.Reservations[0].Instances[0].PrivateIpAddress != nil {
+					pool.Nodes[index].PrivateIP = *out.Reservations[0].Instances[0].PrivateIpAddress
+				}
 			}
 		}
 		cluster.NodePools[in] = pool
@@ -370,7 +371,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 	}
 
 	for _, pool := range cluster.NodePools {
-		err := cloud.TerminatePool(pool, cluster.EnvironmentId)
+		err := cloud.TerminatePool(pool, cluster.ProjectId)
 		if err != nil {
 			return err
 		}
@@ -437,7 +438,7 @@ func (cloud *AWS) GetSubnets(pool *NodePool, network Network) string {
 	return ""
 }
 
-func (cloud *AWS) GetInstances(result *ec2.Reservation, envId string) (latest_instances []*ec2.Instance, err error) {
+func (cloud *AWS) GetInstances(result *ec2.Reservation, projectId string) (latest_instances []*ec2.Instance, err error) {
 
 	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 
@@ -455,7 +456,7 @@ func (cloud *AWS) GetInstances(result *ec2.Reservation, envId string) (latest_in
 		}
 
 		for _, instance := range updated_instances.Reservations[0].Instances {
-			logging.SendLog("Instance created successfully: "+*instance.InstanceId, "info", envId)
+			logging.SendLog("Instance created successfully: "+*instance.InstanceId, "info", projectId)
 			latest_instances = append(latest_instances, instance)
 		}
 		return latest_instances, nil
@@ -476,7 +477,7 @@ func (cloud *AWS) GetInstanceStatus(node *Node) (output *ec2.DescribeInstancesOu
 	}
 	return output, nil
 }
-func (cloud *AWS) TerminatePool(pool *NodePool, envId string) error {
+func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 
 	beego.Info("AWSOperations terminating nodes")
 	var instance_ids []*string
@@ -495,14 +496,14 @@ func (cloud *AWS) TerminatePool(pool *NodePool, envId string) error {
 		beego.Error("Cluster model: Status - Failed to terminate node pool ", err.Error())
 		return err
 	}
-	logging.SendLog("Cluster pool terminated successfully: "+pool.Name, "info", envId)
+	logging.SendLog("Cluster pool terminated successfully: "+pool.Name, "info", projectId)
 	return nil
 }
 
-func (cloud *AWS) GetNetworkStatus(envId string) (Network, error) {
+func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 
 	client := utils.InitReq()
-	req, err := utils.CreateGetRequest(envId, getNetworkHost())
+	req, err := utils.CreateGetRequest(projectId, getNetworkHost())
 
 	response, err := client.SendRequest(req)
 

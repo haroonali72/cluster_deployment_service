@@ -12,11 +12,11 @@ type HeadersData struct {
 }
 
 type Data struct {
-	Message     string `json:"message" bson : "message"`
-	ID          string `json:"id" bson : "id"`
-	Environment string `json:"environment" bson : "environment"`
-	Service     string `json:"service" bson : "service"`
-	Level       string `json:"level" bson : "level"`
+	Message string `json:"message" bson : "message"`
+	ID      string `json:"id" bson : "id"`
+	Project string `json:"project" bson : "project"`
+	Service string `json:"service" bson : "service"`
+	Level   string `json:"level" bson : "level"`
 }
 
 func SendLog(msg, message_type, env_id string) (int, error) {
@@ -25,7 +25,7 @@ func SendLog(msg, message_type, env_id string) (int, error) {
 
 	data.ID = env_id
 	data.Service = "antelope"
-	data.Environment = "environment"
+	data.Project = "project"
 	data.Level = message_type
 	data.Message = msg
 
