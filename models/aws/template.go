@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"time"
 )
 
 type Template struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id"`
+	TemplateId       string        `json:"template_id" bson:"template_id"`
 	Name             string        `json:"name" bson:"name"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
@@ -43,7 +45,7 @@ type AmiT struct {
 }
 
 func CreateTemplate(template Template) error {
-	_, err := GetTemplate(template.Name)
+	_, err := GetTemplate(template.TemplateId)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text, err)
@@ -51,6 +53,8 @@ func CreateTemplate(template Template) error {
 	}
 
 	template.CreationDate = time.Now()
+	i := rand.Int()
+	template.TemplateId = template.Name + string(i)
 	s := db.GetMongoConf()
 	err = db.InsertInMongo(s.MongoAwsTemplateCollection, template)
 	if err != nil {
@@ -61,7 +65,7 @@ func CreateTemplate(template Template) error {
 	return nil
 }
 
-func GetTemplate(templateName string) (template Template, err error) {
+func GetTemplate(templateId string) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
@@ -70,7 +74,7 @@ func GetTemplate(templateName string) (template Template, err error) {
 	defer session.Close()
 	s := db.GetMongoConf()
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
-	err = c.Find(bson.M{"name": templateName}).One(&template)
+	err = c.Find(bson.M{"template_id": templateId}).One(&template)
 	if err != nil {
 		beego.Error(err.Error())
 		return Template{}, err
@@ -98,14 +102,14 @@ func GetAllTemplate() (templates []Template, err error) {
 }
 
 func UpdateTemplate(template Template) error {
-	oldTemplate, err := GetTemplate(template.Name)
+	oldTemplate, err := GetTemplate(template.TemplateId)
 	if err != nil {
-		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
+		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.TemplateId)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
 
-	err = DeleteTemplate(template.Name)
+	err = DeleteTemplate(template.TemplateId)
 	if err != nil {
 		beego.Error("Template model: Update - Got error deleting template: ", err)
 		return err
@@ -123,7 +127,7 @@ func UpdateTemplate(template Template) error {
 	return nil
 }
 
-func DeleteTemplate(templateName string) error {
+func DeleteTemplate(templateId string) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		beego.Error("Template model: Delete - Got error while connecting to the database: ", err)
@@ -132,7 +136,7 @@ func DeleteTemplate(templateName string) error {
 	defer session.Close()
 	s := db.GetMongoConf()
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
-	err = c.Remove(bson.M{"name": templateName})
+	err = c.Remove(bson.M{"template_id": templateId})
 	if err != nil {
 		beego.Error(err.Error())
 		return err

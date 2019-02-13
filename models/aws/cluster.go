@@ -89,7 +89,7 @@ func GetCluster(projectId string) (cluster Cluster_Def, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Find(bson.M{"environment_id": projectId}).One(&cluster)
+	err = c.Find(bson.M{"project_id": projectId}).One(&cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
@@ -151,7 +151,7 @@ func DeleteCluster(projectId string) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Remove(bson.M{"environment_id": projectId})
+	err = c.Remove(bson.M{"project_id": projectId})
 	if err != nil {
 		beego.Error(err.Error())
 		return err

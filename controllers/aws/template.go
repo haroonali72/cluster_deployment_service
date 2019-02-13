@@ -1,10 +1,10 @@
 package aws
 
 import (
+	"antelope/models/aws"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
-	"antelope/models/aws"
 )
 
 // Operations about AWS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
@@ -14,27 +14,27 @@ type AWSTemplateController struct {
 
 // @Title Get
 // @Description get template
-// @Param	name	path	string	true	"Name of the template"
+// @Param	name	path	string	true	"Template Id of the template"
 // @Success 200 {object} aws.Template
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /:name [get]
+// @router /:templateId [get]
 func (c *AWSTemplateController) Get() {
-	name := c.GetString(":name")
+	templateId := c.GetString(":templateId")
 
-	beego.Info("AWSTemplateController: Get template with name: ", name)
+	beego.Info("AWSTemplateController: Get template  id : ", templateId)
 
-	if name == "" {
+	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	template, err := aws.GetTemplate(name)
+	template, err := aws.GetTemplate(templateId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no template exists for this name"}
+		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
 		return
 	}
@@ -106,14 +106,14 @@ func (c *AWSTemplateController) Patch() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	beego.Info("AWSTemplateController: Patch template with name: ", template.Name)
+	beego.Info("AWSTemplateController: Patch template with template id : ", template.TemplateId)
 	beego.Info("AWSTemplateController: JSON Payload: ", template)
 
 	err := aws.UpdateTemplate(template)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no template exists with this name"}
+			c.Data["json"] = map[string]string{"error": "no template exists with this project id"}
 			c.ServeJSON()
 			return
 		}
@@ -129,24 +129,24 @@ func (c *AWSTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete a templates
-// @Param	name	path	string	true	"Name of the template"
+// @Param	name	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
-// @Failure 404 {"error": "name is empty"}
+// @Failure 404 {"error": "project is empty"}
 // @Failure 500 {"error": "internal server error"}
-// @router /:name [delete]
+// @router /:templateId [delete]
 func (c *AWSTemplateController) Delete() {
-	name := c.GetString(":name")
+	templateId := c.GetString(":templateId")
 
-	beego.Info("AWSTemplateController: Delete template with name: ", name)
+	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)
 
-	if name == "" {
+	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	err := aws.DeleteTemplate(name)
+	err := aws.DeleteTemplate(templateId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
