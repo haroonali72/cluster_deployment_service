@@ -237,9 +237,16 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 		var latest_instances []*ec2.Instance
 
-		latest_instances, err = cloud.GetInstances(result, cluster.ProjectId)
-		if err != nil {
-			return nil, err
+		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
+
+			var ids []*string
+			for _, instance := range result.Instances {
+				ids = append(ids, aws.String(*instance.InstanceId))
+			}
+			latest_instances, err = cloud.GetInstances(ids, cluster.ProjectId, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		createdPool.KeyName = pool.KeyName
@@ -308,24 +315,26 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 
 		for index, node := range pool.Nodes {
 
-			out, err := cloud.GetInstanceStatus(node)
+			var nodeId []*string
+			nodeId = append(nodeId, &node.CloudId)
+			out, err := cloud.GetInstances(nodeId, "", false)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
-			if out != nil && out.Reservations != nil && out.Reservations[0].Instances != nil {
-				pool.Nodes[index].NodeState = *out.Reservations[0].Instances[0].State.Name
+			if out != nil {
+				pool.Nodes[index].NodeState = *out[0].State.Name
 
-				if out.Reservations[0].Instances[0].PublicIpAddress != nil {
-					pool.Nodes[index].PublicIP = *out.Reservations[0].Instances[0].PublicIpAddress
+				if out[0].PublicIpAddress != nil {
+					pool.Nodes[index].PublicIP = *out[0].PublicIpAddress
 				}
-				if out.Reservations[0].Instances[0].PrivateDnsName != nil {
-					pool.Nodes[index].PrivateDNS = *out.Reservations[0].Instances[0].PrivateDnsName
+				if out[0].PrivateDnsName != nil {
+					pool.Nodes[index].PrivateDNS = *out[0].PrivateDnsName
 				}
-				if out.Reservations[0].Instances[0].PublicDnsName != nil {
-					pool.Nodes[index].PublicDNS = *out.Reservations[0].Instances[0].PublicDnsName
+				if out[0].PublicDnsName != nil {
+					pool.Nodes[index].PublicDNS = *out[0].PublicDnsName
 				}
-				if out.Reservations[0].Instances[0].PrivateIpAddress != nil {
-					pool.Nodes[index].PrivateIP = *out.Reservations[0].Instances[0].PrivateIpAddress
+				if out[0].PrivateIpAddress != nil {
+					pool.Nodes[index].PrivateIP = *out[0].PrivateIpAddress
 				}
 			}
 		}
@@ -449,32 +458,26 @@ func (cloud *AWS) GetSubnets(pool *NodePool, network Network) string {
 	return ""
 }
 
-func (cloud *AWS) GetInstances(result *ec2.Reservation, projectId string) (latest_instances []*ec2.Instance, err error) {
+func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool) (latest_instances []*ec2.Instance, err error) {
 
-	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
+	instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
+	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
 
-		var ids []*string
-		for _, instance := range result.Instances {
-			ids = append(ids, aws.String(*instance.InstanceId))
-		}
-
-		instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
-		updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
-
-		if err != nil {
-			beego.Error(err.Error())
-			return nil, err
-		}
-
-		for _, instance := range updated_instances.Reservations[0].Instances {
-			logging.SendLog("Instance created successfully: "+*instance.InstanceId, "info", projectId)
-			latest_instances = append(latest_instances, instance)
-		}
-		return latest_instances, nil
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err
 	}
+
+	for _, instance := range updated_instances.Reservations[0].Instances {
+		logging.SendLog("Instance created successfully: "+*instance.InstanceId, "info", projectId)
+		latest_instances = append(latest_instances, instance)
+	}
+	return latest_instances, nil
+
 	return nil, nil
 }
-func (cloud *AWS) GetInstanceStatus(node *Node) (output *ec2.DescribeInstancesOutput, err error) {
+
+/*func (cloud *AWS) GetInstanceStatus(node *Node) (output *ec2.DescribeInstancesOutput, err error) {
 
 	name := "instance-id"
 	ids := []*string{&node.CloudId}
@@ -487,7 +490,7 @@ func (cloud *AWS) GetInstanceStatus(node *Node) (output *ec2.DescribeInstancesOu
 		return nil, err
 	}
 	return output, nil
-}
+}*/
 func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 
 	beego.Info("AWSOperations terminating nodes")

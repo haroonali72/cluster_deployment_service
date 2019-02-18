@@ -333,6 +333,10 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 
 	}
 
+	for _, pools := range cluster.NodePools {
+		var nodes []*Node
+		pools.Nodes = nodes
+	}
 	cluster.Status = "Cluster terminated"
 	err = UpdateCluster(cluster)
 	if err != nil {

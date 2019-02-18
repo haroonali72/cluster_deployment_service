@@ -22,12 +22,6 @@ type Template struct {
 	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
 }
 
-/*type SubclusterT struct {
-	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name      string        `json:"name" bson:"name"`
-	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
-}
-*/
 type NodePoolT struct {
 	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name            string        `json:"name" bson:"name"`
