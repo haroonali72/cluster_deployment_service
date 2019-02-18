@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/db"
 	"antelope/models/logging"
+	"antelope/models/utils"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -173,7 +174,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
-	publisher := models.Notifier{}
+	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		beego.Error(pub_err.Error())
@@ -203,41 +204,8 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
-	for index, nodepool := range cluster.NodePools {
+	cluster = updateNodePool(createdPools, cluster)
 
-		var updatedNodes []*Node
-
-		for _, createdPool := range createdPools {
-
-			if createdPool.PoolName == nodepool.Name {
-
-				for _, inst := range createdPool.Instances {
-
-					var node Node
-					beego.Info(*inst.Tags[0].Value, *inst.Tags[0].Value)
-					if *inst.Tags[0].Key == "Name" {
-						node.Name = *inst.Tags[0].Value
-					}
-					node.KeyName = *inst.KeyName
-					node.CloudId = *inst.InstanceId
-					node.NodeState = *inst.State.Name
-					node.PrivateIP = *inst.PrivateIpAddress
-
-					if inst.PublicIpAddress != nil {
-						node.PublicIP = *inst.PublicIpAddress
-					}
-					node.UserName = nodepool.Ami.Username
-					node.SSHKey = createdPool.Key
-					updatedNodes = append(updatedNodes, &node)
-					beego.Info("Cluster model: Instances added")
-				}
-			}
-		}
-		beego.Info("Cluster model: updated nodes in pools")
-		cluster.NodePools[index].Nodes = updatedNodes
-	}
-	cluster.Status = "Cluster Created"
-	beego.Info(cluster.Status + cluster.ProjectId)
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
@@ -296,7 +264,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
-	publisher := models.Notifier{}
+	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		beego.Error(pub_err.Error())
@@ -350,6 +318,43 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 	publisher.Notify(cluster.ProjectId, "Status Available")
 
 	return nil
+}
+func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def {
+	for index, nodepool := range cluster.NodePools {
+
+		var updatedNodes []*Node
+
+		for _, createdPool := range createdPools {
+
+			if createdPool.PoolName == nodepool.Name {
+
+				for _, inst := range createdPool.Instances {
+
+					var node Node
+					beego.Info(*inst.Tags[0].Value, *inst.Tags[0].Value)
+					if *inst.Tags[0].Key == "Name" {
+						node.Name = *inst.Tags[0].Value
+					}
+					node.KeyName = *inst.KeyName
+					node.CloudId = *inst.InstanceId
+					node.NodeState = *inst.State.Name
+					node.PrivateIP = *inst.PrivateIpAddress
+
+					if inst.PublicIpAddress != nil {
+						node.PublicIP = *inst.PublicIpAddress
+					}
+					node.UserName = nodepool.Ami.Username
+					node.SSHKey = createdPool.Key
+					updatedNodes = append(updatedNodes, &node)
+					beego.Info("Cluster model: Instances added")
+				}
+			}
+		}
+		beego.Info("Cluster model: updated nodes in pools")
+		cluster.NodePools[index].Nodes = updatedNodes
+	}
+	cluster.Status = "Cluster Created"
+	return cluster
 }
 func GetSSHKeyPair(credentials string) ([]*SSHKeyPair, error) {
 

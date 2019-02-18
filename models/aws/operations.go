@@ -477,20 +477,6 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool) (
 	return nil, nil
 }
 
-/*func (cloud *AWS) GetInstanceStatus(node *Node) (output *ec2.DescribeInstancesOutput, err error) {
-
-	name := "instance-id"
-	ids := []*string{&node.CloudId}
-
-	request := &ec2.DescribeInstancesInput{Filters: []*ec2.Filter{&ec2.Filter{Name: &name, Values: ids}}}
-	output, err = cloud.Client.DescribeInstances(request)
-
-	if err != nil {
-		beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
-		return nil, err
-	}
-	return output, nil
-}*/
 func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 
 	beego.Info("AWSOperations terminating nodes")
