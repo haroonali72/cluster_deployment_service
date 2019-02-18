@@ -1,4 +1,4 @@
-package aws
+package models
 
 import (
 	"github.com/astaxie/beego"
@@ -19,7 +19,7 @@ type Response struct {
 	Component string `json:"component"`
 }
 
-func (notifier *Notifier) notify(channel, status string) {
+func (notifier *Notifier) Notify(channel, status string) {
 	msg := Response{
 		Status:    status,
 		ID:        channel,
@@ -29,7 +29,7 @@ func (notifier *Notifier) notify(channel, status string) {
 	beego.Info(*cmd)
 }
 
-func (notifier *Notifier) init_notifier() error {
+func (notifier *Notifier) Init_notifier() error {
 	if notifier.Client != nil {
 		return nil
 	}
