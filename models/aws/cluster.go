@@ -196,10 +196,10 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 			logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			logging.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.notify(cluster.Name, "Status Available")
+			publisher.notify(cluster.ProjectId, "Status Available")
 			return err
 		}
-		publisher.notify(cluster.Name, "Status Available")
+		publisher.notify(cluster.ProjectId, "Status Available")
 		return err
 	}
 
@@ -243,11 +243,11 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
-		publisher.notify(cluster.Name, "Status Available")
+		publisher.notify(cluster.ProjectId, "Status Available")
 		return err
 	}
 	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.notify(cluster.Name, "Status Available")
+	publisher.notify(cluster.ProjectId, "Status Available")
 
 	return nil
 }
@@ -305,7 +305,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 
 	if cluster.Status != "Cluster Created" {
 		beego.Error("Cluster model: Cluster is not in created state ")
-		publisher.notify(cluster.Name, "Status Available")
+		publisher.notify(cluster.ProjectId, "Status Available")
 		return err
 	}
 
@@ -326,10 +326,10 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 			logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			logging.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.notify(cluster.Name, "Status Available")
+			publisher.notify(cluster.ProjectId, "Status Available")
 			return err
 		}
-		publisher.notify(cluster.Name, "Status Available")
+		publisher.notify(cluster.ProjectId, "Status Available")
 
 	}
 
@@ -339,11 +339,11 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
-		publisher.notify(cluster.Name, "Status Available")
+		publisher.notify(cluster.ProjectId, "Status Available")
 		return err
 	}
 	logging.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.notify(cluster.Name, "Status Available")
+	publisher.notify(cluster.ProjectId, "Status Available")
 
 	return nil
 }

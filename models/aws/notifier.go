@@ -13,10 +13,19 @@ type Notifier struct {
 	Client    *redis.Client
 	redisHost string
 }
+type Response struct {
+	Status    string `json:"status"`
+	ID        string `json:"_id"`
+	Component string `json:"component"`
+}
 
 func (notifier *Notifier) notify(channel, status string) {
-
-	cmd := notifier.Client.Publish(channel, status)
+	msg := Response{
+		Status:    status,
+		ID:        channel,
+		Component: "Cluster",
+	}
+	cmd := notifier.Client.Publish(channel, msg)
 	beego.Info(*cmd)
 }
 
