@@ -398,6 +398,17 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		MinCount:         aws.Int64(1),
 		InstanceType:     aws.String(pool.MachineType),
 	}
+	/*
+		setting 50 gb volume - temp work
+	*/
+	ebs, err := cloud.describeAmi(&pool.Ami.AmiId)
+	if err != nil {
+		v := int64(50)
+		if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil && *ebs[0].Ebs.VolumeSize < v {
+			ebs[0].Ebs.VolumeSize = &v
+			input.BlockDeviceMappings = ebs
+		}
+	}
 	ok := cloud.checkInstanceProfile(pool.Name)
 	if !ok {
 		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name)}
@@ -630,4 +641,27 @@ func (cloud *AWS) checkInstanceProfile(iamProfileName string) bool {
 func getNetworkHost() string {
 	return beego.AppConfig.String("network_url")
 
+}
+func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
+	var amis []*string
+	var ebsVolumes []*ec2.BlockDeviceMapping
+	amis = append(amis, ami)
+	amiInput := &ec2.DescribeImagesInput{ImageIds: amis}
+	res, err := cloud.Client.DescribeImages(amiInput)
+	if err != nil {
+		beego.Error(err)
+		return ebsVolumes, err
+	}
+
+	if len(res.Images) <= 0 {
+		return ebsVolumes, errors.New("AMI not available in selected region or AMI not shared with the user")
+	}
+	for _, ebs := range res.Images[0].BlockDeviceMappings {
+		if ebs.VirtualName == nil {
+			beego.Info(*ebs.DeviceName)
+			ebsVolumes = append(ebsVolumes, ebs)
+		}
+	}
+	beego.Info(res.GoString())
+	return ebsVolumes, nil
 }
