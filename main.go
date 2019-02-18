@@ -15,6 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
