@@ -3,7 +3,7 @@ build:
 run:
 	-docker stop antelope
 	-docker rm antelope
-	docker run -d -p 9081:9081 --name antelope antelope
+	docker run -d -p 9081:9081
 	-e mongo_host = "10.248.9.173"
 	-e mongo_auth = "true"
     -e mongo_db = "antelope"
@@ -16,3 +16,4 @@ run:
 	-e redis_url = "10.248.9.173"
 	-e logger_url = "10.248.9.173"
     -e network_url = "10.248.9.173"
+     --name antelope antelope
