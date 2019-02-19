@@ -659,6 +659,15 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
+		pool.KeyInfo.KeyMaterial = keyMaterial
+		err = InsertSSHKeyPair(pool.KeyInfo)
+
+		if err != nil {
+			beego.Error(err.Error())
+			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+			logging.SendLog(err.Error(), "info", projectId)
+			return "", err
+		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
 
 		key, err := GetSSHKeyPair(pool.KeyInfo.KeyName)

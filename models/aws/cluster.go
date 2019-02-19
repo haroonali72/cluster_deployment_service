@@ -55,6 +55,7 @@ type Key struct {
 	KeyName     string         `json:"key_name" bson:"key_name"`
 	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
 	KeyMaterial string         `json:"key_material" bson:"key_materials"`
+	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
@@ -366,7 +367,7 @@ func GetAllSSHKeyPair() (keys []*Key, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
-	err = c.Find(bson.M{"cloud_type": "aws"}).All(&keys)
+	err = c.Find(bson.M{"cloud_type": models.AWS}).All(&keys)
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
@@ -383,14 +384,14 @@ func GetSSHKeyPair(keyname string) (keys *Key, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
-	err = c.Find(bson.M{"cloud_type": "aws", "key_name": keyname}).All(&keys)
+	err = c.Find(bson.M{"cloud_type": models.AWS, "key_name": keyname}).All(&keys)
 	if err != nil {
 		return keys, err
 	}
 	return keys, nil
 }
 func InsertSSHKeyPair(key Key) (err error) {
-
+	key.Cloud = models.AWS
 	session, err := db.GetMongoSession()
 	if err != nil {
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
