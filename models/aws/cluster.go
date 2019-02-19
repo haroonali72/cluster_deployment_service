@@ -8,15 +8,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
 )
 
 type SSHKeyPair struct {
-	Name        string `json:"name" bson:"name",omitempty"`
-	FingerPrint string `json:"fingerprint" bson:"fingerprint"`
+	Name      string `json:"name" bson:"name",omitempty"`
+	CloudType string `json:"cloud_type" bson:"cloud_type"`
+	Key       string `json:"key" bson:"key"`
 }
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
@@ -356,37 +356,20 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetSSHKeyPair(credentials string) ([]*SSHKeyPair, error) {
+func GetAllSSHKeyPair() (keys []*SSHKeyPair, err error) {
 
-	splits := strings.Split(credentials, ":")
-	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
-	}
-	err := aws.init()
+	session, err := db.GetMongoSession()
 	if err != nil {
-		return nil, err
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return keys, err
 	}
-
-	keys, e := aws.getSSHKey()
-	if e != nil {
-		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", e.Error())
-		return nil, e
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
+	err = c.Find(bson.M{"cloud_type": "aws"}).All(&keys)
+	if err != nil {
+		beego.Error(err.Error())
+		return keys, err
 	}
-	k := fillKeyInfo(keys)
-
-	return k, nil
-}
-func fillKeyInfo(keys_raw []*ec2.KeyPairInfo) (keys []*SSHKeyPair) {
-	for _, key := range keys_raw {
-
-		keys = append(keys, &SSHKeyPair{
-			FingerPrint: *key.KeyFingerprint,
-			Name:        *key.KeyName,
-		})
-
-	}
-
-	return keys
+	return keys, nil
 }
