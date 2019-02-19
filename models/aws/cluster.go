@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -402,4 +403,25 @@ func InsertSSHKeyPair(key Key) (err error) {
 		return err
 	}
 	return nil
+}
+func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
+
+	splits := strings.Split(credentials, ":")
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err := aws.init()
+	if err != nil {
+		return nil, err
+	}
+
+	keys, e := aws.getSSHKey()
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", e.Error())
+		return nil, e
+	}
+
+	return keys, nil
 }

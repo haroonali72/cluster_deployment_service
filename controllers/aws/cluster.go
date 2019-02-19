@@ -319,7 +319,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
-// @Success 200 {object} aws.SSHKeyPair
+// @Success 200 {object} aws.Key
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkeys [get]
@@ -328,6 +328,44 @@ func (c *AWSClusterController) GetSSHKeys() {
 	beego.Info("AWSNetworkController: FetchExistingSSHKeys.")
 
 	keys, err := aws.GetAllSSHKeyPair()
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = keys
+	c.ServeJSON()
+}
+
+// @Title AwsSshKeyPair
+// @Description returns aws ssh key pairs
+// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Success 200 {object} []*ec2.KeyPairInfo
+// @Failure 401 {"error": "exception_message"}
+// @Failure 500 {"error": "internal server error"}
+// @router /awssshkeys [get]
+func (c *AWSClusterController) GetSSHKeyPairs() {
+
+	beego.Info("AWSNetworkController: FetchExistingVpcs.")
+	credentials := c.Ctx.Input.Header("Authorization")
+
+	if credentials == "" ||
+		strings.Contains(credentials, " ") ||
+		strings.Contains(strings.ToLower(credentials), "bearer") ||
+		strings.Contains(strings.ToLower(credentials), "aws") ||
+		len(strings.Split(credentials, ":")) != 3 {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.ServeJSON()
+		return
+	}
+
+	beego.Info("AWSClusterController: Get Keys from AWS")
+
+	keys, err := aws.GetAwsSSHKeyPair(credentials)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
