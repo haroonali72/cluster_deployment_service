@@ -393,7 +393,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		SubnetId:         aws.String(subnetId),
 		SecurityGroupIds: sgIds,
 		MaxCount:         aws.Int64(pool.NodeCount),
-		KeyName:          aws.String(pool.KeyName),
+		KeyName:          aws.String(pool.KeyInfo.KeyName),
 		MinCount:         aws.Int64(1),
 		InstanceType:     aws.String(pool.MachineType),
 	}
@@ -645,11 +645,14 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 	return ebsVolumes, nil
 }
 func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
+
 	if pool.KeyInfo.KeyType == models.New {
+
 		beego.Info("AWSOperations: creating key")
 		logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
 
 		keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
+
 		if err != nil {
 			beego.Error(err.Error())
 			logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
@@ -657,25 +660,63 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			return "", err
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
+
 		key, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
 		if err != nil {
+			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
-		keyMaterial = key.Key
+		keyMaterial = key.KeyMaterial
+
 	} else if pool.KeyInfo.KeyType == models.AWSKey {
-		var keys SSHKeyPair
-		keys.Key = pool.KeyInfo.KeyMaterial
-		keys.Name = pool.KeyInfo.KeyName
-		err = InsertSSHKeyPair(keys)
+
+		err = InsertSSHKeyPair(pool.KeyInfo)
+
 		if err != nil {
+			beego.Error(err.Error())
 			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
+		keyMaterial = pool.KeyInfo.KeyMaterial
+
 	} else if pool.KeyInfo.KeyType == models.USERKey {
 
+		_, err = cloud.ImportSSHKeyPair(pool.KeyInfo.KeyName, pool.KeyInfo.KeyMaterial)
+
+		if err != nil {
+			beego.Error(err.Error())
+			logging.SendLog("Error in importing key: "+pool.KeyInfo.KeyName, "info", projectId)
+			logging.SendLog(err.Error(), "info", projectId)
+			return "", err
+		}
+
+		err = InsertSSHKeyPair(pool.KeyInfo)
+
+		if err != nil {
+			beego.Error(err.Error())
+			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+			logging.SendLog(err.Error(), "info", projectId)
+			return "", err
+		}
+		keyMaterial = pool.KeyInfo.KeyMaterial
 	}
 	return keyMaterial, nil
+}
+func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, error) {
+
+	input := &ec2.ImportKeyPairInput{
+		KeyName:           aws.String(key_name),
+		PublicKeyMaterial: []byte(publicKey),
+	}
+	resp, err := cloud.Client.ImportKeyPair(input)
+	if err != nil {
+		beego.Error(err.Error())
+		return "", err
+	}
+	beego.Info("key name", *resp.KeyName, "key fingerprint", *resp.KeyFingerprint)
+
+	return *resp.KeyName, err
 }

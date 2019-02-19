@@ -13,11 +13,6 @@ import (
 	"time"
 )
 
-type SSHKeyPair struct {
-	Name      string       `json:"name" bson:"name",omitempty"`
-	CloudType models.Cloud `json:"cloud" bson:"cloud"`
-	Key       string       `json:"key" bson:"key"`
-}
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id"`
@@ -360,7 +355,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetAllSSHKeyPair() (keys []*SSHKeyPair, err error) {
+func GetAllSSHKeyPair() (keys []*Key, err error) {
 
 	session, err := db.GetMongoSession()
 	if err != nil {
@@ -377,7 +372,7 @@ func GetAllSSHKeyPair() (keys []*SSHKeyPair, err error) {
 	}
 	return keys, nil
 }
-func GetSSHKeyPair(keyname string) (keys *SSHKeyPair, err error) {
+func GetSSHKeyPair(keyname string) (keys *Key, err error) {
 
 	session, err := db.GetMongoSession()
 	if err != nil {
@@ -389,12 +384,11 @@ func GetSSHKeyPair(keyname string) (keys *SSHKeyPair, err error) {
 	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
 	err = c.Find(bson.M{"cloud_type": "aws", "key_name": keyname}).All(&keys)
 	if err != nil {
-		beego.Error(err.Error())
 		return keys, err
 	}
 	return keys, nil
 }
-func InsertSSHKeyPair(key SSHKeyPair) (err error) {
+func InsertSSHKeyPair(key Key) (err error) {
 
 	session, err := db.GetMongoSession()
 	if err != nil {
@@ -405,7 +399,6 @@ func InsertSSHKeyPair(key SSHKeyPair) (err error) {
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoSshKeyCollection, key)
 	if err != nil {
-		beego.Error(err.Error())
 		return err
 	}
 	return nil
