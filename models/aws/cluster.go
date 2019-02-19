@@ -14,9 +14,9 @@ import (
 )
 
 type SSHKeyPair struct {
-	Name      string `json:"name" bson:"name",omitempty"`
-	CloudType string `json:"cloud_type" bson:"cloud_type"`
-	Key       string `json:"key" bson:"key"`
+	Name      string       `json:"name" bson:"name",omitempty"`
+	CloudType models.Cloud `json:"cloud" bson:"cloud"`
+	Key       string       `json:"key" bson:"key"`
 }
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
@@ -40,8 +40,7 @@ type NodePool struct {
 	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
 	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*Node       `json:"nodes" bson:"nodes"`
-	KeyName            string        `json:"key_name" bson:"key_name"`
-	NewKey             bool          `json:"new_key" bson:"new_key"`
+	KeyInfo            Key           `json:"key_info" bson:"key_info"`
 	PoolRole           string        `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
@@ -56,7 +55,11 @@ type Node struct {
 	PrivateDNS string `json:"private_dns" bson:"private_dns,omitempty"`
 	UserName   string `json:"user_name" bson:"user_name,omitempty"`
 }
-
+type Key struct {
+	KeyName     string         `json:"key_name" bson:"key_name"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
+	KeyMaterial string         `json:"key_material" bson:"key_materials"`
+}
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name     string        `json:"name" bson:"name"`
@@ -390,4 +393,20 @@ func GetSSHKeyPair(keyname string) (keys *SSHKeyPair, err error) {
 		return keys, err
 	}
 	return keys, nil
+}
+func InsertSSHKeyPair(key SSHKeyPair) (err error) {
+
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoSshKeyCollection, key)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	return nil
 }

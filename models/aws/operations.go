@@ -19,9 +19,6 @@ import (
 	"time"
 )
 
-/*var (
-	networkHost = beego.AppConfig.String("network_url")
-)*/
 var testInstanceMap = map[string]string{
 	"us-east-2":      "ami-9686a4f3",
 	"sa-east-1":      "ami-a3e39ecf",
@@ -648,25 +645,37 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 	return ebsVolumes, nil
 }
 func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
-	if pool.NewKey {
+	if pool.KeyInfo.KeyType == models.New {
 		beego.Info("AWSOperations: creating key")
-		logging.SendLog("Creating Key "+pool.KeyName, "info", projectId)
+		logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
 
-		keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyName)
+		keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
 		if err != nil {
 			beego.Error(err.Error())
-			logging.SendLog("Error in key creation: "+pool.KeyName, "info", projectId)
+			logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
-	} else {
-		key, err := GetSSHKeyPair(pool.KeyName)
+	} else if pool.KeyInfo.KeyType == models.CPKey {
+		key, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
 		if err != nil {
-			logging.SendLog("Error in getting key: "+pool.KeyName, "info", projectId)
+			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
 		keyMaterial = key.Key
+	} else if pool.KeyInfo.KeyType == models.AWSKey {
+		var keys SSHKeyPair
+		keys.Key = pool.KeyInfo.KeyMaterial
+		keys.Name = pool.KeyInfo.KeyName
+		err = InsertSSHKeyPair(keys)
+		if err != nil {
+			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+			logging.SendLog(err.Error(), "info", projectId)
+			return "", err
+		}
+	} else if pool.KeyInfo.KeyType == models.USERKey {
+
 	}
 	return keyMaterial, nil
 }
