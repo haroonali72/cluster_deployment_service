@@ -171,9 +171,9 @@ type SecurityGroup struct {
 
 type CreatedPool struct {
 	Instances []*ec2.Instance
-	KeyName   string
-	Key       string
-	PoolName  string
+	//KeyName   string
+	Key      string
+	PoolName string
 }
 
 type AWS struct {
@@ -203,16 +203,9 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 	var createdPools []CreatedPool
 
 	for _, pool := range cluster.NodePools {
-
-		beego.Info("AWSOperations: creating key")
 		var createdPool CreatedPool
-		logging.SendLog("Creating Key "+pool.KeyName, "info", cluster.ProjectId)
-
-		keyMaterial, _, err := cloud.KeyPairGenerator(pool.KeyName)
+		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId)
 		if err != nil {
-			beego.Error(err.Error())
-			logging.SendLog("Error in key creation: "+pool.KeyName, "info", cluster.ProjectId)
-			logging.SendLog(err.Error(), "info", cluster.ProjectId)
 			return nil, err
 		}
 		beego.Info("AWSOperations creating nodes")
@@ -249,7 +242,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			}
 		}
 
-		createdPool.KeyName = pool.KeyName
+		//createdPool.KeyName = pool.KeyName
 		createdPool.Key = keyMaterial
 		createdPool.Instances = latest_instances
 		createdPool.PoolName = pool.Name
@@ -653,4 +646,27 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 	}
 	beego.Info(res.GoString())
 	return ebsVolumes, nil
+}
+func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
+	if pool.NewKey {
+		beego.Info("AWSOperations: creating key")
+		logging.SendLog("Creating Key "+pool.KeyName, "info", projectId)
+
+		keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyName)
+		if err != nil {
+			beego.Error(err.Error())
+			logging.SendLog("Error in key creation: "+pool.KeyName, "info", projectId)
+			logging.SendLog(err.Error(), "info", projectId)
+			return "", err
+		}
+	} else {
+		key, err := GetSSHKeyPair(pool.KeyName)
+		if err != nil {
+			logging.SendLog("Error in getting key: "+pool.KeyName, "info", projectId)
+			logging.SendLog(err.Error(), "info", projectId)
+			return "", err
+		}
+		keyMaterial = key.Key
+	}
+	return keyMaterial, nil
 }

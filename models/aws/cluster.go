@@ -41,6 +41,7 @@ type NodePool struct {
 	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*Node       `json:"nodes" bson:"nodes"`
 	KeyName            string        `json:"key_name" bson:"key_name"`
+	NewKey             bool          `json:"new_key" bson:"new_key"`
 	PoolRole           string        `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
@@ -367,6 +368,23 @@ func GetAllSSHKeyPair() (keys []*SSHKeyPair, err error) {
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
 	err = c.Find(bson.M{"cloud_type": "aws"}).All(&keys)
+	if err != nil {
+		beego.Error(err.Error())
+		return keys, err
+	}
+	return keys, nil
+}
+func GetSSHKeyPair(keyname string) (keys *SSHKeyPair, err error) {
+
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return keys, err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
+	err = c.Find(bson.M{"cloud_type": "aws", "key_name": keyname}).All(&keys)
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
