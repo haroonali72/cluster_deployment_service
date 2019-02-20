@@ -75,7 +75,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 	}
 
 	var azureNetwork networks.AzureNetwork
-	network, err := networks.GetNetworkStatus(cluster.EnvironmentId, "azure")
+	network, err := networks.GetNetworkStatus(cluster.ProjectId, "azure")
 	bytes, err := json.Marshal(network)
 	if err != nil {
 		beego.Error(err.Error())
@@ -99,7 +99,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 		result, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup)
 		if err != nil {
-			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.EnvironmentId)
+			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			beego.Error(err.Error())
 			return nil, err
 		}
@@ -389,12 +389,12 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 
 	for _, pool := range cluster.NodePools {
 		for _, node := range pool.Nodes {
-			err := cloud.TerminatePool(node, cluster.EnvironmentId, cluster.ResourceGroup)
+			err := cloud.TerminatePool(node, cluster.ProjectId, cluster.ResourceGroup)
 			if err != nil {
 				return err
 			}
 		}
-		logging.SendLog("Node Pool terminated successfully: "+pool.Name, "info", cluster.EnvironmentId)
+		logging.SendLog("Node Pool terminated successfully: "+pool.Name, "info", cluster.ProjectId)
 	}
 	return nil
 }

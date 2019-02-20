@@ -1,36 +1,34 @@
 package azure
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"antelope/models"
-	"time"
+	"antelope/models/db"
+	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
-	"errors"
-	"antelope/models/db"
+	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
-
 type Template struct {
-	ID               bson.ObjectId  `json:"_id" bson:"_id,omitempty"`
-	EnvironmentId    string         `json:"environment_id" bson:"environment_id"`
-	Name             string         `json:"name" bson:"name"`
-	Cloud            models.Cloud   `json:"cloud" bson:"cloud"`
-	CreationDate     time.Time      `json:"-" bson:"creation_date"`
-	ModificationDate time.Time      `json:"-" bson:"modification_date"`
-	NodePools []*NodePoolT   `json:"node_pools" bson:"node_pools"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
+	Name             string        `json:"name" bson:"name"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	CreationDate     time.Time     `json:"-" bson:"creation_date"`
+	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
 }
 
 type NodePoolT struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name            string        `json:"name" bson:"name"`
-	NodeCount       int32         `json:"node_count" bson:"node_count"`
-	MachineType     string        `json:"machine_type" bson:"machine_type"`
+	ID              bson.ObjectId  `json:"_id" bson:"_id,omitempty"`
+	Name            string         `json:"name" bson:"name"`
+	NodeCount       int32          `json:"node_count" bson:"node_count"`
+	MachineType     string         `json:"machine_type" bson:"machine_type"`
 	Image           ImageReference `json:"ami" bson:"ami"`
-	SubnetId        string `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []string `json:"security_group_id" bson:"security_group_id"`
+	SubnetId        string         `json:"subnet_id" bson:"subnet_id"`
+	SecurityGroupId []string       `json:"security_group_id" bson:"security_group_id"`
 }
-
 
 func CreateTemplate(template Template) error {
 	_, err := GetTemplate(template.Name)
@@ -41,8 +39,8 @@ func CreateTemplate(template Template) error {
 	}
 
 	template.CreationDate = time.Now()
-
-	err = db.InsertInMongo(db.MongoAzureTemplateCollection, template)
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoAzureTemplateCollection, template)
 	if err != nil {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
 		return err
@@ -58,8 +56,8 @@ func GetTemplate(templateName string) (template Template, err error) {
 		return Template{}, err1
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAzureTemplateCollection)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Find(bson.M{"name": templateName}).One(&template)
 	if err != nil {
 		beego.Error(err.Error())
@@ -76,8 +74,8 @@ func GetAllTemplate() (templates []Template, err error) {
 		return nil, err1
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAzureTemplateCollection)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Find(bson.M{}).All(&templates)
 	if err != nil {
 		beego.Error(err.Error())
@@ -120,8 +118,8 @@ func DeleteTemplate(templateName string) error {
 		return err
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAzureTemplateCollection)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Remove(bson.M{"name": templateName})
 	if err != nil {
 		beego.Error(err.Error())

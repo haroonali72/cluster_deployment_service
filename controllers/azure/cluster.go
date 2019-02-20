@@ -1,13 +1,11 @@
 package azure
 
 import (
-	"github.com/astaxie/beego"
 	"antelope/models/azure"
-	"strings"
 	"encoding/json"
+	"github.com/astaxie/beego"
+	"strings"
 	"time"
-	"os/exec"
-	"io/ioutil"
 )
 
 // Operations about azure cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
@@ -17,25 +15,24 @@ type AzureClusterController struct {
 
 // @Title Get
 // @Description get cluster
-// @Param	environmentId	path	string	true	"Id of the environment"
+// @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /:environmentId/ [get]
+// @router /:projectId/ [get]
 func (c *AzureClusterController) Get() {
-	envId := c.GetString(":environmentId")
+	projectId := c.GetString(":projectId")
 
+	beego.Info("AzureClusterController: Get cluster with project id: ", projectId)
 
-	beego.Info("AzureClusterController: Get cluster with environment id: ", envId)
-
-	if envId == "" {
+	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "environment id is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	cluster, err := azure.GetCluster(envId)
+	cluster, err := azure.GetCluster(projectId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
@@ -135,15 +132,15 @@ func (c *AzureClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	environmentId	path	string	true	"Environment id of the cluster"
+// @Param	projectId	path	string	true	"project id of the cluster"
 // @Success 200 {"msg": "cluster deleted successfully"}
-// @Failure 404 {"error": "environment id is empty"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "internal server error"}
-// @router /:environmentId [delete]
+// @router /:projectId [delete]
 func (c *AzureClusterController) Delete() {
-	id := c.GetString(":environmentId")
+	id := c.GetString(":projectId")
 
-	beego.Info("AzureClusterController: Delete cluster with environment id: ", id)
+	beego.Info("AzureClusterController: Delete cluster with project id: ", id)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -167,12 +164,12 @@ func (c *AzureClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
-// @Param	environmentId	path	string	true	"Id of the environment"
+// @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /start/:environmentId [post]
+// @router /start/:projectId [post]
 func (c *AzureClusterController) StartCluster() {
 
 	beego.Info("AzureClusterController: StartCluster.")
@@ -189,22 +186,20 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-
 	var cluster azure.Cluster_Def
 
-	envId := c.GetString(":environmentId")
+	projectId := c.GetString(":projectId")
 
-
-	if envId == "" {
+	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "environment id is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	beego.Info("AzureClusterController: Getting Cluster of environment. ", envId)
+	beego.Info("AzureClusterController: Getting Cluster of project. ", projectId)
 
-	cluster , err :=azure.GetCluster(envId)
+	cluster, err := azure.GetCluster(projectId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -214,7 +209,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 	beego.Info("AzureClusterController: Creating Cluster. ", cluster.Name)
 
-	go azure.DeployCluster(cluster,credentials)
+	go azure.DeployCluster(cluster, credentials)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -223,12 +218,12 @@ func (c *AzureClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
-// @Param	environmentId	path	string	true	"Id of the environment"
+// @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /status/:environmentId/ [get]
+// @router /status/:projectId/ [get]
 func (c *AzureClusterController) GetStatus() {
 
 	beego.Info("AzureClusterController: FetchStatus.")
@@ -244,18 +239,18 @@ func (c *AzureClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	envId := c.GetString(":environmentId")
+	projectId := c.GetString(":projectId")
 
-	if envId == "" {
+	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	beego.Info("AzureClusterController: Fetch Cluster Status of environment. ", envId)
+	beego.Info("AzureClusterController: Fetch Cluster Status of project. ", projectId)
 
-	cluster , err :=azure.FetchStatus(credentials,envId)
+	cluster, err := azure.FetchStatus(credentials, projectId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -268,16 +263,15 @@ func (c *AzureClusterController) GetStatus() {
 	c.ServeJSON()
 }
 
-
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
-// @Param	environmentId	path	string	true	"Id of the environment"
+// @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /terminate/:environmentId/ [post]
+// @router /terminate/:projectId/ [post]
 func (c *AzureClusterController) TerminateCluster() {
 
 	beego.Info("AzureClusterController: TerminateCluster.")
@@ -287,28 +281,27 @@ func (c *AzureClusterController) TerminateCluster() {
 		strings.Contains(credentials, " ") ||
 		strings.Contains(strings.ToLower(credentials), "bearer") ||
 		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 5{
+		len(strings.Split(credentials, ":")) != 5 {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
 		c.ServeJSON()
 		return
 	}
 
-
 	var cluster azure.Cluster_Def
 
-	envId := c.GetString(":environmentId")
+	projectId := c.GetString(":projectId")
 
-	if envId == "" {
+	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "environment id is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	beego.Info("AzureClusterController: Getting Cluster of environment. ", envId)
+	beego.Info("AzureClusterController: Getting Cluster of project. ", projectId)
 
-	cluster , err :=azure.GetCluster(envId)
+	cluster, err := azure.GetCluster(projectId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -318,7 +311,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	}
 	beego.Info("AzureClusterController: Terminating Cluster. ", cluster.Name)
 
-	go azure.TerminateCluster(cluster,credentials)
+	go azure.TerminateCluster(cluster, credentials)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
