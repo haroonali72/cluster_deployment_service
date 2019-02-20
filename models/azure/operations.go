@@ -226,7 +226,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 
 		for index, _ := range pool.Nodes {
 
-			beego.Info("Get VM '%s' by name\n", pool.Name+"-"+string(index))
+			beego.Info("Get VM by name", pool.Name+"-"+string(index))
 			vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 			vmClient.Authorizer = cloud.Authorizer
 			vm, err := vmClient.Get(cloud.context, cluster.ResourceGroup, pool.Name+"-"+string(index), compute.InstanceView)
@@ -242,7 +242,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 }
 func (cloud *AZURE) GetInstance(node Node, resourceGroup string) (compute.VirtualMachine, error) {
 
-	beego.Info("Get VM '%s' by name\n", *node.VMs.Name)
+	beego.Info("Get VM  by name", *node.VMs.Name)
 
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
@@ -442,7 +442,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			return compute.VirtualMachine{}, err
 		}
 	}
-	beego.Info("Get VM  by name\n", pool.Name+"-"+string(index))
+	beego.Info("Get VM  by name", pool.Name+"-"+string(index))
 	vm, err = vmClient.Get(cloud.context, resourceGroup, pool.Name+"-"+strconv.Itoa(index), compute.InstanceView)
 	if err != nil {
 		beego.Error(err)
