@@ -7,33 +7,29 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"time"
 )
 
 type Template struct {
-	ID               bson.ObjectId  `json:"_id" bson:"_id,omitempty"`
-	EnvironmentId    string         `json:"environment_id" bson:"environment_id"`
-	Name             string         `json:"name" bson:"name"`
-	Cloud            models.Cloud   `json:"cloud" bson:"cloud"`
-	CreationDate     time.Time      `json:"-" bson:"creation_date"`
-	ModificationDate time.Time      `json:"-" bson:"modification_date"`
-	NodePools []*NodePoolT   `json:"node_pools" bson:"node_pools"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ProjectId        string        `json:"project_id" bson:"project_id"`
+	TemplateId       string        `json:"template_id" bson:"template_id"`
+	Name             string        `json:"name" bson:"name"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	CreationDate     time.Time     `json:"-" bson:"creation_date"`
+	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
 }
 
-/*type SubclusterT struct {
-	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name      string        `json:"name" bson:"name"`
-	NodePools []*NodePool   `json:"node_pools" bson:"node_pools"`
-}
-*/
 type NodePoolT struct {
 	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name            string        `json:"name" bson:"name"`
 	NodeCount       int32         `json:"node_count" bson:"node_count"`
 	MachineType     string        `json:"machine_type" bson:"machine_type"`
 	Ami             Ami           `json:"ami" bson:"ami"`
-	SubnetId        string `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []string `json:"security_group_id" bson:"security_group_id"`
+	SubnetId        string        `json:"subnet_id" bson:"subnet_id"`
+	SecurityGroupId []string      `json:"security_group_id" bson:"security_group_id"`
 }
 
 type AmiT struct {
@@ -43,7 +39,7 @@ type AmiT struct {
 }
 
 func CreateTemplate(template Template) error {
-	_, err := GetTemplate(template.Name)
+	_, err := GetTemplate(template.TemplateId)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text, err)
@@ -51,8 +47,10 @@ func CreateTemplate(template Template) error {
 	}
 
 	template.CreationDate = time.Now()
-
-	err = db.InsertInMongo(db.MongoAwsTemplateCollection, template)
+	i := rand.Int()
+	template.TemplateId = template.Name + string(i)
+	s := db.GetMongoConf()
+	err = db.InsertInMongo(s.MongoAwsTemplateCollection, template)
 	if err != nil {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
 		return err
@@ -61,16 +59,16 @@ func CreateTemplate(template Template) error {
 	return nil
 }
 
-func GetTemplate(templateName string) (template Template, err error) {
+func GetTemplate(templateId string) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
 		return Template{}, err1
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAwsTemplateCollection)
-	err = c.Find(bson.M{"name": templateName}).One(&template)
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
+	err = c.Find(bson.M{"template_id": templateId}).One(&template)
 	if err != nil {
 		beego.Error(err.Error())
 		return Template{}, err
@@ -86,8 +84,8 @@ func GetAllTemplate() (templates []Template, err error) {
 		return nil, err1
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAwsTemplateCollection)
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{}).All(&templates)
 	if err != nil {
 		beego.Error(err.Error())
@@ -98,14 +96,14 @@ func GetAllTemplate() (templates []Template, err error) {
 }
 
 func UpdateTemplate(template Template) error {
-	oldTemplate, err := GetTemplate(template.Name)
+	oldTemplate, err := GetTemplate(template.TemplateId)
 	if err != nil {
-		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
+		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.TemplateId)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
 
-	err = DeleteTemplate(template.Name)
+	err = DeleteTemplate(template.TemplateId)
 	if err != nil {
 		beego.Error("Template model: Update - Got error deleting template: ", err)
 		return err
@@ -123,16 +121,16 @@ func UpdateTemplate(template Template) error {
 	return nil
 }
 
-func DeleteTemplate(templateName string) error {
+func DeleteTemplate(templateId string) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		beego.Error("Template model: Delete - Got error while connecting to the database: ", err)
 		return err
 	}
 	defer session.Close()
-
-	c := session.DB(db.MongoDb).C(db.MongoAwsTemplateCollection)
-	err = c.Remove(bson.M{"name": templateName})
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
+	err = c.Remove(bson.M{"template_id": templateId})
 	if err != nil {
 		beego.Error(err.Error())
 		return err
