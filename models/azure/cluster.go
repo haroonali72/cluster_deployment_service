@@ -41,11 +41,11 @@ type NodePool struct {
 	PoolSecurityGroups []*string      `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*Node        `json:"nodes" bson:"nodes"`
 	PoolRole           string         `json:"pool_role" bson:"pool_role"`
+	AdminUser          string         `json:"user_name" bson:"user_name,omitempty"`
+	AdminPassword      string         `json:"admin_password" bson:"admin_password,omitempty"`
 }
 type Node struct {
-	AdminUser     string                  `json:"user_name" bson:"user_name,omitempty"`
-	AdminPassword string                  `json:"admin_password" bson:"admin_password,omitempty"`
-	VMs           *compute.VirtualMachine `json:"virtual_machine" bson:"virtual_machine,omitempty"`
+	VMs *compute.VirtualMachine `json:"virtual_machine" bson:"virtual_machine,omitempty"`
 }
 
 type ImageReference struct {
@@ -186,7 +186,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	}
 
 	logging.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	createdPools, err := azure.createCluster(cluster)
+	cluster, err = azure.createCluster(cluster)
 	if err != nil {
 		beego.Error(err.Error())
 
@@ -206,20 +206,6 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		publisher.Notify(cluster.Name, "Status Available")
 		return nil
 
-	}
-
-	for index, nodepool := range cluster.NodePools {
-		for node_index, node := range nodepool.Nodes {
-			for _, createdPool := range createdPools {
-				if createdPool.PoolName == nodepool.Name {
-					for _, createdNode := range createdPool.Instances {
-						if *createdNode.Name == *node.VMs.Name {
-							cluster.NodePools[index].Nodes[node_index].VMs = createdNode
-						}
-					}
-				}
-			}
-		}
 	}
 	cluster.Status = "Cluster Created"
 	beego.Info(cluster.Status + cluster.ProjectId)

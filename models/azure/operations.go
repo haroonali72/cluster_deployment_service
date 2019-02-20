@@ -73,13 +73,13 @@ func (cloud *AZURE) init() error {
 	return nil
 }
 
-func (cloud *AZURE) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
+func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return nil, err
+			return Cluster_Def{}, err
 		}
 	}
 	/*
@@ -98,26 +98,22 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 		return nil, err
 	}*/
 
-	var createdPools []CreatedPool
-
-	for _, pool := range cluster.NodePools {
-
-		var createdPool CreatedPool
+	for i, pool := range cluster.NodePools {
 
 		beego.Info("AZUREOperations creating nodes")
 
 		result, err := cloud.CreateInstance(pool, networks.AzureNetwork{}, cluster.ResourceGroup)
 		if err != nil {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-			return nil, err
+			return Cluster_Def{}, err
+		}
+		for j, vm := range result {
+			cluster.NodePools[i].Nodes[j].VMs = vm
 		}
 
-		createdPool.Instances = result
-		createdPool.PoolName = pool.Name
-		createdPools = append(createdPools, createdPool)
 	}
 
-	return createdPools, nil
+	return cluster, nil
 }
 func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string) ([]*compute.VirtualMachine, error) {
 
@@ -411,8 +407,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			},
 			OsProfile: &compute.OSProfile{
 				ComputerName:  to.StringPtr(pool.Name),
-				AdminUsername: to.StringPtr(node.AdminUser),
-				AdminPassword: to.StringPtr(node.AdminPassword),
+				AdminUsername: to.StringPtr(pool.AdminUser),
+				AdminPassword: to.StringPtr(pool.AdminPassword),
 			},
 			NetworkProfile: &compute.NetworkProfile{
 
