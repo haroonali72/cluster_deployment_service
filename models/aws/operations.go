@@ -170,18 +170,18 @@ type SecurityGroup struct {
 }
 
 type CreatedPool struct {
-	Instances    []*ec2.Instance
-	KeyName    	 string
-	Key     	 string
-	PoolName string
+	Instances []*ec2.Instance
+	KeyName   string
+	Key       string
+	PoolName  string
 }
 
 type AWS struct {
-	Client    	*ec2.EC2
-	IAMService	*iam.IAM
-	AccessKey 	string
-	SecretKey 	string
-	Region   	string
+	Client     *ec2.EC2
+	IAMService *iam.IAM
+	AccessKey  string
+	SecretKey  string
+	Region     string
 }
 
 func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
@@ -208,7 +208,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 		var createdPool CreatedPool
 		logging.SendLog("Creating Key "+pool.KeyName, "info", cluster.ProjectId)
 
-		keyMaterial,_,err  := cloud.KeyPairGenerator(pool.KeyName)
+		keyMaterial, _, err := cloud.KeyPairGenerator(pool.KeyName)
 		if err != nil {
 			beego.Error(err.Error())
 			logging.SendLog("Error in key creation: "+pool.KeyName, "info", cluster.ProjectId)
@@ -302,7 +302,7 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
+func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -338,39 +338,39 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def ) (Cluster_Def, error){
 				}
 			}
 		}
-		cluster.NodePools[in]=pool
+		cluster.NodePools[in] = pool
 	}
-	return cluster,nil
+	return cluster, nil
 }
 
-func (cloud *AWS) getSSHKey ()( []*ec2.KeyPairInfo, error){
+func (cloud *AWS) getSSHKey() ([]*ec2.KeyPairInfo, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 	}
- 	input :=	&ec2.DescribeKeyPairsInput{}
+	input := &ec2.DescribeKeyPairsInput{}
 	keys, err := cloud.Client.DescribeKeyPairs(input)
-	if err != nil{
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
 	return keys.KeyPairs, nil
 }
 
-func (cloud *AWS) KeyPairGenerator(keyName string) ( string ,string, error) {
+func (cloud *AWS) KeyPairGenerator(keyName string) (string, string, error) {
 	params := &ec2.CreateKeyPairInput{
 		KeyName: aws.String(keyName),
 		DryRun:  aws.Bool(false),
 	}
 	resp, err := cloud.Client.CreateKeyPair(params)
 	if err != nil {
-		return "","" ,err
+		return "", "", err
 	}
 
 	return *resp.KeyMaterial, *resp.KeyFingerprint, nil
 }
-func (cloud *AWS) terminateCluster(cluster Cluster_Def ) ( error){
+func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -540,56 +540,55 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 				    }
 				  ]
 				}`)
-		role := string(raw_role)
-		policy := string(raw_policy)
+	role := string(raw_role)
+	policy := string(raw_policy)
 
-		roleInput := iam.CreateRoleInput{AssumeRolePolicyDocument: &role, RoleName: &roleName}
-		out, err := cloud.IAMService.CreateRole(&roleInput)
-		if err != nil {
-			beego.Error(err)
-			return "", err
-		}
+	roleInput := iam.CreateRoleInput{AssumeRolePolicyDocument: &role, RoleName: &roleName}
+	out, err := cloud.IAMService.CreateRole(&roleInput)
+	if err != nil {
+		beego.Error(err)
+		return "", err
+	}
 
-		beego.Info(out.GoString())
+	beego.Info(out.GoString())
 
+	policy_out, err_1 := cloud.IAMService.CreatePolicy(&iam.CreatePolicyInput{
+		PolicyDocument: aws.String(policy),
+		PolicyName:     &roleName,
+	})
 
-		policy_out, err_1 := cloud.IAMService.CreatePolicy(&iam.CreatePolicyInput{
-			PolicyDocument: aws.String(policy),
-			PolicyName:     &roleName,
-		})
+	if err_1 != nil {
+		beego.Error(err_1)
+		return "", err_1
+	}
 
-		if err_1 != nil {
-			beego.Error(err_1)
-			return "",err_1
-		}
+	attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
+	_, err_2 := cloud.IAMService.AttachRolePolicy(&attach)
 
-		attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
-		_, err_2 := cloud.IAMService.AttachRolePolicy(&attach)
+	if err_2 != nil {
+		beego.Error(err_2)
+		return "", err_2
+	}
 
-		if err_2 != nil {
-			beego.Error(err_2)
-			return "", err_2
-		}
+	profileInput := iam.CreateInstanceProfileInput{InstanceProfileName: &roleName}
+	outtt, err := cloud.IAMService.CreateInstanceProfile(&profileInput)
+	if err != nil {
+		beego.Error(err)
+		return "", err
+	}
 
-		profileInput := iam.CreateInstanceProfileInput{InstanceProfileName: &roleName}
-		outtt, err := cloud.IAMService.CreateInstanceProfile(&profileInput)
-		if err != nil {
-			beego.Error(err)
-			return "", err
-		}
+	testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
+	_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
+	if err != nil {
+		beego.Error(err)
+		return "", err
+	}
 
-		testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
-		_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
-		if err != nil {
-			beego.Error(err)
-			return "",  err
-		}
-
-		return  *outtt.InstanceProfile.Arn, nil
+	return *outtt.InstanceProfile.Arn, nil
 
 }
 
-func (cloud *AWS) checkInstanceProfile(iamProfileName string ) bool {
+func (cloud *AWS) checkInstanceProfile(iamProfileName string) bool {
 
 	iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(iamProfileName)}
 
@@ -604,7 +603,7 @@ func (cloud *AWS) checkInstanceProfile(iamProfileName string ) bool {
 
 		//this dummy instance run , to check the success of RunInstance call
 		//this is to ensure that iamProfile is properly propagated
-		_, err :=cloud.Client.RunInstances(&ec2.RunInstancesInput{
+		_, err := cloud.Client.RunInstances(&ec2.RunInstancesInput{
 			// An Amazon Linux AMI ID for t2.micro instances in the us-west-2 region
 			ImageId:            aws.String(ami),
 			InstanceType:       aws.String("t2.micro"),
