@@ -1,27 +1,24 @@
 package networks
 
 import (
-	"strings"
-	"antelope/models/utils"
-	"io/ioutil"
-	"github.com/astaxie/beego"
-	"encoding/json"
 	"antelope/models"
-	"time"
+	"antelope/models/utils"
+	"encoding/json"
+	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
+	"strings"
+	"time"
 )
 
-var (
-	networkHost    = beego.AppConfig.String("network_url")
-)
 type AWSNetwork struct {
-	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
-	Name             string        `json:"name" bson:"name"`
-	Type             models.Type   `json:"type" bson:"type"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
-	NetworkStatus    string        `json:"status" bson:"status"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	EnvironmentId    string           `json:"environment_id" bson:"environment_id"`
+	Name             string           `json:"name" bson:"name"`
+	Type             models.Type      `json:"type" bson:"type"`
+	Cloud            models.Cloud     `json:"cloud" bson:"cloud"`
+	NetworkStatus    string           `json:"status" bson:"status"`
+	CreationDate     time.Time        `json:"-" bson:"creation_date"`
+	ModificationDate time.Time        `json:"-" bson:"modification_date"`
 	Definition       []*AWSDefinition `json:"definition" bson:"definition"`
 }
 
@@ -43,7 +40,7 @@ type Subnet struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	SubnetId string        `json:"subnet_id" bson:"subnet_id"`
 	Name     string        `json:"name" bson:"name"`
-	CIDR  	 string        `json:"cidr" bson:"cidr"`
+	CIDR     string        `json:"cidr" bson:"cidr"`
 }
 
 type SecurityGroup struct {
@@ -54,36 +51,36 @@ type SecurityGroup struct {
 }
 
 type AzureNetwork struct {
-	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
-	Name             string        `json:"name" bson:"name"`
-	Type             models.Type   `json:"type" bson:"type"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
-	NetworkStatus    string        `json:"status" bson:"status"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	EnvironmentId    string             `json:"environment_id" bson:"environment_id"`
+	Name             string             `json:"name" bson:"name"`
+	Type             models.Type        `json:"type" bson:"type"`
+	Cloud            models.Cloud       `json:"cloud" bson:"cloud"`
+	NetworkStatus    string             `json:"status" bson:"status"`
+	CreationDate     time.Time          `json:"-" bson:"creation_date"`
+	ModificationDate time.Time          `json:"-" bson:"modification_date"`
 	Definition       []*AzureDefinition `json:"definition" bson:"definition"`
 }
 
 type AzureDefinition struct {
 	ID             bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
-	Vnet            VNet              `json:"vnet" bson:"vnet"`
+	Vnet           VNet             `json:"vnet" bson:"vnet"`
 	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
 	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
 }
 
 type VNet struct {
-	ID    bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ID     bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	VnetId string        `json:"vnet_id" bson:"vnet_id"`
-	Name  string        `json:"name" bson:"name"`
-	CIDR  string        `json:"cidr" bson:"cidr"`
+	Name   string        `json:"name" bson:"name"`
+	CIDR   string        `json:"cidr" bson:"cidr"`
 }
 
-func GetNetworkStatus(envId string ,cloudType string) ( interface{}, error){
+func GetNetworkStatus(envId string, cloudType string) (interface{}, error) {
 
-	networkUrl := strings.Replace(networkHost,"{cloud_provider}",cloudType,-1)
+	networkUrl := strings.Replace(getNetworkHost(), "{cloud_provider}", cloudType, -1)
 	client := utils.InitReq()
 
-	req , err :=utils.CreateGetRequest(envId, networkUrl)
+	req, err := utils.CreateGetRequest(envId, networkUrl)
 	if err != nil {
 		beego.Error("%s", err)
 		return AWSNetwork{}, err
@@ -110,7 +107,7 @@ func GetNetworkStatus(envId string ,cloudType string) ( interface{}, error){
 			return AWSNetwork{}, err
 		}
 		return network, nil
-	}else if cloudType == "azure"{
+	} else if cloudType == "azure" {
 		var network AzureNetwork
 		contents, err := ioutil.ReadAll(response.Body)
 		if err != nil {
@@ -125,5 +122,9 @@ func GetNetworkStatus(envId string ,cloudType string) ( interface{}, error){
 		}
 		return network, nil
 	}
-	return nil,err
+	return nil, err
+}
+func getNetworkHost() string {
+	return beego.AppConfig.String("network_url")
+
 }
