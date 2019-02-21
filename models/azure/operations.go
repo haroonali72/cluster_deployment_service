@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
+	storage "github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
+	"github.com/aws/aws-sdk-go/aws"
 	"io/ioutil"
 	"os/exec"
 	"strconv"
@@ -31,6 +33,7 @@ type AZURE struct {
 	AddressClient    network.PublicIPAddressesClient
 	InterfacesClient network.InterfacesClient
 	VMClient         compute.VirtualMachinesClient
+	AccountClient    storage.AccountsClient
 	context          context.Context
 	ID               string
 	Key              string
@@ -70,6 +73,9 @@ func (cloud *AZURE) init() error {
 
 	cloud.VMClient = compute.NewVirtualMachinesClient(cloud.Subscription)
 	cloud.VMClient.Authorizer = cloud.Authorizer
+
+	cloud.AccountClient = storage.NewAccountsClient(cloud.Subscription)
+	cloud.AccountClient.Authorizer = cloud.Authorizer
 	return nil
 }
 
@@ -364,12 +370,13 @@ func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, p
 	return nicParameters, nil
 }
 func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, node *Node, resourceGroup string) (compute.VirtualMachine, error) {
+
 	osDisk := &compute.OSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
 		Name:         to.StringPtr(pool.Name + "-" + strconv.Itoa(index)),
-		ManagedDisk: &compute.ManagedDiskParameters{
+		/*	ManagedDisk: &compute.ManagedDiskParameters{
 			StorageAccountType: compute.StorageAccountTypesStandardSSDLRS,
-		},
+		},*/
 	}
 
 	storageName := "ext-" + pool.Name + strconv.Itoa(index)
@@ -419,6 +426,26 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		},
 	}
 
+	if pool.BootDiagnostics.EnableDiagnostics {
+		storageId := ""
+		if pool.BootDiagnostics.NewStroageAccount {
+			storageId, _ := cloud.createStorageAccount(resourceGroup, pool.Name+"-"+strconv.Itoa(index))
+
+			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
+				&compute.BootDiagnostics{
+					Enabled: aws.Bool(true), StorageURI: &storageId,
+				},
+			}
+		} else {
+			storageId = pool.BootDiagnostics.StorageAccountId
+		}
+		vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
+			&compute.BootDiagnostics{
+				Enabled: aws.Bool(true), StorageURI: &storageId,
+			},
+		}
+	}
+
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
 	vmFuture, err := vmClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name+"-"+strconv.Itoa(index), vm)
@@ -440,4 +467,33 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		return compute.VirtualMachine{}, err
 	}
 	return vm, nil
+}
+func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName string) (string, error) {
+	accountParameters := storage.AccountCreateParameters{
+		Sku: &storage.Sku{
+			Name: storage.StandardLRS,
+		},
+		Location: &cloud.Region,
+		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
+	}
+
+	future, err := cloud.AccountClient.Create(context.Background(), resouceGroup, acccountName, accountParameters)
+	if err != nil {
+		beego.Error("Storage account creation failed")
+		beego.Info(err)
+		return "", err
+	}
+	err = future.WaitForCompletion(context.Background(), cloud.AccountClient.Client)
+	if err != nil {
+
+		beego.Error("Storage account creation failed")
+		beego.Info(err)
+		return "", err
+	}
+	account, err := cloud.AccountClient.GetProperties(cloud.context, resouceGroup, acccountName)
+	if err != nil {
+		beego.Info(err.Error())
+		return "", err
+	}
+	return *account.ID, nil
 }
