@@ -261,11 +261,25 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 	}
 
 	for _, pool := range cluster.NodePools {
-		for _, node := range pool.Nodes {
+		for index, node := range pool.Nodes {
+
 			err := cloud.TerminatePool(node, cluster.ProjectId, cluster.ResourceGroup)
 			if err != nil {
 				return err
 			}
+
+			nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(index))
+			err = cloud.deleteNIC(nicName, cluster.ResourceGroup)
+			if err != nil {
+				return err
+			}
+
+			IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(index))
+			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup)
+			if err != nil {
+				return err
+			}
+
 		}
 		logging.SendLog("Node Pool terminated successfully: "+pool.Name, "info", cluster.ProjectId)
 	}
@@ -325,6 +339,21 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 	}
 	return publicIPaddress, nil
 }
+func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string) error {
+
+	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
+	if err != nil {
+		beego.Error(err)
+		return err
+	} else {
+		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
+		if err != nil {
+			beego.Error(err)
+			return err
+		}
+	}
+	return nil
+}
 func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string) (network.Interface, error) {
 
 	nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(index))
@@ -369,6 +398,22 @@ func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, p
 	}
 	return nicParameters, nil
 }
+func (cloud *AZURE) deleteNIC(nicName, resourceGroup string) error {
+
+	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
+	if err != nil {
+		beego.Info(err.Error())
+		return err
+	} else {
+		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
+		if err != nil {
+			beego.Info(err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
 func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, node *Node, resourceGroup string) (compute.VirtualMachine, error) {
 
 	osDisk := &compute.OSDisk{
