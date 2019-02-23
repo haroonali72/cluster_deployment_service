@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
+	"encoding/json"
 )
 
 /*var (
@@ -25,7 +26,12 @@ func (notifier *Notifier) Notify(channel, status string) {
 		ID:        channel,
 		Component: "Cluster",
 	}
-	cmd := notifier.Client.Publish(channel, msg)
+	b,err:=json.Marshal(msg)
+	if err != nil{
+		beego.Error(err.Error())
+		return
+	}
+	cmd := notifier.Client.Publish(channel, string(b))
 	beego.Info(*cmd)
 }
 
