@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
+	"encoding/json"
 )
 
 /*var (
