@@ -32,18 +32,18 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name"`
-	NodeCount          int64              `json:"node_count" bson:"node_count"`
-	MachineType        string             `json:"machine_type" bson:"machine_type"`
-	Image              ImageReference     `json:"image_id" bson:"image_id"`
-	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
-	Nodes              []*Node            `json:"nodes" bson:"nodes"`
-	PoolRole           string             `json:"pool_role" bson:"pool_role"`
-	AdminUser          string             `json:"user_name" bson:"user_name,omitempty"`
-	AdminPassword      string             `json:"admin_password" bson:"admin_password,omitempty"`
-	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
+	ID                 bson.ObjectId             `json:"_id" bson:"_id,omitempty"`
+	Name               string                    `json:"name" bson:"name"`
+	NodeCount          int64                     `json:"node_count" bson:"node_count"`
+	MachineType        string                    `json:"machine_type" bson:"machine_type"`
+	Image              ImageReference            `json:"image_id" bson:"image_id"`
+	PoolSubnet         string                    `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups []*string                 `json:"security_group_id" bson:"security_group_id"`
+	Nodes              []*compute.VirtualMachine `json:"nodes" bson:"nodes"`
+	PoolRole           string                    `json:"pool_role" bson:"pool_role"`
+	AdminUser          string                    `json:"user_name" bson:"user_name",omitempty"`
+	AdminPassword      string                    `json:"admin_password" bson:"admin_password",omitempty"`
+	BootDiagnostics    DiagnosticsProfile        `json:"boot_diagnostics" bson:"boot_diagnostics"`
 }
 type Node struct {
 	VMs *compute.VirtualMachine `json:"virtual_machine" bson:"virtual_machine,omitempty"`
@@ -255,7 +255,7 @@ func FetchStatus(credentials string, projectId string) (Cluster_Def, error) {
 	}
 	err = UpdateCluster(c)
 	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", e.Error())
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}
 	return c, nil
