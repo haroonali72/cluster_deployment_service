@@ -1,9 +1,9 @@
 package utils
 
 import (
+	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
-	"encoding/json"
 )
 
 /*var (
@@ -26,13 +26,16 @@ func (notifier *Notifier) Notify(channel, status string) {
 		ID:        channel,
 		Component: "Cluster",
 	}
-	b,err:=json.Marshal(msg)
-	if err != nil{
+	b, err := json.Marshal(msg)
+	if err != nil {
 		beego.Error(err.Error())
 		return
 	}
 	cmd := notifier.Client.Publish(channel, string(b))
 	beego.Info(*cmd)
+	if cmd != nil {
+		beego.Error(cmd.Err().Error())
+	}
 }
 
 func (notifier *Notifier) Init_notifier() error {
