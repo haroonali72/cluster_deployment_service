@@ -107,12 +107,7 @@ func InitFlags() error {
 		return err
 	}
 
-	host := mongo + ":27017"
-	redis := redis_url + ":6379"
-	elephant := "http://" + logger_url + ":3500/api/v1/logger"
-	weasel := "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
-
-	beego.AppConfig.Set("mongo_host", host)
+	beego.AppConfig.Set("mongo_host", mongo)
 	beego.AppConfig.Set("mongo_user", mongo_user)
 	beego.AppConfig.Set("mongo_pass", mongo_pass)
 	beego.AppConfig.Set("mongo_auth", mongo_auth)
@@ -121,9 +116,9 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_aws_cluster_collection", mongo_aws_cluster_collection)
 	beego.AppConfig.Set("mongo_azure_template_collection", mongo_azure_template_collection)
 	beego.AppConfig.Set("mongo_azure_cluster_collection", mongo_azure_cluster_collection)
-	beego.AppConfig.Set("redis_url", redis)
-	beego.AppConfig.Set("logger_url", elephant)
-	beego.AppConfig.Set("network_url", weasel)
+	beego.AppConfig.Set("redis_url", redis_url)
+	beego.AppConfig.Set("logger_url", logger_url)
+	beego.AppConfig.Set("network_url", network_url)
 
 	return nil
 }

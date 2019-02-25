@@ -502,8 +502,12 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 
 func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 
+	url := getNetworkHost()
+
+	url = strings.Replace(url, "{cloud_provider}", "aws", -1)
+
 	client := utils.InitReq()
-	req, err := utils.CreateGetRequest(projectId, getNetworkHost())
+	req, err := utils.CreateGetRequest(projectId, url)
 
 	response, err := client.SendRequest(req)
 
