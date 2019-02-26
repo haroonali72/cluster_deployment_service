@@ -14,3 +14,11 @@ const (
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
 )
+
+type OsDiskType string
+
+const (
+	StandardHDD OsDiskType = "standard hdd"
+	StandardSSD OsDiskType = "standard ssd"
+	PremiumSSD  OsDiskType = "premium ssd"
+)

@@ -44,6 +44,7 @@ type NodePool struct {
 	AdminUser          string                    `json:"user_name" bson:"user_name",omitempty"`
 	AdminPassword      string                    `json:"admin_password" bson:"admin_password",omitempty"`
 	BootDiagnostics    DiagnosticsProfile        `json:"boot_diagnostics" bson:"boot_diagnostics"`
+	OsDisk             models.OsDiskType         `json:"os_disk_type" bson:"os_disk_type"`
 }
 type Node struct {
 	VMs *compute.VirtualMachine `json:"virtual_machine" bson:"virtual_machine,omitempty"`

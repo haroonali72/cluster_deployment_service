@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"antelope/models"
 	"antelope/models/logging"
 	"antelope/models/networks"
 	"context"
@@ -420,13 +421,21 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string) error {
 }
 
 func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string) (compute.VirtualMachine, error) {
+	var satype compute.StorageAccountTypes
+	if pool.OsDisk == models.StandardSSD {
+		satype = compute.StorageAccountTypesStandardSSDLRS
+	} else if pool.OsDisk == models.PremiumSSD {
+		satype = compute.StorageAccountTypesPremiumLRS
+	} else if pool.OsDisk == models.StandardHDD {
+		satype = compute.StorageAccountTypesStandardLRS
 
+	}
 	osDisk := &compute.OSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
 		Name:         to.StringPtr(pool.Name + "-" + strconv.Itoa(index)),
-		/*	ManagedDisk: &compute.ManagedDiskParameters{
-			StorageAccountType: compute.StorageAccountTypesStandardSSDLRS,
-		},*/
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
 	}
 
 	storageName := "ext-" + pool.Name + strconv.Itoa(index)
@@ -477,16 +486,19 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 
 	if pool.BootDiagnostics.EnableDiagnostics {
-		storageId := ""
+
 		if pool.BootDiagnostics.NewStroageAccount {
-			storageId, _ := cloud.createStorageAccount(resourceGroup, pool.Name+strconv.Itoa(index))
+
+			storageId := "https://" + pool.Name + strconv.Itoa(index) + ".blob.core.windows.net/"
+			cloud.createStorageAccount(resourceGroup, pool.Name+strconv.Itoa(index))
 			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
 				&compute.BootDiagnostics{
 					Enabled: aws.Bool(true), StorageURI: &storageId,
 				},
 			}
 		} else {
-			storageId = pool.BootDiagnostics.StorageAccountId
+
+			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
 			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
 				&compute.BootDiagnostics{
 					Enabled: aws.Bool(true), StorageURI: &storageId,
@@ -517,7 +529,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	return vm, nil
 }
-func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName string) (string, error) {
+func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName string) error {
 	accountParameters := storage.AccountCreateParameters{
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
@@ -530,20 +542,20 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 	if err != nil {
 		beego.Error("Storage account creation failed")
 		beego.Info(err)
-		return "", err
+		return err
 	}
 	err = future.WaitForCompletion(context.Background(), cloud.AccountClient.Client)
 	if err != nil {
 
 		beego.Error("Storage account creation failed")
 		beego.Info(err)
-		return "", err
+		return err
 	}
-	account, err := cloud.AccountClient.GetProperties(cloud.context, resouceGroup, acccountName)
+	/*account, err := cloud.AccountClient.GetProperties(cloud.context, resouceGroup, acccountName)
 	if err != nil {
 		beego.Error(err.Error())
 		return "", err
 	}
-	beego.Info(*account.ID)
-	return *account.ID, nil
+	beego.Info(*account.ID)*/
+	return nil
 }
