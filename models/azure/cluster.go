@@ -5,6 +5,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/logging"
 	"antelope/models/utils"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
@@ -45,9 +46,6 @@ type NodePool struct {
 	AdminPassword      string                    `json:"admin_password" bson:"admin_password",omitempty"`
 	BootDiagnostics    DiagnosticsProfile        `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType         `json:"os_disk_type" bson:"os_disk_type"`
-}
-type Node struct {
-	VMs *compute.VirtualMachine `json:"virtual_machine" bson:"virtual_machine,omitempty"`
 }
 type DiagnosticsProfile struct {
 	EnableDiagnostics bool   `json:"enable_boot_diagnostics" bson :"enable_boot_diagnostics"`
@@ -216,6 +214,9 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	}
 	cluster.Status = "Cluster Created"
 	beego.Info(cluster.Status + cluster.ProjectId)
+	b, _ := json.Marshal(cluster)
+	beego.Info(string(b))
+	beego.Info(cluster)
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())

@@ -86,7 +86,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return Cluster_Def{}, err
+			return cluster, err
 		}
 	}
 	/*
@@ -112,12 +112,13 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		result, err := cloud.CreateInstance(pool, networks.AzureNetwork{}, cluster.ResourceGroup)
 		if err != nil {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-			return Cluster_Def{}, err
+			return cluster, err
 		}
-		for j, vm := range result {
-			cluster.NodePools[i].Nodes[j] = vm
+		/*for _, vm := range result {
+			cluster.NodePools[i].Nodes =append(cluster.NodePools[i].Nodes, vm)
 		}
-
+		*/
+		cluster.NodePools[i].Nodes = result
 	}
 
 	return cluster, nil
@@ -129,10 +130,9 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 	//subnetId := cloud.GetSubnets(pool, networkData)
 	//sgIds := cloud.GetSecurityGroups(pool, networkData)
 
-	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/sadaf-test/providers/Microsoft.Network/virtualNetworks/sadaf-test/subnets/default"
-
+	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/sadaf-0test/providers/Microsoft.Network/virtualNetworks/sadaf-0test-vnet/subnets/default"
 	var sgIds []*string
-	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/sadaf-test/providers/Microsoft.Network/networkSecurityGroups/sadaf"
+	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/sadaf-0test/providers/Microsoft.Network/networkSecurityGroups/sadaf-nsg"
 	sgIds = append(sgIds, &sid)
 
 	i := 0
