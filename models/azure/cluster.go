@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
@@ -33,19 +32,28 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId             `json:"_id" bson:"_id,omitempty"`
-	Name               string                    `json:"name" bson:"name"`
-	NodeCount          int64                     `json:"node_count" bson:"node_count"`
-	MachineType        string                    `json:"machine_type" bson:"machine_type"`
-	Image              ImageReference            `json:"image_id" bson:"image_id"`
-	PoolSubnet         string                    `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*string                 `json:"security_group_id" bson:"security_group_id"`
-	Nodes              []*compute.VirtualMachine `json:"nodes" bson:"nodes"`
-	PoolRole           string                    `json:"pool_role" bson:"pool_role"`
-	AdminUser          string                    `json:"user_name" bson:"user_name",omitempty"`
-	AdminPassword      string                    `json:"admin_password" bson:"admin_password",omitempty"`
-	BootDiagnostics    DiagnosticsProfile        `json:"boot_diagnostics" bson:"boot_diagnostics"`
-	OsDisk             models.OsDiskType         `json:"os_disk_type" bson:"os_disk_type"`
+	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
+	Name               string             `json:"name" bson:"name"`
+	NodeCount          int64              `json:"node_count" bson:"node_count"`
+	MachineType        string             `json:"machine_type" bson:"machine_type"`
+	Image              ImageReference     `json:"image_id" bson:"image_id"`
+	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
+	Nodes              []*VM              `json:"nodes" bson:"nodes"`
+	PoolRole           string             `json:"pool_role" bson:"pool_role"`
+	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
+	AdminPassword      string             `json:"admin_password" bson:"admin_password",omitempty"`
+	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
+	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
+}
+type VM struct {
+	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
+	NodeState *string `json:"node_state" bson:"node_state,omitempty"`
+	Name      *string `json:"name" bson:"name,omitempty"`
+	PrivateIP *string `json:"private_ip" bson:"private_ip,omitempty"`
+	PublicIP  *string `json:"public_ip" bson:"public_ip,omitempty"`
+	UserName  *string `json:"user_name" bson:"user_name,omitempty"`
+	PAssword  *string `json:"password" bson:"password,omitempty"`
 }
 type DiagnosticsProfile struct {
 	EnableDiagnostics bool   `json:"enable_boot_diagnostics" bson :"enable_boot_diagnostics"`

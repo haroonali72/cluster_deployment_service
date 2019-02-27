@@ -114,18 +114,15 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
 		}
-		/*for _, vm := range result {
-			cluster.NodePools[i].Nodes =append(cluster.NodePools[i].Nodes, vm)
-		}
-		*/
+
 		cluster.NodePools[i].Nodes = result
 	}
 
 	return cluster, nil
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string) ([]*compute.VirtualMachine, error) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string) ([]*VM, error) {
 
-	var vms []*compute.VirtualMachine
+	var vms []*VM
 
 	//subnetId := cloud.GetSubnets(pool, networkData)
 	//sgIds := cloud.GetSecurityGroups(pool, networkData)
@@ -158,7 +155,17 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 		if err != nil {
 			return nil, err
 		}
-		vms = append(vms, &vm)
+
+		var vmObj VM
+		vmObj.Name = vm.Name
+		vmObj.CloudId = vm.ID
+		vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+		vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
+		vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
+		vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
+		vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
+
+		vms = append(vms, &vmObj)
 		i = i + 1
 	}
 	return vms, nil
@@ -239,7 +246,16 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 				beego.Error(err)
 				return Cluster_Def{}, err
 			}
-			pool.Nodes = append(pool.Nodes, &vm)
+			var vmObj VM
+			vmObj.Name = vm.Name
+			vmObj.CloudId = vm.ID
+			vmObj.PrivateIP = pool.Nodes[index].PublicIP
+			vmObj.PublicIP = pool.Nodes[index].PublicIP
+			vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
+			vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
+			vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
+
+			pool.Nodes = append(pool.Nodes, &vmObj)
 
 			index = index + 1
 		}
@@ -291,7 +307,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func (cloud *AZURE) TerminatePool(node *compute.VirtualMachine, envId string, resourceGroup string) error {
+func (cloud *AZURE) TerminatePool(node *VM, envId string, resourceGroup string) error {
 
 	beego.Info("AZUREOperations: terminating nodes")
 
