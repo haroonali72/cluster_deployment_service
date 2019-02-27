@@ -244,7 +244,7 @@ func FetchStatus(credentials string, projectId string) (Cluster_Def, error) {
 	}
 	err = UpdateCluster(c)
 	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", e.Error())
+		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}
 	return c, nil

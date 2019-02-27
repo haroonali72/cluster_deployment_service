@@ -439,8 +439,10 @@ func (cloud *AWS) GetSecurityGroups(pool *NodePool, network Network) []*string {
 	for _, definition := range network.Definition {
 		for _, sg := range definition.SecurityGroups {
 			for _, sgName := range pool.PoolSecurityGroups {
-				if *sgName == sg.Name {
-					sgId = append(sgId, &sg.SecurityGroupId)
+				if sgName != nil {
+					if *sgName == sg.Name {
+						sgId = append(sgId, &sg.SecurityGroupId)
+					}
 				}
 			}
 		}
