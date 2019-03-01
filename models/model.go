@@ -15,6 +15,15 @@ const (
 	GCP   Cloud = "gcp"
 )
 
+type KeyType string
+
+const (
+	NEWKey  KeyType = "new"
+	CPKey   KeyType = "cp"
+	AWSKey  KeyType = "aws"
+	USERKey KeyType = "user"
+)
+
 type OsDiskType string
 
 const (

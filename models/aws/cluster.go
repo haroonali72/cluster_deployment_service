@@ -14,10 +14,6 @@ import (
 	"time"
 )
 
-type SSHKeyPair struct {
-	Name        string `json:"name" bson:"name",omitempty"`
-	FingerPrint string `json:"fingerprint" bson:"fingerprint"`
-}
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id"`
@@ -40,7 +36,7 @@ type NodePool struct {
 	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
 	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*Node       `json:"nodes" bson:"nodes"`
-	KeyName            string        `json:"key_name" bson:"key_name"`
+	KeyInfo            Key           `json:"key_info" bson:"key_info"`
 	PoolRole           string        `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
@@ -55,7 +51,12 @@ type Node struct {
 	PrivateDNS string `json:"private_dns" bson:"private_dns,omitempty"`
 	UserName   string `json:"user_name" bson:"user_name,omitempty"`
 }
-
+type Key struct {
+	KeyName     string         `json:"key_name" bson:"key_name"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
+	KeyMaterial string         `json:"key_material" bson:"key_materials"`
+	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
+}
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name     string        `json:"name" bson:"name"`
@@ -356,7 +357,55 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetSSHKeyPair(credentials string) ([]*SSHKeyPair, error) {
+func GetAllSSHKeyPair() (keys []*Key, err error) {
+
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return keys, err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
+	err = c.Find(bson.M{"cloud_type": models.AWS}).All(&keys)
+	if err != nil {
+		beego.Error(err.Error())
+		return keys, err
+	}
+	return keys, nil
+}
+func GetSSHKeyPair(keyname string) (keys *Key, err error) {
+
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return keys, err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
+	err = c.Find(bson.M{"cloud_type": models.AWS, "key_name": keyname}).All(&keys)
+	if err != nil {
+		return keys, err
+	}
+	return keys, nil
+}
+func InsertSSHKeyPair(key Key) (err error) {
+	key.Cloud = models.AWS
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoSshKeyCollection, key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 
 	splits := strings.Split(credentials, ":")
 	aws := AWS{
@@ -374,19 +423,6 @@ func GetSSHKeyPair(credentials string) ([]*SSHKeyPair, error) {
 		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", e.Error())
 		return nil, e
 	}
-	k := fillKeyInfo(keys)
 
-	return k, nil
-}
-func fillKeyInfo(keys_raw []*ec2.KeyPairInfo) (keys []*SSHKeyPair) {
-	for _, key := range keys_raw {
-
-		keys = append(keys, &SSHKeyPair{
-			FingerPrint: *key.KeyFingerprint,
-			Name:        *key.KeyName,
-		})
-
-	}
-
-	return keys
+	return keys, nil
 }
