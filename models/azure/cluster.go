@@ -49,6 +49,12 @@ type NodePool struct {
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
+type Key struct {
+	KeyName     string         `json:"key_name" bson:"key_name"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
+	KeyMaterial string         `json:"key_material" bson:"key_materials"`
+	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
+}
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
 	NodeState *string `json:"node_state" bson:"node_state,omitempty"`
@@ -340,5 +346,20 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 	logging.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.Name, "Status Available")
 
+	return nil
+}
+func InsertSSHKeyPair(key Key) (err error) {
+	key.Cloud = models.AWS
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoSshKeyCollection, key)
+	if err != nil {
+		return err
+	}
 	return nil
 }
