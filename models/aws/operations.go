@@ -646,7 +646,7 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 }
 func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
 
-	if pool.KeyInfo.KeyType == models.New {
+	if pool.KeyInfo.KeyType == models.NEWKey {
 
 		beego.Info("AWSOperations: creating key")
 		logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
