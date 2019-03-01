@@ -88,5 +88,5 @@ type mongConf struct {
 	MongoAwsClusterCollection    string
 	MongoAzureTemplateCollection string
 	MongoAzureClusterCollection  string
-	MongoSshKeyCollection      string
+	MongoSshKeyCollection        string
 }

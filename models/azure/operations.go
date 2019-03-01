@@ -510,8 +510,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		},
 	}
 
-	if pool.CredentialType == "SSH Key" && pool.NewKey {
-		res, err := cloud.GenerateKeyPair(pool.AdminPassword)
+	if pool.KeyInfo.CredentialType == "SSH Key" && pool.KeyInfo.NewKey {
+		res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName)
 		if err != nil {
 			beego.Info(err.Error())
 			return compute.VirtualMachine{}, err
@@ -522,11 +522,35 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		},
 		}
 		vm.OsProfile.LinuxConfiguration.SSH.PublicKeys = &key
+		pool.KeyInfo.PublicKey = res.PublicKey
+		pool.KeyInfo.PrivateKey = res.PrivateKey
 
-	} else if pool.CredentialType == "SSH Key" && !pool.NewKey {
+		err = InsertSSHKeyPair(pool.KeyInfo)
 
+		if err != nil {
+			beego.Error("vm creation failed")
+			beego.Error(err)
+			return compute.VirtualMachine{}, err
+		}
+
+	} else if pool.KeyInfo.CredentialType == "SSH Key" && !pool.KeyInfo.NewKey {
+
+		key := []compute.SSHPublicKey{{
+
+			KeyData: to.StringPtr(pool.KeyInfo.PublicKey),
+		},
+		}
+		vm.OsProfile.LinuxConfiguration.SSH.PublicKeys = &key
+
+		err := InsertSSHKeyPair(pool.KeyInfo)
+
+		if err != nil {
+			beego.Error("vm creation failed")
+			beego.Error(err)
+			return compute.VirtualMachine{}, err
+		}
 	} else {
-		vm.OsProfile.AdminPassword = to.StringPtr(pool.AdminPassword)
+		vm.OsProfile.AdminPassword = to.StringPtr(pool.KeyInfo.AdminPassword)
 	}
 
 	if pool.BootDiagnostics.EnableDiagnostics {

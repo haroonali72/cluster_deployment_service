@@ -42,18 +42,18 @@ type NodePool struct {
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
 	PoolRole           string             `json:"pool_role" bson:"pool_role"`
 	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
-	CredentialType     string             `json:"credential_type"  bson:"credential_type"`
-	NewKey             bool               `json:"new_key"  bson:"new_key"`
-	AdminPassword      string             `json:"admin_password" bson:"admin_password",omitempty"`
-	PrivateKey         string             `json:"private_key" bson:"private_key",omitempty"`
+	KeyInfo            Key                `json:"key_info" bson:"key_info"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
 type Key struct {
-	KeyName     string         `json:"key_name" bson:"key_name"`
-	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
-	KeyMaterial string         `json:"key_material" bson:"key_materials"`
-	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
+	CredentialType string       `json:"credential_type"  bson:"credential_type"`
+	NewKey         bool         `json:"new_key"  bson:"new_key"`
+	KeyName        string       `json:"key_name" bson:"key_name"`
+	AdminPassword  string       `json:"admin_password" bson:"admin_password",omitempty"`
+	PrivateKey     string       `json:"private_key" bson:"private_key",omitempty"`
+	PublicKey      string       `json:"public_key" bson:"public_key",omitempty"`
+	Cloud          models.Cloud `json:"cloud" bson:"cloud"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
@@ -349,7 +349,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 	return nil
 }
 func InsertSSHKeyPair(key Key) (err error) {
-	key.Cloud = models.AWS
+	key.Cloud = models.Azure
 	session, err := db.GetMongoSession()
 	if err != nil {
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
