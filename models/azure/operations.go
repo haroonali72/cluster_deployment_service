@@ -216,14 +216,24 @@ func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse, error) {
 		beego.Error(err1)
 		return KeyPairResponse{}, err1
 	}
+
 	res.PrivateKey = str
 	res.Key_name = keyName
+
+	arr, err1 = ioutil.ReadFile(keyName + ".pub")
+	str = string(arr)
+	if err1 != nil {
+		beego.Error(err1)
+		return KeyPairResponse{}, err1
+	}
+	res.PublicKey = str
 	return res, nil
 }
 
 type KeyPairResponse struct {
 	Key_name   string `json:"key_name"`
-	PrivateKey string `json:"privatekey"`
+	PrivateKey string `json:"private_key"`
+	PublicKey  string `json:"public_key"`
 }
 
 func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
@@ -485,7 +495,6 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			OsProfile: &compute.OSProfile{
 				ComputerName:  to.StringPtr(pool.Name),
 				AdminUsername: to.StringPtr(pool.AdminUser),
-				AdminPassword: to.StringPtr(pool.AdminPassword),
 			},
 			NetworkProfile: &compute.NetworkProfile{
 
@@ -499,6 +508,25 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 				},
 			},
 		},
+	}
+
+	if pool.CredentialType == "SSH Key" && pool.NewKey {
+		res, err := cloud.GenerateKeyPair(pool.AdminPassword)
+		if err != nil {
+			beego.Info(err.Error())
+			return compute.VirtualMachine{}, err
+		}
+		key := []compute.SSHPublicKey{{
+
+			KeyData: to.StringPtr(res.PublicKey),
+		},
+		}
+		vm.OsProfile.LinuxConfiguration.SSH.PublicKeys = &key
+
+	} else if pool.CredentialType == "SSH Key" && !pool.NewKey {
+
+	} else {
+		vm.OsProfile.AdminPassword = to.StringPtr(pool.AdminPassword)
 	}
 
 	if pool.BootDiagnostics.EnableDiagnostics {

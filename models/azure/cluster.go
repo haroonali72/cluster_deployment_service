@@ -42,7 +42,10 @@ type NodePool struct {
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
 	PoolRole           string             `json:"pool_role" bson:"pool_role"`
 	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
+	CredentialType     string             `json:"credential_type"  bson:"credential_type"`
+	NewKey             bool               `json:"new_key"  bson:"new_key"`
 	AdminPassword      string             `json:"admin_password" bson:"admin_password",omitempty"`
+	PrivateKey         string             `json:"private_key" bson:"private_key",omitempty"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
