@@ -54,7 +54,7 @@ type Node struct {
 type Key struct {
 	KeyName     string         `json:"key_name" bson:"key_name"`
 	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
-	KeyMaterial string         `json:"key_material" bson:"key_materials"`
+	KeyMaterial string         `json:"private_key" bson:"private_key"`
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 type Ami struct {
@@ -350,6 +350,8 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 					beego.Info("Cluster model: Instances added")
 				}
 			}
+
+			cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
 		}
 		beego.Info("Cluster model: updated nodes in pools")
 		cluster.NodePools[index].Nodes = updatedNodes
