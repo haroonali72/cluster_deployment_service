@@ -345,12 +345,11 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 						node.PublicIP = *inst.PublicIpAddress
 					}
 					node.UserName = nodepool.Ami.Username
-					node.SSHKey = createdPool.Key
+
 					updatedNodes = append(updatedNodes, &node)
 					beego.Info("Cluster model: Instances added")
 				}
 			}
-
 			cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
 		}
 		beego.Info("Cluster model: updated nodes in pools")
