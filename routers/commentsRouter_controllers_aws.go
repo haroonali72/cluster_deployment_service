@@ -55,6 +55,15 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
 		beego.ControllerComments{
 			Method:           "GetSSHKeyPairs",
+			Router:           `/awssshkeys`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+		beego.ControllerComments{
+			Method:           "GetSSHKeys",
 			Router:           `/sshkeys`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
