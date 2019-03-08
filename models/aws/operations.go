@@ -429,8 +429,10 @@ func (cloud *AWS) GetSecurityGroups(pool *NodePool, network Network) []*string {
 	for _, definition := range network.Definition {
 		for _, sg := range definition.SecurityGroups {
 			for _, sgName := range pool.PoolSecurityGroups {
-				if *sgName == sg.Name {
-					sgId = append(sgId, &sg.SecurityGroupId)
+				if sgName != nil {
+					if *sgName == sg.Name {
+						sgId = append(sgId, &sg.SecurityGroupId)
+					}
 				}
 			}
 		}
@@ -492,8 +494,12 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 
 func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 
+	url := getNetworkHost()
+
+	url = strings.Replace(url, "{cloud_provider}", "aws", -1)
+
 	client := utils.InitReq()
-	req, err := utils.CreateGetRequest(projectId, getNetworkHost())
+	req, err := utils.CreateGetRequest(projectId, url)
 
 	response, err := client.SendRequest(req)
 

@@ -191,7 +191,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		logging.SendLog("Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = "Cluster Creation Failed"
 
 		err = UpdateCluster(cluster)
 		if err != nil {
@@ -243,11 +243,11 @@ func FetchStatus(credentials string, projectId string) (Cluster_Def, error) {
 		beego.Error("Cluster model: Status - Failed to get lastest status ", e.Error())
 		return Cluster_Def{}, e
 	}
-	err = UpdateCluster(c)
-	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", e.Error())
-		return Cluster_Def{}, err
-	}
+	/*	err = UpdateCluster(c)
+		if err != nil {
+			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			return Cluster_Def{}, err
+		}*/
 	return c, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials string) error {
@@ -289,7 +289,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		logging.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster termination failed"
+		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
@@ -306,7 +306,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		var nodes []*Node
 		pools.Nodes = nodes
 	}
-	cluster.Status = "Cluster terminated"
+	cluster.Status = "Cluster Terminated"
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
