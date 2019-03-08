@@ -340,7 +340,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
 					node.PrivateIP = *inst.PrivateIpAddress
-
+					node.SSHKey = createdPool.Key
 					if inst.PublicIpAddress != nil {
 						node.PublicIP = *inst.PublicIpAddress
 					}
