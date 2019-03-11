@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -48,7 +49,13 @@ func CreateTemplate(template Template) error {
 
 	template.CreationDate = time.Now()
 	i := rand.Int()
-	template.TemplateId = template.Name + string(i)
+
+	beego.Info(i)
+	beego.Info(strconv.Itoa(i))
+
+	template.TemplateId = template.Name + strconv.Itoa(i)
+
+	beego.Info(template.TemplateId)
 	s := db.GetMongoConf()
 	err = db.InsertInMongo(s.MongoAwsTemplateCollection, template)
 	if err != nil {

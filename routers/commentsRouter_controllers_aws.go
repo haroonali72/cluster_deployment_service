@@ -117,18 +117,18 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSTemplateController"],
 		beego.ControllerComments{
-			Method:           "Get",
+			Method:           "Delete",
 			Router:           `/:templateId`,
-			AllowHTTPMethods: []string{"get"},
+			AllowHTTPMethods: []string{"delete"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})
 
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSTemplateController"],
 		beego.ControllerComments{
-			Method:           "Delete",
-			Router:           `/:templateId`,
-			AllowHTTPMethods: []string{"delete"},
+			Method:           "Get",
+			Router:           `/:templateId/`,
+			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})

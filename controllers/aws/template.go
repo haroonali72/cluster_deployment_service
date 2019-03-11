@@ -14,11 +14,11 @@ type AWSTemplateController struct {
 
 // @Title Get
 // @Description get template
-// @Param	name	path	string	true	"Template Id of the template"
+// @Param	templateId	path	string	true	"Template Id of the template"
 // @Success 200 {object} aws.Template
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /:templateId [get]
+// @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
 	templateId := c.GetString(":templateId")
 
@@ -26,7 +26,7 @@ func (c *AWSTemplateController) Get() {
 
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "template id is empty"}
 		c.ServeJSON()
 		return
 	}
