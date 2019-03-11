@@ -307,7 +307,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 
 			var nodeId []*string
 			nodeId = append(nodeId, &node.CloudId)
-			out, err := cloud.GetInstances(nodeId, "", false)
+			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
