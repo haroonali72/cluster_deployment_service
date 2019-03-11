@@ -459,7 +459,10 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool) (
 		beego.Error(err.Error())
 		return nil, err
 	}
+	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
 
+		return nil, errors.New("Nodes not found")
+	}
 	for _, instance := range updated_instances.Reservations[0].Instances {
 		logging.SendLog("Instance created successfully: "+*instance.InstanceId, "info", projectId)
 		latest_instances = append(latest_instances, instance)

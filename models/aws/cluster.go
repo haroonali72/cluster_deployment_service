@@ -368,7 +368,7 @@ func GetAllSSHKeyPair() (keys []*Key, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
-	err = c.Find(bson.M{"cloud_type": models.AWS}).All(&keys)
+	err = c.Find(bson.M{"cloud": models.AWS}).All(&keys)
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
@@ -385,7 +385,7 @@ func GetSSHKeyPair(keyname string) (keys *Key, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
-	err = c.Find(bson.M{"cloud_type": models.AWS, "key_name": keyname}).All(&keys)
+	err = c.Find(bson.M{"cloud": models.AWS, "key_name": keyname}).All(&keys)
 	if err != nil {
 		return keys, err
 	}
