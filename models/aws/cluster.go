@@ -40,16 +40,16 @@ type NodePool struct {
 	PoolRole           string        `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
-	CloudId    string `json:"cloud_id" bson:"cloud_id,omitempty"`
-	KeyName    string `json:"key_name" bson:"key_name,omitempty"`
-	SSHKey     string `json:"ssh_key" bson:"ssh_key,omitempty"`
-	NodeState  string `json:"node_state" bson:"node_state,omitempty"`
-	Name       string `json:"name" bson:"name,omitempty"`
-	PrivateIP  string `json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP   string `json:"public_ip" bson:"public_ip,omitempty"`
-	PublicDNS  string `json:"public_dns" bson:"public_dns,omitempty"`
-	PrivateDNS string `json:"private_dns" bson:"private_dns,omitempty"`
-	UserName   string `json:"user_name" bson:"user_name,omitempty"`
+	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
+	KeyName    string `json:"key_name" bson:"key_name",omitempty"`
+	SSHKey     string `json:"ssh_key" bson:"ssh_key",omitempty"`
+	NodeState  string `json:"node_state" bson:"node_state",omitempty"`
+	Name       string `json:"name" bson:"name",omitempty"`
+	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty"`
+	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty"`
+	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty"`
+	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
+	UserName   string `json:"user_name" bson:"user_name",omitempty"`
 }
 type Key struct {
 	KeyName     string         `json:"key_name" bson:"key_name"`

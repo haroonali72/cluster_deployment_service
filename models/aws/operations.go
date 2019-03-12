@@ -241,6 +241,8 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 		//createdPool.KeyName = pool.KeyName
 		createdPool.Key = keyMaterial
+
+		beego.Info(createdPool.Key)
 		createdPool.Instances = latest_instances
 		createdPool.PoolName = pool.Name
 		createdPools = append(createdPools, createdPool)

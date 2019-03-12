@@ -7,17 +7,20 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
+	"math/rand"
+	"strconv"
 	"time"
 )
 
 type Template struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
-	Name             string        `json:"name" bson:"name"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
+	ID bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	//EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
+	TemplateId       string       `json:"template_id" bson:"template_id"`
+	Name             string       `json:"name" bson:"name"`
+	Cloud            models.Cloud `json:"cloud" bson:"cloud"`
+	CreationDate     time.Time    `json:"-" bson:"creation_date"`
+	ModificationDate time.Time    `json:"-" bson:"modification_date"`
+	NodePools        []*NodePoolT `json:"node_pools" bson:"node_pools"`
 }
 
 type NodePoolT struct {
@@ -30,23 +33,26 @@ type NodePoolT struct {
 	SecurityGroupId []string       `json:"security_group_id" bson:"security_group_id"`
 }
 
-func CreateTemplate(template Template) error {
+func CreateTemplate(template Template) (error, string) {
 	_, err := GetTemplate(template.Name)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text, err)
-		return errors.New(text)
+		return errors.New(text), ""
 	}
+	i := rand.Int()
+
+	template.TemplateId = template.Name + strconv.Itoa(i)
 
 	template.CreationDate = time.Now()
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureTemplateCollection, template)
 	if err != nil {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
-		return err
+		return err, ""
 	}
 
-	return nil
+	return nil, template.TemplateId
 }
 
 func GetTemplate(templateName string) (template Template, err error) {
@@ -102,7 +108,7 @@ func UpdateTemplate(template Template) error {
 	template.CreationDate = oldTemplate.CreationDate
 	template.ModificationDate = time.Now()
 
-	err = CreateTemplate(template)
+	err, _ = CreateTemplate(template)
 	if err != nil {
 		beego.Error("Template model: Update - Got error creating template: ", err)
 		return err
