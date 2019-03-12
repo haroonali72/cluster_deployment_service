@@ -77,7 +77,7 @@ func (c *AWSTemplateController) Post() {
 	beego.Info("AWSTemplateController: Post new template with name: ", template.Name)
 	beego.Info("AWSTemplateController: JSON Payload: ", template)
 
-	err := aws.CreateTemplate(template)
+	err, id := aws.CreateTemplate(template)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -91,7 +91,7 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 
-	c.Data["json"] = map[string]string{"msg": "template added successfully"}
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
 

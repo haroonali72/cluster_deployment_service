@@ -1,10 +1,10 @@
 package azure
 
 import (
-	"github.com/astaxie/beego"
-	"encoding/json"
-	"strings"
 	"antelope/models/azure"
+	"encoding/json"
+	"github.com/astaxie/beego"
+	"strings"
 )
 
 // Operations about Azure template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
@@ -77,7 +77,7 @@ func (c *AzureTemplateController) Post() {
 	beego.Info("AzureTemplateController: Post new template with name: ", template.Name)
 	beego.Info("AzureTemplateController: JSON Payload: ", template)
 
-	err := azure.CreateTemplate(template)
+	err, id := azure.CreateTemplate(template)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -91,7 +91,7 @@ func (c *AzureTemplateController) Post() {
 		return
 	}
 
-	c.Data["json"] = map[string]string{"msg": "template added successfully"}
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
 

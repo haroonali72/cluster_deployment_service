@@ -332,10 +332,16 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 				for _, inst := range createdPool.Instances {
 
 					var node Node
-					beego.Info(*inst.Tags[0].Value, *inst.Tags[0].Value)
-					if *inst.Tags[0].Key == "Name" {
-						node.Name = *inst.Tags[0].Value
-					}
+					beego.Info(*inst.Tags[0].Key, *inst.Tags[0].Value)
+					for _, tag := range inst.Tags {
+						beego.Info(*tag.Key, *tag.Value)
+						if *tag.Key == "Name" {
+							node.Name = *tag.Value
+						}
+					} /*
+						if *inst.Tags[0].Key == "Name" {
+							node.Name = *inst.Tags[0].Value
+						}*/
 					node.KeyName = *inst.KeyName
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
