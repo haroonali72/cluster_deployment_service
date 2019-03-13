@@ -18,23 +18,23 @@ type AzureTemplateController struct {
 // @Success 200 {object} azure.Template
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /:name [get]
+// @router /:templateId [get]
 func (c *AzureTemplateController) Get() {
-	name := c.GetString(":name")
+	id := c.GetString(":templateId")
 
-	beego.Info("AzureTemplateController: Get template with name: ", name)
+	beego.Info("AzureTemplateController: Get template with id: ", id)
 
-	if name == "" {
+	if id == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "template id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	template, err := azure.GetTemplate(name)
+	template, err := azure.GetTemplate(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no template exists for this name"}
+		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
 		return
 	}
@@ -106,14 +106,14 @@ func (c *AzureTemplateController) Patch() {
 	var template azure.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	beego.Info("AzureTemplateController: Patch template with name: ", template.Name)
+	beego.Info("AzureTemplateController: Patch template with id: ", template.TemplateId)
 	beego.Info("AzureTemplateController: JSON Payload: ", template)
 
 	err := azure.UpdateTemplate(template)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no template exists with this name"}
+			c.Data["json"] = map[string]string{"error": "no template exists with this id"}
 			c.ServeJSON()
 			return
 		}
@@ -133,20 +133,20 @@ func (c *AzureTemplateController) Patch() {
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 500 {"error": "internal server error"}
-// @router /:name [delete]
+// @router /:templateId [delete]
 func (c *AzureTemplateController) Delete() {
-	name := c.GetString(":name")
+	id := c.GetString(":templateId")
 
-	beego.Info("AzureTemplateController: Delete template with name: ", name)
+	beego.Info("AzureTemplateController: Delete template with id: ", id)
 
-	if name == "" {
+	if id == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	err := azure.DeleteTemplate(name)
+	err := azure.DeleteTemplate(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}

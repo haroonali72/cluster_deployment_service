@@ -100,7 +100,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"],
 		beego.ControllerComments{
 			Method:           "Get",
-			Router:           `/:name`,
+			Router:           `/:templateId`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -109,7 +109,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"],
 		beego.ControllerComments{
 			Method:           "Delete",
-			Router:           `/:name`,
+			Router:           `/:templateId`,
 			AllowHTTPMethods: []string{"delete"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

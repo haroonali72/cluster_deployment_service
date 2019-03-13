@@ -34,7 +34,7 @@ type NodePoolT struct {
 }
 
 func CreateTemplate(template Template) (error, string) {
-	_, err := GetTemplate(template.Name)
+	_, err := GetTemplate(template.TemplateId)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text, err)
@@ -92,14 +92,14 @@ func GetAllTemplate() (templates []Template, err error) {
 }
 
 func UpdateTemplate(template Template) error {
-	oldTemplate, err := GetTemplate(template.Name)
+	oldTemplate, err := GetTemplate(template.TemplateId)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
 
-	err = DeleteTemplate(template.Name)
+	err = DeleteTemplate(template.TemplateId)
 	if err != nil {
 		beego.Error("Template model: Update - Got error deleting template: ", err)
 		return err
