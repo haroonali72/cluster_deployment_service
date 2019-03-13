@@ -47,13 +47,13 @@ type NodePool struct {
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
 type Key struct {
-	CredentialType string       `json:"credential_type"  bson:"credential_type"`
-	NewKey         bool         `json:"new_key"  bson:"new_key"`
-	KeyName        string       `json:"key_name" bson:"key_name"`
-	AdminPassword  string       `json:"admin_password" bson:"admin_password",omitempty"`
-	PrivateKey     string       `json:"private_key" bson:"private_key",omitempty"`
-	PublicKey      string       `json:"public_key" bson:"public_key",omitempty"`
-	Cloud          models.Cloud `json:"cloud" bson:"cloud"`
+	CredentialType string         `json:"credential_type"  bson:"credential_type"`
+	NewKey         models.KeyType `json:"key_type"  bson:"key_type"`
+	KeyName        string         `json:"key_name" bson:"key_name"`
+	AdminPassword  string         `json:"admin_password" bson:"admin_password",omitempty"`
+	PrivateKey     string         `json:"private_key" bson:"private_key",omitempty"`
+	PublicKey      string         `json:"public_key" bson:"public_key",omitempty"`
+	Cloud          models.Cloud   `json:"cloud" bson:"cloud"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
@@ -65,7 +65,7 @@ type VM struct {
 	PAssword  *string `json:"password" bson:"password,omitempty"`
 }
 type DiagnosticsProfile struct {
-	EnableDiagnostics bool   `json:"enable_boot_diagnostics" bson :"enable_boot_diagnostics"`
+	Enable            bool   `json:"enable" bson :"enable"`
 	NewStroageAccount bool   `json:"new_storage_account" bson:"new_storage_account"`
 	StorageAccountId  string `json:"storage_account_id" bson:"storage_account_id"`
 }
@@ -80,6 +80,8 @@ type ImageReference struct {
 }
 
 func CreateCluster(cluster Cluster_Def) error {
+
+	fmt.Printf("%+v", cluster.NodePools[0].BootDiagnostics)
 	_, err := GetCluster(cluster.ProjectId)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster '%s' already exists in the database: ", cluster.Name)
@@ -376,6 +378,22 @@ func GetAllSSHKeyPair() (keys []*Key, err error) {
 	err = c.Find(bson.M{"cloud": models.Azure}).All(&keys)
 	if err != nil {
 		beego.Error(err.Error())
+		return keys, err
+	}
+	return keys, nil
+}
+func GetSSHKeyPair(keyname string) (keys *Key, err error) {
+
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return keys, err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
+	err = c.Find(bson.M{"cloud": models.Azure, "key_name": keyname}).One(&keys)
+	if err != nil {
 		return keys, err
 	}
 	return keys, nil

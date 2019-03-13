@@ -13,24 +13,32 @@ import (
 )
 
 type Template struct {
-	ID bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	//EnvironmentId    string        `json:"environment_id" bson:"environment_id"`
-	TemplateId       string       `json:"template_id" bson:"template_id"`
-	Name             string       `json:"name" bson:"name"`
-	Cloud            models.Cloud `json:"cloud" bson:"cloud"`
-	CreationDate     time.Time    `json:"-" bson:"creation_date"`
-	ModificationDate time.Time    `json:"-" bson:"modification_date"`
-	NodePools        []*NodePoolT `json:"node_pools" bson:"node_pools"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	TemplateId       string        `json:"template_id" bson:"template_id"`
+	Name             string        `json:"name" bson:"name"`
+	Status           string        `json:"status" bson:"status"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	CreationDate     time.Time     `json:"-" bson:"creation_date"`
+	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
+	NetworkName      string        `json:"network_name" bson:"network_name"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 
 type NodePoolT struct {
-	ID              bson.ObjectId  `json:"_id" bson:"_id,omitempty"`
-	Name            string         `json:"name" bson:"name"`
-	NodeCount       int32          `json:"node_count" bson:"node_count"`
-	MachineType     string         `json:"machine_type" bson:"machine_type"`
-	Image           ImageReference `json:"ami" bson:"ami"`
-	SubnetId        string         `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []string       `json:"security_group_id" bson:"security_group_id"`
+	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
+	Name               string             `json:"name" bson:"name"`
+	NodeCount          int64              `json:"node_count" bson:"node_count"`
+	MachineType        string             `json:"machine_type" bson:"machine_type"`
+	Image              ImageReference     `json:"image_id" bson:"image_id"`
+	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
+	Nodes              []*VM              `json:"nodes" bson:"nodes"`
+	PoolRole           string             `json:"pool_role" bson:"pool_role"`
+	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
+	KeyInfo            Key                `json:"key_info" bson:"key_info"`
+	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
+	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
 
 func CreateTemplate(template Template) (error, string) {

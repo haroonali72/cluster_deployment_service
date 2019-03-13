@@ -18,10 +18,11 @@ const (
 type KeyType string
 
 const (
-	NEWKey  KeyType = "new"
-	CPKey   KeyType = "cp"
-	AWSKey  KeyType = "aws"
-	USERKey KeyType = "user"
+	NEWKey   KeyType = "new"
+	CPKey    KeyType = "cp"
+	AWSKey   KeyType = "aws"
+	AZUREKey KeyType = "azure"
+	USERKey  KeyType = "user"
 )
 
 type OsDiskType string
