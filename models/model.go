@@ -32,3 +32,10 @@ const (
 	StandardSSD OsDiskType = "standard ssd"
 	PremiumSSD  OsDiskType = "premium ssd"
 )
+
+type CredentialsType string
+
+const (
+	Password CredentialsType = "password"
+	SSHKey   CredentialsType = "key"
+)

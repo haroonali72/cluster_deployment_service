@@ -47,13 +47,13 @@ type NodePool struct {
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
 type Key struct {
-	CredentialType string         `json:"credential_type"  bson:"credential_type"`
-	NewKey         models.KeyType `json:"key_type"  bson:"key_type"`
-	KeyName        string         `json:"key_name" bson:"key_name"`
-	AdminPassword  string         `json:"admin_password" bson:"admin_password",omitempty"`
-	PrivateKey     string         `json:"private_key" bson:"private_key",omitempty"`
-	PublicKey      string         `json:"public_key" bson:"public_key",omitempty"`
-	Cloud          models.Cloud   `json:"cloud" bson:"cloud"`
+	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
+	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
+	KeyName        string                 `json:"key_name" bson:"key_name"`
+	AdminPassword  string                 `json:"admin_password" bson:"admin_password",omitempty"`
+	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty"`
+	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty"`
+	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
