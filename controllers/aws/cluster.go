@@ -69,7 +69,7 @@ func (c *AWSClusterController) GetAll() {
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster with same name already exists"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AWSClusterController) Post() {
 	var cluster aws.Cluster_Def
@@ -89,7 +89,7 @@ func (c *AWSClusterController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -103,7 +103,7 @@ func (c *AWSClusterController) Post() {
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [put]
 func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
@@ -121,7 +121,7 @@ func (c *AWSClusterController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -135,7 +135,7 @@ func (c *AWSClusterController) Patch() {
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:projectId [delete]
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
@@ -152,7 +152,7 @@ func (c *AWSClusterController) Delete() {
 	err := aws.DeleteCluster(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -168,7 +168,7 @@ func (c *AWSClusterController) Delete() {
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /start/:projectId [post]
 func (c *AWSClusterController) StartCluster() {
 
@@ -203,7 +203,7 @@ func (c *AWSClusterController) StartCluster() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -222,7 +222,7 @@ func (c *AWSClusterController) StartCluster() {
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /status/:projectId/ [get]
 func (c *AWSClusterController) GetStatus() {
 
@@ -254,7 +254,7 @@ func (c *AWSClusterController) GetStatus() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -270,7 +270,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 401 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /terminate/:projectId/ [post]
 func (c *AWSClusterController) TerminateCluster() {
 
@@ -305,7 +305,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -321,7 +321,7 @@ func (c *AWSClusterController) TerminateCluster() {
 // @Description returns ssh key pairs
 // @Success 200 {object} aws.Key
 // @Failure 401 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
@@ -331,7 +331,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}

@@ -127,9 +127,9 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 	//subnetId := cloud.GetSubnets(pool, networkData)
 	//sgIds := cloud.GetSecurityGroups(pool, networkData)
 
-	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/sadaf-0test/providers/Microsoft.Network/virtualNetworks/sadaf-0test-vnet/subnets/default"
+	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/azureCluster/providers/Microsoft.Network/virtualNetworks/sadaf-0test-vnet/subnets/default"
 	var sgIds []*string
-	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/sadaf-0test/providers/Microsoft.Network/networkSecurityGroups/sadaf-nsg"
+	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/azureCluster/providers/Microsoft.Network/networkSecurityGroups/sadaf-nsg"
 	sgIds = append(sgIds, &sid)
 
 	i := 0

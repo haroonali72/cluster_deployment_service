@@ -13,30 +13,26 @@ import (
 )
 
 type Template struct {
-	ID bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	//ProjectId        string        `json:"project_id" bson:"project_id"`
-	TemplateId       string       `json:"template_id" bson:"template_id"`
-	Name             string       `json:"name" bson:"name"`
-	Cloud            models.Cloud `json:"cloud" bson:"cloud"`
-	CreationDate     time.Time    `json:"-" bson:"creation_date"`
-	ModificationDate time.Time    `json:"-" bson:"modification_date"`
-	NodePools        []*NodePoolT `json:"node_pools" bson:"node_pools"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	TemplateId       string        `json:"template_id" bson:"template_id"`
+	Name             string        `json:"name" bson:"name"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	CreationDate     time.Time     `json:"-" bson:"creation_date"`
+	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
+	NetworkName      string        `json:"network_name" bson:"network_name"`
 }
 
 type NodePoolT struct {
 	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name            string        `json:"name" bson:"name"`
+	Name            string        `json:"machine_type" bson:"machine_type"`
+	Ami             Ami           `json:"name" bson:"name"`
 	NodeCount       int32         `json:"node_count" bson:"node_count"`
-	MachineType     string        `json:"machine_type" bson:"machine_type"`
-	Ami             Ami           `json:"ami" bson:"ami"`
+	MachineType     string        `json:"ami" bson:"ami"`
 	SubnetId        string        `json:"subnet_id" bson:"subnet_id"`
 	SecurityGroupId []string      `json:"security_group_id" bson:"security_group_id"`
-}
-
-type AmiT struct {
-	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name     string        `json:"name" bson:"name"`
-	Username string        `json:"username" bson:"username"`
+	KeyInfo         Key           `json:"key_info" bson:"key_info"`
+	PoolRole        string        `json:"pool_role" bson:"pool_role"`
 }
 
 func CreateTemplate(template Template) (error, string) {
