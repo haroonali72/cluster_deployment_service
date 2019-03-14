@@ -612,7 +612,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Location: &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
-
+	acccountName = strings.ToLower(acccountName)
 	future, err := cloud.AccountClient.Create(context.Background(), resouceGroup, acccountName, accountParameters)
 	if err != nil {
 		beego.Error("Storage account creation failed")
