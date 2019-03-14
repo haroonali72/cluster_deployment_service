@@ -34,6 +34,7 @@ type AZURE struct {
 	AddressClient    network.PublicIPAddressesClient
 	InterfacesClient network.InterfacesClient
 	VMClient         compute.VirtualMachinesClient
+	DiskClient       compute.DisksClient
 	AccountClient    storage.AccountsClient
 	context          context.Context
 	ID               string
@@ -259,7 +260,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 			var vmObj VM
 			vmObj.Name = vm.Name
 			vmObj.CloudId = vm.ID
-			vmObj.PrivateIP = pool.Nodes[index].PublicIP
+			vmObj.PrivateIP = pool.Nodes[index].PrivateIP
 			vmObj.PublicIP = pool.Nodes[index].PublicIP
 			vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
 			vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
@@ -338,6 +339,37 @@ func (cloud *AZURE) TerminatePool(node *VM, envId string, resourceGroup string) 
 		beego.Info("Deleted Node" + *node.Name)
 	}
 	logging.SendLog("Node terminated successfully: "+*node.Name, "info", envId)
+
+	future_, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, *node.Name)
+	if err != nil {
+		beego.Error(err)
+		return err
+	} else {
+		err = future_.WaitForCompletion(cloud.context, vmClient.Client)
+		if err != nil {
+			beego.Error("vm deletion failed")
+			beego.Error(err)
+			return err
+		}
+		beego.Info("Deleted Disk" + *node.Name)
+	}
+	logging.SendLog("Disk deleted successfully: "+*node.Name, "info", envId)
+
+	future_1, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, "ext-"+*node.Name)
+	if err != nil {
+		beego.Error(err)
+		return err
+	} else {
+		err = future_1.WaitForCompletion(cloud.context, vmClient.Client)
+		if err != nil {
+			beego.Error("vm deletion failed")
+			beego.Error(err)
+			return err
+		}
+		beego.Info("Deleted Disk" + *node.Name)
+	}
+	logging.SendLog("Disk deleted successfully: "+*node.Name, "info", envId)
+
 	return nil
 }
 func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, index int) (network.PublicIPAddress, error) {
@@ -464,7 +496,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		},
 	}
 
-	storageName := "ext-" + pool.Name + strconv.Itoa(index)
+	storageName := "ext-" + pool.Name + "-" + strconv.Itoa(index)
 	disk := compute.DataDisk{
 		Lun:          to.Int32Ptr(int32(index)),
 		Name:         to.StringPtr(storageName),

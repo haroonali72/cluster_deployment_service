@@ -323,7 +323,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		logging.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster termination failed"
+		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
@@ -336,7 +336,12 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 
 	}
 
-	cluster.Status = "Cluster terminated"
+	cluster.Status = "Cluster Terminated"
+
+	for _, pools := range cluster.NodePools {
+		var nodes []*VM
+		pools.Nodes = nodes
+	}
 	err = UpdateCluster(cluster)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
