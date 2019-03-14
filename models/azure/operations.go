@@ -78,6 +78,9 @@ func (cloud *AZURE) init() error {
 
 	cloud.AccountClient = storage.NewAccountsClient(cloud.Subscription)
 	cloud.AccountClient.Authorizer = cloud.Authorizer
+
+	cloud.DiskClient = compute.NewDisksClient(cloud.Subscription)
+	cloud.DiskClient.Authorizer = cloud.Authorizer
 	return nil
 }
 
@@ -110,7 +113,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 		beego.Info("AZUREOperations creating nodes")
 
-		result, err := cloud.CreateInstance(pool, networks.AzureNetwork{}, cluster.ResourceGroup)
+		result, err := cloud.CreateInstance(pool, networks.AzureNetwork{}, cluster.ResourceGroup, cluster.ProjectId)
 		if err != nil {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
@@ -121,7 +124,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 	return cluster, nil
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string) ([]*VM, error) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string, projectId string) ([]*VM, error) {
 
 	var vms []*VM
 
@@ -140,7 +143,10 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 		/*
 			Making public ip
 		*/
+
 		IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(i))
+		logging.SendLog("Creating Public IP : "+IPname, "info", projectId)
+
 		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, i)
 		if err != nil {
 			return nil, err
