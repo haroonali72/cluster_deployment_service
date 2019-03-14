@@ -569,7 +569,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			return compute.VirtualMachine{}, err
 		}
 		key := []compute.SSHPublicKey{{
-
+			Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
 			KeyData: to.StringPtr(res.PublicKey),
 		},
 		}
@@ -600,7 +600,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		}
 
 		key := []compute.SSHPublicKey{{
-
+			Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
 			KeyData: to.StringPtr(existingKey.PublicKey),
 		}}
 
