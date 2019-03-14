@@ -573,7 +573,12 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			KeyData: to.StringPtr(res.PublicKey),
 		},
 		}
-		vm.OsProfile.LinuxConfiguration.SSH.PublicKeys = &key
+		linux := &compute.LinuxConfiguration{
+			SSH: &compute.SSHConfiguration{
+				PublicKeys: &key,
+			},
+		}
+		vm.OsProfile.LinuxConfiguration = linux
 		pool.KeyInfo.PublicKey = res.PublicKey
 		pool.KeyInfo.PrivateKey = res.PrivateKey
 
@@ -599,7 +604,12 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			KeyData: to.StringPtr(existingKey.PublicKey),
 		}}
 
-		vm.OsProfile.LinuxConfiguration.SSH.PublicKeys = &key
+		linux := &compute.LinuxConfiguration{
+			SSH: &compute.SSHConfiguration{
+				PublicKeys: &key,
+			},
+		}
+		vm.OsProfile.LinuxConfiguration = linux
 
 		err = InsertSSHKeyPair(pool.KeyInfo)
 		/*
