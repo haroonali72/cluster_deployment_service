@@ -25,10 +25,10 @@ type Template struct {
 
 type NodePoolT struct {
 	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name            string        `json:"machine_type" bson:"machine_type"`
-	Ami             Ami           `json:"name" bson:"name"`
+	Name            string        `json:"name" bson:"name"`
+	Ami             Ami           `json:"ami" bson:"ami"`
 	NodeCount       int32         `json:"node_count" bson:"node_count"`
-	MachineType     string        `json:"ami" bson:"ami"`
+	MachineType     string        `json:"machine_type" bson:"machine_type"`
 	SubnetId        string        `json:"subnet_id" bson:"subnet_id"`
 	SecurityGroupId []string      `json:"security_group_id" bson:"security_group_id"`
 	KeyInfo         Key           `json:"key_info" bson:"key_info"`
