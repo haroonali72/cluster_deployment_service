@@ -115,7 +115,6 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 		result, err := cloud.CreateInstance(pool, networks.AzureNetwork{}, cluster.ResourceGroup, cluster.ProjectId)
 		if err != nil {
-			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
 		}
 
@@ -146,22 +145,31 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 
 		IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(i))
 		logging.SendLog("Creating Public IP : "+IPname, "info", projectId)
-
 		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, i)
 		if err != nil {
 			return nil, err
 		}
+		logging.SendLog("Public IP created successfully : "+IPname, "info", projectId)
+
 		/*
 			making network interface
 		*/
+		nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(i))
+		logging.SendLog("Creating NIC : "+nicName, "info", projectId)
 		nicParameters, err := cloud.createNIC(pool, i, resourceGroup, publicIPaddress, subnetId, sgIds)
 		if err != nil {
 			return nil, err
 		}
+		logging.SendLog("NIC created successfully : "+nicName, "info", projectId)
+
+		name := pool.Name + "-" + strconv.Itoa(i)
+
+		logging.SendLog("Creating node  : "+name, "info", projectId)
 		vm, err := cloud.createVM(pool, i, nicParameters, resourceGroup)
 		if err != nil {
 			return nil, err
 		}
+		logging.SendLog("Node created successfully : "+name, "info", projectId)
 
 		var vmObj VM
 		vmObj.Name = vm.Name
@@ -320,23 +328,23 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 			return err
 		}
 	}
-
+	logging.SendLog("Terminating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	for _, pool := range cluster.NodePools {
 		for index, node := range pool.Nodes {
-
+			logging.SendLog("Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
 			err := cloud.TerminatePool(node, cluster.ProjectId, cluster.ResourceGroup)
 			if err != nil {
 				return err
 			}
 
 			nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(index))
-			err = cloud.deleteNIC(nicName, cluster.ResourceGroup)
+			err = cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId)
 			if err != nil {
 				return err
 			}
 
 			IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(index))
-			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup)
+			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId)
 			if err != nil {
 				return err
 			}
@@ -346,10 +354,10 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func (cloud *AZURE) TerminatePool(node *VM, envId string, resourceGroup string) error {
+func (cloud *AZURE) TerminatePool(node *VM, projectId string, resourceGroup string) error {
 
 	beego.Info("AZUREOperations: terminating nodes")
-
+	logging.SendLog("Terminating node: "+*node.Name, "info", projectId)
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
 	future, err := vmClient.Delete(cloud.context, resourceGroup, *node.Name)
@@ -366,7 +374,7 @@ func (cloud *AZURE) TerminatePool(node *VM, envId string, resourceGroup string) 
 		}
 		beego.Info("Deleted Node" + *node.Name)
 	}
-	logging.SendLog("Node terminated successfully: "+*node.Name, "info", envId)
+	logging.SendLog("Node terminated successfully: "+*node.Name, "info", projectId)
 
 	future_, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, *node.Name)
 	if err != nil {
@@ -381,7 +389,7 @@ func (cloud *AZURE) TerminatePool(node *VM, envId string, resourceGroup string) 
 		}
 		beego.Info("Deleted Disk" + *node.Name)
 	}
-	logging.SendLog("Disk deleted successfully: "+*node.Name, "info", envId)
+	logging.SendLog("Disk deleted successfully: "+*node.Name, "info", projectId)
 
 	future_1, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, "ext-"+*node.Name)
 	if err != nil {
@@ -394,9 +402,9 @@ func (cloud *AZURE) TerminatePool(node *VM, envId string, resourceGroup string) 
 			beego.Error(err)
 			return err
 		}
-		beego.Info("Deleted Disk" + *node.Name)
+		beego.Info("Deleted Disk: " + *node.Name)
 	}
-	logging.SendLog("Disk deleted successfully: "+*node.Name, "info", envId)
+	logging.SendLog("Disk deleted successfully: "+"ext-"+*node.Name, "info", projectId)
 
 	return nil
 }
@@ -427,8 +435,8 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 	publicIPaddress, err := cloud.GetPIP(resourceGroup, IPname)
 	return publicIPaddress, err
 }
-func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string) error {
-
+func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string) error {
+	logging.SendLog("Deleting Public IP: "+IPname, "info", projectId)
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err != nil {
 		beego.Error(err)
@@ -440,6 +448,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string) error {
 			return err
 		}
 	}
+	logging.SendLog("Public IP delete successfully: "+IPname, "info", projectId)
 	return nil
 }
 func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string) (network.Interface, error) {
@@ -482,8 +491,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, p
 	nicParameters, err = cloud.GetNIC(resourceGroup, nicName)
 	return nicParameters, nil
 }
-func (cloud *AZURE) deleteNIC(nicName, resourceGroup string) error {
-
+func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error {
+	logging.SendLog("Deleting NIC: "+nicName, "info", proId)
 	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
 	if err != nil {
 		beego.Info(err.Error())
@@ -495,6 +504,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string) error {
 			return err
 		}
 	}
+	logging.SendLog("NIC delete successfully: "+nicName, "info", proId)
 	return nil
 }
 
@@ -606,6 +616,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 		linux := &compute.LinuxConfiguration{
 			SSH: &compute.SSHConfiguration{
+
 				PublicKeys: &key,
 			},
 		}
