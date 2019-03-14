@@ -274,13 +274,12 @@ func FetchStatus(credentials string, projectId string) (Cluster_Def, error) {
 		beego.Error("Cluster model: Status - Failed to get lastest status ", e.Error())
 		return Cluster_Def{}, e
 	}
-	err = UpdateCluster(c)
+	/*err = UpdateCluster(c)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
-	}
+	}*/
 	return c, nil
-	return Cluster_Def{}, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials string) error {
 

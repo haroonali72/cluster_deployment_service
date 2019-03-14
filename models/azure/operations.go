@@ -249,26 +249,33 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 	for in, pool := range cluster.NodePools {
 		index := 0
 		for index < int(pool.NodeCount) {
-			name := pool.Name + "-" + strconv.Itoa(index)
-			beego.Info("Get VM  by name", name)
+			for nodeIndex, n := range pool.Nodes {
+				vm, err := cloud.GetInstance(*n.Name, cluster.ResourceGroup)
+				if err != nil {
+					beego.Error(err)
+					return Cluster_Def{}, err
+				}
+				nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(index))
+				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, nicName)
+				if err != nil {
+					beego.Error(err)
+					return Cluster_Def{}, err
+				}
+				IPname := fmt.Sprintf("pip-%s", *n.Name)
+				publicIPaddress, err := cloud.GetPIP(cluster.ResourceGroup, IPname)
+				if err != nil {
+					beego.Error(err)
+					return Cluster_Def{}, err
+				}
+				pool.Nodes[nodeIndex].Name = vm.Name
+				pool.Nodes[nodeIndex].CloudId = vm.ID
+				pool.Nodes[nodeIndex].PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+				pool.Nodes[nodeIndex].PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
 
-			vm, err := cloud.GetInstance(name, cluster.ResourceGroup)
-			if err != nil {
-				beego.Error(err)
-				return Cluster_Def{}, err
+				pool.Nodes[nodeIndex].NodeState = vm.VirtualMachineProperties.ProvisioningState
+				pool.Nodes[nodeIndex].UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
+				pool.Nodes[nodeIndex].PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
 			}
-			var vmObj VM
-			vmObj.Name = vm.Name
-			vmObj.CloudId = vm.ID
-			vmObj.PrivateIP = pool.Nodes[index].PrivateIP
-			vmObj.PublicIP = pool.Nodes[index].PublicIP
-			vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
-			vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
-			vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
-
-			pool.Nodes = append(pool.Nodes, &vmObj)
-
-			index = index + 1
 		}
 		cluster.NodePools[in] = pool
 	}
@@ -283,7 +290,22 @@ func (cloud *AZURE) GetInstance(name string, resourceGroup string) (compute.Virt
 	}
 	return vm, nil
 }
-
+func (cloud *AZURE) GetNIC(resourceGroup, nicName string) (network.Interface, error) {
+	nicParameters, err := cloud.InterfacesClient.Get(cloud.context, resourceGroup, nicName, "")
+	if err != nil {
+		beego.Info(err.Error())
+		return network.Interface{}, err
+	}
+	return nicParameters, nil
+}
+func (cloud *AZURE) GetPIP(resourceGroup, IPname string) (network.PublicIPAddress, error) {
+	publicIPaddress, err := cloud.AddressClient.Get(cloud.context, resourceGroup, IPname, "")
+	if err != nil {
+		beego.Error(err.Error())
+		return network.PublicIPAddress{}, err
+	}
+	return publicIPaddress, nil
+}
 func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
@@ -396,12 +418,8 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 	}
 
 	beego.Info("Get public IP address info...")
-	publicIPaddress, err := cloud.AddressClient.Get(cloud.context, resourceGroup, IPname, "")
-	if err != nil {
-		beego.Error(err.Error())
-		return network.PublicIPAddress{}, err
-	}
-	return publicIPaddress, nil
+	publicIPaddress, err := cloud.GetPIP(resourceGroup, IPname)
+	return publicIPaddress, err
 }
 func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string) error {
 
@@ -455,11 +473,7 @@ func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, p
 		}
 	}
 
-	nicParameters, err = cloud.InterfacesClient.Get(cloud.context, resourceGroup, nicName, "")
-	if err != nil {
-		beego.Info(err.Error())
-		return network.Interface{}, err
-	}
+	nicParameters, err = cloud.GetNIC(resourceGroup, nicName)
 	return nicParameters, nil
 }
 func (cloud *AZURE) deleteNIC(nicName, resourceGroup string) error {
