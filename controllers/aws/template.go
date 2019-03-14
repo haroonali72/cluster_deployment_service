@@ -129,7 +129,7 @@ func (c *AWSTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete a templates
-// @Param	name	path	string	true	"template id of the template"
+// @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 404 {"error": "project is empty"}
 // @Failure 500 {"error": "internal server error <error msg>"}

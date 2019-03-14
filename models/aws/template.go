@@ -36,12 +36,12 @@ type NodePoolT struct {
 }
 
 func CreateTemplate(template Template) (error, string) {
-	_, err := GetTemplate(template.TemplateId)
+	/*_, err := GetTemplate(template.TemplateId)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text, err)
 		return errors.New(text), ""
-	}
+	}*/
 
 	template.CreationDate = time.Now()
 	i := rand.Int()
@@ -53,7 +53,7 @@ func CreateTemplate(template Template) (error, string) {
 
 	beego.Info(template.TemplateId)
 	s := db.GetMongoConf()
-	err = db.InsertInMongo(s.MongoAwsTemplateCollection, template)
+	err := db.InsertInMongo(s.MongoAwsTemplateCollection, template)
 	if err != nil {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
 		return err, ""
