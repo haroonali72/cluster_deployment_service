@@ -261,38 +261,43 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 	}
 	for in, pool := range cluster.NodePools {
-		index := 0
-		for index < int(pool.NodeCount) {
-			for nodeIndex, n := range pool.Nodes {
-				vm, err := cloud.GetInstance(*n.Name, cluster.ResourceGroup)
-				if err != nil {
-					beego.Error(err)
-					return Cluster_Def{}, err
-				}
-				nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(index))
-				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, nicName)
-				if err != nil {
-					beego.Error(err)
-					return Cluster_Def{}, err
-				}
-				IPname := fmt.Sprintf("pip-%s", *n.Name)
-				publicIPaddress, err := cloud.GetPIP(cluster.ResourceGroup, IPname)
-				if err != nil {
-					beego.Error(err)
-					return Cluster_Def{}, err
-				}
-				pool.Nodes[nodeIndex].Name = vm.Name
-				pool.Nodes[nodeIndex].CloudId = vm.ID
-				pool.Nodes[nodeIndex].PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-				pool.Nodes[nodeIndex].PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
 
-				pool.Nodes[nodeIndex].NodeState = vm.VirtualMachineProperties.ProvisioningState
-				pool.Nodes[nodeIndex].UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
-				pool.Nodes[nodeIndex].PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
+		for nodeIndex, n := range pool.Nodes {
+
+			beego.Info("getting instance")
+			vm, err := cloud.GetInstance(*n.Name, cluster.ResourceGroup)
+			if err != nil {
+				beego.Error(err)
+				return Cluster_Def{}, err
 			}
+			beego.Info("getting nic")
+			nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(nodeIndex))
+			nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, nicName)
+			if err != nil {
+				beego.Error(err)
+				return Cluster_Def{}, err
+			}
+			beego.Info("getting pip")
+			IPname := fmt.Sprintf("pip-%s", *n.Name)
+			publicIPaddress, err := cloud.GetPIP(cluster.ResourceGroup, IPname)
+			if err != nil {
+				beego.Error(err)
+				return Cluster_Def{}, err
+			}
+			pool.Nodes[nodeIndex].Name = vm.Name
+			pool.Nodes[nodeIndex].CloudId = vm.ID
+			pool.Nodes[nodeIndex].PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+			pool.Nodes[nodeIndex].PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
+
+			pool.Nodes[nodeIndex].NodeState = vm.VirtualMachineProperties.ProvisioningState
+			pool.Nodes[nodeIndex].UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
+			pool.Nodes[nodeIndex].PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
+			beego.Info("updated node")
 		}
+		beego.Info("updated node pool")
 		cluster.NodePools[in] = pool
 	}
+	beego.Info("updated cluster")
 	return cluster, nil
 }
 func (cloud *AZURE) GetInstance(name string, resourceGroup string) (compute.VirtualMachine, error) {
