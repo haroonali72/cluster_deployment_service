@@ -522,14 +522,23 @@ func (cloud *AWS) deleteIAMRole(name string) error {
 	}
 	beego.Info(outt.GoString())
 
-	roleInput := iam.DeleteRoleInput{RoleName: &roleName}
-	out, err := cloud.IAMService.DeleteRole(&roleInput)
+	policy := iam.DetachRolePolicyInput{RoleName: &roleName, PolicyArn: &roleName}
+	out, err := cloud.IAMService.DetachRolePolicy(&policy)
 	if err != nil {
 		beego.Error(err.Error())
 		return err
 	}
 
 	beego.Info(out.GoString())
+
+	roleInput := iam.DeleteRoleInput{RoleName: &roleName}
+	out_, err := cloud.IAMService.DeleteRole(&roleInput)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	beego.Info(out_.GoString())
 
 	policy_input := iam.DeletePolicyInput{PolicyArn: &roleName}
 	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
