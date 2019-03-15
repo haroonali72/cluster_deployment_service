@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"strconv"
@@ -176,6 +177,7 @@ type CreatedPool struct {
 type AWS struct {
 	Client     *ec2.EC2
 	IAMService *iam.IAM
+	STS        *sts.STS
 	AccessKey  string
 	SecretKey  string
 	Region     string
@@ -290,7 +292,7 @@ func (cloud *AWS) init() error {
 
 	cloud.Client = ec2.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	cloud.IAMService = iam.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
-
+	cloud.STS = sts.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	return nil
 }
 
@@ -521,8 +523,13 @@ func (cloud *AWS) deleteIAMRole(name string) error {
 		return err
 	}
 	beego.Info(outt.GoString())
-
-	policy := iam.DetachRolePolicyInput{RoleName: &roleName, PolicyArn: &roleName}
+	id, err := cloud.getAccountId()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	policyArn := "arn:aws:iam::" + id + ":policy/" + roleName
+	policy := iam.DetachRolePolicyInput{RoleName: &roleName, PolicyArn: &policyArn}
 	out, err := cloud.IAMService.DetachRolePolicy(&policy)
 	if err != nil {
 		beego.Error(err.Error())
@@ -805,4 +812,14 @@ func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, e
 	beego.Info("key name", *resp.KeyName, "key fingerprint", *resp.KeyFingerprint)
 
 	return *resp.KeyName, err
+}
+func (cloud *AWS) getAccountId() (string, error) {
+	input := sts.GetCallerIdentityInput{}
+	resp, err := cloud.STS.GetCallerIdentity(&input)
+	if err != nil {
+		beego.Error(err.Error())
+		return "", err
+	}
+	return *resp.Account, nil
+
 }
