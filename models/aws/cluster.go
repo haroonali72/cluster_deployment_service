@@ -299,7 +299,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 			return err
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available")
-
+		return nil
 	}
 
 	for _, pools := range cluster.NodePools {

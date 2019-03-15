@@ -332,7 +332,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 			return err
 		}
 		publisher.Notify(cluster.Name, "Status Available")
-
+		return nil
 	}
 
 	cluster.Status = "Cluster Terminated"
