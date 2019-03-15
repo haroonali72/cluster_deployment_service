@@ -30,7 +30,7 @@ type NodePoolT struct {
 	Name               string             `json:"name" bson:"name"`
 	NodeCount          int64              `json:"node_count" bson:"node_count"`
 	MachineType        string             `json:"machine_type" bson:"machine_type"`
-	Image              ImageReference     `json:"image_id" bson:"image_id"`
+	Image              ImageReference     `json:"image" bson:"image"`
 	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id"`
 	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
