@@ -506,18 +506,26 @@ func (cloud *AWS) deleteIAMRole(name string) error {
 
 	roleName := name
 
-	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
-	outtt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
+	profile := iam.RemoveRoleFromInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
+	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
 	if err != nil {
-		beego.Error(err)
+		beego.Error(err.Error())
 		return err
 	}
 	beego.Info(outtt.GoString())
 
+	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
+	outt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	beego.Info(outt.GoString())
+
 	roleInput := iam.DeleteRoleInput{RoleName: &roleName}
 	out, err := cloud.IAMService.DeleteRole(&roleInput)
 	if err != nil {
-		beego.Error(err)
+		beego.Error(err.Error())
 		return err
 	}
 
@@ -527,7 +535,7 @@ func (cloud *AWS) deleteIAMRole(name string) error {
 	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
 
 	if err_1 != nil {
-		beego.Error(err_1)
+		beego.Error(err_1.Error())
 		return err_1
 	}
 
