@@ -376,6 +376,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 		if err != nil {
 			return err
 		}
+		err = cloud.deleteIAMRole(pool.Name)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -497,6 +501,39 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 	}
 	logging.SendLog("Cluster pool terminated successfully: "+pool.Name, "info", projectId)
 	return nil
+}
+func (cloud *AWS) deleteIAMRole(name string) error {
+
+	roleName := name
+
+	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
+	outtt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
+	if err != nil {
+		beego.Error(err)
+		return err
+	}
+	beego.Info(outtt.GoString())
+
+	roleInput := iam.DeleteRoleInput{RoleName: &roleName}
+	out, err := cloud.IAMService.DeleteRole(&roleInput)
+	if err != nil {
+		beego.Error(err)
+		return err
+	}
+
+	beego.Info(out.GoString())
+
+	policy_input := iam.DeletePolicyInput{PolicyArn: &roleName}
+	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
+
+	if err_1 != nil {
+		beego.Error(err_1)
+		return err_1
+	}
+
+	beego.Info(policy_out.GoString())
+	return nil
+
 }
 
 func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
