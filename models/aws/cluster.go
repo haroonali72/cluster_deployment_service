@@ -355,8 +355,8 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 					updatedNodes = append(updatedNodes, &node)
 					beego.Info("Cluster model: Instances added")
 				}
+				cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
 			}
-			cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
 		}
 		beego.Info("Cluster model: updated nodes in pools")
 		cluster.NodePools[index].Nodes = updatedNodes
