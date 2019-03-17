@@ -547,7 +547,7 @@ func (cloud *AWS) deleteIAMRole(name string) error {
 
 	beego.Info(out_.GoString())
 
-	policy_input := iam.DeletePolicyInput{PolicyArn: &roleName}
+	policy_input := iam.DeletePolicyInput{PolicyArn: &policyArn}
 	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
 
 	if err_1 != nil {
