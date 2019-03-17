@@ -5,6 +5,7 @@ import (
 	"antelope/models/logging"
 	"antelope/models/networks"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
@@ -94,7 +95,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 	}
 
-	/*var azureNetwork networks.AzureNetwork
+	var azureNetwork networks.AzureNetwork
 	network, err := networks.GetNetworkStatus(cluster.ProjectId, "azure")
 	bytes, err := json.Marshal(network)
 	if err != nil {
@@ -107,13 +108,13 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err
-	}*/
+	}
 
 	for i, pool := range cluster.NodePools {
 
 		beego.Info("AZUREOperations creating nodes")
 
-		result, err := cloud.CreateInstance(pool, networks.AzureNetwork{}, cluster.ResourceGroup, cluster.ProjectId)
+		result, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
 		if err != nil {
 			return cluster, err
 		}
@@ -126,14 +127,14 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string, projectId string) ([]*VM, error) {
 
 	var vms []*VM
-	/*
-		subnetId := cloud.GetSubnets(pool, networkData)
-		sgIds := cloud.GetSecurityGroups(pool, networkData)
-	*/
-	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/azureCluster/providers/Microsoft.Network/virtualNetworks/vnet-cloudNative/subnets/subnet-cloudNative"
+
+	subnetId := cloud.GetSubnets(pool, networkData)
+	sgIds := cloud.GetSecurityGroups(pool, networkData)
+
+	/*subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/azureCluster/providers/Microsoft.Network/virtualNetworks/vnet-cloudNative/subnets/subnet-cloudNative"
 	var sgIds []*string
 	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/azureCluster/providers/Microsoft.Network/networkSecurityGroups/sg-cloudNative"
-	sgIds = append(sgIds, &sid)
+	sgIds = append(sgIds, &sid)*/
 
 	i := 0
 
