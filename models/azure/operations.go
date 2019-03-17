@@ -585,8 +585,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			beego.Error("vm creation failed")
 			beego.Error(err)
 			return compute.VirtualMachine{}, err
-		}
-		if existingKey != nil && err.Error() != "not found" {
+		} else if existingKey != nil {
 			key := []compute.SSHPublicKey{{
 				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
 				KeyData: to.StringPtr(existingKey.PublicKey),

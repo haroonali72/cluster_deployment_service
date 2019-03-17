@@ -727,8 +727,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
-		}
-		if key != nil && err.Error() != "not found" {
+		} else if key != nil && key.KeyMaterial != "" && key.KeyMaterial != " " {
 			keyMaterial = key.KeyMaterial
 		} else {
 			beego.Info("AWSOperations: creating key")
