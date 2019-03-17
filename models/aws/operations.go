@@ -722,13 +722,13 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
 		key, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
-		if err != nil {
+		if err != nil && err.Error() != "not found" {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
-		if key != nil {
+		if key != nil && err.Error() != "not found" {
 			keyMaterial = key.KeyMaterial
 		} else {
 			beego.Info("AWSOperations: creating key")
