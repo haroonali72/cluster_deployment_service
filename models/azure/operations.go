@@ -114,17 +114,19 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 		beego.Info("AZUREOperations creating nodes")
 
-		result, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
+		result, private, public, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
 		if err != nil {
 			return cluster, err
 		}
 
 		cluster.NodePools[i].Nodes = result
+		cluster.NodePools[i].KeyInfo.PublicKey = public
+		cluster.NodePools[i].KeyInfo.PrivateKey = private
 	}
 
 	return cluster, nil
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string, projectId string) ([]*VM, error) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string, projectId string) ([]*VM, string, string, error) {
 
 	var vms []*VM
 
@@ -137,7 +139,8 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 	sgIds = append(sgIds, &sid)*/
 
 	i := 0
-
+	private := ""
+	public := ""
 	for i < int(pool.NodeCount) {
 
 		/*
@@ -148,7 +151,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 		logging.SendLog("Creating Public IP : "+IPname, "info", projectId)
 		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, i)
 		if err != nil {
-			return nil, err
+			return nil, "", "", err
 		}
 		logging.SendLog("Public IP created successfully : "+IPname, "info", projectId)
 
@@ -159,16 +162,16 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 		logging.SendLog("Creating NIC : "+nicName, "info", projectId)
 		nicParameters, err := cloud.createNIC(pool, i, resourceGroup, publicIPaddress, subnetId, sgIds)
 		if err != nil {
-			return nil, err
+			return nil, "", "", err
 		}
 		logging.SendLog("NIC created successfully : "+nicName, "info", projectId)
 
 		name := pool.Name + "-" + strconv.Itoa(i)
 
 		logging.SendLog("Creating node  : "+name, "info", projectId)
-		vm, err := cloud.createVM(pool, i, nicParameters, resourceGroup)
+		vm, private, public, err := cloud.createVM(pool, i, nicParameters, resourceGroup)
 		if err != nil {
-			return nil, err
+			return nil, "", "", err
 		}
 		logging.SendLog("Node created successfully : "+name, "info", projectId)
 
@@ -182,9 +185,11 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 		vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
 
 		vms = append(vms, &vmObj)
+		beego.Info(private)
+		beego.Info(public)
 		i = i + 1
 	}
-	return vms, nil
+	return vms, private, public, nil
 
 }
 func (cloud *AZURE) GetSecurityGroups(pool *NodePool, network networks.AzureNetwork) []*string {
@@ -514,7 +519,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 	return nil
 }
 
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string) (compute.VirtualMachine, error) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -577,14 +582,15 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			},
 		},
 	}
-
+	private := ""
+	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
 
 		existingKey, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
 		if err != nil && err.Error() != "not found" {
 			beego.Error("vm creation failed")
 			beego.Error(err)
-			return compute.VirtualMachine{}, err
+			return compute.VirtualMachine{}, "", "", err
 		} else if existingKey != nil {
 			key := []compute.SSHPublicKey{{
 				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
@@ -597,12 +603,14 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 				},
 			}
 			vm.OsProfile.LinuxConfiguration = linux
+			private = existingKey.PrivateKey
+			public = existingKey.PublicKey
 		} else {
 
 			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName)
 			if err != nil {
 				beego.Info(err.Error())
-				return compute.VirtualMachine{}, err
+				return compute.VirtualMachine{}, "", "", err
 			}
 			key := []compute.SSHPublicKey{{
 				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
@@ -622,8 +630,11 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			if err != nil {
 				beego.Error("vm creation failed")
 				beego.Error(err)
-				return compute.VirtualMachine{}, err
+				return compute.VirtualMachine{}, "", "", err
 			}
+
+			public = res.PublicKey
+			private = res.PrivateKey
 		}
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
@@ -632,7 +643,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		if err != nil {
 			beego.Error("vm creation failed")
 			beego.Error(err)
-			return compute.VirtualMachine{}, err
+			return compute.VirtualMachine{}, "", "", err
 		}
 
 		key := []compute.SSHPublicKey{{
@@ -648,13 +659,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		}
 		vm.OsProfile.LinuxConfiguration = linux
 
-		//err = InsertSSHKeyPair(pool.KeyInfo)
-		/*
-			if err != nil {
-				beego.Error("vm creation failed")
-				beego.Error(err)
-				return compute.VirtualMachine{}, err
-			}*/
+		private = existingKey.PrivateKey
+		public = existingKey.PublicKey
 	} else {
 		vm.OsProfile.AdminPassword = to.StringPtr(pool.KeyInfo.AdminPassword)
 	}
@@ -686,22 +692,22 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	vmFuture, err := vmClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name+"-"+strconv.Itoa(index), vm)
 	if err != nil {
 		beego.Error(err)
-		return compute.VirtualMachine{}, err
+		return compute.VirtualMachine{}, "", "", err
 	} else {
 		err = vmFuture.WaitForCompletion(cloud.context, vmClient.Client)
 		if err != nil {
 			beego.Error("vm creation failed")
 			beego.Error(err)
-			return compute.VirtualMachine{}, err
+			return compute.VirtualMachine{}, "", "", err
 		}
 	}
 	beego.Info("Get VM  by name", pool.Name+"-"+strconv.Itoa(index))
 	vm, err = cloud.GetInstance(pool.Name+"-"+strconv.Itoa(index), resourceGroup)
 	if err != nil {
 		beego.Error(err)
-		return compute.VirtualMachine{}, err
+		return compute.VirtualMachine{}, "", "", err
 	}
-	return vm, nil
+	return vm, private, public, nil
 }
 func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName string) error {
 	accountParameters := storage.AccountCreateParameters{
