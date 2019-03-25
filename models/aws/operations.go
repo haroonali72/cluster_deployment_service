@@ -43,6 +43,8 @@ var docker_master_policy = []byte(`{
       "Sid": "kopsK8sEC2MasterPermsDescribeResources",
       "Effect": "Allow",
       "Action": [
+        "ec2:*",
+ 		"ecr:*"
         "ec2:DescribeInstances",
         "ec2:DescribeRegions",
         "ec2:DescribeRouteTables",
