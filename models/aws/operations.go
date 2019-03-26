@@ -44,7 +44,7 @@ var docker_master_policy = []byte(`{
       "Effect": "Allow",
       "Action": [
         "ec2:*",
- 		"ecr:*"
+ 		"ecr:*",
         "ec2:DescribeInstances",
         "ec2:DescribeRegions",
         "ec2:DescribeRouteTables",
