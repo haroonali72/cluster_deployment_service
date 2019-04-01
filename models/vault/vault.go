@@ -12,7 +12,7 @@ import (
 
 func GetSSHKey(cloudType string, keyName string) (aws.Key, error) {
 
-	req, err := utils.CreateGetRequest(getVaultHost() + "/" + cloudType + "/" + keyName)
+	req, err := utils.CreateGetRequest(getVaultHost() + "template/sshkey/" + cloudType + "/" + keyName)
 	if err != nil {
 		beego.Error("%s", err)
 		return aws.Key{}, err
@@ -55,7 +55,7 @@ func PostSSHKey(key aws.Key) (int, error) {
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getVaultHost())
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"template/sshkey/")
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -71,7 +71,7 @@ func PostSSHKey(key aws.Key) (int, error) {
 }
 func PostAzureSSHKey(key azure.Key) (int, error) {
 
-	key.Cloud = "aws"
+	key.Cloud = "azure"
 	client := utils.InitReq()
 
 	request_data, err := logging.TransformData(key)
@@ -80,7 +80,7 @@ func PostAzureSSHKey(key azure.Key) (int, error) {
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getVaultHost())
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"template/sshkey/")
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -96,7 +96,7 @@ func PostAzureSSHKey(key azure.Key) (int, error) {
 }
 func GetAzureSSHKey(cloudType string, keyName string) (azure.Key, error) {
 
-	req, err := utils.CreateGetRequest(getVaultHost() + "/" + cloudType + "/" + keyName)
+	req, err := utils.CreateGetRequest(getVaultHost() + "template/sshkey/" + cloudType + "/" + keyName)
 	if err != nil {
 		beego.Error("%s", err)
 		return azure.Key{}, err

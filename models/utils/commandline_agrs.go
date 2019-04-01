@@ -125,7 +125,7 @@ func InitFlags() error {
 	redis := redis_url + ":6379"
 	elephant := "http://" + logger_url + ":3500/api/v1/logger"
 	weasel := "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
-	vault := "http://" + vault_url + ""
+	vault := "http://" + vault_url + ":8092/"
 	beego.AppConfig.Set("mongo_host", host)
 	beego.AppConfig.Set("mongo_user", mongo_user)
 	beego.AppConfig.Set("mongo_pass", mongo_pass)
