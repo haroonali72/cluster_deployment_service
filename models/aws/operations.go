@@ -192,14 +192,12 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			beego.Error(err.Error())
 			return nil, err
 		}
 	}
 	network, err := cloud.GetNetworkStatus(cluster.ProjectId)
 
 	if err != nil {
-		beego.Error(err.Error())
 		return nil, err
 	}
 
@@ -216,7 +214,6 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 		result, err := cloud.CreateInstance(pool, network)
 		if err != nil {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-			beego.Error(err.Error())
 			return nil, err
 		}
 
@@ -225,7 +222,6 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.ProjectId)
 				if err != nil {
 					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-					beego.Error(err.Error())
 					return nil, err
 				}
 			}

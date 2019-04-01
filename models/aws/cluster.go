@@ -161,7 +161,16 @@ func DeleteCluster(projectId string) error {
 
 	return nil
 }
-func DeployCluster(cluster Cluster_Def, credentials string) error {
+func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
+
+	defer func() {
+		if confError != nil {
+			beego.Error(confError.Error())
+			logging.SendLog("Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
+			logging.SendLog(confError.Error(), "error", cluster.ProjectId)
+
+		}
+	}()
 	splits := strings.Split(credentials, ":")
 
 	aws := AWS{
@@ -169,59 +178,38 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		SecretKey: splits[1],
 		Region:    splits[2],
 	}
-	err := aws.init()
-	if err != nil {
-		beego.Error(err.Error())
-		return err
+	confError = aws.init()
+	if confError != nil {
+		return confError
 	}
 
 	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
-		beego.Error(pub_err.Error())
-		return pub_err
+	confError = publisher.Init_notifier()
+	if confError != nil {
+		return confError
 	}
 
 	logging.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	createdPools, err := aws.createCluster(cluster)
+	createdPools, confError := aws.createCluster(cluster)
 
-	if err != nil {
-
-		beego.Error(err.Error())
-
-		logging.SendLog("Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
-
+	if confError != nil {
 		cluster.Status = "Cluster Creation Failed"
-		err = aws.CleanUp(cluster)
-		if err != nil {
-			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
-			logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			logging.SendLog(err.Error(), "error", cluster.ProjectId)
+		confError = aws.CleanUp(cluster)
+		if confError != nil {
 			publisher.Notify(cluster.ProjectId, "Status Available")
-			return err
+			return confError
 		}
-		err = UpdateCluster(cluster)
-		if err != nil {
-			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
-			logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			logging.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.ProjectId, "Status Available")
-			return err
-		}
+		confError = UpdateCluster(cluster)
 		publisher.Notify(cluster.ProjectId, "Status Available")
-		return err
+		return confError
 	}
 
 	cluster = updateNodePool(createdPools, cluster)
 
-	err = UpdateCluster(cluster)
-	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
-		logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
+	confError = UpdateCluster(cluster)
+	if confError != nil {
 		publisher.Notify(cluster.ProjectId, "Status Available")
-		return err
+		return confError
 	}
 	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available")
