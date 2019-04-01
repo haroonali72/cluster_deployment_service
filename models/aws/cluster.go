@@ -186,13 +186,21 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 	createdPools, err := aws.createCluster(cluster)
 
 	if err != nil {
+
 		beego.Error(err.Error())
 
 		logging.SendLog("Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Creation Failed"
-
+		err = aws.CleanUp(cluster)
+		if err != nil {
+			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			logging.SendLog(err.Error(), "error", cluster.ProjectId)
+			publisher.Notify(cluster.ProjectId, "Status Available")
+			return err
+		}
 		err = UpdateCluster(cluster)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())

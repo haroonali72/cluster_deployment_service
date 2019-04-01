@@ -184,6 +184,7 @@ type AWS struct {
 	AccessKey  string
 	SecretKey  string
 	Region     string
+	Resources  map[string]interface{}
 }
 
 func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
@@ -242,6 +243,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			if err != nil {
 				return nil, err
 			}
+
 		}
 
 		//createdPool.KeyName = pool.KeyName
@@ -296,6 +298,7 @@ func (cloud *AWS) init() error {
 	cloud.Client = ec2.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	cloud.IAMService = iam.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	cloud.STS = sts.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
+	cloud.Resources = make(map[string]interface{})
 	return nil
 }
 
@@ -388,6 +391,78 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 	}
 	return nil
 }
+func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
+	for _, pool := range cluster.NodePools {
+		if cloud.Resources[pool.Name+"_iamProfile"] != "" {
+			iamProfile := cloud.Resources[pool.Name+"_iamProfile"]
+			name := ""
+			b, e := json.Marshal(iamProfile)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.deleteIAMProfile(name)
+			if err != nil {
+				return err
+			}
+		}
+
+		if cloud.Resources[pool.Name+"_role"] != "" {
+			role := cloud.Resources[pool.Name+"_role"]
+			name := ""
+			b, e := json.Marshal(role)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.deleteRole(name)
+			if err != nil {
+				return err
+			}
+		}
+		if cloud.Resources[pool.Name+"_policy"] != "" {
+			policy := cloud.Resources[pool.Name+"_policy"]
+			name := ""
+			b, e := json.Marshal(policy)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.deletePolicy(name)
+			if err != nil {
+				return err
+			}
+		}
+
+		if cloud.Resources[pool.Name+"_instances"] != "" {
+			value := cloud.Resources[pool.Name+"_instances"]
+			var ids []*string
+			b, e := json.Marshal(value)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &ids)
+			if e != nil {
+				return e
+			}
+			err := cloud.TerminateIns(ids)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservation, error) {
 
 	subnetId := cloud.GetSubnets(pool, network)
@@ -395,6 +470,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 
 	_, err := cloud.createIAMRole(pool.Name)
 	if err != nil {
+
 		beego.Error(err.Error())
 		return nil, err
 	}
@@ -432,6 +508,15 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		beego.Error(err.Error())
 		return nil, err
 	}
+	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
+
+		var ids []*string
+		for _, instance := range result.Instances {
+			ids = append(ids, aws.String(*instance.InstanceId))
+		}
+		cloud.Resources[pool.Name+"_instances"] = ids
+	}
+
 	return result, nil
 
 }
@@ -484,21 +569,30 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool) (
 
 	return nil, nil
 }
-
-func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
-
-	beego.Info("AWSOperations terminating nodes")
+func (cloud *AWS) getIds(pool *NodePool) []*string {
 	var instance_ids []*string
 
 	for _, id := range pool.Nodes {
 		instance_ids = append(instance_ids, &id.CloudId)
 	}
+	return instance_ids
+}
 
+func (cloud *AWS) TerminateIns(instance_ids []*string) error {
 	input := &ec2.TerminateInstancesInput{
 		InstanceIds: instance_ids,
 	}
 
 	_, err := cloud.Client.TerminateInstances(input)
+
+	return err
+}
+func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
+
+	beego.Info("AWSOperations terminating nodes")
+	instance_ids := cloud.getIds(pool)
+
+	err := cloud.TerminateIns(instance_ids)
 	if err != nil {
 
 		beego.Error("Cluster model: Status - Failed to terminate node pool ", err.Error())
@@ -510,28 +604,53 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 func (cloud *AWS) deleteIAMRole(name string) error {
 
 	roleName := name
+	err := cloud.deleteIAMProfile(roleName)
+	if err != nil {
+		return err
+	}
+	err = cloud.deleteRole(roleName)
+	if err != nil {
+		return err
+	}
+	err = cloud.deletePolicy(roleName)
+	if err != nil {
+		return err
+	}
+	return nil
 
-	profile := iam.RemoveRoleFromInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
-	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
+}
+func (cloud *AWS) deletePolicy(policyName string) error {
+	err, policyArn := cloud.getPolicyARN(policyName)
 	if err != nil {
 		beego.Error(err.Error())
 		return err
 	}
-	beego.Info(outtt.GoString())
+	policy_input := iam.DeletePolicyInput{PolicyArn: &policyArn}
+	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
 
-	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
-	outt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
+	if err_1 != nil {
+		beego.Error(err_1.Error())
+		return err_1
 	}
-	beego.Info(outt.GoString())
+
+	beego.Info(policy_out.GoString())
+	return nil
+}
+func (cloud *AWS) getPolicyARN(policyName string) (error, string) {
 	id, err := cloud.getAccountId()
 	if err != nil {
 		beego.Error(err.Error())
+		return err, ""
+	}
+	policyArn := "arn:aws:iam::" + id + ":policy/" + policyName
+	return nil, policyArn
+}
+func (cloud *AWS) deleteRole(roleName string) error {
+	err, policyArn := cloud.getPolicyARN(roleName)
+	if err != nil {
+		beego.Error(err.Error())
 		return err
 	}
-	policyArn := "arn:aws:iam::" + id + ":policy/" + roleName
 	policy := iam.DetachRolePolicyInput{RoleName: &roleName, PolicyArn: &policyArn}
 	out, err := cloud.IAMService.DetachRolePolicy(&policy)
 	if err != nil {
@@ -549,20 +668,26 @@ func (cloud *AWS) deleteIAMRole(name string) error {
 	}
 
 	beego.Info(out_.GoString())
-
-	policy_input := iam.DeletePolicyInput{PolicyArn: &policyArn}
-	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
-
-	if err_1 != nil {
-		beego.Error(err_1.Error())
-		return err_1
-	}
-
-	beego.Info(policy_out.GoString())
 	return nil
-
 }
+func (cloud *AWS) deleteIAMProfile(roleName string) error {
+	profile := iam.RemoveRoleFromInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
+	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	beego.Info(outtt.GoString())
 
+	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
+	outt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	beego.Info(outt.GoString())
+	return nil
+}
 func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 
 	url := getNetworkHost()
@@ -618,7 +743,7 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 		beego.Error(err)
 		return "", err
 	}
-
+	cloud.Resources[name+"_role"] = roleName
 	beego.Info(out.GoString())
 
 	policy_out, err_1 := cloud.IAMService.CreatePolicy(&iam.CreatePolicyInput{
@@ -630,7 +755,7 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 		beego.Error(err_1)
 		return "", err_1
 	}
-
+	cloud.Resources[name+"_policy"] = roleName
 	attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
 	_, err_2 := cloud.IAMService.AttachRolePolicy(&attach)
 
@@ -645,7 +770,7 @@ func (cloud *AWS) createIAMRole(name string) (string, error) {
 		beego.Error(err)
 		return "", err
 	}
-
+	cloud.Resources[name+"_iamProfile"] = roleName
 	testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
 	_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
 	if err != nil {
