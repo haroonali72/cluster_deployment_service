@@ -80,7 +80,8 @@ func GetNetworkStatus(envId string, cloudType string) (interface{}, error) {
 	networkUrl := strings.Replace(getNetworkHost(), "{cloud_provider}", cloudType, -1)
 	client := utils.InitReq()
 
-	req, err := utils.CreateGetRequest(envId, networkUrl)
+	url := networkUrl + "/" + envId
+	req, err := utils.CreateGetRequest(url)
 	if err != nil {
 		beego.Error("%s", err)
 		return AWSNetwork{}, err

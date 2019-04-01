@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/logging"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
@@ -569,7 +570,9 @@ func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 	url = strings.Replace(url, "{cloud_provider}", "aws", -1)
 
 	client := utils.InitReq()
-	req, err := utils.CreateGetRequest(projectId, url)
+
+	url = url + "/" + projectId
+	req, err := utils.CreateGetRequest(url)
 
 	response, err := client.SendRequest(req)
 
@@ -723,13 +726,13 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
-		key, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
+		key, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
 		if err != nil && err.Error() != "not found" {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
-		} else if key != nil && key.KeyMaterial != "" && key.KeyMaterial != " " {
+		} else if key.KeyMaterial != "" && key.KeyMaterial != " " {
 			keyMaterial = key.KeyMaterial
 		} else {
 			beego.Info("AWSOperations: creating key")
@@ -744,7 +747,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 				return "", err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
-			err = InsertSSHKeyPair(pool.KeyInfo)
+			_, err = vault.PostSSHKey(pool.KeyInfo)
 
 			if err != nil {
 				beego.Error(err.Error())
@@ -755,7 +758,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
 
-		key, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
+		key, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
 		if err != nil {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
@@ -766,7 +769,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 
 	} else if pool.KeyInfo.KeyType == models.AWSKey {
 
-		err = InsertSSHKeyPair(pool.KeyInfo)
+		_, err = vault.PostSSHKey(pool.KeyInfo)
 
 		if err != nil {
 			beego.Error(err.Error())
@@ -787,7 +790,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			return "", err
 		}
 
-		err = InsertSSHKeyPair(pool.KeyInfo)
+		_, err = vault.PostSSHKey(pool.KeyInfo)
 
 		if err != nil {
 			beego.Error(err.Error())

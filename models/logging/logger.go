@@ -31,7 +31,7 @@ func SendLog(msg, message_type, env_id string) (int, error) {
 
 	logger := utils.InitReq()
 
-	request_data, err := transformData(data)
+	request_data, err := TransformData(data)
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -52,7 +52,7 @@ func SendLog(msg, message_type, env_id string) (int, error) {
 
 }
 
-func transformData(data interface{}) ([]byte, error) {
+func TransformData(data interface{}) ([]byte, error) {
 
 	request_data, err := json.Marshal(data)
 	return request_data, err

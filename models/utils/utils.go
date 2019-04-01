@@ -1,16 +1,16 @@
 package utils
 
 import (
-	"net/http"
-	"github.com/astaxie/beego"
 	"bytes"
+	"github.com/astaxie/beego"
+	"net/http"
 )
 
 type HTTPClient struct {
 	client *http.Client
 }
 
-func CreatePostRequest (request_data []byte, url string) (*http.Request, error){
+func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 
 	beego.Info("requesting ", url)
 
@@ -18,30 +18,30 @@ func CreatePostRequest (request_data []byte, url string) (*http.Request, error){
 
 	if err != nil {
 		beego.Error("%s", err)
-		return nil , err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	return req , nil
+	return req, nil
 }
 
-func CreateGetRequest ( key string, url string) (*http.Request, error){
+func CreateGetRequest(url string) (*http.Request, error) {
 
 	beego.Info("requesting", url)
-  url= url +"/"+ key
+
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
 		beego.Error("%s", err)
-		return nil , err
+		return nil, err
 	}
 
 	req.Proto = "HTTP/1.0"
 	req.Header.Set("Content-Type", "application/json")
-	return req , nil
+	return req, nil
 }
 
-func (httpReq *HTTPClient) SendRequest (req * http.Request)(*http.Response, error){
+func (httpReq *HTTPClient) SendRequest(req *http.Request) (*http.Response, error) {
 
 	response, err := httpReq.client.Do(req)
 	if err != nil {
@@ -51,7 +51,7 @@ func (httpReq *HTTPClient) SendRequest (req * http.Request)(*http.Response, erro
 	return response, err
 }
 
-func InitReq () HTTPClient{
+func InitReq() HTTPClient {
 
 	var client HTTPClient
 	client.client = &http.Client{}

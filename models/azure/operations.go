@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/logging"
 	"antelope/models/networks"
+	"antelope/models/vault"
 	"context"
 	"encoding/json"
 	"errors"
@@ -585,13 +586,12 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-
-		existingKey, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
+		existingKey, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
 		if err != nil && err.Error() != "not found" {
 			beego.Error("vm creation failed")
 			beego.Error(err)
 			return compute.VirtualMachine{}, "", "", err
-		} else if existingKey != nil {
+		} else if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
 			key := []compute.SSHPublicKey{{
 				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
 				KeyData: to.StringPtr(existingKey.PublicKey),
@@ -626,7 +626,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			pool.KeyInfo.PublicKey = res.PublicKey
 			pool.KeyInfo.PrivateKey = res.PrivateKey
 
-			err = InsertSSHKeyPair(pool.KeyInfo)
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo)
 			if err != nil {
 				beego.Error("vm creation failed")
 				beego.Error(err)
@@ -639,7 +639,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		existingKey, err := GetSSHKeyPair(pool.KeyInfo.KeyName)
+		existingKey, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
 		if err != nil {
 			beego.Error("vm creation failed")
 			beego.Error(err)

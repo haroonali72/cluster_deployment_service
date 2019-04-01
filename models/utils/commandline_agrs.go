@@ -20,6 +20,7 @@ var (
 	mongo_azure_cluster_collection  = ""
 	redis_url                       = ""
 	logger_url                      = ""
+	vault_url                       = ""
 	network_url                     = ""
 )
 
@@ -104,6 +105,12 @@ func InitFlags() error {
 			Destination: &network_url,
 			EnvVar:      "network_url",
 		},
+		cli.StringFlag{
+			Name:        "vault_url",
+			Usage:       "vault host",
+			Destination: &vault_url,
+			EnvVar:      "vault_url",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -118,7 +125,7 @@ func InitFlags() error {
 	redis := redis_url + ":6379"
 	elephant := "http://" + logger_url + ":3500/api/v1/logger"
 	weasel := "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
-
+	vault := "http://" + vault_url + ""
 	beego.AppConfig.Set("mongo_host", host)
 	beego.AppConfig.Set("mongo_user", mongo_user)
 	beego.AppConfig.Set("mongo_pass", mongo_pass)
@@ -132,6 +139,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("redis_url", redis)
 	beego.AppConfig.Set("logger_url", elephant)
 	beego.AppConfig.Set("network_url", weasel)
+	beego.AppConfig.Set("vault_url", vault)
 
 	return nil
 }

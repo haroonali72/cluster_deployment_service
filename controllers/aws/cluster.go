@@ -33,6 +33,7 @@ func (c *AWSClusterController) Get() {
 	}
 
 	cluster, err := aws.GetCluster(projectId)
+
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
