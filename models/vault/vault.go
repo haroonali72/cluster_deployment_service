@@ -11,9 +11,9 @@ import (
 )
 
 type Key struct {
-	keyInfo interface{}
-	KeyName string
-	Cloud   string
+	keyInfo interface{} `json:"key_info"`
+	KeyName string      `json:"key_name"`
+	Cloud   string      `json:"cloud_type"`
 }
 
 func GetSSHKey(cloudType string, keyName string) (aws.Key, error) {
