@@ -268,6 +268,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 	}
 	for in, pool := range cluster.NodePools {
+		keyInfo, _ := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
 
 		for nodeIndex, n := range pool.Nodes {
 
@@ -299,8 +300,12 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 			pool.Nodes[nodeIndex].NodeState = vm.VirtualMachineProperties.ProvisioningState
 			pool.Nodes[nodeIndex].UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
 			pool.Nodes[nodeIndex].PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
+
 			beego.Info("updated node")
 		}
+
+		pool.KeyInfo = keyInfo
+
 		beego.Info("updated node pool")
 		cluster.NodePools[in] = pool
 	}

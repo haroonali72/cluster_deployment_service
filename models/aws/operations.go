@@ -40,12 +40,65 @@ var testInstanceMap = map[string]string{
 var docker_master_policy = []byte(`{
   "Version": "2012-10-17",
   "Statement": [
+     {
+      	"Sid": "VisualEditor0",
+		"Effect": "Allow",
+         "Action": [
+                "ec2:AttachVolume",
+                "elasticloadbalancing:ModifyListener",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:DescribeInstances",
+                "iam:ListServerCertificates",
+                "elasticloadbalancing:ConfigureHealthCheck",
+                "elasticloadbalancing:RegisterTargets",
+                "ec2:DescribeRegions",
+                "elasticloadbalancing:ModifyTargetGroups",
+                "elasticloadbalancing:DeleteLoadBalancer",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "ec2:DeleteVolume",
+                "elasticloadbalancing:RemoveTags",
+                "elasticloadbalancing:CreateListener",
+                "elasticloadbalancing:DescribeListeners",
+                "elasticloadbalancing:DeleteTargetGroups",
+                "ec2:CreateRoute",
+                "ec2:CreateSecurityGroup",
+                "ec2:DescribeVolumes",
+                "ec2:ModifyInstanceAttribute",
+                "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                "elasticloadbalancing:DeleteListeners",
+                "ec2:DescribeRouteTables",
+                "ec2:DetachVolume",
+                "iam:GetServerCertificate",
+                "elasticloadbalancing:CreateLoadBalancer",
+                "elasticloadbalancing:DescribeTags",
+                "ec2:CreateTags",
+                "elasticloadbalancing:CreateTargetGroup",
+                "ec2:DeleteRoute",
+                "elasticloadbalancing:DeregisterTargets",
+                "elasticloadbalancing:*",
+                "elasticloadbalancing:DeleteTargetGroup",
+                "elasticloadbalancing:CreateLoadBalancerListeners",
+                "ec2:DescribeSecurityGroups",
+                "ec2:CreateVolume",
+                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                "ec2:RevokeSecurityGroupIngress",
+                "elasticloadbalancing:AddTags",
+                "ec2:DeleteSecurityGroup",
+                "elasticloadbalancing:DescribeTargetGroups",
+                "elasticloadbalancing:DeleteLoadBalancerListeners",
+                "ec2:*",
+                "ec2:DescribeSubnets",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                "elasticloadbalancing:ModifyTargetGroup",
+                "elasticloadbalancing:DeleteListener",
+                "ecr:*"
+            ],
+         "Resource": ["*" ]
+        },
     {
       "Sid": "kopsK8sEC2MasterPermsDescribeResources",
       "Effect": "Allow",
       "Action": [
-        "ec2:*",
- 		"ecr:*",
         "ec2:DescribeInstances",
         "ec2:DescribeRegions",
         "ec2:DescribeRouteTables",
@@ -310,6 +363,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 	for in, pool := range cluster.NodePools {
 
 		for index, node := range pool.Nodes {
+			keyInfo, _ := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
 
 			var nodeId []*string
 			nodeId = append(nodeId, &node.CloudId)
@@ -332,7 +386,10 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 				if out[0].PrivateIpAddress != nil {
 					pool.Nodes[index].PrivateIP = *out[0].PrivateIpAddress
 				}
+
 			}
+			pool.KeyInfo = keyInfo
+
 		}
 		cluster.NodePools[in] = pool
 	}

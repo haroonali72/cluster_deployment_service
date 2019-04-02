@@ -10,6 +10,12 @@ import (
 	"io/ioutil"
 )
 
+type Key struct {
+	keyInfo interface{}
+	KeyName string
+	Cloud   string
+}
+
 func GetSSHKey(cloudType string, keyName string) (aws.Key, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "template/sshkey/" + cloudType + "/" + keyName)
@@ -47,9 +53,14 @@ func getVaultHost() string {
 func PostSSHKey(key aws.Key) (int, error) {
 
 	key.Cloud = "aws"
+
+	var keyObj Key
+	keyObj.keyInfo = key
+	keyObj.Cloud = "azure"
+	keyObj.KeyName = key.KeyName
 	client := utils.InitReq()
 
-	request_data, err := logging.TransformData(key)
+	request_data, err := logging.TransformData(keyObj)
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -72,9 +83,15 @@ func PostSSHKey(key aws.Key) (int, error) {
 func PostAzureSSHKey(key azure.Key) (int, error) {
 
 	key.Cloud = "azure"
+
+	var keyObj Key
+	keyObj.keyInfo = key
+	keyObj.Cloud = "azure"
+	keyObj.KeyName = key.KeyName
+
 	client := utils.InitReq()
 
-	request_data, err := logging.TransformData(key)
+	request_data, err := logging.TransformData(keyObj)
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err

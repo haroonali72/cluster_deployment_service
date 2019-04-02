@@ -338,11 +338,11 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 						if *inst.Tags[0].Key == "Name" {
 							node.Name = *inst.Tags[0].Value
 						}*/
-					node.KeyName = *inst.KeyName
+					//node.KeyName = *inst.KeyName
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
 					node.PrivateIP = *inst.PrivateIpAddress
-					node.SSHKey = createdPool.Key
+					//node.SSHKey = createdPool.Key
 					if inst.PublicIpAddress != nil {
 						node.PublicIP = *inst.PublicIpAddress
 					}
@@ -351,7 +351,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 					updatedNodes = append(updatedNodes, &node)
 					beego.Info("Cluster model: Instances added")
 				}
-				cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
+				//cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
 			}
 		}
 		beego.Info("Cluster model: updated nodes in pools")
