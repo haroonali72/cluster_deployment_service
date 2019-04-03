@@ -161,16 +161,16 @@ func DeleteCluster(projectId string) error {
 
 	return nil
 }
+func PrintError(confError error, name, projectId string) {
+	if confError != nil {
+		beego.Error(confError.Error())
+		logging.SendLog("Cluster creation failed : "+name, "error", projectId)
+		logging.SendLog(confError.Error(), "error", projectId)
+
+	}
+}
 func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 
-	defer func() {
-		if confError != nil {
-			beego.Error(confError.Error())
-			logging.SendLog("Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
-			logging.SendLog(confError.Error(), "error", cluster.ProjectId)
-
-		}
-	}()
 	splits := strings.Split(credentials, ":")
 
 	aws := AWS{
@@ -180,12 +180,14 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	}
 	confError = aws.init()
 	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId)
 		return confError
 	}
 
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId)
 		return confError
 	}
 
@@ -193,13 +195,18 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	createdPools, confError := aws.createCluster(cluster)
 
 	if confError != nil {
-		cluster.Status = "Cluster Creation Failed"
+		PrintError(confError, cluster.Name, cluster.ProjectId)
+
 		confError = aws.CleanUp(cluster)
 		if confError != nil {
-			publisher.Notify(cluster.ProjectId, "Status Available")
-			return confError
+			PrintError(confError, cluster.Name, cluster.ProjectId)
 		}
+
+		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available")
 		return confError
 	}
@@ -208,6 +215,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 
 	confError = UpdateCluster(cluster)
 	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available")
 		return confError
 	}

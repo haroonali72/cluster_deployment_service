@@ -44,6 +44,7 @@ type AZURE struct {
 	Tenant           string
 	Subscription     string
 	Region           string
+	Resources        map[string]interface{}
 }
 
 func (cloud *AZURE) init() error {
@@ -117,6 +118,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 		result, _, _, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
 		if err != nil {
+			beego.Error(err.Error())
 			return cluster, err
 		}
 
@@ -155,7 +157,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("Public IP created successfully : "+IPname, "info", projectId)
-
+		cloud.Resources["IPName-"+strconv.Itoa(i)] = IPname
 		/*
 			making network interface
 		*/
@@ -166,6 +168,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("NIC created successfully : "+nicName, "info", projectId)
+		cloud.Resources["NicName-"+strconv.Itoa(i)] = nicName
 
 		name := pool.Name + "-" + strconv.Itoa(i)
 
@@ -175,6 +178,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("Node created successfully : "+name, "info", projectId)
+		cloud.Resources["NodeName-"+strconv.Itoa(i)] = name
 
 		var vmObj VM
 		vmObj.Name = vm.Name
@@ -349,7 +353,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 	for _, pool := range cluster.NodePools {
 		for index, node := range pool.Nodes {
 			logging.SendLog("Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
-			err := cloud.TerminatePool(node, cluster.ProjectId, cluster.ResourceGroup)
+			err := cloud.TerminatePool(*node.Name, cluster.ProjectId, cluster.ResourceGroup)
 			if err != nil {
 				return err
 			}
@@ -371,13 +375,13 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func (cloud *AZURE) TerminatePool(node *VM, projectId string, resourceGroup string) error {
+func (cloud *AZURE) TerminatePool(name string, projectId string, resourceGroup string) error {
 
 	beego.Info("AZUREOperations: terminating nodes")
-	logging.SendLog("Terminating node: "+*node.Name, "info", projectId)
+	logging.SendLog("Terminating node: "+name, "info", projectId)
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
-	future, err := vmClient.Delete(cloud.context, resourceGroup, *node.Name)
+	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
 
 	if err != nil {
 		beego.Error(err)
@@ -389,11 +393,11 @@ func (cloud *AZURE) TerminatePool(node *VM, projectId string, resourceGroup stri
 			beego.Error(err)
 			return err
 		}
-		beego.Info("Deleted Node" + *node.Name)
+		beego.Info("Deleted Node" + name)
 	}
-	logging.SendLog("Node terminated successfully: "+*node.Name, "info", projectId)
+	logging.SendLog("Node terminated successfully: "+name, "info", projectId)
 
-	future_, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, *node.Name)
+	future_, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, name)
 	if err != nil {
 		beego.Error(err)
 		return err
@@ -404,11 +408,11 @@ func (cloud *AZURE) TerminatePool(node *VM, projectId string, resourceGroup stri
 			beego.Error(err)
 			return err
 		}
-		beego.Info("Deleted Disk" + *node.Name)
+		beego.Info("Deleted Disk" + name)
 	}
-	logging.SendLog("Disk deleted successfully: "+*node.Name, "info", projectId)
+	logging.SendLog("Disk deleted successfully: "+name, "info", projectId)
 
-	future_1, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, "ext-"+*node.Name)
+	future_1, err := cloud.DiskClient.Delete(cloud.context, resourceGroup, "ext-"+name)
 	if err != nil {
 		beego.Error(err)
 		return err
@@ -419,9 +423,9 @@ func (cloud *AZURE) TerminatePool(node *VM, projectId string, resourceGroup stri
 			beego.Error(err)
 			return err
 		}
-		beego.Info("Deleted Disk: " + *node.Name)
+		beego.Info("Deleted Disk: " + name)
 	}
-	logging.SendLog("Disk deleted successfully: "+"ext-"+*node.Name, "info", projectId)
+	logging.SendLog("Disk deleted successfully: "+"ext-"+name, "info", projectId)
 
 	return nil
 }
@@ -691,15 +695,12 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			}
 		}
 	}
-
-	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
-	vmClient.Authorizer = cloud.Authorizer
-	vmFuture, err := vmClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name+"-"+strconv.Itoa(index), vm)
+	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name+"-"+strconv.Itoa(index), vm)
 	if err != nil {
 		beego.Error(err)
 		return compute.VirtualMachine{}, "", "", err
 	} else {
-		err = vmFuture.WaitForCompletion(cloud.context, vmClient.Client)
+		err = vmFuture.WaitForCompletion(cloud.context, cloud.VMClient.Client)
 		if err != nil {
 			beego.Error("vm creation failed")
 			beego.Error(err)
@@ -742,5 +743,63 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		return "", err
 	}
 	beego.Info(*account.ID)*/
+	return nil
+}
+func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
+	for _, pool := range cluster.NodePools {
+		i := 0
+		for i <= int(pool.NodeCount) {
+			if cloud.Resources["NodeName-"+strconv.Itoa(i)] != "" {
+				name := cloud.Resources["NodeName-"+strconv.Itoa(i)]
+				nodeName := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &nodeName)
+				if e != nil {
+					return e
+				}
+
+				err := cloud.TerminatePool(nodeName, cluster.ProjectId, cluster.ResourceGroup)
+				if err != nil {
+					return err
+				}
+			}
+			if cloud.Resources["NicName-"+strconv.Itoa(i)] != "" {
+				name := cloud.Resources["NicName-"+strconv.Itoa(i)]
+				nicName := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &nicName)
+				if e != nil {
+					return e
+				}
+				err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId)
+				if err != nil {
+					return err
+				}
+			}
+			if cloud.Resources["IPName-"+strconv.Itoa(i)] != "" {
+				name := cloud.Resources["IPName-"+strconv.Itoa(i)]
+				IPname := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &IPname)
+				if e != nil {
+					return e
+				}
+				err := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }
