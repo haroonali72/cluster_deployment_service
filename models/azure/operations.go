@@ -115,14 +115,14 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 		beego.Info("AZUREOperations creating nodes")
 
-		result, private, public, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
+		result, _, _, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
 		if err != nil {
 			return cluster, err
 		}
 
 		cluster.NodePools[i].Nodes = result
-		cluster.NodePools[i].KeyInfo.PublicKey = public
-		cluster.NodePools[i].KeyInfo.PrivateKey = private
+		//	cluster.NodePools[i].KeyInfo.PublicKey = public
+		//	cluster.NodePools[i].KeyInfo.PrivateKey = private
 	}
 
 	return cluster, nil

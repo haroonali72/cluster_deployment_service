@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -52,6 +52,7 @@ func setEnv() {
 	os.Setenv("redis_url", "10.248.9.173")
 	os.Setenv("logger_url", "10.248.9.173")
 	os.Setenv("network_url", "10.248.9.173")
+	os.Setenv("vault_url", "10.248.9.173")
 }
 
 /*func setAppConf(){
