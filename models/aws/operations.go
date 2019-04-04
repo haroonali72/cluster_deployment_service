@@ -445,7 +445,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 	return nil
 }
 func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
+	beego.Info("in clean up method")
 	for _, pool := range cluster.NodePools {
+		beego.Info("terminating pool" + pool.Name)
+		beego.Info(cloud.Resources[pool.Name+"_iamProfile"])
 		if cloud.Resources[pool.Name+"_iamProfile"] != "" {
 			iamProfile := cloud.Resources[pool.Name+"_iamProfile"]
 			name := ""
@@ -462,7 +465,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 				return err
 			}
 		}
-
+		beego.Info(cloud.Resources[pool.Name+"_role"])
 		if cloud.Resources[pool.Name+"_role"] != "" {
 			role := cloud.Resources[pool.Name+"_role"]
 			name := ""
@@ -479,6 +482,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 				return err
 			}
 		}
+		beego.Info(cloud.Resources[pool.Name+"_policy"])
 		if cloud.Resources[pool.Name+"_policy"] != "" {
 			policy := cloud.Resources[pool.Name+"_policy"]
 			name := ""
@@ -495,7 +499,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 				return err
 			}
 		}
-
+		beego.Info(cloud.Resources[pool.Name+"_instances"])
 		if cloud.Resources[pool.Name+"_instances"] != "" {
 			value := cloud.Resources[pool.Name+"_instances"]
 			var ids []*string

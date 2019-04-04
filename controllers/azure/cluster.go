@@ -84,7 +84,7 @@ func (c *AzureClusterController) Post() {
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster with same name already exists"}
+			c.Data["json"] = map[string]string{"error": "cluster with same project id already exists"}
 			c.ServeJSON()
 			return
 		}

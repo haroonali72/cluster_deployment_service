@@ -83,7 +83,7 @@ func CreateCluster(cluster Cluster_Def) error {
 	fmt.Printf("%+v", cluster.NodePools[0].BootDiagnostics)
 	_, err := GetCluster(cluster.ProjectId)
 	if err == nil { //cluster found
-		text := fmt.Sprintf("Cluster model: Create - Cluster '%s' already exists in the database: ", cluster.Name)
+		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
