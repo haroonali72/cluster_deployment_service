@@ -3,7 +3,6 @@ package main
 import (
 	"antelope/models/db"
 	"antelope/models/utils"
-	_ "antelope/routers"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
 	"os"
@@ -15,7 +14,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	setEnv()
+	//setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -54,26 +53,3 @@ func setEnv() {
 	os.Setenv("network_url", "10.248.9.173")
 	os.Setenv("vault_url", "10.248.9.173")
 }
-
-/*func setAppConf(){
-	iniconf, err := config.NewConfig("ini", "conf/app.conf")
-	if err != nil {
-		beego.Error(err)
-	}
-	iniconf.Set("mongo_host","10.248.9.173")
-	beego.Info(iniconf.String("appname"))
-	beego.Info(iniconf.String("mongo_host"))
-	beego.AppConfig.String("mongo_host")
-	err = iniconf.SaveConfigFile("conf/app.conf")
-	if err != nil {
-		beego.Error(err)
-	}
-	beego.Info(iniconf.String("mongo_host"))
-	beego.Info(iniconf.String("mongo_host"))
-	beego.Info(beego.AppConfig.String("mongo_host"))
-	beego.AppConfig.Set("mongo_host","10.248.9.173")
-	beego.Info(beego.AppConfig.String("mongo_host"))
-	/*beego.Info("going into sleep mode")
-	time.Sleep(1*time.Minute)
-    beego.Info("returing from set conf method")*/
-//}
