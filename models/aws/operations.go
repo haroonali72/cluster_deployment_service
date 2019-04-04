@@ -363,8 +363,10 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 	for in, pool := range cluster.NodePools {
 
 		for index, node := range pool.Nodes {
-			keyInfo, _ := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
-
+			keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
 			var nodeId []*string
 			nodeId = append(nodeId, &node.CloudId)
 			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false)
@@ -388,14 +390,31 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 				}
 
 			}
-			pool.KeyInfo = keyInfo
+			k, err := keyCoverstion(keyInfo)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
+			pool.KeyInfo = k
 
 		}
 		cluster.NodePools[in] = pool
 	}
 	return cluster, nil
 }
-
+func keyCoverstion(keyInfo interface{}) (Key, error) {
+	b, e := json.Marshal(keyInfo)
+	var k Key
+	if e != nil {
+		beego.Error(e)
+		return Key{}, e
+	}
+	e = json.Unmarshal(b, &k)
+	if e != nil {
+		beego.Error(e)
+		return Key{}, e
+	}
+	return k, nil
+}
 func (cloud *AWS) getSSHKey() ([]*ec2.KeyPairInfo, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -908,43 +927,56 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
-		key, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+
 		if err != nil && err.Error() != "not found" {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
-		} else if key.KeyMaterial != "" && key.KeyMaterial != " " {
-			keyMaterial = key.KeyMaterial
 		} else {
-			beego.Info("AWSOperations: creating key")
-			logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
-
-			keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
-
+			key, err := keyCoverstion(keyInfo)
 			if err != nil {
-				beego.Error(err.Error())
-				logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
-				logging.SendLog(err.Error(), "info", projectId)
 				return "", err
 			}
-			pool.KeyInfo.KeyMaterial = keyMaterial
-			_, err = vault.PostSSHKey(pool.KeyInfo)
+			pool.KeyInfo = key
+			if key.KeyMaterial != "" && key.KeyMaterial != " " {
+				keyMaterial = key.KeyMaterial
+			} else {
+				beego.Info("AWSOperations: creating key")
+				logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
 
-			if err != nil {
-				beego.Error(err.Error())
-				logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-				logging.SendLog(err.Error(), "info", projectId)
-				return "", err
+				keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
+
+				if err != nil {
+					beego.Error(err.Error())
+					logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
+					logging.SendLog(err.Error(), "info", projectId)
+					return "", err
+				}
+				pool.KeyInfo.KeyMaterial = keyMaterial
+				_, err = vault.PostSSHKey(pool.KeyInfo)
+
+				if err != nil {
+					beego.Error(err.Error())
+					logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+					logging.SendLog(err.Error(), "info", projectId)
+					return "", err
+				}
 			}
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
 
-		key, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+
 		if err != nil {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
+			return "", err
+		}
+		key, err := keyCoverstion(k)
+		if err != nil {
 			return "", err
 		}
 		keyMaterial = key.KeyMaterial

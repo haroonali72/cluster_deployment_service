@@ -30,7 +30,7 @@ type azureKey struct {
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 
-func GetSSHKey(cloudType string, keyName string) (awsKey, error) {
+func GetSSHKey(cloudType string, keyName string) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "template/sshkey/" + cloudType + "/" + keyName)
 	if err != nil {
@@ -147,7 +147,7 @@ func PostAzureSSHKey(keyRaw interface{}) (int, error) {
 	return response.StatusCode, err
 
 }
-func GetAzureSSHKey(cloudType string, keyName string) (azureKey, error) {
+func GetAzureSSHKey(cloudType string, keyName string) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "template/sshkey/" + cloudType + "/" + keyName)
 	if err != nil {
