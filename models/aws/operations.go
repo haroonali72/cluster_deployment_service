@@ -929,7 +929,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 	if pool.KeyInfo.KeyType == models.NEWKey {
 		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
 
-		if err != nil && err.Error() != "not found" {
+		if err != nil && err.Error() != "data doesn't exist againt request" {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
