@@ -48,9 +48,11 @@ func setEnv() {
 	os.Setenv("mongo_aws_cluster_collection", "aws_cluster")
 	os.Setenv("mongo_azure_template_collection", "azure_template")
 	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
+	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
 	os.Setenv("redis_url", "10.248.9.173")
 	os.Setenv("logger_url", "10.248.9.173")
 	os.Setenv("network_url", "10.248.9.173")
+	os.Setenv("vault_url", "10.248.9.173")
 }
 
 /*func setAppConf(){

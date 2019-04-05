@@ -9,7 +9,6 @@ COPY . .
 RUN go get github.com/astaxie/beego
 RUN go get github.com/beego/bee
 RUN go get -u github.com/golang/dep/cmd/dep
-RUN go get "github.com/go-redis/redis"
 
 # Create a dep project, and run `ensure`, which will pull in all
 # of the dependencies within this directory.

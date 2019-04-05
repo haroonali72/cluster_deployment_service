@@ -1,10 +1,10 @@
 package aws
 
 import (
+	"antelope/models/aws"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
-	"antelope/models/aws"
 )
 
 // Operations about AWS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
@@ -14,27 +14,27 @@ type AWSTemplateController struct {
 
 // @Title Get
 // @Description get template
-// @Param	name	path	string	true	"Name of the template"
+// @Param	templateId	path	string	true	"Template Id of the template"
 // @Success 200 {object} aws.Template
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
-// @router /:name [get]
+// @Failure 500 {"error": "internal server error "}
+// @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
-	name := c.GetString(":name")
+	templateId := c.GetString(":templateId")
 
-	beego.Info("AWSTemplateController: Get template with name: ", name)
+	beego.Info("AWSTemplateController: Get template  id : ", templateId)
 
-	if name == "" {
+	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "template id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	template, err := aws.GetTemplate(name)
+	template, err := aws.GetTemplate(templateId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no template exists for this name"}
+		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
 		return
 	}
@@ -46,7 +46,7 @@ func (c *AWSTemplateController) Get() {
 // @Title Get All
 // @Description get all the templates
 // @Success 200 {object} []aws.Template
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSTemplateController) GetAll() {
 	beego.Info("AWSTemplateController: GetAll template.")
@@ -54,7 +54,7 @@ func (c *AWSTemplateController) GetAll() {
 	templates, err := aws.GetAllTemplate()
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -68,7 +68,7 @@ func (c *AWSTemplateController) GetAll() {
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 201 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AWSTemplateController) Post() {
 	var template aws.Template
@@ -77,7 +77,7 @@ func (c *AWSTemplateController) Post() {
 	beego.Info("AWSTemplateController: Post new template with name: ", template.Name)
 	beego.Info("AWSTemplateController: JSON Payload: ", template)
 
-	err := aws.CreateTemplate(template)
+	err, id := aws.CreateTemplate(template)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -86,12 +86,12 @@ func (c *AWSTemplateController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	c.Data["json"] = map[string]string{"msg": "template added successfully"}
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
 
@@ -100,25 +100,25 @@ func (c *AWSTemplateController) Post() {
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 404 {"error": "no template exists with this name"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [put]
 func (c *AWSTemplateController) Patch() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	beego.Info("AWSTemplateController: Patch template with name: ", template.Name)
+	beego.Info("AWSTemplateController: Patch template with template id : ", template.TemplateId)
 	beego.Info("AWSTemplateController: JSON Payload: ", template)
 
 	err := aws.UpdateTemplate(template)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no template exists with this name"}
+			c.Data["json"] = map[string]string{"error": "no template exists with this project id"}
 			c.ServeJSON()
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -129,27 +129,27 @@ func (c *AWSTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete a templates
-// @Param	name	path	string	true	"Name of the template"
+// @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
-// @Failure 404 {"error": "name is empty"}
-// @Failure 500 {"error": "internal server error"}
-// @router /:name [delete]
+// @Failure 404 {"error": "project is empty"}
+// @Failure 500 {"error": "internal server error <error msg>"}
+// @router /:templateId [delete]
 func (c *AWSTemplateController) Delete() {
-	name := c.GetString(":name")
+	templateId := c.GetString(":templateId")
 
-	beego.Info("AWSTemplateController: Delete template with name: ", name)
+	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)
 
-	if name == "" {
+	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	err := aws.DeleteTemplate(name)
+	err := aws.DeleteTemplate(templateId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
