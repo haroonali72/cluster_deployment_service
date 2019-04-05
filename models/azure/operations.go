@@ -84,6 +84,8 @@ func (cloud *AZURE) init() error {
 
 	cloud.DiskClient = compute.NewDisksClient(cloud.Subscription)
 	cloud.DiskClient.Authorizer = cloud.Authorizer
+	cloud.Resources = make(map[string]interface{})
+
 	return nil
 }
 
