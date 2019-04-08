@@ -468,7 +468,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 	for _, pool := range cluster.NodePools {
 		beego.Info("terminating pool" + pool.Name)
 		beego.Info(cloud.Resources[pool.Name+"_iamProfile"])
-		if cloud.Resources[pool.Name+"_iamProfile"] != "" {
+		if cloud.Resources[pool.Name+"_iamProfile"] != nil {
 			iamProfile := cloud.Resources[pool.Name+"_iamProfile"]
 			name := ""
 			b, e := json.Marshal(iamProfile)
@@ -485,7 +485,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			}
 		}
 		beego.Info(cloud.Resources[pool.Name+"_role"])
-		if cloud.Resources[pool.Name+"_role"] != "" {
+		if cloud.Resources[pool.Name+"_role"] != nil {
 			role := cloud.Resources[pool.Name+"_role"]
 			name := ""
 			b, e := json.Marshal(role)
@@ -502,7 +502,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			}
 		}
 		beego.Info(cloud.Resources[pool.Name+"_policy"])
-		if cloud.Resources[pool.Name+"_policy"] != "" {
+		if cloud.Resources[pool.Name+"_policy"] != nil {
 			policy := cloud.Resources[pool.Name+"_policy"]
 			name := ""
 			b, e := json.Marshal(policy)
@@ -519,7 +519,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			}
 		}
 		beego.Info(cloud.Resources[pool.Name+"_instances"])
-		if cloud.Resources[pool.Name+"_instances"] != "" {
+		if cloud.Resources[pool.Name+"_instances"] != nil {
 			value := cloud.Resources[pool.Name+"_instances"]
 			var ids []*string
 			b, e := json.Marshal(value)
@@ -929,7 +929,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 	if pool.KeyInfo.KeyType == models.NEWKey {
 		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
 
-		if err != nil && err.Error() != "not found" {
+		if err != nil && err.Error() != "data doesn't exist againt request" {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)

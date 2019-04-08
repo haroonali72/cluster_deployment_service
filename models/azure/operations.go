@@ -84,6 +84,8 @@ func (cloud *AZURE) init() error {
 
 	cloud.DiskClient = compute.NewDisksClient(cloud.Subscription)
 	cloud.DiskClient.Authorizer = cloud.Authorizer
+	cloud.Resources = make(map[string]interface{})
+
 	return nil
 }
 
@@ -618,7 +620,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
 
-		if err != nil && err.Error() != "not found" {
+		if err != nil && err.Error() != "data doesn't exist againt request" {
 			beego.Error("vm creation failed")
 			beego.Error(err)
 			return compute.VirtualMachine{}, "", "", err
@@ -783,7 +785,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 	for _, pool := range cluster.NodePools {
 		i := 0
 		for i <= int(pool.NodeCount) {
-			if cloud.Resources["NodeName-"+strconv.Itoa(i)] != "" {
+			if cloud.Resources["NodeName-"+strconv.Itoa(i)] != nil {
 				name := cloud.Resources["NodeName-"+strconv.Itoa(i)]
 				nodeName := ""
 				b, e := json.Marshal(name)
@@ -800,7 +802,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return err
 				}
 			}
-			if cloud.Resources["NicName-"+strconv.Itoa(i)] != "" {
+			if cloud.Resources["NicName-"+strconv.Itoa(i)] != nil {
 				name := cloud.Resources["NicName-"+strconv.Itoa(i)]
 				nicName := ""
 				b, e := json.Marshal(name)
@@ -816,7 +818,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return err
 				}
 			}
-			if cloud.Resources["IPName-"+strconv.Itoa(i)] != "" {
+			if cloud.Resources["IPName-"+strconv.Itoa(i)] != nil {
 				name := cloud.Resources["IPName-"+strconv.Itoa(i)]
 				IPname := ""
 				b, e := json.Marshal(name)
@@ -832,6 +834,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return err
 				}
 			}
+			i = i + 1
 		}
 	}
 
