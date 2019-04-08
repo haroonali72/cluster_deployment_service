@@ -934,7 +934,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
-		} else {
+		} else if err == nil {
 			key, err := keyCoverstion(keyInfo)
 			if err != nil {
 				return "", err
@@ -942,27 +942,27 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			pool.KeyInfo = key
 			if key.KeyMaterial != "" && key.KeyMaterial != " " {
 				keyMaterial = key.KeyMaterial
-			} else {
-				beego.Info("AWSOperations: creating key")
-				logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
+			}
+		} else if err != nil && err.Error() == "not found" {
+			beego.Info("AWSOperations: creating key")
+			logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
 
-				keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
+			keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
 
-				if err != nil {
-					beego.Error(err.Error())
-					logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
-					logging.SendLog(err.Error(), "info", projectId)
-					return "", err
-				}
-				pool.KeyInfo.KeyMaterial = keyMaterial
-				_, err = vault.PostSSHKey(pool.KeyInfo)
+			if err != nil {
+				beego.Error(err.Error())
+				logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
+				logging.SendLog(err.Error(), "info", projectId)
+				return "", err
+			}
+			pool.KeyInfo.KeyMaterial = keyMaterial
+			_, err = vault.PostSSHKey(pool.KeyInfo)
 
-				if err != nil {
-					beego.Error(err.Error())
-					logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-					logging.SendLog(err.Error(), "info", projectId)
-					return "", err
-				}
+			if err != nil {
+				beego.Error(err.Error())
+				logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+				logging.SendLog(err.Error(), "info", projectId)
+				return "", err
 			}
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {

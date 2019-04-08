@@ -624,7 +624,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			beego.Error("vm creation failed")
 			beego.Error(err)
 			return compute.VirtualMachine{}, "", "", err
-		} else {
+		} else if err == nil {
 
 			existingKey, err := keyCoverstion(k)
 			if err != nil {
@@ -644,37 +644,37 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 				vm.OsProfile.LinuxConfiguration = linux
 				private = existingKey.PrivateKey
 				public = existingKey.PublicKey
-			} else {
-
-				res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName)
-				if err != nil {
-					beego.Info(err.Error())
-					return compute.VirtualMachine{}, "", "", err
-				}
-				key := []compute.SSHPublicKey{{
-					Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
-					KeyData: to.StringPtr(res.PublicKey),
-				},
-				}
-				linux := &compute.LinuxConfiguration{
-					SSH: &compute.SSHConfiguration{
-						PublicKeys: &key,
-					},
-				}
-				vm.OsProfile.LinuxConfiguration = linux
-				pool.KeyInfo.PublicKey = res.PublicKey
-				pool.KeyInfo.PrivateKey = res.PrivateKey
-
-				_, err = vault.PostAzureSSHKey(pool.KeyInfo)
-				if err != nil {
-					beego.Error("vm creation failed")
-					beego.Error(err)
-					return compute.VirtualMachine{}, "", "", err
-				}
-
-				public = res.PublicKey
-				private = res.PrivateKey
 			}
+		} else if err != nil && err.Error() == "not found" {
+
+			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName)
+			if err != nil {
+				beego.Info(err.Error())
+				return compute.VirtualMachine{}, "", "", err
+			}
+			key := []compute.SSHPublicKey{{
+				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
+				KeyData: to.StringPtr(res.PublicKey),
+			},
+			}
+			linux := &compute.LinuxConfiguration{
+				SSH: &compute.SSHConfiguration{
+					PublicKeys: &key,
+				},
+			}
+			vm.OsProfile.LinuxConfiguration = linux
+			pool.KeyInfo.PublicKey = res.PublicKey
+			pool.KeyInfo.PrivateKey = res.PrivateKey
+
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo)
+			if err != nil {
+				beego.Error("vm creation failed")
+				beego.Error(err)
+				return compute.VirtualMachine{}, "", "", err
+			}
+
+			public = res.PublicKey
+			private = res.PrivateKey
 		}
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
