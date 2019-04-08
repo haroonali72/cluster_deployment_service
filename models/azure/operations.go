@@ -785,7 +785,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 	for _, pool := range cluster.NodePools {
 		i := 0
 		for i <= int(pool.NodeCount) {
-			if cloud.Resources["NodeName-"+strconv.Itoa(i)] != "" {
+			if cloud.Resources["NodeName-"+strconv.Itoa(i)] != nil {
 				name := cloud.Resources["NodeName-"+strconv.Itoa(i)]
 				nodeName := ""
 				b, e := json.Marshal(name)
@@ -802,7 +802,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return err
 				}
 			}
-			if cloud.Resources["NicName-"+strconv.Itoa(i)] != "" {
+			if cloud.Resources["NicName-"+strconv.Itoa(i)] != nil {
 				name := cloud.Resources["NicName-"+strconv.Itoa(i)]
 				nicName := ""
 				b, e := json.Marshal(name)
@@ -818,7 +818,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return err
 				}
 			}
-			if cloud.Resources["IPName-"+strconv.Itoa(i)] != "" {
+			if cloud.Resources["IPName-"+strconv.Itoa(i)] != nil {
 				name := cloud.Resources["IPName-"+strconv.Itoa(i)]
 				IPname := ""
 				b, e := json.Marshal(name)
