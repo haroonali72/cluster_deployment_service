@@ -385,7 +385,7 @@ func (c *AWSClusterController) GetSSHKeyPairs() {
 // @Success 200 {object} []*ec2.KeyPairInfo
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
-// @router /awsamis/:amiId/ [ [get]
+// @router /amis/:amiId/ [ [get]
 func (c *AWSClusterController) GetAMI() {
 
 	beego.Info("AWSNetworkController: FetchExistingVpcs.")
