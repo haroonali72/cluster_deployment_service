@@ -5,6 +5,7 @@ import (
 	"antelope/models/logging"
 	"antelope/models/utils"
 	"encoding/json"
+	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 )
@@ -46,7 +47,9 @@ func GetSSHKey(cloudType string, keyName string) (interface{}, error) {
 	defer response.Body.Close()
 
 	var key awsKey
-
+	if response.StatusCode == 500 {
+		return awsKey{}, errors.New("not found")
+	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		beego.Error("%s", err)
@@ -164,6 +167,9 @@ func GetAzureSSHKey(cloudType string, keyName string) (interface{}, error) {
 
 	var key azureKey
 
+	if response.StatusCode == 500 {
+		return azureKey{}, errors.New("not found")
+	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		beego.Error("%s", err)

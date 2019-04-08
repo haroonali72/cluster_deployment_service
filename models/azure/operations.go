@@ -620,7 +620,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
 
-		if err != nil && err.Error() != "data doesn't exist againt request" {
+		if err != nil && err.Error() != "not found" {
 			beego.Error("vm creation failed")
 			beego.Error(err)
 			return compute.VirtualMachine{}, "", "", err
