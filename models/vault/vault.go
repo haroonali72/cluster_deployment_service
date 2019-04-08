@@ -33,7 +33,7 @@ type azureKey struct {
 
 func GetSSHKey(cloudType string, keyName string) (interface{}, error) {
 
-	req, err := utils.CreateGetRequest(getVaultHost() + "template/sshkey/" + cloudType + "/" + keyName)
+	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshkey/" + cloudType + "/" + keyName)
 	if err != nil {
 		beego.Error("%s", err)
 		return awsKey{}, err
