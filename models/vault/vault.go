@@ -48,7 +48,8 @@ func GetSSHKey(cloudType string, keyName string) (interface{}, error) {
 
 	var key awsKey
 	beego.Info(response.StatusCode)
-	if response.StatusCode == 500 {
+	beego.Info(response.Status)
+	if response.StatusCode == 404 {
 		return awsKey{}, errors.New("not found")
 	}
 	contents, err := ioutil.ReadAll(response.Body)
@@ -168,7 +169,8 @@ func GetAzureSSHKey(cloudType string, keyName string) (interface{}, error) {
 
 	var key azureKey
 	beego.Info(response.StatusCode)
-	if response.StatusCode == 500 {
+	beego.Info(response.Status)
+	if response.StatusCode == 404 {
 		return azureKey{}, errors.New("not found")
 	}
 	contents, err := ioutil.ReadAll(response.Body)
