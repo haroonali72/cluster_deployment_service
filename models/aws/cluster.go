@@ -454,7 +454,7 @@ func GetAWSAmi(credentials string, amiId string) ([]*ec2.BlockDeviceMapping, err
 		return nil, err
 	}
 
-	amis, e := aws.describeAmi(amiId)
+	amis, e := aws.describeAmi(&amiId)
 	if e != nil {
 		beego.Error("Cluster model: Status - Failed to get ami details ", e.Error())
 		return nil, e
