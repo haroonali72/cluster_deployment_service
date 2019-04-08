@@ -563,11 +563,13 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	/*
 		setting 50 gb volume - temp work
 	*/
+
 	ebs, err := cloud.describeAmi(&pool.Ami.AmiId)
 	if err != nil {
-		v := int64(50)
-		if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil && *ebs[0].Ebs.VolumeSize < v {
-			ebs[0].Ebs.VolumeSize = &v
+		if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
+			ebs[0].Ebs.VolumeSize = &pool.Ami.VolumeSize
+			ebs[0].Ebs.VolumeType = &pool.Ami.VolumeType
+			ebs[0].Ebs.Iops = &pool.Ami.Iops
 			input.BlockDeviceMappings = ebs
 		}
 	}

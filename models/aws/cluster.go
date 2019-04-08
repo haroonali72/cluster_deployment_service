@@ -62,6 +62,10 @@ type Ami struct {
 	Name     string        `json:"name" bson:"name"`
 	AmiId    string        `json:"ami_id" bson:"ami_id"`
 	Username string        `json:"username" bson:"username"`
+
+	VolumeType string `json:"volume_type" bson:"volume_type"`
+	VolumeSize int64  `json:"volume_size" bson:"volume_size"`
+	Iops       int64  `json:"iops" bson:"iops"`
 }
 
 func CreateCluster(cluster Cluster_Def) error {
@@ -436,4 +440,25 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 	}
 
 	return keys, nil
+}
+func GetAWSAmi(credentials string, amiId string) ([]*ec2.BlockDeviceMapping, error) {
+
+	splits := strings.Split(credentials, ":")
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err := aws.init()
+	if err != nil {
+		return nil, err
+	}
+
+	amis, e := aws.describeAmi(amiId)
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to get ami details ", e.Error())
+		return nil, e
+	}
+
+	return amis, nil
 }
