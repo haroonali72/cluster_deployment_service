@@ -7,6 +7,7 @@ import (
 	"antelope/models/vault"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -16,6 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -256,7 +260,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 	for _, pool := range cluster.NodePools {
 		var createdPool CreatedPool
-		err := cloud.getKey(*pool, cluster.ProjectId)
+		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId)
 		if err != nil {
 			return nil, err
 		}
@@ -276,10 +280,18 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 					return nil, err
 				}
 			}
-			err = cloud.createVolume(result.Instances, pool.Ami.ExternalVolume)
-			if err != nil {
-				logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-				return nil, err
+			if pool.Ami.IsExternal {
+				pool.KeyInfo.KeyMaterial = keyMaterial
+				err = cloud.createVolume(result.Instances, pool.Ami.ExternalVolume)
+				if err != nil {
+					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
+					return nil, err
+				}
+				err = cloud.attachVolume(result.Instances, pool.Ami, pool.KeyInfo)
+				if err != nil {
+					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
+					return nil, err
+				}
 			}
 		}
 
@@ -952,28 +964,28 @@ func (cloud *AWS) createVolume(ids []*ec2.Instance, volume Volume) error {
 	return nil
 
 }
-func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
-
-	var keyMaterial string
+func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
 
 		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
 
 		if err != nil && err.Error() != "not found" {
+
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return err
+			return "", err
+
 		} else if err == nil {
-			_, err := keyCoverstion(keyInfo)
+			key, err := keyCoverstion(keyInfo)
 			if err != nil {
-				return err
+				return "", err
 			}
-			/*pool.KeyInfo = key
+			pool.KeyInfo = key
 			if key.KeyMaterial != "" && key.KeyMaterial != " " {
 				keyMaterial = key.KeyMaterial
-			}*/
+			}
 		} else if err != nil && err.Error() == "not found" {
 			beego.Info("AWSOperations: creating key")
 			logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
@@ -984,7 +996,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
 				beego.Error(err.Error())
 				logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
 				logging.SendLog(err.Error(), "info", projectId)
-				return err
+				return "", err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
 			_, err = vault.PostSSHKey(pool.KeyInfo)
@@ -993,7 +1005,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
 				beego.Error(err.Error())
 				logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 				logging.SendLog(err.Error(), "info", projectId)
-				return err
+				return "", err
 			}
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
@@ -1004,13 +1016,13 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return err
+			return "", err
 		}
-		_, err = keyCoverstion(k)
+		key, err := keyCoverstion(k)
 		if err != nil {
-			return err
+			return "", err
 		}
-		//	keyMaterial = key.KeyMaterial
+		keyMaterial = key.KeyMaterial
 
 	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
 
@@ -1020,7 +1032,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
 			beego.Error(err.Error())
 			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return err
+			return "", err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
 
@@ -1032,7 +1044,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
 			beego.Error(err.Error())
 			logging.SendLog("Error in importing key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return err
+			return "", err
 		}
 
 		_, err = vault.PostSSHKey(pool.KeyInfo)
@@ -1041,11 +1053,11 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
 			beego.Error(err.Error())
 			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return err
+			return "", err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
 	}
-	return nil
+	return keyMaterial, nil
 }
 func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, error) {
 
@@ -1071,4 +1083,99 @@ func (cloud *AWS) getAccountId() (string, error) {
 	}
 	return *resp.Account, nil
 
+}
+func (cloud *AWS) attachVolume(ids []*ec2.Instance, ami Ami, key Key) error {
+
+	for _, id := range ids {
+
+		fileWrite(key.KeyMaterial, key.KeyName)
+		copyFile(key.KeyName, ami.Username, *id.InstanceId)
+		runScript(key.KeyName, ami.Username, *id.InstanceId)
+		deleteScript(key.KeyName, ami.Username, *id.InstanceId)
+		deleteFile(key.KeyName)
+	}
+	return nil
+
+}
+
+func fileWrite(key string, keyName string) error {
+
+	f, err := os.Create("../antelope/keys/" + keyName + ".pem")
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	defer f.Close()
+	d2 := []byte(key)
+	n2, err := f.Write(d2)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	fmt.Printf("wrote %d bytes\n", n2)
+
+	err = os.Chmod("../antelope/keys/"+keyName+".pem", 0777)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func copyFile(keyName string, userName string, instanceId string) error {
+
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId + ":/home/ubuntu"
+	cmd1 := "scp"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "../antelope/scripts/mount.sh", ip}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+func runScript(keyName string, userName string, instanceId string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/ubuntu/mount.sh", "xvdg", "g", "data0"}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func deleteScript(keyName string, userName string, instanceId string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/ubuntu/mount.sh"}
+	cmd := exec.Command(cmd1, args...)
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func deleteFile(keyName string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	err := os.Remove(keyPath)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
 }

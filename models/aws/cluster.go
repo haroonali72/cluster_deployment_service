@@ -65,6 +65,7 @@ type Ami struct {
 	Username string        `json:"username" bson:"username"`
 
 	RootVolume     Volume `json:"root_volume" bson:"root_volume"`
+	IsExternal     bool   `json:"is_external" bson:"is_external"`
 	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
 }
 type Volume struct {
