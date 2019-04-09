@@ -129,7 +129,6 @@ func PostAzureSSHKey(keyRaw interface{}) (int, error) {
 		beego.Error(e.Error())
 		return 400, e
 	}
-	key.Cloud = "aws"
 	key.Cloud = "azure"
 
 	var keyObj Key
@@ -197,7 +196,7 @@ func GetAzureSSHKey(cloudType string, keyName string) (interface{}, error) {
 	return key, nil
 
 }
-func GetAllAwsSSHKey(cloudType string) ([]string, error) {
+func GetAllSSHKey(cloudType string) ([]string, error) {
 	var keys []string
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType)
 	if err != nil {
