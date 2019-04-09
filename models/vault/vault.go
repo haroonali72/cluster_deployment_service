@@ -12,7 +12,7 @@ import (
 )
 
 type Key struct {
-	keyInfo interface{} `json:"key_info"`
+	KeyInfo interface{} `json:"key_info"`
 	KeyName string      `json:"key_name"`
 	Cloud   string      `json:"cloud_type"`
 }
@@ -86,7 +86,7 @@ func PostSSHKey(keyRaw interface{}) (int, error) {
 	key.Cloud = "aws"
 
 	var keyObj Key
-	keyObj.keyInfo = key
+	keyObj.KeyInfo = key
 	keyObj.Cloud = "aws"
 	keyObj.KeyName = key.KeyName
 	client := utils.InitReq()
@@ -133,7 +133,7 @@ func PostAzureSSHKey(keyRaw interface{}) (int, error) {
 	key.Cloud = "azure"
 
 	var keyObj Key
-	keyObj.keyInfo = key
+	keyObj.KeyInfo = key
 	keyObj.Cloud = "azure"
 	keyObj.KeyName = key.KeyName
 
