@@ -225,9 +225,7 @@ type SecurityGroup struct {
 
 type CreatedPool struct {
 	Instances []*ec2.Instance
-	//KeyName   string
-	Key      string
-	PoolName string
+	PoolName  string
 }
 
 type AWS struct {
@@ -258,7 +256,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 	for _, pool := range cluster.NodePools {
 		var createdPool CreatedPool
-		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId)
+		err := cloud.getKey(*pool, cluster.ProjectId)
 		if err != nil {
 			return nil, err
 		}
@@ -278,6 +276,11 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 					return nil, err
 				}
 			}
+			err = cloud.createVolume(result.Instances, pool.Ami.ExternalVolume)
+			if err != nil {
+				logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
+				return nil, err
+			}
 		}
 
 		var latest_instances []*ec2.Instance
@@ -295,10 +298,6 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 		}
 
-		//createdPool.KeyName = pool.KeyName
-		createdPool.Key = keyMaterial
-
-		beego.Info(createdPool.Key)
 		createdPool.Instances = latest_instances
 		createdPool.PoolName = pool.Name
 		createdPools = append(createdPools, createdPool)
@@ -567,9 +566,9 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	ebs, err := cloud.describeAmi(&pool.Ami.AmiId)
 	if err != nil {
 		if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
-			ebs[0].Ebs.VolumeSize = &pool.Ami.VolumeSize
-			ebs[0].Ebs.VolumeType = &pool.Ami.VolumeType
-			ebs[0].Ebs.Iops = &pool.Ami.Iops
+			ebs[0].Ebs.VolumeSize = &pool.Ami.RootVolume.VolumeSize
+			ebs[0].Ebs.VolumeType = &pool.Ami.RootVolume.VolumeType
+			ebs[0].Ebs.Iops = &pool.Ami.RootVolume.Iops
 			input.BlockDeviceMappings = ebs
 		}
 	}
@@ -926,25 +925,55 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 	beego.Info(res.GoString())
 	return ebsVolumes, nil
 }
-func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
+func (cloud *AWS) createVolume(ids []*ec2.Instance, volume Volume) error {
+
+	for _, id := range ids {
+
+		input := ec2.CreateVolumeInput{Iops: aws.Int64(volume.Iops),
+			VolumeType: aws.String(volume.VolumeType),
+			Size:       aws.Int64(volume.VolumeSize)}
+
+		out, err := cloud.Client.CreateVolume(&input)
+		if err != nil {
+			beego.Error(err.Error())
+			return err
+		}
+
+		attach := ec2.AttachVolumeInput{VolumeId: out.VolumeId, InstanceId: id.InstanceId, Device: aws.String("/dev/sdf")}
+
+		out_, err_ := cloud.Client.AttachVolume(&attach)
+
+		if err_ != nil {
+			beego.Error(err_.Error())
+			return err_
+		}
+		beego.Info(out_.State)
+	}
+	return nil
+
+}
+func (cloud *AWS) getKey(pool NodePool, projectId string) (err error) {
+
+	var keyMaterial string
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
+
 		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
 
 		if err != nil && err.Error() != "not found" {
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return "", err
+			return err
 		} else if err == nil {
-			key, err := keyCoverstion(keyInfo)
+			_, err := keyCoverstion(keyInfo)
 			if err != nil {
-				return "", err
+				return err
 			}
-			pool.KeyInfo = key
+			/*pool.KeyInfo = key
 			if key.KeyMaterial != "" && key.KeyMaterial != " " {
 				keyMaterial = key.KeyMaterial
-			}
+			}*/
 		} else if err != nil && err.Error() == "not found" {
 			beego.Info("AWSOperations: creating key")
 			logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
@@ -955,7 +984,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 				beego.Error(err.Error())
 				logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
 				logging.SendLog(err.Error(), "info", projectId)
-				return "", err
+				return err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
 			_, err = vault.PostSSHKey(pool.KeyInfo)
@@ -964,7 +993,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 				beego.Error(err.Error())
 				logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 				logging.SendLog(err.Error(), "info", projectId)
-				return "", err
+				return err
 			}
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
@@ -975,15 +1004,15 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			beego.Error(err.Error())
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return "", err
+			return err
 		}
-		key, err := keyCoverstion(k)
+		_, err = keyCoverstion(k)
 		if err != nil {
-			return "", err
+			return err
 		}
-		keyMaterial = key.KeyMaterial
+		//	keyMaterial = key.KeyMaterial
 
-	} else if pool.KeyInfo.KeyType == models.AWSKey {
+	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
 
 		_, err = vault.PostSSHKey(pool.KeyInfo)
 
@@ -991,11 +1020,11 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			beego.Error(err.Error())
 			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return "", err
+			return err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
 
-	} else if pool.KeyInfo.KeyType == models.USERKey {
+	} else if pool.KeyInfo.KeyType == models.USERKey { ///not integrated
 
 		_, err = cloud.ImportSSHKeyPair(pool.KeyInfo.KeyName, pool.KeyInfo.KeyMaterial)
 
@@ -1003,7 +1032,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			beego.Error(err.Error())
 			logging.SendLog("Error in importing key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return "", err
+			return err
 		}
 
 		_, err = vault.PostSSHKey(pool.KeyInfo)
@@ -1012,11 +1041,11 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 			beego.Error(err.Error())
 			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
-			return "", err
+			return err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
 	}
-	return keyMaterial, nil
+	return nil
 }
 func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, error) {
 

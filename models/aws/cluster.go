@@ -64,6 +64,10 @@ type Ami struct {
 	AmiId    string        `json:"ami_id" bson:"ami_id"`
 	Username string        `json:"username" bson:"username"`
 
+	RootVolume     Volume `json:"root_volume" bson:"root_volume"`
+	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
+}
+type Volume struct {
 	VolumeType string `json:"volume_type" bson:"volume_type"`
 	VolumeSize int64  `json:"volume_size" bson:"volume_size"`
 	Iops       int64  `json:"iops" bson:"iops"`
@@ -337,7 +341,6 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 		for _, createdPool := range createdPools {
 
 			if createdPool.PoolName == nodepool.Name {
-
 				for _, inst := range createdPool.Instances {
 
 					var node Node
@@ -347,15 +350,10 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 						if *tag.Key == "Name" {
 							node.Name = *tag.Value
 						}
-					} /*
-						if *inst.Tags[0].Key == "Name" {
-							node.Name = *inst.Tags[0].Value
-						}*/
-					//node.KeyName = *inst.KeyName
+					}
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
 					node.PrivateIP = *inst.PrivateIpAddress
-					//node.SSHKey = createdPool.Key
 					if inst.PublicIpAddress != nil {
 						node.PublicIP = *inst.PublicIpAddress
 					}
@@ -364,7 +362,6 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 					updatedNodes = append(updatedNodes, &node)
 					beego.Info("Cluster model: Instances added")
 				}
-				//cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
 			}
 		}
 		beego.Info("Cluster model: updated nodes in pools")
@@ -375,7 +372,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 }
 func GetAllSSHKeyPair() (keys []string, err error) {
 
-	keys, err = vault.GetAllAwsSSHKey("aws")
+	keys, err = vault.GetAllSSHKey("aws")
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
