@@ -371,7 +371,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 }
 func GetAllSSHKeyPair() (keys []string, err error) {
 
-	keys, err = vault.GetAllAwsSSHKey("aws")
+	keys, err = vault.GetAllSSHKey("aws")
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
