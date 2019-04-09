@@ -197,3 +197,37 @@ func GetAzureSSHKey(cloudType string, keyName string) (interface{}, error) {
 	return key, nil
 
 }
+func GetAllAwsSSHKey(cloudType string) ([]string, error) {
+	var keys []string
+	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType)
+	if err != nil {
+		beego.Error("%s", err)
+		return keys, err
+	}
+	client := utils.InitReq()
+	response, err := client.SendRequest(req)
+	if err != nil {
+		beego.Error("%s", err)
+		return keys, err
+	}
+	defer response.Body.Close()
+
+	beego.Info(response.StatusCode)
+	beego.Info(response.Status)
+	if response.StatusCode == 500 {
+		return keys, errors.New("not found")
+	}
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		beego.Error("%s", err)
+		return keys, err
+	}
+
+	err = json.Unmarshal(contents, &keys)
+	if err != nil {
+		beego.Error("%s", err)
+		return keys, err
+	}
+	return keys, nil
+
+}
