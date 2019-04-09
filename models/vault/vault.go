@@ -6,6 +6,7 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 )
@@ -89,7 +90,8 @@ func PostSSHKey(keyRaw interface{}) (int, error) {
 	keyObj.Cloud = "aws"
 	keyObj.KeyName = key.KeyName
 	client := utils.InitReq()
-
+	fmt.Print("+#v", key)
+	fmt.Print("+#v", keyObj)
 	request_data, err := logging.TransformData(keyObj)
 	if err != nil {
 		beego.Error("%s", err)
@@ -107,6 +109,8 @@ func PostSSHKey(keyRaw interface{}) (int, error) {
 		beego.Error("%s", err)
 		return 400, err
 	}
+
+	beego.Error(response.StatusCode)
 	return response.StatusCode, err
 
 }
