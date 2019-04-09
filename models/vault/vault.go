@@ -96,7 +96,7 @@ func PostSSHKey(keyRaw interface{}) (int, error) {
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"template/sshKey/")
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -138,7 +138,7 @@ func PostAzureSSHKey(keyRaw interface{}) (int, error) {
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"template/sshKey/")
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -154,7 +154,7 @@ func PostAzureSSHKey(keyRaw interface{}) (int, error) {
 }
 func GetAzureSSHKey(cloudType string, keyName string) (interface{}, error) {
 
-	req, err := utils.CreateGetRequest(getVaultHost() + "template/sshKey/" + cloudType + "/" + keyName)
+	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
 		beego.Error("%s", err)
 		return azureKey{}, err
