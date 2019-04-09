@@ -5,6 +5,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/logging"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -368,17 +369,9 @@ func InsertSSHKeyPair(key Key) (err error) {
 	}
 	return nil
 }
-func GetAllSSHKeyPair() (keys []*Key, err error) {
+func GetAllSSHKeyPair() (keys []string, err error) {
 
-	session, err := db.GetMongoSession()
-	if err != nil {
-		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
-		return keys, err
-	}
-	defer session.Close()
-	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
-	err = c.Find(bson.M{"cloud": models.Azure}).All(&keys)
+	keys, err = vault.GetAllSSHKey("azure")
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
