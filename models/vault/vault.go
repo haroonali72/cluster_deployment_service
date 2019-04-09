@@ -90,8 +90,8 @@ func PostSSHKey(keyRaw interface{}) (int, error) {
 	keyObj.Cloud = "aws"
 	keyObj.KeyName = key.KeyName
 	client := utils.InitReq()
-	fmt.Print("+#v", key)
-	fmt.Print("+#v", keyObj)
+	fmt.Print("+%v", key)
+	fmt.Print("+%v", keyObj)
 	request_data, err := logging.TransformData(keyObj)
 	if err != nil {
 		beego.Error("%s", err)
@@ -111,6 +111,9 @@ func PostSSHKey(keyRaw interface{}) (int, error) {
 	}
 
 	beego.Error(response.StatusCode)
+	if response.StatusCode == 500 {
+		return 0, errors.New("error in saving key")
+	}
 	return response.StatusCode, err
 
 }
@@ -152,6 +155,9 @@ func PostAzureSSHKey(keyRaw interface{}) (int, error) {
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
+	}
+	if response.StatusCode == 500 {
+		return 0, errors.New("error in saving key")
 	}
 	return response.StatusCode, err
 
