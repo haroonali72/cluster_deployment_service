@@ -282,12 +282,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			}
 			if pool.Ami.IsExternal {
 				pool.KeyInfo.KeyMaterial = keyMaterial
-				err = cloud.createVolume(result.Instances, pool.Ami.ExternalVolume)
-				if err != nil {
-					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-					return nil, err
-				}
-				err = cloud.attachVolume(result.Instances, pool.Ami, pool.KeyInfo)
+				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId)
 				if err != nil {
 					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 					return nil, err
@@ -574,16 +569,37 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	/*
 		setting 50 gb volume - temp work
 	*/
-
+	beego.Info("updating root volume ")
 	ebs, err := cloud.describeAmi(&pool.Ami.AmiId)
 	if err != nil {
-		if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
-			ebs[0].Ebs.VolumeSize = &pool.Ami.RootVolume.VolumeSize
-			ebs[0].Ebs.VolumeType = &pool.Ami.RootVolume.VolumeType
+		beego.Error(err.Error())
+		return nil, err
+	}
+	if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
+		ebs[0].Ebs.VolumeSize = &pool.Ami.RootVolume.VolumeSize
+		ebs[0].Ebs.VolumeType = &pool.Ami.RootVolume.VolumeType
+		if pool.Ami.RootVolume.VolumeType == "io1" {
 			ebs[0].Ebs.Iops = &pool.Ami.RootVolume.Iops
-			input.BlockDeviceMappings = ebs
 		}
 	}
+
+	beego.Info("attaching external volume")
+	if pool.Ami.IsExternal {
+		var external_volume ec2.BlockDeviceMapping
+
+		var external_ebs ec2.EbsBlockDevice
+
+		external_ebs.VolumeType = &pool.Ami.ExternalVolume.VolumeType
+		external_ebs.VolumeSize = &pool.Ami.ExternalVolume.VolumeSize
+		if pool.Ami.ExternalVolume.VolumeType == "io1" {
+			external_ebs.Iops = &pool.Ami.ExternalVolume.Iops
+		}
+		external_volume.Ebs = &external_ebs
+		external_volume.DeviceName = aws.String("/dev/sdf")
+		ebs = append(ebs, &external_volume)
+	}
+	input.BlockDeviceMappings = ebs
+
 	ok := cloud.checkInstanceProfile(pool.Name)
 	if !ok {
 		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name)}
@@ -786,9 +802,18 @@ func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 	client := utils.InitReq()
 
 	url = url + "/" + projectId
+
 	req, err := utils.CreateGetRequest(url)
+	if err != nil {
+		beego.Error("%s", err)
+		return Network{}, err
+	}
 
 	response, err := client.SendRequest(req)
+	if err != nil {
+		beego.Error("%s", err)
+		return Network{}, err
+	}
 
 	defer response.Body.Close()
 
@@ -937,14 +962,28 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 	beego.Info(res.GoString())
 	return ebsVolumes, nil
 }
-func (cloud *AWS) createVolume(ids []*ec2.Instance, volume Volume) error {
+
+/*func (cloud *AWS) createVolume(ids []*ec2.Instance, volume Volume, projectId string) error {
 
 	for _, id := range ids {
+		/*start := time.Now()
+		timeToWait := 60 //seconds
+		retry := true
 
-		input := ec2.CreateVolumeInput{Iops: aws.Int64(volume.Iops),
+		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
+
+			err, state := cloud.checkInstanceState(*id.InstanceId, projectId)
+
+		}
+		input := ec2.CreateVolumeInput{
 			VolumeType: aws.String(volume.VolumeType),
-			Size:       aws.Int64(volume.VolumeSize)}
+			Size:       aws.Int64(volume.VolumeSize),
+		AvailabilityZone:aws.String(cloud.Region+"a")}
 
+
+		if input.VolumeType ==aws.String("io1"){
+			input.Iops=aws.Int64(volume.Iops)
+		}
 		out, err := cloud.Client.CreateVolume(&input)
 		if err != nil {
 			beego.Error(err.Error())
@@ -962,6 +1001,16 @@ func (cloud *AWS) createVolume(ids []*ec2.Instance, volume Volume) error {
 		beego.Info(out_.State)
 	}
 	return nil
+
+}*/
+func (cloud *AWS) checkInstanceState(id string, projectId string) (error, string) {
+	ids := []*string{&id}
+	latest_instances, err := cloud.GetInstances(ids, projectId, false)
+	if err != nil {
+		return err, ""
+	} else {
+		return nil, *latest_instances[0].PublicIpAddress
+	}
 
 }
 func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
@@ -1084,15 +1133,41 @@ func (cloud *AWS) getAccountId() (string, error) {
 	return *resp.Account, nil
 
 }
-func (cloud *AWS) attachVolume(ids []*ec2.Instance, ami Ami, key Key) error {
+
+func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string) error {
 
 	for _, id := range ids {
 
-		fileWrite(key.KeyMaterial, key.KeyName)
-		copyFile(key.KeyName, ami.Username, *id.InstanceId)
-		runScript(key.KeyName, ami.Username, *id.InstanceId)
-		deleteScript(key.KeyName, ami.Username, *id.InstanceId)
-		deleteFile(key.KeyName)
+		err := fileWrite(key.KeyMaterial, key.KeyName)
+		if err != nil {
+			return err
+		}
+		publicIp := ""
+		if id.PublicIpAddress == nil {
+			beego.Error("waiting for public ip")
+			time.Sleep(time.Second * 40)
+			beego.Error("waited for public ip")
+			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId)
+			if err != nil {
+				return err
+			}
+		}
+		err = copyFile(key.KeyName, ami.Username, publicIp)
+		if err != nil {
+			return err
+		}
+		err = runScript(key.KeyName, ami.Username, publicIp)
+		if err != nil {
+			return err
+		}
+		err = deleteScript(key.KeyName, ami.Username, publicIp)
+		if err != nil {
+			return err
+		}
+		err = deleteFile(key.KeyName)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 
@@ -1125,8 +1200,10 @@ func fileWrite(key string, keyName string) error {
 func copyFile(keyName string, userName string, instanceId string) error {
 
 	keyPath := "../antelope/keys/" + keyName + ".pem"
-	ip := userName + "@" + instanceId + ":/home/ubuntu"
+	ip := userName + "@" + instanceId + ":/home/" + userName
 	cmd1 := "scp"
+	beego.Info(keyPath)
+	beego.Info(ip)
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "../antelope/scripts/mount.sh", ip}
 	cmd := exec.Command(cmd1, args...)
 
@@ -1134,7 +1211,7 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err.Error())
+		beego.Error(err.Error())
 		return err
 	}
 	return nil
@@ -1143,15 +1220,15 @@ func runScript(keyName string, userName string, instanceId string) error {
 	keyPath := "../antelope/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/ubuntu/mount.sh", "xvdg", "g", "data0"}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/mount.sh"}
 	cmd := exec.Command(cmd1, args...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err.Error())
-		return err
+		beego.Warn(err.Error())
+		return nil
 	}
 	return nil
 }
@@ -1160,7 +1237,7 @@ func deleteScript(keyName string, userName string, instanceId string) error {
 	keyPath := "../antelope/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/ubuntu/mount.sh"}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/mount.sh"}
 	cmd := exec.Command(cmd1, args...)
 	err := cmd.Run()
 	if err != nil {

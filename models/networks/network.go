@@ -93,36 +93,20 @@ func GetNetworkStatus(envId string, cloudType string) (interface{}, error) {
 		return AWSNetwork{}, err
 	}
 	defer response.Body.Close()
-	if cloudType == "aws" {
-		var network AWSNetwork
-
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			beego.Error("%s", err)
-			return AWSNetwork{}, err
-		}
-
-		err = json.Unmarshal(contents, &network)
-		if err != nil {
-			beego.Error("%s", err)
-			return AWSNetwork{}, err
-		}
-		return network, nil
-	} else if cloudType == "azure" {
-		var network AzureNetwork
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			beego.Error("%s", err)
-			return AzureNetwork{}, err
-		}
-
-		err = json.Unmarshal(contents, &network)
-		if err != nil {
-			beego.Error("%s", err)
-			return AzureNetwork{}, err
-		}
-		return network, nil
+	var network AzureNetwork
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		beego.Error("%s", err)
+		return AzureNetwork{}, err
 	}
+
+	err = json.Unmarshal(contents, &network)
+	if err != nil {
+		beego.Error("%s", err)
+		return AzureNetwork{}, err
+	}
+	return network, nil
+
 	return nil, err
 }
 func getNetworkHost() string {
