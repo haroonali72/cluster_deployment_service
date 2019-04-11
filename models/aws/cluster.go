@@ -63,6 +63,15 @@ type Ami struct {
 	Name     string        `json:"name" bson:"name"`
 	AmiId    string        `json:"ami_id" bson:"ami_id"`
 	Username string        `json:"username" bson:"username"`
+
+	RootVolume     Volume `json:"root_volume" bson:"root_volume"`
+	IsExternal     bool   `json:"is_external" bson:"is_external"`
+	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
+}
+type Volume struct {
+	VolumeType string `json:"volume_type" bson:"volume_type"`
+	VolumeSize int64  `json:"volume_size" bson:"volume_size"`
+	Iops       int64  `json:"iops" bson:"iops"`
 }
 
 func CreateCluster(cluster Cluster_Def) error {
@@ -333,7 +342,6 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 		for _, createdPool := range createdPools {
 
 			if createdPool.PoolName == nodepool.Name {
-
 				for _, inst := range createdPool.Instances {
 
 					var node Node
@@ -343,15 +351,10 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 						if *tag.Key == "Name" {
 							node.Name = *tag.Value
 						}
-					} /*
-						if *inst.Tags[0].Key == "Name" {
-							node.Name = *inst.Tags[0].Value
-						}*/
-					//node.KeyName = *inst.KeyName
+					}
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
 					node.PrivateIP = *inst.PrivateIpAddress
-					//node.SSHKey = createdPool.Key
 					if inst.PublicIpAddress != nil {
 						node.PublicIP = *inst.PublicIpAddress
 					}
@@ -360,7 +363,6 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 					updatedNodes = append(updatedNodes, &node)
 					beego.Info("Cluster model: Instances added")
 				}
-				//cluster.NodePools[index].KeyInfo.KeyMaterial = createdPool.Key
 			}
 		}
 		beego.Info("Cluster model: updated nodes in pools")
@@ -429,4 +431,25 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 	}
 
 	return keys, nil
+}
+func GetAWSAmi(credentials string, amiId string) ([]*ec2.BlockDeviceMapping, error) {
+
+	splits := strings.Split(credentials, ":")
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err := aws.init()
+	if err != nil {
+		return nil, err
+	}
+
+	amis, e := aws.describeAmi(&amiId)
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to get ami details ", e.Error())
+		return nil, e
+	}
+
+	return amis, nil
 }
