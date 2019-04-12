@@ -74,12 +74,25 @@ type Volume struct {
 	Iops       int64  `json:"iops" bson:"iops"`
 }
 
+func checkClusterSize(cluster Cluster_Def) error {
+	for _, pools := range cluster.NodePools {
+		if pools.NodeCount > 3 {
+			return errors.New("Nodepool can't have more than 3 nodes")
+		}
+	}
+	return nil
+}
 func CreateCluster(cluster Cluster_Def) error {
 	_, err := GetCluster(cluster.ProjectId)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster '%s' already exists in the database: ", cluster.Name)
 		beego.Error(text, err)
 		return errors.New(text)
+	}
+	err = checkClusterSize(cluster)
+	if err != nil { //cluster found
+		beego.Error(err.Error())
+		return err
 	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)

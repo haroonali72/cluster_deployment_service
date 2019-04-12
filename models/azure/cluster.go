@@ -79,6 +79,14 @@ type ImageReference struct {
 	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
 
+func checkClusterSize(cluster Cluster_Def) error {
+	for _, pools := range cluster.NodePools {
+		if pools.NodeCount > 3 {
+			return errors.New("Nodepool can't have more than 3 nodes")
+		}
+	}
+	return nil
+}
 func CreateCluster(cluster Cluster_Def) error {
 
 	fmt.Printf("%+v", cluster.NodePools[0].BootDiagnostics)
@@ -94,6 +102,12 @@ func CreateCluster(cluster Cluster_Def) error {
 		return err
 	}
 	defer session.Close()
+
+	err = checkClusterSize(cluster)
+	if err != nil { //cluster found
+		beego.Error(err.Error())
+		return err
+	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureClusterCollection, cluster)
 	if err != nil {
