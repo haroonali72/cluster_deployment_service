@@ -13,7 +13,7 @@ RUN echo $GOPATH
 ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 RUN echo $PATH
 
-ENV GOOS=linux GOARCH=amd64 GOARM=7 go build
+#ENV GOOS=linux GOARCH=amd64 GOARM=7 go build
 # Set our workdir to our current service in the gopath
 WORKDIR /go/src/antelope/
 # Copy the current code into our workdir
