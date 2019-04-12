@@ -1,15 +1,15 @@
 FROM ubuntu:bionic
 
-RUN apt-get install openssh-client
+WORKDIR /go/src/antelope/
 
 RUN wget "https://dl.google.com/go/go1.11.1.linux-arm64.tar.gz"
-
+RUN tar-xzvf go1.11.1.linux-arm64.tar.gz
+RUN mv go1.11.1.linux-arm64 go
 ENV GOROOT=/usr/local/go
 ENV GOPATH=$HOME/go
 RUN PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
 # Set our workdir to our current service in the gopath
-WORKDIR /go/src/antelope/
 
 # Copy the current code into our workdir
 COPY . .
