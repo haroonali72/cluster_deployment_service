@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -1177,21 +1176,21 @@ func fileWrite(key string, keyName string) error {
 
 	f, err := os.Create("../antelope/keys/" + keyName + ".pem")
 	if err != nil {
-		fmt.Println(err.Error())
+		beego.Error(err.Error())
 		return err
 	}
 	defer f.Close()
 	d2 := []byte(key)
 	n2, err := f.Write(d2)
 	if err != nil {
-		fmt.Println(err.Error())
+		beego.Error(err.Error())
 		return err
 	}
-	fmt.Printf("wrote %d bytes\n", n2)
+	beego.Info("wrote %d bytes\n", n2)
 
 	err = os.Chmod("../antelope/keys/"+keyName+".pem", 0777)
 	if err != nil {
-		log.Println(err)
+		beego.Error(err)
 		return err
 	}
 	return nil
