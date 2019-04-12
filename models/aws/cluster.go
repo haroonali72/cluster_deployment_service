@@ -207,10 +207,10 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 
-		confError = aws.CleanUp(cluster)
+		/*confError = aws.CleanUp(cluster)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId)
-		}
+		}*/
 
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster)
