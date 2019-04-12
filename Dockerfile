@@ -1,5 +1,5 @@
 FROM golang:1.11.3 as builder
-
+RUN apt-get install openssh-client
 # Set our workdir to our current service in the gopath
 WORKDIR /go/src/antelope/
 
