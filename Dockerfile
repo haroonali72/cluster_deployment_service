@@ -9,7 +9,7 @@ ENV GOROOT /usr/local/go
 RUN echo $GOROOT
 ENV GOPATH=/go
 RUN echo $GOPATH
-RUN PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 RUN echo $PATH
 # Set our workdir to our current service in the gopath
 WORKDIR /go/src/antelope/
