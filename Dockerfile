@@ -18,7 +18,7 @@ RUN echo $PATH
 WORKDIR /go/src/antelope/
 # Copy the current code into our workdir
 COPY . .
-
+RUN apt-get install git
 RUN go get github.com/astaxie/beego
 RUN go get github.com/beego/bee
 RUN go get -u github.com/golang/dep/cmd/dep
