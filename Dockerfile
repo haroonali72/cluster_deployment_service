@@ -4,7 +4,7 @@ WORKDIR /go/src/antelope/
 RUN apt-get update && apt-get install wget -y
 RUN wget https://dl.google.com/go/go1.11.1.linux-arm64.tar.gz
 RUN tar -xzvf go1.11.1.linux-arm64.tar.gz
-RUN mv go1.11.1.linux-arm64 go
+#RUN mv go1.11.1.linux-arm64 go
 ENV GOROOT=/usr/local/go
 ENV GOPATH=$HOME/go
 RUN PATH=$GOPATH/bin:$GOROOT/bin:$PATH
