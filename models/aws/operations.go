@@ -1141,6 +1141,10 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 		if err != nil {
 			return err
 		}
+		err = setPermission(key.KeyName)
+		if err != nil {
+			return err
+		}
 		publicIp := ""
 		if id.PublicIpAddress == nil {
 			beego.Error("waiting for public ip")
@@ -1195,7 +1199,22 @@ func fileWrite(key string, keyName string) error {
 	}
 	return nil
 }
+func setPermission(keyName string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	cmd1 := "chmod"
+	beego.Info(keyPath)
+	args := []string{"600", keyPath}
+	cmd := exec.Command(cmd1, args...)
 
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	return nil
+}
 func copyFile(keyName string, userName string, instanceId string) error {
 
 	keyPath := "../antelope/keys/" + keyName + ".pem"
