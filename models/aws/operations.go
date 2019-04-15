@@ -284,7 +284,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId)
 				if err != nil {
 					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-					//return nil, err
+					return nil, err
 				}
 			}
 		}
