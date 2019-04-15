@@ -593,6 +593,11 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		if pool.Ami.ExternalVolume.VolumeType == "io1" {
 			external_ebs.Iops = &pool.Ami.ExternalVolume.Iops
 		}
+		if pool.Ami.ExternalVolume.DeleteOnTermination {
+			external_ebs.DeleteOnTermination = aws.Bool(true)
+		} else {
+			external_ebs.DeleteOnTermination = aws.Bool(false)
+		}
 		external_volume.Ebs = &external_ebs
 		external_volume.DeviceName = aws.String("/dev/sdf")
 		ebs = append(ebs, &external_volume)

@@ -69,9 +69,10 @@ type Ami struct {
 	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
 }
 type Volume struct {
-	VolumeType string `json:"volume_type" bson:"volume_type"`
-	VolumeSize int64  `json:"volume_size" bson:"volume_size"`
-	Iops       int64  `json:"iops" bson:"iops"`
+	VolumeType          string `json:"volume_type" bson:"volume_type"`
+	VolumeSize          int64  `json:"volume_size" bson:"volume_size"`
+	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination"`
+	Iops                int64  `json:"iops" bson:"iops"`
 }
 
 func checkClusterSize(cluster Cluster_Def) error {
