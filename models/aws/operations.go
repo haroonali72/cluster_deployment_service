@@ -1160,9 +1160,26 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 				return err
 			}
 		}
-		err = copyFile(key.KeyName, ami.Username, publicIp)
-		if err != nil {
-			return err
+
+		start := time.Now()
+		timeToWait := 60 //seconds
+		retry := true
+		var errCopy error
+
+		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
+
+			errCopy = copyFile(key.KeyName, ami.Username, publicIp)
+			if errCopy != nil && strings.Contains(errCopy.Error(), "Connection refused") {
+
+				beego.Info("time passed %6.2f sec\n", time.Since(start).Seconds())
+				beego.Info("waiting 5 seconds before retry")
+				time.Sleep(5 * time.Second)
+			} else {
+				retry = false
+			}
+		}
+		if errCopy != nil {
+			return errCopy
 		}
 		err = setScriptPermision(key.KeyName, ami.Username, publicIp)
 		if err != nil {
