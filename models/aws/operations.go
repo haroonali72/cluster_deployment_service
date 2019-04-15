@@ -1159,6 +1159,10 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 		if err != nil {
 			return err
 		}
+		err = setScriptPermision(key.KeyName, ami.Username, publicIp)
+		if err != nil {
+			return err
+		}
 		err = runScript(key.KeyName, ami.Username, publicIp)
 		if err != nil {
 			return err
@@ -1231,6 +1235,22 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	if err != nil {
 		beego.Error(err.Error())
 		return err
+	}
+	return nil
+}
+func setScriptPermision(keyName string, userName string, instanceId string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/mount.sh"}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Warn(err.Error())
+		return nil
 	}
 	return nil
 }
