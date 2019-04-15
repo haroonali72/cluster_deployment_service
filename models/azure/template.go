@@ -1,4 +1,4 @@
-package aws
+package azure
 
 import (
 	"antelope/models"
@@ -16,44 +16,45 @@ type Template struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	TemplateId       string        `json:"template_id" bson:"template_id"`
 	Name             string        `json:"name" bson:"name"`
+	Status           string        `json:"status" bson:"status"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
 	NetworkName      string        `json:"network_name" bson:"network_name"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 
 type NodePoolT struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name            string        `json:"name" bson:"name"`
-	Ami             Ami           `json:"ami" bson:"ami"`
-	NodeCount       int32         `json:"node_count" bson:"node_count"`
-	MachineType     string        `json:"machine_type" bson:"machine_type"`
-	SubnetId        string        `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []string      `json:"security_group_id" bson:"security_group_id"`
-	KeyInfo         Key           `json:"key_info" bson:"key_info"`
-	PoolRole        string        `json:"pool_role" bson:"pool_role"`
+	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
+	Name               string             `json:"name" bson:"name"`
+	NodeCount          int64              `json:"node_count" bson:"node_count"`
+	MachineType        string             `json:"machine_type" bson:"machine_type"`
+	Image              ImageReference     `json:"image" bson:"image"`
+	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
+	Nodes              []*VM              `json:"nodes" bson:"nodes"`
+	PoolRole           string             `json:"pool_role" bson:"pool_role"`
+	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
+	KeyInfo            Key                `json:"key_info" bson:"key_info"`
+	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
+	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
 
 func CreateTemplate(template Template) (error, string) {
-	/*_, err := GetTemplate(template.TemplateId)
+	_, err := GetTemplate(template.TemplateId)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text, err)
 		return errors.New(text), ""
-	}*/
-
-	template.CreationDate = time.Now()
+	}
 	i := rand.Int()
-
-	beego.Info(i)
-	beego.Info(strconv.Itoa(i))
 
 	template.TemplateId = template.Name + strconv.Itoa(i)
 
-	beego.Info(template.TemplateId)
-	s := db.GetMongoConf()
-	err := db.InsertInMongo(s.MongoAwsTemplateCollection, template)
+	template.CreationDate = time.Now()
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoAzureTemplateCollection, template)
 	if err != nil {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
 		return err, ""
@@ -62,16 +63,16 @@ func CreateTemplate(template Template) (error, string) {
 	return nil, template.TemplateId
 }
 
-func GetTemplate(templateId string) (template Template, err error) {
+func GetTemplate(templateName string) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
 		return Template{}, err1
 	}
 	defer session.Close()
-	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
-	err = c.Find(bson.M{"template_id": templateId}).One(&template)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
+	err = c.Find(bson.M{"name": templateName}).One(&template)
 	if err != nil {
 		beego.Error(err.Error())
 		return Template{}, err
@@ -87,8 +88,8 @@ func GetAllTemplate() (templates []Template, err error) {
 		return nil, err1
 	}
 	defer session.Close()
-	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Find(bson.M{}).All(&templates)
 	if err != nil {
 		beego.Error(err.Error())
@@ -101,7 +102,7 @@ func GetAllTemplate() (templates []Template, err error) {
 func UpdateTemplate(template Template) error {
 	oldTemplate, err := GetTemplate(template.TemplateId)
 	if err != nil {
-		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.TemplateId)
+		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
@@ -124,16 +125,16 @@ func UpdateTemplate(template Template) error {
 	return nil
 }
 
-func DeleteTemplate(templateId string) error {
+func DeleteTemplate(templateName string) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		beego.Error("Template model: Delete - Got error while connecting to the database: ", err)
 		return err
 	}
 	defer session.Close()
-	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
-	err = c.Remove(bson.M{"template_id": templateId})
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
+	err = c.Remove(bson.M{"name": templateName})
 	if err != nil {
 		beego.Error(err.Error())
 		return err

@@ -35,7 +35,7 @@ func (notifier *Notifier) Notify(channel, status string) {
 	beego.Info(*cmd)
 	if cmd != nil {
 		if cmd.Err() != nil {
-			beego.Error(cmd.Err())
+			beego.Error(cmd.Err().Error())
 		}
 	}
 }

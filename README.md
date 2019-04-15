@@ -1,4 +1,4 @@
-# antilope
+# antelope
 
 CloudPlex microservice based node pool solution.
 

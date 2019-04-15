@@ -1,0 +1,9 @@
+.git/
+Dockerfile
+.project
+.idea/
+*.exe
+*.iml
+.project
+.cache
+.idea

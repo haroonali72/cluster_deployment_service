@@ -14,3 +14,28 @@ const (
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
 )
+
+type KeyType string
+
+const (
+	NEWKey   KeyType = "new"
+	CPKey    KeyType = "cp"
+	AWSKey   KeyType = "aws"
+	AZUREKey KeyType = "azure"
+	USERKey  KeyType = "user"
+)
+
+type OsDiskType string
+
+const (
+	StandardHDD OsDiskType = "standard hdd"
+	StandardSSD OsDiskType = "standard ssd"
+	PremiumSSD  OsDiskType = "premium ssd"
+)
+
+type CredentialsType string
+
+const (
+	Password CredentialsType = "password"
+	SSHKey   CredentialsType = "key"
+)

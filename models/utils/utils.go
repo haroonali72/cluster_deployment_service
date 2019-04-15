@@ -25,16 +25,17 @@ func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 	return req, nil
 }
 
-func CreateGetRequest(key string, url string) (*http.Request, error) {
+func CreateGetRequest(url string) (*http.Request, error) {
 
 	beego.Info("requesting", url)
-	url = url + "/" + key
+
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
 		beego.Error("%s", err)
 		return nil, err
 	}
+
 	req.Proto = "HTTP/1.0"
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil

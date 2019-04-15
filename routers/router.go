@@ -10,8 +10,8 @@ package routers
 import (
 	"antelope/controllers"
 	"antelope/controllers/aws"
-
 	"github.com/astaxie/beego"
+	"antelope/controllers/azure"
 )
 
 func init() {
@@ -29,6 +29,16 @@ func init() {
 		beego.NSNamespace("/cluster/aws",
 			beego.NSInclude(
 				&aws.AWSClusterController{},
+			),
+		),
+		beego.NSNamespace("/cluster/azure",
+			beego.NSInclude(
+				&azure.AzureClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/azure",
+			beego.NSInclude(
+				&azure.AzureTemplateController{},
 			),
 		),
 	)

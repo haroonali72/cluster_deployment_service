@@ -5,6 +5,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/logging"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -14,10 +15,6 @@ import (
 	"time"
 )
 
-type SSHKeyPair struct {
-	Name        string `json:"name" bson:"name",omitempty"`
-	FingerPrint string `json:"fingerprint" bson:"fingerprint"`
-}
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id"`
@@ -40,35 +37,63 @@ type NodePool struct {
 	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
 	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*Node       `json:"nodes" bson:"nodes"`
-	KeyName            string        `json:"key_name" bson:"key_name"`
+	KeyInfo            Key           `json:"key_info" bson:"key_info"`
 	PoolRole           string        `json:"pool_role" bson:"pool_role"`
 }
 type Node struct {
-	CloudId    string `json:"cloud_id" bson:"cloud_id,omitempty"`
-	KeyName    string `json:"key_name" bson:"key_name,omitempty"`
-	SSHKey     string `json:"ssh_key" bson:"ssh_key,omitempty"`
-	NodeState  string `json:"node_state" bson:"node_state,omitempty"`
-	Name       string `json:"name" bson:"name,omitempty"`
-	PrivateIP  string `json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP   string `json:"public_ip" bson:"public_ip,omitempty"`
-	PublicDNS  string `json:"public_dns" bson:"public_dns,omitempty"`
-	PrivateDNS string `json:"private_dns" bson:"private_dns,omitempty"`
-	UserName   string `json:"user_name" bson:"user_name,omitempty"`
+	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
+	KeyName    string `json:"key_name" bson:"key_name",omitempty"`
+	SSHKey     string `json:"ssh_key" bson:"ssh_key",omitempty"`
+	NodeState  string `json:"node_state" bson:"node_state",omitempty"`
+	Name       string `json:"name" bson:"name",omitempty"`
+	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty"`
+	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty"`
+	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty"`
+	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
+	UserName   string `json:"user_name" bson:"user_name",omitempty"`
 }
-
+type Key struct {
+	KeyName     string         `json:"key_name" bson:"key_name"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
+	KeyMaterial string         `json:"private_key" bson:"private_key"`
+	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
+}
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name     string        `json:"name" bson:"name"`
 	AmiId    string        `json:"ami_id" bson:"ami_id"`
 	Username string        `json:"username" bson:"username"`
+
+	RootVolume     Volume `json:"root_volume" bson:"root_volume"`
+	IsExternal     bool   `json:"is_external" bson:"is_external"`
+	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
+}
+type Volume struct {
+	VolumeType          string `json:"volume_type" bson:"volume_type"`
+	VolumeSize          int64  `json:"volume_size" bson:"volume_size"`
+	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination"`
+	Iops                int64  `json:"iops" bson:"iops"`
 }
 
+func checkClusterSize(cluster Cluster_Def) error {
+	for _, pools := range cluster.NodePools {
+		if pools.NodeCount > 3 {
+			return errors.New("Nodepool can't have more than 3 nodes")
+		}
+	}
+	return nil
+}
 func CreateCluster(cluster Cluster_Def) error {
 	_, err := GetCluster(cluster.ProjectId)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster '%s' already exists in the database: ", cluster.Name)
 		beego.Error(text, err)
 		return errors.New(text)
+	}
+	err = checkClusterSize(cluster)
+	if err != nil { //cluster found
+		beego.Error(err.Error())
+		return err
 	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
@@ -160,7 +185,16 @@ func DeleteCluster(projectId string) error {
 
 	return nil
 }
-func DeployCluster(cluster Cluster_Def, credentials string) error {
+func PrintError(confError error, name, projectId string) {
+	if confError != nil {
+		beego.Error(confError.Error())
+		logging.SendLog("Cluster creation failed : "+name, "error", projectId)
+		logging.SendLog(confError.Error(), "error", projectId)
+
+	}
+}
+func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
+
 	splits := strings.Split(credentials, ":")
 
 	aws := AWS{
@@ -168,51 +202,46 @@ func DeployCluster(cluster Cluster_Def, credentials string) error {
 		SecretKey: splits[1],
 		Region:    splits[2],
 	}
-	err := aws.init()
-	if err != nil {
-		beego.Error(err.Error())
-		return err
+	confError = aws.init()
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId)
+		return confError
 	}
 
 	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
-		beego.Error(pub_err.Error())
-		return pub_err
+	confError = publisher.Init_notifier()
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId)
+		return confError
 	}
 
 	logging.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	createdPools, err := aws.createCluster(cluster)
+	createdPools, confError := aws.createCluster(cluster)
 
-	if err != nil {
-		beego.Error(err.Error())
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId)
 
-		logging.SendLog("Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
+		confError = aws.CleanUp(cluster)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId)
+		}
 
 		cluster.Status = "Cluster Creation Failed"
-
-		err = UpdateCluster(cluster)
-		if err != nil {
-			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
-			logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			logging.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.ProjectId, "Status Available")
-			return err
+		confError = UpdateCluster(cluster)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available")
-		return err
+		return confError
 	}
 
 	cluster = updateNodePool(createdPools, cluster)
 
-	err = UpdateCluster(cluster)
-	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
-		logging.SendLog("Cluster updation failed in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
+	confError = UpdateCluster(cluster)
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available")
-		return err
+		return confError
 	}
 	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available")
@@ -298,7 +327,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 			return err
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available")
-
+		return nil
 	}
 
 	for _, pools := range cluster.NodePools {
@@ -327,24 +356,24 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 		for _, createdPool := range createdPools {
 
 			if createdPool.PoolName == nodepool.Name {
-
 				for _, inst := range createdPool.Instances {
 
 					var node Node
-					beego.Info(*inst.Tags[0].Value, *inst.Tags[0].Value)
-					if *inst.Tags[0].Key == "Name" {
-						node.Name = *inst.Tags[0].Value
+					beego.Info(*inst.Tags[0].Key, *inst.Tags[0].Value)
+					for _, tag := range inst.Tags {
+						beego.Info(*tag.Key, *tag.Value)
+						if *tag.Key == "Name" {
+							node.Name = *tag.Value
+						}
 					}
-					node.KeyName = *inst.KeyName
 					node.CloudId = *inst.InstanceId
 					node.NodeState = *inst.State.Name
 					node.PrivateIP = *inst.PrivateIpAddress
-
 					if inst.PublicIpAddress != nil {
 						node.PublicIP = *inst.PublicIpAddress
 					}
 					node.UserName = nodepool.Ami.Username
-					node.SSHKey = createdPool.Key
+
 					updatedNodes = append(updatedNodes, &node)
 					beego.Info("Cluster model: Instances added")
 				}
@@ -356,7 +385,47 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetSSHKeyPair(credentials string) ([]*SSHKeyPair, error) {
+func GetAllSSHKeyPair() (keys []string, err error) {
+
+	keys, err = vault.GetAllSSHKey("aws")
+	if err != nil {
+		beego.Error(err.Error())
+		return keys, err
+	}
+	return keys, nil
+}
+func GetSSHKeyPair(keyname string) (keys *Key, err error) {
+
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return keys, err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoSshKeyCollection)
+	err = c.Find(bson.M{"cloud": models.AWS, "key_name": keyname}).One(&keys)
+	if err != nil {
+		return keys, err
+	}
+	return keys, nil
+}
+func InsertSSHKeyPair(key Key) (err error) {
+	key.Cloud = models.AWS
+	session, err := db.GetMongoSession()
+	if err != nil {
+		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
+		return err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoSshKeyCollection, key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 
 	splits := strings.Split(credentials, ":")
 	aws := AWS{
@@ -374,19 +443,27 @@ func GetSSHKeyPair(credentials string) ([]*SSHKeyPair, error) {
 		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", e.Error())
 		return nil, e
 	}
-	k := fillKeyInfo(keys)
 
-	return k, nil
+	return keys, nil
 }
-func fillKeyInfo(keys_raw []*ec2.KeyPairInfo) (keys []*SSHKeyPair) {
-	for _, key := range keys_raw {
+func GetAWSAmi(credentials string, amiId string) ([]*ec2.BlockDeviceMapping, error) {
 
-		keys = append(keys, &SSHKeyPair{
-			FingerPrint: *key.KeyFingerprint,
-			Name:        *key.KeyName,
-		})
-
+	splits := strings.Split(credentials, ":")
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err := aws.init()
+	if err != nil {
+		return nil, err
 	}
 
-	return keys
+	amis, e := aws.describeAmi(&amiId)
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to get ami details ", e.Error())
+		return nil, e
+	}
+
+	return amis, nil
 }
