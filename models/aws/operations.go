@@ -1169,7 +1169,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
 
 			errCopy = copyFile(key.KeyName, ami.Username, publicIp)
-			if errCopy != nil && strings.Contains(errCopy.Error(), "Connection refused") {
+			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
 
 				beego.Info("time passed %6.2f sec\n", time.Since(start).Seconds())
 				beego.Info("waiting 5 seconds before retry")
