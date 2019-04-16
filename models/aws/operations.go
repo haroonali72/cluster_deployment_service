@@ -1013,9 +1013,14 @@ func (cloud *AWS) checkInstanceState(id string, projectId string) (error, string
 	if err != nil {
 		return err, ""
 	} else {
-		return nil, *latest_instances[0].PublicIpAddress
-	}
+		if latest_instances[0].PublicIpAddress != nil {
 
+			return nil, *latest_instances[0].PublicIpAddress
+		} else {
+
+			return errors.New("public ip not assigned"), ""
+		}
+	}
 }
 func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
 
@@ -1153,7 +1158,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 		publicIp := ""
 		if id.PublicIpAddress == nil {
 			beego.Error("waiting for public ip")
-			time.Sleep(time.Second * 40)
+			time.Sleep(time.Second * 50)
 			beego.Error("waited for public ip")
 			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId)
 			if err != nil {
