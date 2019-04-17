@@ -19,6 +19,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -118,12 +119,19 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 		beego.Info("AZUREOperations creating nodes")
 
-		result, _, _, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
+		result, private_key, _, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId)
 		if err != nil {
 			beego.Error(err.Error())
 			return cluster, err
 		}
-
+		beego.Info("private key")
+		beego.Info(private_key)
+		IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(i))
+		err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, IPname)
+		if err != nil {
+			logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+			return cluster, err
+		}
 		cluster.NodePools[i].Nodes = result
 		//	cluster.NodePools[i].KeyInfo.PublicKey = public
 		//	cluster.NodePools[i].KeyInfo.PrivateKey = private
@@ -135,17 +143,17 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 
 	var vms []*VM
 
-	subnetId := cloud.GetSubnets(pool, networkData)
-	sgIds := cloud.GetSecurityGroups(pool, networkData)
+	//subnetId := cloud.GetSubnets(pool, networkData)
+	//sgIds := cloud.GetSecurityGroups(pool, networkData)
 
-	/*subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/azureCluster/providers/Microsoft.Network/virtualNetworks/vnet-cloudNative/subnets/subnet-cloudNative"
+	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/March25-02/providers/Microsoft.Network/virtualNetworks/vpc-bm2/subnets/vpc-sub2"
 	var sgIds []*string
-	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/azureCluster/providers/Microsoft.Network/networkSecurityGroups/sg-cloudNative"
-	sgIds = append(sgIds, &sid)*/
-
+	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/March25-02/providers/Microsoft.Network/networkSecurityGroups/vpc-sg2"
+	sgIds = append(sgIds, &sid)
+	beego.Info(subnetId)
+	beego.Info(sgIds)
 	i := 0
-	private := ""
-	public := ""
+	private_key := ""
 	for i < int(pool.NodeCount) {
 
 		/*
@@ -194,9 +202,12 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 		vms = append(vms, &vmObj)
 		beego.Info(private)
 		beego.Info(public)
+		private_key = private
+
 		i = i + 1
 	}
-	return vms, private, public, nil
+	beego.Info(private_key)
+	return vms, private_key, "", nil
 
 }
 func (cloud *AZURE) GetSecurityGroups(pool *NodePool, network networks.AzureNetwork) []*string {
@@ -838,5 +849,182 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 		}
 	}
 
+	return nil
+}
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, pip string) error {
+	beego.Info(privateKey)
+	for _, vm := range vms {
+		err := fileWrite(privateKey, KeyName)
+		if err != nil {
+			return err
+		}
+		err = setPermission(KeyName)
+		if err != nil {
+			return err
+		}
+
+		if vm.PublicIP == nil {
+			beego.Error("waiting for public ip")
+			time.Sleep(time.Second * 50)
+			beego.Error("waited for public ip")
+			publicIp, err := cloud.GetPIP(resourceGroup, pip)
+			if err != nil {
+				return err
+			}
+			vm.PublicIP = publicIp.PublicIPAddressPropertiesFormat.IPAddress
+		}
+
+		start := time.Now()
+		timeToWait := 60 //seconds
+		retry := true
+		var errCopy error
+
+		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
+
+			errCopy = copyFile(KeyName, user, *vm.PublicIP)
+			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
+
+				beego.Info("time passed %6.2f sec\n", time.Since(start).Seconds())
+				beego.Info("waiting 5 seconds before retry")
+				time.Sleep(5 * time.Second)
+			} else {
+				retry = false
+			}
+		}
+		if errCopy != nil {
+			return errCopy
+		}
+		err = setScriptPermision(KeyName, user, *vm.PublicIP)
+		if err != nil {
+			return err
+		}
+		err = runScript(KeyName, user, *vm.PublicIP)
+		if err != nil {
+			return err
+		}
+		err = deleteScript(KeyName, user, *vm.PublicIP)
+		if err != nil {
+			return err
+		}
+		err = deleteFile(KeyName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+
+}
+func fileWrite(key string, keyName string) error {
+
+	f, err := os.Create("../antelope/keys/" + keyName + ".pem")
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	defer f.Close()
+	d2 := []byte(key)
+	n2, err := f.Write(d2)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	beego.Info("wrote %d bytes\n", n2)
+
+	err = os.Chmod("../antelope/keys/"+keyName+".pem", 0777)
+	if err != nil {
+		beego.Error(err)
+		return err
+	}
+	return nil
+}
+func setPermission(keyName string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	cmd1 := "chmod"
+	beego.Info(keyPath)
+	args := []string{"600", keyPath}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	return nil
+}
+func copyFile(keyName string, userName string, instanceId string) error {
+
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId + ":/home/" + userName
+	cmd1 := "scp"
+	beego.Info(keyPath)
+	beego.Info(ip)
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "../antelope/scripts/azure-volume-mount.sh", ip}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	return nil
+}
+func setScriptPermision(keyName string, userName string, instanceId string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/azure-volume-mount.sh"}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Warn(err.Error())
+		return nil
+	}
+	return nil
+}
+func runScript(keyName string, userName string, instanceId string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/azure-volume-mount.sh"}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Warn(err.Error())
+		return nil
+	}
+	return nil
+}
+
+func deleteScript(keyName string, userName string, instanceId string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/azure-volume-mount.sh"}
+	cmd := exec.Command(cmd1, args...)
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func deleteFile(keyName string) error {
+	keyPath := "../antelope/keys/" + keyName + ".pem"
+	err := os.Remove(keyPath)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
 	return nil
 }

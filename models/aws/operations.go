@@ -280,12 +280,10 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 				}
 			}
 			if pool.Ami.IsExternal {
-				beego.Info(keyMaterial)
 				pool.KeyInfo.KeyMaterial = keyMaterial
-				beego.Info(pool.KeyInfo.KeyMaterial)
 				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId)
 				if err != nil {
-					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
+					logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 					return nil, err
 				}
 			}
@@ -1082,7 +1080,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 		if err != nil {
 			return "", err
 		}
-		beego.Info(key.KeyMaterial)
+
 		keyMaterial = key.KeyMaterial
 
 	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
@@ -1149,7 +1147,6 @@ func (cloud *AWS) getAccountId() (string, error) {
 func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string) error {
 
 	for _, id := range ids {
-		beego.Info(key.KeyMaterial)
 		err := fileWrite(key.KeyMaterial, key.KeyName)
 		if err != nil {
 			return err
@@ -1175,7 +1172,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 		var errCopy error
 
 		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
-			beego.Info(key.KeyMaterial)
+
 			errCopy = copyFile(key.KeyName, ami.Username, publicIp)
 			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
 
