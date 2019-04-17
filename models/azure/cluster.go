@@ -37,6 +37,7 @@ type NodePool struct {
 	NodeCount          int64              `json:"node_count" bson:"node_count"`
 	MachineType        string             `json:"machine_type" bson:"machine_type"`
 	Image              ImageReference     `json:"image" bson:"image"`
+	Volume             Volume             `json:"volume" bson:"volume"`
 	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id"`
 	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
@@ -54,6 +55,10 @@ type Key struct {
 	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty"`
 	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty"`
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
+}
+type Volume struct {
+	DataDisk models.OsDiskType `json:"disk_type" bson:"disk_type"`
+	Size     int32             `json:"disk_size" bson:"disk_size"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`

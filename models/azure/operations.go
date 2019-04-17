@@ -580,13 +580,23 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			StorageAccountType: satype,
 		},
 	}
+	if pool.Volume.DataDisk == models.StandardSSD {
+		satype = compute.StorageAccountTypesStandardSSDLRS
+	} else if pool.Volume.DataDisk == models.PremiumSSD {
+		satype = compute.StorageAccountTypesPremiumLRS
+	} else if pool.Volume.DataDisk == models.StandardHDD {
+		satype = compute.StorageAccountTypesStandardLRS
 
+	}
 	storageName := "ext-" + pool.Name + "-" + strconv.Itoa(index)
 	disk := compute.DataDisk{
 		Lun:          to.Int32Ptr(int32(index)),
 		Name:         to.StringPtr(storageName),
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
-		DiskSizeGB:   to.Int32Ptr(int32(1023)),
+		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
 	}
 
 	var storage = []compute.DataDisk{}
