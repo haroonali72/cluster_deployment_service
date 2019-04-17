@@ -280,7 +280,9 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 				}
 			}
 			if pool.Ami.IsExternal {
+				beego.Info(keyMaterial)
 				pool.KeyInfo.KeyMaterial = keyMaterial
+				beego.Info(pool.KeyInfo.KeyMaterial)
 				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId)
 				if err != nil {
 					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
@@ -410,12 +412,12 @@ func keyCoverstion(keyInfo interface{}) (Key, error) {
 	b, e := json.Marshal(keyInfo)
 	var k Key
 	if e != nil {
-		beego.Error(e)
+		beego.Error(e.Error())
 		return Key{}, e
 	}
 	e = json.Unmarshal(b, &k)
 	if e != nil {
-		beego.Error(e)
+		beego.Error(e.Error())
 		return Key{}, e
 	}
 	return k, nil
@@ -1075,6 +1077,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 		if err != nil {
 			return "", err
 		}
+		beego.Info(key.KeyMaterial)
 		keyMaterial = key.KeyMaterial
 
 	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
@@ -1141,7 +1144,7 @@ func (cloud *AWS) getAccountId() (string, error) {
 func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string) error {
 
 	for _, id := range ids {
-
+		beego.Info(key.KeyMaterial)
 		err := fileWrite(key.KeyMaterial, key.KeyName)
 		if err != nil {
 			return err
@@ -1167,7 +1170,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 		var errCopy error
 
 		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
-
+			beego.Info(key.KeyMaterial)
 			errCopy = copyFile(key.KeyName, ami.Username, publicIp)
 			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
 
