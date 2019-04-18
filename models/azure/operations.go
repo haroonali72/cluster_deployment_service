@@ -588,6 +588,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		satype = compute.StorageAccountTypesStandardLRS
 
 	}
+
 	storageName := "ext-" + pool.Name + "-" + strconv.Itoa(index)
 	disk := compute.DataDisk{
 		Lun:          to.Int32Ptr(int32(index)),
@@ -616,8 +617,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 					Publisher: to.StringPtr(pool.Image.Publisher),
 					Version:   to.StringPtr(pool.Image.Version),
 				},
-				OsDisk:    osDisk,
-				DataDisks: &storage,
+				OsDisk: osDisk,
+				//DataDisks: &storage,
 			},
 			OsProfile: &compute.OSProfile{
 				ComputerName:  to.StringPtr(pool.Name),
@@ -635,6 +636,9 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 				},
 			},
 		},
+	}
+	if pool.Volume.EnableVolume {
+		vm.StorageProfile.DataDisks = &storage
 	}
 	private := ""
 	public := ""
