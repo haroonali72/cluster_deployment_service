@@ -57,8 +57,9 @@ type Key struct {
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 type Volume struct {
-	DataDisk models.OsDiskType `json:"disk_type" bson:"disk_type"`
-	Size     int32             `json:"disk_size" bson:"disk_size"`
+	DataDisk     models.OsDiskType `json:"disk_type" bson:"disk_type"`
+	Size         int32             `json:"disk_size" bson:"disk_size"`
+	EnableVolume bool              `json:"enable_volume" bson :"enable_volume"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
