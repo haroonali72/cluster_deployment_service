@@ -133,8 +133,6 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 			return cluster, err
 		}
 		cluster.NodePools[i].Nodes = result
-		//	cluster.NodePools[i].KeyInfo.PublicKey = public
-		//	cluster.NodePools[i].KeyInfo.PrivateKey = private
 	}
 
 	return cluster, nil
@@ -188,6 +186,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("Node created successfully : "+name, "info", projectId)
+		cloud.Resources[pool.Name+"-SA"+strconv.Itoa(i)] = pool.Name + strconv.Itoa(i)
 		cloud.Resources[pool.Name+"-NodeName-"+strconv.Itoa(i)] = name
 
 		var vmObj VM
@@ -740,7 +739,12 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		if pool.BootDiagnostics.NewStroageAccount {
 
 			storageId := "https://" + pool.Name + strconv.Itoa(index) + ".blob.core.windows.net/"
-			cloud.createStorageAccount(resourceGroup, pool.Name+strconv.Itoa(index))
+			err := cloud.createStorageAccount(resourceGroup, pool.Name+strconv.Itoa(index))
+			if err != nil {
+				beego.Error("vm creation failed")
+				beego.Error(err)
+				return compute.VirtualMachine{}, "", "", err
+			}
 			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
 				&compute.BootDiagnostics{
 					Enabled: aws.Bool(true), StorageURI: &storageId,
@@ -806,6 +810,17 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 	beego.Info(*account.ID)*/
 	return nil
 }
+func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName string) error {
+
+	acccountName = strings.ToLower(acccountName)
+	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, acccountName)
+	if err != nil {
+		beego.Error("Storage account creation failed")
+		beego.Info(err)
+		return err
+	}
+	return nil
+}
 func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 	for _, pool := range cluster.NodePools {
 		i := 0
@@ -855,6 +870,22 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return e
 				}
 				err := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId)
+				if err != nil {
+					return err
+				}
+			}
+			if cloud.Resources[pool.Name+"-SA"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[pool.Name+"-SA"+strconv.Itoa(i)]
+				SAname := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &SAname)
+				if e != nil {
+					return e
+				}
+				err := cloud.deleteStorageAccount(cluster.ResourceGroup, SAname)
 				if err != nil {
 					return err
 				}
