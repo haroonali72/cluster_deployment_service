@@ -167,7 +167,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("Public IP created successfully : "+IPname, "info", projectId)
-		cloud.Resources["IPName-"+strconv.Itoa(i)] = IPname
+		cloud.Resources[pool.Name+"IPName-"+strconv.Itoa(i)] = IPname
 		/*
 			making network interface
 		*/
@@ -178,7 +178,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("NIC created successfully : "+nicName, "info", projectId)
-		cloud.Resources["NicName-"+strconv.Itoa(i)] = nicName
+		cloud.Resources[pool.Name+"-NicName-"+strconv.Itoa(i)] = nicName
 
 		name := pool.Name + "-" + strconv.Itoa(i)
 
@@ -188,7 +188,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("Node created successfully : "+name, "info", projectId)
-		cloud.Resources["NodeName-"+strconv.Itoa(i)] = name
+		cloud.Resources[pool.Name+"-NodeName-"+strconv.Itoa(i)] = name
 
 		var vmObj VM
 		vmObj.Name = vm.Name
@@ -810,8 +810,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 	for _, pool := range cluster.NodePools {
 		i := 0
 		for i <= int(pool.NodeCount) {
-			if cloud.Resources["NodeName-"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources["NodeName-"+strconv.Itoa(i)]
+			if cloud.Resources[pool.Name+"-NodeName-"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[pool.Name+"-NodeName-"+strconv.Itoa(i)]
 				nodeName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -827,8 +827,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return err
 				}
 			}
-			if cloud.Resources["NicName-"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources["NicName-"+strconv.Itoa(i)]
+			if cloud.Resources[pool.Name+"-NicName-"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[pool.Name+"-NicName-"+strconv.Itoa(i)]
 				nicName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -843,8 +843,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 					return err
 				}
 			}
-			if cloud.Resources["IPName-"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources["IPName-"+strconv.Itoa(i)]
+			if cloud.Resources[pool.Name+"-IPName-"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[pool.Name+"-IPName-"+strconv.Itoa(i)]
 				IPname := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -881,8 +881,9 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		if vm.PublicIP == nil {
 			beego.Error("waiting for public ip")
 			time.Sleep(time.Second * 50)
-			beego.Error("waited for public ip")
 			publicIp, err := cloud.GetPIP(resourceGroup, pip)
+
+			beego.Error("waited for public ip")
 			if err != nil {
 				return err
 			}
