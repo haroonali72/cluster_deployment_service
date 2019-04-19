@@ -162,14 +162,17 @@ func GetAllCluster() (clusters []Cluster_Def, err error) {
 	return clusters, nil
 }
 
-func UpdateCluster(cluster Cluster_Def) error {
+func UpdateCluster(cluster Cluster_Def, update bool) error {
 	oldCluster, err := GetCluster(cluster.ProjectId)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
-
+	if oldCluster.Status == "Cluster Created" && update {
+		beego.Error("Cluster is in runnning state")
+		return errors.New("Cluster is in runnning state")
+	}
 	err = DeleteCluster(cluster.ProjectId)
 	if err != nil {
 		beego.Error("Cluster model: Update - Got error deleting cluster: ", err)
@@ -248,7 +251,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 		}
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster(cluster)
+		confError = UpdateCluster(cluster, true)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId)
 		}
@@ -258,7 +261,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster(cluster)
+	confError = UpdateCluster(cluster, true)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 		publisher.Notify(cluster.Name, "Status Available")
@@ -343,7 +346,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster)
+		err = UpdateCluster(cluster, true)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 			logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -361,7 +364,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		var nodes []*VM
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster(cluster)
+	err = UpdateCluster(cluster, true)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)

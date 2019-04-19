@@ -113,7 +113,7 @@ func (c *AWSClusterController) Patch() {
 	beego.Info("AWSClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("AWSClusterController: JSON Payload: ", cluster)
 
-	err := aws.UpdateCluster(cluster)
+	err := aws.UpdateCluster(cluster, true)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -150,7 +150,14 @@ func (c *AWSClusterController) Delete() {
 		return
 	}
 
-	err := aws.DeleteCluster(id)
+	cluster, err := aws.GetCluster(id)
+	if err == nil && cluster.Status == "Cluster Created" {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error ," + "Cluster is in running state"}
+		c.ServeJSON()
+		return
+	}
+	err = aws.DeleteCluster(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

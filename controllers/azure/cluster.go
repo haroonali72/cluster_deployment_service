@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"antelope/models/aws"
 	"antelope/models/azure"
 	"encoding/json"
 	"github.com/astaxie/beego"
@@ -112,7 +113,7 @@ func (c *AzureClusterController) Patch() {
 	beego.Info("AzureClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("AzureClusterController: JSON Payload: ", cluster)
 
-	err := azure.UpdateCluster(cluster)
+	err := azure.UpdateCluster(cluster, true)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -148,7 +149,13 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	cluster, err := aws.GetCluster(id)
+	if err == nil && cluster.Status == "Cluster Created" {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
+		c.ServeJSON()
+		return
+	}
 	err := azure.DeleteCluster(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
