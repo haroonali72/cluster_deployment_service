@@ -67,8 +67,8 @@ func (c *AzureClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	azure.Cluster_Def		true	"body for cluster content"
-// @Success 201 {"msg": "cluster created successfully"}
-// @Failure 409 {"error": "cluster with same name already exists"}
+// @Success 200 {"msg": "cluster created successfully"}
+// @Failure 409 {"error": "cluster against same project id already exists"}
 // @Failure 500 {"error": "internal server error"}
 // @router / [post]
 func (c *AzureClusterController) Post() {
@@ -84,7 +84,7 @@ func (c *AzureClusterController) Post() {
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster with same project id already exists"}
+			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -166,8 +166,8 @@ func (c *AzureClusterController) Delete() {
 // @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
-// @Failure 404 {"error": "name is empty"}
-// @Failure 401 {"error": "exception_message"}
+// @Failure 404 {"error": "project id is empty"}
+// @Failure 400 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /start/:projectId [post]
 func (c *AzureClusterController) StartCluster() {
@@ -227,7 +227,7 @@ func (c *AzureClusterController) StartCluster() {
 // @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} azure.Cluster_Def
-// @Failure 404 {"error": "name is empty"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /status/:projectId/ [get]
@@ -250,7 +250,7 @@ func (c *AzureClusterController) GetStatus() {
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -275,7 +275,7 @@ func (c *AzureClusterController) GetStatus() {
 // @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 404 {"error": "name is empty"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /terminate/:projectId/ [post]
@@ -327,7 +327,6 @@ func (c *AzureClusterController) TerminateCluster() {
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
 // @Success 200 {object} []string
-// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkeys [get]
 func (c *AzureClusterController) GetSSHKeys() {

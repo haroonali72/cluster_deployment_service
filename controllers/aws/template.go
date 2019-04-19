@@ -66,7 +66,7 @@ func (c *AWSTemplateController) GetAll() {
 // @Title Create
 // @Description create a new template
 // @Param	body	body	aws.Template	true	"body for template content"
-// @Success 201 {"msg": "template created successfully"}
+// @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
@@ -131,7 +131,7 @@ func (c *AWSTemplateController) Patch() {
 // @Description delete a templates
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
-// @Failure 404 {"error": "project is empty"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:templateId [delete]
 func (c *AWSTemplateController) Delete() {
