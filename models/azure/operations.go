@@ -402,6 +402,10 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 			if err != nil {
 				return err
 			}
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name+strconv.Itoa(index))
+			if err != nil {
+				return err
+			}
 
 		}
 		logging.SendLog("Node Pool terminated successfully: "+pool.Name, "info", cluster.ProjectId)
