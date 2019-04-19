@@ -207,6 +207,13 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+
+	if cluster.Status == "Cluster Created" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+		c.ServeJSON()
+		return
+	}
 	beego.Info("AzureClusterController: Creating Cluster. ", cluster.Name)
 
 	go azure.DeployCluster(cluster, credentials)

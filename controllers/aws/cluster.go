@@ -208,6 +208,12 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+	if cluster.Status == "Cluster Created" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+		c.ServeJSON()
+		return
+	}
 	beego.Info("AWSClusterController: Creating Cluster. ", cluster.Name)
 
 	go aws.DeployCluster(cluster, credentials)

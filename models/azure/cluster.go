@@ -224,22 +224,22 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 		Subscription: splits[3],
 		Region:       splits[4],
 	}
-	err := azure.init()
-	if err != nil {
+	confError = azure.init()
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
-		return err
+		return confError
 	}
 
 	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
+	confError = publisher.Init_notifier()
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
-		return pub_err
+		return confError
 	}
 
 	logging.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, err = azure.createCluster(cluster)
-	if err != nil {
+	cluster, confError = azure.createCluster(cluster)
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 
 		confError = azure.CleanUp(cluster)
@@ -248,8 +248,8 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 		}
 
 		cluster.Status = "Cluster creation failed"
-		err = UpdateCluster(cluster)
-		if err != nil {
+		confError = UpdateCluster(cluster)
+		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId)
 		}
 		publisher.Notify(cluster.Name, "Status Available")
@@ -258,11 +258,11 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	}
 	cluster.Status = "Cluster Created"
 
-	err = UpdateCluster(cluster)
-	if err != nil {
+	confError = UpdateCluster(cluster)
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 		publisher.Notify(cluster.Name, "Status Available")
-		return err
+		return confError
 	}
 	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.Name, "Status Available")
