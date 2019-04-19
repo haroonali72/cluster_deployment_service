@@ -126,8 +126,8 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 		beego.Info("private key")
 		beego.Info(private_key)
-		IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(i))
-		err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, IPname)
+
+		err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name)
 		if err != nil {
 			logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
@@ -865,9 +865,10 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 
 	return nil
 }
-func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, pip string) error {
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, name string) error {
 	beego.Info(privateKey)
-	for _, vm := range vms {
+	for i, vm := range vms {
+		pip := fmt.Sprintf("pip-%s", name+"-"+strconv.Itoa(i))
 		err := fileWrite(privateKey, KeyName)
 		if err != nil {
 			return err
