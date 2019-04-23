@@ -819,7 +819,7 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 	acccountName = strings.ToLower(acccountName)
 	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, acccountName)
 	if err != nil {
-		beego.Error("Storage account creation failed")
+		beego.Error("Storage account deletion failed")
 		beego.Info(err)
 		return err
 	}

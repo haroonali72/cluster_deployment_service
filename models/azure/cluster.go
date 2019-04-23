@@ -251,7 +251,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 		}
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster(cluster, true)
+		confError = UpdateCluster(cluster, false)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId)
 		}
@@ -261,7 +261,7 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster(cluster, true)
+	confError = UpdateCluster(cluster, false)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 		publisher.Notify(cluster.Name, "Status Available")
@@ -346,7 +346,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster, true)
+		err = UpdateCluster(cluster, false)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 			logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -364,7 +364,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		var nodes []*VM
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster(cluster, true)
+	err = UpdateCluster(cluster, false)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
