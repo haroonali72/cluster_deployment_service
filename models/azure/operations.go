@@ -126,8 +126,8 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 		beego.Info("private key")
 		beego.Info(private_key)
-		IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(i))
-		err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, IPname)
+		//IPname := fmt.Sprintf("pip-%s", pool.Name+"-"+strconv.Itoa(i))
+		err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup)
 		if err != nil {
 			logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
@@ -865,7 +865,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
 
 	return nil
 }
-func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, pip string) error {
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string) error {
 	beego.Info(privateKey)
 	for _, vm := range vms {
 		err := fileWrite(privateKey, KeyName)
@@ -878,10 +878,11 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		}
 
 		if vm.PublicIP == nil {
-			beego.Error("waiting for public ip")
+			beego.Info("waiting for public ip")
 			time.Sleep(time.Second * 50)
-			beego.Error("waited for public ip")
-			publicIp, err := cloud.GetPIP(resourceGroup, pip)
+			beego.Info("waited for public ip")
+			IPname := fmt.Sprintf("pip-%s", vm.Name)
+			publicIp, err := cloud.GetPIP(resourceGroup, IPname)
 			if err != nil {
 				return err
 			}
