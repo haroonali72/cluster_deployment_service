@@ -881,7 +881,8 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 			beego.Info("waiting for public ip")
 			time.Sleep(time.Second * 50)
 			beego.Info("waited for public ip")
-			IPname := fmt.Sprintf("pip-%s", vm.Name)
+			IPname := fmt.Sprintf("pip-%s", *vm.Name)
+			beego.Info(IPname)
 			publicIp, err := cloud.GetPIP(resourceGroup, IPname)
 			if err != nil {
 				return err
