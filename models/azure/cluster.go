@@ -162,14 +162,17 @@ func GetAllCluster() (clusters []Cluster_Def, err error) {
 	return clusters, nil
 }
 
-func UpdateCluster(cluster Cluster_Def) error {
+func UpdateCluster(cluster Cluster_Def, update bool) error {
 	oldCluster, err := GetCluster(cluster.ProjectId)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
-
+	if oldCluster.Status == "Cluster Created" && update {
+		beego.Error("Cluster is in runnning state")
+		return errors.New("Cluster is in runnning state")
+	}
 	err = DeleteCluster(cluster.ProjectId)
 	if err != nil {
 		beego.Error("Cluster model: Update - Got error deleting cluster: ", err)
@@ -224,22 +227,22 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 		Subscription: splits[3],
 		Region:       splits[4],
 	}
-	err := azure.init()
-	if err != nil {
+	confError = azure.init()
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
-		return err
+		return confError
 	}
 
 	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
+	confError = publisher.Init_notifier()
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
-		return pub_err
+		return confError
 	}
 
 	logging.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, err = azure.createCluster(cluster)
-	if err != nil {
+	cluster, confError = azure.createCluster(cluster)
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 
 		confError = azure.CleanUp(cluster)
@@ -248,8 +251,8 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 		}
 
 		cluster.Status = "Cluster creation failed"
-		err = UpdateCluster(cluster)
-		if err != nil {
+		confError = UpdateCluster(cluster, false)
+		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId)
 		}
 		publisher.Notify(cluster.Name, "Status Available")
@@ -258,11 +261,11 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	}
 	cluster.Status = "Cluster Created"
 
-	err = UpdateCluster(cluster)
-	if err != nil {
+	confError = UpdateCluster(cluster, false)
+	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 		publisher.Notify(cluster.Name, "Status Available")
-		return err
+		return confError
 	}
 	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.Name, "Status Available")
@@ -343,7 +346,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster)
+		err = UpdateCluster(cluster, false)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 			logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -361,7 +364,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		var nodes []*VM
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster(cluster)
+	err = UpdateCluster(cluster, false)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)

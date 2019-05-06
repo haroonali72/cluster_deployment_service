@@ -10,7 +10,7 @@
   version = "v0.4.12"
 
 [[projects]]
-  digest = "1:795111a75b7e339a674da7c1e0cb7f8bbdd444d9ec1335b25ded4d1387b674a9"
+  digest = "1:7836fcafcc515973ef6e3687e51ee0906a2a2026e9d944ec3948bf0860dad061"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/compute/mgmt/2018-04-01/compute",
@@ -19,11 +19,11 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "d659f2a91175cac99aa5627d09b83026eacc978d"
-  version = "v27.0.0"
+  revision = "b11e4e7e4bf27a4eb96af9db49de9c7509f5bb01"
+  version = "v27.3.0"
 
 [[projects]]
-  digest = "1:375029cf4f67c508d1fa3bd0abf7f44f78176c44963422bf3eeeefbe16cab9a8"
+  digest = "1:c1e04f3b97fbb6e25891c10d3d2d906dcd5807774a3a68d0e32e2b7bda9b5c7f"
   name = "github.com/Azure/go-autorest"
   packages = [
     "autorest",
@@ -36,8 +36,8 @@
     "tracing",
   ]
   pruneopts = "UT"
-  revision = "d10011c9c6fd34ca45f1e15ee330e3af8ed8b96a"
-  version = "v11.7.1"
+  revision = "562d3769ef2f0f56bc52749babd3e88367e28588"
+  version = "v11.9.0"
 
 [[projects]]
   digest = "1:3f450bf1f3e8855b552df87e0cac6f9a8a1431f593589d11100f5f7d9402f024"
@@ -59,7 +59,7 @@
   version = "v1.11.1"
 
 [[projects]]
-  digest = "1:374ab8bdbc5326972e155c6ab0d714df57ba9ed7df08fb7ae3acbdca1fd5ff52"
+  digest = "1:96baba9b32e18c0eeab6e6780d9488567f5baf41a14a0292b02a5c18d40b6b2f"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -96,8 +96,8 @@
     "service/sts",
   ]
   pruneopts = "UT"
-  revision = "56c1def75689cceec1fa6f14c2eedb4b798827f9"
-  version = "v1.19.11"
+  revision = "85ae0e8271315ab6e2e7867a01e5de8a0eb45b40"
+  version = "v1.19.14"
 
 [[projects]]
   digest = "1:fdb4ed936abeecb46a8c27dcac83f75c05c87a46d9ec7711411eb785c213fa02"
@@ -274,7 +274,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a7550c619a7f9701bc2f0b2c866668a207cfb693a2834796f723d2c78b514372"
+  digest = "1:d9403fe14e9ea0436e59be99b24c76517720c524d5649c3359224364e70252cd"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -286,7 +286,7 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "eb5bcb51f2a31c7d5141d810b70815c05d9c9146"
+  revision = "1f3472d942ba824034fb77cab6a6cfc1bc8a2c3c"
 
 [[projects]]
   branch = "master"
@@ -294,15 +294,15 @@
   name = "golang.org/x/sync"
   packages = ["semaphore"]
   pruneopts = "UT"
-  revision = "e225da77a7e68af35c70ccbf71af2b83e6acac3c"
+  revision = "56d357773e8497dfd526f0727e187720d1093757"
 
 [[projects]]
   branch = "master"
-  digest = "1:e2e51bf73862610e548f3acd292f447b500e53d792aa55260a8cb605dfd8ba09"
+  digest = "1:d53852c73a1e10a3b9f26554fdea3f3a30f01652bc963417eb1d4f7baab8ce33"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "0ad05ae3009d6413d3363aa09b350b2ec37daf09"
+  revision = "f0ce4c0180bef7e9c51babed693a6e47fdd8962f"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -345,10 +345,10 @@
     "protobuf/field_mask",
   ]
   pruneopts = "UT"
-  revision = "64821d5d210748c883cd2b809589555ae4654203"
+  revision = "e7d98fc518a78c9f8b5ee77be7b0b317475d89e1"
 
 [[projects]]
-  digest = "1:31d87f39886fb38a2b6c097ff3b9f985d6960772170d64a68246f7790e955746"
+  digest = "1:707c3a5d10ed430ea767d73df122d9eb3dfb6312bbacc9f2e39204390686d1d0"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -385,8 +385,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "236199dd5f8031d698fb64091194aecd1c3895b2"
-  version = "v1.20.0"
+  revision = "25c4f928eaa6d96443009bd842389fb4fa48664e"
+  version = "v1.20.1"
 
 [[projects]]
   branch = "v2"
@@ -422,6 +422,7 @@
     "github.com/Azure/go-autorest/autorest/azure",
     "github.com/Azure/go-autorest/autorest/to",
     "github.com/astaxie/beego",
+    "github.com/astaxie/beego/context/param",
     "github.com/astaxie/beego/plugins/cors",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/credentials",

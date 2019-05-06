@@ -69,7 +69,7 @@ func (c *AWSClusterController) GetAll() {
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
-// @Failure 409 {"error": "cluster with same name already exists"}
+// @Failure 409 {"error": "cluster against this project already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AWSClusterController) Post() {
@@ -85,7 +85,7 @@ func (c *AWSClusterController) Post() {
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster with this project id  already exists"}
+			c.Data["json"] = map[string]string{"error": "cluster against this project id  already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -113,7 +113,7 @@ func (c *AWSClusterController) Patch() {
 	beego.Info("AWSClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("AWSClusterController: JSON Payload: ", cluster)
 
-	err := aws.UpdateCluster(cluster)
+	err := aws.UpdateCluster(cluster, true)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -145,12 +145,19 @@ func (c *AWSClusterController) Delete() {
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	err := aws.DeleteCluster(id)
+	cluster, err := aws.GetCluster(id)
+	if err == nil && cluster.Status == "Cluster Created" {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error ," + "Cluster is in running state"}
+		c.ServeJSON()
+		return
+	}
+	err = aws.DeleteCluster(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -208,6 +215,12 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+	if cluster.Status == "Cluster Created" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+		c.ServeJSON()
+		return
+	}
 	beego.Info("AWSClusterController: Creating Cluster. ", cluster.Name)
 
 	go aws.DeployCluster(cluster, credentials)
@@ -221,7 +234,7 @@ func (c *AWSClusterController) StartCluster() {
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
-// @Failure 404 {"error": "name is empty"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /status/:projectId/ [get]
@@ -244,7 +257,7 @@ func (c *AWSClusterController) GetStatus() {
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -269,7 +282,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 404 {"error": "name is empty"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /terminate/:projectId/ [post]
@@ -321,7 +334,6 @@ func (c *AWSClusterController) TerminateCluster() {
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
 // @Success 200 {object} []string
-// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeys() {
@@ -347,6 +359,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
 // @Failure 401 {"error": "exception_message"}
+// @Failure 404 {"error": "ami id is empty"}
 // @Failure 500 {"error": "internal server error"}
 // @router /amis/:amiId [get]
 func (c *AWSClusterController) GetAMI() {

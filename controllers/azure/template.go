@@ -66,7 +66,7 @@ func (c *AzureTemplateController) GetAll() {
 // @Title Create
 // @Description create a new template
 // @Param	body	body	azure.Template	true	"body for template content"
-// @Success 201 {"msg": "template created successfully"}
+// @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "internal server error"}
 // @router / [post]
