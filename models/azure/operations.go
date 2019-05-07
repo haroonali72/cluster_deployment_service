@@ -188,7 +188,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 			return nil, "", "", err
 		}
 		logging.SendLog("Node created successfully : "+name, "info", projectId)
-		cloud.Resources[pool.Name+"-SA"+strconv.Itoa(i)] = pool.Name + strconv.Itoa(i)
+
 		cloud.Resources[pool.Name+"-NodeName-"+strconv.Itoa(i)] = name
 
 		var vmObj VM
@@ -756,6 +756,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 					Enabled: aws.Bool(true), StorageURI: &storageId,
 				},
 			}
+			cloud.Resources[pool.Name+"-SA"+strconv.Itoa(index)] = pool.Name + strconv.Itoa(index)
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
