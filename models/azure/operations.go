@@ -143,15 +143,15 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 
 	var vms []*VM
 
-	//subnetId := cloud.GetSubnets(pool, networkData)
-	//sgIds := cloud.GetSecurityGroups(pool, networkData)
+	subnetId := cloud.GetSubnets(pool, networkData)
+	sgIds := cloud.GetSecurityGroups(pool, networkData)
 
-	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/March25-02/providers/Microsoft.Network/virtualNetworks/vpc-bm2/subnets/vpc-sub2"
-	var sgIds []*string
-	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/March25-02/providers/Microsoft.Network/networkSecurityGroups/vpc-sg2"
-	sgIds = append(sgIds, &sid)
-	beego.Info(subnetId)
-	beego.Info(sgIds)
+	/*	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/March25-02/providers/Microsoft.Network/virtualNetworks/vpc-bm2/subnets/vpc-sub2"
+		var sgIds []*string
+		sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/March25-02/providers/Microsoft.Network/networkSecurityGroups/vpc-sg2"
+		sgIds = append(sgIds, &sid)
+		beego.Info(subnetId)
+		beego.Info(sgIds)*/
 	i := 0
 	private_key := ""
 	for i < int(pool.NodeCount) {
