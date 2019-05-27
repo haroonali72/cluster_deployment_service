@@ -2,6 +2,8 @@ package aws
 
 import (
 	"antelope/models"
+	"antelope/models/aws/IAMRoles"
+	autoscaling2 "antelope/models/aws/autoscaling"
 	"antelope/models/logging"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -13,8 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/sts"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"os"
@@ -23,22 +23,6 @@ import (
 	"strings"
 	"time"
 )
-
-var testInstanceMap = map[string]string{
-	"us-east-2":      "ami-9686a4f3",
-	"sa-east-1":      "ami-a3e39ecf",
-	"eu-central-1":   "ami-5a922335",
-	"us-west-1":      "ami-2d5c6d4d",
-	"us-west-2":      "ami-ecc63a94",
-	"ap-northeast-2": "ami-0f6fb461",
-	"ca-central-1":   "ami-e59c2581",
-	"eu-west-2":      "ami-e1f2e185",
-	"ap-southeast-1": "ami-e6d3a585",
-	"eu-west-1":      "ami-17d11e6e",
-	"ap-southeast-2": "ami-391ff95b",
-	"ap-northeast-1": "ami-8422ebe2",
-	"us-east-1":      "ami-d651b8ac",
-	"ap-south-1":     "ami-08a5e367"}
 
 var docker_master_policy = []byte(`{
   "Version": "2012-10-17",
@@ -232,13 +216,11 @@ type CreatedPool struct {
 }
 
 type AWS struct {
-	Client     *ec2.EC2
-	IAMService *iam.IAM
-	STS        *sts.STS
-	AccessKey  string
-	SecretKey  string
-	Region     string
-	Resources  map[string]interface{}
+	Client    *ec2.EC2
+	AccessKey string
+	SecretKey string
+	Region    string
+	Resources map[string]interface{}
 }
 
 func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
@@ -249,6 +231,17 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			return nil, err
 		}
 	}
+
+	roles := IAMRoles.AWSIAMRoles{
+		AccessKey: cloud.AccessKey,
+		SecretKey: cloud.SecretKey,
+		Region:    cloud.Region,
+	}
+	confError := roles.Init()
+	if confError != nil {
+		return nil, confError
+	}
+
 	network, err := cloud.GetNetworkStatus(cluster.ProjectId)
 
 	if err != nil {
@@ -265,7 +258,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 		}
 		beego.Info("AWSOperations creating nodes")
 
-		result, err := cloud.CreateInstance(pool, network)
+		result, err, subnetId := cloud.CreateInstance(roles, pool, network)
 		if err != nil {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return nil, err
@@ -284,6 +277,21 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId)
 				if err != nil {
 					logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+					return nil, err
+				}
+			}
+			if pool.EnableScaling {
+				scaler := autoscaling2.AWSAutoScaler{
+					AccessKey: cloud.AccessKey,
+					SecretKey: cloud.SecretKey,
+					Region:    cloud.Region,
+				}
+				confError := scaler.Init()
+				if confError != nil {
+					return nil, confError
+				}
+				err = scaler.AutoScaler(cluster.ProjectId, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.MaxScalingGroupSize)
+				if err != nil {
 					return nil, err
 				}
 			}
@@ -350,8 +358,6 @@ func (cloud *AWS) init() error {
 	creds := credentials.NewStaticCredentials(cloud.AccessKey, cloud.SecretKey, "")
 
 	cloud.Client = ec2.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
-	cloud.IAMService = iam.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
-	cloud.STS = sts.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	cloud.Resources = make(map[string]interface{})
 	return nil
 }
@@ -456,12 +462,22 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 		}
 	}
 
+	roles := IAMRoles.AWSIAMRoles{
+		AccessKey: cloud.AccessKey,
+		SecretKey: cloud.SecretKey,
+		Region:    cloud.Region,
+	}
+	confError := roles.Init()
+	if confError != nil {
+		return confError
+	}
+
 	for _, pool := range cluster.NodePools {
 		err := cloud.TerminatePool(pool, cluster.ProjectId)
 		if err != nil {
 			return err
 		}
-		err = cloud.deleteIAMRole(pool.Name)
+		err = roles.DeleteIAMRole(pool.Name)
 		if err != nil {
 			return err
 		}
@@ -469,6 +485,17 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 	return nil
 }
 func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
+
+	roles := IAMRoles.AWSIAMRoles{
+		AccessKey: cloud.AccessKey,
+		SecretKey: cloud.SecretKey,
+		Region:    cloud.Region,
+	}
+	confError := roles.Init()
+	if confError != nil {
+		return confError
+	}
+
 	beego.Info("in clean up method")
 	for _, pool := range cluster.NodePools {
 		beego.Info("terminating pool" + pool.Name)
@@ -484,7 +511,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := cloud.deleteIAMProfile(name)
+			err := roles.DeleteIAMProfile(name)
 			if err != nil {
 				return err
 			}
@@ -501,7 +528,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := cloud.deleteRole(name)
+			err := roles.DeleteRole(name)
 			if err != nil {
 				return err
 			}
@@ -518,7 +545,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := cloud.deletePolicy(name)
+			err := roles.DeletePolicy(name)
 			if err != nil {
 				return err
 			}
@@ -544,18 +571,28 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 
 	return nil
 }
-func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservation, error) {
+func (cloud *AWS) CreateInstance(roles IAMRoles.AWSIAMRoles, pool *NodePool, network Network) (*ec2.Reservation, error, string) {
 
 	subnetId := cloud.GetSubnets(pool, network)
 	sgIds := cloud.GetSecurityGroups(pool, network)
-
-	_, err := cloud.createIAMRole(pool.Name)
+	_, err := roles.CreateRole(pool.Name)
 	if err != nil {
-
 		beego.Error(err.Error())
-		return nil, err
+		return nil, err, ""
 	}
-
+	cloud.Resources[pool.Name+"_role"] = pool.Name
+	_, err = roles.CreatePolicy(pool.Name, docker_master_policy)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err, ""
+	}
+	cloud.Resources[pool.Name+"_policy"] = pool.Name
+	_, err = roles.CreateIAMProfile(pool.Name)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err, ""
+	}
+	cloud.Resources[pool.Name+"_iamProfile"] = pool.Name
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
 		SubnetId:         aws.String(subnetId),
@@ -572,7 +609,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	ebs, err := cloud.describeAmi(&pool.Ami.AmiId)
 	if err != nil {
 		beego.Error(err.Error())
-		return nil, err
+		return nil, err, ""
 	}
 	if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
 		ebs[0].Ebs.VolumeSize = &pool.Ami.RootVolume.VolumeSize
@@ -604,7 +641,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	}
 	input.BlockDeviceMappings = ebs
 
-	ok := cloud.checkInstanceProfile(pool.Name)
+	ok := roles.CheckInstanceProfile(pool.Name)
 	if !ok {
 		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name)}
 		input.IamInstanceProfile = &iamProfile
@@ -615,7 +652,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	result, err := cloud.Client.RunInstances(input)
 	if err != nil {
 		beego.Error(err.Error())
-		return nil, err
+		return nil, err, ""
 	}
 	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 
@@ -626,7 +663,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		cloud.Resources[pool.Name+"_instances"] = ids
 	}
 
-	return result, nil
+	return result, nil, subnetId
 
 }
 func (cloud *AWS) GetSecurityGroups(pool *NodePool, network Network) []*string {
@@ -710,93 +747,6 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
 	logging.SendLog("Cluster pool terminated successfully: "+pool.Name, "info", projectId)
 	return nil
 }
-func (cloud *AWS) deleteIAMRole(name string) error {
-
-	roleName := name
-	err := cloud.deleteIAMProfile(roleName)
-	if err != nil {
-		return err
-	}
-	err = cloud.deleteRole(roleName)
-	if err != nil {
-		return err
-	}
-	err = cloud.deletePolicy(roleName)
-	if err != nil {
-		return err
-	}
-	return nil
-
-}
-func (cloud *AWS) deletePolicy(policyName string) error {
-	err, policyArn := cloud.getPolicyARN(policyName)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
-	}
-	policy_input := iam.DeletePolicyInput{PolicyArn: &policyArn}
-	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
-
-	if err_1 != nil {
-		beego.Error(err_1.Error())
-		return err_1
-	}
-
-	beego.Info(policy_out.GoString())
-	return nil
-}
-func (cloud *AWS) getPolicyARN(policyName string) (error, string) {
-	id, err := cloud.getAccountId()
-	if err != nil {
-		beego.Error(err.Error())
-		return err, ""
-	}
-	policyArn := "arn:aws:iam::" + id + ":policy/" + policyName
-	return nil, policyArn
-}
-func (cloud *AWS) deleteRole(roleName string) error {
-	err, policyArn := cloud.getPolicyARN(roleName)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
-	}
-	policy := iam.DetachRolePolicyInput{RoleName: &roleName, PolicyArn: &policyArn}
-	out, err := cloud.IAMService.DetachRolePolicy(&policy)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
-	}
-
-	beego.Info(out.GoString())
-
-	roleInput := iam.DeleteRoleInput{RoleName: &roleName}
-	out_, err := cloud.IAMService.DeleteRole(&roleInput)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
-	}
-
-	beego.Info(out_.GoString())
-	return nil
-}
-func (cloud *AWS) deleteIAMProfile(roleName string) error {
-	profile := iam.RemoveRoleFromInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
-	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
-	}
-	beego.Info(outtt.GoString())
-
-	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
-	outt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
-	}
-	beego.Info(outt.GoString())
-	return nil
-}
 func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 
 	url := getNetworkHost()
@@ -837,108 +787,7 @@ func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 	return network, nil
 
 }
-func (cloud *AWS) createIAMRole(name string) (string, error) {
 
-	roleName := name
-
-	raw_policy := docker_master_policy
-	raw_role := []byte(`{
-				  "Version": "2012-10-17",
-				  "Statement": [
-				    {
-				      "Effect": "Allow",
-				      "Principal": { "Service": "ec2.amazonaws.com"},
-				      "Action": "sts:AssumeRole"
-				    }
-				  ]
-				}`)
-	role := string(raw_role)
-	policy := string(raw_policy)
-
-	roleInput := iam.CreateRoleInput{AssumeRolePolicyDocument: &role, RoleName: &roleName}
-	out, err := cloud.IAMService.CreateRole(&roleInput)
-	if err != nil {
-		beego.Error(err)
-		return "", err
-	}
-	cloud.Resources[name+"_role"] = roleName
-	beego.Info(out.GoString())
-
-	policy_out, err_1 := cloud.IAMService.CreatePolicy(&iam.CreatePolicyInput{
-		PolicyDocument: aws.String(policy),
-		PolicyName:     &roleName,
-	})
-
-	if err_1 != nil {
-		beego.Error(err_1)
-		return "", err_1
-	}
-	cloud.Resources[name+"_policy"] = roleName
-	attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
-	_, err_2 := cloud.IAMService.AttachRolePolicy(&attach)
-
-	if err_2 != nil {
-		beego.Error(err_2)
-		return "", err_2
-	}
-
-	profileInput := iam.CreateInstanceProfileInput{InstanceProfileName: &roleName}
-	outtt, err := cloud.IAMService.CreateInstanceProfile(&profileInput)
-	if err != nil {
-		beego.Error(err)
-		return "", err
-	}
-	cloud.Resources[name+"_iamProfile"] = roleName
-	testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
-	_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
-	if err != nil {
-		beego.Error(err)
-		return "", err
-	}
-
-	return *outtt.InstanceProfile.Arn, nil
-
-}
-
-func (cloud *AWS) checkInstanceProfile(iamProfileName string) bool {
-
-	iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(iamProfileName)}
-
-	start := time.Now()
-	timeToWait := 60 //seconds
-	retry := true
-
-	region := cloud.Region
-	ami := testInstanceMap[region]
-
-	for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
-
-		//this dummy instance run , to check the success of RunInstance call
-		//this is to ensure that iamProfile is properly propagated
-		_, err := cloud.Client.RunInstances(&ec2.RunInstancesInput{
-			// An Amazon Linux AMI ID for t2.micro instances in the us-west-2 region
-			ImageId:            aws.String(ami),
-			InstanceType:       aws.String("t2.micro"),
-			MinCount:           aws.Int64(1),
-			MaxCount:           aws.Int64(1),
-			DryRun:             aws.Bool(true),
-			IamInstanceProfile: &iamProfile,
-		})
-
-		beego.Error(err)
-
-		if err != nil && strings.Contains(err.Error(), "DryRunOperation: Request would have succeeded") {
-			retry = false
-		} else {
-			beego.Info("time passed %6.2f sec\n", time.Since(start).Seconds())
-			beego.Info("waiting 5 seconds before retry")
-			time.Sleep(5 * time.Second)
-		}
-
-	}
-	beego.Info("retry", retry)
-	return retry
-}
 func getNetworkHost() string {
 	return beego.AppConfig.String("network_url")
 
@@ -1132,16 +981,6 @@ func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, e
 	beego.Info("key name", *resp.KeyName, "key fingerprint", *resp.KeyFingerprint)
 
 	return *resp.KeyName, err
-}
-func (cloud *AWS) getAccountId() (string, error) {
-	input := sts.GetCallerIdentityInput{}
-	resp, err := cloud.STS.GetCallerIdentity(&input)
-	if err != nil {
-		beego.Error(err.Error())
-		return "", err
-	}
-	return *resp.Account, nil
-
 }
 
 func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string) error {

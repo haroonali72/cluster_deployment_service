@@ -29,16 +29,18 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name               string        `json:"name" bson:"name"`
-	NodeCount          int64         `json:"node_count" bson:"node_count"`
-	MachineType        string        `json:"machine_type" bson:"machine_type"`
-	Ami                Ami           `json:"ami" bson:"ami"`
-	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
-	Nodes              []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo            Key           `json:"key_info" bson:"key_info"`
-	PoolRole           string        `json:"pool_role" bson:"pool_role"`
+	ID                  bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name                string        `json:"name" bson:"name"`
+	NodeCount           int64         `json:"node_count" bson:"node_count"`
+	MachineType         string        `json:"machine_type" bson:"machine_type"`
+	Ami                 Ami           `json:"ami" bson:"ami"`
+	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups  []*string     `json:"security_group_id" bson:"security_group_id"`
+	Nodes               []*Node       `json:"nodes" bson:"nodes"`
+	KeyInfo             Key           `json:"key_info" bson:"key_info"`
+	PoolRole            string        `json:"pool_role" bson:"pool_role"`
+	EnableScaling       bool          `json:"base_scaling_config" bson:"base_scaling_config"`
+	MaxScalingGroupSize int64         `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
