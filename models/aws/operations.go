@@ -494,6 +494,17 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 	}
 
 	for _, pool := range cluster.NodePools {
+		if pool.EnableScaling {
+			err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+			if err != nil {
+				return err
+			}
+			err = cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
+			if err != nil {
+				return err
+			}
+		}
+
 		err := cloud.TerminatePool(pool, cluster.ProjectId)
 		if err != nil {
 			return err
