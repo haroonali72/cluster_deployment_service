@@ -221,6 +221,8 @@ type AWS struct {
 	SecretKey string
 	Region    string
 	Resources map[string]interface{}
+
+	Scaler autoscaling2.AWSAutoScaler
 }
 
 func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
@@ -281,19 +283,27 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 				}
 			}
 			if pool.EnableScaling {
-				scaler := autoscaling2.AWSAutoScaler{
-					AccessKey: cloud.AccessKey,
-					SecretKey: cloud.SecretKey,
-					Region:    cloud.Region,
-				}
-				confError := scaler.Init()
-				if confError != nil {
-					return nil, confError
-				}
-				err = scaler.AutoScaler(cluster.ProjectId, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.MaxScalingGroupSize)
+
+				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.MaxScalingGroupSize)
 				if err != nil {
 					return nil, err
 				}
+				if m[cluster.ProjectId+"_autoScaler"] != "" {
+					cloud.Resources[cluster.ProjectId+"_autoScaler"] = cluster.ProjectId
+				}
+				if m[cluster.ProjectId+"_launchConfig"] != "" {
+					cloud.Resources[cluster.ProjectId+"_launchConfig"] = cluster.ProjectId
+				}
+				if m[cluster.ProjectId+"_role"] != "" {
+					cloud.Resources[cluster.ProjectId+"_role"] = cluster.ProjectId
+				}
+				if m[cluster.ProjectId+"_policy"] != "" {
+					cloud.Resources[cluster.ProjectId+"_policy"] = cluster.ProjectId
+				}
+				if m[cluster.ProjectId+"_iamProfile"] != "" {
+					cloud.Resources[cluster.ProjectId+"_iamProfile"] = cluster.ProjectId
+				}
+
 			}
 		}
 
@@ -356,9 +366,20 @@ func (cloud *AWS) init() error {
 
 	region := cloud.Region
 	creds := credentials.NewStaticCredentials(cloud.AccessKey, cloud.SecretKey, "")
-
 	cloud.Client = ec2.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	cloud.Resources = make(map[string]interface{})
+
+	scaler := autoscaling2.AWSAutoScaler{
+		AccessKey: cloud.AccessKey,
+		SecretKey: cloud.SecretKey,
+		Region:    cloud.Region,
+	}
+	confError := scaler.Init()
+	if confError != nil {
+		return confError
+	}
+
+	cloud.Scaler = scaler
 	return nil
 }
 
@@ -566,6 +587,18 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+	if cloud.Resources[cluster.ProjectId+"_launchConfig"] != nil {
+		err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
+		if err != nil {
+			return err
+		}
+	}
+	if cloud.Resources[cluster.ProjectId+"_autoScaler"] != nil {
+		err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+		if err != nil {
+			return err
 		}
 	}
 

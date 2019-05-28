@@ -52,7 +52,9 @@ func (cloud *AWSAutoScaler) Init() error {
 
 	return nil
 }
-func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeIp string, imageId string) error {
+func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeIp string, imageId string) (error, map[string]string) {
+
+	m := make(map[string]string)
 	config_input := autoscaling.CreateLaunchConfigurationInput{}
 	beego.Info("getting project" + projectId)
 	config_input.ImageId = &imageId
@@ -66,16 +68,42 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeIp string, imag
 	}
 	confError := roles.Init()
 	if confError != nil {
-		return confError
+		return confError, m
 	}
 
-	id, err := roles.CreateIAMRole(projectId, autoscale_policy)
+	_, err := roles.CreateRole(projectId)
 	if err != nil {
 		beego.Error(err.Error())
-		return err
+		return err, m
 	}
+	m[projectId+"_role"] = projectId
+	_, err = roles.CreatePolicy(projectId, autoscale_policy)
+	if err != nil {
+		beego.Error(err.Error())
+		return err, m
+	}
+	m[projectId+"_policy"] = projectId
+	id, err := roles.CreateIAMProfile(projectId)
+	if err != nil {
+		beego.Error(err.Error())
+		return err, m
+	}
+	m[projectId+"_iamProfile"] = projectId
 	config_input.IamInstanceProfile = &id
 	_, config_err := cloud.AutoScaling.CreateLaunchConfiguration(&config_input)
+
+	if config_err != nil {
+		beego.Error(config_err.Error())
+		return config_err, m
+	}
+	m[projectId+"_launchConfig"] = projectId
+	return nil, m
+}
+func (cloud *AWSAutoScaler) DeleteConfiguration(projectId string) error {
+	config_input := autoscaling.DeleteLaunchConfigurationInput{
+		LaunchConfigurationName: aws.String(projectId),
+	}
+	_, config_err := cloud.AutoScaling.DeleteLaunchConfiguration(&config_input)
 
 	if config_err != nil {
 		beego.Error(config_err.Error())
@@ -83,12 +111,12 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeIp string, imag
 	}
 	return nil
 }
-func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId string, subnetId string, maxSize int64) error {
+func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId string, subnetId string, maxSize int64) (error, map[string]string) {
 
-	err := cloud.ConfigLauncher(projectId, nodeIp, imageId)
+	err, m := cloud.ConfigLauncher(projectId, nodeIp, imageId)
 	if err != nil {
 		beego.Error(err.Error())
-		return err
+		return err, m
 	}
 	min := int64(0)
 
@@ -113,8 +141,22 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 
 	if config_err != nil {
 		beego.Error(config_err.Error())
+		return config_err, m
+	}
+	m[projectId+"_autoScaler"] = projectId
+	return nil, m
+
+}
+func (cloud *AWSAutoScaler) DeleteAutoScaler(projectId string) error {
+	config_input := autoscaling.DeleteAutoScalingGroupInput{
+		AutoScalingGroupName: aws.String(projectId),
+		ForceDelete:          aws.Bool(true),
+	}
+	_, config_err := cloud.AutoScaling.DeleteAutoScalingGroup(&config_input)
+
+	if config_err != nil {
+		beego.Error(config_err.Error())
 		return config_err
 	}
 	return nil
-
 }
