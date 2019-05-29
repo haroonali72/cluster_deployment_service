@@ -129,11 +129,16 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 	config_input.VPCZoneIdentifier = &subnetId
 	config_input.LaunchConfigurationName = &projectId
 
-	tag := autoscaling.Tag{
-		Key:   aws.String(""),
-		Value: aws.String(""),
-	}
 	var tags []*autoscaling.Tag
+	tag := autoscaling.Tag{
+		Key:   aws.String("k8s.io/cluster-autoscaler/enabled"),
+		Value: aws.String("true"),
+	}
+	tags = append(tags, &tag)
+	tag = autoscaling.Tag{
+		Key:   aws.String("k8s.io/cluster-autoscaler/" + projectId),
+		Value: aws.String(projectId),
+	}
 	tags = append(tags, &tag)
 	config_input.Tags = tags
 
