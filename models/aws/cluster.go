@@ -29,18 +29,22 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                  bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name                string        `json:"name" bson:"name"`
-	NodeCount           int64         `json:"node_count" bson:"node_count"`
-	MachineType         string        `json:"machine_type" bson:"machine_type"`
-	Ami                 Ami           `json:"ami" bson:"ami"`
-	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups  []*string     `json:"security_group_id" bson:"security_group_id"`
-	Nodes               []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo             Key           `json:"key_info" bson:"key_info"`
-	PoolRole            string        `json:"pool_role" bson:"pool_role"`
-	EnableScaling       bool          `json:"base_scaling_config" bson:"base_scaling_config"`
-	MaxScalingGroupSize int64         `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	ID                 bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name               string        `json:"name" bson:"name"`
+	NodeCount          int64         `json:"node_count" bson:"node_count"`
+	MachineType        string        `json:"machine_type" bson:"machine_type"`
+	Ami                Ami           `json:"ami" bson:"ami"`
+	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
+	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
+	Nodes              []*Node       `json:"nodes" bson:"nodes"`
+	KeyInfo            Key           `json:"key_info" bson:"key_info"`
+	PoolRole           string        `json:"pool_role" bson:"pool_role"`
+	EnableScaling      bool          `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling            AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
+}
+type AutoScaling struct {
+	PoolName            string `json:"pool_name" bson:"pool_name"`
+	MaxScalingGroupSize int64  `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -361,6 +365,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def) Cluster_Def
 		for _, createdPool := range createdPools {
 
 			if createdPool.PoolName == nodepool.Name {
+
 				for _, inst := range createdPool.Instances {
 
 					var node Node
@@ -471,4 +476,25 @@ func GetAWSAmi(credentials string, amiId string) ([]*ec2.BlockDeviceMapping, err
 	}
 
 	return amis, nil
+}
+func EnableScaling(credentials string, projectId string, cluster Cluster_Def, scaleDef AutoScaling) error {
+
+	splits := strings.Split(credentials, ":")
+	aws := AWS{
+		AccessKey: splits[0],
+		SecretKey: splits[1],
+		Region:    splits[2],
+	}
+	err := aws.init()
+	if err != nil {
+		return err
+	}
+
+	e := aws.enableScaling(cluster, scaleDef)
+	if e != nil {
+		beego.Error("Cluster model: Status - Failed to enable  scaling", e.Error())
+		return e
+	}
+
+	return nil
 }

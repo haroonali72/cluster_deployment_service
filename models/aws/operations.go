@@ -223,6 +223,7 @@ type AWS struct {
 	Resources map[string]interface{}
 
 	Scaler autoscaling2.AWSAutoScaler
+	Roles  IAMRoles.AWSIAMRoles
 }
 
 func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
@@ -232,16 +233,6 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	roles := IAMRoles.AWSIAMRoles{
-		AccessKey: cloud.AccessKey,
-		SecretKey: cloud.SecretKey,
-		Region:    cloud.Region,
-	}
-	confError := roles.Init()
-	if confError != nil {
-		return nil, confError
 	}
 
 	network, err := cloud.GetNetworkStatus(cluster.ProjectId)
@@ -260,7 +251,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 		}
 		beego.Info("AWSOperations creating nodes")
 
-		result, err, subnetId := cloud.CreateInstance(roles, pool, network)
+		result, err, subnetId := cloud.CreateInstance(pool, network)
 		if err != nil {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return nil, err
@@ -284,10 +275,8 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			}
 			if pool.EnableScaling {
 
-				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.MaxScalingGroupSize)
-				if err != nil {
-					return nil, err
-				}
+				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
+
 				if m[cluster.ProjectId+"_autoScaler"] != "" {
 					cloud.Resources[cluster.ProjectId+"_autoScaler"] = cluster.ProjectId
 				}
@@ -302,6 +291,9 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 				}
 				if m[cluster.ProjectId+"_iamProfile"] != "" {
 					cloud.Resources[cluster.ProjectId+"_iamProfile"] = cluster.ProjectId
+				}
+				if err != nil {
+					return nil, err
 				}
 
 			}
@@ -380,6 +372,18 @@ func (cloud *AWS) init() error {
 	}
 
 	cloud.Scaler = scaler
+
+	roles := IAMRoles.AWSIAMRoles{
+		AccessKey: cloud.AccessKey,
+		SecretKey: cloud.SecretKey,
+		Region:    cloud.Region,
+	}
+	confError = roles.Init()
+	if confError != nil {
+		return confError
+	}
+
+	cloud.Roles = roles
 	return nil
 }
 
@@ -518,16 +522,6 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 }
 func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 
-	roles := IAMRoles.AWSIAMRoles{
-		AccessKey: cloud.AccessKey,
-		SecretKey: cloud.SecretKey,
-		Region:    cloud.Region,
-	}
-	confError := roles.Init()
-	if confError != nil {
-		return confError
-	}
-
 	beego.Info("in clean up method")
 	for _, pool := range cluster.NodePools {
 		beego.Info("terminating pool" + pool.Name)
@@ -543,7 +537,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := roles.DeleteIAMProfile(name)
+			err := cloud.Roles.DeleteIAMProfile(name)
 			if err != nil {
 				return err
 			}
@@ -560,7 +554,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := roles.DeleteRole(name)
+			err := cloud.Roles.DeleteRole(name)
 			if err != nil {
 				return err
 			}
@@ -577,7 +571,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := roles.DeletePolicy(name)
+			err := cloud.Roles.DeletePolicy(name)
 			if err != nil {
 				return err
 			}
@@ -601,13 +595,82 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 		}
 	}
 	if cloud.Resources[cluster.ProjectId+"_launchConfig"] != nil {
+		id := cloud.Resources[cluster.ProjectId+"_launchConfig"]
+		name := ""
+		b, e := json.Marshal(id)
+		if e != nil {
+			return e
+		}
+		e = json.Unmarshal(b, &name)
+		if e != nil {
+			return e
+		}
 		err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
 		if err != nil {
 			return err
 		}
 	}
 	if cloud.Resources[cluster.ProjectId+"_autoScaler"] != nil {
+		id := cloud.Resources[cluster.ProjectId+"_autoScaler"]
+		name := ""
+		b, e := json.Marshal(id)
+		if e != nil {
+			return e
+		}
+		e = json.Unmarshal(b, &name)
+		if e != nil {
+			return e
+		}
 		err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+		if err != nil {
+			return err
+		}
+	}
+	if cloud.Resources[cluster.ProjectId+"_role"] != nil {
+		role := cloud.Resources[cluster.ProjectId+"_role"]
+		name := ""
+		b, e := json.Marshal(role)
+		if e != nil {
+			return e
+		}
+		e = json.Unmarshal(b, &name)
+		if e != nil {
+			return e
+		}
+		err := cloud.Roles.DeleteRole(name)
+		if err != nil {
+			return err
+		}
+	}
+	if cloud.Resources[cluster.ProjectId+"_policy"] != nil {
+		policy := cloud.Resources[cluster.ProjectId+"_policy"]
+		name := ""
+		b, e := json.Marshal(policy)
+		if e != nil {
+			return e
+		}
+		e = json.Unmarshal(b, &name)
+		if e != nil {
+			return e
+		}
+		err := cloud.Roles.DeletePolicy(name)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cloud.Resources[cluster.ProjectId+"_iamProfile"] != "" {
+		policy := cloud.Resources[cluster.ProjectId+"_iamProfile"]
+		name := ""
+		b, e := json.Marshal(policy)
+		if e != nil {
+			return e
+		}
+		e = json.Unmarshal(b, &name)
+		if e != nil {
+			return e
+		}
+		err := cloud.Roles.DeleteIAMProfile(name)
 		if err != nil {
 			return err
 		}
@@ -615,23 +678,23 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 
 	return nil
 }
-func (cloud *AWS) CreateInstance(roles IAMRoles.AWSIAMRoles, pool *NodePool, network Network) (*ec2.Reservation, error, string) {
+func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservation, error, string) {
 
 	subnetId := cloud.GetSubnets(pool, network)
 	sgIds := cloud.GetSecurityGroups(pool, network)
-	_, err := roles.CreateRole(pool.Name)
+	_, err := cloud.Roles.CreateRole(pool.Name)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_role"] = pool.Name
-	_, err = roles.CreatePolicy(pool.Name, docker_master_policy)
+	_, err = cloud.Roles.CreatePolicy(pool.Name, docker_master_policy)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_policy"] = pool.Name
-	_, err = roles.CreateIAMProfile(pool.Name)
+	_, err = cloud.Roles.CreateIAMProfile(pool.Name)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err, ""
@@ -685,7 +748,7 @@ func (cloud *AWS) CreateInstance(roles IAMRoles.AWSIAMRoles, pool *NodePool, net
 	}
 	input.BlockDeviceMappings = ebs
 
-	ok := roles.CheckInstanceProfile(pool.Name)
+	ok := cloud.Roles.CheckInstanceProfile(pool.Name)
 	if !ok {
 		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name)}
 		input.IamInstanceProfile = &iamProfile
@@ -1089,7 +1152,61 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 	return nil
 
 }
+func (cloud *AWS) enableScaling(cluster Cluster_Def, scaleDef AutoScaling) error {
 
+	for _, pool := range cluster.NodePools {
+		if pool.Name == scaleDef.PoolName {
+			network, err := cloud.GetNetworkStatus(cluster.ProjectId)
+
+			if err != nil {
+				return err
+			}
+			subnetId := cloud.GetSubnets(pool, network)
+			err, m := cloud.Scaler.AutoScaler(cluster.ProjectId, pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
+			if err != nil {
+				if m[cluster.ProjectId+"_launchConfig"] != "" {
+
+					err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
+					if err != nil {
+						return err
+					}
+				}
+				if m[cluster.ProjectId+"_autoScaler"] != "" {
+
+					err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+					if err != nil {
+						return err
+					}
+				}
+				if m[cluster.ProjectId+"_role"] != "" {
+
+					err := cloud.Roles.DeleteRole(cluster.ProjectId)
+					if err != nil {
+						return err
+					}
+				}
+				if cloud.Resources[cluster.ProjectId+"_policy"] != nil {
+
+					err := cloud.Roles.DeletePolicy(cluster.ProjectId)
+					if err != nil {
+						return err
+					}
+				}
+
+				if cloud.Resources[cluster.ProjectId+"_iamProfile"] != "" {
+
+					err := cloud.Roles.DeleteIAMProfile(cluster.ProjectId)
+					if err != nil {
+						return err
+					}
+				}
+				return err
+			}
+			break
+		}
+	}
+	return nil
+}
 func fileWrite(key string, keyName string) error {
 
 	f, err := os.Create("../antelope/keys/" + keyName + ".pem")

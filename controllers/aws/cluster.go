@@ -364,7 +364,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @router /amis/:amiId [get]
 func (c *AWSClusterController) GetAMI() {
 
-	beego.Info("AWSNetworkController: FetchExistingVpcs.")
+	beego.Info("AWSClusterController: FetchAMIs.")
 	credentials := c.Ctx.Input.Header("Authorization")
 
 	if credentials == "" ||
@@ -397,5 +397,53 @@ func (c *AWSClusterController) GetAMI() {
 	}
 
 	c.Data["json"] = keys
+	c.ServeJSON()
+}
+
+// @Title EnableScaling
+// @Description enables autoscaling
+// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
+// @Success 200 {object} aws.AutoScaling
+// @Success 200 {"msg": "cluster autoscaled successfully"}
+// @Failure 500 {"error": "internal server error <error msg>"}
+// @router /enablescaling/:projectId/ [post]
+func (c *AWSClusterController) EnableAutoScaling() {
+
+	beego.Info("AWSClusterController: EnableScaling.")
+	credentials := c.Ctx.Input.Header("Authorization")
+
+	var scaler aws.AutoScaling
+	json.Unmarshal(c.Ctx.Input.RequestBody, &scaler)
+
+	if credentials == "" ||
+		strings.Contains(credentials, " ") ||
+		strings.Contains(strings.ToLower(credentials), "bearer") ||
+		strings.Contains(strings.ToLower(credentials), "aws") ||
+		len(strings.Split(credentials, ":")) != 3 {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+		c.ServeJSON()
+		return
+	}
+	projectId := c.GetString(":projectId")
+	cluster, err := aws.GetCluster(projectId)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = aws.EnableScaling(credentials, projectId, cluster, scaler)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()
 }
