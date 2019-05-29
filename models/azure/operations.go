@@ -89,7 +89,10 @@ func (cloud *AZURE) init() error {
 
 	return nil
 }
+func getNetworkHost() string {
+	return beego.AppConfig.String("network_url")
 
+}
 func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 	if cloud == nil {
@@ -101,7 +104,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	}
 
 	var azureNetwork networks.AzureNetwork
-	network, err := networks.GetNetworkStatus(cluster.ProjectId, "azure")
+	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "azure")
 	bytes, err := json.Marshal(network)
 	if err != nil {
 		beego.Error(err.Error())

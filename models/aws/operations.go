@@ -5,6 +5,7 @@ import (
 	"antelope/models/aws/IAMRoles"
 	autoscaling2 "antelope/models/aws/autoscaling"
 	"antelope/models/logging"
+	"antelope/models/networks"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -397,42 +398,96 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 	}
 	for in, pool := range cluster.NodePools {
-
-		for index, node := range pool.Nodes {
-			keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+		/*
+			fetching aws scaled node
+		*/
+		if pool.EnableScaling {
+			var names []*string
+			rawOutput, err := networks.GetAPIStatus(getKubeEngineHost(), cluster.ProjectId, "")
+			bytes, err := json.Marshal(rawOutput)
+			if err != nil {
+				beego.Error(err.Error())
+				return cluster, err
+			}
+			err = json.Unmarshal(bytes, &names)
+			if err != nil {
+				beego.Error(err.Error())
+				return cluster, err
+			}
+			out, err := cloud.GetInstancesByDNS(names, cluster.ProjectId)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
-			var nodeId []*string
-			nodeId = append(nodeId, &node.CloudId)
-			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false)
-			if err != nil {
-				return Cluster_Def{}, err
-			}
-			if out != nil {
-				pool.Nodes[index].NodeState = *out[0].State.Name
+			for _, o := range out {
+				for i, n := range pool.Nodes {
+					if n.CloudId == *o.InstanceId {
+						pool.Nodes[i].NodeState = *o.State.Name
 
-				if out[0].PublicIpAddress != nil {
-					pool.Nodes[index].PublicIP = *out[0].PublicIpAddress
+						if out[0].PublicIpAddress != nil {
+							pool.Nodes[i].PublicIP = *o.PublicIpAddress
+						}
+						if out[0].PrivateDnsName != nil {
+							pool.Nodes[i].PrivateDNS = *o.PrivateDnsName
+						}
+						if out[0].PublicDnsName != nil {
+							pool.Nodes[i].PublicDNS = *o.PublicDnsName
+						}
+						if out[0].PrivateIpAddress != nil {
+							pool.Nodes[i].PrivateIP = *o.PrivateIpAddress
+						}
+					} else {
+						for _, tag := range o.Tags {
+							if *tag.Key == "aws:autoscaling:groupName" && *tag.Value == cluster.ProjectId {
+								var newNode Node
+								newNode.CloudId = *o.InstanceId
+								newNode.NodeState = *o.State.Name
+								newNode.PrivateIP = *o.PrivateIpAddress
+								if o.PublicIpAddress != nil {
+									newNode.PublicIP = *o.PublicIpAddress
+								}
+								newNode.UserName = pool.Ami.Username
+								pool.Nodes = append(pool.Nodes, &newNode)
+							}
+						}
+					}
 				}
-				if out[0].PrivateDnsName != nil {
-					pool.Nodes[index].PrivateDNS = *out[0].PrivateDnsName
-				}
-				if out[0].PublicDnsName != nil {
-					pool.Nodes[index].PublicDNS = *out[0].PublicDnsName
-				}
-				if out[0].PrivateIpAddress != nil {
-					pool.Nodes[index].PrivateIP = *out[0].PrivateIpAddress
-				}
-
 			}
-			k, err := keyCoverstion(keyInfo)
-			if err != nil {
-				return Cluster_Def{}, err
-			}
-			pool.KeyInfo = k
+		} else {
+			for index, node := range pool.Nodes {
+				var nodeId []*string
+				nodeId = append(nodeId, &node.CloudId)
+				out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false)
+				if err != nil {
+					return Cluster_Def{}, err
+				}
+				if out != nil {
+					pool.Nodes[index].NodeState = *out[0].State.Name
 
+					if out[0].PublicIpAddress != nil {
+						pool.Nodes[index].PublicIP = *out[0].PublicIpAddress
+					}
+					if out[0].PrivateDnsName != nil {
+						pool.Nodes[index].PrivateDNS = *out[0].PrivateDnsName
+					}
+					if out[0].PublicDnsName != nil {
+						pool.Nodes[index].PublicDNS = *out[0].PublicDnsName
+					}
+					if out[0].PrivateIpAddress != nil {
+						pool.Nodes[index].PrivateIP = *out[0].PrivateIpAddress
+					}
+				}
+			}
 		}
+
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+		if err != nil {
+			return Cluster_Def{}, err
+		}
+		k, err := keyCoverstion(keyInfo)
+		if err != nil {
+			return Cluster_Def{}, err
+		}
+		pool.KeyInfo = k
 		cluster.NodePools[in] = pool
 	}
 	return cluster, nil
@@ -820,7 +875,28 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool) (
 	}
 	return latest_instances, nil
 
-	return nil, nil
+}
+func (cloud *AWS) GetInstancesByDNS(privateDns []*string, projectId string) (latest_instances []*ec2.Instance, err error) {
+
+	//dns :=[]*string {privateDns}
+	filters := []*ec2.Filter{&ec2.Filter{Name: aws.String("private-dns-name"), Values: privateDns}}
+
+	instance_input := ec2.DescribeInstancesInput{Filters: filters}
+	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
+
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err
+	}
+	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
+
+		return nil, errors.New("Nodes not found")
+	}
+	for _, instance := range updated_instances.Reservations[0].Instances {
+		latest_instances = append(latest_instances, instance)
+	}
+	return latest_instances, nil
+
 }
 func (cloud *AWS) getIds(pool *NodePool) []*string {
 	var instance_ids []*string
@@ -894,10 +970,11 @@ func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 	return network, nil
 
 }
-
+func getKubeEngineHost() string {
+	return beego.AppConfig.String("network_url")
+}
 func getNetworkHost() string {
 	return beego.AppConfig.String("network_url")
-
 }
 func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 	var amis []*string

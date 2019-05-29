@@ -3,7 +3,6 @@ package networks
 import (
 	"antelope/models"
 	"antelope/models/utils"
-	"encoding/json"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -75,41 +74,34 @@ type VNet struct {
 	CIDR   string        `json:"cidr" bson:"cidr"`
 }
 
-func GetNetworkStatus(envId string, cloudType string) (interface{}, error) {
+func GetAPIStatus(host, projectId string, cloudType string) (interface{}, error) {
 
-	networkUrl := strings.Replace(getNetworkHost(), "{cloud_provider}", cloudType, -1)
+	if strings.Contains(host, "{cloud_provider}") {
+		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+	}
+
 	client := utils.InitReq()
 
-	url := networkUrl + "/" + envId
+	url := host + "/" + projectId
 	req, err := utils.CreateGetRequest(url)
 	if err != nil {
 		beego.Error("%s", err)
-		return AWSNetwork{}, err
+		return nil, err
 	}
 
 	response, err := client.SendRequest(req)
 	if err != nil {
 		beego.Error("%s", err)
-		return AWSNetwork{}, err
+		return nil, err
 	}
 	defer response.Body.Close()
-	var network AzureNetwork
+	//	var network AzureNetwork
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		beego.Error("%s", err)
-		return AzureNetwork{}, err
+		return nil, err
 	}
 
-	err = json.Unmarshal(contents, &network)
-	if err != nil {
-		beego.Error("%s", err)
-		return AzureNetwork{}, err
-	}
-	return network, nil
-
-	return nil, err
-}
-func getNetworkHost() string {
-	return beego.AppConfig.String("network_url")
+	return contents, nil
 
 }
