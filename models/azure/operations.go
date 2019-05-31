@@ -300,14 +300,17 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 	}
 	for in, pool := range cluster.NodePools {
-		k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
-		if err != nil {
-			beego.Error(err)
-			return Cluster_Def{}, err
-		}
-		keyInfo, err := keyCoverstion(k1)
-		if err != nil {
-			return Cluster_Def{}, err
+		var keyInfo Key
+		if pool.KeyInfo.CredentialType == models.SSHKey {
+			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
+			if err != nil {
+				beego.Error(err)
+				return Cluster_Def{}, err
+			}
+			keyInfo, err = keyCoverstion(k1)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
 		}
 		for nodeIndex, n := range pool.Nodes {
 
