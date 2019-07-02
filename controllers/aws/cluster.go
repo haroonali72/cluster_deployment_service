@@ -413,8 +413,8 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	beego.Info("AWSClusterController: EnableScaling.")
 	credentials := c.Ctx.Input.Header("Authorization")
 
-	var scaler aws.AutoScaling
-	json.Unmarshal(c.Ctx.Input.RequestBody, &scaler)
+	/*var scaler aws.AutoScaling
+	json.Unmarshal(c.Ctx.Input.RequestBody, &scaler)*/
 
 	if credentials == "" ||
 		strings.Contains(credentials, " ") ||
@@ -436,7 +436,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	err = aws.EnableScaling(credentials, projectId, cluster, scaler)
+	err = aws.EnableScaling(credentials, cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

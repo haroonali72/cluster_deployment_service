@@ -1229,10 +1229,10 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 	return nil
 
 }
-func (cloud *AWS) enableScaling(cluster Cluster_Def, scaleDef AutoScaling) error {
+func (cloud *AWS) enableScaling(cluster Cluster_Def) error {
 
 	for _, pool := range cluster.NodePools {
-		if pool.Name == scaleDef.PoolName {
+		if pool.EnableScaling {
 			network, err := cloud.GetNetworkStatus(cluster.ProjectId)
 
 			if err != nil {

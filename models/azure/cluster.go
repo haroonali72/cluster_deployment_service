@@ -46,6 +46,12 @@ type NodePool struct {
 	KeyInfo            Key                `json:"key_info" bson:"key_info"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
+	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
+}
+type AutoScaling struct {
+	PoolName            string `json:"pool_name" bson:"pool_name"`
+	MaxScalingGroupSize int64  `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
 }
 type Key struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`

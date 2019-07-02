@@ -43,8 +43,7 @@ type NodePool struct {
 	Scaling            AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 type AutoScaling struct {
-	PoolName            string `json:"pool_name" bson:"pool_name"`
-	MaxScalingGroupSize int64  `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -477,7 +476,7 @@ func GetAWSAmi(credentials string, amiId string) ([]*ec2.BlockDeviceMapping, err
 
 	return amis, nil
 }
-func EnableScaling(credentials string, projectId string, cluster Cluster_Def, scaleDef AutoScaling) error {
+func EnableScaling(credentials string, cluster Cluster_Def) error {
 
 	splits := strings.Split(credentials, ":")
 	aws := AWS{
@@ -490,11 +489,10 @@ func EnableScaling(credentials string, projectId string, cluster Cluster_Def, sc
 		return err
 	}
 
-	e := aws.enableScaling(cluster, scaleDef)
+	e := aws.enableScaling(cluster)
 	if e != nil {
 		beego.Error("Cluster model: Status - Failed to enable  scaling", e.Error())
 		return e
 	}
-
 	return nil
 }
