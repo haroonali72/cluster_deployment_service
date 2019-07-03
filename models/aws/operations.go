@@ -244,7 +244,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 	var createdPools []CreatedPool
 
-	for _, pool := range cluster.NodePools {
+	for i, pool := range cluster.NodePools {
 		var createdPool CreatedPool
 		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId)
 		if err != nil {
@@ -276,7 +276,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			}
 			if pool.EnableScaling {
 
-				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
+				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
 
 				if m[cluster.ProjectId+"_autoScaler"] != "" {
 					cloud.Resources[cluster.ProjectId+"_autoScaler"] = cluster.ProjectId
@@ -1231,7 +1231,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 }
 func (cloud *AWS) enableScaling(cluster Cluster_Def) error {
 
-	for _, pool := range cluster.NodePools {
+	for i, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			network, err := cloud.GetNetworkStatus(cluster.ProjectId)
 
@@ -1239,7 +1239,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def) error {
 				return err
 			}
 			subnetId := cloud.GetSubnets(pool, network)
-			err, m := cloud.Scaler.AutoScaler(cluster.ProjectId, pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
+			err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
 			if err != nil {
 				if m[cluster.ProjectId+"_launchConfig"] != "" {
 

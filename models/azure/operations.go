@@ -35,10 +35,8 @@ type AZURE struct {
 	Authorizer       *autorest.BearerAuthorizer
 	AddressClient    network.PublicIPAddressesClient
 	InterfacesClient network.InterfacesClient
-	VMClient         compute.VirtualMachinesClient
 	VMSSCLient       compute.VirtualMachineScaleSetsClient
 	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
-	DiskClient       compute.DisksClient
 	AccountClient    storage.AccountsClient
 	context          context.Context
 	ID               string
@@ -78,14 +76,9 @@ func (cloud *AZURE) init() error {
 	cloud.InterfacesClient = network.NewInterfacesClient(cloud.Subscription)
 	cloud.InterfacesClient.Authorizer = cloud.Authorizer
 
-	cloud.VMClient = compute.NewVirtualMachinesClient(cloud.Subscription)
-	cloud.VMClient.Authorizer = cloud.Authorizer
-
 	cloud.AccountClient = storage.NewAccountsClient(cloud.Subscription)
 	cloud.AccountClient.Authorizer = cloud.Authorizer
 
-	cloud.DiskClient = compute.NewDisksClient(cloud.Subscription)
-	cloud.DiskClient.Authorizer = cloud.Authorizer
 	cloud.Resources = make(map[string]interface{})
 
 	return nil

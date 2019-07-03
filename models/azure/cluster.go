@@ -50,8 +50,7 @@ type NodePool struct {
 	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 }
 type AutoScaling struct {
-	PoolName            string `json:"pool_name" bson:"pool_name"`
-	MaxScalingGroupSize int64  `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
 }
 type Key struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
