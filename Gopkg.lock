@@ -59,7 +59,7 @@
   version = "v1.11.1"
 
 [[projects]]
-  digest = "1:96baba9b32e18c0eeab6e6780d9488567f5baf41a14a0292b02a5c18d40b6b2f"
+  digest = "1:7866bdb553b248472d70246e9c50e2c795ad2252a8a72d2b1073823fcc494aa6"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -91,6 +91,7 @@
     "private/protocol/query/queryutil",
     "private/protocol/rest",
     "private/protocol/xml/xmlutil",
+    "service/autoscaling",
     "service/ec2",
     "service/iam",
     "service/sts",
@@ -158,6 +159,14 @@
   pruneopts = "UT"
   revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
   version = "v1.3.1"
+
+[[projects]]
+  digest = "1:582b704bebaa06b48c29b0cec224a6058a09c86883aaddabde889cd1a5f73e1b"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
+  version = "v1.1.1"
 
 [[projects]]
   branch = "master"
@@ -427,10 +436,12 @@
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/session",
+    "github.com/aws/aws-sdk-go/service/autoscaling",
     "github.com/aws/aws-sdk-go/service/ec2",
     "github.com/aws/aws-sdk-go/service/iam",
     "github.com/aws/aws-sdk-go/service/sts",
     "github.com/go-redis/redis",
+    "github.com/google/uuid",
     "github.com/smartystreets/goconvey/convey",
     "github.com/urfave/cli",
     "gopkg.in/mgo.v2",
