@@ -2,6 +2,7 @@ package aws
 
 import (
 	"antelope/models/aws"
+	"antelope/models/logging"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -21,8 +22,10 @@ type AWSTemplateController struct {
 // @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
 	templateId := c.GetString(":templateId")
+	ctx := new(logging.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId)
 
-	beego.Info("AWSTemplateController: Get template  id : ", templateId)
+	ctx.SendSDLog("AWSTemplateController: Get template  id : "+templateId, "info")
 
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -31,7 +34,7 @@ func (c *AWSTemplateController) Get() {
 		return
 	}
 
-	template, err := aws.GetTemplate(templateId)
+	template, err := aws.GetTemplate(templateId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
@@ -49,9 +52,12 @@ func (c *AWSTemplateController) Get() {
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSTemplateController) GetAll() {
-	beego.Info("AWSTemplateController: GetAll template.")
+	ctx := new(logging.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
-	templates, err := aws.GetAllTemplate()
+	ctx.SendSDLog("AWSTemplateController: GetAll template.", "info")
+
+	templates, err := aws.GetAllTemplate(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -73,11 +79,11 @@ func (c *AWSTemplateController) GetAll() {
 func (c *AWSTemplateController) Post() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+	ctx := new(logging.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("AWSTemplateController: Post new template with name: "+template.Name, "error")
 
-	beego.Info("AWSTemplateController: Post new template with name: ", template.Name)
-	beego.Info("AWSTemplateController: JSON Payload: ", template)
-
-	err, id := aws.CreateTemplate(template)
+	err, id := aws.CreateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -105,11 +111,11 @@ func (c *AWSTemplateController) Post() {
 func (c *AWSTemplateController) Patch() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+	ctx := new(logging.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("AWSTemplateController: Patch template with template id : "+template.TemplateId, "error")
 
-	beego.Info("AWSTemplateController: Patch template with template id : ", template.TemplateId)
-	beego.Info("AWSTemplateController: JSON Payload: ", template)
-
-	err := aws.UpdateTemplate(template)
+	err := aws.UpdateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -136,17 +142,19 @@ func (c *AWSTemplateController) Patch() {
 // @router /:templateId [delete]
 func (c *AWSTemplateController) Delete() {
 	templateId := c.GetString(":templateId")
+	ctx := new(logging.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "")
 
 	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)
 
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "template id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	err := aws.DeleteTemplate(templateId)
+	err := aws.DeleteTemplate(templateId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

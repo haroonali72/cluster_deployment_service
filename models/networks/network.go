@@ -2,8 +2,8 @@ package networks
 
 import (
 	"antelope/models"
+	"antelope/models/logging"
 	"antelope/models/utils"
-	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"strings"
@@ -74,7 +74,7 @@ type VNet struct {
 	CIDR   string        `json:"cidr" bson:"cidr"`
 }
 
-func GetAPIStatus(host, projectId string, cloudType string) (interface{}, error) {
+func GetAPIStatus(host, projectId string, cloudType string, ctx logging.Context) (interface{}, error) {
 
 	if strings.Contains(host, "{cloud_provider}") {
 		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
@@ -85,20 +85,20 @@ func GetAPIStatus(host, projectId string, cloudType string) (interface{}, error)
 	url := host + "/" + projectId
 	req, err := utils.CreateGetRequest(url)
 	if err != nil {
-		beego.Error("%s", err)
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
 
 	response, err := client.SendRequest(req)
 	if err != nil {
-		beego.Error("%s", err)
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
 	defer response.Body.Close()
 	//	var network AzureNetwork
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		beego.Error("%s", err)
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
 

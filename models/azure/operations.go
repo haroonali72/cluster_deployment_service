@@ -37,6 +37,7 @@ type AZURE struct {
 	InterfacesClient network.InterfacesClient
 	VMSSCLient       compute.VirtualMachineScaleSetsClient
 	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
+	VMClient         compute.VirtualMachinesClient
 	AccountClient    storage.AccountsClient
 	context          context.Context
 	ID               string
@@ -79,6 +80,15 @@ func (cloud *AZURE) init() error {
 	cloud.AccountClient = storage.NewAccountsClient(cloud.Subscription)
 	cloud.AccountClient.Authorizer = cloud.Authorizer
 
+	cloud.VMClient = compute.NewVirtualMachinesClient(cloud.Subscription)
+	cloud.VMClient.Authorizer = cloud.Authorizer
+
+	cloud.VMSSVMClient = compute.NewVirtualMachineScaleSetVMsClient(cloud.Subscription)
+	cloud.VMSSVMClient.Authorizer = cloud.Authorizer
+
+	cloud.VMSSCLient = compute.NewVirtualMachineScaleSetsClient(cloud.Subscription)
+	cloud.VMSSCLient.Authorizer = cloud.Authorizer
+
 	cloud.Resources = make(map[string]interface{})
 
 	return nil
@@ -87,7 +97,7 @@ func getNetworkHost() string {
 	return beego.AppConfig.String("network_url")
 
 }
-func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
+func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Cluster_Def, error) {
 
 	if cloud == nil {
 		err := cloud.init()
@@ -98,32 +108,30 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	}
 
 	var azureNetwork networks.AzureNetwork
-	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "azure")
+	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "azure", ctx)
 	bytes, err := json.Marshal(network)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return cluster, err
 	}
 
 	err = json.Unmarshal(bytes, &azureNetwork)
 
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return cluster, err
 	}
 
 	for i, pool := range cluster.NodePools {
 
-		beego.Info("AZUREOperations creating nodes")
+		ctx.SendSDLog("AZUREOperations creating nodes", "info")
 
-		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i)
+		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx)
 		if err != nil {
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			return cluster, err
 		}
-		beego.Info("private key")
-		beego.Info(private_key)
-		err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, i)
+		err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, i, ctx)
 		if err != nil {
 			logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
@@ -133,53 +141,99 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 
 	return cluster, nil
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string, projectId string, poolIndex int) ([]*VM, string, error) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx logging.Context) ([]*VM, string, error) {
 
 	var cpVms []*VM
 
 	subnetId := cloud.GetSubnets(pool, networkData)
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
 
-	private_key := ""
+	if pool.PoolRole == "master" {
+		IPname := fmt.Sprintf("pip-%s", projectId+"-"+strconv.Itoa(poolIndex))
+		logging.SendLog("Creating Public IP : "+projectId, "info", projectId)
+		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, poolIndex, ctx)
+		if err != nil {
+			return nil, "", err
+		}
+		logging.SendLog("Public IP created successfully : "+IPname, "info", projectId)
+		cloud.Resources[projectId+"IPName-"+strconv.Itoa(poolIndex)] = IPname
+		/*
+			making network interface
+		*/
+		nicName := fmt.Sprintf("NIC-%s", projectId+"-"+strconv.Itoa(poolIndex))
+		logging.SendLog("Creating NIC : "+nicName, "info", projectId)
+		nicParameters, err := cloud.createNIC(pool, poolIndex, resourceGroup, publicIPaddress, subnetId, sgIds, nicName, ctx)
+		if err != nil {
+			return nil, "", err
+		}
+		logging.SendLog("NIC created successfully : "+nicName, "info", projectId)
+		cloud.Resources[projectId+"-NicName-"+strconv.Itoa(poolIndex)] = nicName
 
-	vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds)
-	if err != nil {
-		return nil, "", err
-	}
-	for _, vm := range vms.Values() {
+		name := projectId + strconv.Itoa(poolIndex)
+
+		logging.SendLog("Creating node  : "+name, "info", projectId)
+		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, name, ctx)
+		if err != nil {
+			return nil, "", err
+		}
+		logging.SendLog("Node created successfully : "+name, "info", projectId)
+
+		cloud.Resources[projectId+"-NodeName-"+strconv.Itoa(poolIndex)] = name
+
 		var vmObj VM
 		vmObj.Name = vm.Name
 		vmObj.CloudId = vm.ID
-		nicId := ""
-		for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
-			nicId = *nic.ID
-			break
-		}
-		arr := strings.Split(nicId, "/")
-		nicName := arr[12]
-		nicParameters, err := cloud.GetNIC(resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), *vm.Name, nicName)
-		if err != nil {
-			return nil, "", err
-		}
 		vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-		pipId := (*(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID)
-		arr = strings.Split(pipId, "/")
-		pipConf := arr[14]
-		pipAddress := arr[16]
-		pip, err := cloud.GetPIP(resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), *vm.Name, nicName, pipConf, pipAddress)
-		if err != nil {
-			return nil, "", err
-		}
-		vmObj.PublicIP = pip.IPAddress
-		vmObj.NodeState = vm.ProvisioningState
-		vmObj.UserName = vm.OsProfile.AdminUsername
-		vmObj.PAssword = vm.OsProfile.AdminPassword
+		vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
+		vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
+		vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
+		vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
 
 		cpVms = append(cpVms, &vmObj)
 
+		return cpVms, private_key, nil
+
+	} else {
+		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx)
+		if err != nil {
+			return nil, "", err
+		}
+		for _, vm := range vms.Values() {
+			var vmObj VM
+			vmObj.Name = vm.Name
+			vmObj.CloudId = vm.ID
+			nicId := ""
+			for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
+				nicId = *nic.ID
+				break
+			}
+			arr := strings.Split(nicId, "/")
+			nicName := arr[12]
+			nicParameters, err := cloud.GetNIC(resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), *vm.Name, nicName, ctx)
+			if err != nil {
+				return nil, "", err
+			}
+			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+			pipId := (*(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID)
+			arr = strings.Split(pipId, "/")
+			pipConf := arr[14]
+			pipAddress := arr[16]
+			pip, err := cloud.GetPIP(resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), *vm.Name, nicName, pipConf, pipAddress, ctx)
+			if err != nil {
+				return nil, "", err
+			}
+			vmObj.PublicIP = pip.IPAddress
+			vmObj.NodeState = vm.ProvisioningState
+			vmObj.UserName = vm.OsProfile.AdminUsername
+			vmObj.PAssword = vm.OsProfile.AdminPassword
+
+			cpVms = append(cpVms, &vmObj)
+
+		}
+		cloud.Resources["vmss-"+projectId+"-"+strconv.Itoa(poolIndex)] = projectId + "-" + strconv.Itoa(poolIndex)
+
+		return cpVms, private_key, nil
 	}
-	cloud.Resources["vmss-"+projectId+"-"+strconv.Itoa(poolIndex)] = projectId + "-" + strconv.Itoa(poolIndex)
-	return cpVms, private_key, err
 
 }
 func (cloud *AZURE) GetSecurityGroups(pool *NodePool, network networks.AzureNetwork) []*string {
@@ -205,7 +259,7 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network networks.AzureNetwork) st
 	}
 	return ""
 }
-func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse, error) {
+func (cloud *AZURE) GenerateKeyPair(keyName string, ctx logging.Context) (KeyPairResponse, error) {
 
 	res := KeyPairResponse{}
 
@@ -216,15 +270,15 @@ func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse, error) {
 	cmd := "ssh-keygen"
 	args := []string{"-t", "rsa", "-b", "4096", "-C", "azure@example.com", "-f", keyName}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return KeyPairResponse{}, err
 	}
-	beego.Info("Successfully generated sshkeys")
+	ctx.SendSDLog("Successfully generated sshkeys", "info")
 
 	arr, err1 := ioutil.ReadFile(keyName)
 	str := string(arr)
 	if err1 != nil {
-		beego.Error(err1)
+		ctx.SendSDLog(err1.Error(), "error")
 		return KeyPairResponse{}, err1
 	}
 
@@ -234,7 +288,7 @@ func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse, error) {
 	arr, err1 = ioutil.ReadFile(keyName + ".pub")
 	str = string(arr)
 	if err1 != nil {
-		beego.Error(err1)
+		ctx.SendSDLog(err1.Error(), "error")
 		return KeyPairResponse{}, err1
 	}
 	res.PublicKey = str
@@ -247,116 +301,170 @@ type KeyPairResponse struct {
 	PublicKey  string `json:"public_key"`
 }
 
-func keyCoverstion(keyInfo interface{}) (Key, error) {
+func keyCoverstion(keyInfo interface{}, ctx logging.Context) (Key, error) {
 	b, e := json.Marshal(keyInfo)
 	var k Key
 	if e != nil {
-		beego.Error(e)
+		ctx.SendSDLog(e.Error(), "error")
 		return Key{}, e
 	}
 	e = json.Unmarshal(b, &k)
 	if e != nil {
-		beego.Error(e)
+		ctx.SendSDLog(e.Error(), "error")
 		return Key{}, e
 	}
 	return k, nil
 }
-func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
+func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
-			beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
-
+			ctx.SendSDLog("Cluster model: Status - Failed to get lastest status "+err.Error(), "error")
 			return Cluster_Def{}, err
 		}
 	}
 	var cpVms []*VM
 	for in, pool := range cluster.NodePools {
-		k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
+		k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
 		if err != nil {
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return Cluster_Def{}, err
 		}
-		keyInfo, err := keyCoverstion(k1)
+		keyInfo, err := keyCoverstion(k1, ctx)
 		if err != nil {
 			return Cluster_Def{}, err
 		}
 
 		pool.KeyInfo = keyInfo
-		vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), "", "", "")
-		if err != nil {
-			beego.Error(err)
-			return Cluster_Def{}, err
-		}
-		for _, vm := range vms.Values() {
+		if pool.PoolRole == "master" {
+
+			beego.Info("getting instance")
+			vm, err := cloud.GetInstance(*pool.Nodes[0].Name, cluster.ResourceGroup, ctx)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return Cluster_Def{}, err
+			}
+			beego.Info("getting nic")
+			nicName := fmt.Sprintf("NIC-%s", cluster.ProjectId+"-"+strconv.Itoa(in))
+			nicParameters, err := cloud.GetVMNIC(cluster.ResourceGroup, nicName, ctx)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return Cluster_Def{}, err
+			}
+			beego.Info("getting pip")
+			IPname := fmt.Sprintf("pip-%s", *pool.Nodes[0].Name)
+			publicIPaddress, err := cloud.GetVMSSPIP(cluster.ResourceGroup, IPname, ctx)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return Cluster_Def{}, err
+			}
+
 			var vmObj VM
 			vmObj.Name = vm.Name
 			vmObj.CloudId = vm.ID
-			nicId := ""
-			for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
-				nicId = *nic.ID
-				break
-			}
-			arr := strings.Split(nicId, "/")
-			nicName := arr[12]
-			nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), *vm.Name, nicName)
-			if err != nil {
-				return Cluster_Def{}, err
-			}
-			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-			pipId := (*(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID)
-			arr = strings.Split(pipId, "/")
-			pipConf := arr[14]
-			pipAddress := arr[16]
-			pip, err := cloud.GetPIP(cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), *vm.Name, nicName, pipConf, pipAddress)
-			if err != nil {
-				return Cluster_Def{}, err
-			}
-			vmObj.PublicIP = pip.IPAddress
+			vmObj.CloudId = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+			vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
 			vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
 
 			cpVms = append(cpVms, &vmObj)
+			beego.Info("updated node pool")
+			cluster.NodePools[in].Nodes = cpVms
 
+		} else {
+			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), "", "", "")
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return Cluster_Def{}, err
+			}
+			for _, vm := range vms.Values() {
+				var vmObj VM
+				vmObj.Name = vm.Name
+				vmObj.CloudId = vm.ID
+				nicId := ""
+				for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
+					nicId = *nic.ID
+					break
+				}
+				arr := strings.Split(nicId, "/")
+				nicName := arr[12]
+				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), *vm.Name, nicName, ctx)
+				if err != nil {
+					return Cluster_Def{}, err
+				}
+				vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+				pipId := (*(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID)
+				arr = strings.Split(pipId, "/")
+				pipConf := arr[14]
+				pipAddress := arr[16]
+				pip, err := cloud.GetPIP(cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), *vm.Name, nicName, pipConf, pipAddress, ctx)
+				if err != nil {
+					return Cluster_Def{}, err
+				}
+				vmObj.PublicIP = pip.IPAddress
+				vmObj.NodeState = vm.ProvisioningState
+				vmObj.UserName = vm.OsProfile.AdminUsername
+				vmObj.PAssword = vm.OsProfile.AdminPassword
+
+				cpVms = append(cpVms, &vmObj)
+
+			}
+
+			beego.Info("updated node pool")
+			cluster.NodePools[in].Nodes = cpVms
 		}
-		beego.Info("updated node pool")
-		cluster.NodePools[in].Nodes = cpVms
 	}
 	beego.Info("updated cluster")
 	return cluster, nil
 }
 
-/*func (cloud *AZURE) GetInstance(name string, resourceGroup string) (compute.VirtualMachine, error) {
+func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx logging.Context) (compute.VirtualMachine, error) {
 
 	vm, err := cloud.VMClient.Get(cloud.context, resourceGroup, name, compute.InstanceView)
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachine{}, err
 	}
 	return vm, nil
-}*/
-func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string) (network.Interface, error) {
+}
+func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx logging.Context) (network.Interface, error) {
 	nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.context, resourceGroup, vmss, vm, nicName, "")
 	if err != nil {
-		beego.Info(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return network.Interface{}, err
 	}
 	return nicParameters, nil
 }
-func (cloud *AZURE) GetPIP(resourceGroup, vmss, vm, nic, ipConfig, ipAddress string) (network.PublicIPAddress, error) {
+func (cloud *AZURE) GetPIP(resourceGroup, vmss, vm, nic, ipConfig, ipAddress string, ctx logging.Context) (network.PublicIPAddress, error) {
 	publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.context, resourceGroup, vmss, vm, nic, ipConfig, ipAddress, "")
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return network.PublicIPAddress{}, err
 	}
 	return publicIPaddress, nil
 }
-func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
+func (cloud *AZURE) GetVMNIC(resourceGroup, nicName string, ctx logging.Context) (network.Interface, error) {
+	nicParameters, err := cloud.InterfacesClient.Get(cloud.context, resourceGroup, nicName, "")
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return network.Interface{}, err
+	}
+	return nicParameters, nil
+}
+func (cloud *AZURE) GetVMSSPIP(resourceGroup, IPname string, ctx logging.Context) (network.PublicIPAddress, error) {
+	publicIPaddress, err := cloud.AddressClient.Get(cloud.context, resourceGroup, IPname, "")
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return network.PublicIPAddress{}, err
+	}
+	return publicIPaddress, nil
+}
+func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
@@ -364,43 +472,68 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def) error {
 	for poolIndex, pool := range cluster.NodePools {
 
 		logging.SendLog("Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
-		err := cloud.TerminatePool(cluster.ProjectId, cluster.ResourceGroup, strconv.Itoa(poolIndex))
-		if err != nil {
-			return err
-		}
+		if pool.PoolRole == "master" {
 
-		err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex))
-		if err != nil {
-			return err
-		}
+			logging.SendLog("Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
+			err := cloud.TerminatePool(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx)
+			if err != nil {
+				return err
+			}
 
+			nicName := fmt.Sprintf("NIC-%s", cluster.ProjectId+"-"+strconv.Itoa(poolIndex))
+			err = cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+			if err != nil {
+				return err
+			}
+
+			IPname := fmt.Sprintf("pip-%s", cluster.ProjectId+"-"+strconv.Itoa(poolIndex))
+			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx)
+			if err != nil {
+				return err
+			}
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex), ctx)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			err := cloud.TerminatePool(cluster.ProjectId+strconv.Itoa(poolIndex), cluster.ResourceGroup, cluster.ProjectId, ctx)
+			if err != nil {
+				return err
+			}
+
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex), ctx)
+			if err != nil {
+				return err
+			}
+		}
 		logging.SendLog("Node Pool terminated successfully: "+pool.Name, "info", cluster.ProjectId)
 	}
 	return nil
 }
-func (cloud *AZURE) TerminatePool(projectId string, resourceGroup string, poolIndex string) error {
+func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId string, ctx logging.Context) error {
 
-	beego.Info("AZUREOperations: terminating node pools")
+	ctx.SendSDLog("AZUREOperations: terminating node pools", "info")
 
-	future, err := cloud.VMSSCLient.Delete(cloud.context, resourceGroup, projectId+"-"+poolIndex)
+	future, err := cloud.VMSSCLient.Delete(cloud.context, resourceGroup, name)
 
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	} else {
 		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
-	logging.SendLog("Node pool terminated successfully: "+projectId+"-"+poolIndex, "info", projectId)
+	logging.SendLog("Node pool terminated successfully: "+name, "info", projectId)
 
 	return nil
 }
 
-/*func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, index int) (network.PublicIPAddress, error) {
+func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, index int, ctx logging.Context) (network.PublicIPAddress, error) {
 
 	pipParameters := network.PublicIPAddress{
 		Location: &cloud.Region,
@@ -413,40 +546,38 @@ func (cloud *AZURE) TerminatePool(projectId string, resourceGroup string, poolIn
 
 	address, err := cloud.AddressClient.CreateOrUpdate(cloud.context, resourceGroup, IPname, pipParameters)
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return network.PublicIPAddress{}, err
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return network.PublicIPAddress{}, err
 		}
 	}
 
-	beego.Info("Get public IP address info...")
-	publicIPaddress, err := cloud.GetPIP(resourceGroup, IPname)
+	ctx.SendSDLog("Get public IP address info...", "info")
+	publicIPaddress, err := cloud.GetVMSSPIP(resourceGroup, IPname, ctx)
 	return publicIPaddress, err
 }
 
-func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string) error {
+func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string, ctx logging.Context) error {
 	logging.SendLog("Deleting Public IP: "+IPname, "info", projectId)
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
 	logging.SendLog("Public IP delete successfully: "+IPname, "info", projectId)
 	return nil
 }
-func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string) (network.Interface, error) {
-
-	nicName := fmt.Sprintf("NIC-%s", pool.Name+"-"+strconv.Itoa(index))
+func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx logging.Context) (network.Interface, error) {
 
 	nicParameters := network.Interface{
 		Location: &cloud.Region,
@@ -471,37 +602,37 @@ func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, p
 
 	future, err := cloud.InterfacesClient.CreateOrUpdate(cloud.context, resourceGroup, nicName, nicParameters)
 	if err != nil {
-		beego.Info(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return network.Interface{}, err
 	} else {
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
-			beego.Info(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			return network.Interface{}, err
 		}
 	}
 
-	nicParameters, err = cloud.GetNIC(resourceGroup, nicName)
+	nicParameters, err = cloud.GetVMNIC(resourceGroup, nicName, ctx)
 	return nicParameters, nil
 }
-func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error {
+func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx logging.Context) error {
 	logging.SendLog("Deleting NIC: "+nicName, "info", proId)
 	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
 	if err != nil {
-		beego.Info(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	} else {
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
-			beego.Info(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
 	logging.SendLog("NIC delete successfully: "+nicName, "info", proId)
 	return nil
 }
-*/
-/*func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string) (compute.VirtualMachine, string, string, error) {
+
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, name string, ctx logging.Context) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -513,7 +644,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 	}
 	osDisk := &compute.OSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
-		Name:         to.StringPtr(pool.Name + "-" + strconv.Itoa(index)),
+		Name:         to.StringPtr(name),
 		ManagedDisk: &compute.ManagedDiskParameters{
 			StorageAccountType: satype,
 		},
@@ -527,7 +658,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 
 	}
 
-	storageName := "ext-" + pool.Name + "-" + strconv.Itoa(index)
+	storageName := "ext-" + name
 	disk := compute.DataDisk{
 		Lun:          to.Int32Ptr(int32(index)),
 		Name:         to.StringPtr(storageName),
@@ -542,7 +673,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 	storage = append(storage, disk)
 
 	vm := compute.VirtualMachine{
-		Name:     to.StringPtr(pool.Name + "-" + strconv.Itoa(index)),
+		Name:     to.StringPtr(name),
 		Location: to.StringPtr(cloud.Region),
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			HardwareProfile: &compute.HardwareProfile{
@@ -581,15 +712,15 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
 
 		if err != nil && err.Error() != "not found" {
-			beego.Error("vm creation failed")
-			beego.Error(err)
+			ctx.SendSDLog("vm creation failed", "error")
+			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachine{}, "", "", err
 		} else if err == nil {
 
-			existingKey, err := keyCoverstion(k)
+			existingKey, err := keyCoverstion(k, ctx)
 			if err != nil {
 				return compute.VirtualMachine{}, "", "", err
 			}
@@ -610,9 +741,9 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 			}
 		} else if err != nil && err.Error() == "not found" {
 
-			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName)
+			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
 			if err != nil {
-				beego.Info(err.Error())
+				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
 			}
 			key := []compute.SSHPublicKey{{
@@ -629,10 +760,9 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 			pool.KeyInfo.PublicKey = res.PublicKey
 			pool.KeyInfo.PrivateKey = res.PrivateKey
 
-			_, err = vault.PostAzureSSHKey(pool.KeyInfo)
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx)
 			if err != nil {
-				beego.Error("vm creation failed")
-				beego.Error(err)
+				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
 			}
 
@@ -642,14 +772,13 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
 		if err != nil {
-			beego.Error("vm creation failed")
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachine{}, "", "", err
 		}
 
-		existingKey, err := keyCoverstion(k)
+		existingKey, err := keyCoverstion(k, ctx)
 		if err != nil {
 			return compute.VirtualMachine{}, "", "", err
 		}
@@ -677,11 +806,10 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 
 		if pool.BootDiagnostics.NewStroageAccount {
 
-			storageId := "https://" + pool.Name + strconv.Itoa(index) + ".blob.core.windows.net/"
-			err := cloud.createStorageAccount(resourceGroup, pool.Name+strconv.Itoa(index))
+			storageId := "https://" + name + ".blob.core.windows.net/"
+			err := cloud.createStorageAccount(resourceGroup, name, ctx)
 			if err != nil {
-				beego.Error("vm creation failed")
-				beego.Error(err)
+				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
 			}
 			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
@@ -689,7 +817,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 					Enabled: to.BoolPtr(true), StorageURI: &storageId,
 				},
 			}
-			cloud.Resources[pool.Name+"-SA"+strconv.Itoa(index)] = pool.Name + strconv.Itoa(index)
+			cloud.Resources[name+"-SA"] = name
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
@@ -700,27 +828,26 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string) error
 			}
 		}
 	}
-	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name+"-"+strconv.Itoa(index), vm)
+	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, name, vm)
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachine{}, "", "", err
 	} else {
 		err = vmFuture.WaitForCompletion(cloud.context, cloud.VMClient.Client)
 		if err != nil {
-			beego.Error("vm creation failed")
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachine{}, "", "", err
 		}
 	}
-	beego.Info("Get VM  by name", pool.Name+"-"+strconv.Itoa(index))
-	vm, err = cloud.GetInstance(pool.Name+"-"+strconv.Itoa(index), resourceGroup)
+	beego.Info("Get VM  by name", name)
+	vm, err = cloud.GetInstance(name, resourceGroup, ctx)
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachine{}, "", "", err
 	}
 	return vm, private, public, nil
-}*/
-func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName string) error {
+}
+func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName string, ctx logging.Context) error {
 	accountParameters := storage.AccountCreateParameters{
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
@@ -750,60 +877,127 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 	beego.Info(*account.ID)*/
 	return nil
 }
-func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName string) error {
+func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName string, ctx logging.Context) error {
 
 	acccountName = strings.ToLower(acccountName)
 	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, acccountName)
 	if err != nil {
 		beego.Error("Storage account deletion failed")
-		beego.Info(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 	return nil
 }
-func (cloud *AZURE) CleanUp(cluster Cluster_Def) error {
-	for i, _ := range cluster.NodePools {
-		if cloud.Resources["vmss-"+cluster.ProjectId+"-"+strconv.Itoa(i)] != nil {
-			name := cloud.Resources["vmss-"+cluster.ProjectId+"-"+strconv.Itoa(i)]
-			vmssName := ""
-			b, e := json.Marshal(name)
-			if e != nil {
-				return e
+func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
+	for i, pool := range cluster.NodePools {
+		if pool.PoolRole == "master" {
+			if cloud.Resources[cluster.ProjectId+"-NodeName-"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[cluster.ProjectId+"-NodeName-"+strconv.Itoa(i)]
+				nodeName := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &nodeName)
+				if e != nil {
+					return e
+				}
+
+				err := cloud.TerminatePool(nodeName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				if err != nil {
+					return err
+				}
 			}
-			e = json.Unmarshal(b, &vmssName)
-			if e != nil {
-				return e
+			if cloud.Resources[cluster.ProjectId+"-NicName-"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[cluster.ProjectId+"-NicName-"+strconv.Itoa(i)]
+				nicName := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &nicName)
+				if e != nil {
+					return e
+				}
+				err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				if err != nil {
+					return err
+				}
+			}
+			if cloud.Resources[cluster.ProjectId+"-IPName-"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[cluster.ProjectId+"-IPName-"+strconv.Itoa(i)]
+				IPname := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &IPname)
+				if e != nil {
+					return e
+				}
+				err := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				if err != nil {
+					return err
+				}
+			}
+			if cloud.Resources[cluster.ProjectId+strconv.Itoa(i)+"-SA"] != nil {
+				name := cloud.Resources[cluster.ProjectId+strconv.Itoa(i)+"-SA"]
+				SAname := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &SAname)
+				if e != nil {
+					return e
+				}
+				err := cloud.deleteStorageAccount(cluster.ResourceGroup, SAname, ctx)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+
+			if cloud.Resources["vmss-"+cluster.ProjectId+"-"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources["vmss-"+cluster.ProjectId+"-"+strconv.Itoa(i)]
+				vmssName := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &vmssName)
+				if e != nil {
+					return e
+				}
+
+				err := cloud.TerminatePool(vmssName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				if err != nil {
+					return err
+				}
 			}
 
-			err := cloud.TerminatePool(vmssName, cluster.ProjectId, cluster.ResourceGroup)
-			if err != nil {
-				return err
+			if cloud.Resources[cluster.ProjectId+"-SA"+strconv.Itoa(i)] != nil {
+				name := cloud.Resources[cluster.ProjectId+"-SA"+strconv.Itoa(i)]
+				SAname := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &SAname)
+				if e != nil {
+					return e
+				}
+				err := cloud.deleteStorageAccount(cluster.ResourceGroup, SAname, ctx)
+				if err != nil {
+					return err
+				}
 			}
 		}
-
-		if cloud.Resources[cluster.ProjectId+"-SA"+strconv.Itoa(i)] != nil {
-			name := cloud.Resources[cluster.ProjectId+"-SA"+strconv.Itoa(i)]
-			SAname := ""
-			b, e := json.Marshal(name)
-			if e != nil {
-				return e
-			}
-			e = json.Unmarshal(b, &SAname)
-			if e != nil {
-				return e
-			}
-			err := cloud.deleteStorageAccount(cluster.ResourceGroup, SAname)
-			if err != nil {
-				return err
-			}
-		}
-		i = i + 1
-
 	}
 
 	return nil
 }
-func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolIndex int) error {
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolIndex int, ctx logging.Context) error {
 
 	for _, vm := range vms {
 		err := fileWrite(privateKey, KeyName)
@@ -816,12 +1010,12 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		}
 
 		if vm.PublicIP == nil {
-			beego.Info("waiting for public ip")
+			ctx.SendSDLog("waiting for public ip", "warning")
 			time.Sleep(time.Second * 50)
-			beego.Info("waited for public ip")
+			ctx.SendSDLog("waited for public ip", "warning")
 			IPname := fmt.Sprintf("pip-%s", *vm.Name)
 			beego.Info(IPname)
-			publicIp, err := cloud.GetPIP(resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub")
+			publicIp, err := cloud.GetPIP(resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
 			if err != nil {
 				return err
 			}
@@ -838,8 +1032,8 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 			errCopy = copyFile(KeyName, user, *vm.PublicIP)
 			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
 
-				beego.Info("time passed %6.2f sec\n", time.Since(start).Seconds())
-				beego.Info("waiting 5 seconds before retry")
+				//ctx.SendSDLog(("time passed %6.2f sec\n"+ strconv.Itoa( int( time.Since(start).Seconds())))+"warning")
+				ctx.SendSDLog("waiting 5 seconds before retry", "warning")
 				time.Sleep(5 * time.Second)
 			} else {
 				retry = false
@@ -848,19 +1042,19 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		if errCopy != nil {
 			return errCopy
 		}
-		err = setScriptPermision(KeyName, user, *vm.PublicIP)
+		err = setScriptPermision(KeyName, user, *vm.PublicIP, ctx)
 		if err != nil {
 			return err
 		}
-		err = runScript(KeyName, user, *vm.PublicIP)
+		err = runScript(KeyName, user, *vm.PublicIP, ctx)
 		if err != nil {
 			return err
 		}
-		err = deleteScript(KeyName, user, *vm.PublicIP)
+		err = deleteScript(KeyName, user, *vm.PublicIP, ctx)
 		if err != nil {
 			return err
 		}
-		err = deleteFile(KeyName)
+		err = deleteFile(KeyName, ctx)
 		if err != nil {
 			return err
 		}
@@ -926,7 +1120,7 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	}
 	return nil
 }
-func setScriptPermision(keyName string, userName string, instanceId string) error {
+func setScriptPermision(keyName string, userName string, instanceId string, ctx logging.Context) error {
 	keyPath := "../antelope/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
@@ -937,12 +1131,12 @@ func setScriptPermision(keyName string, userName string, instanceId string) erro
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		beego.Warn(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil
 	}
 	return nil
 }
-func runScript(keyName string, userName string, instanceId string) error {
+func runScript(keyName string, userName string, instanceId string, ctx logging.Context) error {
 	keyPath := "../antelope/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
@@ -953,13 +1147,13 @@ func runScript(keyName string, userName string, instanceId string) error {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		beego.Warn(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil
 	}
 	return nil
 }
 
-func deleteScript(keyName string, userName string, instanceId string) error {
+func deleteScript(keyName string, userName string, instanceId string, ctx logging.Context) error {
 	keyPath := "../antelope/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
@@ -967,22 +1161,22 @@ func deleteScript(keyName string, userName string, instanceId string) error {
 	cmd := exec.Command(cmd1, args...)
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 	return nil
 }
 
-func deleteFile(keyName string) error {
+func deleteFile(keyName string, ctx logging.Context) error {
 	keyPath := "../antelope/keys/" + keyName + ".pem"
 	err := os.Remove(keyPath)
 	if err != nil {
-		fmt.Println(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 	return nil
 }
-func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
+func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx logging.Context) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
 
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -1085,15 +1279,14 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	// public := ""
 
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
 
 		if err != nil && err.Error() != "not found" {
-			beego.Error("vm creation failed")
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		} else if err == nil {
 
-			existingKey, err := keyCoverstion(k)
+			existingKey, err := keyCoverstion(k, ctx)
 			if err != nil {
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
@@ -1114,9 +1307,9 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			}
 		} else if err != nil && err.Error() == "not found" {
 
-			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName)
+			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
 			if err != nil {
-				beego.Info(err.Error())
+				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 			key := []compute.SSHPublicKey{{
@@ -1133,10 +1326,9 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			pool.KeyInfo.PublicKey = res.PublicKey
 			pool.KeyInfo.PrivateKey = res.PrivateKey
 
-			_, err = vault.PostAzureSSHKey(pool.KeyInfo)
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx)
 			if err != nil {
-				beego.Error("vm creation failed")
-				beego.Error(err)
+				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 
@@ -1146,14 +1338,13 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
 		if err != nil {
-			beego.Error("vm creation failed")
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 
-		existingKey, err := keyCoverstion(k)
+		existingKey, err := keyCoverstion(k, ctx)
 		if err != nil {
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
@@ -1182,10 +1373,9 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		if pool.BootDiagnostics.NewStroageAccount {
 
 			storageId := "https://" + projectId + strconv.Itoa(poolIndex) + ".blob.core.windows.net/"
-			err := cloud.createStorageAccount(resourceGroup, projectId+strconv.Itoa(poolIndex))
+			err := cloud.createStorageAccount(resourceGroup, projectId+strconv.Itoa(poolIndex), ctx)
 			if err != nil {
-				beego.Error("vm creation failed")
-				beego.Error(err)
+				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 			params.VirtualMachineProfile.DiagnosticsProfile = &compute.DiagnosticsProfile{
@@ -1204,21 +1394,21 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			}
 		}
 	}
-	address, err := cloud.VMSSCLient.CreateOrUpdate(cloud.context, resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), params)
+	address, err := cloud.VMSSCLient.CreateOrUpdate(cloud.context, resourceGroup, projectId+strconv.Itoa(poolIndex), params)
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
-			beego.Error(err)
+			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 	}
 
 	vms, err := cloud.VMSSVMClient.List(cloud.context, resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), "", "", "")
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	}
 	return vms, nil, private

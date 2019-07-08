@@ -6,18 +6,14 @@ import (
 	autoscaling2 "antelope/models/aws/autoscaling"
 	"antelope/models/logging"
 	"antelope/models/networks"
-	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -172,45 +168,6 @@ var docker_master_policy = []byte(`{
   ]
 }`)
 
-type Network struct {
-	ProjectId        string        `json:"Project_id" bson:"Project_id"`
-	Name             string        `json:"name" bson:"name"`
-	Type             models.Type   `json:"type" bson:"type"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
-	NetworkStatus    string        `json:"status" bson:"status"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	Definition       []*Definition `json:"definition" bson:"definition"`
-}
-
-type Definition struct {
-	ID             bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
-	Vpc            Vpc              `json:"vpc" bson:"vpc"`
-	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
-	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
-}
-
-type Vpc struct {
-	ID    bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	VpcId string        `json:"vpc_id" bson:"vpc_id"`
-	Name  string        `json:"name" bson:"name"`
-	CIDR  string        `json:"cidr" bson:"cidr"`
-}
-
-type Subnet struct {
-	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SubnetId string        `json:"subnet_id" bson:"subnet_id"`
-	Name     string        `json:"name" bson:"name"`
-	CIDR     string        `json:"cidr" bson:"cidr"`
-}
-
-type SecurityGroup struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SecurityGroupId string        `json:"security_group_id" bson:"security_group_id"`
-	Name            string        `json:"name" bson:"name"`
-	Description     string        `json:"description" bson:"description"`
-}
-
 type CreatedPool struct {
 	Instances []*ec2.Instance
 	PoolName  string
@@ -227,7 +184,7 @@ type AWS struct {
 	Roles  IAMRoles.AWSIAMRoles
 }
 
-func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
+func (cloud *AWS) createCluster(cluster Cluster_Def, ctx logging.Context) ([]CreatedPool, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -235,24 +192,32 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			return nil, err
 		}
 	}
+	var awsNetwork networks.AWSNetwork
+	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
 
-	network, err := cloud.GetNetworkStatus(cluster.ProjectId)
-
+	bytes, err := json.Marshal(network)
 	if err != nil {
+		beego.Error(err.Error())
 		return nil, err
 	}
 
+	err = json.Unmarshal(bytes, &awsNetwork)
+
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err
+	}
 	var createdPools []CreatedPool
 
 	for i, pool := range cluster.NodePools {
 		var createdPool CreatedPool
-		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId)
+		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx)
 		if err != nil {
 			return nil, err
 		}
 		beego.Info("AWSOperations creating nodes")
 
-		result, err, subnetId := cloud.CreateInstance(pool, network)
+		result, err, subnetId := cloud.CreateInstance(pool, awsNetwork, ctx)
 		if err != nil {
 			logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return nil, err
@@ -260,7 +225,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 
 		if result != nil && result.Instances != nil && len(result.Instances) > 0 {
 			for index, instance := range result.Instances {
-				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.ProjectId)
+				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.ProjectId, ctx)
 				if err != nil {
 					logging.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 					return nil, err
@@ -268,7 +233,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			}
 			if pool.Ami.IsExternal {
 				pool.KeyInfo.KeyMaterial = keyMaterial
-				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId)
+				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId, ctx)
 				if err != nil {
 					logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 					return nil, err
@@ -276,7 +241,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			}
 			if pool.EnableScaling {
 
-				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
+				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
 
 				if m[cluster.ProjectId+"_autoScaler"] != "" {
 					cloud.Resources[cluster.ProjectId+"_autoScaler"] = cluster.ProjectId
@@ -308,7 +273,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 			for _, instance := range result.Instances {
 				ids = append(ids, aws.String(*instance.InstanceId))
 			}
-			latest_instances, err = cloud.GetInstances(ids, cluster.ProjectId, true)
+			latest_instances, err = cloud.GetInstances(ids, cluster.ProjectId, true, ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -323,7 +288,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def) ([]CreatedPool, error) {
 	return createdPools, nil
 }
 
-func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, projectId string) error {
+func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, projectId string, ctx logging.Context) error {
 	var resource []*string
 	resource = append(resource, instance_id)
 
@@ -338,11 +303,11 @@ func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, 
 	}
 	out, err := cloud.Client.CreateTags(&input)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 
-	beego.Info(out.String())
+	ctx.SendSDLog(out.String(), "info")
 	return nil
 }
 
@@ -388,12 +353,11 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
+func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			beego.Error("Cluster model: Status - Failed to get lastest status ", err.Error())
-
+			ctx.SendSDLog("Failed to get latest status"+err.Error(), "error")
 			return Cluster_Def{}, err
 		}
 	}
@@ -402,106 +366,112 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 			fetching aws scaled node
 		*/
 		if pool.EnableScaling {
-			var names []*string
-			rawOutput, err := networks.GetAPIStatus(getKubeEngineHost(), cluster.ProjectId, "")
-			bytes, err := json.Marshal(rawOutput)
-			if err != nil {
-				beego.Error(err.Error())
-				return cluster, err
-			}
-			err = json.Unmarshal(bytes, &names)
-			if err != nil {
-				beego.Error(err.Error())
-				return cluster, err
-			}
-			out, err := cloud.GetInstancesByDNS(names, cluster.ProjectId)
-			if err != nil {
-				return Cluster_Def{}, err
-			}
-			for _, o := range out {
-				for i, n := range pool.Nodes {
-					if n.CloudId == *o.InstanceId {
-						pool.Nodes[i].NodeState = *o.State.Name
-
-						if out[0].PublicIpAddress != nil {
-							pool.Nodes[i].PublicIP = *o.PublicIpAddress
-						}
-						if out[0].PrivateDnsName != nil {
-							pool.Nodes[i].PrivateDNS = *o.PrivateDnsName
-						}
-						if out[0].PublicDnsName != nil {
-							pool.Nodes[i].PublicDNS = *o.PublicDnsName
-						}
-						if out[0].PrivateIpAddress != nil {
-							pool.Nodes[i].PrivateIP = *o.PrivateIpAddress
-						}
-					} else {
-						for _, tag := range o.Tags {
-							if *tag.Key == "aws:autoscaling:groupName" && *tag.Value == cluster.ProjectId {
-								var newNode Node
-								newNode.CloudId = *o.InstanceId
-								newNode.NodeState = *o.State.Name
-								newNode.PrivateIP = *o.PrivateIpAddress
-								if o.PublicIpAddress != nil {
-									newNode.PublicIP = *o.PublicIpAddress
-								}
-								newNode.UserName = pool.Ami.Username
-								pool.Nodes = append(pool.Nodes, &newNode)
-							}
-						}
-					}
+			/*	var names []*string
+				rawOutput, err := networks.GetAPIStatus(getKubeEngineHost(), cluster.ProjectId, "", ctx)
+				bytes, err := json.Marshal(rawOutput)
+				if err != nil {
+					ctx.SendSDLog(err.Error(),"error")
+					return cluster, err
 				}
-			}
-		} else {
-			for index, node := range pool.Nodes {
-				var nodeId []*string
-				nodeId = append(nodeId, &node.CloudId)
-				out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false)
+				err = json.Unmarshal(bytes, &names)
+				if err != nil {
+					ctx.SendSDLog(err.Error(),"error")
+					return cluster, err
+				}
+				out, err := cloud.GetInstancesByDNS(names, cluster.ProjectId, ctx)
 				if err != nil {
 					return Cluster_Def{}, err
 				}
-				if out != nil {
-					pool.Nodes[index].NodeState = *out[0].State.Name
+				for _, o := range out {
+					for i, n := range pool.Nodes {
+						if n.CloudId == *o.InstanceId {
+							pool.Nodes[i].NodeState = *o.State.Name
 
-					if out[0].PublicIpAddress != nil {
-						pool.Nodes[index].PublicIP = *out[0].PublicIpAddress
+							if out[0].PublicIpAddress != nil {
+								pool.Nodes[i].PublicIP = *o.PublicIpAddress
+							}
+							if out[0].PrivateDnsName != nil {
+								pool.Nodes[i].PrivateDNS = *o.PrivateDnsName
+							}
+							if out[0].PublicDnsName != nil {
+								pool.Nodes[i].PublicDNS = *o.PublicDnsName
+							}
+							if out[0].PrivateIpAddress != nil {
+								pool.Nodes[i].PrivateIP = *o.PrivateIpAddress
+							}
+						} else {
+							for _, tag := range o.Tags {
+								if *tag.Key == "aws:autoscaling:groupName" && *tag.Value == cluster.ProjectId {
+									var newNode Node
+									newNode.CloudId = *o.InstanceId
+									newNode.NodeState = *o.State.Name
+									newNode.PrivateIP = *o.PrivateIpAddress
+									if o.PublicIpAddress != nil {
+										newNode.PublicIP = *o.PublicIpAddress
+									}
+									newNode.UserName = pool.Ami.Username
+									pool.Nodes = append(pool.Nodes, &newNode)
+								}
+							}
+						}
 					}
-					if out[0].PrivateDnsName != nil {
-						pool.Nodes[index].PrivateDNS = *out[0].PrivateDnsName
-					}
-					if out[0].PublicDnsName != nil {
-						pool.Nodes[index].PublicDNS = *out[0].PublicDnsName
-					}
-					if out[0].PrivateIpAddress != nil {
-						pool.Nodes[index].PrivateIP = *out[0].PrivateIpAddress
-					}
+				}*/
+			err, instances := cloud.Scaler.GetAutoScaler(cluster.ProjectId, cluster.ProjectId+strconv.Itoa(in), ctx)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
+			for _, inst := range instances {
+				cluster.NodePools[in].Nodes = append(cluster.NodePools[in].Nodes, &Node{CloudId: *inst.InstanceId})
+			}
+		}
+		for index, node := range cluster.NodePools[in].Nodes {
+			var nodeId []*string
+			nodeId = append(nodeId, &node.CloudId)
+			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false, ctx)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
+			if out != nil {
+				cluster.NodePools[in].Nodes[index].NodeState = *out[0].State.Name
+
+				if out[0].PublicIpAddress != nil {
+					cluster.NodePools[in].Nodes[index].PublicIP = *out[0].PublicIpAddress
+				}
+				if out[0].PrivateDnsName != nil {
+					cluster.NodePools[in].Nodes[index].PrivateDNS = *out[0].PrivateDnsName
+				}
+				if out[0].PublicDnsName != nil {
+					cluster.NodePools[in].Nodes[index].PublicDNS = *out[0].PublicDnsName
+				}
+				if out[0].PrivateIpAddress != nil {
+					cluster.NodePools[in].Nodes[index].PrivateIP = *out[0].PrivateIpAddress
 				}
 			}
 		}
 
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
+		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
+			return Cluster_Def{}, err
+		}
+		k, err := keyCoverstion(keyInfo, ctx)
 		if err != nil {
 			return Cluster_Def{}, err
 		}
-		k, err := keyCoverstion(keyInfo)
-		if err != nil {
-			return Cluster_Def{}, err
-		}
-		pool.KeyInfo = k
-		cluster.NodePools[in] = pool
+		cluster.NodePools[in].KeyInfo = k
 	}
 	return cluster, nil
 }
-func keyCoverstion(keyInfo interface{}) (Key, error) {
+func keyCoverstion(keyInfo interface{}, ctx logging.Context) (Key, error) {
 	b, e := json.Marshal(keyInfo)
 	var k Key
 	if e != nil {
-		beego.Error(e.Error())
+		ctx.SendSDLog(e.Error(), "error")
 		return Key{}, e
 	}
 	e = json.Unmarshal(b, &k)
 	if e != nil {
-		beego.Error(e.Error())
+		ctx.SendSDLog(e.Error(), "error")
 		return Key{}, e
 	}
 	return k, nil
@@ -533,11 +503,11 @@ func (cloud *AWS) KeyPairGenerator(keyName string) (string, string, error) {
 
 	return *resp.KeyMaterial, *resp.KeyFingerprint, nil
 }
-func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
+func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
@@ -549,6 +519,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 	}
 	confError := roles.Init()
 	if confError != nil {
+		ctx.SendSDLog(confError.Error(), "error")
 		return confError
 	}
 
@@ -556,26 +527,28 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def) error {
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
 			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
 				return err
 			}
 			err = cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
 			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
 				return err
 			}
 		}
 
-		err := cloud.TerminatePool(pool, cluster.ProjectId)
+		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx)
 		if err != nil {
 			return err
 		}
-		err = roles.DeleteIAMRole(pool.Name)
+		err = roles.DeleteIAMRole(pool.Name, ctx)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
+func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 
 	beego.Info("in clean up method")
 	for _, pool := range cluster.NodePools {
@@ -592,7 +565,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := cloud.Roles.DeleteIAMProfile(name)
+			err := cloud.Roles.DeleteIAMProfile(name, ctx)
 			if err != nil {
 				return err
 			}
@@ -609,7 +582,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := cloud.Roles.DeleteRole(name)
+			err := cloud.Roles.DeleteRole(name, ctx)
 			if err != nil {
 				return err
 			}
@@ -626,7 +599,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			if e != nil {
 				return e
 			}
-			err := cloud.Roles.DeletePolicy(name)
+			err := cloud.Roles.DeletePolicy(name, ctx)
 			if err != nil {
 				return err
 			}
@@ -645,6 +618,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 			}
 			err := cloud.TerminateIns(ids)
 			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
 				return err
 			}
 		}
@@ -662,6 +636,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 		}
 		err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
 		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
@@ -678,6 +653,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 		}
 		err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
 		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
@@ -692,7 +668,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 		if e != nil {
 			return e
 		}
-		err := cloud.Roles.DeleteRole(name)
+		err := cloud.Roles.DeleteRole(name, ctx)
 		if err != nil {
 			return err
 		}
@@ -708,7 +684,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 		if e != nil {
 			return e
 		}
-		err := cloud.Roles.DeletePolicy(name)
+		err := cloud.Roles.DeletePolicy(name, ctx)
 		if err != nil {
 			return err
 		}
@@ -725,7 +701,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 		if e != nil {
 			return e
 		}
-		err := cloud.Roles.DeleteIAMProfile(name)
+		err := cloud.Roles.DeleteIAMProfile(name, ctx)
 		if err != nil {
 			return err
 		}
@@ -733,25 +709,25 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def) error {
 
 	return nil
 }
-func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservation, error, string) {
+func (cloud *AWS) CreateInstance(pool *NodePool, network networks.AWSNetwork, ctx logging.Context) (*ec2.Reservation, error, string) {
 
 	subnetId := cloud.GetSubnets(pool, network)
 	sgIds := cloud.GetSecurityGroups(pool, network)
 	_, err := cloud.Roles.CreateRole(pool.Name)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_role"] = pool.Name
-	_, err = cloud.Roles.CreatePolicy(pool.Name, docker_master_policy)
+	_, err = cloud.Roles.CreatePolicy(pool.Name, docker_master_policy, ctx)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_policy"] = pool.Name
-	_, err = cloud.Roles.CreateIAMProfile(pool.Name)
+	_, err = cloud.Roles.CreateIAMProfile(pool.Name, ctx)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_iamProfile"] = pool.Name
@@ -768,9 +744,9 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		setting 50 gb volume - temp work
 	*/
 	beego.Info("updating root volume ")
-	ebs, err := cloud.describeAmi(&pool.Ami.AmiId)
+	ebs, err := cloud.describeAmi(&pool.Ami.AmiId, ctx)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err, ""
 	}
 	if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
@@ -781,7 +757,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		}
 	}
 
-	beego.Info("attaching external volume")
+	ctx.SendSDLog("attaching external volume", "info")
 	if pool.Ami.IsExternal {
 		var external_volume ec2.BlockDeviceMapping
 
@@ -808,12 +784,12 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name)}
 		input.IamInstanceProfile = &iamProfile
 	} else {
-		beego.Info("failed in attaching")
+		ctx.SendSDLog("failed in attaching", "info")
 	}
 
 	result, err := cloud.Client.RunInstances(input)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err, ""
 	}
 	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
@@ -828,7 +804,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network Network) (*ec2.Reservat
 	return result, nil, subnetId
 
 }
-func (cloud *AWS) GetSecurityGroups(pool *NodePool, network Network) []*string {
+func (cloud *AWS) GetSecurityGroups(pool *NodePool, network networks.AWSNetwork) []*string {
 	var sgId []*string
 	for _, definition := range network.Definition {
 		for _, sg := range definition.SecurityGroups {
@@ -843,7 +819,7 @@ func (cloud *AWS) GetSecurityGroups(pool *NodePool, network Network) []*string {
 	}
 	return sgId
 }
-func (cloud *AWS) GetSubnets(pool *NodePool, network Network) string {
+func (cloud *AWS) GetSubnets(pool *NodePool, network networks.AWSNetwork) string {
 	for _, definition := range network.Definition {
 		for _, subnet := range definition.Subnets {
 			if subnet.Name == pool.PoolSubnet {
@@ -854,13 +830,13 @@ func (cloud *AWS) GetSubnets(pool *NodePool, network Network) string {
 	return ""
 }
 
-func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool) (latest_instances []*ec2.Instance, err error) {
+func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, ctx logging.Context) (latest_instances []*ec2.Instance, err error) {
 
 	instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
 	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
 
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
 	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
@@ -876,7 +852,7 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool) (
 	return latest_instances, nil
 
 }
-func (cloud *AWS) GetInstancesByDNS(privateDns []*string, projectId string) (latest_instances []*ec2.Instance, err error) {
+func (cloud *AWS) GetInstancesByDNS(privateDns []*string, projectId string, ctx logging.Context) (latest_instances []*ec2.Instance, err error) {
 
 	//dns :=[]*string {privateDns}
 	filters := []*ec2.Filter{&ec2.Filter{Name: aws.String("private-dns-name"), Values: privateDns}}
@@ -885,7 +861,7 @@ func (cloud *AWS) GetInstancesByDNS(privateDns []*string, projectId string) (lat
 	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
 
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
 	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
@@ -916,21 +892,21 @@ func (cloud *AWS) TerminateIns(instance_ids []*string) error {
 
 	return err
 }
-func (cloud *AWS) TerminatePool(pool *NodePool, projectId string) error {
+func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx logging.Context) error {
 
 	beego.Info("AWSOperations terminating nodes")
 	instance_ids := cloud.getIds(pool)
 
 	err := cloud.TerminateIns(instance_ids)
 	if err != nil {
-
-		beego.Error("Cluster model: Status - Failed to terminate node pool ", err.Error())
+		ctx.SendSDLog("Cluster model: Status - Failed to terminate node pool "+err.Error(), "error")
 		return err
 	}
 	logging.SendLog("Cluster pool terminated successfully: "+pool.Name, "info", projectId)
 	return nil
 }
-func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
+
+/*func (cloud *AWS) GetNetworkStatus(projectId string,ctx logging.Context) (Network, error) {
 
 	url := getNetworkHost()
 
@@ -942,13 +918,13 @@ func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 
 	req, err := utils.CreateGetRequest(url)
 	if err != nil {
-		beego.Error("%s", err)
+		ctx.SendSDLog( err.Error(),"error")
 		return Network{}, err
 	}
 
 	response, err := client.SendRequest(req)
 	if err != nil {
-		beego.Error("%s", err)
+		ctx.SendSDLog( err.Error(),"error")
 		return Network{}, err
 	}
 
@@ -958,32 +934,32 @@ func (cloud *AWS) GetNetworkStatus(projectId string) (Network, error) {
 
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		beego.Error("%s", err)
+		ctx.SendSDLog( err.Error(),"error")
 		return Network{}, err
 	}
 
 	err = json.Unmarshal(contents, &network)
 	if err != nil {
-		beego.Error("%s", err)
+		ctx.SendSDLog( err.Error(),"error")
 		return Network{}, err
 	}
 	return network, nil
 
-}
+}*/
 func getKubeEngineHost() string {
 	return beego.AppConfig.String("network_url")
 }
 func getNetworkHost() string {
 	return beego.AppConfig.String("network_url")
 }
-func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
+func (cloud *AWS) describeAmi(ami *string, ctx logging.Context) ([]*ec2.BlockDeviceMapping, error) {
 	var amis []*string
 	var ebsVolumes []*ec2.BlockDeviceMapping
 	amis = append(amis, ami)
 	amiInput := &ec2.DescribeImagesInput{ImageIds: amis}
 	res, err := cloud.Client.DescribeImages(amiInput)
 	if err != nil {
-		beego.Error(err)
+		ctx.SendSDLog(err.Error(), "error")
 		return ebsVolumes, err
 	}
 
@@ -1040,9 +1016,9 @@ func (cloud *AWS) describeAmi(ami *string) ([]*ec2.BlockDeviceMapping, error) {
 	return nil
 
 }*/
-func (cloud *AWS) checkInstanceState(id string, projectId string) (error, string) {
+func (cloud *AWS) checkInstanceState(id string, projectId string, ctx logging.Context) (error, string) {
 	ids := []*string{&id}
-	latest_instances, err := cloud.GetInstances(ids, projectId, false)
+	latest_instances, err := cloud.GetInstances(ids, projectId, false, ctx)
 	if err != nil {
 		return err, ""
 	} else {
@@ -1055,21 +1031,21 @@ func (cloud *AWS) checkInstanceState(id string, projectId string) (error, string
 		}
 	}
 }
-func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, err error) {
+func (cloud *AWS) getKey(pool NodePool, projectId string, ctx logging.Context) (keyMaterial string, err error) {
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
 
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
 
 		if err != nil && err.Error() != "not found" {
 
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 
 		} else if err == nil {
-			key, err := keyCoverstion(keyInfo)
+			key, err := keyCoverstion(keyInfo, ctx)
 			if err != nil {
 				return "", err
 			}
@@ -1078,22 +1054,22 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 				keyMaterial = key.KeyMaterial
 			}
 		} else if err != nil && err.Error() == "not found" {
-			beego.Info("AWSOperations: creating key")
+			ctx.SendSDLog("AWSOperations: creating key", "info")
 			logging.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
 
 			keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
 
 			if err != nil {
-				beego.Error(err.Error())
+				ctx.SendSDLog(err.Error(), "error")
 				logging.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
 				logging.SendLog(err.Error(), "info", projectId)
 				return "", err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
-			_, err = vault.PostSSHKey(pool.KeyInfo)
+			_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
 
 			if err != nil {
-				beego.Error(err.Error())
+				ctx.SendSDLog(err.Error(), "error")
 				logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 				logging.SendLog(err.Error(), "info", projectId)
 				return "", err
@@ -1101,15 +1077,15 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
 
-		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName)
+		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
 
 		if err != nil {
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			logging.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
-		key, err := keyCoverstion(k)
+		key, err := keyCoverstion(k, ctx)
 		if err != nil {
 			return "", err
 		}
@@ -1118,10 +1094,10 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 
 	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
 
-		_, err = vault.PostSSHKey(pool.KeyInfo)
+		_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
 
 		if err != nil {
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
@@ -1133,16 +1109,16 @@ func (cloud *AWS) getKey(pool NodePool, projectId string) (keyMaterial string, e
 		_, err = cloud.ImportSSHKeyPair(pool.KeyInfo.KeyName, pool.KeyInfo.KeyMaterial)
 
 		if err != nil {
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			logging.SendLog("Error in importing key: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
 		}
 
-		_, err = vault.PostSSHKey(pool.KeyInfo)
+		_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
 
 		if err != nil {
-			beego.Error(err.Error())
+			ctx.SendSDLog(err.Error(), "error")
 			logging.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
 			logging.SendLog(err.Error(), "info", projectId)
 			return "", err
@@ -1167,15 +1143,17 @@ func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, e
 	return *resp.KeyName, err
 }
 
-func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string) error {
+func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string, ctx logging.Context) error {
 
 	for _, id := range ids {
 		err := fileWrite(key.KeyMaterial, key.KeyName)
 		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 		err = setPermission(key.KeyName)
 		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 		publicIp := ""
@@ -1183,8 +1161,9 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 			beego.Error("waiting for public ip")
 			time.Sleep(time.Second * 50)
 			beego.Error("waited for public ip")
-			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId)
+			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId, ctx)
 			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
 				return err
 			}
 		}
@@ -1207,44 +1186,60 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 			}
 		}
 		if errCopy != nil {
+			ctx.SendSDLog(errCopy.Error(), "error")
 			return errCopy
 		}
 		err = setScriptPermision(key.KeyName, ami.Username, publicIp)
 		if err != nil {
+			ctx.SendSDLog(errCopy.Error(), "error")
 			return err
 		}
 		err = runScript(key.KeyName, ami.Username, publicIp)
 		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 		err = deleteScript(key.KeyName, ami.Username, publicIp)
 		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 		err = deleteFile(key.KeyName)
 		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
 	return nil
 
 }
-func (cloud *AWS) enableScaling(cluster Cluster_Def) error {
+func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx logging.Context) error {
 
 	for i, pool := range cluster.NodePools {
 		if pool.EnableScaling {
-			network, err := cloud.GetNetworkStatus(cluster.ProjectId)
+			var awsNetwork networks.AWSNetwork
+			network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
 
+			bytes, err := json.Marshal(network)
 			if err != nil {
+				beego.Error(err.Error())
 				return err
 			}
-			subnetId := cloud.GetSubnets(pool, network)
-			err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize)
+
+			err = json.Unmarshal(bytes, &awsNetwork)
+
+			if err != nil {
+				beego.Error(err.Error())
+				return err
+			}
+			subnetId := cloud.GetSubnets(pool, awsNetwork)
+			err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
 			if err != nil {
 				if m[cluster.ProjectId+"_launchConfig"] != "" {
 
 					err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
 					if err != nil {
+						ctx.SendSDLog(err.Error(), "error")
 						return err
 					}
 				}
@@ -1252,19 +1247,20 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def) error {
 
 					err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
 					if err != nil {
+						ctx.SendSDLog(err.Error(), "error")
 						return err
 					}
 				}
 				if m[cluster.ProjectId+"_role"] != "" {
 
-					err := cloud.Roles.DeleteRole(cluster.ProjectId)
+					err := cloud.Roles.DeleteRole(cluster.ProjectId, ctx)
 					if err != nil {
 						return err
 					}
 				}
 				if cloud.Resources[cluster.ProjectId+"_policy"] != nil {
 
-					err := cloud.Roles.DeletePolicy(cluster.ProjectId)
+					err := cloud.Roles.DeletePolicy(cluster.ProjectId, ctx)
 					if err != nil {
 						return err
 					}
@@ -1272,7 +1268,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def) error {
 
 				if cloud.Resources[cluster.ProjectId+"_iamProfile"] != "" {
 
-					err := cloud.Roles.DeleteIAMProfile(cluster.ProjectId)
+					err := cloud.Roles.DeleteIAMProfile(cluster.ProjectId, ctx)
 					if err != nil {
 						return err
 					}
@@ -1288,21 +1284,18 @@ func fileWrite(key string, keyName string) error {
 
 	f, err := os.Create("../antelope/keys/" + keyName + ".pem")
 	if err != nil {
-		beego.Error(err.Error())
 		return err
 	}
 	defer f.Close()
 	d2 := []byte(key)
 	n2, err := f.Write(d2)
 	if err != nil {
-		beego.Error(err.Error())
 		return err
 	}
 	beego.Info("wrote %d bytes\n", n2)
 
 	err = os.Chmod("../antelope/keys/"+keyName+".pem", 0777)
 	if err != nil {
-		beego.Error(err)
 		return err
 	}
 	return nil
@@ -1318,7 +1311,6 @@ func setPermission(keyName string) error {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		beego.Error(err.Error())
 		return err
 	}
 	return nil
@@ -1337,7 +1329,6 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		beego.Error(err.Error())
 		return err
 	}
 	return nil
@@ -1353,7 +1344,6 @@ func setScriptPermision(keyName string, userName string, instanceId string) erro
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		beego.Warn(err.Error())
 		return nil
 	}
 	return nil
@@ -1369,7 +1359,6 @@ func runScript(keyName string, userName string, instanceId string) error {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		beego.Warn(err.Error())
 		return nil
 	}
 	return nil
@@ -1383,7 +1372,6 @@ func deleteScript(keyName string, userName string, instanceId string) error {
 	cmd := exec.Command(cmd1, args...)
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
 	return nil
@@ -1393,7 +1381,6 @@ func deleteFile(keyName string) error {
 	keyPath := "../antelope/keys/" + keyName + ".pem"
 	err := os.Remove(keyPath)
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
 	return nil
