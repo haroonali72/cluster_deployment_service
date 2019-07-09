@@ -31,6 +31,7 @@ type NodePool struct {
 	MachineType string        `json:"machine_type" bson:"machine_type"`
 	Image       Image         `json:"image" bson:"image"`
 	PoolSubnet  string        `json:"subnet_id" bson:"subnet_id"`
+	PoolRole    string        `json:"pool_role" bson:"pool_role"`
 	Nodes       []*Node       `json:"nodes" bson:"nodes"`
 }
 

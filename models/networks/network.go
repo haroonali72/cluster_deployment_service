@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+type GCPNetwork struct {
+	Definition []*AWSDefinition `json:"definition" bson:"definition"`
+}
+
 type AWSNetwork struct {
 	EnvironmentId    string           `json:"environment_id" bson:"environment_id"`
 	Name             string           `json:"name" bson:"name"`
