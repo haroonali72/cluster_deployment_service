@@ -64,7 +64,7 @@ type Key struct {
 type Volume struct {
 	DataDisk     models.OsDiskType `json:"disk_type" bson:"disk_type"`
 	Size         int32             `json:"disk_size" bson:"disk_size"`
-	EnableVolume bool              `json:"enable_volume" bson :"enable_volume"`
+	EnableVolume bool              `json:"enable_volume" bson:"enable_volume"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
@@ -248,7 +248,7 @@ func DeployCluster(cluster Cluster_Def, credentials string, ctx logging.Context)
 	cluster, confError = azure.createCluster(cluster, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
-
+		beego.Info("going to cleanup")
 		confError = azure.CleanUp(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
