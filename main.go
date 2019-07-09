@@ -39,20 +39,20 @@ func main() {
 	beego.Run()
 }
 func setEnv() {
-	os.Setenv("mongo_host", "10.248.9.173")
+	os.Setenv("mongo_host", "35.246.150.221")
 	os.Setenv("mongo_auth", "true")
 	os.Setenv("mongo_db", "antelope")
 	os.Setenv("mongo_user", "antelope")
-	os.Setenv("mongo_pass", "deltapsi@#22237")
+	os.Setenv("mongo_pass", "antelope")
 	os.Setenv("mongo_aws_template_collection", "aws_template")
 	os.Setenv("mongo_aws_cluster_collection", "aws_cluster")
 	os.Setenv("mongo_azure_template_collection", "azure_template")
 	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
-	os.Setenv("redis_url", "10.248.9.173")
-	os.Setenv("logger_url", "10.248.9.173")
-	os.Setenv("network_url", "10.248.9.173")
-	os.Setenv("vault_url", "http://a0744a091342011e98db7065c2a0b3d8-1120916201.ap-southeast-1.elb.amazonaws.com:8000/")
+	os.Setenv("redis_url", "35.246.150.221")
+	os.Setenv("logger_url", "https://dapis.cloudplex.cf/api/v1/logger")
+	os.Setenv("network_url", "https://dapis.cloudplex.cf/weasel/network/{cloud_provider}")
+	os.Setenv("vault_url", "https://dapis.cloudplex.cf/robin/api/v1")
 }
 
 /*func setAppConf(){

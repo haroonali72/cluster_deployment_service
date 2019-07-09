@@ -4,11 +4,13 @@ import (
 	"antelope/models/aws/IAMRoles"
 	"antelope/models/logging"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"time"
 )
 
 type AWSAutoScaler struct {
@@ -53,13 +55,14 @@ func (cloud *AWSAutoScaler) Init() error {
 
 	return nil
 }
-func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeIp string, imageId string, ctx logging.Context) (error, map[string]string) {
-
+func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imageId string, ctx logging.Context) (error, map[string]string) {
+	fmt.Println(nodeId)
 	m := make(map[string]string)
+
 	config_input := autoscaling.CreateLaunchConfigurationInput{}
-	beego.Info("getting project" + projectId)
+
 	config_input.ImageId = &imageId
-	config_input.InstanceId = &nodeIp
+	config_input.InstanceId = &nodeId
 	config_input.LaunchConfigurationName = &projectId
 
 	roles := IAMRoles.AWSIAMRoles{
@@ -71,33 +74,38 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeIp string, imag
 	if confError != nil {
 		return confError, m
 	}
-
-	_, err := roles.CreateRole(projectId)
+	/*
+		_, err := roles.CreateRole(projectId+"-scale")
+		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
+			return err, m
+		}
+		m[projectId+"_scale_role"] = projectId+"-scale"
+		_, err = roles.CreatePolicy(projectId+"-scale", autoscale_policy, ctx)
+		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
+			return err, m
+		}
+		m[projectId+"_scale_policy"] = projectId+"-scale"*/
+	/*id, err := roles.CreateIAMProfile(projectId+"-scale", ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err, m
 	}
-	m[projectId+"_role"] = projectId
-	_, err = roles.CreatePolicy(projectId, autoscale_policy, ctx)
-	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
-		return err, m
-	}
-	m[projectId+"_policy"] = projectId
-	id, err := roles.CreateIAMProfile(projectId, ctx)
-	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
-		return err, m
-	}
-	m[projectId+"_iamProfile"] = projectId
-	config_input.IamInstanceProfile = &id
+	m[projectId+"_scale_iamProfile"] = projectId+"-scale"
+	ok := roles.CheckInstanceProfile(projectId+"-scale")
+	if !ok {
+		//config_input.IamInstanceProfile = &id
+	} else {
+		ctx.SendSDLog("failed in attaching", "info")
+	}*/
 	_, config_err := cloud.AutoScaling.CreateLaunchConfiguration(&config_input)
 
 	if config_err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(config_err.Error(), "error")
 		return config_err, m
 	}
-	m[projectId+"_launchConfig"] = projectId
+	m[projectId+"_scale_launchConfig"] = projectId
 	return nil, m
 }
 func (cloud *AWSAutoScaler) DeleteConfiguration(projectId string) error {
@@ -112,7 +120,9 @@ func (cloud *AWSAutoScaler) DeleteConfiguration(projectId string) error {
 	return nil
 }
 func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId string, subnetId string, maxSize int64, ctx logging.Context) (error, map[string]string) {
-
+	beego.Info("before sleep")
+	time.Sleep(time.Second * 180)
+	beego.Info("after sleep")
 	err, m := cloud.ConfigLauncher(projectId, nodeIp, imageId, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -123,7 +133,7 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 	config_input := autoscaling.CreateAutoScalingGroupInput{}
 
 	config_input.AutoScalingGroupName = &projectId
-	config_input.InstanceId = &nodeIp
+	//	config_input.InstanceId = &nodeIp
 	config_input.MinSize = &min
 	config_input.MaxSize = &maxSize
 	config_input.VPCZoneIdentifier = &subnetId
@@ -148,7 +158,7 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 		ctx.SendSDLog(config_err.Error(), "error")
 		return config_err, m
 	}
-	m[projectId+"_autoScaler"] = projectId
+	m[projectId+"_scale_autoScaler"] = projectId
 	return nil, m
 
 }
@@ -177,6 +187,11 @@ func (cloud *AWSAutoScaler) GetAutoScaler(projectId string, name string, ctx log
 		ctx.SendSDLog(config_err.Error(), "error")
 		return config_err, nil
 	}
-	return nil, out.AutoScalingGroups[0].Instances
+	if out != nil && out.AutoScalingGroups != nil && out.AutoScalingGroups[0].Instances != nil {
+
+		return nil, out.AutoScalingGroups[0].Instances
+	} else {
+		return nil, nil
+	}
 
 }

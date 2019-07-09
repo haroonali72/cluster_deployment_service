@@ -38,10 +38,11 @@ func (cloud *AWSIAMRoles) Init() error {
 	creds := credentials.NewStaticCredentials(cloud.AccessKey, cloud.SecretKey, "")
 	cloud.Client = ec2.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	cloud.IAMService = iam.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
-
+	cloud.STS = sts.New(session.New(&aws.Config{Region: &region, Credentials: creds}))
 	return nil
 }
-func (cloud *AWSIAMRoles) CreateIAMRole(name string, policyDef []byte) (string, error) {
+
+/*func (cloud *AWSIAMRoles) CreateIAMRole(name string, policyDef []byte) (string, error) {
 
 	roleName := name
 
@@ -100,7 +101,7 @@ func (cloud *AWSIAMRoles) CreateIAMRole(name string, policyDef []byte) (string, 
 
 	return *outtt.InstanceProfile.Arn, nil
 
-}
+}*/
 func (cloud *AWSIAMRoles) CreateRole(name string) (string, error) {
 
 	roleName := name

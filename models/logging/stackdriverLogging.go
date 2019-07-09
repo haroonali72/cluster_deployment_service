@@ -40,9 +40,9 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 	c.data.Message = strconv.Itoa(line) + " " + file + " " + msg
 
 	if c.data.Severity == "error" {
-		beego.Error(msg)
+		beego.Error(c.data.Message)
 	} else {
-		beego.Info(msg)
+		beego.Info(c.data.Message)
 	}
 	logger := utils.InitReq()
 

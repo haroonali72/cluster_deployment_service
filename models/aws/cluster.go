@@ -306,7 +306,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string, ctx logging.Conte
 		return pub_err
 	}
 
-	if cluster.Status != "Cluster Created" {
+	if cluster.Status != "Cluster Created" && cluster.Status == "Cluster Termination Failed" {
 		ctx.SendSDLog("Cluster model: Cluster is not in created state ", "error")
 		publisher.Notify(cluster.ProjectId, "Status Available")
 		return err

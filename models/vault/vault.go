@@ -49,7 +49,7 @@ func GetSSHKey(cloudType string, keyName string, ctx logging.Context) (interface
 	var key awsKey
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 500 {
+	if response.StatusCode == 500 || response.StatusCode == 404 {
 		return awsKey{}, errors.New("not found")
 	}
 	contents, err := ioutil.ReadAll(response.Body)

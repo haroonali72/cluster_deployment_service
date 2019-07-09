@@ -24,6 +24,18 @@ import (
 var docker_master_policy = []byte(`{
   "Version": "2012-10-17",
   "Statement": [
+	{
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeAutoScalingInstances",
+                "autoscaling:DescribeLaunchConfigurations",
+                "autoscaling:SetDesiredCapacity",
+				"autoscaling:DescribeTags",
+                "autoscaling:TerminateInstanceInAutoScalingGroup"
+            ],
+            "Resource": "*"
+	 },
      {
       	"Sid": "VisualEditor0",
 		"Effect": "Allow",
@@ -193,23 +205,23 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx logging.Context) ([]Cre
 		}
 	}
 	var awsNetwork networks.AWSNetwork
-	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
+	/*	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
 
-	bytes, err := json.Marshal(network)
-	if err != nil {
-		beego.Error(err.Error())
-		return nil, err
-	}
+		bytes, err := json.Marshal(network)
+		if err != nil {
+			beego.Error(err.Error())
+			return nil, err
+		}
 
-	err = json.Unmarshal(bytes, &awsNetwork)
+		err = json.Unmarshal(bytes, &awsNetwork)
 
-	if err != nil {
-		beego.Error(err.Error())
-		return nil, err
-	}
+		if err != nil {
+			beego.Error(err.Error())
+			return nil, err
+		}*/
 	var createdPools []CreatedPool
 
-	for i, pool := range cluster.NodePools {
+	for _, pool := range cluster.NodePools {
 		var createdPool CreatedPool
 		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx)
 		if err != nil {
@@ -241,22 +253,22 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx logging.Context) ([]Cre
 			}
 			if pool.EnableScaling {
 
-				err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
+				err, m := cloud.Scaler.AutoScaler(pool.Name, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
 
-				if m[cluster.ProjectId+"_autoScaler"] != "" {
-					cloud.Resources[cluster.ProjectId+"_autoScaler"] = cluster.ProjectId
+				if m[pool.Name+"_scale_autoScaler"] != "" {
+					cloud.Resources[pool.Name+"_scale_autoScaler"] = pool.Name + "-scale"
 				}
-				if m[cluster.ProjectId+"_launchConfig"] != "" {
-					cloud.Resources[cluster.ProjectId+"_launchConfig"] = cluster.ProjectId
+				if m[pool.Name+"_scale_launchConfig"] != "" {
+					cloud.Resources[pool.Name+"_scale_launchConfig"] = pool.Name + "-scale"
 				}
-				if m[cluster.ProjectId+"_role"] != "" {
-					cloud.Resources[cluster.ProjectId+"_role"] = cluster.ProjectId
+				if m[pool.Name+"_scale_role"] != "" {
+					cloud.Resources[pool.Name+"_scale_role"] = pool.Name + "-scale"
 				}
-				if m[cluster.ProjectId+"_policy"] != "" {
-					cloud.Resources[cluster.ProjectId+"_policy"] = cluster.ProjectId
+				if m[pool.Name+"_scale_policy"] != "" {
+					cloud.Resources[pool.Name+"_scale_policy"] = pool.Name + "-scale"
 				}
-				if m[cluster.ProjectId+"_iamProfile"] != "" {
-					cloud.Resources[cluster.ProjectId+"_iamProfile"] = cluster.ProjectId
+				if m[pool.Name+"_iamProfile"] != "" {
+					cloud.Resources[pool.Name+"_scale_iamProfile"] = pool.Name + "-scale"
 				}
 				if err != nil {
 					return nil, err
@@ -420,8 +432,10 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Cluster
 			if err != nil {
 				return Cluster_Def{}, err
 			}
-			for _, inst := range instances {
-				cluster.NodePools[in].Nodes = append(cluster.NodePools[in].Nodes, &Node{CloudId: *inst.InstanceId})
+			if instances != nil {
+				for _, inst := range instances {
+					cluster.NodePools[in].Nodes = append(cluster.NodePools[in].Nodes, &Node{CloudId: *inst.InstanceId})
+				}
 			}
 		}
 		for index, node := range cluster.NodePools[in].Nodes {
@@ -525,12 +539,12 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx logging.Context) err
 
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
-			err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return err
 			}
-			err = cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
+			err = cloud.Scaler.DeleteConfiguration(pool.Name)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return err
@@ -541,7 +555,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx logging.Context) err
 		if err != nil {
 			return err
 		}
-		err = roles.DeleteIAMRole(pool.Name, ctx)
+		err = cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err != nil {
 			return err
 		}
@@ -550,11 +564,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx logging.Context) err
 }
 func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 
-	beego.Info("in clean up method")
 	for _, pool := range cluster.NodePools {
-		beego.Info("terminating pool" + pool.Name)
-		beego.Info(cloud.Resources[pool.Name+"_iamProfile"])
+
 		if cloud.Resources[pool.Name+"_iamProfile"] != nil {
+
 			iamProfile := cloud.Resources[pool.Name+"_iamProfile"]
 			name := ""
 			b, e := json.Marshal(iamProfile)
@@ -570,8 +583,9 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 				return err
 			}
 		}
-		beego.Info(cloud.Resources[pool.Name+"_role"])
+
 		if cloud.Resources[pool.Name+"_role"] != nil {
+			beego.Info(cloud.Resources[pool.Name+"_role"])
 			role := cloud.Resources[pool.Name+"_role"]
 			name := ""
 			b, e := json.Marshal(role)
@@ -582,12 +596,13 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 			if e != nil {
 				return e
 			}
+			beego.Info(name)
 			err := cloud.Roles.DeleteRole(name, ctx)
 			if err != nil {
 				return err
 			}
 		}
-		beego.Info(cloud.Resources[pool.Name+"_policy"])
+
 		if cloud.Resources[pool.Name+"_policy"] != nil {
 			policy := cloud.Resources[pool.Name+"_policy"]
 			name := ""
@@ -604,7 +619,74 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 				return err
 			}
 		}
-		beego.Info(cloud.Resources[pool.Name+"_instances"])
+		if cloud.Resources[pool.Name+"_scale_launchConfig"] != nil {
+
+			err := cloud.Scaler.DeleteConfiguration(pool.Name)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return err
+			}
+		}
+		if cloud.Resources[pool.Name+"_scale_autoScaler"] != nil {
+
+			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return err
+			}
+		}
+		if cloud.Resources[pool.Name+"_scale_iamProfile"] != nil {
+
+			iamProfile := cloud.Resources[pool.Name+"_scale_iamProfile"]
+			name := ""
+			b, e := json.Marshal(iamProfile)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Roles.DeleteIAMProfile(name, ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		if cloud.Resources[pool.Name+"_scale_role"] != nil {
+			role := cloud.Resources[pool.Name+"_scale_role"]
+			name := ""
+			b, e := json.Marshal(role)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Roles.DeleteRole(name, ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		if cloud.Resources[pool.Name+"_scale_policy"] != nil {
+			policy := cloud.Resources[pool.Name+"_scale_policy"]
+			name := ""
+			b, e := json.Marshal(policy)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Roles.DeletePolicy(name, ctx)
+			if err != nil {
+				return err
+			}
+		}
+
 		if cloud.Resources[pool.Name+"_instances"] != nil {
 			value := cloud.Resources[pool.Name+"_instances"]
 			var ids []*string
@@ -623,96 +705,99 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 			}
 		}
 	}
-	if cloud.Resources[cluster.ProjectId+"_launchConfig"] != nil {
-		id := cloud.Resources[cluster.ProjectId+"_launchConfig"]
-		name := ""
-		b, e := json.Marshal(id)
-		if e != nil {
-			return e
+	/*	if cloud.Resources[cluster.ProjectId+"_launchConfig"] != nil {
+			id := cloud.Resources[cluster.ProjectId+"_launchConfig"]
+			name := ""
+			b, e := json.Marshal(id)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return err
+			}
 		}
-		e = json.Unmarshal(b, &name)
-		if e != nil {
-			return e
+		if cloud.Resources[cluster.ProjectId+"_autoScaler"] != nil {
+			id := cloud.Resources[cluster.ProjectId+"_autoScaler"]
+			name := ""
+			b, e := json.Marshal(id)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return err
+			}
 		}
-		err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
-		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
-			return err
+		if cloud.Resources[cluster.ProjectId+"_role"] != nil {
+			role := cloud.Resources[cluster.ProjectId+"_role"]
+			name := ""
+			b, e := json.Marshal(role)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Roles.DeleteRole(name, ctx)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if cloud.Resources[cluster.ProjectId+"_autoScaler"] != nil {
-		id := cloud.Resources[cluster.ProjectId+"_autoScaler"]
-		name := ""
-		b, e := json.Marshal(id)
-		if e != nil {
-			return e
+		if cloud.Resources[cluster.ProjectId+"_policy"] != nil {
+			policy := cloud.Resources[cluster.ProjectId+"_policy"]
+			name := ""
+			b, e := json.Marshal(policy)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Roles.DeletePolicy(name, ctx)
+			if err != nil {
+				return err
+			}
 		}
-		e = json.Unmarshal(b, &name)
-		if e != nil {
-			return e
-		}
-		err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
-		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
-			return err
-		}
-	}
-	if cloud.Resources[cluster.ProjectId+"_role"] != nil {
-		role := cloud.Resources[cluster.ProjectId+"_role"]
-		name := ""
-		b, e := json.Marshal(role)
-		if e != nil {
-			return e
-		}
-		e = json.Unmarshal(b, &name)
-		if e != nil {
-			return e
-		}
-		err := cloud.Roles.DeleteRole(name, ctx)
-		if err != nil {
-			return err
-		}
-	}
-	if cloud.Resources[cluster.ProjectId+"_policy"] != nil {
-		policy := cloud.Resources[cluster.ProjectId+"_policy"]
-		name := ""
-		b, e := json.Marshal(policy)
-		if e != nil {
-			return e
-		}
-		e = json.Unmarshal(b, &name)
-		if e != nil {
-			return e
-		}
-		err := cloud.Roles.DeletePolicy(name, ctx)
-		if err != nil {
-			return err
-		}
-	}
 
-	if cloud.Resources[cluster.ProjectId+"_iamProfile"] != "" {
-		policy := cloud.Resources[cluster.ProjectId+"_iamProfile"]
-		name := ""
-		b, e := json.Marshal(policy)
-		if e != nil {
-			return e
-		}
-		e = json.Unmarshal(b, &name)
-		if e != nil {
-			return e
-		}
-		err := cloud.Roles.DeleteIAMProfile(name, ctx)
-		if err != nil {
-			return err
-		}
-	}
+		if cloud.Resources[cluster.ProjectId+"_iamProfile"] != "" {
+			policy := cloud.Resources[cluster.ProjectId+"_iamProfile"]
+			name := ""
+			b, e := json.Marshal(policy)
+			if e != nil {
+				return e
+			}
+			e = json.Unmarshal(b, &name)
+			if e != nil {
+				return e
+			}
+			err := cloud.Roles.DeleteIAMProfile(name, ctx)
+			if err != nil {
+				return err
+			}
+		}*/
 
 	return nil
 }
 func (cloud *AWS) CreateInstance(pool *NodePool, network networks.AWSNetwork, ctx logging.Context) (*ec2.Reservation, error, string) {
 
-	subnetId := cloud.GetSubnets(pool, network)
-	sgIds := cloud.GetSecurityGroups(pool, network)
+	//subnetId := cloud.GetSubnets(pool, network)
+	//sgIds := cloud.GetSecurityGroups(pool, network)
+	subnetId := "subnet-0fca4a3b97b1a1d8e"
+	sid := "sg-060473b5f6720b8e3"
+	sgIds := []*string{&sid}
 	_, err := cloud.Roles.CreateRole(pool.Name)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -1215,7 +1300,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 }
 func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx logging.Context) error {
 
-	for i, pool := range cluster.NodePools {
+	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			var awsNetwork networks.AWSNetwork
 			network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
@@ -1233,49 +1318,48 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx logging.Context) error 
 				return err
 			}
 			subnetId := cloud.GetSubnets(pool, awsNetwork)
-			err, m := cloud.Scaler.AutoScaler(cluster.ProjectId+strconv.Itoa(i), pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
+			err, m := cloud.Scaler.AutoScaler(pool.Name, pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
 			if err != nil {
-				if m[cluster.ProjectId+"_launchConfig"] != "" {
+				if m[cluster.ProjectId+"_scale_launchConfig"] != "" {
 
-					err := cloud.Scaler.DeleteConfiguration(cluster.ProjectId)
+					err := cloud.Scaler.DeleteConfiguration(pool.Name)
 					if err != nil {
 						ctx.SendSDLog(err.Error(), "error")
 						return err
 					}
 				}
-				if m[cluster.ProjectId+"_autoScaler"] != "" {
+				if m[cluster.ProjectId+"_scale_autoScaler"] != "" {
 
-					err := cloud.Scaler.DeleteAutoScaler(cluster.ProjectId)
+					err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 					if err != nil {
 						ctx.SendSDLog(err.Error(), "error")
 						return err
 					}
 				}
-				if m[cluster.ProjectId+"_role"] != "" {
+				if m[cluster.ProjectId+"_scale_role"] != "" {
 
-					err := cloud.Roles.DeleteRole(cluster.ProjectId, ctx)
+					err := cloud.Roles.DeleteRole(pool.Name+"-scale", ctx)
 					if err != nil {
 						return err
 					}
 				}
-				if cloud.Resources[cluster.ProjectId+"_policy"] != nil {
+				if m[cluster.ProjectId+"_scale_policy"] != "" {
 
-					err := cloud.Roles.DeletePolicy(cluster.ProjectId, ctx)
+					err := cloud.Roles.DeletePolicy(pool.Name+"-scale", ctx)
 					if err != nil {
 						return err
 					}
 				}
 
-				if cloud.Resources[cluster.ProjectId+"_iamProfile"] != "" {
+				if m[cluster.ProjectId+"_scale_iamProfile"] != "" {
 
-					err := cloud.Roles.DeleteIAMProfile(cluster.ProjectId, ctx)
+					err := cloud.Roles.DeleteIAMProfile(pool.Name+"-scale", ctx)
 					if err != nil {
 						return err
 					}
 				}
 				return err
 			}
-			break
 		}
 	}
 	return nil
