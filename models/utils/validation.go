@@ -54,4 +54,3 @@ func IsValdidGcpCredentials(credentials string) (bool, GcpCredentials) {
 	gcpCredentials.Raw = decodedCredentials
 	return true, gcpCredentials
 }
-

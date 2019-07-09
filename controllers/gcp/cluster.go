@@ -1,7 +1,6 @@
 package gcp
 
 import (
-	"antelope/models/aws"
 	"antelope/models/gcp"
 	"antelope/models/utils"
 	"encoding/json"
@@ -150,7 +149,7 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	cluster, err := aws.GetCluster(id)
+	cluster, err := gcp.GetCluster(id)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}

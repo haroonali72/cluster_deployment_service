@@ -18,6 +18,8 @@ var (
 	mongo_aws_cluster_collection    = ""
 	mongo_azure_template_collection = ""
 	mongo_azure_cluster_collection  = ""
+	mongo_gcp_template_collection   = ""
+	mongo_gcp_cluster_collection    = ""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
@@ -89,6 +91,18 @@ func InitFlags() error {
 			EnvVar:      "mongo_azure_cluster_collection",
 		},
 		cli.StringFlag{
+			Name:        "mongo_gcp_template_collection",
+			Usage:       "gcp template collection name ",
+			Destination: &mongo_gcp_template_collection,
+			EnvVar:      "mongo_gcp_template_collection",
+		},
+		cli.StringFlag{
+			Name:        "mongo_gcp_cluster_collection",
+			Usage:       "gcp cluster collection name ",
+			Destination: &mongo_gcp_cluster_collection,
+			EnvVar:      "mongo_gcp_cluster_collection",
+		},
+		cli.StringFlag{
 			Name:        "redis_url",
 			Usage:       "redis host",
 			Destination: &redis_url,
@@ -145,6 +159,8 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_aws_cluster_collection", mongo_aws_cluster_collection)
 	beego.AppConfig.Set("mongo_azure_template_collection", mongo_azure_template_collection)
 	beego.AppConfig.Set("mongo_azure_cluster_collection", mongo_azure_cluster_collection)
+	beego.AppConfig.Set("mongo_gcp_cluster_collection", "")
+	beego.AppConfig.Set("mongo_gcp_template_collection", "")
 	beego.AppConfig.Set("redis_url", redis)
 	beego.AppConfig.Set("logger_url", elephant)
 	beego.AppConfig.Set("network_url", weasel)

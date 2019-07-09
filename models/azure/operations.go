@@ -325,16 +325,18 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 	}
 	var cpVms []*VM
 	for in, pool := range cluster.NodePools {
-		k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
-		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
-			return Cluster_Def{}, err
+		var keyInfo Key
+		if pool.KeyInfo.CredentialType == models.SSHKey {
+			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+			if err != nil {
+				ctx.SendSDLog(err.Error(), "error")
+				return Cluster_Def{}, err
+			}
+			keyInfo, err = keyCoverstion(k1, ctx)
+			if err != nil {
+				return Cluster_Def{}, err
+			}
 		}
-		keyInfo, err := keyCoverstion(k1, ctx)
-		if err != nil {
-			return Cluster_Def{}, err
-		}
-
 		pool.KeyInfo = keyInfo
 		if pool.PoolRole == "master" {
 

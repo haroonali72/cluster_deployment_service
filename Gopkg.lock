@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:80004fcc5cf64e591486b3e11b406f1e0d17bf85d475d64203c8494f5da4fcd1"
+  name = "cloud.google.com/go"
+  packages = ["compute/metadata"]
+  pruneopts = "UT"
+  revision = "cf81fad90a1a1de334c4fc27e23eb9a4224b627a"
+  version = "v0.41.0"
+
+[[projects]]
   digest = "1:6b1426cad7057b717351eacf5b6fe70f053f11aac1ce254bbf2fd72c031719eb"
   name = "contrib.go.opencensus.io/exporter/ocagent"
   packages = ["."]
@@ -38,6 +46,14 @@
   pruneopts = "UT"
   revision = "562d3769ef2f0f56bc52749babd3e88367e28588"
   version = "v11.9.0"
+
+[[projects]]
+  digest = "1:320e7ead93de9fd2b0e59b50fd92a4d50c1f8ab455d96bc2eb083267453a9709"
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
+  version = "v9"
 
 [[projects]]
   digest = "1:3f450bf1f3e8855b552df87e0cac6f9a8a1431f593589d11100f5f7d9402f024"
@@ -283,10 +299,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d9403fe14e9ea0436e59be99b24c76517720c524d5649c3359224364e70252cd"
+  digest = "1:68ad4c549c0def177e5146b40756b9e66d78b7276746023a12361de2f171ef41"
   name = "golang.org/x/net"
   packages = [
     "context",
+    "context/ctxhttp",
     "http/httpguts",
     "http2",
     "http2/hpack",
@@ -296,6 +313,20 @@
   ]
   pruneopts = "UT"
   revision = "1f3472d942ba824034fb77cab6a6cfc1bc8a2c3c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:31e33f76456ccf54819ab4a646cf01271d1a99d7712ab84bf1a9e7b61cd2031b"
+  name = "golang.org/x/oauth2"
+  packages = [
+    ".",
+    "google",
+    "internal",
+    "jws",
+    "jwt",
+  ]
+  pruneopts = "UT"
+  revision = "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
 
 [[projects]]
   branch = "master"
@@ -337,12 +368,42 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:5f003878aabe31d7f6b842d4de32b41c46c214bb629bb485387dbcce1edf5643"
+  digest = "1:b66d03e1a4f94fab66a592d705a25f16e09a6109aa4ddb12c8d4f935cf66589a"
   name = "google.golang.org/api"
-  packages = ["support/bundler"]
+  packages = [
+    "compute/v1",
+    "gensupport",
+    "googleapi",
+    "googleapi/internal/uritemplates",
+    "googleapi/transport",
+    "internal",
+    "option",
+    "support/bundler",
+    "transport/http",
+    "transport/http/internal/propagation",
+  ]
   pruneopts = "UT"
   revision = "0cbcb99a9ea0c8023c794b2693cbe1def82ed4d7"
   version = "v0.3.2"
+
+[[projects]]
+  digest = "1:498b722d33dde4471e7d6e5d88a5e7132d2a8306fea5ff5ee82d1f418b4f41ed"
+  name = "google.golang.org/appengine"
+  packages = [
+    ".",
+    "internal",
+    "internal/app_identity",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/modules",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch",
+  ]
+  pruneopts = "UT"
+  revision = "b2f4a3cf3c67576a2ee09e1fe62656a5086ce880"
+  version = "v1.6.1"
 
 [[projects]]
   branch = "master"
@@ -430,6 +491,7 @@
     "github.com/Azure/go-autorest/autorest/adal",
     "github.com/Azure/go-autorest/autorest/azure",
     "github.com/Azure/go-autorest/autorest/to",
+    "github.com/asaskevich/govalidator",
     "github.com/astaxie/beego",
     "github.com/astaxie/beego/context/param",
     "github.com/astaxie/beego/plugins/cors",
@@ -444,6 +506,8 @@
     "github.com/google/uuid",
     "github.com/smartystreets/goconvey/convey",
     "github.com/urfave/cli",
+    "google.golang.org/api/compute/v1",
+    "google.golang.org/api/option",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",
   ]
