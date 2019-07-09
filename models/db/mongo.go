@@ -77,6 +77,8 @@ func GetMongoConf() mongConf {
 	conf.MongoAwsClusterCollection = beego.AppConfig.String("mongo_aws_cluster_collection")
 	conf.MongoAzureClusterCollection = beego.AppConfig.String("mongo_azure_cluster_collection")
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
+	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
+	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
 	return conf
 }
 
@@ -90,5 +92,7 @@ type mongConf struct {
 	MongoAwsClusterCollection    string
 	MongoAzureTemplateCollection string
 	MongoAzureClusterCollection  string
+	MongoGcpTemplateCollection string
+	MongoGcpClusterCollection  string
 	MongoSshKeyCollection        string
 }
