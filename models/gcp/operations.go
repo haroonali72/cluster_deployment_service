@@ -216,7 +216,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 
 		nodes := []*Node{}
 		nodes = append(nodes, &Node{
-			Url:    result.Name,
+			Url:    result.SelfLink,
 			Status: result.Status,
 		})
 
