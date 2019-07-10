@@ -385,7 +385,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 			cluster.NodePools[in].Nodes = cpVms
 
 		} else {
-			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), "", "", "")
+			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(in), "", "", "")
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return Cluster_Def{}, err
@@ -401,7 +401,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 				}
 				arr := strings.Split(nicId, "/")
 				nicName := arr[12]
-				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), arr[10], nicName, ctx)
+				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(in), arr[10], nicName, ctx)
 				if err != nil {
 					return Cluster_Def{}, err
 				}
@@ -410,7 +410,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 				arr = strings.Split(pipId, "/")
 				pipConf := arr[14]
 				pipAddress := arr[16]
-				pip, err := cloud.GetPIP(cluster.ResourceGroup, cluster.ProjectId+"-"+strconv.Itoa(in), arr[10], nicName, pipConf, pipAddress, ctx)
+				pip, err := cloud.GetPIP(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(in), arr[10], nicName, pipConf, pipAddress, ctx)
 				if err != nil {
 					return Cluster_Def{}, err
 				}
@@ -1033,7 +1033,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 			ctx.SendSDLog("waited for public ip", "warning")
 			IPname := fmt.Sprintf("pip-%s", *vm.Name)
 			beego.Info(IPname)
-			publicIp, err := cloud.GetPIP(resourceGroup, projectId+"-"+strconv.Itoa(poolIndex), *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
+			publicIp, err := cloud.GetPIP(resourceGroup, projectId+strconv.Itoa(poolIndex), *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
 			if err != nil {
 				return err
 			}
