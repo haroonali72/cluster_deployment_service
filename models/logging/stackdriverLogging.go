@@ -37,7 +37,7 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 	_, file, line, _ := runtime.Caller(1)
 
 	c.data.Severity = message_type
-	c.data.Message = strconv.Itoa(line) + " " + file + " " + msg
+	c.data.Message = file + ":" + strconv.Itoa(line) + " " + msg
 
 	if c.data.Severity == "error" {
 		beego.Error(c.data.Message)
