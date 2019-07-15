@@ -205,20 +205,20 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx logging.Context) ([]Cre
 		}
 	}
 	var awsNetwork networks.AWSNetwork
-	/*	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
+	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
 
-		bytes, err := json.Marshal(network)
-		if err != nil {
-			beego.Error(err.Error())
-			return nil, err
-		}
+	bytes, err := json.Marshal(network)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err
+	}
 
-		err = json.Unmarshal(bytes, &awsNetwork)
+	err = json.Unmarshal(bytes, &awsNetwork)
 
-		if err != nil {
-			beego.Error(err.Error())
-			return nil, err
-		}*/
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err
+	}
 	var createdPools []CreatedPool
 
 	for _, pool := range cluster.NodePools {
@@ -793,11 +793,11 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 }
 func (cloud *AWS) CreateInstance(pool *NodePool, network networks.AWSNetwork, ctx logging.Context) (*ec2.Reservation, error, string) {
 
-	//subnetId := cloud.GetSubnets(pool, network)
-	//sgIds := cloud.GetSecurityGroups(pool, network)
-	subnetId := "subnet-0fca4a3b97b1a1d8e"
-	sid := "sg-060473b5f6720b8e3"
-	sgIds := []*string{&sid}
+	subnetId := cloud.GetSubnets(pool, network)
+	sgIds := cloud.GetSecurityGroups(pool, network)
+	//subnetId := "subnet-0fca4a3b97b1a1d8e"
+	//sid := "sg-060473b5f6720b8e3"
+	//sgIds := []*string{&sid}
 	_, err := cloud.Roles.CreateRole(pool.Name)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")

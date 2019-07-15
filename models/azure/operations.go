@@ -108,7 +108,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 	}
 
 	var azureNetwork networks.AzureNetwork
-	/*network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "azure", ctx)
+	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "azure", ctx)
 	bytes, err := json.Marshal(network)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -120,7 +120,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return cluster, err
-	}*/
+	}
 
 	for i, pool := range cluster.NodePools {
 
@@ -147,12 +147,12 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 
 	var cpVms []*VM
 
-	/*subnetId := cloud.GetSubnets(pool, networkData)
-	sgIds := cloud.GetSecurityGroups(pool, networkData)*/
-	subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/virtualNetworks/testsadaf-vnet/subnets/default"
-	var sgIds []*string
-	sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
-	sgIds = append(sgIds, &sid)
+	subnetId := cloud.GetSubnets(pool, networkData)
+	sgIds := cloud.GetSecurityGroups(pool, networkData)
+	//subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/virtualNetworks/testsadaf-vnet/subnets/default"
+	//var sgIds []*string
+	//sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
+	//sgIds = append(sgIds, &sid)
 	if pool.PoolRole == "master" {
 		IPname := fmt.Sprintf("pip-%s", projectId+"-"+strconv.Itoa(poolIndex))
 		logging.SendLog("Creating Public IP : "+projectId, "info", projectId)
