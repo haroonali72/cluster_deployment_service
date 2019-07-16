@@ -109,13 +109,13 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 
 	var azureNetwork networks.AzureNetwork
 	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "azure", ctx)
-	bytes, err := json.Marshal(network)
+	/*bytes, err := json.Marshal(network)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return cluster, err
 	}
-
-	err = json.Unmarshal(bytes, &azureNetwork)
+	*/
+	err = json.Unmarshal(network.([]byte), &azureNetwork)
 
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")

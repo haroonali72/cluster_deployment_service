@@ -207,13 +207,13 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx logging.Context) ([]Cre
 	var awsNetwork networks.AWSNetwork
 	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
 
-	bytes, err := json.Marshal(network)
+	/*bytes, err := json.Marshal(network)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err
-	}
+	}*/
 
-	err = json.Unmarshal(bytes, &awsNetwork)
+	err = json.Unmarshal(network.([]byte), &awsNetwork)
 
 	if err != nil {
 		beego.Error(err.Error())

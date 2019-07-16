@@ -15,7 +15,7 @@ type GCPNetwork struct {
 }
 
 type AWSNetwork struct {
-	EnvironmentId    string           `json:"environment_id" bson:"environment_id"`
+	EnvironmentId    string           `json:"project_id" bson:"project_id"`
 	Name             string           `json:"name" bson:"name"`
 	Type             models.Type      `json:"type" bson:"type"`
 	Cloud            models.Cloud     `json:"cloud" bson:"cloud"`
@@ -26,31 +26,27 @@ type AWSNetwork struct {
 }
 
 type AWSDefinition struct {
-	ID             bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
 	Vpc            Vpc              `json:"vpc" bson:"vpc"`
 	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
 	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
 }
 
 type Vpc struct {
-	ID    bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	VpcId string        `json:"vpc_id" bson:"vpc_id"`
-	Name  string        `json:"name" bson:"name"`
-	CIDR  string        `json:"cidr" bson:"cidr"`
+	VpcId string `json:"vpc_id" bson:"vpc_id"`
+	Name  string `json:"name" bson:"name"`
+	CIDR  string `json:"cidr" bson:"cidr"`
 }
 
 type Subnet struct {
-	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SubnetId string        `json:"subnet_id" bson:"subnet_id"`
-	Name     string        `json:"name" bson:"name"`
-	CIDR     string        `json:"cidr" bson:"cidr"`
+	SubnetId string `json:"subnet_id" bson:"subnet_id"`
+	Name     string `json:"name" bson:"name"`
+	CIDR     string `json:"cidr" bson:"cidr"`
 }
 
 type SecurityGroup struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	SecurityGroupId string        `json:"security_group_id" bson:"security_group_id"`
-	Name            string        `json:"name" bson:"name"`
-	Description     string        `json:"description" bson:"description"`
+	SecurityGroupId string `json:"security_group_id" bson:"security_group_id"`
+	Name            string `json:"name" bson:"name"`
+	Description     string `json:"description" bson:"description"`
 }
 
 type AzureNetwork struct {
@@ -65,7 +61,6 @@ type AzureNetwork struct {
 }
 
 type AzureDefinition struct {
-	ID             bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
 	Vnet           VNet             `json:"vnet" bson:"vnet"`
 	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
 	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
