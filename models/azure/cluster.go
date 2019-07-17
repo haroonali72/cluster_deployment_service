@@ -6,11 +6,11 @@ import (
 	"antelope/models/logging"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"time"
 )
 
@@ -90,6 +90,18 @@ type ImageReference struct {
 	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
 
+func GetProfile(profileId string, region string, ctx logging.Context) (vault.AzureProfile, error) {
+	data, err := vault.GetCredentialProfile("azure", profileId, ctx)
+	azureProfile := vault.AzureProfile{}
+	err = json.Unmarshal(data, &azureProfile)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return vault.AzureProfile{}, err
+	}
+	azureProfile.Profile.Location = region
+	return azureProfile, nil
+
+}
 func checkClusterSize(cluster Cluster_Def) error {
 	for _, pools := range cluster.NodePools {
 		if pools.NodeCount > 3 {
@@ -217,19 +229,16 @@ func PrintError(confError error, name, projectId string, ctx logging.Context) {
 		ctx.SendSDLog(confError.Error(), "error")
 		logging.SendLog("Cluster creation failed : "+name, "error", projectId)
 		logging.SendLog(confError.Error(), "error", projectId)
-
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials string, ctx logging.Context) (confError error) {
-
-	splits := strings.Split(credentials, ":")
+func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logging.Context) (confError error) {
 
 	azure := AZURE{
-		ID:           splits[0],
-		Key:          splits[1],
-		Tenant:       splits[2],
-		Subscription: splits[3],
-		Region:       splits[4],
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
 	}
 	confError = azure.init()
 	if confError != nil {
@@ -276,20 +285,20 @@ func DeployCluster(cluster Cluster_Def, credentials string, ctx logging.Context)
 
 	return nil
 }
-func FetchStatus(credentials string, projectId string, ctx logging.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, projectId string, ctx logging.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
 		return Cluster_Def{}, err
 	}
-	splits := strings.Split(credentials, ":")
+
 	azure := AZURE{
-		ID:           splits[0],
-		Key:          splits[1],
-		Tenant:       splits[2],
-		Subscription: splits[3],
-		Region:       splits[4],
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
 	}
 	err = azure.init()
 	if err != nil {
@@ -308,7 +317,7 @@ func FetchStatus(credentials string, projectId string, ctx logging.Context) (Clu
 	}*/
 	return c, nil
 }
-func TerminateCluster(cluster Cluster_Def, credentials string, ctx logging.Context) error {
+func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logging.Context) error {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
@@ -327,13 +336,13 @@ func TerminateCluster(cluster Cluster_Def, credentials string, ctx logging.Conte
 		publisher.Notify(cluster.Name, "Status Available")
 		return err
 	}
-	splits := strings.Split(credentials, ":")
+
 	azure := AZURE{
-		ID:           splits[0],
-		Key:          splits[1],
-		Tenant:       splits[2],
-		Subscription: splits[3],
-		Region:       splits[4],
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
 	}
 	err = azure.init()
 	if err != nil {

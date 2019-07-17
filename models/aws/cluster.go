@@ -6,6 +6,7 @@ import (
 	"antelope/models/logging"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -86,6 +87,18 @@ func checkClusterSize(cluster Cluster_Def, ctx logging.Context) error {
 		}
 	}
 	return nil
+}
+func GetProfile(profileId string, region string, ctx logging.Context) (vault.AwsProfile, error) {
+	data, err := vault.GetCredentialProfile("aws", profileId, ctx)
+	awsProfile := vault.AwsProfile{}
+	err = json.Unmarshal(data, &awsProfile)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return vault.AwsProfile{}, err
+	}
+	awsProfile.Profile.Region = region
+	return awsProfile, nil
+
 }
 func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	_, err := GetCluster(cluster.ProjectId, ctx)
@@ -197,14 +210,12 @@ func PrintError(confError error, name, projectId string, ctx logging.Context) {
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials string, ctx logging.Context) (confError error) {
-
-	splits := strings.Split(credentials, ":")
+func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx logging.Context) (confError error) {
 
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: credentials.AccessKey,
+		SecretKey: credentials.SecretKey,
+		Region:    credentials.Region,
 	}
 	confError = aws.init()
 	if confError != nil {
@@ -252,18 +263,18 @@ func DeployCluster(cluster Cluster_Def, credentials string, ctx logging.Context)
 
 	return nil
 }
-func FetchStatus(credentials string, projectId string, ctx logging.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx logging.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
 		return Cluster_Def{}, err
 	}
-	splits := strings.Split(credentials, ":")
+	//splits := strings.Split(credentials, ":")
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: credentials.Profile.AccessKey,
+		SecretKey: credentials.Profile.SecretKey,
+		Region:    credentials.Profile.Region,
 	}
 	err = aws.init()
 	if err != nil {
@@ -283,14 +294,12 @@ func FetchStatus(credentials string, projectId string, ctx logging.Context) (Clu
 		}*/
 	return c, nil
 }
-func TerminateCluster(cluster Cluster_Def, credentials string, ctx logging.Context) error {
-
-	splits := strings.Split(credentials, ":")
+func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx logging.Context) error {
 
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: profile.Profile.AccessKey,
+		SecretKey: profile.Profile.SecretKey,
+		Region:    profile.Profile.Region,
 	}
 	err := aws.init()
 	if err != nil {
@@ -453,13 +462,12 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 
 	return keys, nil
 }
-func GetAWSAmi(credentials string, amiId string, ctx logging.Context) ([]*ec2.BlockDeviceMapping, error) {
+func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx logging.Context) ([]*ec2.BlockDeviceMapping, error) {
 
-	splits := strings.Split(credentials, ":")
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: credentials.Profile.AccessKey,
+		SecretKey: credentials.Profile.SecretKey,
+		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
 	if err != nil {

@@ -202,15 +202,14 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.SendSDLog("AzureClusterController: POST cluster with project id: "+projectId, "error")
 
 	beego.Info("AzureClusterController: StartCluster.")
-	credentials := c.Ctx.Input.Header("Authorization")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region := c.Ctx.Input.Header("X-Region")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 5 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
+	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -226,7 +225,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	ctx.SendSDLog("AzureClusterController: Getting Cluster of project. "+projectId, "info")
 
-	cluster, err := azure.GetCluster(projectId, *ctx)
+	cluster, err = azure.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -243,7 +242,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 	ctx.SendSDLog("AzureClusterController: Creating Cluster. "+cluster.Name, "info")
 
-	go azure.DeployCluster(cluster, credentials, *ctx)
+	go azure.DeployCluster(cluster, azureProfile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -262,19 +261,17 @@ func (c *AzureClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
 
-	credentials := c.Ctx.Input.Header("Authorization")
-
 	ctx := new(logging.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
 
-	ctx.SendSDLog("AzureClusterController: FetchStatus.", "info")
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 5 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region := c.Ctx.Input.Header("X-Region")
+
+	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -288,7 +285,7 @@ func (c *AzureClusterController) GetStatus() {
 
 	ctx.SendSDLog("AzureClusterController: Fetch Cluster Status of project. "+projectId, "info")
 
-	cluster, err := azure.FetchStatus(credentials, projectId, *ctx)
+	cluster, err := azure.FetchStatus(azureProfile, projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -319,15 +316,14 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	ctx.SendSDLog("AzureClusterController: TerminateCluster.", "info")
 
-	credentials := c.Ctx.Input.Header("Authorization")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region := c.Ctx.Input.Header("X-Region")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 5 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
+	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -343,7 +339,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	ctx.SendSDLog("AzureClusterController: Getting Cluster of project. "+projectId, "info")
 
-	cluster, err := azure.GetCluster(projectId, *ctx)
+	cluster, err = azure.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -353,7 +349,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	}
 	ctx.SendSDLog("AzureClusterController: Terminating Cluster. "+cluster.Name, "info")
 
-	go azure.TerminateCluster(cluster, credentials, *ctx)
+	go azure.TerminateCluster(cluster, azureProfile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
