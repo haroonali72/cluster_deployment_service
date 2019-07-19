@@ -143,7 +143,7 @@ func InitFlags() error {
 	}
 
 	host := mongo + ":27017"
-	redis := redis_url + ":31845"
+	redis := redis_url + ":6379"
 	elephant := "http://" + logger_url + ":3500/api/v1/logger"
 	weasel := "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
 	vault := "http://" + vault_url + ":8092/robin/api/v1"
