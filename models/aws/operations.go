@@ -6,6 +6,7 @@ import (
 	autoscaling2 "antelope/models/aws/autoscaling"
 	"antelope/models/logging"
 	"antelope/models/networks"
+	"antelope/models/types"
 	"antelope/models/vault"
 	"encoding/json"
 	"errors"
@@ -204,8 +205,10 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx logging.Context) ([]Cre
 			return nil, err
 		}
 	}
-	var awsNetwork networks.AWSNetwork
-	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
+	var awsNetwork types.AWSNetwork
+
+	url := getNetworkHost("aws") + "/" + cluster.ProjectId
+	network, err := networks.GetAPIStatus(url, ctx)
 
 	/*bytes, err := json.Marshal(network)
 	if err != nil {
@@ -791,7 +794,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 
 	return nil
 }
-func (cloud *AWS) CreateInstance(pool *NodePool, network networks.AWSNetwork, ctx logging.Context) (*ec2.Reservation, error, string) {
+func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx logging.Context) (*ec2.Reservation, error, string) {
 
 	subnetId := cloud.GetSubnets(pool, network)
 	sgIds := cloud.GetSecurityGroups(pool, network)
@@ -889,7 +892,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network networks.AWSNetwork, ct
 	return result, nil, subnetId
 
 }
-func (cloud *AWS) GetSecurityGroups(pool *NodePool, network networks.AWSNetwork) []*string {
+func (cloud *AWS) GetSecurityGroups(pool *NodePool, network types.AWSNetwork) []*string {
 	var sgId []*string
 	for _, definition := range network.Definition {
 		for _, sg := range definition.SecurityGroups {
@@ -904,7 +907,7 @@ func (cloud *AWS) GetSecurityGroups(pool *NodePool, network networks.AWSNetwork)
 	}
 	return sgId
 }
-func (cloud *AWS) GetSubnets(pool *NodePool, network networks.AWSNetwork) string {
+func (cloud *AWS) GetSubnets(pool *NodePool, network types.AWSNetwork) string {
 	for _, definition := range network.Definition {
 		for _, subnet := range definition.Subnets {
 			if subnet.Name == pool.PoolSubnet {
@@ -1034,8 +1037,12 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx logging.Co
 func getKubeEngineHost() string {
 	return beego.AppConfig.String("network_url")
 }
-func getNetworkHost() string {
-	return beego.AppConfig.String("network_url")
+func getNetworkHost(cloudType string) string {
+	host := beego.AppConfig.String("network_url")
+	if strings.Contains(host, "{cloud_provider}") {
+		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+	}
+	return host
 }
 func (cloud *AWS) describeAmi(ami *string, ctx logging.Context) ([]*ec2.BlockDeviceMapping, error) {
 	var amis []*string
@@ -1302,8 +1309,9 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx logging.Context) error 
 
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
-			var awsNetwork networks.AWSNetwork
-			network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "aws", ctx)
+			var awsNetwork types.AWSNetwork
+			url := getNetworkHost("aws") + "/" + cluster.ProjectId
+			network, err := networks.GetAPIStatus(url, ctx)
 
 			bytes, err := json.Marshal(network)
 			if err != nil {

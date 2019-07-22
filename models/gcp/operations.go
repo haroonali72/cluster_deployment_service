@@ -3,6 +3,7 @@ package gcp
 import (
 	"antelope/models/logging"
 	"antelope/models/networks"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"context"
 	"encoding/json"
@@ -20,8 +21,12 @@ type GCP struct {
 	Region      string
 }
 
-func getNetworkHost() string {
-	return beego.AppConfig.String("network_url")
+func getNetworkHost(cloudType string) string {
+	host := beego.AppConfig.String("network_url")
+	if strings.Contains(host, "{cloud_provider}") {
+		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+	}
+	return host
 }
 func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	if cloud.Client == nil {
@@ -30,8 +35,9 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 			return cluster, err
 		}
 	}
-	var gcpNetwork networks.GCPNetwork
-	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "gcp", logging.Context{})
+	var gcpNetwork types.GCPNetwork
+	url := getNetworkHost("gcp") + "/" + cluster.ProjectId
+	network, err := networks.GetAPIStatus(url, logging.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err
@@ -101,7 +107,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	return cluster, nil
 }
 
-func (cloud *GCP) createInstanceTemplate(pool *NodePool, network networks.GCPNetwork) (string, error) {
+func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwork) (string, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -273,7 +279,7 @@ func GetGCP(credentials, region string) (GCP, error) {
 	}, nil
 }
 
-func getSubnet(subnetName string, subnets []*networks.Subnet) string {
+func getSubnet(subnetName string, subnets []*types.Subnet) string {
 	for _, subnet := range subnets {
 		if subnet.Name == subnetName {
 			return subnet.SubnetId

@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/logging"
 	"antelope/models/networks"
+	"antelope/models/types"
 	"antelope/models/vault"
 	"context"
 	"encoding/json"
@@ -93,8 +94,12 @@ func (cloud *AZURE) init() error {
 
 	return nil
 }
-func getNetworkHost() string {
-	return beego.AppConfig.String("network_url")
+func getNetworkHost(cloudType string) string {
+	host := beego.AppConfig.String("network_url")
+	if strings.Contains(host, "{cloud_provider}") {
+		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+	}
+	return host
 
 }
 func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Cluster_Def, error) {
@@ -107,8 +112,9 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 		}
 	}
 
-	var azureNetwork networks.AzureNetwork
-	network, err := networks.GetAPIStatus(getNetworkHost(), cluster.ProjectId, "azure", ctx)
+	var azureNetwork types.AzureNetwork
+	url := getNetworkHost("azure") + "/" + cluster.ProjectId
+	network, err := networks.GetAPIStatus(url, ctx)
 	/*bytes, err := json.Marshal(network)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -143,7 +149,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 
 	return cluster, nil
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx logging.Context) ([]*VM, string, error) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx logging.Context) ([]*VM, string, error) {
 
 	var cpVms []*VM
 
@@ -246,7 +252,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData networks.AzureNet
 	}
 
 }
-func (cloud *AZURE) GetSecurityGroups(pool *NodePool, network networks.AzureNetwork) []*string {
+func (cloud *AZURE) GetSecurityGroups(pool *NodePool, network types.AzureNetwork) []*string {
 	var sgId []*string
 	for _, definition := range network.Definition {
 		for _, sg := range definition.SecurityGroups {
@@ -259,7 +265,7 @@ func (cloud *AZURE) GetSecurityGroups(pool *NodePool, network networks.AzureNetw
 	}
 	return sgId
 }
-func (cloud *AZURE) GetSubnets(pool *NodePool, network networks.AzureNetwork) string {
+func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) string {
 	for _, definition := range network.Definition {
 		for _, subnet := range definition.Subnets {
 			if subnet.Name == pool.PoolSubnet {
