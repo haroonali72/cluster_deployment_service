@@ -20,7 +20,7 @@ type AWSClusterController struct {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:projectId/ [get]
 func (c *AWSClusterController) Get() {
 	projectId := c.GetString(":projectId")
@@ -52,7 +52,7 @@ func (c *AWSClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Success 200 {object} []aws.Cluster_Def
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
 	ctx := new(logging.Context)
@@ -63,7 +63,7 @@ func (c *AWSClusterController) GetAll() {
 	clusters, err := aws.GetAllCluster(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -76,6 +76,7 @@ func (c *AWSClusterController) GetAll() {
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
+// @Success 400 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster against this project already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
@@ -199,11 +200,11 @@ func (c *AWSClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	header	string	false	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
-// @Failure 401 {"error": "exception_message"}
+// @Failure 40 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /start/:projectId [post]
 func (c *AWSClusterController) StartCluster() {
@@ -266,11 +267,10 @@ func (c *AWSClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	header	string	false	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /status/:projectId/ [get]
 func (c *AWSClusterController) GetStatus() {
@@ -322,11 +322,10 @@ func (c *AWSClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	Authorization	X-Profile-Id	string	false	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /terminate/:projectId/ [post]
 func (c *AWSClusterController) TerminateCluster() {
@@ -410,10 +409,10 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 // @Title AwsAmis
 // @Description returns aws ami details
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Region	header	string	false	""
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
-// @Failure 401 {"error": "exception_message"}
 // @Failure 404 {"error": "ami id is empty"}
 // @Failure 500 {"error": "internal server error"}
 // @router /amis/:amiId [get]
@@ -443,7 +442,7 @@ func (c *AWSClusterController) GetAMI() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -454,7 +453,7 @@ func (c *AWSClusterController) GetAMI() {
 
 // @Title EnableScaling
 // @Description enables autoscaling
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	header	string	false	""
 // @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
@@ -462,26 +461,29 @@ func (c *AWSClusterController) GetAMI() {
 // @router /enablescaling/:projectId/ [post]
 func (c *AWSClusterController) EnableAutoScaling() {
 
+	projectId := c.GetString(":projectId")
+
 	ctx := new(logging.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("AWSClusterController: EnableScaling.", "info")
 
-	credentials := c.Ctx.Input.Header("Authorization")
-
-	/*var scaler aws.AutoScaling
-	json.Unmarshal(c.Ctx.Input.RequestBody, &scaler)*/
-
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-	projectId := c.GetString(":projectId")
+
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	cluster, err := aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
@@ -491,7 +493,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	err = aws.EnableScaling(credentials, cluster, *ctx)
+	err = aws.EnableScaling(awsProfile, cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

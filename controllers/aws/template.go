@@ -18,7 +18,7 @@ type AWSTemplateController struct {
 // @Param	templateId	path	string	true	"Template Id of the template"
 // @Success 200 {object} aws.Template
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error "}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
 	templateId := c.GetString(":templateId")

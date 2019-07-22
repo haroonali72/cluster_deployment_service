@@ -518,13 +518,12 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx logging.Context) 
 	}
 	return amis, nil
 }
-func EnableScaling(credentials string, cluster Cluster_Def, ctx logging.Context) error {
+func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx logging.Context) error {
 
-	splits := strings.Split(credentials, ":")
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: credentials.Profile.AccessKey,
+		SecretKey: credentials.Profile.SecretKey,
+		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
 	if err != nil {
