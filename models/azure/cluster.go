@@ -95,6 +95,10 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	url := beego.AppConfig.String("raccon_host") + "/" + projectId
 
 	data, err := api_handler.GetAPIStatus(url, ctx)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return "", err
+	}
 	region := ""
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
@@ -108,21 +112,20 @@ func GetNetwork(projectId string, ctx logging.Context) error {
 
 	url := getNetworkHost("azure") + "/" + projectId
 
-	data, err := api_handler.GetAPIStatus(url, ctx)
+	_, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
-	region := ""
-	err = json.Unmarshal(data.([]byte), &region)
-	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
-		return err
-	}
+
 	return nil
 }
 func GetProfile(profileId string, region string, ctx logging.Context) (vault.AzureProfile, error) {
 	data, err := vault.GetCredentialProfile("azure", profileId, ctx)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return vault.AzureProfile{}, err
+	}
 	azureProfile := vault.AzureProfile{}
 	err = json.Unmarshal(data, &azureProfile)
 	if err != nil {
