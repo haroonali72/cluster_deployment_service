@@ -52,7 +52,7 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getLoggerHost())
+	req, err := utils.CreatePostRequest(request_data, getHost())
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -74,4 +74,7 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.data.Request.Path = path
 	c.data.Request.RequestId = uuid.New().String()
 	c.data.ProjectId = projectId
+}
+func getHost() string {
+	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/backend/logging"
 }

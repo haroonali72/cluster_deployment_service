@@ -59,5 +59,5 @@ func TransformData(data interface{}) ([]byte, error) {
 
 }
 func getLoggerHost() string {
-	return beego.AppConfig.String("logger_url")
+	return "http://" + beego.AppConfig.String("logger_url") + ":3500/api/v1/logger"
 }
