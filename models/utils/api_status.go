@@ -2,6 +2,7 @@ package utils
 
 import (
 	"antelope/models/logging"
+	"errors"
 	"io/ioutil"
 )
 
@@ -20,6 +21,11 @@ func GetAPIStatus(host string, ctx logging.Context) (interface{}, error) {
 		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
+
+	if response.StatusCode == 404 {
+		ctx.SendSDLog("no network exists for this project id", "error")
+		return nil, errors.New("no network exists for this project id")
+	}
 	defer response.Body.Close()
 	//	var network AzureNetwork
 	contents, err := ioutil.ReadAll(response.Body)
@@ -27,7 +33,6 @@ func GetAPIStatus(host string, ctx logging.Context) (interface{}, error) {
 		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
-
 	return contents, nil
 
 }

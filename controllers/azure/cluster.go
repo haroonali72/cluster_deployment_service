@@ -90,7 +90,13 @@ func (c *AzureClusterController) Post() {
 	ctx.SendSDLog("AzureClusterController: Post new cluster with name: "+cluster.Name, "error ")
 
 	cluster.CreationDate = time.Now()
-
+	err := azure.GetNetwork(cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	res, err := govalidator.ValidateStruct(cluster)
 	if !res || err != nil {
 		c.Ctx.Output.SetStatus(400)

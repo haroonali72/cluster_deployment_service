@@ -97,7 +97,13 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	err = aws.GetNetwork(cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {

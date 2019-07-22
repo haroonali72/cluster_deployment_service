@@ -104,6 +104,10 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	url := beego.AppConfig.String("raccon_host") + "/" + projectId
 
 	data, err := utils.GetAPIStatus(url, ctx)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return "", err
+	}
 	region := ""
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
@@ -112,6 +116,24 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	}
 	return region, nil
 
+}
+
+func GetNetwork(projectId string, ctx logging.Context) error {
+
+	url := getNetworkHost("aws") + "/" + projectId
+
+	data, err := utils.GetAPIStatus(url, ctx)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return err
+	}
+	region := ""
+	err = json.Unmarshal(data.([]byte), &region)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return err
+	}
+	return nil
 }
 func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	_, err := GetCluster(cluster.ProjectId, ctx)
