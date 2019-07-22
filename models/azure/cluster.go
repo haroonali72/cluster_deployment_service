@@ -20,32 +20,32 @@ type SSHKeyPair struct {
 }
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id"`
-	Name             string        `json:"name" bson:"name"`
-	Status           string        `json:"status" bson:"status"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	Status           string        `json:"status" bson:"status" valid:"required"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(New|new)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
-	NetworkName      string        `json:"network_name" bson:"network_name"`
-	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required"`
 }
 
 type NodePool struct {
 	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name"`
-	NodeCount          int64              `json:"node_count" bson:"node_count"`
-	MachineType        string             `json:"machine_type" bson:"machine_type"`
-	Image              ImageReference     `json:"image" bson:"image"`
-	Volume             Volume             `json:"volume" bson:"volume"`
-	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
+	Name               string             `json:"name" bson:"name" valid:"required"`
+	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required"`
+	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
+	Image              ImageReference     `json:"image" bson:"image" valid:"required"`
+	Volume             Volume             `json:"volume" bson:"volume" valid:"required"`
+	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" valid:"required"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
-	PoolRole           string             `json:"pool_role" bson:"pool_role"`
-	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
+	PoolRole           string             `json:"pool_role" bson:"pool_role" valid:"required"`
+	AdminUser          string             `json:"user_name" bson:"user_name",omitempty" valid:"required"`
 	KeyInfo            Key                `json:"key_info" bson:"key_info"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
-	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
+	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required in(standard hdd|standard ssd|premium ssd)"`
 	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 }
@@ -53,9 +53,9 @@ type AutoScaling struct {
 	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
 }
 type Key struct {
-	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
-	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
-	KeyName        string                 `json:"key_name" bson:"key_name"`
+	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" valid:"required, in(password|key)"`
+	NewKey         models.KeyType         `json:"key_type"  bson:"key_type" valid:"required in(new|cp|azure|user")"`
+	KeyName        string                 `json:"key_name" bson:"key_name" valid:"required"`
 	AdminPassword  string                 `json:"admin_password" bson:"admin_password",omitempty"`
 	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty"`
 	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty"`
@@ -83,10 +83,10 @@ type DiagnosticsProfile struct {
 
 type ImageReference struct {
 	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Publisher string        `json:"publisher" bson:"publisher,omitempty"`
-	Offer     string        `json:"offer" bson:"offer,omitempty"`
-	Sku       string        `json:"sku" bson:"sku,omitempty"`
-	Version   string        `json:"version" bson:"version,omitempty"`
+	Publisher string        `json:"publisher" bson:"publisher,omitempty" valid:"required"`
+	Offer     string        `json:"offer" bson:"offer,omitempty" valid:"required"`
+	Sku       string        `json:"sku" bson:"sku,omitempty" valid:"required"`
+	Version   string        `json:"version" bson:"version,omitempty" valid:"required"`
 	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
 

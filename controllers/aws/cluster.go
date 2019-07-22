@@ -4,6 +4,7 @@ import (
 	"antelope/models/aws"
 	"antelope/models/logging"
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 	"time"
@@ -89,7 +90,15 @@ func (c *AWSClusterController) Post() {
 
 	ctx.SendSDLog("AWSClusterController: Post new cluster with name: "+cluster.Name, "info")
 
-	err := aws.CreateCluster(cluster, *ctx)
+	res, err := govalidator.ValidateStruct(cluster)
+	if !res || err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)

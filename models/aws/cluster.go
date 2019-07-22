@@ -17,28 +17,28 @@ import (
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name"`
-	Status           string        `json:"status" bson:"status"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AWS|aws)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
-	NetworkName      string        `json:"network_name" bson:"network_name"`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
 }
 
 type NodePool struct {
 	ID                 bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name               string        `json:"name" bson:"name"`
-	NodeCount          int64         `json:"node_count" bson:"node_count"`
-	MachineType        string        `json:"machine_type" bson:"machine_type"`
+	Name               string        `json:"name" bson:"name" valid:"required"`
+	NodeCount          int64         `json:"node_count" bson:"node_count" valid:"required"`
+	MachineType        string        `json:"machine_type" bson:"machine_type" valid:"required"`
 	Ami                Ami           `json:"ami" bson:"ami"`
-	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
+	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id" valid:"required"`
+	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id" valid:"required"`
 	Nodes              []*Node       `json:"nodes" bson:"nodes"`
 	KeyInfo            Key           `json:"key_info" bson:"key_info"`
-	PoolRole           string        `json:"pool_role" bson:"pool_role"`
+	PoolRole           string        `json:"pool_role" bson:"pool_role" valid:"required"`
 	EnableScaling      bool          `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
@@ -58,18 +58,18 @@ type Node struct {
 	UserName   string `json:"user_name" bson:"user_name",omitempty"`
 }
 type Key struct {
-	KeyName     string         `json:"key_name" bson:"key_name"`
-	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
+	KeyName     string         `json:"key_name" bson:"key_name" valid:"required"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required in(new|cp|aws|user)"`
 	KeyMaterial string         `json:"private_key" bson:"private_key"`
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name     string        `json:"name" bson:"name"`
-	AmiId    string        `json:"ami_id" bson:"ami_id"`
-	Username string        `json:"username" bson:"username"`
+	Name     string        `json:"name" bson:"name" valid:"required"`
+	AmiId    string        `json:"ami_id" bson:"ami_id" valid:"required"`
+	Username string        `json:"username" bson:"username" valid:"required"`
 
-	RootVolume     Volume `json:"root_volume" bson:"root_volume"`
+	RootVolume     Volume `json:"root_volume" bson:"root_volume" valid:"required"`
 	IsExternal     bool   `json:"is_external" bson:"is_external"`
 	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
 }
