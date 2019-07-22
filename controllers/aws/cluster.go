@@ -4,6 +4,7 @@ import (
 	"antelope/models/aws"
 	"antelope/models/logging"
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 	"time"
@@ -89,7 +90,15 @@ func (c *AWSClusterController) Post() {
 
 	ctx.SendSDLog("AWSClusterController: Post new cluster with name: "+cluster.Name, "info")
 
-	err := aws.CreateCluster(cluster, *ctx)
+	res, err := govalidator.ValidateStruct(cluster)
+	if !res || err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -200,18 +209,7 @@ func (c *AWSClusterController) StartCluster() {
 
 	ctx.SendSDLog("AWSNetworkController: StartCluster.", "info")
 
-	credentials := c.Ctx.Input.Header("Authorization")
-
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
-		c.ServeJSON()
-		return
-	}
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
 	var cluster aws.Cluster_Def
 
@@ -237,8 +235,24 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendSDLog("AWSClusterController: Creating Cluster. "+cluster.Name, "info")
-	go aws.DeployCluster(cluster, credentials, *ctx)
+
+	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -261,18 +275,7 @@ func (c *AWSClusterController) GetStatus() {
 
 	ctx.SendSDLog("AWSNetworkController: FetchStatus.", "info")
 
-	credentials := c.Ctx.Input.Header("Authorization")
-
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
-		c.ServeJSON()
-		return
-	}
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -282,8 +285,23 @@ func (c *AWSClusterController) GetStatus() {
 	}
 
 	ctx.SendSDLog("AWSClusterController: Fetch Cluster Status of project. "+projectId, "info")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
 
-	cluster, err := aws.FetchStatus(credentials, projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -314,15 +332,20 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	ctx.SendSDLog("AWSNetworkController: TerminateCluster.", "info")
 
-	credentials := c.Ctx.Input.Header("Authorization")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -338,7 +361,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	ctx.SendSDLog("AWSClusterController: Getting Cluster of project. "+projectId, "info")
 
-	cluster, err := aws.GetCluster(projectId, *ctx)
+	cluster, err = aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -348,7 +371,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 	ctx.SendSDLog("AWSClusterController: Terminating Cluster. "+cluster.Name, "info")
 
-	go aws.TerminateCluster(cluster, credentials, *ctx)
+	go aws.TerminateCluster(cluster, awsProfile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -395,18 +418,11 @@ func (c *AWSClusterController) GetAMI() {
 
 	ctx.SendSDLog("AWSClusterController: FetchAMIs.", "info")
 
-	credentials := c.Ctx.Input.Header("Authorization")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region := c.Ctx.Input.Header("X-Region")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
-		c.ServeJSON()
-		return
-	}
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+
 	amiId := c.GetString(":amiId")
 
 	if amiId == "" {
@@ -417,7 +433,7 @@ func (c *AWSClusterController) GetAMI() {
 	}
 	ctx.SendSDLog("AWSClusterController: Get Ami from AWS", "info")
 
-	keys, err := aws.GetAWSAmi(credentials, amiId, *ctx)
+	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

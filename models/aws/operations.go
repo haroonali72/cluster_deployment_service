@@ -5,8 +5,8 @@ import (
 	"antelope/models/aws/IAMRoles"
 	autoscaling2 "antelope/models/aws/autoscaling"
 	"antelope/models/logging"
-	"antelope/models/networks"
 	"antelope/models/types"
+	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
 	"errors"
@@ -208,7 +208,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx logging.Context) ([]Cre
 	var awsNetwork types.AWSNetwork
 
 	url := getNetworkHost("aws") + "/" + cluster.ProjectId
-	network, err := networks.GetAPIStatus(url, ctx)
+	network, err := utils.GetAPIStatus(url, ctx)
 
 	/*bytes, err := json.Marshal(network)
 	if err != nil {
@@ -1311,7 +1311,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx logging.Context) error 
 		if pool.EnableScaling {
 			var awsNetwork types.AWSNetwork
 			url := getNetworkHost("aws") + "/" + cluster.ProjectId
-			network, err := networks.GetAPIStatus(url, ctx)
+			network, err := utils.GetAPIStatus(url, ctx)
 
 			bytes, err := json.Marshal(network)
 			if err != nil {

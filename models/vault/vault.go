@@ -21,6 +21,25 @@ type awsKey struct {
 	KeyMaterial string         `json:"private_key" bson:"private_key"`
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
+
+type AzureProfile struct {
+	Profile AzureCredentials `json:"credentials"`
+}
+type AzureCredentials struct {
+	ClientId       string `json:"client_id"`
+	ClientSecret   string `json:"client_secret"`
+	SubscriptionId string `json:"subscription_id"`
+	TenantId       string `json:"tenant_id"`
+	Location       string `json:"region"`
+}
+type AwsProfile struct {
+	Profile AwsCredentials `json:"credentials"`
+}
+type AwsCredentials struct {
+	AccessKey string `json:"access_key"`
+	SecretKey string `json:"access_secret"`
+	Region    string `json:"region"`
+}
 type azureKey struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
 	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
@@ -228,5 +247,33 @@ func GetAllSSHKey(cloudType string, ctx logging.Context) ([]string, error) {
 		return keys, err
 	}
 	return keys, nil
+
+}
+func GetCredentialProfile(cloudType string, profileId string, ctx logging.Context) ([]byte, error) {
+
+	req, err := utils.CreateGetRequest(getVaultHost() + "/template/" + cloudType + "/credentials/" + profileId)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return []byte{}, err
+	}
+	client := utils.InitReq()
+	response, err := client.SendRequest(req)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return []byte{}, err
+	}
+	defer response.Body.Close()
+
+	beego.Info(response.StatusCode)
+	beego.Info(response.Status)
+	if response.StatusCode == 500 || response.StatusCode == 404 {
+		return []byte{}, errors.New("not found")
+	}
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return []byte{}, err
+	}
+	return contents, nil
 
 }

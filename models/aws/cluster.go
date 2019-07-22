@@ -6,6 +6,7 @@ import (
 	"antelope/models/logging"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -16,28 +17,28 @@ import (
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name"`
-	Status           string        `json:"status" bson:"status"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AWS|aws)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
-	NetworkName      string        `json:"network_name" bson:"network_name"`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
 }
 
 type NodePool struct {
 	ID                 bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name               string        `json:"name" bson:"name"`
-	NodeCount          int64         `json:"node_count" bson:"node_count"`
-	MachineType        string        `json:"machine_type" bson:"machine_type"`
+	Name               string        `json:"name" bson:"name" valid:"required"`
+	NodeCount          int64         `json:"node_count" bson:"node_count" valid:"required"`
+	MachineType        string        `json:"machine_type" bson:"machine_type" valid:"required"`
 	Ami                Ami           `json:"ami" bson:"ami"`
-	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id"`
-	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id"`
+	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id" valid:"required"`
+	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id" valid:"required"`
 	Nodes              []*Node       `json:"nodes" bson:"nodes"`
 	KeyInfo            Key           `json:"key_info" bson:"key_info"`
-	PoolRole           string        `json:"pool_role" bson:"pool_role"`
+	PoolRole           string        `json:"pool_role" bson:"pool_role" valid:"required"`
 	EnableScaling      bool          `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
@@ -57,18 +58,18 @@ type Node struct {
 	UserName   string `json:"user_name" bson:"user_name",omitempty"`
 }
 type Key struct {
-	KeyName     string         `json:"key_name" bson:"key_name"`
-	KeyType     models.KeyType `json:"key_type" bson:"key_type"`
+	KeyName     string         `json:"key_name" bson:"key_name" valid:"required"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required in(new|cp|aws|user)"`
 	KeyMaterial string         `json:"private_key" bson:"private_key"`
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name     string        `json:"name" bson:"name"`
-	AmiId    string        `json:"ami_id" bson:"ami_id"`
-	Username string        `json:"username" bson:"username"`
+	Name     string        `json:"name" bson:"name" valid:"required"`
+	AmiId    string        `json:"ami_id" bson:"ami_id" valid:"required"`
+	Username string        `json:"username" bson:"username" valid:"required"`
 
-	RootVolume     Volume `json:"root_volume" bson:"root_volume"`
+	RootVolume     Volume `json:"root_volume" bson:"root_volume" valid:"required"`
 	IsExternal     bool   `json:"is_external" bson:"is_external"`
 	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
 }
@@ -86,6 +87,31 @@ func checkClusterSize(cluster Cluster_Def, ctx logging.Context) error {
 		}
 	}
 	return nil
+}
+func GetProfile(profileId string, region string, ctx logging.Context) (vault.AwsProfile, error) {
+	data, err := vault.GetCredentialProfile("aws", profileId, ctx)
+	awsProfile := vault.AwsProfile{}
+	err = json.Unmarshal(data, &awsProfile)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return vault.AwsProfile{}, err
+	}
+	awsProfile.Profile.Region = region
+	return awsProfile, nil
+
+}
+func GetRegion(projectId string, ctx logging.Context) (string, error) {
+	url := beego.AppConfig.String("raccon_host") + "/" + projectId
+
+	data, err := utils.GetAPIStatus(url, ctx)
+	region := ""
+	err = json.Unmarshal(data.([]byte), &region)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return region, err
+	}
+	return region, nil
+
 }
 func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	_, err := GetCluster(cluster.ProjectId, ctx)
@@ -197,14 +223,12 @@ func PrintError(confError error, name, projectId string, ctx logging.Context) {
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials string, ctx logging.Context) (confError error) {
-
-	splits := strings.Split(credentials, ":")
+func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx logging.Context) (confError error) {
 
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: credentials.AccessKey,
+		SecretKey: credentials.SecretKey,
+		Region:    credentials.Region,
 	}
 	confError = aws.init()
 	if confError != nil {
@@ -252,18 +276,18 @@ func DeployCluster(cluster Cluster_Def, credentials string, ctx logging.Context)
 
 	return nil
 }
-func FetchStatus(credentials string, projectId string, ctx logging.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx logging.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
 		return Cluster_Def{}, err
 	}
-	splits := strings.Split(credentials, ":")
+	//splits := strings.Split(credentials, ":")
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: credentials.Profile.AccessKey,
+		SecretKey: credentials.Profile.SecretKey,
+		Region:    credentials.Profile.Region,
 	}
 	err = aws.init()
 	if err != nil {
@@ -283,14 +307,12 @@ func FetchStatus(credentials string, projectId string, ctx logging.Context) (Clu
 		}*/
 	return c, nil
 }
-func TerminateCluster(cluster Cluster_Def, credentials string, ctx logging.Context) error {
-
-	splits := strings.Split(credentials, ":")
+func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx logging.Context) error {
 
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: profile.Profile.AccessKey,
+		SecretKey: profile.Profile.SecretKey,
+		Region:    profile.Profile.Region,
 	}
 	err := aws.init()
 	if err != nil {
@@ -453,13 +475,12 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 
 	return keys, nil
 }
-func GetAWSAmi(credentials string, amiId string, ctx logging.Context) ([]*ec2.BlockDeviceMapping, error) {
+func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx logging.Context) ([]*ec2.BlockDeviceMapping, error) {
 
-	splits := strings.Split(credentials, ":")
 	aws := AWS{
-		AccessKey: splits[0],
-		SecretKey: splits[1],
-		Region:    splits[2],
+		AccessKey: credentials.Profile.AccessKey,
+		SecretKey: credentials.Profile.SecretKey,
+		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
 	if err != nil {

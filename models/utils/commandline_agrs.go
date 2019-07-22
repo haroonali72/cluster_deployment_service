@@ -25,6 +25,7 @@ var (
 	vault_url                       = ""
 	kube_engine_url                 = ""
 	network_url                     = ""
+	raccoon_url                     = ""
 )
 
 func InitFlags() error {
@@ -132,6 +133,12 @@ func InitFlags() error {
 			Destination: &kube_engine_url,
 			EnvVar:      "kube_engine_url",
 		},
+		cli.StringFlag{
+			Name:        "raccoon_url",
+			Usage:       "raccoon_url",
+			Destination: &raccoon_url,
+			EnvVar:      "raccoon_url",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -148,6 +155,7 @@ func InitFlags() error {
 	weasel := "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
 	vault := "http://" + vault_url + ":8092/robin/api/v1"
 	kube := "http://" + kube_engine_url + "3300:/kube/api/v1/nodes"
+	raccoon := "http://" + raccoon_url + "/raccoon/projects/"
 
 	beego.AppConfig.Set("mongo_host", host)
 	beego.AppConfig.Set("mongo_user", mongo_user)
@@ -166,5 +174,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("network_url", weasel)
 	beego.AppConfig.Set("vault_url", vault)
 	beego.AppConfig.Set("kube_engine_url", kube)
+	beego.AppConfig.Set("raccoon_url", raccoon)
 	return nil
 }
