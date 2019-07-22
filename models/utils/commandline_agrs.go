@@ -137,7 +137,7 @@ func InitFlags() error {
 			Name:        "raccoon_url",
 			Usage:       "raccoon_url",
 			Destination: &raccoon_url,
-			EnvVar:      "raccoon_url",
+			EnvVar:      "racoon_url",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
@@ -151,7 +151,7 @@ func InitFlags() error {
 
 	host := mongo + ":27017"
 	redis := redis_url + ":6379"
-	elephant := "http://" + logger_url + ":3500/api/v1/logger"
+	//elephant := "http://" + logger_url + ":3500/api/v1/logger"
 	weasel := "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
 	vault := "http://" + vault_url + ":8092/robin/api/v1"
 	kube := "http://" + kube_engine_url + "3300:/kube/api/v1/nodes"
@@ -170,7 +170,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_gcp_cluster_collection", mongo_gcp_cluster_collection)
 	beego.AppConfig.Set("mongo_gcp_template_collection", mongo_gcp_template_collection)
 	beego.AppConfig.Set("redis_url", redis)
-	beego.AppConfig.Set("logger_url", elephant)
+	beego.AppConfig.Set("logger_url", logger_url)
 	beego.AppConfig.Set("network_url", weasel)
 	beego.AppConfig.Set("vault_url", vault)
 	beego.AppConfig.Set("kube_engine_url", kube)
