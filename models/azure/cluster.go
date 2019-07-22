@@ -20,7 +20,7 @@ type SSHKeyPair struct {
 }
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required matches:[A-Za-z0-9_.@+-=,]`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"required"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(New|new)"`
