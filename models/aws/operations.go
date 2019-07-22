@@ -1313,13 +1313,13 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx logging.Context) error 
 			url := getNetworkHost("aws") + "/" + cluster.ProjectId
 			network, err := api_handler.GetAPIStatus(url, ctx)
 
-			bytes, err := json.Marshal(network)
+			//bytes, err := json.Marshal(network)
 			if err != nil {
 				beego.Error(err.Error())
 				return err
 			}
 
-			err = json.Unmarshal(bytes, &awsNetwork)
+			err = json.Unmarshal(network.([]byte), &awsNetwork)
 
 			if err != nil {
 				beego.Error(err.Error())

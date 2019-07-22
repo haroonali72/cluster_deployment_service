@@ -90,6 +90,9 @@ type ImageReference struct {
 	Version   string        `json:"version" bson:"version,omitempty" valid:"required"`
 	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
+type Project struct {
+	Region string `json:"region"`
+}
 
 func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	url := beego.AppConfig.String("raccon_host") + "/" + projectId
@@ -99,13 +102,13 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 		ctx.SendSDLog(err.Error(), "error")
 		return "", err
 	}
-	region := ""
+	var region Project
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
-		return region, err
+		return region.Region, err
 	}
-	return region, nil
+	return region.Region, nil
 
 }
 func GetNetwork(projectId string, ctx logging.Context) error {

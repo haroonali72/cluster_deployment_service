@@ -42,13 +42,13 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		beego.Error(err.Error())
 		return cluster, err
 	}
-	bytes, err := json.Marshal(network)
+	/*bytes, err := json.Marshal(network)
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err
 	}
-
-	err = json.Unmarshal(bytes, &gcpNetwork)
+	*/
+	err = json.Unmarshal(network.([]byte), &gcpNetwork)
 
 	if err != nil {
 		beego.Error(err.Error())

@@ -80,6 +80,9 @@ type Volume struct {
 	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination"`
 	Iops                int64  `json:"iops" bson:"iops"`
 }
+type Project struct {
+	Region string `json:"region"`
+}
 
 func checkClusterSize(cluster Cluster_Def, ctx logging.Context) error {
 	for _, pools := range cluster.NodePools {
@@ -113,13 +116,13 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 		ctx.SendSDLog(err.Error(), "error")
 		return "", err
 	}
-	region := ""
+	var region Project
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
-		return region, err
+		return region.Region, err
 	}
-	return region, nil
+	return region.Region, nil
 
 }
 
