@@ -2,9 +2,9 @@ package azure
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/logging"
 	"antelope/models/types"
-	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
 	"encoding/json"
@@ -114,7 +114,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 
 	var azureNetwork types.AzureNetwork
 	url := getNetworkHost("azure") + "/" + cluster.ProjectId
-	network, err := utils.GetAPIStatus(url, ctx)
+	network, err := api_handler.GetAPIStatus(url, ctx)
 	/*bytes, err := json.Marshal(network)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")

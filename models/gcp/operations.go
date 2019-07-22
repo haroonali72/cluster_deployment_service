@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"antelope/models/api_handler"
 	"antelope/models/logging"
 	"antelope/models/types"
 	"antelope/models/utils"
@@ -36,7 +37,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	}
 	var gcpNetwork types.GCPNetwork
 	url := getNetworkHost("gcp") + "/" + cluster.ProjectId
-	network, err := utils.GetAPIStatus(url, logging.Context{})
+	network, err := api_handler.GetAPIStatus(url, logging.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err

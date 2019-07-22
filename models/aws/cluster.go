@@ -2,6 +2,7 @@ package aws
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/logging"
 	"antelope/models/utils"
@@ -103,7 +104,7 @@ func GetProfile(profileId string, region string, ctx logging.Context) (vault.Aws
 func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	url := beego.AppConfig.String("raccon_host") + "/" + projectId
 
-	data, err := utils.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return "", err
@@ -122,7 +123,7 @@ func GetNetwork(projectId string, ctx logging.Context) error {
 
 	url := getNetworkHost("aws") + "/" + projectId
 
-	data, err := utils.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err

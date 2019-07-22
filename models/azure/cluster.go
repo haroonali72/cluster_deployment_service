@@ -2,6 +2,7 @@ package azure
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/logging"
 	"antelope/models/utils"
@@ -20,7 +21,7 @@ type SSHKeyPair struct {
 }
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required matches:[A-Za-z0-9_.@+-=,]`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required matches:[A-Za-z0-9]`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"required"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(New|new)"`
@@ -93,7 +94,7 @@ type ImageReference struct {
 func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	url := beego.AppConfig.String("raccon_host") + "/" + projectId
 
-	data, err := utils.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(url, ctx)
 	region := ""
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
@@ -107,7 +108,7 @@ func GetNetwork(projectId string, ctx logging.Context) error {
 
 	url := getNetworkHost("azure") + "/" + projectId
 
-	data, err := utils.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err

@@ -1,16 +1,17 @@
-package utils
+package api_handler
 
 import (
 	"antelope/models/logging"
+	"antelope/models/utils"
 	"errors"
 	"io/ioutil"
 )
 
 func GetAPIStatus(host string, ctx logging.Context) (interface{}, error) {
 
-	client := InitReq()
+	client := utils.InitReq()
 
-	req, err := CreateGetRequest(host)
+	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
