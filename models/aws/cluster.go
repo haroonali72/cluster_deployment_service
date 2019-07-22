@@ -100,6 +100,19 @@ func GetProfile(profileId string, region string, ctx logging.Context) (vault.Aws
 	return awsProfile, nil
 
 }
+func GetRegion(projectId string, ctx logging.Context) (string, error) {
+	url := beego.AppConfig.String("raccon_host") + "/" + projectId
+
+	data, err := utils.GetAPIStatus(url, ctx)
+	region := ""
+	err = json.Unmarshal(data.([]byte), &region)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return region, err
+	}
+	return region, nil
+
+}
 func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	_, err := GetCluster(cluster.ProjectId, ctx)
 	if err == nil { //cluster found

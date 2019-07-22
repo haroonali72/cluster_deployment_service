@@ -203,7 +203,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	beego.Info("AzureClusterController: StartCluster.")
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
+	region, err := azure.GetRegion(projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
 
@@ -265,7 +265,7 @@ func (c *AzureClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
+	region, err := azure.GetRegion(projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
 
@@ -317,7 +317,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendSDLog("AzureClusterController: TerminateCluster.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
+	region, err := azure.GetRegion(projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
 

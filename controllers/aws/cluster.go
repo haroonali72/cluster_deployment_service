@@ -201,7 +201,6 @@ func (c *AWSClusterController) StartCluster() {
 	ctx.SendSDLog("AWSNetworkController: StartCluster.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
 
 	var cluster aws.Cluster_Def
 
@@ -227,7 +226,13 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
 
 	if err != nil {
@@ -262,7 +267,6 @@ func (c *AWSClusterController) GetStatus() {
 	ctx.SendSDLog("AWSNetworkController: FetchStatus.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -272,6 +276,13 @@ func (c *AWSClusterController) GetStatus() {
 	}
 
 	ctx.SendSDLog("AWSClusterController: Fetch Cluster Status of project. "+projectId, "info")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
 
 	if err != nil {
@@ -313,7 +324,13 @@ func (c *AWSClusterController) TerminateCluster() {
 	ctx.SendSDLog("AWSNetworkController: TerminateCluster.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
 
