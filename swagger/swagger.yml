@@ -1,0 +1,1447 @@
+swagger: "2.0"
+info:
+  title: antelope API
+  description: cloudPlex CNAP node pool solution
+  version: 1.0.0
+  termsOfService: https://cloudplex.io/
+  contact:
+    email: info@cloudplex.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+basePath: /antelope
+paths:
+  /cluster/aws/:
+    put:
+      tags:
+      - cluster/aws
+      description: update an existing cluster
+      operationId: AWSClusterController.Update
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/aws.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster updated successfully"}'
+        "404":
+          description: '{"error": "no cluster exists with this name"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+    post:
+      tags:
+      - cluster/aws
+      description: create a new cluster
+      operationId: AWSClusterController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/aws.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"msg": "cluster created successfully"}'
+        "409":
+          description: '{"error": "cluster against this project already exists"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/{projectId}:
+    delete:
+      tags:
+      - cluster/aws
+      description: delete a cluster
+      operationId: AWSClusterController.Delete
+      parameters:
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/{projectId}/:
+    get:
+      tags:
+      - cluster/aws
+      description: get cluster
+      operationId: AWSClusterController.Get
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/aws.Cluster_Def'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/all:
+    get:
+      tags:
+      - cluster/aws
+      description: get all the clusters
+      operationId: AWSClusterController.Get All
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/aws.Cluster_Def'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/amis/{amiId}:
+    get:
+      tags:
+      - cluster/aws
+      description: returns aws ami details
+      operationId: AWSClusterController.AwsAmis
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      - in: header
+        name: X-Region
+        description: "false"
+        type: string
+      - in: path
+        name: amiId
+        description: Id of the ami
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/*ec2.BlockDeviceMapping'
+        "404":
+          description: '{"error": "ami id is empty"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/aws/enablescaling/{projectId}/:
+    post:
+      tags:
+      - cluster/aws
+      description: enables autoscaling
+      operationId: AWSClusterController.EnableScaling
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/aws.AutoScaling'
+      responses:
+        "200":
+          description: '{"msg": "cluster autoscaled successfully"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/sshkeys:
+    get:
+      tags:
+      - cluster/aws
+      description: returns ssh key pairs
+      operationId: AWSClusterController.SSHKeyPair
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              type: string
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/start/{projectId}:
+    post:
+      tags:
+      - cluster/aws
+      description: starts a  cluster
+      operationId: AWSClusterController.Start
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "40":
+          description: '{"error": "exception_message"}'
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "404":
+          description: '{"error": "name is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/status/{projectId}/:
+    get:
+      tags:
+      - cluster/aws
+      description: returns status of nodes
+      operationId: AWSClusterController.Status
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/aws.Cluster_Def'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/terminate/{projectId}/:
+    post:
+      tags:
+      - cluster/aws
+      description: terminates a  cluster
+      operationId: AWSClusterController.Terminate
+      parameters:
+      - in: X-Profile-Id
+        name: Authorization
+        description: "false"
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster terminated successfully"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/:
+    put:
+      tags:
+      - cluster/azure
+      description: update an existing cluster
+      operationId: AzureClusterController.Update
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/azure.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster updated successfully"}'
+        "404":
+          description: '{"error": "no cluster exists with this name"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+    post:
+      tags:
+      - cluster/azure
+      description: create a new cluster
+      operationId: AzureClusterController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/azure.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"msg": "error message"}'
+        "409":
+          description: '{"error": "cluster against same project id already exists"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/{projectId}:
+    delete:
+      tags:
+      - cluster/azure
+      description: delete a cluster
+      operationId: AzureClusterController.Delete
+      parameters:
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/{projectId}/:
+    get:
+      tags:
+      - cluster/azure
+      description: get cluster
+      operationId: AzureClusterController.Get
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/azure.Cluster_Def'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/azure/all:
+    get:
+      tags:
+      - cluster/azure
+      description: get all the clusters
+      operationId: AzureClusterController.Get All
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/azure.Cluster_Def'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/sshkeys:
+    get:
+      tags:
+      - cluster/azure
+      description: returns ssh key pairs
+      operationId: AzureClusterController.SSHKeyPair
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              type: string
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/start/{projectId}:
+    post:
+      tags:
+      - cluster/azure
+      description: starts a  cluster
+      operationId: AzureClusterController.Start
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "exception_message"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/status/{projectId}/:
+    get:
+      tags:
+      - cluster/azure
+      description: returns status of nodes
+      operationId: AzureClusterController.Status
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/azure.Cluster_Def'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/terminate/{projectId}/:
+    post:
+      tags:
+      - cluster/azure
+      description: terminates a  cluster
+      operationId: AzureClusterController.Terminate
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster terminated successfully"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /cluster/gcp/:
+    put:
+      tags:
+      - cluster/gcp
+      description: update an existing cluster
+      operationId: GcpClusterController.Update
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/gcp.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster updated successfully"}'
+        "404":
+          description: '{"error": "no cluster exists with this name"}'
+        "500":
+          description: '{"error": "internal server error"}'
+    post:
+      tags:
+      - cluster/gcp
+      description: create a new cluster
+      operationId: GcpClusterController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/gcp.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "409":
+          description: '{"error": "cluster against same project id already exists"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/{projectId}:
+    delete:
+      tags:
+      - cluster/gcp
+      description: delete a cluster
+      operationId: GcpClusterController.Delete
+      parameters:
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/{projectId}/:
+    get:
+      tags:
+      - cluster/gcp
+      description: get cluster
+      operationId: GcpClusterController.Get
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/gcp.Cluster_Def'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/all:
+    get:
+      tags:
+      - cluster/gcp
+      description: get all the clusters
+      operationId: GcpClusterController.Get All
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.Cluster_Def'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/start/{projectId}:
+    post:
+      tags:
+      - cluster/gcp
+      description: starts a  cluster
+      operationId: GcpClusterController.Start
+      parameters:
+      - in: header
+        name: Authorization
+        description: base64 encoded service_account_json
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "exception_message"}'
+        "401":
+          description: '{"error": "Authorization format should be ''base64 encoded
+            service_account_json''"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/status/{projectId}/:
+    get:
+      tags:
+      - cluster/gcp
+      description: returns status of nodes
+      operationId: GcpClusterController.Status
+      parameters:
+      - in: header
+        name: Authorization
+        description: base64 encoded service_account_json
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/gcp.Cluster_Def'
+        "401":
+          description: '{"error": "Authorization format should be ''base64 encoded
+            service_account_json''"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/terminate/{projectId}/:
+    post:
+      tags:
+      - cluster/gcp
+      description: terminates a  cluster
+      operationId: GcpClusterController.Terminate
+      parameters:
+      - in: header
+        name: Authorization
+        description: base64 encoded service_account_json
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster terminated successfully"}'
+        "401":
+          description: '{"error": "Authorization format should be ''base64 encoded
+            service_account_json''"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /health/:
+    get:
+      tags:
+      - health
+      description: get health
+      operationId: HealthController.Get
+      responses:
+        "200":
+          description: '"alive!"'
+  /template/aws/:
+    put:
+      tags:
+      - template/aws
+      description: update an existing template
+      operationId: AWSTemplateController.Update
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/aws.Template'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+    post:
+      tags:
+      - template/aws
+      description: create a new template
+      operationId: AWSTemplateController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/aws.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /template/aws/{templateId}:
+    delete:
+      tags:
+      - template/aws
+      description: delete a templates
+      operationId: AWSTemplateController.Delete
+      parameters:
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /template/aws/{templateId}/:
+    get:
+      tags:
+      - template/aws
+      description: get template
+      operationId: AWSTemplateController.Get
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/aws.Template'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /template/aws/all:
+    get:
+      tags:
+      - template/aws
+      description: get all the templates
+      operationId: AWSTemplateController.Get All
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/aws.Template'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /template/azure/:
+    put:
+      tags:
+      - template/azure
+      description: update an existing template
+      operationId: AzureTemplateController.Update
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/azure.Template'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "internal server error <error msg> "}'
+    post:
+      tags:
+      - template/azure
+      description: create a new template
+      operationId: AzureTemplateController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/azure.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /template/azure/{templateId}:
+    get:
+      tags:
+      - template/azure
+      description: get template
+      operationId: AzureTemplateController.Get
+      parameters:
+      - in: path
+        name: name
+        description: Name of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/azure.Template'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+    delete:
+      tags:
+      - template/azure
+      description: delete a templates
+      operationId: AzureTemplateController.Delete
+      parameters:
+      - in: path
+        name: name
+        description: Name of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "404":
+          description: '{"error": "name is empty"}'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /template/azure/all:
+    get:
+      tags:
+      - template/azure
+      description: get all the templates
+      operationId: AzureTemplateController.Get All
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/azure.Template'
+        "500":
+          description: '{"error": "internal server error <error msg>"}'
+  /template/gcp/:
+    put:
+      tags:
+      - template/gcp
+      description: update an existing template
+      operationId: GcpTemplateController.Update
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/gcp.Template'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "internal server error"}'
+    post:
+      tags:
+      - template/gcp
+      description: create a new template
+      operationId: GcpTemplateController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/gcp.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /template/gcp/{templateId}:
+    get:
+      tags:
+      - template/gcp
+      description: get template
+      operationId: GcpTemplateController.Get
+      parameters:
+      - in: path
+        name: name
+        description: Name of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/gcp.Template'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error"}'
+    delete:
+      tags:
+      - template/gcp
+      description: delete a templates
+      operationId: GcpTemplateController.Delete
+      parameters:
+      - in: path
+        name: name
+        description: Name of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "404":
+          description: '{"error": "name is empty"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /template/gcp/all:
+    get:
+      tags:
+      - template/gcp
+      description: get all the templates
+      operationId: GcpTemplateController.Get All
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.Template'
+        "500":
+          description: '{"error": "internal server error"}'
+definitions:
+  '*ec2.BlockDeviceMapping':
+    title: BlockDeviceMapping
+    type: object
+  511.0xc042863530.false:
+    title: "false"
+    type: object
+  aws.Ami:
+    title: Ami
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      ami_id:
+        type: string
+      external_volume:
+        $ref: '#/definitions/aws.Volume'
+      is_external:
+        type: boolean
+      name:
+        type: string
+      root_volume:
+        $ref: '#/definitions/aws.Volume'
+      username:
+        type: string
+  aws.AutoScaling:
+    title: AutoScaling
+    type: object
+    properties:
+      max_scaling_group_size:
+        type: integer
+        format: int64
+  aws.Cluster_Def:
+    title: Cluster_Def
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      kube_credentials:
+        $ref: '#/definitions/511.0xc042863530.false'
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/aws.NodePool'
+      project_id:
+        type: string
+      status:
+        type: string
+  aws.Key:
+    title: Key
+    type: object
+    properties:
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      key_name:
+        type: string
+      key_type:
+        $ref: '#/definitions/models.KeyType'
+      private_key:
+        type: string
+  aws.Node:
+    title: Node
+    type: object
+    properties:
+      cloud_id:
+        type: string
+      key_name:
+        type: string
+      name:
+        type: string
+      node_state:
+        type: string
+      private_dns:
+        type: string
+      private_ip:
+        type: string
+      public_dns:
+        type: string
+      public_ip:
+        type: string
+      ssh_key:
+        type: string
+      user_name:
+        type: string
+  aws.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      ami:
+        $ref: '#/definitions/aws.Ami'
+      auto_scaling:
+        $ref: '#/definitions/aws.AutoScaling'
+      enable_scaling:
+        type: boolean
+      key_info:
+        $ref: '#/definitions/aws.Key'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/aws.Node'
+      pool_role:
+        type: string
+      security_group_id:
+        type: array
+        items:
+          $ref: '#/definitions/aws.string'
+      subnet_id:
+        type: string
+  aws.NodePoolT:
+    title: NodePoolT
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      ami:
+        $ref: '#/definitions/aws.Ami'
+      key_info:
+        $ref: '#/definitions/aws.Key'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int32
+      pool_role:
+        type: string
+      security_group_id:
+        type: array
+        items:
+          type: string
+      subnet_id:
+        type: string
+  aws.Template:
+    title: Template
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/aws.NodePoolT'
+      template_id:
+        type: string
+  aws.Volume:
+    title: Volume
+    type: object
+    properties:
+      delete_on_termination:
+        type: boolean
+      iops:
+        type: integer
+        format: int64
+      volume_size:
+        type: integer
+        format: int64
+      volume_type:
+        type: string
+  aws.string:
+    title: string
+    type: object
+  azure.AutoScaling:
+    title: AutoScaling
+    type: object
+    properties:
+      max_scaling_group_size:
+        type: integer
+        format: int64
+  azure.Cluster_Def:
+    title: Cluster_Def
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/azure.NodePool'
+      project_id:
+        type: string
+      resource_group:
+        type: string
+      status:
+        type: string
+  azure.DiagnosticsProfile:
+    title: DiagnosticsProfile
+    type: object
+    properties:
+      enable:
+        type: boolean
+      new_storage_account:
+        type: boolean
+      storage_account_id:
+        type: string
+  azure.ImageReference:
+    title: ImageReference
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      image_id:
+        type: string
+      offer:
+        type: string
+      publisher:
+        type: string
+      sku:
+        type: string
+      version:
+        type: string
+  azure.Key:
+    title: Key
+    type: object
+    properties:
+      admin_password:
+        type: string
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      credential_type:
+        $ref: '#/definitions/models.CredentialsType'
+      key_name:
+        type: string
+      key_type:
+        $ref: '#/definitions/models.KeyType'
+      private_key:
+        type: string
+      public_key:
+        type: string
+  azure.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      auto_scaling:
+        $ref: '#/definitions/azure.AutoScaling'
+      boot_diagnostics:
+        $ref: '#/definitions/azure.DiagnosticsProfile'
+      enable_scaling:
+        type: boolean
+      image:
+        $ref: '#/definitions/azure.ImageReference'
+      key_info:
+        $ref: '#/definitions/azure.Key'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/azure.VM'
+      os_disk_type:
+        $ref: '#/definitions/models.OsDiskType'
+      pool_role:
+        type: string
+      security_group_id:
+        type: array
+        items:
+          $ref: '#/definitions/azure.string'
+      subnet_id:
+        type: string
+      user_name:
+        type: string
+      volume:
+        $ref: '#/definitions/azure.Volume'
+  azure.NodePoolT:
+    title: NodePoolT
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      boot_diagnostics:
+        $ref: '#/definitions/azure.DiagnosticsProfile'
+      image:
+        $ref: '#/definitions/azure.ImageReference'
+      key_info:
+        $ref: '#/definitions/azure.Key'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/azure.VM'
+      os_disk_type:
+        $ref: '#/definitions/models.OsDiskType'
+      pool_role:
+        type: string
+      security_group_id:
+        type: array
+        items:
+          $ref: '#/definitions/azure.string'
+      subnet_id:
+        type: string
+      user_name:
+        type: string
+  azure.Template:
+    title: Template
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/azure.NodePoolT'
+      resource_group:
+        type: string
+      status:
+        type: string
+      template_id:
+        type: string
+  azure.VM:
+    title: VM
+    type: object
+    properties:
+      cloud_id:
+        type: string
+      name:
+        type: string
+      node_state:
+        type: string
+      password:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
+        type: string
+      user_name:
+        type: string
+  azure.Volume:
+    title: Volume
+    type: object
+    properties:
+      disk_size:
+        type: integer
+        format: int32
+      disk_type:
+        $ref: '#/definitions/models.OsDiskType'
+      enable_volume:
+        type: boolean
+  azure.string:
+    title: string
+    type: object
+  bson.ObjectId:
+    title: ObjectId
+    type: object
+  gcp.Cluster_Def:
+    title: Cluster_Def
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/gcp.NodePool'
+      project_id:
+        type: string
+      status:
+        type: string
+  gcp.Image:
+    title: Image
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      family:
+        type: string
+      project:
+        type: string
+  gcp.Node:
+    title: Node
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      current_action:
+        type: string
+      status:
+        type: string
+      url:
+        type: string
+  gcp.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      image:
+        $ref: '#/definitions/gcp.Image'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/gcp.Node'
+      pool_role:
+        type: string
+      subnet_id:
+        type: string
+  gcp.NodePoolT:
+    title: NodePoolT
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      image:
+        $ref: '#/definitions/gcp.Image'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      subnet_id:
+        type: string
+  gcp.Template:
+    title: Template
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/gcp.NodePoolT'
+      resource_group:
+        type: string
+      status:
+        type: string
+      template_id:
+        type: string
+  models.Cloud:
+    title: Cloud
+    type: string
+    enum:
+    - AWS = "aws"
+    - Azure = "azure"
+    - GCP = "gcp"
+    example: aws
+  models.CredentialsType:
+    title: CredentialsType
+    type: string
+    enum:
+    - Password = "password"
+    - SSHKey = "key"
+    example: password
+  models.KeyType:
+    title: KeyType
+    type: string
+    enum:
+    - NEWKey = "new"
+    - CPKey = "cp"
+    - AWSKey = "aws"
+    - AZUREKey = "azure"
+    - USERKey = "user"
+    example: new
+  models.OsDiskType:
+    title: OsDiskType
+    type: string
+    enum:
+    - StandardHDD = "standard hdd"
+    - StandardSSD = "standard ssd"
+    - PremiumSSD = "premium ssd"
+    example: standard hdd
+tags:
+- name: health
+  description: |
+    health endpoint
+- name: template/aws
+  description: |
+    Operations about AWS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: cluster/aws
+  description: |
+    Operations about AWS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: cluster/azure
+  description: |
+    Operations about azure cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: template/azure
+  description: |
+    Operations about Azure template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: cluster/gcp
+  description: |
+    Operations about Gcp cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: template/gcp
+  description: |
+    Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
