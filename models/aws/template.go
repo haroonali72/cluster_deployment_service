@@ -36,6 +36,14 @@ type NodePoolT struct {
 	PoolRole        string        `json:"pool_role" bson:"pool_role"`
 }
 
+func checkTemplateSize(template Template, ctx logging.Context) error {
+	for _, pools := range template.NodePools {
+		if pools.NodeCount > 3 {
+			return errors.New("Nodepool can't have more than 3 nodes")
+		}
+	}
+	return nil
+}
 func CreateTemplate(template Template, ctx logging.Context) (error, string) {
 	/*_, err := GetTemplate(template.TemplateId)
 	if err == nil { //template found
@@ -53,8 +61,15 @@ func CreateTemplate(template Template, ctx logging.Context) (error, string) {
 	template.TemplateId = template.Name + strconv.Itoa(i)
 
 	beego.Info(template.TemplateId)
+
+	err := checkTemplateSize(template, ctx)
+	if err != nil { //cluster found
+		ctx.SendSDLog(err.Error(), "error")
+		return err, ""
+	}
+
 	s := db.GetMongoConf()
-	err := db.InsertInMongo(s.MongoAwsTemplateCollection, template)
+	err = db.InsertInMongo(s.MongoAwsTemplateCollection, template)
 	if err != nil {
 		ctx.SendSDLog("Template model: Create - Got error inserting template to the database: "+err.Error(), "error")
 		return err, ""

@@ -53,6 +53,7 @@ type AzureNetwork struct {
 	NetworkStatus    string             `json:"status" bson:"status"`
 	CreationDate     time.Time          `json:"-" bson:"creation_date"`
 	ModificationDate time.Time          `json:"-" bson:"modification_date"`
+	ResourceGroup    string             `json:"resource_group" bson:"resource_group"`
 	Definition       []*AzureDefinition `json:"definition" bson:"definition"`
 }
 

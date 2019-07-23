@@ -42,6 +42,14 @@ type NodePoolT struct {
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }
 
+func checkTemplateSize(cluster Template) error {
+	for _, pools := range cluster.NodePools {
+		if pools.NodeCount > 3 {
+			return errors.New("Nodepool can't have more than 3 nodes")
+		}
+	}
+	return nil
+}
 func CreateTemplate(template Template, ctx logging.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
@@ -54,6 +62,12 @@ func CreateTemplate(template Template, ctx logging.Context) (error, string) {
 	template.TemplateId = template.Name + strconv.Itoa(i)
 
 	template.CreationDate = time.Now()
+
+	err = checkTemplateSize(template)
+	if err != nil { //cluster found
+		ctx.SendSDLog(err.Error(), "error")
+		return err, ""
+	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureTemplateCollection, template)
 	if err != nil {

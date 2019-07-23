@@ -5,6 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/logging"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -35,7 +36,7 @@ type Cluster_Def struct {
 type NodePool struct {
 	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
 	Name               string             `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required"`
+	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required matches:[0-9]"`
 	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
 	Image              ImageReference     `json:"image" bson:"image" valid:"required"`
 	Volume             Volume             `json:"volume" bson:"volume" valid:"required"`
@@ -91,6 +92,9 @@ type ImageReference struct {
 	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
 type Project struct {
+	ProjectData Data `json:"data"`
+}
+type Data struct {
 	Region string `json:"region"`
 }
 
@@ -106,19 +110,26 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
-		return region.Region, err
+		return region.ProjectData.Region, err
 	}
-	return region.Region, nil
+	return region.ProjectData.Region, nil
 
 }
-func GetNetwork(projectId string, ctx logging.Context) error {
+func GetNetwork(projectId string, ctx logging.Context, resourceGroup string) error {
 
 	url := getNetworkHost("azure") + "/" + projectId
 
-	_, err := api_handler.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err
+	}
+
+	var network types.AzureNetwork
+	err = json.Unmarshal(data.([]byte), &network)
+	if network.ResourceGroup != resourceGroup {
+		ctx.SendSDLog("Resource group is incorrect", "error")
+		return errors.New("Resource Group is in correct")
 	}
 
 	return nil

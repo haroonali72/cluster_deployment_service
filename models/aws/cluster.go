@@ -32,7 +32,7 @@ type Cluster_Def struct {
 type NodePool struct {
 	ID                 bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name               string        `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64         `json:"node_count" bson:"node_count" valid:"required"`
+	NodeCount          int64         `json:"node_count" bson:"node_count" valid:"required" matches:[0-9]`
 	MachineType        string        `json:"machine_type" bson:"machine_type" valid:"required"`
 	Ami                Ami           `json:"ami" bson:"ami"`
 	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id" valid:"required"`
