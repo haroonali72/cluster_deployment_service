@@ -20,7 +20,11 @@ func main() {
 	if !db.IsMongoAlive() {
 		os.Exit(1)
 	}
-
+	beego.BConfig.AppName = "antelope"
+	beego.BConfig.CopyRequestBody = true
+	beego.BConfig.WebConfig.EnableDocs = true
+	beego.BConfig.WebConfig.AutoRender = true
+	beego.BConfig.RunMode = "dev"
 	beego.BConfig.WebConfig.DirectoryIndex = true
 	beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
 	beego.BConfig.Listen.HTTPPort = 9081
