@@ -95,7 +95,7 @@ type Project struct {
 }
 
 func GetRegion(projectId string, ctx logging.Context) (string, error) {
-	url := beego.AppConfig.String("raccon_host") + "/" + projectId
+	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
 
 	data, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {

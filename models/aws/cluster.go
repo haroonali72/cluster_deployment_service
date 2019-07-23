@@ -81,6 +81,9 @@ type Volume struct {
 	Iops                int64  `json:"iops" bson:"iops"`
 }
 type Project struct {
+	ProjectData Data `json:"data"`
+}
+type Data struct {
 	Region string `json:"region"`
 }
 
@@ -120,9 +123,9 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
-		return region.Region, err
+		return region.ProjectData.Region, err
 	}
-	return region.Region, nil
+	return region.ProjectData.Region, nil
 
 }
 
