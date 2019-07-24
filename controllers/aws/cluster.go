@@ -200,7 +200,7 @@ func (c *AWSClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
@@ -267,7 +267,7 @@ func (c *AWSClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": "project id is empty"}
@@ -322,7 +322,7 @@ func (c *AWSClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param	Authorization	X-Profile-Id	string	false	""
+// @Param	X-Profile-Id	X-Profile-Id	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
@@ -409,7 +409,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 // @Title AwsAmis
 // @Description returns aws ami details
-// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	X-Region	header	string	false	""
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
@@ -453,7 +453,7 @@ func (c *AWSClusterController) GetAMI() {
 
 // @Title EnableScaling
 // @Description enables autoscaling
-// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}

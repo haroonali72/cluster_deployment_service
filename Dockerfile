@@ -16,8 +16,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/
 
 # final stage
 FROM ubuntu:bionic
-
-RUN apt-get update && apt-get install -y openssl
+RUN apt update && apt install  ca-certificates -y && apt install -y openssl
+RUN apt-get update 
 
 WORKDIR /app
 
