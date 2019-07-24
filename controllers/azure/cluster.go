@@ -91,6 +91,7 @@ func (c *AzureClusterController) Post() {
 	ctx.SendSDLog("AzureClusterController: Post new cluster with name: "+cluster.Name, "error ")
 
 	cluster.CreationDate = time.Now()
+	beego.Info(cluster.ResourceGroup)
 	err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
