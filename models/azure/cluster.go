@@ -127,6 +127,8 @@ func GetNetwork(projectId string, ctx logging.Context, resourceGroup string) err
 
 	var network types.AzureNetwork
 	err = json.Unmarshal(data.([]byte), &network)
+	beego.Info(string(data.([]byte)))
+	beego.Info(network)
 	beego.Info(network.ResourceGroup + " " + resourceGroup)
 	if network.ResourceGroup != resourceGroup {
 		ctx.SendSDLog("Resource group is incorrect", "error")
