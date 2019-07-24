@@ -129,8 +129,8 @@ func GetNetwork(projectId string, ctx logging.Context, resourceGroup string) err
 	err = json.Unmarshal(data.([]byte), &network)
 	beego.Info(string(data.([]byte)))
 	beego.Info(network)
-	beego.Info(network.ResourceGroup + " " + resourceGroup)
-	if network.ResourceGroup != resourceGroup {
+	beego.Info(network.Definition[0].ResourceGroup + " " + resourceGroup)
+	if network.Definition[0].ResourceGroup != resourceGroup {
 		ctx.SendSDLog("Resource group is incorrect", "error")
 		return errors.New("Resource Group is in correct")
 	}
