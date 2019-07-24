@@ -24,8 +24,8 @@ type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required matches:[A-Za-z0-9]`
 	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           string        `json:"status" bson:"status" valid:"required"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(New|new)"`
+	Status           string        `json:"status" bson:"status" valid:"in(NEW|new)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AZURE|azure)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
