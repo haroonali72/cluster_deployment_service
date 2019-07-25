@@ -349,20 +349,20 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 		if pool.PoolRole == "master" {
 
 			beego.Info("getting instance")
-			vm, err := cloud.GetInstance(*pool.Nodes[0].Name, cluster.ResourceGroup, ctx)
+			vm, err := cloud.GetInstance(pool.Name, cluster.ResourceGroup, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return Cluster_Def{}, err
 			}
 			beego.Info("getting nic")
-			nicName := fmt.Sprintf("NIC-%s", cluster.ProjectId+"-"+strconv.Itoa(in))
+			nicName := "NIC-" + pool.Name
 			nicParameters, err := cloud.GetVMNIC(cluster.ResourceGroup, nicName, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return Cluster_Def{}, err
 			}
 			beego.Info("getting pip")
-			IPname := fmt.Sprintf("pip-%s", *pool.Nodes[0].Name)
+			IPname := "pip-" + pool.Name
 			publicIPaddress, err := cloud.GetVMSSPIP(cluster.ResourceGroup, IPname, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
@@ -383,7 +383,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 			cluster.NodePools[in].Nodes = cpVms
 
 		} else {
-			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(in), "", "", "")
+			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, pool.Name, "", "", "")
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return Cluster_Def{}, err
