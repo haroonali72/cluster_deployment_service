@@ -115,12 +115,6 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 	var azureNetwork types.AzureNetwork
 	url := getNetworkHost("azure") + "/" + cluster.ProjectId
 	network, err := api_handler.GetAPIStatus(url, ctx)
-	/*bytes, err := json.Marshal(network)
-	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
-		return cluster, err
-	}
-	*/
 	err = json.Unmarshal(network.([]byte), &azureNetwork)
 
 	if err != nil {
@@ -138,7 +132,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx logging.Context) (Clu
 			return cluster, err
 		}
 		if pool.Volume.EnableVolume {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, i, ctx)
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx)
 			if err != nil {
 				logging.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
@@ -160,36 +154,34 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 	//sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
 	//sgIds = append(sgIds, &sid)
 	if pool.PoolRole == "master" {
-		IPname := fmt.Sprintf("pip-%s", projectId+"-"+strconv.Itoa(poolIndex))
+		IPname := "pip-" + pool.Name
 		logging.SendLog("Creating Public IP : "+projectId, "info", projectId)
-		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, poolIndex, ctx)
+		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
 		if err != nil {
 			return nil, "", err
 		}
 		logging.SendLog("Public IP created successfully : "+IPname, "info", projectId)
-		cloud.Resources[projectId+"IPName-"+strconv.Itoa(poolIndex)] = IPname
+		cloud.Resources[projectId+IPname] = IPname
 		/*
 			making network interface
 		*/
-		nicName := fmt.Sprintf("NIC-%s", projectId+"-"+strconv.Itoa(poolIndex))
+		nicName := "NIC-" + pool.Name
 		logging.SendLog("Creating NIC : "+nicName, "info", projectId)
-		nicParameters, err := cloud.createNIC(pool, poolIndex, resourceGroup, publicIPaddress, subnetId, sgIds, nicName, ctx)
+		nicParameters, err := cloud.createNIC(pool, resourceGroup, publicIPaddress, subnetId, sgIds, nicName, ctx)
 		if err != nil {
 			return nil, "", err
 		}
 		logging.SendLog("NIC created successfully : "+nicName, "info", projectId)
-		cloud.Resources[projectId+"-NicName-"+strconv.Itoa(poolIndex)] = nicName
+		cloud.Resources[projectId+nicName] = nicName
 
-		name := projectId + strconv.Itoa(poolIndex)
-
-		logging.SendLog("Creating node  : "+name, "info", projectId)
-		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, name, ctx)
+		logging.SendLog("Creating node  : "+pool.Name, "info", projectId)
+		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx)
 		if err != nil {
 			return nil, "", err
 		}
-		logging.SendLog("Node created successfully : "+name, "info", projectId)
+		logging.SendLog("Node created successfully : "+pool.Name, "info", projectId)
 
-		cloud.Resources[projectId+"-NodeName-"+strconv.Itoa(poolIndex)] = name
+		cloud.Resources["NodeName-"+pool.Name] = pool.Name
 
 		var vmObj VM
 		vmObj.Name = vm.Name
@@ -209,7 +201,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		if err != nil {
 			return nil, "", err
 		}
-		cloud.Resources["vmss-"+projectId+"-"+strconv.Itoa(poolIndex)] = projectId + strconv.Itoa(poolIndex)
+		cloud.Resources["vmss-"+pool.Name] = pool.Name
 		for _, vm := range vms.Values() {
 			var vmObj VM
 			vmObj.Name = vm.Name
@@ -551,7 +543,7 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 	return nil
 }
 
-func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, index int, ctx logging.Context) (network.PublicIPAddress, error) {
+func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx logging.Context) (network.PublicIPAddress, error) {
 
 	pipParameters := network.PublicIPAddress{
 		Location: &cloud.Region,
@@ -595,14 +587,14 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 	logging.SendLog("Public IP delete successfully: "+IPname, "info", projectId)
 	return nil
 }
-func (cloud *AZURE) createNIC(pool *NodePool, index int, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx logging.Context) (network.Interface, error) {
+func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx logging.Context) (network.Interface, error) {
 
 	nicParameters := network.Interface{
 		Location: &cloud.Region,
 		InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
 			IPConfigurations: &[]network.InterfaceIPConfiguration{
 				{
-					Name: to.StringPtr(fmt.Sprintf("IPconfig-%s", strings.ToLower(pool.Name)+"-"+strconv.Itoa(index))),
+					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
 						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
@@ -650,7 +642,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx l
 	return nil
 }
 
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, name string, ctx logging.Context) (compute.VirtualMachine, string, string, error) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx logging.Context) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -662,7 +654,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	osDisk := &compute.OSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
-		Name:         to.StringPtr(name),
+		Name:         to.StringPtr(pool.Name),
 		ManagedDisk: &compute.ManagedDiskParameters{
 			StorageAccountType: satype,
 		},
@@ -676,7 +668,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	}
 
-	storageName := "ext-" + name
+	storageName := "ext-" + pool.Name
 	disk := compute.DataDisk{
 		Lun:          to.Int32Ptr(int32(index)),
 		Name:         to.StringPtr(storageName),
@@ -691,7 +683,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	storage = append(storage, disk)
 
 	vm := compute.VirtualMachine{
-		Name:     to.StringPtr(name),
+		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			HardwareProfile: &compute.HardwareProfile{
@@ -824,8 +816,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 		if pool.BootDiagnostics.NewStroageAccount {
 
-			storageId := "https://" + name + ".blob.core.windows.net/"
-			err := cloud.createStorageAccount(resourceGroup, name, ctx)
+			storageId := "https://" + pool.Name + ".blob.core.windows.net/"
+			err := cloud.createStorageAccount(resourceGroup, pool.Name, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
@@ -835,7 +827,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 					Enabled: to.BoolPtr(true), StorageURI: &storageId,
 				},
 			}
-			cloud.Resources[name+"-SA"] = name
+			cloud.Resources["SA-"+pool.Name] = pool.Name
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
@@ -846,7 +838,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			}
 		}
 	}
-	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, name, vm)
+	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, vm)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachine{}, "", "", err
@@ -857,8 +849,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			return compute.VirtualMachine{}, "", "", err
 		}
 	}
-	beego.Info("Get VM  by name", name)
-	vm, err = cloud.GetInstance(name, resourceGroup, ctx)
+	beego.Info("Get VM  by name", pool.Name)
+	vm, err = cloud.GetInstance(pool.Name, resourceGroup, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachine{}, "", "", err
@@ -907,10 +899,10 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 	return nil
 }
 func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
-	for i, pool := range cluster.NodePools {
+	for _, pool := range cluster.NodePools {
 		if pool.PoolRole == "master" {
-			if cloud.Resources[cluster.ProjectId+"-NodeName-"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources[cluster.ProjectId+"-NodeName-"+strconv.Itoa(i)]
+			if cloud.Resources["NodeName-"+pool.Name] != nil {
+				name := cloud.Resources["NodeName-"+pool.Name]
 				nodeName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -929,8 +921,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 					return err
 				}
 			}
-			if cloud.Resources[cluster.ProjectId+"-NicName-"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources[cluster.ProjectId+"-NicName-"+strconv.Itoa(i)]
+			if cloud.Resources[cluster.ProjectId+pool.Name] != nil {
+				name := cloud.Resources[cluster.ProjectId+pool.Name]
 				nicName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -948,8 +940,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 					return err
 				}
 			}
-			if cloud.Resources[cluster.ProjectId+"-IPName-"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources[cluster.ProjectId+"-IPName-"+strconv.Itoa(i)]
+			if cloud.Resources[cluster.ProjectId+pool.Name] != nil {
+				name := cloud.Resources[cluster.ProjectId+pool.Name]
 				IPname := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -964,8 +956,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 					return err
 				}
 			}
-			if cloud.Resources[cluster.ProjectId+strconv.Itoa(i)+"-SA"] != nil {
-				name := cloud.Resources[cluster.ProjectId+strconv.Itoa(i)+"-SA"]
+			if cloud.Resources["SA-"+pool.Name] != nil {
+				name := cloud.Resources["SA-"+pool.Name]
 				SAname := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -982,8 +974,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 			}
 		} else {
 
-			if cloud.Resources["vmss-"+cluster.ProjectId+"-"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources["vmss-"+cluster.ProjectId+"-"+strconv.Itoa(i)]
+			if cloud.Resources["vmss-"+pool.Name] != nil {
+				name := cloud.Resources["vmss-"+pool.Name]
 				vmssName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -1000,8 +992,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 				}
 			}
 
-			if cloud.Resources[cluster.ProjectId+"-SA"+strconv.Itoa(i)] != nil {
-				name := cloud.Resources[cluster.ProjectId+"-SA"+strconv.Itoa(i)]
+			if cloud.Resources["SA-"+pool.Name] != nil {
+				name := cloud.Resources["SA-"+pool.Name]
 				SAname := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -1021,7 +1013,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 
 	return nil
 }
-func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolIndex int, ctx logging.Context) error {
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx logging.Context) error {
 
 	for _, vm := range vms {
 		err := fileWrite(privateKey, KeyName)
@@ -1039,7 +1031,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 			ctx.SendSDLog("waited for public ip", "warning")
 			IPname := fmt.Sprintf("pip-%s", *vm.Name)
 			beego.Info(IPname)
-			publicIp, err := cloud.GetPIP(resourceGroup, projectId+strconv.Itoa(poolIndex), *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
+			publicIp, err := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
 			if err != nil {
 				return err
 			}
@@ -1227,7 +1219,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 	}
 
-	storageName := "ext-" + projectId + "-" + strconv.Itoa(poolIndex)
+	storageName := "ext-" + pool.Name
 	disk := compute.VirtualMachineScaleSetDataDisk{
 		Lun:          to.Int32Ptr(int32(poolIndex)),
 		Name:         to.StringPtr(storageName),
@@ -1239,7 +1231,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	}
 	storage := []compute.VirtualMachineScaleSetDataDisk{disk}
 	params := compute.VirtualMachineScaleSet{
-		Name:     to.StringPtr(projectId + strconv.Itoa(poolIndex)),
+		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
 		Sku: &compute.Sku{
 			Capacity: to.Int64Ptr(pool.NodeCount),
@@ -1265,7 +1257,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 					NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
 						{
-							Name: to.StringPtr("nic-" + projectId + "-" + strconv.Itoa(poolIndex)),
+							Name: to.StringPtr("nic-" + pool.Name),
 							VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 								Primary: to.BoolPtr(true),
 								IPConfigurations: &[]compute.VirtualMachineScaleSetIPConfiguration{
@@ -1274,10 +1266,10 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 										VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
 											Subnet: &compute.APIEntityReference{ID: to.StringPtr(subnetId)},
 											PublicIPAddressConfiguration: &compute.VirtualMachineScaleSetPublicIPAddressConfiguration{
-												Name: to.StringPtr("pip-" + projectId + "-" + strconv.Itoa(poolIndex)),
+												Name: to.StringPtr("pip-" + pool.Name),
 												VirtualMachineScaleSetPublicIPAddressConfigurationProperties: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationProperties{
 													DNSSettings: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationDNSSettings{
-														DomainNameLabel: to.StringPtr(fmt.Sprintf("%s", strings.ToLower(projectId)+"-"+strconv.Itoa(poolIndex))),
+														DomainNameLabel: to.StringPtr(pool.Name),
 													},
 												},
 											},
@@ -1396,8 +1388,8 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 		if pool.BootDiagnostics.NewStroageAccount {
 
-			storageId := "https://" + projectId + strconv.Itoa(poolIndex) + ".blob.core.windows.net/"
-			err := cloud.createStorageAccount(resourceGroup, projectId+strconv.Itoa(poolIndex), ctx)
+			storageId := "https://" + pool.Name + ".blob.core.windows.net/"
+			err := cloud.createStorageAccount(resourceGroup, pool.Name, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
@@ -1407,7 +1399,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 					Enabled: to.BoolPtr(true), StorageURI: &storageId,
 				},
 			}
-			cloud.Resources[projectId+"-SA"+strconv.Itoa(poolIndex)] = projectId + strconv.Itoa(poolIndex)
+			cloud.Resources["SA-"+pool.Name] = pool.Name
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
@@ -1421,7 +1413,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	params.UpgradePolicy = &compute.UpgradePolicy{
 		Mode: compute.Manual,
 	}
-	address, err := cloud.VMSSCLient.CreateOrUpdate(cloud.context, resourceGroup, projectId+strconv.Itoa(poolIndex), params)
+	address, err := cloud.VMSSCLient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, params)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
@@ -1433,7 +1425,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		}
 	}
 
-	vms, err := cloud.VMSSVMClient.List(cloud.context, resourceGroup, projectId+strconv.Itoa(poolIndex), "", "", "")
+	vms, err := cloud.VMSSVMClient.List(cloud.context, resourceGroup, pool.Name, "", "", "")
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
