@@ -490,24 +490,24 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx logging.Context) e
 				return err
 			}
 
-			nicName := fmt.Sprintf("NIC-%s", cluster.ProjectId+"-"+strconv.Itoa(poolIndex))
+			nicName := "NIC-" + pool.Name
 			err = cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx)
 			if err != nil {
 				return err
 			}
 
-			IPname := fmt.Sprintf("pip-%s", cluster.ProjectId+"-"+strconv.Itoa(poolIndex))
+			IPname := "pip-" + pool.Name
 			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx)
 			if err != nil {
 				return err
 			}
-			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex), ctx)
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name, ctx)
 			if err != nil {
 				return err
 			}
 
 		} else {
-			err := cloud.TerminatePool(cluster.ProjectId+strconv.Itoa(poolIndex), cluster.ResourceGroup, cluster.ProjectId, ctx)
+			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.ProjectId, ctx)
 			if err != nil {
 				return err
 			}

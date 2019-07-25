@@ -16,9 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/
 
 # final stage
 FROM ubuntu:bionic
-RUN apt update && apt install  ca-certificates -y && apt install -y openssl
-RUN apt install ssh-keygen
-RUN apt-get update
+RUN apt update && apt install  ca-certificates -y && apt install -y openssl && apt install ssh -y
 
 WORKDIR /app
 COPY --from=build-env /go/src/antelope/swagger/ /app/swagger/
