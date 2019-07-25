@@ -319,7 +319,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logg
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
 		}
-		publisher.Notify(cluster.Name, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available")
 		return nil
 
 	}
@@ -328,11 +328,11 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logg
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
-		publisher.Notify(cluster.Name, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available")
 		return confError
 	}
 	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.Name, "Status Available")
+	publisher.Notify(cluster.ProjectId, "Status Available")
 
 	return nil
 }
@@ -384,7 +384,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx l
 	}
 	if cluster.Status != "Cluster Created" {
 		ctx.SendSDLog("Cluster model: Cluster is not in created state ", "error")
-		publisher.Notify(cluster.Name, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available")
 		return err
 	}
 
@@ -415,10 +415,10 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx l
 			ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
 			logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			logging.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.Name, "Status Available")
+			publisher.Notify(cluster.ProjectId, "Status Available")
 			return err
 		}
-		publisher.Notify(cluster.Name, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available")
 		return nil
 	}
 
@@ -433,11 +433,11 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx l
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
 		logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		logging.SendLog(err.Error(), "error", cluster.ProjectId)
-		publisher.Notify(cluster.Name, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available")
 		return err
 	}
 	logging.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.Name, "Status Available")
+	publisher.Notify(cluster.ProjectId, "Status Available")
 
 	return nil
 }
