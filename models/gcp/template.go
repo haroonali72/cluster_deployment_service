@@ -3,6 +3,7 @@ package gcp
 import (
 	"antelope/models"
 	"antelope/models/db"
+	"antelope/models/utils"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -32,6 +33,7 @@ type NodePoolT struct {
 	MachineType string        `json:"machine_type" bson:"machine_type"`
 	Image       Image         `json:"image" bson:"image"`
 	PoolSubnet  string        `json:"subnet_id" bson:"subnet_id"`
+	KeyInfo     utils.Key     `json:"key_info" bson:"key_info"`
 }
 
 func CreateTemplate(template Template) (error, string) {

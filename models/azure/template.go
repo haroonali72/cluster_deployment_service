@@ -3,6 +3,7 @@ package azure
 import (
 	"antelope/models"
 	"antelope/models/db"
+	"antelope/models/utils"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -36,7 +37,7 @@ type NodePoolT struct {
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
 	PoolRole           string             `json:"pool_role" bson:"pool_role"`
 	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
-	KeyInfo            Key                `json:"key_info" bson:"key_info"`
+	KeyInfo            utils.Key          `json:"key_info" bson:"key_info"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
 }

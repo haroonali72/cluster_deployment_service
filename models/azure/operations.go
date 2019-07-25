@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/logging"
 	"antelope/models/networks"
+	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
 	"encoding/json"
@@ -18,7 +19,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -234,62 +234,7 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network networks.AzureNetwork) st
 	}
 	return ""
 }
-func (cloud *AZURE) GenerateKeyPair(keyName string) (KeyPairResponse, error) {
 
-	res := KeyPairResponse{}
-
-	t := time.Now().Local()
-	tstamp := t.Format("20060102150405")
-	keyName = keyName + "_" + tstamp
-
-	cmd := "ssh-keygen"
-	args := []string{"-t", "rsa", "-b", "4096", "-C", "azure@example.com", "-f", keyName}
-	if err := exec.Command(cmd, args...).Run(); err != nil {
-		beego.Error(err)
-		return KeyPairResponse{}, err
-	}
-	beego.Info("Successfully generated sshkeys")
-
-	arr, err1 := ioutil.ReadFile(keyName)
-	str := string(arr)
-	if err1 != nil {
-		beego.Error(err1)
-		return KeyPairResponse{}, err1
-	}
-
-	res.PrivateKey = str
-	res.Key_name = keyName
-
-	arr, err1 = ioutil.ReadFile(keyName + ".pub")
-	str = string(arr)
-	if err1 != nil {
-		beego.Error(err1)
-		return KeyPairResponse{}, err1
-	}
-	res.PublicKey = str
-	return res, nil
-}
-
-type KeyPairResponse struct {
-	Key_name   string `json:"key_name"`
-	PrivateKey string `json:"private_key"`
-	PublicKey  string `json:"public_key"`
-}
-
-func keyCoverstion(keyInfo interface{}) (Key, error) {
-	b, e := json.Marshal(keyInfo)
-	var k Key
-	if e != nil {
-		beego.Error(e)
-		return Key{}, e
-	}
-	e = json.Unmarshal(b, &k)
-	if e != nil {
-		beego.Error(e)
-		return Key{}, e
-	}
-	return k, nil
-}
 func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
@@ -300,14 +245,14 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def) (Cluster_Def, error) {
 		}
 	}
 	for in, pool := range cluster.NodePools {
-		var keyInfo Key
+		var keyInfo utils.Key
 		if pool.KeyInfo.CredentialType == models.SSHKey {
 			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName)
 			if err != nil {
 				beego.Error(err)
 				return Cluster_Def{}, err
 			}
-			keyInfo, err = keyCoverstion(k1)
+			keyInfo, err = utils.KeyConversion(k1)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
@@ -659,7 +604,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			return compute.VirtualMachine{}, "", "", err
 		} else if err == nil {
 
-			existingKey, err := keyCoverstion(k)
+			existingKey, err := utils.KeyConversion(k)
 			if err != nil {
 				return compute.VirtualMachine{}, "", "", err
 			}
@@ -680,7 +625,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			}
 		} else if err != nil && err.Error() == "not found" {
 
-			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName)
+			res, err := utils.GenerateKeyPair(pool.KeyInfo.KeyName)
 			if err != nil {
 				beego.Info(err.Error())
 				return compute.VirtualMachine{}, "", "", err
@@ -719,7 +664,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			return compute.VirtualMachine{}, "", "", err
 		}
 
-		existingKey, err := keyCoverstion(k)
+		existingKey, err := utils.KeyConversion(k)
 		if err != nil {
 			return compute.VirtualMachine{}, "", "", err
 		}

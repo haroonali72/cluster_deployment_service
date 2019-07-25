@@ -42,24 +42,15 @@ type NodePool struct {
 	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id"`
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
 	PoolRole           string             `json:"pool_role" bson:"pool_role"`
-	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
-	KeyInfo            Key                `json:"key_info" bson:"key_info"`
+	AdminUser          string             `json:"user_name" bson:"user_name,omitempty"`
+	KeyInfo            utils.Key          `json:"key_info" bson:"key_info"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
-}
-type Key struct {
-	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
-	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
-	KeyName        string                 `json:"key_name" bson:"key_name"`
-	AdminPassword  string                 `json:"admin_password" bson:"admin_password",omitempty"`
-	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty"`
-	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty"`
-	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 type Volume struct {
 	DataDisk     models.OsDiskType `json:"disk_type" bson:"disk_type"`
 	Size         int32             `json:"disk_size" bson:"disk_size"`
-	EnableVolume bool              `json:"enable_volume" bson :"enable_volume"`
+	EnableVolume bool              `json:"enable_volume" bson:"enable_volume"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
@@ -71,7 +62,7 @@ type VM struct {
 	PAssword  *string `json:"password" bson:"password,omitempty"`
 }
 type DiagnosticsProfile struct {
-	Enable            bool   `json:"enable" bson :"enable"`
+	Enable            bool   `json:"enable" bson:"enable"`
 	NewStroageAccount bool   `json:"new_storage_account" bson:"new_storage_account"`
 	StorageAccountId  string `json:"storage_account_id" bson:"storage_account_id"`
 }
@@ -377,7 +368,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 
 	return nil
 }
-func InsertSSHKeyPair(key Key) (err error) {
+func InsertSSHKeyPair(key utils.Key) (err error) {
 	key.Cloud = models.Azure
 	session, err := db.GetMongoSession()
 	if err != nil {
@@ -401,7 +392,7 @@ func GetAllSSHKeyPair() (keys []string, err error) {
 	}
 	return keys, nil
 }
-func GetSSHKeyPair(keyname string) (keys *Key, err error) {
+func GetSSHKeyPair(keyname string) (keys *utils.Key, err error) {
 
 	session, err := db.GetMongoSession()
 	if err != nil {
