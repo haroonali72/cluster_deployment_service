@@ -12,7 +12,7 @@ type HTTPClient struct {
 
 func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 
-	beego.Info("requesting ", url)
+	//beego.Info("requesting ", url)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(request_data))
 
@@ -27,7 +27,7 @@ func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 
 func CreateGetRequest(url string) (*http.Request, error) {
 
-	beego.Info("requesting", url)
+	//beego.Info("requesting", url)
 
 	req, err := http.NewRequest("GET", url, nil)
 

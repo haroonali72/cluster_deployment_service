@@ -485,7 +485,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx logging.Context) e
 		if pool.PoolRole == "master" {
 
 			logging.SendLog("Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
-			err := cloud.TerminatePool(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx)
+			err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx)
 			if err != nil {
 				return err
 			}
@@ -538,8 +538,31 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 			return err
 		}
 	}
-	logging.SendLog("Node pool terminated successfully: "+name, "info", projectId)
+	ctx.SendSDLog("Node pool terminated successfully: "+name, "info")
 
+	return nil
+}
+func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, ctx logging.Context) error {
+
+	beego.Info("AZUREOperations: terminating nodes")
+	ctx.SendSDLog("Terminating node: "+name, "info")
+	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
+	vmClient.Authorizer = cloud.Authorizer
+	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
+
+	if err != nil {
+		beego.Error(err)
+		return err
+	} else {
+		err = future.WaitForCompletion(cloud.context, vmClient.Client)
+		if err != nil {
+			beego.Error("vm deletion failed")
+			beego.Error(err)
+			return err
+		}
+		beego.Info("Deleted Node" + name)
+	}
+	ctx.SendSDLog("Node terminated successfully: "+name, "info")
 	return nil
 }
 
@@ -915,7 +938,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 					return e
 				}
 
-				err := cloud.TerminatePool(nodeName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				err := cloud.TerminateMasterNode(nodeName, cluster.ResourceGroup, cluster.ProjectId, ctx)
 				if err != nil {
 					beego.Info(e.Error())
 					return err
