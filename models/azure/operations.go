@@ -372,7 +372,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 			var vmObj VM
 			vmObj.Name = vm.Name
 			vmObj.CloudId = vm.ID
-			vmObj.CloudId = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
 			vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
 			vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
