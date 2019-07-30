@@ -1393,7 +1393,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "532.0xc0428812c0.false": {
+        "532.0xc0428b1b60.false": {
             "title": "false",
             "type": "object"
         },
@@ -1445,7 +1445,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/532.0xc0428812c0.false"
+                    "$ref": "#/definitions/532.0xc0428b1b60.false"
                 },
                 "name": {
                     "type": "string"
@@ -2034,6 +2034,9 @@
                 },
                 "subnet_id": {
                     "type": "string"
+                },
+                "volume": {
+                    "$ref": "#/definitions/gcp.Volume"
                 }
             }
         },
@@ -2098,6 +2101,25 @@
                 }
             }
         },
+        "gcp.Volume": {
+            "title": "Volume",
+            "type": "object",
+            "properties": {
+                "disk_size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "disk_type": {
+                    "$ref": "#/definitions/models.GCPDiskType"
+                },
+                "enable_volume": {
+                    "type": "boolean"
+                },
+                "is_blank": {
+                    "type": "boolean"
+                }
+            }
+        },
         "models.Cloud": {
             "title": "Cloud",
             "type": "string",
@@ -2116,6 +2138,15 @@
                 "SSHKey = \"key\""
             ],
             "example": "password"
+        },
+        "models.GCPDiskType": {
+            "title": "GCPDiskType",
+            "type": "string",
+            "enum": [
+                "PdStandard = \"pd-standard\"",
+                "PdSSD = \"pd-ssd\""
+            ],
+            "example": "pd-standard"
         },
         "models.KeyType": {
             "title": "KeyType",
