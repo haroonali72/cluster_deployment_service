@@ -327,7 +327,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 
 			//cpVms = append(cpVms, &vmObj)
 			beego.Info("updated node pool")
-			cluster.NodePools[in].Nodes = cpVms
+			cluster.NodePools[in].Nodes = ([]*VM{&vmObj})
 
 		} else {
 			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, pool.Name, "", "", "")
