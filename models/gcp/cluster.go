@@ -26,18 +26,22 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID          bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name        string        `json:"name" bson:"name"`
-	NodeCount   int64         `json:"node_count" bson:"node_count"`
-	MachineType string        `json:"machine_type" bson:"machine_type"`
-	Image       Image         `json:"image" bson:"image"`
-	Volume      Volume        `json:"volume" bson:"volume"`
-	PoolSubnet  string        `json:"subnet_id" bson:"subnet_id"`
-	PoolRole    string        `json:"pool_role" bson:"pool_role"`
-	Nodes       []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo     utils.Key     `json:"key_info" bson:"key_info"`
+	ID            bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name          string        `json:"name" bson:"name"`
+	NodeCount     int64         `json:"node_count" bson:"node_count"`
+	MachineType   string        `json:"machine_type" bson:"machine_type"`
+	Image         Image         `json:"image" bson:"image"`
+	Volume        Volume        `json:"volume" bson:"volume"`
+	PoolSubnet    string        `json:"subnet_id" bson:"subnet_id"`
+	PoolRole      string        `json:"pool_role" bson:"pool_role"`
+	Nodes         []*Node       `json:"nodes" bson:"nodes"`
+	KeyInfo       utils.Key     `json:"key_info" bson:"key_info"`
+	EnableScaling bool          `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling       AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
-
+type AutoScaling struct {
+	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+}
 type Node struct {
 	ID            bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Url           string        `json:"url" bson:"url"`
