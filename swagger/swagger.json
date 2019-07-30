@@ -1393,7 +1393,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "532.0xc0428b1b60.false": {
+        "532.0xc05a1ebe60.false": {
             "title": "false",
             "type": "object"
         },
@@ -1445,7 +1445,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/532.0xc0428b1b60.false"
+                    "$ref": "#/definitions/532.0xc05a1ebe60.false"
                 },
                 "name": {
                     "type": "string"
@@ -1935,7 +1935,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "object"
+            "type": "string"
         },
         "gcp.Cluster_Def": {
             "title": "Cluster_Def",

@@ -27,11 +27,11 @@
 
 [[constraint]]
   name = "github.com/Azure/azure-sdk-for-go"
-  version = "32.0.0"
+  version = "21.4.0"
 
 [[constraint]]
   name = "github.com/Azure/go-autorest"
-  version = "12.3.0"
+  version = "11.1.2"
 
 [[constraint]]
   name = "github.com/asaskevich/govalidator"
