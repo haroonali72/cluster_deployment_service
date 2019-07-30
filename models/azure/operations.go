@@ -785,7 +785,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 		if pool.BootDiagnostics.NewStroageAccount {
 			sName := strings.Replace(pool.Name, "-", "", -1)
-			storageId := "https://" + pool.Name + ".blob.core.windows.net/"
+			sName = strings.ToLower(sName)
+			storageId := "https://" + sName + ".blob.core.windows.net/"
 			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
@@ -884,7 +885,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 					return e
 				}
 
-				err := cloud.TerminateMasterNode(nodeName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				err := cloud.TerminateMasterNode(nodeName, cluster.ProjectId, cluster.ResourceGroup, ctx)
 				if err != nil {
 					beego.Info(e.Error())
 					return err
@@ -1356,9 +1357,10 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	if pool.BootDiagnostics.Enable {
 
 		if pool.BootDiagnostics.NewStroageAccount {
-
-			storageId := "https://" + pool.Name + ".blob.core.windows.net/"
-			err := cloud.createStorageAccount(resourceGroup, pool.Name, ctx)
+			sName := strings.Replace(pool.Name, "-", "", -1)
+			sName = strings.ToLower(sName)
+			storageId := "https://" + sName + ".blob.core.windows.net/"
+			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
