@@ -324,7 +324,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
 
-			cpVms = append(cpVms, &vmObj)
+			//cpVms = append(cpVms, &vmObj)
 			beego.Info("updated node pool")
 			cluster.NodePools[in].Nodes = cpVms
 
