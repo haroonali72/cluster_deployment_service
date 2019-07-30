@@ -31,6 +31,7 @@ type NodePool struct {
 	NodeCount   int64         `json:"node_count" bson:"node_count"`
 	MachineType string        `json:"machine_type" bson:"machine_type"`
 	Image       Image         `json:"image" bson:"image"`
+	Volume      Volume        `json:"volume" bson:"volume"`
 	PoolSubnet  string        `json:"subnet_id" bson:"subnet_id"`
 	Nodes       []*Node       `json:"nodes" bson:"nodes"`
 	KeyInfo     utils.Key     `json:"key_info" bson:"key_info"`
@@ -47,6 +48,13 @@ type Image struct {
 	ID      bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Project string        `json:"project" bson:"project"`
 	Family  string        `json:"family" bson:"family"`
+}
+
+type Volume struct {
+	DiskType     models.GCPDiskType `json:"disk_type" bson:"disk_type"`
+	IsBlank      bool               `json:"is_blank" bson:"is_blank"`
+	Size         int64              `json:"disk_size" bson:"disk_size"`
+	EnableVolume bool               `json:"enable_volume" bson:"enable_volume"`
 }
 
 func checkClusterSize(cluster Cluster_Def) error {

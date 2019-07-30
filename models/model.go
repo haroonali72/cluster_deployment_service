@@ -33,6 +33,13 @@ const (
 	PremiumSSD  OsDiskType = "premium ssd"
 )
 
+type GCPDiskType string
+
+const (
+	PdStandard GCPDiskType = "pd-standard"
+	PdSSD GCPDiskType = "pd-ssd"
+)
+
 type CredentialsType string
 
 const (
