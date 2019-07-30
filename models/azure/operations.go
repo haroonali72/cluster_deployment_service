@@ -518,7 +518,7 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 		Location: &cloud.Region,
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 			DNSSettings: &network.PublicIPAddressDNSSettings{
-				DomainNameLabel: to.StringPtr(IPname),
+				DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
 			},
 		},
 	}
@@ -784,9 +784,9 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	if pool.BootDiagnostics.Enable {
 
 		if pool.BootDiagnostics.NewStroageAccount {
-
+			sName := strings.Replace(pool.Name, "-", "", -1)
 			storageId := "https://" + pool.Name + ".blob.core.windows.net/"
-			err := cloud.createStorageAccount(resourceGroup, pool.Name, ctx)
+			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
