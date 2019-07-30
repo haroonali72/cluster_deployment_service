@@ -3,8 +3,10 @@ package azure
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
+	"antelope/models/key_utils"
 	"antelope/models/logging"
 	"antelope/models/types"
+	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
 	"encoding/json"
@@ -18,7 +20,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -267,62 +268,7 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	}
 	return ""
 }
-func (cloud *AZURE) GenerateKeyPair(keyName string, ctx logging.Context) (KeyPairResponse, error) {
 
-	res := KeyPairResponse{}
-
-	t := time.Now().Local()
-	tstamp := t.Format("20060102150405")
-	keyName = keyName + "_" + tstamp
-
-	cmd := "ssh-keygen"
-	args := []string{"-t", "rsa", "-b", "4096", "-C", "azure@example.com", "-f", keyName}
-	if err := exec.Command(cmd, args...).Run(); err != nil {
-		ctx.SendSDLog(err.Error(), "error")
-		return KeyPairResponse{}, err
-	}
-	ctx.SendSDLog("Successfully generated sshkeys", "info")
-
-	arr, err1 := ioutil.ReadFile(keyName)
-	str := string(arr)
-	if err1 != nil {
-		ctx.SendSDLog(err1.Error(), "error")
-		return KeyPairResponse{}, err1
-	}
-
-	res.PrivateKey = str
-	res.Key_name = keyName
-
-	arr, err1 = ioutil.ReadFile(keyName + ".pub")
-	str = string(arr)
-	if err1 != nil {
-		ctx.SendSDLog(err1.Error(), "error")
-		return KeyPairResponse{}, err1
-	}
-	res.PublicKey = str
-	return res, nil
-}
-
-type KeyPairResponse struct {
-	Key_name   string `json:"key_name"`
-	PrivateKey string `json:"private_key"`
-	PublicKey  string `json:"public_key"`
-}
-
-func keyCoverstion(keyInfo interface{}, ctx logging.Context) (Key, error) {
-	b, e := json.Marshal(keyInfo)
-	var k Key
-	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
-		return Key{}, e
-	}
-	e = json.Unmarshal(b, &k)
-	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
-		return Key{}, e
-	}
-	return k, nil
-}
 func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
@@ -333,14 +279,14 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx logging.Context) (Clust
 	}
 	var cpVms []*VM
 	for in, pool := range cluster.NodePools {
-		var keyInfo Key
+		var keyInfo utils.Key
 		if pool.KeyInfo.CredentialType == models.SSHKey {
 			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return Cluster_Def{}, err
 			}
-			keyInfo, err = keyCoverstion(k1, ctx)
+			keyInfo, err = key_utils.KeyConversion(k1, ctx)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
@@ -753,7 +699,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			return compute.VirtualMachine{}, "", "", err
 		} else if err == nil {
 
-			existingKey, err := keyCoverstion(k, ctx)
+			existingKey, err := key_utils.KeyConversion(k, ctx)
 			if err != nil {
 				return compute.VirtualMachine{}, "", "", err
 			}
@@ -774,7 +720,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			}
 		} else if err != nil && err.Error() == "not found" {
 
-			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
+			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
@@ -811,7 +757,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			return compute.VirtualMachine{}, "", "", err
 		}
 
-		existingKey, err := keyCoverstion(k, ctx)
+		existingKey, err := key_utils.KeyConversion(k, ctx)
 		if err != nil {
 			return compute.VirtualMachine{}, "", "", err
 		}
@@ -1325,7 +1271,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		} else if err == nil {
 
-			existingKey, err := keyCoverstion(k, ctx)
+			existingKey, err := key_utils.KeyConversion(k, ctx)
 			if err != nil {
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
@@ -1346,7 +1292,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			}
 		} else if err != nil && err.Error() == "not found" {
 
-			res, err := cloud.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
+			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
@@ -1383,7 +1329,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 
-		existingKey, err := keyCoverstion(k, ctx)
+		existingKey, err := key_utils.KeyConversion(k, ctx)
 		if err != nil {
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}

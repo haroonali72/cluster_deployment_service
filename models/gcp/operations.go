@@ -1,13 +1,17 @@
 package gcp
 
 import (
+	"antelope/models"
 	"antelope/models/api_handler"
+	"antelope/models/key_utils"
 	"antelope/models/logging"
 	"antelope/models/types"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
@@ -115,6 +119,11 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		}
 	}
 
+	publicKey, _, err := fetchOrGenerateKey(models.GCP, pool.KeyInfo)
+	if err != nil {
+		return "", err
+	}
+
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		NetworkInterfaces: []*compute.NetworkInterface{
@@ -128,6 +137,15 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 				Boot:       true,
 				InitializeParams: &compute.AttachedDiskInitializeParams{
 					SourceImage: "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family,
+				},
+			},
+		},
+		Metadata: &compute.Metadata{
+			Fingerprint: pool.Name + ":" + pool.MachineType + ":" + string(pool.NodeCount),
+			Items: []*compute.MetadataItems{
+				{
+					Key:   "ssh-keys",
+					Value: to.StringPtr("ssh_key@cloudplex.com:ssh-rsa " + publicKey + " ssh_key@cloudplex.com"),
 				},
 			},
 		},
@@ -286,4 +304,37 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 		}
 	}
 	return ""
+}
+
+func fetchOrGenerateKey(cloud models.Cloud, keyInfo utils.Key) (string, string, error) {
+	key, err := vault.GetAzureSSHKey(string(cloud), keyInfo.KeyName, logging.Context{})
+
+	if err != nil && err.Error() != "not found" {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", "", err
+	}
+
+	existingKey, err := key_utils.KeyConversion(key, logging.Context{})
+	if err != nil {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", "", err
+	}
+
+	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
+		return existingKey.PrivateKey, existingKey.PublicKey, nil
+	}
+
+	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, logging.Context{})
+	if err != nil {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", "", err
+	}
+
+	_, err = vault.PostAzureSSHKey(keyInfo, logging.Context{})
+	if err != nil {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", "", err
+	}
+
+	return res.PrivateKey, res.PublicKey, nil
 }

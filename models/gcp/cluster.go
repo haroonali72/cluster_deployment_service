@@ -5,6 +5,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/logging"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -33,6 +34,7 @@ type NodePool struct {
 	PoolSubnet  string        `json:"subnet_id" bson:"subnet_id"`
 	PoolRole    string        `json:"pool_role" bson:"pool_role"`
 	Nodes       []*Node       `json:"nodes" bson:"nodes"`
+	KeyInfo     utils.Key     `json:"key_info" bson:"key_info"`
 }
 
 type Node struct {
@@ -252,6 +254,15 @@ func FetchStatus(credentials string, projectId string) (Cluster_Def, error) {
 	}
 
 	return c, nil
+}
+
+func GetAllSSHKeyPair() (keys []string, err error) {
+	keys, err = vault.GetAllSSHKey(string(models.GCP), logging.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		return keys, err
+	}
+	return keys, nil
 }
 
 func TerminateCluster(cluster Cluster_Def, credentials string) error {

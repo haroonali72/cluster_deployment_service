@@ -320,3 +320,24 @@ func (c *GcpClusterController) TerminateCluster() {
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }
+
+// @Title SSHKeyPair
+// @Description returns ssh key pairs
+// @Success 200 {object} []string
+// @Failure 500 {"error": "internal server error"}
+// @router /sshkeys [get]
+func (c *GcpClusterController) GetSSHKeys() {
+	beego.Info("GcpClusterController: FetchExistingSSHKeys.")
+
+	keys, err := gcp.GetAllSSHKeyPair()
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = keys
+	c.ServeJSON()
+}

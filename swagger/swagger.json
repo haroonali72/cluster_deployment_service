@@ -112,7 +112,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "false",
+                        "description": "profileId",
                         "type": "string"
                     },
                     {
@@ -159,7 +159,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "false",
+                        "description": "profileId",
                         "type": "string"
                     },
                     {
@@ -216,7 +216,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "false",
+                        "description": "profileId",
                         "type": "string"
                     },
                     {
@@ -254,7 +254,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "false",
+                        "description": "profileId",
                         "type": "string"
                     },
                     {
@@ -291,8 +291,8 @@
                 "parameters": [
                     {
                         "in": "X-Profile-Id",
-                        "name": "Authorization",
-                        "description": "false",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
                         "type": "string"
                     },
                     {
@@ -732,6 +732,29 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/gcp.Cluster_Def"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gcp/sshkeys": {
+            "get": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "returns ssh key pairs",
+                "operationId": "GcpClusterController.SSHKeyPair",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
                             }
                         }
                     },
@@ -1370,7 +1393,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "532.0xc042874960.false": {
+        "532.0xc0428812c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -1422,7 +1445,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/532.0xc042874960.false"
+                    "$ref": "#/definitions/532.0xc0428812c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -1717,33 +1740,6 @@
                 }
             }
         },
-        "azure.Key": {
-            "title": "Key",
-            "type": "object",
-            "properties": {
-                "admin_password": {
-                    "type": "string"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "credential_type": {
-                    "$ref": "#/definitions/models.CredentialsType"
-                },
-                "key_name": {
-                    "type": "string"
-                },
-                "key_type": {
-                    "$ref": "#/definitions/models.KeyType"
-                },
-                "private_key": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                }
-            }
-        },
         "azure.NodePool": {
             "title": "NodePool",
             "type": "object",
@@ -1764,7 +1760,7 @@
                     "$ref": "#/definitions/azure.ImageReference"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/azure.Key"
+                    "$ref": "#/definitions/utils.Key"
                 },
                 "machine_type": {
                     "type": "string"
@@ -1819,7 +1815,7 @@
                     "$ref": "#/definitions/azure.ImageReference"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/azure.Key"
+                    "$ref": "#/definitions/utils.Key"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2014,6 +2010,9 @@
                 "image": {
                     "$ref": "#/definitions/gcp.Image"
                 },
+                "key_info": {
+                    "$ref": "#/definitions/utils.Key"
+                },
                 "machine_type": {
                     "type": "string"
                 },
@@ -2047,6 +2046,9 @@
                 },
                 "image": {
                     "$ref": "#/definitions/gcp.Image"
+                },
+                "key_info": {
+                    "$ref": "#/definitions/utils.Key"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2136,6 +2138,33 @@
                 "PremiumSSD = \"premium ssd\""
             ],
             "example": "standard hdd"
+        },
+        "utils.Key": {
+            "title": "Key",
+            "type": "object",
+            "properties": {
+                "admin_password": {
+                    "type": "string"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "credential_type": {
+                    "$ref": "#/definitions/models.CredentialsType"
+                },
+                "key_name": {
+                    "type": "string"
+                },
+                "key_type": {
+                    "$ref": "#/definitions/models.KeyType"
+                },
+                "private_key": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                }
+            }
         }
     },
     "tags": [
