@@ -76,5 +76,6 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.data.ProjectId = projectId
 }
 func getHost() string {
+	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
 	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/backend/logging"
 }

@@ -23,7 +23,6 @@ var (
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
-	kube_engine_url                 = ""
 	network_url                     = ""
 	raccoon_url                     = ""
 )
@@ -51,7 +50,7 @@ func InitFlags() error {
 		},
 		cli.StringFlag{
 			Name:        "mongo_user",
-			Usage:       "mongo user name ",
+			Usage:       "mongo user name",
 			Destination: &mongo_user,
 			EnvVar:      "mongo_user",
 		},
@@ -128,12 +127,6 @@ func InitFlags() error {
 			EnvVar:      "vault_url",
 		},
 		cli.StringFlag{
-			Name:        "kube_engine_url",
-			Usage:       "kube_engine_url",
-			Destination: &kube_engine_url,
-			EnvVar:      "kube_engine_url",
-		},
-		cli.StringFlag{
 			Name:        "raccoon_url",
 			Usage:       "raccoon_url",
 			Destination: &raccoon_url,
@@ -149,15 +142,13 @@ func InitFlags() error {
 		return err
 	}
 
-	host := mongo + ":27017"
-	redis := redis_url + ":6379"
-	//elephant := "http://" + logger_url + ":3500/api/v1/logger"
-	weasel := "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
-	vault := "http://" + vault_url + ":8092/robin/api/v1"
-	kube := "http://" + kube_engine_url + "3300:/kube/api/v1/nodes"
-	raccoon := "http://" + raccoon_url + "/raccoon/projects/"
+	mongo = mongo + ":32180"
+	redis_url = redis_url + ":6379"
+	network_url = "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
+	vault_url = "http://" + vault_url + ":8092/robin/api/v1"
+	raccoon_url := "http://" + raccoon_url + "/raccoon/projects/"
 
-	beego.AppConfig.Set("mongo_host", host)
+	beego.AppConfig.Set("mongo_host", mongo)
 	beego.AppConfig.Set("mongo_user", mongo_user)
 	beego.AppConfig.Set("mongo_pass", mongo_pass)
 	beego.AppConfig.Set("mongo_auth", mongo_auth)
@@ -169,11 +160,10 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_azure_cluster_collection", mongo_azure_cluster_collection)
 	beego.AppConfig.Set("mongo_gcp_cluster_collection", mongo_gcp_cluster_collection)
 	beego.AppConfig.Set("mongo_gcp_template_collection", mongo_gcp_template_collection)
-	beego.AppConfig.Set("redis_url", redis)
+	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)
-	beego.AppConfig.Set("network_url", weasel)
-	beego.AppConfig.Set("vault_url", vault)
-	beego.AppConfig.Set("kube_engine_url", kube)
-	beego.AppConfig.Set("raccoon_url", raccoon)
+	beego.AppConfig.Set("network_url", network_url)
+	beego.AppConfig.Set("vault_url", vault_url)
+	beego.AppConfig.Set("raccoon_url", raccoon_url)
 	return nil
 }
