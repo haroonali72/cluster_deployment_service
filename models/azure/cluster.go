@@ -28,7 +28,7 @@ type Cluster_Def struct {
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AZURE|azure)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required"`
 }
@@ -39,7 +39,7 @@ type NodePool struct {
 	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required matches:[0-9]"`
 	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
 	Image              ImageReference     `json:"image" bson:"image" valid:"required"`
-	Volume             Volume             `json:"volume" bson:"volume" valid:"required"`
+	Volume             Volume             `json:"volume" bson:"volume"`
 	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" valid:"required"`
 	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`

@@ -25,7 +25,7 @@ type Cluster_Def struct {
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AWS|aws)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
 }
 
