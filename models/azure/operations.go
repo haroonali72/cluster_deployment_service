@@ -182,7 +182,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			return nil, "", err
 		}
 		logging.SendLog("Node created successfully : "+pool.Name, "info", projectId)
-
+		cloud.Resources["Disk-"+pool.Name] = pool.Name
 		cloud.Resources["NodeName-"+pool.Name] = pool.Name
 
 		var vmObj VM
@@ -953,6 +953,22 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx logging.Context) error {
 					return e
 				}
 				err := cloud.deleteStorageAccount(cluster.ResourceGroup, SAname, ctx)
+				if err != nil {
+					return err
+				}
+			}
+			if cloud.Resources["Disk-"+pool.Name] != nil {
+				name := cloud.Resources["Disk-"+pool.Name]
+				diskName := ""
+				b, e := json.Marshal(name)
+				if e != nil {
+					return e
+				}
+				e = json.Unmarshal(b, &diskName)
+				if e != nil {
+					return e
+				}
+				err := cloud.deleteDisk(cluster.ResourceGroup, diskName, ctx)
 				if err != nil {
 					return err
 				}
