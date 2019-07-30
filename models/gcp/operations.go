@@ -145,10 +145,27 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 			Items: []*compute.MetadataItems{
 				{
 					Key:   "ssh-keys",
-					Value: to.StringPtr("ssh_key@cloudplex.com:ssh-rsa " + publicKey + " ssh_key@cloudplex.com"),
+					Value: to.StringPtr(publicKey),
 				},
 			},
 		},
+	}
+
+	if pool.Volume.EnableVolume {
+		secondaryDisk := compute.AttachedDisk{
+			AutoDelete: true,
+			Boot:       false,
+			InitializeParams: &compute.AttachedDiskInitializeParams{
+				DiskSizeGb: pool.Volume.Size,
+				DiskType: string(pool.Volume.DiskType),
+			},
+		}
+
+		if !pool.Volume.IsBlank {
+			secondaryDisk.InitializeParams.SourceImage = "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family
+		}
+
+		instanceProperties.Disks = append(instanceProperties.Disks, &secondaryDisk)
 	}
 
 	instanceTemplate := compute.InstanceTemplate{
