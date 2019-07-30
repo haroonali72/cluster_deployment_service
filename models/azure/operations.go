@@ -40,6 +40,7 @@ type AZURE struct {
 	VMSSCLient       compute.VirtualMachineScaleSetsClient
 	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
 	VMClient         compute.VirtualMachinesClient
+	DiskClient       compute.DisksClient
 	AccountClient    storage.AccountsClient
 	context          context.Context
 	ID               string
@@ -451,6 +452,10 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx logging.Context) e
 			if err != nil {
 				return err
 			}
+			err = cloud.deleteDisk(cluster.ResourceGroup, pool.Name, ctx)
+			if err != nil {
+				return err
+			}
 
 		} else {
 			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.ProjectId, ctx)
@@ -855,6 +860,16 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		return "", err
 	}
 	beego.Info(*account.ID)*/
+	return nil
+}
+func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx logging.Context) error {
+
+	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, diskName)
+	if err != nil {
+		beego.Error("Disk deletion failed")
+		ctx.SendSDLog(err.Error(), "error")
+		return err
+	}
 	return nil
 }
 func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName string, ctx logging.Context) error {
