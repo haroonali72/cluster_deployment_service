@@ -60,13 +60,13 @@ type Node struct {
 }
 type Key struct {
 	KeyName     string         `json:"key_name" bson:"key_name" valid:"required"`
-	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required in(new|cp|aws|user)"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required, in(new|cp|aws|user)"`
 	KeyMaterial string         `json:"private_key" bson:"private_key"`
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 type Ami struct {
 	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name     string        `json:"name" bson:"name" valid:"required"`
+	Name     string        `json:"name" bson:"name"`
 	AmiId    string        `json:"ami_id" bson:"ami_id" valid:"required"`
 	Username string        `json:"username" bson:"username" valid:"required"`
 

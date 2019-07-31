@@ -47,7 +47,7 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"msg": "cluster created successfully"}'
+          description: '{"msg": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
         "500":
@@ -913,7 +913,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  511.0xc0599161b0.false:
+  511.0xc0598a3110.false:
     title: "false"
     type: object
   aws.Ami:
@@ -950,7 +950,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/511.0xc0599161b0.false'
+        $ref: '#/definitions/511.0xc0598a3110.false'
       name:
         type: string
       network_name:

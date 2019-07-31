@@ -76,7 +76,7 @@ func (c *AWSClusterController) GetAll() {
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
-// @Success 400 {"msg": "cluster created successfully"}
+// @Success 400 {"msg": "error msg"}
 // @Failure 409 {"error": "cluster against this project already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
@@ -92,7 +92,9 @@ func (c *AWSClusterController) Post() {
 	ctx.SendSDLog("AWSClusterController: Post new cluster with name: "+cluster.Name, "info")
 
 	res, err := govalidator.ValidateStruct(cluster)
+	beego.Info("hello -- validated cluster")
 	if !res || err != nil {
+		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()

@@ -47,7 +47,7 @@ type NodePool struct {
 	AdminUser          string             `json:"user_name" bson:"user_name,omitempty"`
 	KeyInfo            utils.Key          `json:"key_info" bson:"key_info"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
-	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required in(standard hdd|standard ssd|premium ssd)"`
+	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required, in(standard hdd|standard ssd|premium ssd)"`
 	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 }
