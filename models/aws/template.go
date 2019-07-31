@@ -3,7 +3,7 @@ package aws
 import (
 	"antelope/models"
 	"antelope/models/db"
-	"antelope/models/logging"
+	"antelope/models/utils"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -36,7 +36,7 @@ type NodePoolT struct {
 	PoolRole        string        `json:"pool_role" bson:"pool_role"`
 }
 
-func checkTemplateSize(template Template, ctx logging.Context) error {
+func checkTemplateSize(template Template, ctx utils.Context) error {
 	for _, pools := range template.NodePools {
 		if pools.NodeCount > 3 {
 			return errors.New("Nodepool can't have more than 3 nodes")
@@ -44,7 +44,7 @@ func checkTemplateSize(template Template, ctx logging.Context) error {
 	}
 	return nil
 }
-func CreateTemplate(template Template, ctx logging.Context) (error, string) {
+func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	/*_, err := GetTemplate(template.TemplateId)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
@@ -78,7 +78,7 @@ func CreateTemplate(template Template, ctx logging.Context) (error, string) {
 	return nil, template.TemplateId
 }
 
-func GetTemplate(templateId string, ctx logging.Context) (template Template, err error) {
+func GetTemplate(templateId string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Template model: Get - Got error while connecting to the database: "+err.Error(), "error")
@@ -96,7 +96,7 @@ func GetTemplate(templateId string, ctx logging.Context) (template Template, err
 	return template, nil
 }
 
-func GetAllTemplate(ctx logging.Context) (templates []Template, err error) {
+func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
@@ -114,7 +114,7 @@ func GetAllTemplate(ctx logging.Context) (templates []Template, err error) {
 	return templates, nil
 }
 
-func UpdateTemplate(template Template, ctx logging.Context) error {
+func UpdateTemplate(template Template, ctx utils.Context) error {
 	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.TemplateId)
@@ -140,7 +140,7 @@ func UpdateTemplate(template Template, ctx logging.Context) error {
 	return nil
 }
 
-func DeleteTemplate(templateId string, ctx logging.Context) error {
+func DeleteTemplate(templateId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendSDLog("Template model: Delete - Got error while connecting to the database: "+err.Error(), "error")

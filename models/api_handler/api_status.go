@@ -1,13 +1,12 @@
 package api_handler
 
 import (
-	"antelope/models/logging"
 	"antelope/models/utils"
 	"errors"
 	"io/ioutil"
 )
 
-func GetAPIStatus(host string, ctx logging.Context) (interface{}, error) {
+func GetAPIStatus(host string, ctx utils.Context) (interface{}, error) {
 
 	client := utils.InitReq()
 

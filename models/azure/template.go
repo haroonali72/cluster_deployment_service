@@ -3,7 +3,6 @@ package azure
 import (
 	"antelope/models"
 	"antelope/models/db"
-	"antelope/models/logging"
 	"antelope/models/utils"
 	"errors"
 	"fmt"
@@ -51,7 +50,7 @@ func checkTemplateSize(cluster Template) error {
 	}
 	return nil
 }
-func CreateTemplate(template Template, ctx logging.Context) (error, string) {
+func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
@@ -79,7 +78,7 @@ func CreateTemplate(template Template, ctx logging.Context) (error, string) {
 	return nil, template.TemplateId
 }
 
-func GetTemplate(templateName string, ctx logging.Context) (template Template, err error) {
+func GetTemplate(templateName string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Template model: Get - Got error while connecting to the database: "+err1.Error(), "error")
@@ -96,7 +95,7 @@ func GetTemplate(templateName string, ctx logging.Context) (template Template, e
 	return template, nil
 }
 
-func GetAllTemplate(ctx logging.Context) (templates []Template, err error) {
+func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Template model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
@@ -114,7 +113,7 @@ func GetAllTemplate(ctx logging.Context) (templates []Template, err error) {
 	return templates, nil
 }
 
-func UpdateTemplate(template Template, ctx logging.Context) error {
+func UpdateTemplate(template Template, ctx utils.Context) error {
 	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
@@ -140,7 +139,7 @@ func UpdateTemplate(template Template, ctx logging.Context) error {
 	return nil
 }
 
-func DeleteTemplate(templateName string, ctx logging.Context) error {
+func DeleteTemplate(templateName string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 

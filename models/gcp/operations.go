@@ -4,7 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/key_utils"
-	"antelope/models/logging"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -40,7 +39,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	}
 	var gcpNetwork types.GCPNetwork
 	url := getNetworkHost("gcp") + "/" + cluster.ProjectId
-	network, err := api_handler.GetAPIStatus(url, logging.Context{})
+	network, err := api_handler.GetAPIStatus(url, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err
@@ -316,14 +315,14 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 }
 
 func fetchOrGenerateKey(cloud models.Cloud, keyInfo utils.Key) (string, string, error) {
-	key, err := vault.GetAzureSSHKey(string(cloud), keyInfo.KeyName, logging.Context{})
+	key, err := vault.GetAzureSSHKey(string(cloud), keyInfo.KeyName, utils.Context{})
 
 	if err != nil && err.Error() != "not found" {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", "", err
 	}
 
-	existingKey, err := key_utils.KeyConversion(key, logging.Context{})
+	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", "", err
@@ -333,13 +332,13 @@ func fetchOrGenerateKey(cloud models.Cloud, keyInfo utils.Key) (string, string, 
 		return existingKey.PrivateKey, existingKey.PublicKey, nil
 	}
 
-	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, logging.Context{})
+	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, utils.Context{})
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", "", err
 	}
 
-	_, err = vault.PostAzureSSHKey(keyInfo, logging.Context{})
+	_, err = vault.PostAzureSSHKey(keyInfo, utils.Context{})
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", "", err

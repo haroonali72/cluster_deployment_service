@@ -1,7 +1,6 @@
-package logging
+package utils
 
 import (
-	"antelope/models/utils"
 	"github.com/astaxie/beego"
 	"github.com/google/uuid"
 	"runtime"
@@ -44,7 +43,7 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 	} else {
 		beego.Info(c.data.Message)
 	}
-	logger := utils.InitReq()
+	logger := InitReq()
 
 	request_data, err := TransformData(c.data)
 	if err != nil {
@@ -52,7 +51,7 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getHost())
+	req, err := CreatePostRequest(request_data, getHost())
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err

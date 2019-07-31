@@ -2,7 +2,7 @@ package autoscaling
 
 import (
 	"antelope/models/aws/IAMRoles"
-	"antelope/models/logging"
+	"antelope/models/utils"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -55,7 +55,7 @@ func (cloud *AWSAutoScaler) Init() error {
 
 	return nil
 }
-func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imageId string, ctx logging.Context) (error, map[string]string) {
+func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imageId string, ctx utils.Context) (error, map[string]string) {
 	fmt.Println(nodeId)
 	m := make(map[string]string)
 
@@ -119,7 +119,7 @@ func (cloud *AWSAutoScaler) DeleteConfiguration(projectId string) error {
 	}
 	return nil
 }
-func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId string, subnetId string, maxSize int64, ctx logging.Context) (error, map[string]string) {
+func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId string, subnetId string, maxSize int64, ctx utils.Context) (error, map[string]string) {
 	beego.Info("before sleep")
 	time.Sleep(time.Second * 180)
 	beego.Info("after sleep")
@@ -174,7 +174,7 @@ func (cloud *AWSAutoScaler) DeleteAutoScaler(projectId string) error {
 	}
 	return nil
 }
-func (cloud *AWSAutoScaler) GetAutoScaler(projectId string, name string, ctx logging.Context) (error, []*autoscaling.Instance) {
+func (cloud *AWSAutoScaler) GetAutoScaler(projectId string, name string, ctx utils.Context) (error, []*autoscaling.Instance) {
 	str := []*string{&name}
 
 	config_input := autoscaling.DescribeAutoScalingGroupsInput{}

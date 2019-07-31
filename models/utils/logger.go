@@ -1,7 +1,6 @@
-package logging
+package utils
 
 import (
-	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 )
@@ -29,7 +28,7 @@ func SendLog(msg, message_type, env_id string) (int, error) {
 	data.Level = message_type
 	data.Message = msg
 
-	logger := utils.InitReq()
+	logger := InitReq()
 
 	request_data, err := TransformData(data)
 	if err != nil {
@@ -37,7 +36,7 @@ func SendLog(msg, message_type, env_id string) (int, error) {
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getLoggerHost())
+	req, err := CreatePostRequest(request_data, getLoggerHost())
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err

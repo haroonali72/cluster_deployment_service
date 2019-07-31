@@ -3,7 +3,7 @@ package azure
 import (
 	"antelope/models/aws"
 	"antelope/models/azure"
-	"antelope/models/logging"
+	"antelope/models/utils"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
@@ -26,7 +26,7 @@ type AzureClusterController struct {
 func (c *AzureClusterController) Get() {
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
 
 	ctx.SendSDLog("AWSClusterController: Get cluster with project id "+projectId, "info")
@@ -58,7 +58,7 @@ func (c *AzureClusterController) Get() {
 func (c *AzureClusterController) GetAll() {
 	beego.Info("AzureClusterController: GetAll clusters.")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
 	clusters, err := azure.GetAllCluster(*ctx)
@@ -85,7 +85,7 @@ func (c *AzureClusterController) Post() {
 	var cluster azure.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId)
 
 	ctx.SendSDLog("AzureClusterController: Post new cluster with name: "+cluster.Name, "error ")
@@ -137,7 +137,7 @@ func (c *AzureClusterController) Patch() {
 	var cluster azure.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)
 
 	ctx.SendSDLog("AzureClusterController: Patch cluster with name: "+cluster.Name, "info")
@@ -170,7 +170,7 @@ func (c *AzureClusterController) Patch() {
 func (c *AzureClusterController) Delete() {
 	id := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
 
 	ctx.SendSDLog("AzureClusterController: Delete cluster with project id: "+id, "error")
@@ -213,7 +213,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
 
 	ctx.SendSDLog("AzureClusterController: POST cluster with project id: "+projectId, "error")
@@ -277,7 +277,7 @@ func (c *AzureClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
@@ -326,7 +326,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
 
 	ctx.SendSDLog("AzureClusterController: TerminateCluster.", "info")
@@ -377,7 +377,7 @@ func (c *AzureClusterController) TerminateCluster() {
 // @router /sshkeys [get]
 func (c *AzureClusterController) GetSSHKeys() {
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
 

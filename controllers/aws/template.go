@@ -2,7 +2,7 @@ package aws
 
 import (
 	"antelope/models/aws"
-	"antelope/models/logging"
+	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -22,7 +22,7 @@ type AWSTemplateController struct {
 // @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
 	templateId := c.GetString(":templateId")
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId)
 
 	ctx.SendSDLog("AWSTemplateController: Get template  id : "+templateId, "info")
@@ -52,7 +52,7 @@ func (c *AWSTemplateController) Get() {
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSTemplateController) GetAll() {
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
 	ctx.SendSDLog("AWSTemplateController: GetAll template.", "info")
@@ -79,7 +79,7 @@ func (c *AWSTemplateController) GetAll() {
 func (c *AWSTemplateController) Post() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("AWSTemplateController: Post new template with name: "+template.Name, "error")
 
@@ -111,7 +111,7 @@ func (c *AWSTemplateController) Post() {
 func (c *AWSTemplateController) Patch() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("AWSTemplateController: Patch template with template id : "+template.TemplateId, "error")
 
@@ -142,7 +142,7 @@ func (c *AWSTemplateController) Patch() {
 // @router /:templateId [delete]
 func (c *AWSTemplateController) Delete() {
 	templateId := c.GetString(":templateId")
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "")
 
 	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)

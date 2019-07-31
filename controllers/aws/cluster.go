@@ -2,7 +2,7 @@ package aws
 
 import (
 	"antelope/models/aws"
-	"antelope/models/logging"
+	"antelope/models/utils"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
@@ -25,7 +25,7 @@ type AWSClusterController struct {
 func (c *AWSClusterController) Get() {
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
 	ctx.SendSDLog("AWSClusterController: Get cluster with project id: "+projectId, "info")
 
@@ -55,7 +55,7 @@ func (c *AWSClusterController) Get() {
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
 	ctx.SendSDLog("AWSClusterController: GetAll clusters.", "info")
@@ -86,7 +86,7 @@ func (c *AWSClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId)
 
 	ctx.SendSDLog("AWSClusterController: Post new cluster with name: "+cluster.Name, "info")
@@ -136,7 +136,7 @@ func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)
 
 	ctx.SendSDLog("AWSClusterController: Patch cluster with name: "+cluster.Name, "info")
@@ -169,7 +169,7 @@ func (c *AWSClusterController) Patch() {
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
 
 	ctx.SendSDLog("AWSClusterController: Delete cluster with project id: "+id, "info")
@@ -213,7 +213,7 @@ func (c *AWSClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
 
 	ctx.SendSDLog("AWSNetworkController: StartCluster.", "info")
@@ -278,7 +278,7 @@ func (c *AWSClusterController) StartCluster() {
 func (c *AWSClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
 
 	ctx.SendSDLog("AWSNetworkController: FetchStatus.", "info")
@@ -334,7 +334,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
 
 	ctx.SendSDLog("AWSNetworkController: TerminateCluster.", "info")
@@ -391,7 +391,7 @@ func (c *AWSClusterController) TerminateCluster() {
 // @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
 	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
@@ -420,7 +420,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @router /amis/:amiId [get]
 func (c *AWSClusterController) GetAMI() {
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
 	ctx.SendSDLog("AWSClusterController: FetchAMIs.", "info")
@@ -465,7 +465,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("AWSClusterController: EnableScaling.", "info")
 

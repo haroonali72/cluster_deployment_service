@@ -2,7 +2,7 @@ package azure
 
 import (
 	"antelope/models/azure"
-	"antelope/models/logging"
+	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -24,7 +24,7 @@ func (c *AzureTemplateController) Get() {
 
 	id := c.GetString(":templateId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id)
 
 	ctx.SendSDLog("AzureTemplateController: Get template with id: "+id, "info")
@@ -54,7 +54,7 @@ func (c *AzureTemplateController) Get() {
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AzureTemplateController) GetAll() {
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("AzureTemplateController: GetAll template.", "info")
 
@@ -82,7 +82,7 @@ func (c *AzureTemplateController) Post() {
 	var template azure.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 
 	ctx.SendSDLog("AzureTemplateController: Post new template with name: "+template.Name, "info")
@@ -116,7 +116,7 @@ func (c *AzureTemplateController) Patch() {
 	var template azure.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId)
 
 	ctx.SendSDLog("AzureTemplateController: Patch template with id: "+template.TemplateId, "info")
@@ -149,7 +149,7 @@ func (c *AzureTemplateController) Patch() {
 func (c *AzureTemplateController) Delete() {
 	id := c.GetString(":templateId")
 
-	ctx := new(logging.Context)
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
 
 	ctx.SendSDLog("AzureTemplateController: Delete template with id: ", id)

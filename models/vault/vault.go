@@ -2,7 +2,6 @@ package vault
 
 import (
 	"antelope/models"
-	"antelope/models/logging"
 	"antelope/models/utils"
 	"encoding/json"
 	"errors"
@@ -50,7 +49,7 @@ type azureKey struct {
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 
-func GetSSHKey(cloudType string, keyName string, ctx logging.Context) (interface{}, error) {
+func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
@@ -88,7 +87,7 @@ func GetSSHKey(cloudType string, keyName string, ctx logging.Context) (interface
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url")
 }
-func PostSSHKey(keyRaw interface{}, ctx logging.Context) (int, error) {
+func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
@@ -108,7 +107,7 @@ func PostSSHKey(keyRaw interface{}, ctx logging.Context) (int, error) {
 	keyObj.Cloud = "aws"
 	keyObj.KeyName = key.KeyName
 	client := utils.InitReq()
-	request_data, err := logging.TransformData(keyObj)
+	request_data, err := utils.TransformData(keyObj)
 	if err != nil {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
@@ -133,7 +132,7 @@ func PostSSHKey(keyRaw interface{}, ctx logging.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func PostAzureSSHKey(keyRaw interface{}, ctx logging.Context) (int, error) {
+func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		ctx.SendSDLog(e.Error(), "error")
@@ -154,7 +153,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx logging.Context) (int, error) {
 
 	client := utils.InitReq()
 
-	request_data, err := logging.TransformData(keyObj)
+	request_data, err := utils.TransformData(keyObj)
 	if err != nil {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
@@ -177,7 +176,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx logging.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func GetAzureSSHKey(cloudType string, keyName string, ctx logging.Context) (interface{}, error) {
+func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
@@ -212,7 +211,7 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx logging.Context) (inte
 	return key, nil
 
 }
-func GetAllSSHKey(cloudType string, ctx logging.Context) ([]string, error) {
+func GetAllSSHKey(cloudType string, ctx utils.Context) ([]string, error) {
 	var keys []string
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType)
 	if err != nil {
@@ -249,7 +248,7 @@ func GetAllSSHKey(cloudType string, ctx logging.Context) ([]string, error) {
 	return keys, nil
 
 }
-func GetCredentialProfile(cloudType string, profileId string, ctx logging.Context) ([]byte, error) {
+func GetCredentialProfile(cloudType string, profileId string, ctx utils.Context) ([]byte, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/" + cloudType + "/credentials/" + profileId)
 	if err != nil {

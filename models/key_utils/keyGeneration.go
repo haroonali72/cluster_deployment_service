@@ -1,7 +1,6 @@
 package key_utils
 
 import (
-	"antelope/models/logging"
 	"antelope/models/utils"
 	"encoding/json"
 	"io/ioutil"
@@ -9,7 +8,7 @@ import (
 	"time"
 )
 
-func KeyConversion(keyInfo interface{}, ctx logging.Context) (utils.Key, error) {
+func KeyConversion(keyInfo interface{}, ctx utils.Context) (utils.Key, error) {
 	b, e := json.Marshal(keyInfo)
 	var k utils.Key
 	if e != nil {
@@ -24,7 +23,7 @@ func KeyConversion(keyInfo interface{}, ctx logging.Context) (utils.Key, error) 
 	return k, nil
 }
 
-func GenerateKeyPair(keyName string, ctx logging.Context) (utils.KeyPairResponse, error) {
+func GenerateKeyPair(keyName string, ctx utils.Context) (utils.KeyPairResponse, error) {
 
 	res := utils.KeyPairResponse{}
 

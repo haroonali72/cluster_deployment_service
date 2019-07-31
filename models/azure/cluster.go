@@ -4,7 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
-	"antelope/models/logging"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -98,7 +97,7 @@ type Data struct {
 	Region string `json:"region"`
 }
 
-func GetRegion(projectId string, ctx logging.Context) (string, error) {
+func GetRegion(projectId string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
 
 	data, err := api_handler.GetAPIStatus(url, ctx)
@@ -115,7 +114,7 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func GetNetwork(projectId string, ctx logging.Context, resourceGroup string) error {
+func GetNetwork(projectId string, ctx utils.Context, resourceGroup string) error {
 
 	url := getNetworkHost("azure") + "/" + projectId
 
@@ -137,7 +136,7 @@ func GetNetwork(projectId string, ctx logging.Context, resourceGroup string) err
 
 	return nil
 }
-func GetProfile(profileId string, region string, ctx logging.Context) (vault.AzureProfile, error) {
+func GetProfile(profileId string, region string, ctx utils.Context) (vault.AzureProfile, error) {
 	data, err := vault.GetCredentialProfile("azure", profileId, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -161,7 +160,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
+func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 
 	_, err := GetCluster(cluster.ProjectId, ctx)
 	if err == nil { //cluster found
@@ -191,7 +190,7 @@ func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	return nil
 }
 
-func GetCluster(projectId string, ctx logging.Context) (cluster Cluster_Def, err error) {
+func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
@@ -211,7 +210,7 @@ func GetCluster(projectId string, ctx logging.Context) (cluster Cluster_Def, err
 	return cluster, nil
 }
 
-func GetAllCluster(ctx logging.Context) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
@@ -229,7 +228,7 @@ func GetAllCluster(ctx logging.Context) (clusters []Cluster_Def, err error) {
 	return clusters, nil
 }
 
-func UpdateCluster(cluster Cluster_Def, update bool, ctx logging.Context) error {
+func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
@@ -258,7 +257,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx logging.Context) error 
 	return nil
 }
 
-func DeleteCluster(projectId string, ctx logging.Context) error {
+func DeleteCluster(projectId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), "error")
@@ -275,14 +274,14 @@ func DeleteCluster(projectId string, ctx logging.Context) error {
 
 	return nil
 }
-func PrintError(confError error, name, projectId string, ctx logging.Context) {
+func PrintError(confError error, name, projectId string, ctx utils.Context) {
 	if confError != nil {
 		ctx.SendSDLog(confError.Error(), "error")
-		logging.SendLog("Cluster creation failed : "+name, "error", projectId)
-		logging.SendLog(confError.Error(), "error", projectId)
+		utils.SendLog("Cluster creation failed : "+name, "error", projectId)
+		utils.SendLog(confError.Error(), "error", projectId)
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logging.Context) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context) (confError error) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -304,7 +303,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logg
 		return confError
 	}
 
-	logging.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	cluster, confError = azure.createCluster(cluster, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
@@ -319,7 +318,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logg
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 
 	}
@@ -328,15 +327,15 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logg
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
-	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available")
+	utils.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
 }
-func FetchStatus(credentials vault.AzureProfile, projectId string, ctx logging.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
@@ -368,7 +367,7 @@ func FetchStatus(credentials vault.AzureProfile, projectId string, ctx logging.C
 	}*/
 	return c, nil
 }
-func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx logging.Context) error {
+func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context) error {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
@@ -384,7 +383,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx l
 	}
 	if cluster.Status != "Cluster Created" {
 		ctx.SendSDLog("Cluster model: Cluster is not in created state ", "error")
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
@@ -406,19 +405,19 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx l
 
 		ctx.SendSDLog(err.Error(), "error")
 
-		logging.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
+		utils.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-			logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			logging.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.ProjectId, "Status Available")
+			utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			utils.SendLog(err.Error(), "error", cluster.ProjectId)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return err
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
 
@@ -431,13 +430,13 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx l
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-		logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(err.Error(), "error", cluster.ProjectId)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
-	logging.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available")
+	utils.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
 }
@@ -456,7 +455,7 @@ func InsertSSHKeyPair(key utils.Key) (err error) {
 	}
 	return nil
 }
-func GetAllSSHKeyPair(ctx logging.Context) (keys []string, err error) {
+func GetAllSSHKeyPair(ctx utils.Context) (keys []string, err error) {
 
 	keys, err = vault.GetAllSSHKey("azure", ctx)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
-	"antelope/models/logging"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -87,7 +86,7 @@ type Data struct {
 	Region string `json:"region"`
 }
 
-func checkClusterSize(cluster Cluster_Def, ctx logging.Context) error {
+func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pools := range cluster.NodePools {
 		if pools.NodeCount > 3 {
 			return errors.New("Nodepool can't have more than 3 nodes")
@@ -95,7 +94,7 @@ func checkClusterSize(cluster Cluster_Def, ctx logging.Context) error {
 	}
 	return nil
 }
-func GetProfile(profileId string, region string, ctx logging.Context) (vault.AwsProfile, error) {
+func GetProfile(profileId string, region string, ctx utils.Context) (vault.AwsProfile, error) {
 	data, err := vault.GetCredentialProfile("aws", profileId, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -111,7 +110,7 @@ func GetProfile(profileId string, region string, ctx logging.Context) (vault.Aws
 	return awsProfile, nil
 
 }
-func GetRegion(projectId string, ctx logging.Context) (string, error) {
+func GetRegion(projectId string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
 
 	data, err := api_handler.GetAPIStatus(url, ctx)
@@ -129,7 +128,7 @@ func GetRegion(projectId string, ctx logging.Context) (string, error) {
 
 }
 
-func GetNetwork(projectId string, ctx logging.Context) error {
+func GetNetwork(projectId string, ctx utils.Context) error {
 
 	url := getNetworkHost("aws") + "/" + projectId
 
@@ -141,7 +140,7 @@ func GetNetwork(projectId string, ctx logging.Context) error {
 
 	return nil
 }
-func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
+func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, ctx)
 	if err == nil { //cluster found
 		ctx.SendSDLog("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, "error")
@@ -162,7 +161,7 @@ func CreateCluster(cluster Cluster_Def, ctx logging.Context) error {
 	return nil
 }
 
-func GetCluster(projectId string, ctx logging.Context) (cluster Cluster_Def, err error) {
+func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
@@ -181,7 +180,7 @@ func GetCluster(projectId string, ctx logging.Context) (cluster Cluster_Def, err
 	return cluster, nil
 }
 
-func GetAllCluster(ctx logging.Context) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
@@ -198,7 +197,7 @@ func GetAllCluster(ctx logging.Context) (clusters []Cluster_Def, err error) {
 	return clusters, nil
 }
 
-func UpdateCluster(cluster Cluster_Def, update bool, ctx logging.Context) error {
+func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Update - Cluster   does not exist in the database: "+cluster.Name+err.Error(), "error")
@@ -226,7 +225,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx logging.Context) error 
 	return nil
 }
 
-func DeleteCluster(projectId string, ctx logging.Context) error {
+func DeleteCluster(projectId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), "error")
@@ -243,15 +242,15 @@ func DeleteCluster(projectId string, ctx logging.Context) error {
 
 	return nil
 }
-func PrintError(confError error, name, projectId string, ctx logging.Context) {
+func PrintError(confError error, name, projectId string, ctx utils.Context) {
 	if confError != nil {
 		ctx.SendSDLog(confError.Error(), "error")
-		logging.SendLog("Cluster creation failed : "+name, "error", projectId)
-		logging.SendLog(confError.Error(), "error", projectId)
+		utils.SendLog("Cluster creation failed : "+name, "error", projectId)
+		utils.SendLog(confError.Error(), "error", projectId)
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx logging.Context) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context) (confError error) {
 
 	aws := AWS{
 		AccessKey: credentials.AccessKey,
@@ -271,7 +270,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx lo
 		return confError
 	}
 
-	logging.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	createdPools, confError := aws.createCluster(cluster, ctx)
 
 	if confError != nil {
@@ -287,7 +286,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx lo
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
@@ -296,15 +295,15 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx lo
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
-	logging.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available")
+	utils.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
 }
-func FetchStatus(credentials vault.AwsProfile, projectId string, ctx logging.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
@@ -335,7 +334,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx logging.Con
 		}*/
 	return c, nil
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx logging.Context) error {
+func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context) error {
 
 	aws := AWS{
 		AccessKey: profile.Profile.AccessKey,
@@ -358,11 +357,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx logging
 
 	if cluster.Status != "Cluster Created" && cluster.Status == "Cluster Termination Failed" {
 		ctx.SendSDLog("Cluster model: Cluster is not in created state ", "error")
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
-	logging.SendLog("Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog("Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
 	err = aws.terminateCluster(cluster, ctx)
 
@@ -370,19 +369,19 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx logging
 
 		ctx.SendSDLog(err.Error(), "error")
 
-		logging.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
+		utils.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-			logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			logging.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.ProjectId, "Status Available")
+			utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			utils.SendLog(err.Error(), "error", cluster.ProjectId)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return err
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
 
@@ -394,17 +393,17 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx logging
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-		logging.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		logging.SendLog(err.Error(), "error", cluster.ProjectId)
-		publisher.Notify(cluster.ProjectId, "Status Available")
+		utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(err.Error(), "error", cluster.ProjectId)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
-	logging.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available")
+	utils.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
 }
-func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx logging.Context) Cluster_Def {
+func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.Context) Cluster_Def {
 	for index, nodepool := range cluster.NodePools {
 
 		var updatedNodes []*Node
@@ -442,7 +441,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx logging
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetAllSSHKeyPair(ctx logging.Context) (keys []string, err error) {
+func GetAllSSHKeyPair(ctx utils.Context) (keys []string, err error) {
 
 	keys, err = vault.GetAllSSHKey("aws", ctx)
 	if err != nil {
@@ -503,7 +502,7 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 
 	return keys, nil
 }
-func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx logging.Context) ([]*ec2.BlockDeviceMapping, error) {
+func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context) ([]*ec2.BlockDeviceMapping, error) {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -523,7 +522,7 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx logging.Context) 
 	}
 	return amis, nil
 }
-func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx logging.Context) error {
+func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.Context) error {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,

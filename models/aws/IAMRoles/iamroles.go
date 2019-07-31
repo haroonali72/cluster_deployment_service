@@ -1,7 +1,7 @@
 package IAMRoles
 
 import (
-	"antelope/models/logging"
+	"antelope/models/utils"
 	"errors"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
@@ -125,7 +125,7 @@ func (cloud *AWSIAMRoles) CreateRole(name string) (string, error) {
 	return roleName, nil
 
 }
-func (cloud *AWSIAMRoles) CreatePolicy(name string, policyDef []byte, ctx logging.Context) (string, error) {
+func (cloud *AWSIAMRoles) CreatePolicy(name string, policyDef []byte, ctx utils.Context) (string, error) {
 
 	roleName := name
 
@@ -153,7 +153,7 @@ func (cloud *AWSIAMRoles) CreatePolicy(name string, policyDef []byte, ctx loggin
 	return roleName, nil
 
 }
-func (cloud *AWSIAMRoles) CreateIAMProfile(name string, ctx logging.Context) (string, error) {
+func (cloud *AWSIAMRoles) CreateIAMProfile(name string, ctx utils.Context) (string, error) {
 
 	roleName := name
 
@@ -230,7 +230,7 @@ var testInstanceMap = map[string]string{
 	"ap-south-1":     "ami-08a5e367",
 }
 
-func (cloud *AWSIAMRoles) DeletePolicy(policyName string, ctx logging.Context) error {
+func (cloud *AWSIAMRoles) DeletePolicy(policyName string, ctx utils.Context) error {
 	err, policyArn := cloud.GetPolicyARN(policyName)
 	if err != nil {
 		beego.Error(err.Error())
@@ -256,7 +256,7 @@ func (cloud *AWSIAMRoles) GetPolicyARN(policyName string) (error, string) {
 	policyArn := "arn:aws:iam::" + id + ":policy/" + policyName
 	return nil, policyArn
 }
-func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx logging.Context) error {
+func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	err, policyArn := cloud.GetPolicyARN(roleName)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -281,7 +281,7 @@ func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx logging.Context) error
 	beego.Info(out_.GoString())
 	return nil
 }
-func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx logging.Context) error {
+func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx utils.Context) error {
 	profile := iam.RemoveRoleFromInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
 	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
 	if err != nil {
@@ -299,7 +299,7 @@ func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx logging.Context)
 	beego.Info(outt.GoString())
 	return nil
 }
-func (cloud *AWSIAMRoles) DeleteIAMRole(name string, ctx logging.Context) error {
+func (cloud *AWSIAMRoles) DeleteIAMRole(name string, ctx utils.Context) error {
 
 	roleName := name
 	err := cloud.DeleteIAMProfile(roleName, ctx)
