@@ -1211,7 +1211,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	}
 	osDisk := &compute.VirtualMachineScaleSetOSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
-		Name:         to.StringPtr(pool.Name),
+		//Name:         to.StringPtr(pool.Name),
 		ManagedDisk: &compute.VirtualMachineScaleSetManagedDiskParameters{
 			StorageAccountType: satype,
 		},
