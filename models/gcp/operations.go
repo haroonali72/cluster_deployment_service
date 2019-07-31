@@ -10,7 +10,6 @@ import (
 	"antelope/models/vault"
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
 	"google.golang.org/api/compute/v1"
@@ -157,7 +156,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 			Boot:       false,
 			InitializeParams: &compute.AttachedDiskInitializeParams{
 				DiskSizeGb: pool.Volume.Size,
-				DiskType: string(pool.Volume.DiskType),
+				DiskType:   string(pool.Volume.DiskType),
 			},
 		}
 
@@ -299,18 +298,11 @@ func (cloud *GCP) init() error {
 	return nil
 }
 
-func GetGCP(credentials, region string) (GCP, error) {
-	isValid, creds := utils.IsValdidGcpCredentials(credentials)
-	if !isValid {
-		text := "invalid cloud credentials"
-		beego.Error(text)
-		return GCP{}, errors.New(text)
-	}
-
+func GetGCP(credentials GcpCredentials) (GCP, error) {
 	return GCP{
-		Credentials: creds.Raw,
-		ProjectId:   creds.ProjectId,
-		Region:      region,
+		Credentials: credentials.RawData,
+		ProjectId:   credentials.AccountData.ProjectId,
+		Region:      credentials.Region,
 	}, nil
 }
 

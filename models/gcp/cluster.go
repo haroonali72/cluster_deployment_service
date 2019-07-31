@@ -6,8 +6,10 @@ import (
 	"antelope/models/logging"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -61,6 +63,27 @@ type Volume struct {
 	Size         int64              `json:"disk_size" bson:"disk_size"`
 	EnableVolume bool               `json:"enable_volume" bson:"enable_volume"`
 }
+type GcpResponse struct {
+	Credentials GcpCredentials `json:"credentials"`
+}
+type GcpCredentials struct {
+	AccountData AccountData `json:"account_data"`
+	RawData     string      `json:"raw_account_data" valid:"required"`
+	Region      string      `json:"region"`
+}
+
+type AccountData struct {
+	Type          string `json:"type" valid:"required"`
+	ProjectId     string `json:"project_id" valid:"required"`
+	PrivateKeyId  string `json:"private_key_id" valid:"required"`
+	PrivateKey    string `json:"private_key" valid:"required"`
+	ClientEmail   string `json:"client_email" valid:"required"`
+	ClientId      string `json:"client_id" valid:"required"`
+	AuthUri       string `json:"auth_uri" valid:"required"`
+	TokenUri      string `json:"token_uri" valid:"required"`
+	AuthProvider  string `json:"auth_provider_x509_cert_url" valid:"required"`
+	ClientCertUrl string `json:"client_x509_cert_url" valid:"required"`
+}
 
 func checkClusterSize(cluster Cluster_Def) error {
 	for _, pools := range cluster.NodePools {
@@ -69,6 +92,37 @@ func checkClusterSize(cluster Cluster_Def) error {
 		}
 	}
 	return nil
+}
+
+func IsValidGcpCredentials(profileId, region string) (bool, GcpCredentials) {
+	credentials := GcpResponse{}
+
+	response, err := vault.GetCredentialProfile(profileId, "gcp", logging.Context{})
+	if err != nil {
+		return false, GcpCredentials{}
+	}
+
+	err = json.Unmarshal(response, &credentials)
+	if err != nil {
+		beego.Error(err.Error())
+		return false, GcpCredentials{}
+	}
+
+	jsonData, err := json.Marshal(credentials.Credentials.AccountData)
+	if err != nil {
+		beego.Error(err.Error())
+		return false, GcpCredentials{}
+	}
+
+	credentials.Credentials.RawData = string(jsonData)
+	credentials.Credentials.Region = region
+	_, err = govalidator.ValidateStruct(credentials.Credentials)
+	if err != nil {
+		beego.Error(err.Error())
+		return false, GcpCredentials{}
+	}
+
+	return true, credentials.Credentials
 }
 
 func CreateCluster(cluster Cluster_Def) error {
@@ -193,8 +247,8 @@ func PrintError(confError error, name, projectId string) {
 	}
 }
 
-func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
-	gcp, err := GetGCP(credentials, "")
+func DeployCluster(cluster Cluster_Def, credentials GcpCredentials) (confError error) {
+	gcp, err := GetGCP(credentials)
 	if err != nil {
 		return err
 	}
@@ -243,14 +297,14 @@ func DeployCluster(cluster Cluster_Def, credentials string) (confError error) {
 	return nil
 }
 
-func FetchStatus(credentials string, projectId string) (Cluster_Def, error) {
+func FetchStatus(credentials GcpCredentials, projectId string) (Cluster_Def, error) {
 	cluster, err := GetCluster(projectId)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}
 
-	gcp, err := GetGCP(credentials, "")
+	gcp, err := GetGCP(credentials)
 	if err != nil {
 		return Cluster_Def{}, err
 	}
@@ -277,7 +331,7 @@ func GetAllSSHKeyPair() (keys []string, err error) {
 	return keys, nil
 }
 
-func TerminateCluster(cluster Cluster_Def, credentials string) error {
+func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials) error {
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
@@ -296,7 +350,7 @@ func TerminateCluster(cluster Cluster_Def, credentials string) error {
 		return err
 	}
 
-	gcp, err := GetGCP(credentials, "")
+	gcp, err := GetGCP(credentials)
 	if err != nil {
 		return err
 	}
