@@ -91,6 +91,9 @@ func (cloud *AZURE) init() error {
 	cloud.VMSSCLient = compute.NewVirtualMachineScaleSetsClient(cloud.Subscription)
 	cloud.VMSSCLient.Authorizer = cloud.Authorizer
 
+	cloud.DiskClient = compute.NewDisksClient(cloud.Subscription)
+	cloud.DiskClient.Authorizer = cloud.Authorizer
+
 	cloud.Resources = make(map[string]interface{})
 
 	return nil
@@ -453,6 +456,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context) err
 			if err != nil {
 				return err
 			}
+			beego.Info("terminating master pool disk: " + pool.Name)
 			err = cloud.deleteDisk(cluster.ResourceGroup, pool.Name, ctx)
 			if err != nil {
 				return err
@@ -867,7 +871,7 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 
 	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, diskName)
 	if err != nil {
-		beego.Error("Disk deletion failed")
+		beego.Error("Disk deletion failed" + err.Error())
 		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
@@ -1207,7 +1211,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	}
 	osDisk := &compute.VirtualMachineScaleSetOSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
-		//Name:         to.StringPtr(projectId + "-" + strconv.Itoa(poolIndex)),
+		Name:         to.StringPtr(pool.Name),
 		ManagedDisk: &compute.VirtualMachineScaleSetManagedDiskParameters{
 			StorageAccountType: satype,
 		},
