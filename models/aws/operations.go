@@ -246,7 +246,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]Creat
 					return nil, err
 				}
 			}
-			if pool.Ami.IsExternal {
+			if pool.IsExternal {
 				pool.KeyInfo.KeyMaterial = keyMaterial
 				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId, ctx)
 				if err != nil {
@@ -846,17 +846,17 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	}
 
 	ctx.SendSDLog("attaching external volume", "info")
-	if pool.Ami.IsExternal {
+	if pool.IsExternal {
 		var external_volume ec2.BlockDeviceMapping
 
 		var external_ebs ec2.EbsBlockDevice
 
-		external_ebs.VolumeType = &pool.Ami.ExternalVolume.VolumeType
-		external_ebs.VolumeSize = &pool.Ami.ExternalVolume.VolumeSize
-		if pool.Ami.ExternalVolume.VolumeType == "io1" {
-			external_ebs.Iops = &pool.Ami.ExternalVolume.Iops
+		external_ebs.VolumeType = &pool.ExternalVolume.VolumeType
+		external_ebs.VolumeSize = &pool.ExternalVolume.VolumeSize
+		if pool.ExternalVolume.VolumeType == "io1" {
+			external_ebs.Iops = &pool.ExternalVolume.Iops
 		}
-		if pool.Ami.ExternalVolume.DeleteOnTermination {
+		if pool.ExternalVolume.DeleteOnTermination {
 			external_ebs.DeleteOnTermination = aws.Bool(true)
 		} else {
 			external_ebs.DeleteOnTermination = aws.Bool(false)

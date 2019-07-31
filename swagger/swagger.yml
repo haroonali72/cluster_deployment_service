@@ -913,7 +913,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  484.0xc05989ab10.false:
+  484.0xc059892690.false:
     title: "false"
     type: object
   aws.Ami:
@@ -924,10 +924,6 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       ami_id:
         type: string
-      external_volume:
-        $ref: '#/definitions/aws.Volume'
-      is_external:
-        type: boolean
       name:
         type: string
       root_volume:
@@ -950,7 +946,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/484.0xc05989ab10.false'
+        $ref: '#/definitions/484.0xc059892690.false'
       name:
         type: string
       network_name:
@@ -1010,6 +1006,10 @@ definitions:
       auto_scaling:
         $ref: '#/definitions/aws.AutoScaling'
       enable_scaling:
+        type: boolean
+      external_volume:
+        $ref: '#/definitions/aws.Volume'
+      is_external:
         type: boolean
       key_info:
         $ref: '#/definitions/aws.Key'
@@ -1161,6 +1161,8 @@ definitions:
         type: boolean
       image:
         $ref: '#/definitions/azure.ImageReference'
+      is_external:
+        type: boolean
       key_info:
         $ref: '#/definitions/utils.Key'
       machine_type:
@@ -1272,8 +1274,6 @@ definitions:
         format: int32
       disk_type:
         $ref: '#/definitions/models.OsDiskType'
-      enable_volume:
-        type: boolean
   azure.string:
     title: string
     type: object

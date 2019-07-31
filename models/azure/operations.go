@@ -132,7 +132,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 			ctx.SendSDLog(err.Error(), "error")
 			return cluster, err
 		}
-		if pool.Volume.EnableVolume {
+		if pool.EnableVolume {
 			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx)
 			if err != nil {
 				utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
@@ -689,7 +689,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			},
 		},
 	}
-	if pool.Volume.EnableVolume {
+	if pool.EnableVolume {
 		vm.StorageProfile.DataDisks = &storage
 	}
 	private := ""
@@ -1287,7 +1287,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		},
 	}
 
-	if pool.Volume.EnableVolume {
+	if pool.EnableVolume {
 		params.VirtualMachineProfile.StorageProfile.DataDisks = &storage
 	}
 

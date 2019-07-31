@@ -39,6 +39,7 @@ type NodePool struct {
 	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
 	Image              ImageReference     `json:"image" bson:"image" valid:"required"`
 	Volume             Volume             `json:"volume" bson:"volume"`
+	EnableVolume       bool               `json:"is_external" bson:"is_external"`
 	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" valid:"required"`
 	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
@@ -63,9 +64,8 @@ type Key struct {
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 type Volume struct {
-	DataDisk     models.OsDiskType `json:"disk_type" bson:"disk_type"`
-	Size         int32             `json:"disk_size" bson:"disk_size"`
-	EnableVolume bool              `json:"enable_volume" bson:"enable_volume"`
+	DataDisk models.OsDiskType `json:"disk_type" bson:"disk_type"`
+	Size     int32             `json:"disk_size" bson:"disk_size"`
 }
 type VM struct {
 	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`

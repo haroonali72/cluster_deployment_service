@@ -41,6 +41,8 @@ type NodePool struct {
 	PoolRole           string        `json:"pool_role" bson:"pool_role" valid:"required"`
 	EnableScaling      bool          `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
+	IsExternal         bool          `json:"is_external" bson:"is_external"`
+	ExternalVolume     Volume        `json:"external_volume" bson:"external_volume"`
 }
 type AutoScaling struct {
 	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
@@ -64,14 +66,11 @@ type Key struct {
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 type Ami struct {
-	ID       bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name     string        `json:"name" bson:"name"`
-	AmiId    string        `json:"ami_id" bson:"ami_id" valid:"required"`
-	Username string        `json:"username" bson:"username" valid:"required"`
-
-	RootVolume     Volume `json:"root_volume" bson:"root_volume" valid:"required"`
-	IsExternal     bool   `json:"is_external" bson:"is_external"`
-	ExternalVolume Volume `json:"external_volume" bson:"external_volume"`
+	ID         bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name       string        `json:"name" bson:"name"`
+	AmiId      string        `json:"ami_id" bson:"ami_id" valid:"required"`
+	Username   string        `json:"username" bson:"username" valid:"required"`
+	RootVolume Volume        `json:"root_volume" bson:"root_volume" valid:"required"`
 }
 type Volume struct {
 	VolumeType          string `json:"volume_type" bson:"volume_type"`

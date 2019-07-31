@@ -1390,7 +1390,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc05989ab10.false": {
+        "484.0xc059892690.false": {
             "title": "false",
             "type": "object"
         },
@@ -1403,12 +1403,6 @@
                 },
                 "ami_id": {
                     "type": "string"
-                },
-                "external_volume": {
-                    "$ref": "#/definitions/aws.Volume"
-                },
-                "is_external": {
-                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
@@ -1442,7 +1436,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc05989ab10.false"
+                    "$ref": "#/definitions/484.0xc059892690.false"
                 },
                 "name": {
                     "type": "string"
@@ -1532,6 +1526,12 @@
                     "$ref": "#/definitions/aws.AutoScaling"
                 },
                 "enable_scaling": {
+                    "type": "boolean"
+                },
+                "external_volume": {
+                    "$ref": "#/definitions/aws.Volume"
+                },
+                "is_external": {
                     "type": "boolean"
                 },
                 "key_info": {
@@ -1756,6 +1756,9 @@
                 "image": {
                     "$ref": "#/definitions/azure.ImageReference"
                 },
+                "is_external": {
+                    "type": "boolean"
+                },
                 "key_info": {
                     "$ref": "#/definitions/utils.Key"
                 },
@@ -1920,9 +1923,6 @@
                 },
                 "disk_type": {
                     "$ref": "#/definitions/models.OsDiskType"
-                },
-                "enable_volume": {
-                    "type": "boolean"
                 }
             }
         },
