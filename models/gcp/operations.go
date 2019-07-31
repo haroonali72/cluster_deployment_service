@@ -149,7 +149,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		},
 	}
 
-	if pool.Volume.EnableVolume {
+	if pool.EnableVolume {
 		secondaryDisk := compute.AttachedDisk{
 			AutoDelete: true,
 			Boot:       false,

@@ -33,6 +33,7 @@ type NodePool struct {
 	MachineType   string        `json:"machine_type" bson:"machine_type"`
 	Image         Image         `json:"image" bson:"image"`
 	Volume        Volume        `json:"volume" bson:"volume"`
+	EnableVolume  bool          `json:"is_external" bson:"is_external"`
 	PoolSubnet    string        `json:"subnet_id" bson:"subnet_id"`
 	PoolRole      string        `json:"pool_role" bson:"pool_role"`
 	Nodes         []*Node       `json:"nodes" bson:"nodes"`
@@ -57,10 +58,9 @@ type Image struct {
 }
 
 type Volume struct {
-	DiskType     models.GCPDiskType `json:"disk_type" bson:"disk_type"`
-	IsBlank      bool               `json:"is_blank" bson:"is_blank"`
-	Size         int64              `json:"disk_size" bson:"disk_size"`
-	EnableVolume bool               `json:"enable_volume" bson:"enable_volume"`
+	DiskType models.GCPDiskType `json:"disk_type" bson:"disk_type"`
+	IsBlank  bool               `json:"is_blank" bson:"is_blank"`
+	Size     int64              `json:"disk_size" bson:"disk_size"`
 }
 type GcpResponse struct {
 	Credentials GcpCredentials `json:"credentials"`

@@ -68,13 +68,14 @@ type Volume struct {
 	Size     int32             `json:"disk_size" bson:"disk_size"`
 }
 type VM struct {
-	CloudId   *string `json:"cloud_id" bson:"cloud_id,omitempty"`
-	NodeState *string `json:"node_state" bson:"node_state,omitempty"`
-	Name      *string `json:"name" bson:"name,omitempty"`
-	PrivateIP *string `json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP  *string `json:"public_ip" bson:"public_ip,omitempty"`
-	UserName  *string `json:"user_name" bson:"user_name,omitempty"`
-	PAssword  *string `json:"password" bson:"password,omitempty"`
+	CloudId      *string `json:"cloud_id" bson:"cloud_id,omitempty"`
+	NodeState    *string `json:"node_state" bson:"node_state,omitempty"`
+	Name         *string `json:"name" bson:"name,omitempty"`
+	PrivateIP    *string `json:"private_ip" bson:"private_ip,omitempty"`
+	PublicIP     *string `json:"public_ip" bson:"public_ip,omitempty"`
+	UserName     *string `json:"user_name" bson:"user_name,omitempty"`
+	PAssword     *string `json:"password" bson:"password,omitempty"`
+	ComputerName *string `json:"computer_name" bson:"computer_name,omitempty"`
 }
 type DiagnosticsProfile struct {
 	Enable            bool   `json:"enable" bson:"enable"`

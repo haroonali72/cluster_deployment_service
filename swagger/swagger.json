@@ -1390,7 +1390,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc059892690.false": {
+        "484.0xc05992ab40.false": {
             "title": "false",
             "type": "object"
         },
@@ -1436,7 +1436,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc059892690.false"
+                    "$ref": "#/definitions/484.0xc05992ab40.false"
                 },
                 "name": {
                     "type": "string"
@@ -1893,6 +1893,9 @@
                 "cloud_id": {
                     "type": "string"
                 },
+                "computer_name": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2023,6 +2026,9 @@
                 "image": {
                     "$ref": "#/definitions/gcp.Image"
                 },
+                "is_external": {
+                    "type": "boolean"
+                },
                 "key_info": {
                     "$ref": "#/definitions/utils.Key"
                 },
@@ -2124,9 +2130,6 @@
                 },
                 "disk_type": {
                     "$ref": "#/definitions/models.GCPDiskType"
-                },
-                "enable_volume": {
-                    "type": "boolean"
                 },
                 "is_blank": {
                     "type": "boolean"

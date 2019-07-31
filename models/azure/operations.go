@@ -192,6 +192,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
 		vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
 		vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
+		vmObj.ComputerName = vm.OsProfile.ComputerName
 
 		cpVms = append(cpVms, &vmObj)
 
@@ -236,7 +237,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
-
+			vmObj.ComputerName = vm.OsProfile.ComputerName
 			cpVms = append(cpVms, &vmObj)
 
 		}
@@ -323,6 +324,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster
 			vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
+			vmObj.ComputerName = vm.OsProfile.ComputerName
 
 			//cpVms = append(cpVms, &vmObj)
 			beego.Info("updated node pool")
@@ -362,7 +364,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster
 				vmObj.NodeState = vm.ProvisioningState
 				vmObj.UserName = vm.OsProfile.AdminUsername
 				vmObj.PAssword = vm.OsProfile.AdminPassword
-
+				vmObj.ComputerName = vm.OsProfile.ComputerName
 				cpVms = append(cpVms, &vmObj)
 
 			}
