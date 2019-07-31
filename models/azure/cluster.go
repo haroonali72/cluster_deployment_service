@@ -21,7 +21,7 @@ type SSHKeyPair struct {
 }
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required matches:[A-Za-z0-9]`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"in(NEW|new|New)"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AZURE|azure)"`
@@ -35,7 +35,7 @@ type Cluster_Def struct {
 type NodePool struct {
 	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
 	Name               string             `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required matches:[0-9]"`
+	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,int"`
 	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
 	Image              ImageReference     `json:"image" bson:"image" valid:"required"`
 	Volume             Volume             `json:"volume" bson:"volume"`
