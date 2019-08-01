@@ -869,7 +869,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 }
 func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.Context) error {
 
-	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, diskName)
+	_, err := cloud.DiskClient.Delete(context.Background(), resouceGroup, diskName)
 	if err != nil {
 		beego.Error("Disk deletion failed" + err.Error())
 		ctx.SendSDLog(err.Error(), "error")
