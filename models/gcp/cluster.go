@@ -69,6 +69,7 @@ type GcpCredentials struct {
 	AccountData AccountData `json:"account_data"`
 	RawData     string      `json:"raw_account_data" valid:"required"`
 	Region      string      `json:"region"`
+	Zone        string      `json:"zone"`
 }
 
 type AccountData struct {
@@ -93,7 +94,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 	return nil
 }
 
-func IsValidGcpCredentials(profileId, region string) (bool, GcpCredentials) {
+func IsValidGcpCredentials(profileId, region, zone string) (bool, GcpCredentials) {
 	credentials := GcpResponse{}
 
 	response, err := vault.GetCredentialProfile("gcp", profileId, utils.Context{})
@@ -115,6 +116,7 @@ func IsValidGcpCredentials(profileId, region string) (bool, GcpCredentials) {
 
 	credentials.Credentials.RawData = string(jsonData)
 	credentials.Credentials.Region = region
+	credentials.Credentials.Zone = zone
 	_, err = govalidator.ValidateStruct(credentials.Credentials)
 	if err != nil {
 		beego.Error(err.Error())

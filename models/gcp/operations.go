@@ -21,6 +21,7 @@ type GCP struct {
 	Credentials string
 	ProjectId   string
 	Region      string
+	Zone        string
 }
 
 func getNetworkHost(cloudType string) string {
@@ -62,7 +63,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		if pool.PoolRole == "master" {
 			instance := compute.Instance{
 				Name:        strings.ToLower(pool.Name),
-				MachineType: pool.MachineType,
+				MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
 				NetworkInterfaces: []*compute.NetworkInterface{
 					{
 						Subnetwork: getSubnet(pool.PoolSubnet, gcpNetwork.Definition[0].Subnets),
@@ -79,7 +80,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 				},
 			}
 			ctx := context.Background()
-			_, err = cloud.Client.Instances.Insert(cloud.ProjectId, "a", &instance).Context(ctx).Do()
+			_, err = cloud.Client.Instances.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instance).Context(ctx).Do()
 			if err != nil {
 				beego.Error(err.Error())
 				return cluster, err
@@ -98,7 +99,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 			}
 
 			ctx := context.Background()
-			_, err = cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, "a", &instanceGroup).Context(ctx).Do()
+			_, err = cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instanceGroup).Context(ctx).Do()
 			if err != nil {
 				beego.Error(err.Error())
 				return cluster, err
@@ -123,7 +124,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 	}
 
 	instanceProperties := compute.InstanceProperties{
-		MachineType: pool.MachineType,
+		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{
 				Subnetwork: getSubnet(pool.PoolSubnet, network.Definition[0].Subnets),
@@ -302,13 +303,14 @@ func GetGCP(credentials GcpCredentials) (GCP, error) {
 		Credentials: credentials.RawData,
 		ProjectId:   credentials.AccountData.ProjectId,
 		Region:      credentials.Region,
+		Zone:        credentials.Zone,
 	}, nil
 }
 
 func getSubnet(subnetName string, subnets []*types.Subnet) string {
 	for _, subnet := range subnets {
 		if subnet.Name == subnetName {
-			return subnet.SubnetId
+			return subnet.Link
 		}
 	}
 	return ""
