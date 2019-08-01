@@ -1275,7 +1275,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 												Name: to.StringPtr("pip-" + pool.Name),
 												VirtualMachineScaleSetPublicIPAddressConfigurationProperties: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationProperties{
 													DNSSettings: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationDNSSettings{
-														DomainNameLabel: to.StringPtr(pool.Name),
+														DomainNameLabel: to.StringPtr(strings.ToLower(pool.Name)),
 													},
 												},
 											},
