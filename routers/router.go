@@ -10,8 +10,9 @@ package routers
 import (
 	"antelope/controllers"
 	"antelope/controllers/aws"
-	"github.com/astaxie/beego"
 	"antelope/controllers/azure"
+	"antelope/controllers/gcp"
+	"github.com/astaxie/beego"
 )
 
 func init() {
@@ -39,6 +40,16 @@ func init() {
 		beego.NSNamespace("/template/azure",
 			beego.NSInclude(
 				&azure.AzureTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/gcp",
+			beego.NSInclude(
+				&gcp.GcpClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/gcp",
+			beego.NSInclude(
+				&gcp.GcpTemplateController{},
 			),
 		),
 	)

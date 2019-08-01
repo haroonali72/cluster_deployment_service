@@ -3,7 +3,9 @@ package azure
 import (
 	"antelope/models/aws"
 	"antelope/models/azure"
+	"antelope/models/utils"
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 	"time"
@@ -24,7 +26,10 @@ type AzureClusterController struct {
 func (c *AzureClusterController) Get() {
 	projectId := c.GetString(":projectId")
 
-	beego.Info("AzureClusterController: Get cluster with project id: ", projectId)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
+
+	ctx.SendSDLog("AWSClusterController: Get cluster with project id "+projectId, "info")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -33,7 +38,7 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	cluster, err := azure.GetCluster(projectId)
+	cluster, err := azure.GetCluster(projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
@@ -48,15 +53,18 @@ func (c *AzureClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Success 200 {object} []azure.Cluster_Def
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AzureClusterController) GetAll() {
 	beego.Info("AzureClusterController: GetAll clusters.")
 
-	clusters, err := azure.GetAllCluster()
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+
+	clusters, err := azure.GetAllCluster(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -70,18 +78,36 @@ func (c *AzureClusterController) GetAll() {
 // @Param	body	body 	azure.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
-// @Failure 500 {"error": "internal server error"}
+// @Success 400 {"msg": "error message"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AzureClusterController) Post() {
 	var cluster azure.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	beego.Info("AzureClusterController: Post new cluster with name: ", cluster.Name)
-	beego.Info("AzureClusterController: JSON Payload: ", cluster)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId)
+
+	ctx.SendSDLog("AzureClusterController: Post new cluster with name: "+cluster.Name, "error ")
 
 	cluster.CreationDate = time.Now()
+	beego.Info(cluster.ResourceGroup)
+	err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	res, err := govalidator.ValidateStruct(cluster)
+	if !res || err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
-	err := azure.CreateCluster(cluster)
+	err = azure.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -90,7 +116,7 @@ func (c *AzureClusterController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -104,16 +130,19 @@ func (c *AzureClusterController) Post() {
 // @Param	body	body 	azure.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [put]
 func (c *AzureClusterController) Patch() {
+
 	var cluster azure.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	beego.Info("AzureClusterController: Patch cluster with name: ", cluster.Name)
-	beego.Info("AzureClusterController: JSON Payload: ", cluster)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)
 
-	err := azure.UpdateCluster(cluster, true)
+	ctx.SendSDLog("AzureClusterController: Patch cluster with name: "+cluster.Name, "info")
+
+	err := azure.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -122,7 +151,7 @@ func (c *AzureClusterController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -136,12 +165,15 @@ func (c *AzureClusterController) Patch() {
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:projectId [delete]
 func (c *AzureClusterController) Delete() {
 	id := c.GetString(":projectId")
 
-	beego.Info("AzureClusterController: Delete cluster with project id: ", id)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
+
+	ctx.SendSDLog("AzureClusterController: Delete cluster with project id: "+id, "error")
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -149,17 +181,17 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	cluster, err := aws.GetCluster(id)
+	cluster, err := aws.GetCluster(id, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
-	err = azure.DeleteCluster(id)
+	err = azure.DeleteCluster(id, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -170,32 +202,36 @@ func (c *AzureClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 400 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /start/:projectId [post]
 func (c *AzureClusterController) StartCluster() {
 
-	beego.Info("AzureClusterController: StartCluster.")
-	credentials := c.Ctx.Input.Header("Authorization")
+	projectId := c.GetString(":projectId")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 5 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
+
+	ctx.SendSDLog("AzureClusterController: POST cluster with project id: "+projectId, "error")
+
+	beego.Info("AzureClusterController: StartCluster.")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region, err := azure.GetRegion(projectId, *ctx)
+
+	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	var cluster azure.Cluster_Def
-
-	projectId := c.GetString(":projectId")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -204,13 +240,13 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	beego.Info("AzureClusterController: Getting Cluster of project. ", projectId)
+	ctx.SendSDLog("AzureClusterController: Getting Cluster of project. "+projectId, "info")
 
-	cluster, err := azure.GetCluster(projectId)
+	cluster, err = azure.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -221,9 +257,9 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("AzureClusterController: Creating Cluster. ", cluster.Name)
+	ctx.SendSDLog("AzureClusterController: Creating Cluster. "+cluster.Name, "info")
 
-	go azure.DeployCluster(cluster, credentials)
+	go azure.DeployCluster(cluster, azureProfile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -231,29 +267,30 @@ func (c *AzureClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 401 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /status/:projectId/ [get]
 func (c *AzureClusterController) GetStatus() {
 
-	beego.Info("AzureClusterController: FetchStatus.")
-	credentials := c.Ctx.Input.Header("Authorization")
+	projectId := c.GetString(":projectId")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 5 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region, err := azure.GetRegion(projectId, *ctx)
+
+	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-	projectId := c.GetString(":projectId")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -262,13 +299,13 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	beego.Info("AzureClusterController: Fetch Cluster Status of project. ", projectId)
+	ctx.SendSDLog("AzureClusterController: Fetch Cluster Status of project. "+projectId, "info")
 
-	cluster, err := azure.FetchStatus(credentials, projectId)
+	cluster, err := azure.FetchStatus(azureProfile, projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -279,32 +316,34 @@ func (c *AzureClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param	Authorization	header	string	false	"{id}:{key}:{tenant}:{subscription}:{region}"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 401 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /terminate/:projectId/ [post]
 func (c *AzureClusterController) TerminateCluster() {
 
-	beego.Info("AzureClusterController: TerminateCluster.")
-	credentials := c.Ctx.Input.Header("Authorization")
+	projectId := c.GetString(":projectId")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "azure") ||
-		len(strings.Split(credentials, ":")) != 5 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{id}:{key}:{tenant}:{subscription}:{region}'"}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
+
+	ctx.SendSDLog("AzureClusterController: TerminateCluster.", "info")
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region, err := azure.GetRegion(projectId, *ctx)
+
+	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	var cluster azure.Cluster_Def
-
-	projectId := c.GetString(":projectId")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -313,19 +352,19 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	beego.Info("AzureClusterController: Getting Cluster of project. ", projectId)
+	ctx.SendSDLog("AzureClusterController: Getting Cluster of project. "+projectId, "info")
 
-	cluster, err := azure.GetCluster(projectId)
+	cluster, err = azure.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-	beego.Info("AzureClusterController: Terminating Cluster. ", cluster.Name)
+	ctx.SendSDLog("AzureClusterController: Terminating Cluster. "+cluster.Name, "info")
 
-	go azure.TerminateCluster(cluster, credentials)
+	go azure.TerminateCluster(cluster, azureProfile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -334,17 +373,19 @@ func (c *AzureClusterController) TerminateCluster() {
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
 // @Success 200 {object} []string
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /sshkeys [get]
 func (c *AzureClusterController) GetSSHKeys() {
 
-	beego.Info("AWSNetworkController: FetchExistingSSHKeys.")
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
 
-	keys, err := azure.GetAllSSHKeyPair()
+	keys, err := azure.GetAllSSHKeyPair(*ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}

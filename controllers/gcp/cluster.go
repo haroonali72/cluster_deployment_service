@@ -1,9 +1,7 @@
 package gcp
 
 import (
-	"antelope/models/aws"
 	"antelope/models/gcp"
-	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -150,7 +148,7 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	cluster, err := aws.GetCluster(id)
+	cluster, err := gcp.GetCluster(id)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
@@ -171,22 +169,22 @@ func (c *GcpClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	Authorization	header	string	false	"base64 encoded service_account_json"
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "exception_message"}
-// @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "internal server error"}
 // @router /start/:projectId [post]
 func (c *GcpClusterController) StartCluster() {
 	beego.Info("GcpClusterController: StartCluster.")
-	credentials := c.Ctx.Input.Header("Authorization")
 
-	valid, _ := utils.IsValdidGcpCredentials(credentials)
-	if !valid {
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "")
+	if !isValid {
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be 'base64 encoded service_account_json'"}
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}
@@ -229,21 +227,20 @@ func (c *GcpClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	Authorization	header	string	false	"base64 encoded service_account_json"
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
-// @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "internal server error"}
 // @router /status/:projectId/ [get]
 func (c *GcpClusterController) GetStatus() {
 	beego.Info("GcpClusterController: FetchStatus.")
-	credentials := c.Ctx.Input.Header("Authorization")
 
-	valid, _ := utils.IsValdidGcpCredentials(credentials)
-	if !valid {
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "")
+	if !isValid {
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be 'base64 encoded service_account_json'"}
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}
@@ -274,7 +271,7 @@ func (c *GcpClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param	Authorization	header	string	false	"base64 encoded service_account_json"
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
@@ -283,12 +280,12 @@ func (c *GcpClusterController) GetStatus() {
 // @router /terminate/:projectId/ [post]
 func (c *GcpClusterController) TerminateCluster() {
 	beego.Info("GcpClusterController: TerminateCluster.")
-	credentials := c.Ctx.Input.Header("Authorization")
 
-	valid, _ := utils.IsValdidGcpCredentials(credentials)
-	if !valid {
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "")
+	if !isValid {
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be 'base64 encoded service_account_json'"}
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}

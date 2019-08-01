@@ -20,7 +20,7 @@ type Response struct {
 	Component string `json:"component"`
 }
 
-func (notifier *Notifier) Notify(channel, status string) {
+func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	msg := Response{
 		Status:    status,
 		ID:        channel,
@@ -33,6 +33,12 @@ func (notifier *Notifier) Notify(channel, status string) {
 	}
 	cmd := notifier.Client.Publish(channel, string(b))
 	beego.Info(*cmd)
+	b, err = json.Marshal(*cmd)
+	if err != nil {
+		beego.Error(err.Error())
+		return
+	}
+	ctx.SendSDLog(string(b), "info")
 	if cmd != nil {
 		if cmd.Err() != nil {
 			beego.Error(cmd.Err().Error())

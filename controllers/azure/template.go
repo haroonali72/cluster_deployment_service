@@ -2,6 +2,7 @@ package azure
 
 import (
 	"antelope/models/azure"
+	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -17,12 +18,16 @@ type AzureTemplateController struct {
 // @Param	name	path	string	true	"Name of the template"
 // @Success 200 {object} azure.Template
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:templateId [get]
 func (c *AzureTemplateController) Get() {
+
 	id := c.GetString(":templateId")
 
-	beego.Info("AzureTemplateController: Get template with id: ", id)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id)
+
+	ctx.SendSDLog("AzureTemplateController: Get template with id: "+id, "info")
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -31,10 +36,10 @@ func (c *AzureTemplateController) Get() {
 		return
 	}
 
-	template, err := azure.GetTemplate(id)
+	template, err := azure.GetTemplate(id, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
+		c.Data["json"] = map[string]string{"error": "no template exists for this id " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -46,15 +51,17 @@ func (c *AzureTemplateController) Get() {
 // @Title Get All
 // @Description get all the templates
 // @Success 200 {object} []azure.Template
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AzureTemplateController) GetAll() {
-	beego.Info("AzureTemplateController: GetAll template.")
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("AzureTemplateController: GetAll template.", "info")
 
-	templates, err := azure.GetAllTemplate()
+	templates, err := azure.GetAllTemplate(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -68,16 +75,19 @@ func (c *AzureTemplateController) GetAll() {
 // @Param	body	body	azure.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AzureTemplateController) Post() {
+
 	var template azure.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	beego.Info("AzureTemplateController: Post new template with name: ", template.Name)
-	beego.Info("AzureTemplateController: JSON Payload: ", template)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 
-	err, id := azure.CreateTemplate(template)
+	ctx.SendSDLog("AzureTemplateController: Post new template with name: "+template.Name, "info")
+
+	err, id := azure.CreateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -86,7 +96,7 @@ func (c *AzureTemplateController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -100,16 +110,18 @@ func (c *AzureTemplateController) Post() {
 // @Param	body	body	azure.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 404 {"error": "no template exists with this name"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg> "}
 // @router / [put]
 func (c *AzureTemplateController) Patch() {
 	var template azure.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	beego.Info("AzureTemplateController: Patch template with id: ", template.TemplateId)
-	beego.Info("AzureTemplateController: JSON Payload: ", template)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId)
 
-	err := azure.UpdateTemplate(template)
+	ctx.SendSDLog("AzureTemplateController: Patch template with id: "+template.TemplateId, "info")
+
+	err := azure.UpdateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -118,7 +130,7 @@ func (c *AzureTemplateController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -132,12 +144,15 @@ func (c *AzureTemplateController) Patch() {
 // @Param	name	path	string	true	"Name of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 404 {"error": "name is empty"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:templateId [delete]
 func (c *AzureTemplateController) Delete() {
 	id := c.GetString(":templateId")
 
-	beego.Info("AzureTemplateController: Delete template with id: ", id)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
+
+	ctx.SendSDLog("AzureTemplateController: Delete template with id: ", id)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -146,10 +161,10 @@ func (c *AzureTemplateController) Delete() {
 		return
 	}
 
-	err := azure.DeleteTemplate(id)
+	err := azure.DeleteTemplate(id, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}

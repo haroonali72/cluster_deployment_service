@@ -14,6 +14,6 @@ type HealthController struct {
 // @Success 200 "alive!"
 // @router / [get]
 func (c *HealthController) Get() {
-	c.Data["json"] = "alive!"
+	c.Data["json"] = "ok!"
 	c.ServeJSON()
 }

@@ -2,7 +2,9 @@ package aws
 
 import (
 	"antelope/models/aws"
+	"antelope/models/utils"
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 	"time"
@@ -18,12 +20,14 @@ type AWSClusterController struct {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /:projectId/ [get]
 func (c *AWSClusterController) Get() {
 	projectId := c.GetString(":projectId")
 
-	beego.Info("AWSClusterController: Get cluster with project id: ", projectId)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
+	ctx.SendSDLog("AWSClusterController: Get cluster with project id: "+projectId, "info")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -32,7 +36,7 @@ func (c *AWSClusterController) Get() {
 		return
 	}
 
-	cluster, err := aws.GetCluster(projectId)
+	cluster, err := aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -48,15 +52,18 @@ func (c *AWSClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Success 200 {object} []aws.Cluster_Def
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
-	beego.Info("AWSClusterController: GetAll clusters.")
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
-	clusters, err := aws.GetAllCluster()
+	ctx.SendSDLog("AWSClusterController: GetAll clusters.", "info")
+
+	clusters, err := aws.GetAllCluster(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -69,6 +76,7 @@ func (c *AWSClusterController) GetAll() {
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
+// @Success 400 {"msg": "error msg"}
 // @Failure 409 {"error": "cluster against this project already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
@@ -76,12 +84,30 @@ func (c *AWSClusterController) Post() {
 	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	beego.Info("AWSClusterController: Post new cluster with name: ", cluster.Name)
-	beego.Info("AWSClusterController: JSON Payload: ", cluster)
-
 	cluster.CreationDate = time.Now()
 
-	err := aws.CreateCluster(cluster)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId)
+
+	ctx.SendSDLog("AWSClusterController: Post new cluster with name: "+cluster.Name, "info")
+
+	res, err := govalidator.ValidateStruct(cluster)
+	beego.Info("hello -- validated cluster")
+	if !res || err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	err = aws.GetNetwork(cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -110,10 +136,12 @@ func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	beego.Info("AWSClusterController: Patch cluster with name: ", cluster.Name)
-	beego.Info("AWSClusterController: JSON Payload: ", cluster)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)
 
-	err := aws.UpdateCluster(cluster, true)
+	ctx.SendSDLog("AWSClusterController: Patch cluster with name: "+cluster.Name, "info")
+
+	err := aws.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -141,7 +169,10 @@ func (c *AWSClusterController) Patch() {
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
 
-	beego.Info("AWSClusterController: Delete cluster with project id: ", id)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
+
+	ctx.SendSDLog("AWSClusterController: Delete cluster with project id: "+id, "info")
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -150,14 +181,14 @@ func (c *AWSClusterController) Delete() {
 		return
 	}
 
-	cluster, err := aws.GetCluster(id)
+	cluster, err := aws.GetCluster(id, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error ," + "Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
-	err = aws.DeleteCluster(id)
+	err = aws.DeleteCluster(id, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -171,32 +202,25 @@ func (c *AWSClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
-// @Failure 401 {"error": "exception_message"}
+// @Failure 40 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /start/:projectId [post]
 func (c *AWSClusterController) StartCluster() {
 
-	beego.Info("AWSNetworkController: StartCluster.")
-	credentials := c.Ctx.Input.Header("Authorization")
+	projectId := c.GetString(":projectId")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
-		c.ServeJSON()
-		return
-	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
+
+	ctx.SendSDLog("AWSNetworkController: StartCluster.", "info")
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
 	var cluster aws.Cluster_Def
-
-	projectId := c.GetString(":projectId")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -205,9 +229,8 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	beego.Info("AWSClusterController: Getting Cluster of project. ", projectId)
-
-	cluster, err := aws.GetCluster(projectId)
+	ctx.SendSDLog("AWSClusterController: Getting Cluster of project. "+projectId, "info")
+	cluster, err := aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -221,9 +244,24 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("AWSClusterController: Creating Cluster. ", cluster.Name)
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
 
-	go aws.DeployCluster(cluster, credentials)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendSDLog("AWSClusterController: Creating Cluster. "+cluster.Name, "info")
+
+	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -231,29 +269,21 @@ func (c *AWSClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /status/:projectId/ [get]
 func (c *AWSClusterController) GetStatus() {
 
-	beego.Info("AWSNetworkController: FetchStatus.")
-	credentials := c.Ctx.Input.Header("Authorization")
-
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
-		c.ServeJSON()
-		return
-	}
 	projectId := c.GetString(":projectId")
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
+
+	ctx.SendSDLog("AWSNetworkController: FetchStatus.", "info")
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -262,9 +292,24 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	beego.Info("AWSClusterController: Fetch Cluster Status of project. ", projectId)
+	ctx.SendSDLog("AWSClusterController: Fetch Cluster Status of project. "+projectId, "info")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
 
-	cluster, err := aws.FetchStatus(credentials, projectId)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -279,32 +324,40 @@ func (c *AWSClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	X-Profile-Id	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 401 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /terminate/:projectId/ [post]
 func (c *AWSClusterController) TerminateCluster() {
 
-	beego.Info("AWSNetworkController: TerminateCluster.")
-	credentials := c.Ctx.Input.Header("Authorization")
+	projectId := c.GetString(":projectId")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
+
+	ctx.SendSDLog("AWSNetworkController: TerminateCluster.", "info")
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	var cluster aws.Cluster_Def
-
-	projectId := c.GetString(":projectId")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -313,9 +366,9 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	beego.Info("AWSClusterController: Getting Cluster of project. ", projectId)
+	ctx.SendSDLog("AWSClusterController: Getting Cluster of project. "+projectId, "info")
 
-	cluster, err := aws.GetCluster(projectId)
+	cluster, err = aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -323,9 +376,9 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("AWSClusterController: Terminating Cluster. ", cluster.Name)
+	ctx.SendSDLog("AWSClusterController: Terminating Cluster. "+cluster.Name, "info")
 
-	go aws.TerminateCluster(cluster, credentials)
+	go aws.TerminateCluster(cluster, awsProfile, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -338,9 +391,12 @@ func (c *AWSClusterController) TerminateCluster() {
 // @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
-	beego.Info("AWSNetworkController: FetchExistingSSHKeys.")
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
-	keys, err := aws.GetAllSSHKeyPair()
+	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
+
+	keys, err := aws.GetAllSSHKeyPair(*ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -355,28 +411,25 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 // @Title AwsAmis
 // @Description returns aws ami details
-// @Param	Authorization	header	string	false	"{access_key}:{secret_key}:{region}"
+// @Param	X-Profile-Id	header	string	profileId	""
+// @Param	X-Region	header	string	false	""
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
-// @Failure 401 {"error": "exception_message"}
 // @Failure 404 {"error": "ami id is empty"}
 // @Failure 500 {"error": "internal server error"}
 // @router /amis/:amiId [get]
 func (c *AWSClusterController) GetAMI() {
 
-	beego.Info("AWSNetworkController: FetchExistingVpcs.")
-	credentials := c.Ctx.Input.Header("Authorization")
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
-	if credentials == "" ||
-		strings.Contains(credentials, " ") ||
-		strings.Contains(strings.ToLower(credentials), "bearer") ||
-		strings.Contains(strings.ToLower(credentials), "aws") ||
-		len(strings.Split(credentials, ":")) != 3 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Authorization format should be '{access_key}:{secret_key}:{region}'"}
-		c.ServeJSON()
-		return
-	}
+	ctx.SendSDLog("AWSClusterController: FetchAMIs.", "info")
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region := c.Ctx.Input.Header("X-Region")
+
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+
 	amiId := c.GetString(":amiId")
 
 	if amiId == "" {
@@ -385,17 +438,71 @@ func (c *AWSClusterController) GetAMI() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("AWSClusterController: Get Ami from AWS")
+	ctx.SendSDLog("AWSClusterController: Get Ami from AWS", "info")
 
-	keys, err := aws.GetAWSAmi(credentials, amiId)
+	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	c.Data["json"] = keys
+	c.ServeJSON()
+}
+
+// @Title EnableScaling
+// @Description enables autoscaling
+// @Param	X-Profile-Id	header	string	profileId	""
+// @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
+// @Success 200 {object} aws.AutoScaling
+// @Success 200 {"msg": "cluster autoscaled successfully"}
+// @Failure 500 {"error": "internal server error <error msg>"}
+// @router /enablescaling/:projectId/ [post]
+func (c *AWSClusterController) EnableAutoScaling() {
+
+	projectId := c.GetString(":projectId")
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("AWSClusterController: EnableScaling.", "info")
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region, err := aws.GetRegion(projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+	cluster, err := aws.GetCluster(projectId, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = aws.EnableScaling(awsProfile, cluster, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()
 }
