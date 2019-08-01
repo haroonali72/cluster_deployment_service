@@ -170,6 +170,8 @@ func (c *GcpClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	X-Region	header	string	true	"gcp region"
+// @Param	X-Zone	header	string	true	"gcp zone"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "exception_message"}
@@ -180,8 +182,10 @@ func (c *GcpClusterController) StartCluster() {
 	beego.Info("GcpClusterController: StartCluster.")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	region := c.Ctx.Input.Header("X-Region")
+	zone := c.Ctx.Input.Header("X-Zone")
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "")
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
@@ -228,6 +232,8 @@ func (c *GcpClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	X-Region	header	string	true	"gcp region"
+// @Param	X-Zone	header	string	true	"gcp zone"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 404 {"error": "project id is empty"}
@@ -237,7 +243,10 @@ func (c *GcpClusterController) GetStatus() {
 	beego.Info("GcpClusterController: FetchStatus.")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "")
+	region := c.Ctx.Input.Header("X-Region")
+	zone := c.Ctx.Input.Header("X-Zone")
+
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
@@ -272,6 +281,8 @@ func (c *GcpClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	X-Region	header	string	true	"gcp region"
+// @Param	X-Zone	header	string	true	"gcp zone"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
@@ -282,7 +293,10 @@ func (c *GcpClusterController) TerminateCluster() {
 	beego.Info("GcpClusterController: TerminateCluster.")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "")
+	region := c.Ctx.Input.Header("X-Region")
+	zone := c.Ctx.Input.Header("X-Zone")
+
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}

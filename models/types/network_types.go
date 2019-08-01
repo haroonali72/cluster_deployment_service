@@ -31,18 +31,21 @@ type Vpc struct {
 	VpcId string `json:"vpc_id" bson:"vpc_id"`
 	Name  string `json:"name" bson:"name"`
 	CIDR  string `json:"cidr" bson:"cidr"`
+	Link  string `json:"link" bson:"link"`
 }
 
 type Subnet struct {
 	SubnetId string `json:"subnet_id" bson:"subnet_id"`
 	Name     string `json:"name" bson:"name"`
 	CIDR     string `json:"cidr" bson:"cidr"`
+	Link     string `json:"link" bson:"link"`
 }
 
 type SecurityGroup struct {
 	SecurityGroupId string `json:"security_group_id" bson:"security_group_id"`
 	Name            string `json:"name" bson:"name"`
 	Description     string `json:"description" bson:"description"`
+	Link            string `json:"link" bson:"link"`
 }
 
 type AzureNetwork struct {
