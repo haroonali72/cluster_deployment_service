@@ -89,7 +89,7 @@ func GetTemplate(templateName string, ctx utils.Context) (template Template, err
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Find(bson.M{"name": templateName}).One(&template)
 	if err != nil {
-		ctx.SendSDLog(err1.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		return Template{}, err
 	}
 	return template, nil
