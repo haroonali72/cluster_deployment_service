@@ -1125,7 +1125,7 @@ func setPermission(keyName string) error {
 }
 func copyFile(keyName string, userName string, instanceId string) error {
 
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId + ":/home/" + userName
 	cmd1 := "scp"
 	beego.Info(keyPath)
@@ -1143,7 +1143,7 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	return nil
 }
 func setScriptPermision(keyName string, userName string, instanceId string, ctx utils.Context) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/azure-volume-mount.sh"}
@@ -1159,7 +1159,7 @@ func setScriptPermision(keyName string, userName string, instanceId string, ctx 
 	return nil
 }
 func runScript(keyName string, userName string, instanceId string, ctx utils.Context) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/azure-volume-mount.sh"}
@@ -1176,7 +1176,7 @@ func runScript(keyName string, userName string, instanceId string, ctx utils.Con
 }
 
 func deleteScript(keyName string, userName string, instanceId string, ctx utils.Context) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/azure-volume-mount.sh"}
@@ -1190,7 +1190,7 @@ func deleteScript(keyName string, userName string, instanceId string, ctx utils.
 }
 
 func deleteFile(keyName string, ctx utils.Context) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	err := os.Remove(keyPath)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")

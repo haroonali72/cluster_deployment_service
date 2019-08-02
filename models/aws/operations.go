@@ -1409,7 +1409,7 @@ func setPermission(keyName string) error {
 }
 func copyFile(keyName string, userName string, instanceId string) error {
 
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId + ":/home/" + userName
 	cmd1 := "scp"
 	beego.Info(keyPath)
@@ -1426,7 +1426,7 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	return nil
 }
 func setScriptPermision(keyName string, userName string, instanceId string) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/mount.sh"}
@@ -1441,7 +1441,7 @@ func setScriptPermision(keyName string, userName string, instanceId string) erro
 	return nil
 }
 func runScript(keyName string, userName string, instanceId string) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/mount.sh"}
@@ -1457,7 +1457,7 @@ func runScript(keyName string, userName string, instanceId string) error {
 }
 
 func deleteScript(keyName string, userName string, instanceId string) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/mount.sh"}
@@ -1470,7 +1470,7 @@ func deleteScript(keyName string, userName string, instanceId string) error {
 }
 
 func deleteFile(keyName string) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	err := os.Remove(keyPath)
 	if err != nil {
 		return err
