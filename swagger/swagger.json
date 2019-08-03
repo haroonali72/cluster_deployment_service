@@ -780,6 +780,20 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "X-Region",
+                        "description": "gcp region",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Zone",
+                        "description": "gcp zone",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "in": "path",
                         "name": "projectId",
                         "description": "Id of the project",
@@ -819,6 +833,20 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "X-Region",
+                        "description": "gcp region",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Zone",
+                        "description": "gcp zone",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "in": "path",
                         "name": "projectId",
                         "description": "Id of the project",
@@ -854,6 +882,20 @@
                         "in": "header",
                         "name": "X-Profile-Id",
                         "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Region",
+                        "description": "gcp region",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Zone",
+                        "description": "gcp zone",
                         "required": true,
                         "type": "string"
                     },
@@ -1390,7 +1432,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc05992ab40.false": {
+        "504.0xc05a46a450.false": {
             "title": "false",
             "type": "object"
         },
@@ -1436,7 +1478,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc05992ab40.false"
+                    "$ref": "#/definitions/504.0xc05a46a450.false"
                 },
                 "name": {
                     "type": "string"
