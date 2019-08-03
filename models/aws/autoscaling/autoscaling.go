@@ -150,6 +150,11 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 		Value: aws.String(projectId),
 	}
 	tags = append(tags, &tag)
+	tag = autoscaling.Tag{
+		Key:   aws.String("Name"),
+		Value: aws.String(projectId),
+	}
+	tags = append(tags, &tag)
 	config_input.Tags = tags
 
 	_, config_err := cloud.AutoScaling.CreateAutoScalingGroup(&config_input)
@@ -188,7 +193,6 @@ func (cloud *AWSAutoScaler) GetAutoScaler(projectId string, name string, ctx uti
 		return config_err, nil
 	}
 	if out != nil && out.AutoScalingGroups != nil && out.AutoScalingGroups[0].Instances != nil {
-
 		return nil, out.AutoScalingGroups[0].Instances
 	} else {
 		return nil, nil

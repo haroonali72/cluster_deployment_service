@@ -417,6 +417,9 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster_D
 				if out[0].PrivateIpAddress != nil {
 					cluster.NodePools[in].Nodes[index].PrivateIP = *out[0].PrivateIpAddress
 				}
+				if pool.Ami.Username != "" {
+					cluster.NodePools[in].Nodes[index].UserName = pool.Ami.Username
+				}
 			}
 		}
 
