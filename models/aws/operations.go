@@ -381,68 +381,22 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster_D
 			fetching aws scaled node
 		*/
 		if pool.EnableScaling {
-			/*	var names []*string
-				rawOutput, err := networks.GetAPIStatus(getKubeEngineHost(), cluster.ProjectId, "", ctx)
-				bytes, err := json.Marshal(rawOutput)
-				if err != nil {
-					ctx.SendSDLog(err.Error(),"error")
-					return cluster, err
-				}
-				err = json.Unmarshal(bytes, &names)
-				if err != nil {
-					ctx.SendSDLog(err.Error(),"error")
-					return cluster, err
-				}
-				out, err := cloud.GetInstancesByDNS(names, cluster.ProjectId, ctx)
-				if err != nil {
-					return Cluster_Def{}, err
-				}
-				for _, o := range out {
-					for i, n := range pool.Nodes {
-						if n.CloudId == *o.InstanceId {
-							pool.Nodes[i].NodeState = *o.State.Name
-
-							if out[0].PublicIpAddress != nil {
-								pool.Nodes[i].PublicIP = *o.PublicIpAddress
-							}
-							if out[0].PrivateDnsName != nil {
-								pool.Nodes[i].PrivateDNS = *o.PrivateDnsName
-							}
-							if out[0].PublicDnsName != nil {
-								pool.Nodes[i].PublicDNS = *o.PublicDnsName
-							}
-							if out[0].PrivateIpAddress != nil {
-								pool.Nodes[i].PrivateIP = *o.PrivateIpAddress
-							}
-						} else {
-							for _, tag := range o.Tags {
-								if *tag.Key == "aws:autoscaling:groupName" && *tag.Value == cluster.ProjectId {
-									var newNode Node
-									newNode.CloudId = *o.InstanceId
-									newNode.NodeState = *o.State.Name
-									newNode.PrivateIP = *o.PrivateIpAddress
-									if o.PublicIpAddress != nil {
-										newNode.PublicIP = *o.PublicIpAddress
-									}
-									newNode.UserName = pool.Ami.Username
-									pool.Nodes = append(pool.Nodes, &newNode)
-								}
-							}
-						}
-					}
-				}*/
-			err, instances := cloud.Scaler.GetAutoScaler(cluster.ProjectId, cluster.ProjectId+strconv.Itoa(in), ctx)
+			beego.Info("getting scaler nodes")
+			err, instances := cloud.Scaler.GetAutoScaler(cluster.ProjectId, pool.Name, ctx)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
 			if instances != nil {
 				for _, inst := range instances {
 					cluster.NodePools[in].Nodes = append(cluster.NodePools[in].Nodes, &Node{CloudId: *inst.InstanceId})
+					beego.Info(*inst.InstanceId)
 				}
 			}
 		}
 		for index, node := range cluster.NodePools[in].Nodes {
+
 			var nodeId []*string
+			beego.Info(node.CloudId)
 			nodeId = append(nodeId, &node.CloudId)
 			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false, ctx)
 			if err != nil {
@@ -924,6 +878,7 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, c
 	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
 
 	if err != nil {
+
 		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
