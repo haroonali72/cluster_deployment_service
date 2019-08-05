@@ -136,7 +136,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 			return cluster, err
 		}
 		if pool.EnableVolume {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx)
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, pool.PoolRole)
 			if err != nil {
 				utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
@@ -313,7 +313,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster
 			}
 			beego.Info("getting pip")
 			IPname := "pip-" + pool.Name
-			publicIPaddress, err := cloud.GetVMSSPIP(cluster.ResourceGroup, IPname, ctx)
+			publicIPaddress, err := cloud.GetVMPIP(cluster.ResourceGroup, IPname, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return Cluster_Def{}, err
@@ -413,7 +413,7 @@ func (cloud *AZURE) GetVMNIC(resourceGroup, nicName string, ctx utils.Context) (
 	}
 	return nicParameters, nil
 }
-func (cloud *AZURE) GetVMSSPIP(resourceGroup, IPname string, ctx utils.Context) (network.PublicIPAddress, error) {
+func (cloud *AZURE) GetVMPIP(resourceGroup, IPname string, ctx utils.Context) (network.PublicIPAddress, error) {
 	publicIPaddress, err := cloud.AddressClient.Get(cloud.context, resourceGroup, IPname, "")
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -546,7 +546,7 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 	}
 
 	ctx.SendSDLog("Get public IP address info...", "info")
-	publicIPaddress, err := cloud.GetVMSSPIP(resourceGroup, IPname, ctx)
+	publicIPaddress, err := cloud.GetVMPIP(resourceGroup, IPname, ctx)
 	return publicIPaddress, err
 }
 
@@ -1019,7 +1019,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
-func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx utils.Context) error {
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx utils.Context, poleRole string) error {
 
 	for _, vm := range vms {
 		err := fileWrite(privateKey, KeyName)
@@ -1037,11 +1037,20 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 			ctx.SendSDLog("waited for public ip", "warning")
 			IPname := fmt.Sprintf("pip-%s", *vm.Name)
 			beego.Info(IPname)
-			publicIp, err := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
-			if err != nil {
-				return err
+			if poleRole == "master" {
+				IPname := "pip-" + poolName
+				publicIp, err := cloud.GetVMPIP(resourceGroup, IPname, ctx)
+				if err != nil {
+					return err
+				}
+				vm.PublicIP = publicIp.IPAddress
+			} else {
+				publicIp, err := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
+				if err != nil {
+					return err
+				}
+				vm.PublicIP = publicIp.IPAddress
 			}
-			vm.PublicIP = publicIp.IPAddress
 		}
 
 		start := time.Now()
