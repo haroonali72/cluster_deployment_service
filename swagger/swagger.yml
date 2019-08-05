@@ -553,16 +553,6 @@ paths:
         description: vault credentials profile id
         required: true
         type: string
-      - in: header
-        name: X-Region
-        description: gcp region
-        required: true
-        type: string
-      - in: header
-        name: X-Zone
-        description: gcp zone
-        required: true
-        type: string
       - in: path
         name: projectId
         description: Id of the project
@@ -589,16 +579,6 @@ paths:
         description: vault credentials profile id
         required: true
         type: string
-      - in: header
-        name: X-Region
-        description: gcp region
-        required: true
-        type: string
-      - in: header
-        name: X-Zone
-        description: gcp zone
-        required: true
-        type: string
       - in: path
         name: projectId
         description: Id of the project
@@ -623,16 +603,6 @@ paths:
       - in: header
         name: X-Profile-Id
         description: vault credentials profile id
-        required: true
-        type: string
-      - in: header
-        name: X-Region
-        description: gcp region
-        required: true
-        type: string
-      - in: header
-        name: X-Zone
-        description: gcp zone
         required: true
         type: string
       - in: path
@@ -943,7 +913,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  504.0xc05a46e5d0.false:
+  504.0xc05a484ae0.false:
     title: "false"
     type: object
   aws.Ami:
@@ -976,7 +946,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/504.0xc05a46e5d0.false'
+        $ref: '#/definitions/504.0xc05a484ae0.false'
       name:
         type: string
       network_name:
