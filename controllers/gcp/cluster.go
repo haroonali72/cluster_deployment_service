@@ -170,8 +170,6 @@ func (c *GcpClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	X-Region	header	string	true	"gcp region"
-// @Param	X-Zone	header	string	true	"gcp zone"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "exception_message"}
@@ -181,9 +179,25 @@ func (c *GcpClusterController) Delete() {
 func (c *GcpClusterController) StartCluster() {
 	beego.Info("GcpClusterController: StartCluster.")
 
+	projectId := c.GetString(":projectId")
+
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
-	zone := c.Ctx.Input.Header("X-Zone")
+
+	region, zone, err := gcp.GetRegion(projectId)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
 	if !isValid {
@@ -195,18 +209,9 @@ func (c *GcpClusterController) StartCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	projectId := c.GetString(":projectId")
-
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
 
-	cluster, err := gcp.GetCluster(projectId)
+	cluster, err = gcp.GetCluster(projectId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -232,8 +237,6 @@ func (c *GcpClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	X-Region	header	string	true	"gcp region"
-// @Param	X-Zone	header	string	true	"gcp zone"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 404 {"error": "project id is empty"}
@@ -243,22 +246,29 @@ func (c *GcpClusterController) GetStatus() {
 	beego.Info("GcpClusterController: FetchStatus.")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
-	zone := c.Ctx.Input.Header("X-Zone")
-
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
-	if !isValid {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
-		c.ServeJSON()
-		return
-	}
 
 	projectId := c.GetString(":projectId")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region, zone, err := gcp.GetRegion(projectId)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
+	if !isValid {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}
@@ -281,8 +291,6 @@ func (c *GcpClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	X-Region	header	string	true	"gcp region"
-// @Param	X-Zone	header	string	true	"gcp zone"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
@@ -293,8 +301,24 @@ func (c *GcpClusterController) TerminateCluster() {
 	beego.Info("GcpClusterController: TerminateCluster.")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region := c.Ctx.Input.Header("X-Region")
-	zone := c.Ctx.Input.Header("X-Zone")
+
+	projectId := c.GetString(":projectId")
+
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region, zone, err := gcp.GetRegion(projectId)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
 	if !isValid {
@@ -306,18 +330,9 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	projectId := c.GetString(":projectId")
-
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
 
-	cluster, err := gcp.GetCluster(projectId)
+	cluster, err = gcp.GetCluster(projectId)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

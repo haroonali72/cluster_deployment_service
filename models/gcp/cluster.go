@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -84,7 +85,31 @@ type AccountData struct {
 	AuthProvider  string `json:"auth_provider_x509_cert_url" valid:"required"`
 	ClientCertUrl string `json:"client_x509_cert_url" valid:"required"`
 }
+type Project struct {
+	ProjectData Data `json:"data"`
+}
+type Data struct {
+	Region string `json:"region"`
+	Zone   string `json:"zone"`
+}
 
+func GetRegion(projectId string) (string, string, error) {
+	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
+
+	data, err := api_handler.GetAPIStatus(url, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error(), "error")
+		return "", "", err
+	}
+	var project Project
+	err = json.Unmarshal(data.([]byte), &project)
+	if err != nil {
+		beego.Error(err.Error(), "error")
+		return "", "", err
+	}
+	return project.ProjectData.Region, project.ProjectData.Zone, nil
+
+}
 func checkClusterSize(cluster Cluster_Def) error {
 	for _, pools := range cluster.NodePools {
 		if pools.NodeCount > 3 {
