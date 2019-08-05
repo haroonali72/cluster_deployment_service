@@ -1374,7 +1374,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context) error {
 }
 func fileWrite(key string, keyName string) error {
 
-	f, err := os.Create("../antelope/keys/" + keyName + ".pem")
+	f, err := os.Create("/app/keys/" + keyName + ".pem")
 	if err != nil {
 		return err
 	}
@@ -1386,14 +1386,14 @@ func fileWrite(key string, keyName string) error {
 	}
 	beego.Info("wrote %d bytes\n", n2)
 
-	err = os.Chmod("../antelope/keys/"+keyName+".pem", 0777)
+	err = os.Chmod("/app/keys/"+keyName+".pem", 0777)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func setPermission(keyName string) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	cmd1 := "chmod"
 	beego.Info(keyPath)
 	args := []string{"600", keyPath}

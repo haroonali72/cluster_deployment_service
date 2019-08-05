@@ -1086,7 +1086,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 }
 func fileWrite(key string, keyName string) error {
 
-	f, err := os.Create("../antelope/keys/" + keyName + ".pem")
+	f, err := os.Create("/app/keys/" + keyName + ".pem")
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -1100,7 +1100,7 @@ func fileWrite(key string, keyName string) error {
 	}
 	beego.Info("wrote %d bytes\n", n2)
 
-	err = os.Chmod("../antelope/keys/"+keyName+".pem", 0777)
+	err = os.Chmod("/app/keys/"+keyName+".pem", 0777)
 	if err != nil {
 		beego.Error(err)
 		return err
@@ -1108,7 +1108,7 @@ func fileWrite(key string, keyName string) error {
 	return nil
 }
 func setPermission(keyName string) error {
-	keyPath := "../antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	cmd1 := "chmod"
 	beego.Info(keyPath)
 	args := []string{"600", keyPath}
