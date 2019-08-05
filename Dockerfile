@@ -21,6 +21,7 @@ RUN apt update && apt install  ca-certificates -y && apt install -y openssl && a
 WORKDIR /app
 COPY --from=build-env /go/src/antelope/swagger/ /app/swagger/
 COPY --from=build-env /go/src/antelope/keys/ /app/keys/
+COPY --from=build-env /go/src/antelope/scripts/ /app/scripts/
 COPY --from=build-env /go/src/antelope/antelope /app/
 
 EXPOSE 9081
