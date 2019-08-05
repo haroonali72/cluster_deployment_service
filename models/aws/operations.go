@@ -1372,7 +1372,7 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	cmd1 := "scp"
 	beego.Info(keyPath)
 	beego.Info(ip)
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "../antelope/scripts/mount.sh", ip}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "/app/scripts/mount.sh", ip}
 	cmd := exec.Command(cmd1, args...)
 
 	cmd.Stdout = os.Stdout

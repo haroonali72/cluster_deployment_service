@@ -165,7 +165,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			return nil, "", err
 		}
 		utils.SendLog("Public IP created successfully : "+IPname, "info", projectId)
-		cloud.Resources[projectId+IPname] = IPname
+		cloud.Resources["Pip-"+projectId] = IPname
 		/*
 			making network interface
 		*/
@@ -176,7 +176,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			return nil, "", err
 		}
 		utils.SendLog("NIC created successfully : "+nicName, "info", projectId)
-		cloud.Resources[projectId+nicName] = nicName
+		cloud.Resources["Nic-"+projectId] = nicName
 
 		utils.SendLog("Creating node  : "+pool.Name, "info", projectId)
 		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx)
@@ -184,8 +184,8 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			return nil, "", err
 		}
 		utils.SendLog("Node created successfully : "+pool.Name, "info", projectId)
-		cloud.Resources["Disk-"+pool.Name] = pool.Name
-		cloud.Resources["NodeName-"+pool.Name] = pool.Name
+		cloud.Resources["Disk-"+projectId] = pool.Name
+		cloud.Resources["NodeName-"+projectId] = pool.Name
 
 		var vmObj VM
 		vmObj.Name = vm.Name
@@ -206,7 +206,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		if err != nil {
 			return nil, "", err
 		}
-		cloud.Resources["vmss-"+pool.Name] = pool.Name
+		cloud.Resources["Vmss-"+pool.Name] = pool.Name
 		for _, vm := range vms.Values() {
 			var vmObj VM
 			vmObj.Name = vm.Name
@@ -891,8 +891,8 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pool := range cluster.NodePools {
 		if pool.PoolRole == "master" {
-			if cloud.Resources["NodeName-"+pool.Name] != nil {
-				name := cloud.Resources["NodeName-"+pool.Name]
+			if cloud.Resources["NodeName-"+cluster.ProjectId] != nil {
+				name := cloud.Resources["NodeName-"+cluster.ProjectId]
 				nodeName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -911,8 +911,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 					return err
 				}
 			}
-			if cloud.Resources[cluster.ProjectId+pool.Name] != nil {
-				name := cloud.Resources[cluster.ProjectId+pool.Name]
+			if cloud.Resources["Nic-"+cluster.ProjectId] != nil {
+				name := cloud.Resources["Nic-"+cluster.ProjectId]
 				nicName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -930,8 +930,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 					return err
 				}
 			}
-			if cloud.Resources[cluster.ProjectId+pool.Name] != nil {
-				name := cloud.Resources[cluster.ProjectId+pool.Name]
+			if cloud.Resources["Pip-"+cluster.ProjectId] != nil {
+				name := cloud.Resources["Pip-"+cluster.ProjectId]
 				IPname := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -962,8 +962,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 					return err
 				}
 			}
-			if cloud.Resources["Disk-"+pool.Name] != nil {
-				name := cloud.Resources["Disk-"+pool.Name]
+			if cloud.Resources["Disk-"+cluster.ProjectId] != nil {
+				name := cloud.Resources["Disk-"+cluster.ProjectId]
 				diskName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -980,8 +980,8 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 			}
 		} else {
 
-			if cloud.Resources["vmss-"+pool.Name] != nil {
-				name := cloud.Resources["vmss-"+pool.Name]
+			if cloud.Resources["Vmss-"+pool.Name] != nil {
+				name := cloud.Resources["Vmss-"+pool.Name]
 				vmssName := ""
 				b, e := json.Marshal(name)
 				if e != nil {
@@ -1139,7 +1139,7 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	cmd1 := "scp"
 	beego.Info(keyPath)
 	beego.Info(ip)
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "../antelope/scripts/azure-volume-mount.sh", ip}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "/app/scripts/azure-volume-mount.sh", ip}
 	cmd := exec.Command(cmd1, args...)
 
 	cmd.Stdout = os.Stdout
