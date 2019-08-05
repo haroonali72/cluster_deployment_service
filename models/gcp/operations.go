@@ -248,7 +248,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 
 	ctx := context.Background()
 	if pool.PoolRole == "master" {
-		result, err := cloud.Client.Instances.Get(cloud.ProjectId, "a", pool.Name).Context(ctx).Do()
+		result, err := cloud.Client.Instances.Get(cloud.ProjectId, cloud.Zone, pool.Name).Context(ctx).Do()
 		if err != nil {
 			beego.Error(err.Error())
 			return err
@@ -262,7 +262,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 
 		pool.Nodes = nodes
 	}
-	result, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, "a", pool.Name).Context(ctx).Do()
+	result, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Zone, pool.Name).Context(ctx).Do()
 	if err != nil {
 		beego.Error(err.Error())
 		return err
