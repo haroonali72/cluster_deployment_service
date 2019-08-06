@@ -697,6 +697,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	if pool.EnableVolume {
 		vm.StorageProfile.DataDisks = &storage
+		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 	}
 	private := ""
 	public := ""
@@ -978,6 +979,12 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 					return err
 				}
 			}
+			if cloud.Resources["ext-"+pool.Name] != nil {
+				err := cloud.deleteDisk(cluster.ResourceGroup, "ext-"+pool.Name, ctx)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 
 			if cloud.Resources["Vmss-"+pool.Name] != nil {
@@ -1234,10 +1241,10 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 	}
 
-	storageName := "ext-" + pool.Name
+	//storageName := "ext-" + pool.Name
 	disk := compute.VirtualMachineScaleSetDataDisk{
-		Lun:          to.Int32Ptr(int32(poolIndex)),
-		Name:         to.StringPtr(storageName),
+		Lun: to.Int32Ptr(int32(poolIndex)),
+		//Name:         to.StringPtr(storageName),
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
 		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),
 		ManagedDisk: &compute.VirtualMachineScaleSetManagedDiskParameters{
