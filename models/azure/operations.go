@@ -221,7 +221,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			nicName := arr[12]
 			beego.Info(nicName)
 			beego.Info(arr[10])
-			nicParameters, err := cloud.GetNIC(resourceGroup, projectId+strconv.Itoa(poolIndex), arr[10], nicName, ctx)
+			nicParameters, err := cloud.GetNIC(resourceGroup, pool.Name, arr[10], nicName, ctx)
 			if err != nil {
 				return nil, "", err
 			}
@@ -232,7 +232,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			pipAddress := arr[16]
 			beego.Info(pipId)
 			beego.Info(arr[10])
-			pip, err := cloud.GetPIP(resourceGroup, projectId+strconv.Itoa(poolIndex), arr[10], nicName, pipConf, pipAddress, ctx)
+			pip, err := cloud.GetPIP(resourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 			if err != nil {
 				return nil, "", err
 			}
@@ -350,7 +350,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster
 				}
 				arr := strings.Split(nicId, "/")
 				nicName := arr[12]
-				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(in), arr[10], nicName, ctx)
+				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, pool.Name, arr[10], nicName, ctx)
 				if err != nil {
 					return Cluster_Def{}, err
 				}
@@ -359,7 +359,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster
 				arr = strings.Split(pipId, "/")
 				pipConf := arr[14]
 				pipAddress := arr[16]
-				pip, err := cloud.GetPIP(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(in), arr[10], nicName, pipConf, pipAddress, ctx)
+				pip, err := cloud.GetPIP(cluster.ResourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 				if err != nil {
 					return Cluster_Def{}, err
 				}
