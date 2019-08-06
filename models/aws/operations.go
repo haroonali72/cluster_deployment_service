@@ -420,6 +420,11 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster_D
 				if pool.Ami.Username != "" {
 					cluster.NodePools[in].Nodes[index].UserName = pool.Ami.Username
 				}
+				for _, tag := range out[0].Tags {
+					if *tag.Key == "Name" {
+						cluster.NodePools[in].Nodes[index].Name = *tag.Value
+					}
+				}
 			}
 		}
 
