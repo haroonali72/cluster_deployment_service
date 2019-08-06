@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
-	"time"
 )
 
 // Operations about Gcp cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
@@ -77,8 +76,6 @@ func (c *GcpClusterController) Post() {
 
 	beego.Info("GcpClusterController: Post new cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
-
-	cluster.CreationDate = time.Now()
 
 	err := gcp.CreateCluster(cluster)
 	if err != nil {
@@ -173,22 +170,28 @@ func (c *GcpClusterController) Delete() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "exception_message"}
-// @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "internal server error"}
 // @router /start/:projectId [post]
 func (c *GcpClusterController) StartCluster() {
 	beego.Info("GcpClusterController: StartCluster.")
 
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+
 	projectId := c.GetString(":projectId")
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	region, zone, err := gcp.GetRegion(projectId)
 
@@ -239,7 +242,8 @@ func (c *GcpClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
-// @Failure 404 {"error": "project id is empty"}
+// @Failure 206 {object} gcp.Cluster_Def
+// @Failure 400 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /status/:projectId/ [get]
 func (c *GcpClusterController) GetStatus() {
@@ -249,8 +253,15 @@ func (c *GcpClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
 
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -278,10 +289,7 @@ func (c *GcpClusterController) GetStatus() {
 	cluster, err := gcp.FetchStatus(credentials, projectId)
 
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
-		c.ServeJSON()
-		return
+		c.Ctx.Output.SetStatus(206)
 	}
 
 	c.Data["json"] = cluster
@@ -294,7 +302,7 @@ func (c *GcpClusterController) GetStatus() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
-// @Failure 404 {"error": "project id is empty"}
+// @Failure 400 {"error": "exception_message"}
 // @Failure 500 {"error": "internal server error"}
 // @router /terminate/:projectId/ [post]
 func (c *GcpClusterController) TerminateCluster() {
@@ -304,8 +312,15 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return

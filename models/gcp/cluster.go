@@ -16,7 +16,7 @@ import (
 )
 
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id"`
 	Name             string        `json:"name" bson:"name"`
 	Status           string        `json:"status" bson:"status"`
@@ -28,7 +28,7 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID            bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	Name          string        `json:"name" bson:"name"`
 	NodeCount     int64         `json:"node_count" bson:"node_count"`
 	MachineType   string        `json:"machine_type" bson:"machine_type"`
@@ -42,18 +42,23 @@ type NodePool struct {
 	EnableScaling bool          `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling       AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
+
 type AutoScaling struct {
 	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
 }
+
 type Node struct {
-	ID            bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Url           string        `json:"url" bson:"url"`
-	Status        string        `json:"status" bson:"status"`
-	CurrentAction string        `json:"current_action" bson:"current_action"`
+	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	CloudId   string        `json:"cloud_id" bson:"cloud_id,omitempty"`
+	Url       string        `json:"url" bson:"url,omitempty"`
+	NodeState string        `json:"node_state" bson:"node_state,omitempty"`
+	Name      string        `json:"name" bson:"name,omitempty"`
+	PrivateIp string        `json:"private_ip" bson:"private_ip"`
+	PublicIp  string        `json:"public_ip" bson:"public_ip"`
 }
 
 type Image struct {
-	ID      bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	Project string        `json:"project" bson:"project"`
 	Family  string        `json:"family" bson:"family"`
 }
@@ -170,6 +175,16 @@ func CreateCluster(cluster Cluster_Def) error {
 		beego.Error(err.Error())
 		return err
 	}
+
+	if cluster.CreationDate.IsZero() {
+		cluster.CreationDate = time.Now()
+		cluster.ModificationDate = time.Now()
+		if cluster.Status == "" {
+			cluster.Status = "new"
+		}
+		cluster.Cloud = models.GCP
+	}
+
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoGcpClusterCollection, cluster)
 	if err != nil {
@@ -327,25 +342,25 @@ func FetchStatus(credentials GcpCredentials, projectId string) (Cluster_Def, err
 	cluster, err := GetCluster(projectId)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
-		return Cluster_Def{}, err
+		return cluster, err
 	}
 
 	gcp, err := GetGCP(credentials)
 	if err != nil {
-		return Cluster_Def{}, err
+		return cluster, err
 	}
 	err = gcp.init()
 	if err != nil {
-		return Cluster_Def{}, err
+		return cluster, err
 	}
 
-	c, e := gcp.fetchClusterStatus(cluster)
-	if e != nil {
-		beego.Error("Cluster model: Status - Failed to get lastest status ", e.Error())
-		return Cluster_Def{}, e
+	err = gcp.fetchClusterStatus(&cluster)
+	if err != nil {
+		beego.Error("Cluster model: Status - Failed to get latest status ", err.Error())
+		return cluster, err
 	}
 
-	return c, nil
+	return cluster, nil
 }
 
 func GetAllSSHKeyPair() (keys []string, err error) {
@@ -367,11 +382,11 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials) error {
 
 	cluster, err := GetCluster(cluster.ProjectId)
 	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		beego.Error("Cluster model: Terminate - Got error while connecting to the database: ", err.Error())
 		return err
 	}
-	if cluster.Status != "Cluster Created" {
-		beego.Error("Cluster model: Cluster is not in created state ")
+	if cluster.Status == "" || cluster.Status == "new" {
+		beego.Error("Cluster model: Cannot terminate a new cluster")
 		publisher.Notify(cluster.ProjectId, "Status Available", utils.Context{})
 		return err
 	}
@@ -396,7 +411,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials) error {
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false)
 		if err != nil {
-			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+			beego.Error("Cluster model: Terminate - Got error while connecting to the database: ", err.Error())
 			utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", utils.Context{})
@@ -414,7 +429,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials) error {
 	}
 	err = UpdateCluster(cluster, false)
 	if err != nil {
-		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
+		beego.Error("Cluster model: Terminate - Got error while connecting to the database: ", err.Error())
 		utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", utils.Context{})

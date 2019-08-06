@@ -7,6 +7,7 @@ import (
 )
 
 type GCPNetwork struct {
+	Name       string           `json:"name" bson:"name"`
 	Definition []*AWSDefinition `json:"definition" bson:"definition"`
 }
 

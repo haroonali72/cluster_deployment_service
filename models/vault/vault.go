@@ -5,6 +5,7 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 )
@@ -176,8 +177,53 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	return response.StatusCode, err
 
 }
+func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+	b, e := json.Marshal(keyRaw)
+	if e != nil {
+		ctx.SendSDLog(e.Error(), "error")
+		return 400, e
+	}
+	var key azureKey
+	e = json.Unmarshal(b, &key)
+	if e != nil {
+		ctx.SendSDLog(e.Error(), "error")
+		return 400, e
+	}
+	key.Cloud = models.GCP
+
+	var keyObj Key
+	keyObj.KeyInfo = key
+	keyObj.Cloud = string(models.GCP)
+	keyObj.KeyName = key.KeyName
+
+	client := utils.InitReq()
+
+	request_data, err := utils.TransformData(keyObj)
+	if err != nil {
+		ctx.SendSDLog(e.Error(), "error")
+		return 400, err
+	}
+
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
+	if err != nil {
+		ctx.SendSDLog(e.Error(), "error")
+		return 400, err
+	}
+
+	response, err := client.SendRequest(req)
+	if err != nil {
+		ctx.SendSDLog(e.Error(), "error")
+		return 400, err
+	}
+	if response.StatusCode == 500 {
+		return 0, errors.New("error in saving key")
+	}
+	return response.StatusCode, err
+
+}
 func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}, error) {
 
+	fmt.Print(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
