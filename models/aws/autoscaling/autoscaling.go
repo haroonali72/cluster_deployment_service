@@ -21,21 +21,21 @@ type AWSAutoScaler struct {
 }
 
 var autoscale_policy = []byte(`{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "autoscaling:DescribeAutoScalingGroups",
-                "autoscaling:DescribeAutoScalingInstances",
-                "autoscaling:DescribeLaunchConfigurations",
-                "autoscaling:SetDesiredCapacity",
+   "Version": "2012-10-17",
+   "Statement": [
+       {
+           "Effect": "Allow",
+           "Action": [
+               "autoscaling:DescribeAutoScalingGroups",
+               "autoscaling:DescribeAutoScalingInstances",
+               "autoscaling:DescribeLaunchConfigurations",
+               "autoscaling:SetDesiredCapacity",
 				"autoscaling:DescribeTags",
-                "autoscaling:TerminateInstanceInAutoScalingGroup"
-            ],
-            "Resource": "*"
-        }
-    ]
+               "autoscaling:TerminateInstanceInAutoScalingGroup"
+           ],
+           "Resource": "*"
+       }
+   ]
 }`)
 
 func (cloud *AWSAutoScaler) Init() error {
@@ -140,17 +140,14 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 	config_input.LaunchConfigurationName = &projectId
 
 	var tags []*autoscaling.Tag
+	//tag := autoscaling.Tag{
+	//	Key:   aws.String("k8s.io/cluster-autoscaler/enabled"),
+	//	Value: aws.String("true"),
+	//}
+	//tags = append(tags, &tag)
+	tag_ := autoscaling.Tag{Key: aws.String("KubernetesCluster"), Value: aws.String(projectId)}
+	tags = append(tags, &tag_)
 	tag := autoscaling.Tag{
-		Key:   aws.String("k8s.io/cluster-autoscaler/enabled"),
-		Value: aws.String("true"),
-	}
-	tags = append(tags, &tag)
-	tag = autoscaling.Tag{
-		Key:   aws.String("k8s.io/cluster-autoscaler/" + projectId),
-		Value: aws.String(projectId),
-	}
-	tags = append(tags, &tag)
-	tag = autoscaling.Tag{
 		Key:   aws.String("Name"),
 		Value: aws.String(projectId),
 	}
