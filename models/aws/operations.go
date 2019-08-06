@@ -256,7 +256,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]Creat
 			}
 			if pool.EnableScaling {
 
-				err, m := cloud.Scaler.AutoScaler(pool.Name, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
+				err, m := cloud.Scaler.AutoScaler(pool.Name, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx, cluster.ProjectId)
 
 				if m[pool.Name+"_scale_autoScaler"] != "" {
 					cloud.Resources[pool.Name+"_scale_autoScaler"] = pool.Name + "-scale"
@@ -1289,7 +1289,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context) error {
 				return err
 			}
 			subnetId := cloud.GetSubnets(pool, awsNetwork)
-			err, m := cloud.Scaler.AutoScaler(pool.Name, pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx)
+			err, m := cloud.Scaler.AutoScaler(pool.Name, pool.Nodes[0].CloudId, pool.Ami.AmiId, subnetId, pool.Scaling.MaxScalingGroupSize, ctx, cluster.ProjectId)
 			if err != nil {
 				if m[cluster.ProjectId+"_scale_launchConfig"] != "" {
 
