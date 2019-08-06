@@ -119,11 +119,11 @@ func (cloud *AWSAutoScaler) DeleteConfiguration(projectId string) error {
 	}
 	return nil
 }
-func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId string, subnetId string, maxSize int64, ctx utils.Context) (error, map[string]string) {
+func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId string, subnetId string, maxSize int64, ctx utils.Context, projectId string) (error, map[string]string) {
 	beego.Info("before sleep")
 	time.Sleep(time.Second * 180)
 	beego.Info("after sleep")
-	err, m := cloud.ConfigLauncher(projectId, nodeIp, imageId, ctx)
+	err, m := cloud.ConfigLauncher(name, nodeIp, imageId, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err, m
@@ -132,12 +132,12 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 
 	config_input := autoscaling.CreateAutoScalingGroupInput{}
 
-	config_input.AutoScalingGroupName = &projectId
+	config_input.AutoScalingGroupName = &name
 	//	config_input.InstanceId = &nodeIp
 	config_input.MinSize = &min
 	config_input.MaxSize = &maxSize
 	config_input.VPCZoneIdentifier = &subnetId
-	config_input.LaunchConfigurationName = &projectId
+	config_input.LaunchConfigurationName = &name
 
 	var tags []*autoscaling.Tag
 	//tag := autoscaling.Tag{
@@ -149,7 +149,7 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 	tags = append(tags, &tag_)
 	tag := autoscaling.Tag{
 		Key:   aws.String("Name"),
-		Value: aws.String(projectId),
+		Value: aws.String(name),
 	}
 	tags = append(tags, &tag)
 	config_input.Tags = tags
@@ -160,7 +160,7 @@ func (cloud *AWSAutoScaler) AutoScaler(projectId string, nodeIp string, imageId 
 		ctx.SendSDLog(config_err.Error(), "error")
 		return config_err, m
 	}
-	m[projectId+"_scale_autoScaler"] = projectId
+	m[name+"_scale_autoScaler"] = name
 	return nil, m
 
 }
