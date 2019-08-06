@@ -461,7 +461,12 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context) err
 			if err != nil {
 				return err
 			}
-
+			if pool.EnableVolume {
+				err := cloud.deleteDisk(cluster.ResourceGroup, "ext-"+pool.Name, ctx)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.ProjectId, ctx)
 			if err != nil {
