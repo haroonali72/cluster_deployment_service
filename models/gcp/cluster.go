@@ -55,6 +55,7 @@ type Node struct {
 	Name      string        `json:"name" bson:"name,omitempty"`
 	PrivateIp string        `json:"private_ip" bson:"private_ip"`
 	PublicIp  string        `json:"public_ip" bson:"public_ip"`
+	Username  string        `json:"username" bson:"username"`
 }
 
 type Image struct {
