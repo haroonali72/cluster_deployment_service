@@ -477,7 +477,8 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 			beego.Error(err.Error())
 			return err
 		}
-
+		
+		newNode.Username = pool.Username
 		pool.Nodes = []*Node{&newNode}
 	} else {
 		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(ctx).Do()
@@ -497,6 +498,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 				return err
 			}
 
+			newNode.Username = pool.Username
 			pool.Nodes = append(pool.Nodes, &newNode)
 		}
 	}
