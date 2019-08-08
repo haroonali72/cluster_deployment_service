@@ -23,7 +23,7 @@ func KeyConversion(keyInfo interface{}, ctx utils.Context) (utils.Key, error) {
 	return k, nil
 }
 
-func GenerateKeyPair(keyName string, ctx utils.Context) (utils.KeyPairResponse, error) {
+func GenerateKeyPair(keyName, username string, ctx utils.Context) (utils.KeyPairResponse, error) {
 
 	res := utils.KeyPairResponse{}
 
@@ -32,7 +32,7 @@ func GenerateKeyPair(keyName string, ctx utils.Context) (utils.KeyPairResponse, 
 	keyName = keyName + "_" + tstamp
 
 	cmd := "ssh-keygen"
-	args := []string{"-t", "rsa", "-b", "4096", "-C", "azure@example.com", "-f", keyName}
+	args := []string{"-t", "rsa", "-b", "4096", "-C", username, "-f", keyName}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return utils.KeyPairResponse{}, err

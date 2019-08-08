@@ -15,6 +15,7 @@ type Key struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
 	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
 	KeyName        string                 `json:"key_name" bson:"key_name"`
+	Username       string                 `json:"username" bson:"username,omitempty"`
 	AdminPassword  string                 `json:"admin_password" bson:"admin_password,omitempty"`
 	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty"`
 	PublicKey      string                 `json:"public_key" bson:"public_key,omitempty"`

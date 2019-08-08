@@ -736,7 +736,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			}
 		} else if err != nil && err.Error() == "not found" {
 
-			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
+			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, "azure@example.com", ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
@@ -1350,7 +1350,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			}
 		} else if err != nil && err.Error() == "not found" {
 
-			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, ctx)
+			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, "azure@example.com", ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
