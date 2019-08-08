@@ -120,6 +120,24 @@ func (c *AzureTemplateController) Post() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 
+	//==========================RBAC Authentication==============================//
+
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Evaluate("Create", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendSDLog("AzureTemplateController: Post new template with name: "+template.Name, "info")
 
 	err, id := azure.CreateTemplate(template, *ctx)
@@ -135,7 +153,17 @@ func (c *AzureTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+	//==========================RBAC Policy Creation==============================//
 
+	token = c.Ctx.Input.Header("token")
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, "userName", "companyId", nil, *ctx)
+	if err != nil || statusCode != 200 {
+		//beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.ServeJSON()
+		return
+	}
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }

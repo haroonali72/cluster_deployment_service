@@ -116,6 +116,23 @@ func (c *GcpTemplateController) Post() {
 
 	beego.Info("GcpTemplateController: Post new template with name: ", template.Name)
 	beego.Info("GcpTemplateController: JSON Payload: ", template)
+	//==========================RBAC Authentication==============================//
+
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	err, id := gcp.CreateTemplate(template)
 	if err != nil {
@@ -127,6 +144,17 @@ func (c *GcpTemplateController) Post() {
 		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+	//==========================RBAC Policy Creation==============================//
+
+	token = c.Ctx.Input.Header("token")
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, "userName", "companyId", nil, utils.Context{})
+	if err != nil || statusCode != 200 {
+		//beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
 		c.ServeJSON()
 		return
 	}
