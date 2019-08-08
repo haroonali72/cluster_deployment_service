@@ -687,7 +687,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key) error {
 		return err
 	}
 	
-	username := "user@cloudplex.io"
+	username := "cloudplex"
 	if keyInfo.Username != "" {
 		username = keyInfo.Username
 	}
