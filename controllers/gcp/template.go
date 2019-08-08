@@ -2,6 +2,8 @@ package gcp
 
 import (
 	"antelope/models/gcp"
+	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -14,6 +16,7 @@ type GcpTemplateController struct {
 
 // @Title Get
 // @Description get template
+// @Param	token	header	string	token ""
 // @Param	name	path	string	true	"Name of the template"
 // @Success 200 {object} gcp.Template
 // @Failure 404 {"error": exception_message}
@@ -21,9 +24,6 @@ type GcpTemplateController struct {
 // @router /:templateId [get]
 func (c *GcpTemplateController) Get() {
 	id := c.GetString(":templateId")
-
-	beego.Info("GcpTemplateController: Get template with id: ", id)
-
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "template id is empty"}
@@ -31,6 +31,26 @@ func (c *GcpTemplateController) Get() {
 		return
 	}
 
+	beego.Info("GcpTemplateController: Get template with id: ", id)
+	//==========================RBAC Authentication==============================//
+
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Authenticate(id, "View", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
 	template, err := gcp.GetTemplate(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -45,12 +65,31 @@ func (c *GcpTemplateController) Get() {
 
 // @Title Get All
 // @Description get all the templates
+// @Param	token	header	string	token ""
 // @Success 200 {object} []gcp.Template
 // @Failure 500 {"error": "internal server error"}
 // @router /all [get]
 func (c *GcpTemplateController) GetAll() {
 	beego.Info("GcpTemplateController: GetAll template.")
+	//==========================RBAC Authentication==============================//
 
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.GetAllAuthenticate("companyid", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
 	templates, err := gcp.GetAllTemplate()
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -66,6 +105,7 @@ func (c *GcpTemplateController) GetAll() {
 // @Title Create
 // @Description create a new template
 // @Param	body	body	gcp.Template	true	"body for template content"
+// @Param	token	header	string	token ""
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "internal server error"}
@@ -97,6 +137,7 @@ func (c *GcpTemplateController) Post() {
 
 // @Title Update
 // @Description update an existing template
+// @Param	token	header	string	token ""
 // @Param	body	body	gcp.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 404 {"error": "no template exists with this name"}
@@ -105,11 +146,29 @@ func (c *GcpTemplateController) Post() {
 func (c *GcpTemplateController) Patch() {
 	var template gcp.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+	//==========================RBAC Authentication==============================//
 
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Authenticate(template.TemplateId, "Update", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
 	beego.Info("GcpTemplateController: Patch template with id: ", template.TemplateId)
 	beego.Info("GcpTemplateController: JSON Payload: ", template)
 
-	err := gcp.UpdateTemplate(template)
+	err = gcp.UpdateTemplate(template)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -129,6 +188,7 @@ func (c *GcpTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete a templates
+// @Param	token	header	string	token ""
 // @Param	name	path	string	true	"Name of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 404 {"error": "name is empty"}
@@ -145,8 +205,27 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
+	//==========================RBAC Authentication==============================//
 
-	err := gcp.DeleteTemplate(id)
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Authenticate(id, "Delete", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
+
+	err = gcp.DeleteTemplate(id)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
