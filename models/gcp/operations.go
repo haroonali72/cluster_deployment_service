@@ -124,8 +124,12 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 		Metadata: &compute.Metadata{
 			Items: []*compute.MetadataItems{
 				{
+					Key:   "block-project-ssh-keys",
+					Value: to.StringPtr("true"),
+				},
+				{
 					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.PublicKey),
+					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 				},
 			},
 		},
@@ -277,8 +281,12 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		Metadata: &compute.Metadata{
 			Items: []*compute.MetadataItems{
 				{
+					Key:   "block-project-ssh-keys",
+					Value: to.StringPtr("true"),
+				},
+				{
 					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.PublicKey),
+					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 				},
 			},
 		},
@@ -478,7 +486,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 			return err
 		}
 		
-		newNode.Username = pool.Username
+		newNode.Username = pool.KeyInfo.Username
 		pool.Nodes = []*Node{&newNode}
 	} else {
 		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(ctx).Do()
@@ -498,7 +506,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 				return err
 			}
 
-			newNode.Username = pool.Username
+			newNode.Username = pool.KeyInfo.Username
 			pool.Nodes = append(pool.Nodes, &newNode)
 		}
 	}
@@ -667,21 +675,21 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 
 func fetchOrGenerateKey(keyInfo *utils.Key) error {
 	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, utils.Context{})
-
+	
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return err
 	}
-
+	
 	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return err
 	}
-
+	
 	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
 		keyInfo.PrivateKey = existingKey.PrivateKey
-		keyInfo.PublicKey = existingKey.PublicKey
+		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n")
 		return nil
 	}
 
@@ -699,7 +707,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key) error {
 	keyInfo.Username = username
 	keyInfo.Cloud = models.GCP
 	keyInfo.PrivateKey = res.PrivateKey
-	keyInfo.PublicKey = res.PublicKey
+	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
 
 	_, err = vault.PostGcpSSHKey(keyInfo, utils.Context{})
 	if err != nil {
