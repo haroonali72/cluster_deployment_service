@@ -2,6 +2,7 @@ package aws
 
 import (
 	"antelope/models/aws"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
@@ -16,6 +17,7 @@ type AWSTemplateController struct {
 // @Title Get
 // @Description get template
 // @Param	templateId	path	string	true	"Template Id of the template"
+// @Param	token	header	string	token ""
 // @Success 200 {object} aws.Template
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error <error msg>"}
@@ -24,6 +26,25 @@ func (c *AWSTemplateController) Get() {
 	templateId := c.GetString(":templateId")
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId)
+	//==========================RBAC Authentication==============================//
+
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Authenticate(templateId, "View", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 
 	ctx.SendSDLog("AWSTemplateController: Get template  id : "+templateId, "info")
 
@@ -48,6 +69,7 @@ func (c *AWSTemplateController) Get() {
 
 // @Title Get All
 // @Description get all the templates
+// @Param	token	header	string	token ""
 // @Success 200 {object} []aws.Template
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
@@ -55,6 +77,25 @@ func (c *AWSTemplateController) GetAll() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
+	//==========================RBAC Authentication==============================//
+
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.GetAllAuthenticate("companyId", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSTemplateController: GetAll template.", "info")
 
 	templates, err := aws.GetAllTemplate(*ctx)
@@ -71,6 +112,7 @@ func (c *AWSTemplateController) GetAll() {
 
 // @Title Create
 // @Description create a new template
+// @Param	token	header	string	token ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
@@ -81,6 +123,7 @@ func (c *AWSTemplateController) Post() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+
 	ctx.SendSDLog("AWSTemplateController: Post new template with name: "+template.Name, "error")
 
 	err, id := aws.CreateTemplate(template, *ctx)
@@ -103,6 +146,7 @@ func (c *AWSTemplateController) Post() {
 
 // @Title Update
 // @Description update an existing template
+// @Param	token	header	string	token ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 404 {"error": "no template exists with this name"}
@@ -113,9 +157,29 @@ func (c *AWSTemplateController) Patch() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+	//==========================RBAC Authentication==============================//
+
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Authenticate(template.TemplateId, "Update", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
+
 	ctx.SendSDLog("AWSTemplateController: Patch template with template id : "+template.TemplateId, "error")
 
-	err := aws.UpdateTemplate(template, *ctx)
+	err = aws.UpdateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -135,6 +199,7 @@ func (c *AWSTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete a templates
+// @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 404 {"error": "project id is empty"}
@@ -144,7 +209,25 @@ func (c *AWSTemplateController) Delete() {
 	templateId := c.GetString(":templateId")
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "")
+	//==========================RBAC Authentication==============================//
 
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Authenticate(templateId, "Delete", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)
 
 	if templateId == "" {
@@ -154,7 +237,7 @@ func (c *AWSTemplateController) Delete() {
 		return
 	}
 
-	err := aws.DeleteTemplate(templateId, *ctx)
+	err = aws.DeleteTemplate(templateId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
