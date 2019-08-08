@@ -687,15 +687,15 @@ func fetchOrGenerateKey(keyInfo *utils.Key) error {
 		return err
 	}
 	
+	username := "user@cloudplex.io"
+	if keyInfo.Username != "" {
+		username = keyInfo.Username
+	}
+
 	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
 		keyInfo.PrivateKey = existingKey.PrivateKey
 		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n")
 		return nil
-	}
-
-	username := "user@cloudplex.io"
-	if keyInfo.Username != "" {
-		username = keyInfo.Username
 	}
 
 	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, username, utils.Context{})
