@@ -125,10 +125,10 @@ func checkClusterSize(cluster Cluster_Def) error {
 	return nil
 }
 
-func IsValidGcpCredentials(profileId, region, zone string) (bool, GcpCredentials) {
+func IsValidGcpCredentials(profileId, region, token, zone string) (bool, GcpCredentials) {
 	credentials := GcpResponse{}
 
-	response, err := vault.GetCredentialProfile("gcp", profileId, utils.Context{})
+	response, err := vault.GetCredentialProfile("gcp", profileId, token, utils.Context{})
 	if err != nil {
 		return false, GcpCredentials{}
 	}

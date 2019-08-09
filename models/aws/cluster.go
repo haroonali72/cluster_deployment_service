@@ -93,8 +93,8 @@ func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 	}
 	return nil
 }
-func GetProfile(profileId string, region string, ctx utils.Context) (vault.AwsProfile, error) {
-	data, err := vault.GetCredentialProfile("aws", profileId, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AwsProfile, error) {
+	data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return vault.AwsProfile{}, err

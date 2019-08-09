@@ -377,7 +377,7 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -445,7 +445,7 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -512,7 +512,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -616,7 +616,7 @@ func (c *AWSClusterController) GetAMI() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region := c.Ctx.Input.Header("X-Region")
 
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	amiId := c.GetString(":amiId")
 
@@ -685,7 +685,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

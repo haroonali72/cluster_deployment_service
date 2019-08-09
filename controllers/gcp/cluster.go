@@ -309,7 +309,7 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone)
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
@@ -400,7 +400,7 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone)
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
@@ -476,7 +476,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone)
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}

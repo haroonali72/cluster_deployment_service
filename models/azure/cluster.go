@@ -137,8 +137,8 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string) error
 
 	return nil
 }
-func GetProfile(profileId string, region string, ctx utils.Context) (vault.AzureProfile, error) {
-	data, err := vault.GetCredentialProfile("azure", profileId, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
+	data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return vault.AzureProfile{}, err

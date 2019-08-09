@@ -1,7 +1,6 @@
 package azure
 
 import (
-	"antelope/models/aws"
 	"antelope/models/azure"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -47,7 +46,7 @@ func (c *AzureClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AWSClusterController: Get cluster with project id "+projectId, "info")
+	ctx.SendSDLog("AZUREClusterController: Get cluster with project id "+projectId, "info")
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -267,7 +266,7 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	cluster, err := aws.GetCluster(id, *ctx)
+	cluster, err := azure.GetCluster(id, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
@@ -325,7 +324,7 @@ func (c *AzureClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(projectId, *ctx)
 
-	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -403,7 +402,7 @@ func (c *AzureClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(projectId, *ctx)
 
-	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -471,7 +470,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(projectId, *ctx)
 
-	azureProfile, err := azure.GetProfile(profileId, region, *ctx)
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -521,7 +520,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 	token := c.Ctx.Input.Header("token")
 
 	//=============================================================================//
-	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
+	ctx.SendSDLog("AZUREClusterController: FetchExistingSSHKeys.", "info")
 
 	keys, err := azure.GetAllSSHKeyPair(*ctx, token)
 

@@ -295,13 +295,14 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 	return keys, nil
 
 }
-func GetCredentialProfile(cloudType string, profileId string, ctx utils.Context) ([]byte, error) {
+func GetCredentialProfile(cloudType string, profileId string, token string, ctx utils.Context) ([]byte, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/" + cloudType + "/credentials/" + profileId)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return []byte{}, err
 	}
+	req.Header.Add("token", token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
