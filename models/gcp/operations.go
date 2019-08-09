@@ -794,7 +794,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key) error {
 		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n")
 		
 		keySplits := strings.Split(keyInfo.PublicKey, " ")
-		if len(keySplits) >= 2 && keySplits[2] != username {
+		if len(keySplits) >= 3 && keySplits[2] != username {
 			keyInfo.PublicKey = keySplits[0] + " " + keySplits[1] + " " + username
 		}
 		
