@@ -550,6 +550,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
+// @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /sshkeys [get]
@@ -557,10 +558,14 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	//==========================RBAC Authentication==============================//
 
+	token := c.Ctx.Input.Header("token")
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
 
-	keys, err := aws.GetAllSSHKeyPair(*ctx)
+	keys, err := aws.GetAllSSHKeyPair(*ctx, token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -576,6 +581,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @Title AwsAmis
 // @Description returns aws ami details
 // @Param	X-Profile-Id	header	string	profileId	""
+// @Param	token	header	string	token ""
 // @Param	X-Region	header	string	false	""
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
@@ -586,7 +592,25 @@ func (c *AWSClusterController) GetAMI() {
 
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	//==========================RBAC Authentication==============================//
 
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.GetAllAuthenticate("Terminate", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSClusterController: FetchAMIs.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
@@ -620,6 +644,7 @@ func (c *AWSClusterController) GetAMI() {
 // @Title EnableScaling
 // @Description enables autoscaling
 // @Param	X-Profile-Id	header	string	profileId	""
+// @Param	token	header	string	token ""
 // @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
@@ -632,7 +657,25 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("AWSClusterController: EnableScaling.", "info")
+	//==========================RBAC Authentication==============================//
 
+	token := c.Ctx.Input.Header("token")
+	allowed, err := rbac_athentication.Authenticate(projectId, "Start", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := aws.GetRegion(projectId, *ctx)
 	if err != nil {

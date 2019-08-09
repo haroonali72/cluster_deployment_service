@@ -511,8 +511,12 @@ func (c *GcpClusterController) TerminateCluster() {
 // @router /sshkeys [get]
 func (c *GcpClusterController) GetSSHKeys() {
 	beego.Info("GcpClusterController: FetchExistingSSHKeys.")
+	//==========================RBAC Authentication==============================//
 
-	keys, err := gcp.GetAllSSHKeyPair()
+	token := c.Ctx.Input.Header("token")
+
+	//=============================================================================//
+	keys, err := gcp.GetAllSSHKeyPair(token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

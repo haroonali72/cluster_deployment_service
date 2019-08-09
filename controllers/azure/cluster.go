@@ -516,9 +516,14 @@ func (c *AzureClusterController) GetSSHKeys() {
 
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	//==========================RBAC Authentication==============================//
+
+	token := c.Ctx.Input.Header("token")
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
 
-	keys, err := azure.GetAllSSHKeyPair(*ctx)
+	keys, err := azure.GetAllSSHKeyPair(*ctx, token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

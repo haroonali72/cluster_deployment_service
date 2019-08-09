@@ -48,7 +48,7 @@ type AutoScaling struct {
 }
 
 type Node struct {
-	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ID        bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	CloudId   string        `json:"cloud_id" bson:"cloud_id,omitempty"`
 	Url       string        `json:"url" bson:"url,omitempty"`
 	NodeState string        `json:"node_state" bson:"node_state,omitempty"`
@@ -59,7 +59,7 @@ type Node struct {
 }
 
 type Image struct {
-	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ID      bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	Project string        `json:"project" bson:"project"`
 	Family  string        `json:"family" bson:"family"`
 }
@@ -364,8 +364,8 @@ func FetchStatus(credentials GcpCredentials, projectId string) (Cluster_Def, err
 	return cluster, nil
 }
 
-func GetAllSSHKeyPair() (keys []string, err error) {
-	keys, err = vault.GetAllSSHKey(string(models.GCP), utils.Context{})
+func GetAllSSHKeyPair(token string) (keys []string, err error) {
+	keys, err = vault.GetAllSSHKey(string(models.GCP), utils.Context{}, token)
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err

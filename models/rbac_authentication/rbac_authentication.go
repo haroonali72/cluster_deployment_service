@@ -129,11 +129,11 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 
 }
 
-/*func DeletePolicy(resourceId string,token string, ctx utils.Context) (int, error) {
+func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, error) {
 
 	client := utils.InitReq()
 
-	req, err := utils.CreateDeleteRequest(getRbacHost()+"/security/api/rbac/policy")
+	req, err := utils.CreateDeleteRequest(getRbacHost() + "/security/api/rbac/policy")
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return 400, err
@@ -141,7 +141,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
 	q.Add("resouce_type", "Cluster")
-	req.Header.Set("token",token)
+	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 
 	response, err := client.SendRequest(req)
@@ -152,4 +152,3 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	return response.StatusCode, err
 
 }
-*/

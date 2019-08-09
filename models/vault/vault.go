@@ -257,7 +257,7 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 	return key, nil
 
 }
-func GetAllSSHKey(cloudType string, ctx utils.Context) ([]string, error) {
+func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, error) {
 	var keys []string
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType)
 	if err != nil {
@@ -265,6 +265,7 @@ func GetAllSSHKey(cloudType string, ctx utils.Context) ([]string, error) {
 		return keys, err
 	}
 	client := utils.InitReq()
+	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")

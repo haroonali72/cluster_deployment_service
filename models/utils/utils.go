@@ -59,6 +59,21 @@ func CreateGetRequest(url string) (*http.Request, error) {
 	return req, nil
 }
 
+func CreateDeleteRequest(url string) (*http.Request, error) {
+
+	//beego.Info("requesting ", url)
+
+	req, err := http.NewRequest("DELETE", url, nil)
+
+	if err != nil {
+		beego.Error("%s", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	return req, nil
+}
+
 func (httpReq *HTTPClient) SendRequest(req *http.Request) (*http.Response, error) {
 
 	response, err := httpReq.client.Do(req)

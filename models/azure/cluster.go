@@ -456,9 +456,9 @@ func InsertSSHKeyPair(key utils.Key) (err error) {
 	}
 	return nil
 }
-func GetAllSSHKeyPair(ctx utils.Context) (keys []string, err error) {
+func GetAllSSHKeyPair(ctx utils.Context, token string) (keys []string, err error) {
 
-	keys, err = vault.GetAllSSHKey("azure", ctx)
+	keys, err = vault.GetAllSSHKey("azure", ctx, token)
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err

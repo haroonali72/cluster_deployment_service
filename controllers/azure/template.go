@@ -156,8 +156,15 @@ func (c *AzureTemplateController) Post() {
 	//==========================RBAC Policy Creation==============================//
 
 	token = c.Ctx.Input.Header("token")
-	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, "userName", "companyId", nil, *ctx)
-	if err != nil || statusCode != 200 {
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, "userName", "companyId", nil, *ctx)
+	if err != nil {
+		//beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.ServeJSON()
+		return
+	}
+	if statusCode != 200 {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
@@ -265,7 +272,24 @@ func (c *AzureTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
+	//==========================RBAC Authentication==============================//
 
+	status_code, err := rbac_athentication.DeletePolicy(id, token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if status_code != 200 {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "RBAC Policy Deletion Failed"}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
 	c.ServeJSON()
 }
