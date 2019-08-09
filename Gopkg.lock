@@ -328,7 +328,7 @@
   version = "v0.3.2"
 
 [[projects]]
-  digest = "1:83cb15ecd8ab1b0fa36480306d02d345848b6a581b64a889a06d87adf5c1d0d1"
+  digest = "1:5bd8ed4d9641a64f99276360eb126fc1d486f01ede07b2426c01c2e26abc8d77"
   name = "google.golang.org/api"
   packages = [
     "compute/v1",
@@ -336,6 +336,7 @@
     "googleapi",
     "googleapi/internal/uritemplates",
     "googleapi/transport",
+    "iam/v1",
     "internal",
     "option",
     "transport/http",
@@ -463,6 +464,7 @@
     "github.com/smartystreets/goconvey/convey",
     "github.com/urfave/cli",
     "google.golang.org/api/compute/v1",
+    "google.golang.org/api/iam/v1",
     "google.golang.org/api/option",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",

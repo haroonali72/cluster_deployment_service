@@ -28,19 +28,20 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name          string        `json:"name" bson:"name"`
-	NodeCount     int64         `json:"node_count" bson:"node_count"`
-	MachineType   string        `json:"machine_type" bson:"machine_type"`
-	Image         Image         `json:"image" bson:"image"`
-	Volume        Volume        `json:"volume" bson:"volume"`
-	EnableVolume  bool          `json:"is_external" bson:"is_external"`
-	PoolSubnet    string        `json:"subnet_id" bson:"subnet_id"`
-	PoolRole      string        `json:"pool_role" bson:"pool_role"`
-	Nodes         []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo       utils.Key     `json:"key_info" bson:"key_info"`
-	EnableScaling bool          `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling       AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
+	ID                  bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Name                string        `json:"name" bson:"name"`
+	NodeCount           int64         `json:"node_count" bson:"node_count"`
+	MachineType         string        `json:"machine_type" bson:"machine_type"`
+	Image               Image         `json:"image" bson:"image"`
+	Volume              Volume        `json:"volume" bson:"volume"`
+	EnableVolume        bool          `json:"is_external" bson:"is_external"`
+	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
+	PoolRole            string        `json:"pool_role" bson:"pool_role"`
+	ServiceAccountEmail string        `json:"service_account_email" bson:"service_account_email"`
+	Nodes               []*Node       `json:"nodes" bson:"nodes"`
+	KeyInfo             utils.Key     `json:"key_info" bson:"key_info"`
+	EnableScaling       bool          `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 
 type AutoScaling struct {
@@ -48,7 +49,7 @@ type AutoScaling struct {
 }
 
 type Node struct {
-	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ID        bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	CloudId   string        `json:"cloud_id" bson:"cloud_id,omitempty"`
 	Url       string        `json:"url" bson:"url,omitempty"`
 	NodeState string        `json:"node_state" bson:"node_state,omitempty"`
@@ -59,7 +60,7 @@ type Node struct {
 }
 
 type Image struct {
-	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ID      bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	Project string        `json:"project" bson:"project"`
 	Family  string        `json:"family" bson:"family"`
 }
