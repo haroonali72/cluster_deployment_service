@@ -9,9 +9,11 @@ import (
 	"antelope/models/vault"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"math/rand"
 	"strconv"
@@ -21,6 +23,7 @@ import (
 
 type GCP struct {
 	Client      *compute.Service
+	Iam         *iam.Service
 	Credentials string
 	ProjectId   string
 	Region      string
@@ -99,6 +102,14 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 		beego.Warn("creating instance '" + pool.Name + "' without external ip")
 	}
 
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+
+	pool.ServiceAccountEmail, err = cloud.createServiceAccount(pool.Name + "-" + cloud.ProjectId + strconv.Itoa(r1.Intn(100)))
+	if err != nil {
+		return err
+	}
+
 	instance := compute.Instance{
 		Name:        strings.ToLower(pool.Name),
 		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
@@ -131,6 +142,12 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 					Key:   "ssh-keys",
 					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 				},
+			},
+		},
+		ServiceAccounts: []*compute.ServiceAccount{
+			{
+				Email:  pool.ServiceAccountEmail,
+				Scopes: []string{"https://www.googleapis.com/auth/compute"},
 			},
 		},
 	}
@@ -256,6 +273,14 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		return "", err
 	}
 
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+
+	pool.ServiceAccountEmail, err = cloud.createServiceAccount(pool.Name + "-" + cloud.ProjectId + strconv.Itoa(r1.Intn(100)))
+	if err != nil {
+		return "", err
+	}
+
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		NetworkInterfaces: []*compute.NetworkInterface{
@@ -290,6 +315,12 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 				},
 			},
 		},
+		ServiceAccounts: []*compute.ServiceAccount{
+			{
+				Email:  pool.ServiceAccountEmail,
+				Scopes: []string{"https://www.googleapis.com/auth/compute"},
+			},
+		},
 	}
 
 	if pool.EnableVolume {
@@ -308,9 +339,6 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 
 		instanceProperties.Disks = append(instanceProperties.Disks, &secondaryDisk)
 	}
-
-	s1 := rand.NewSource(time.Now().UnixNano())
-	r1 := rand.New(s1)
 
 	instanceTemplate := compute.InstanceTemplate{
 		Name:       strings.ToLower(pool.Name) + "-template" + strconv.Itoa(r1.Intn(1000)) + strconv.Itoa(r1.Intn(1000)),
@@ -413,6 +441,11 @@ func (cloud *GCP) deletePool(pool *NodePool) error {
 		if err != nil {
 			return err
 		}
+
+		err = cloud.deleteServiceAccount(pool.ServiceAccountEmail)
+		if err != nil {
+			return err
+		}
 	} else {
 		ctx := context.Background()
 		instanceGroupManager, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(ctx).Do()
@@ -445,6 +478,11 @@ func (cloud *GCP) deletePool(pool *NodePool) error {
 			if err != nil {
 				return err
 			}
+		}
+
+		err = cloud.deleteServiceAccount(pool.ServiceAccountEmail)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -485,7 +523,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 			beego.Error(err.Error())
 			return err
 		}
-		
+
 		newNode.Username = pool.KeyInfo.Username
 		pool.Nodes = []*Node{&newNode}
 	} else {
@@ -575,6 +613,59 @@ func (cloud *GCP) releaseExternalIp(nodeName string) error {
 	return nil
 }
 
+func (cloud *GCP) createServiceAccount(name string) (string, error) {
+	if cloud.Iam == nil {
+		err := cloud.init()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if len(name) > 30 {
+		name = name[:30]
+	}
+
+	request := &iam.CreateServiceAccountRequest{
+		AccountId: name,
+		ServiceAccount: &iam.ServiceAccount{
+			DisplayName: name,
+		},
+	}
+
+	ctx := context.Background()
+	account, err := cloud.Iam.Projects.ServiceAccounts.Create("projects/"+cloud.ProjectId, request).Context(ctx).Do()
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "exists") {
+		beego.Error(err.Error())
+		return "", err
+	}
+
+	if account == nil {
+		text := "cannot create service account"
+		beego.Error(text)
+		return "", errors.New(text)
+	}
+
+	return account.Email, nil
+}
+
+func (cloud *GCP) deleteServiceAccount(email string) error {
+	if cloud.Iam == nil {
+		err := cloud.init()
+		if err != nil {
+			return err
+		}
+	}
+
+	ctx := context.Background()
+	_, err := cloud.Iam.Projects.ServiceAccounts.Delete("projects/-/serviceAccounts/" + email).Context(ctx).Do()
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+		beego.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func (cloud *GCP) waitForGlobalCompletion(op *compute.Operation) error {
 	if op == nil {
 		return nil
@@ -652,6 +743,12 @@ func (cloud *GCP) init() error {
 		return err
 	}
 
+	cloud.Iam, err = iam.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -675,18 +772,18 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 
 func fetchOrGenerateKey(keyInfo *utils.Key) error {
 	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, utils.Context{})
-	
+
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return err
 	}
-	
+
 	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return err
 	}
-	
+
 	username := "cloudplex"
 	if keyInfo.Username != "" {
 		username = keyInfo.Username
