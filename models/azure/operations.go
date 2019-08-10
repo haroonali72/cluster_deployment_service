@@ -142,6 +142,13 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 				return cluster, err
 			}
 		}
+		if pool.PoolRole == "master" {
+			err = cloud.mountStaticVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, pool.PoolRole)
+			if err != nil {
+				utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+				return cluster, err
+			}
+		}
 		cluster.NodePools[i].Nodes = result
 	}
 
@@ -664,7 +671,18 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 
 	var storage = []compute.DataDisk{}
-	storage = append(storage, disk)
+
+	staticVolume := compute.DataDisk{
+		Lun:          to.Int32Ptr(int32(index)),
+		Name:         to.StringPtr(storageName),
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+
+	storage = append(storage, staticVolume)
 
 	vm := compute.VirtualMachine{
 		Name:     to.StringPtr(pool.Name),
@@ -701,9 +719,10 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		},
 	}
 	if pool.EnableVolume {
-		vm.StorageProfile.DataDisks = &storage
+		storage = append(storage, disk)
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 	}
+	vm.StorageProfile.DataDisks = &storage
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
@@ -1031,6 +1050,80 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
+func (cloud *AZURE) mountStaticVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx utils.Context, poleRole string) error {
+
+	for _, vm := range vms {
+		err := fileWrite(privateKey, KeyName)
+		if err != nil {
+			return err
+		}
+		err = setPermission(KeyName)
+		if err != nil {
+			return err
+		}
+
+		if vm.PublicIP == nil {
+			ctx.SendSDLog("waiting for public ip", "warning")
+			time.Sleep(time.Second * 50)
+			ctx.SendSDLog("waited for public ip", "warning")
+			IPname := fmt.Sprintf("pip-%s", *vm.Name)
+			beego.Info(IPname)
+			if poleRole == "master" {
+				IPname := "pip-" + poolName
+				publicIp, err := cloud.GetVMPIP(resourceGroup, IPname, ctx)
+				if err != nil {
+					return err
+				}
+				vm.PublicIP = publicIp.IPAddress
+			} else {
+				publicIp, err := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
+				if err != nil {
+					return err
+				}
+				vm.PublicIP = publicIp.IPAddress
+			}
+		}
+
+		start := time.Now()
+		timeToWait := 60 //seconds
+		retry := true
+		var errCopy error
+
+		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
+
+			errCopy = copyFile(KeyName, user, *vm.PublicIP)
+			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
+
+				//ctx.SendSDLog(("time passed %6.2f sec\n"+ strconv.Itoa( int( time.Since(start).Seconds())))+"warning")
+				ctx.SendSDLog("waiting 5 seconds before retry", "warning")
+				time.Sleep(5 * time.Second)
+			} else {
+				retry = false
+			}
+		}
+		if errCopy != nil {
+			return errCopy
+		}
+		err = setScriptPermision(KeyName, user, *vm.PublicIP, ctx)
+		if err != nil {
+			return err
+		}
+		err = runStaticScript(KeyName, user, *vm.PublicIP, ctx)
+		if err != nil {
+			return err
+		}
+		err = deleteScript(KeyName, user, *vm.PublicIP, ctx)
+		if err != nil {
+			return err
+		}
+		err = deleteFile(KeyName, ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+
+}
 func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx utils.Context, poleRole string) error {
 
 	for _, vm := range vms {
@@ -1184,6 +1277,22 @@ func runScript(keyName string, userName string, instanceId string, ctx utils.Con
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/azure-volume-mount.sh"}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return nil
+	}
+	return nil
+}
+func runStaticScript(keyName string, userName string, instanceId string, ctx utils.Context) error {
+	keyPath := "/app/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/static_volume.sh"}
 	cmd := exec.Command(cmd1, args...)
 
 	cmd.Stdout = os.Stdout
