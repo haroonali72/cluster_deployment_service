@@ -741,6 +741,44 @@
                 }
             }
         },
+        "/cluster/gcp/serviceaccounts": {
+            "get": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "returns list of service account emails",
+                "operationId": "GcpClusterController.ListServiceAccounts",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"profile id is empty\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/sshkeys": {
             "get": {
                 "tags": [
@@ -794,9 +832,6 @@
                     "400": {
                         "description": "{\"error\": \"exception_message\"}"
                     },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
-                    },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
                     }
@@ -833,8 +868,14 @@
                             "$ref": "#/definitions/gcp.Cluster_Def"
                         }
                     },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                    "206": {
+                        "description": "{object} gcp.Cluster_Def"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"exception_message\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
@@ -869,11 +910,11 @@
                     "200": {
                         "description": "{\"msg\": \"cluster terminated successfully\"}"
                     },
+                    "400": {
+                        "description": "{\"error\": \"exception_message\"}"
+                    },
                     "401": {
                         "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
@@ -1390,7 +1431,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "504.0xc05a484ae0.false": {
+        "504.0xc0429a0f30.false": {
             "title": "false",
             "type": "object"
         },
@@ -1436,7 +1477,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/504.0xc05a484ae0.false"
+                    "$ref": "#/definitions/504.0xc0429a0f30.false"
                 },
                 "name": {
                     "type": "string"
@@ -1935,7 +1976,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
@@ -1951,9 +1992,6 @@
             "title": "Cluster_Def",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
@@ -1981,9 +2019,6 @@
             "title": "Image",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "family": {
                     "type": "string"
                 },
@@ -1996,16 +2031,25 @@
             "title": "Node",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "current_action": {
+                "cloud_id": {
                     "type": "string"
                 },
-                "status": {
+                "name": {
+                    "type": "string"
+                },
+                "node_state": {
+                    "type": "string"
+                },
+                "private_ip": {
+                    "type": "string"
+                },
+                "public_ip": {
                     "type": "string"
                 },
                 "url": {
+                    "type": "string"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }
@@ -2014,9 +2058,6 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "auto_scaling": {
                     "$ref": "#/definitions/gcp.AutoScaling"
                 },
@@ -2049,6 +2090,9 @@
                     }
                 },
                 "pool_role": {
+                    "type": "string"
+                },
+                "service_account_email": {
                     "type": "string"
                 },
                 "subnet_id": {
@@ -2209,6 +2253,9 @@
                     "type": "string"
                 },
                 "public_key": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
