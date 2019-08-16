@@ -1091,7 +1091,7 @@ func (cloud *AZURE) mountStaticVolume(vms []*VM, privateKey string, KeyName stri
 
 		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
 
-			errCopy = copyFile(KeyName, user, *vm.PublicIP)
+			errCopy = copy(KeyName, user, *vm.PublicIP)
 			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
 
 				//ctx.SendSDLog(("time passed %6.2f sec\n"+ strconv.Itoa( int( time.Since(start).Seconds())))+"warning")
@@ -1104,7 +1104,7 @@ func (cloud *AZURE) mountStaticVolume(vms []*VM, privateKey string, KeyName stri
 		if errCopy != nil {
 			return errCopy
 		}
-		err = setScriptPermision(KeyName, user, *vm.PublicIP, ctx)
+		err = Permision(KeyName, user, *vm.PublicIP, ctx)
 		if err != nil {
 			return err
 		}
@@ -1112,7 +1112,7 @@ func (cloud *AZURE) mountStaticVolume(vms []*VM, privateKey string, KeyName stri
 		if err != nil {
 			return err
 		}
-		err = deleteScript(KeyName, user, *vm.PublicIP, ctx)
+		err = delete(KeyName, user, *vm.PublicIP, ctx)
 		if err != nil {
 			return err
 		}
@@ -1272,6 +1272,41 @@ func setScriptPermision(keyName string, userName string, instanceId string, ctx 
 	}
 	return nil
 }
+func copy(keyName string, userName string, instanceId string) error {
+
+	keyPath := "/app/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId + ":/home/" + userName
+	cmd1 := "scp"
+	beego.Info(keyPath)
+	beego.Info(ip)
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "/app/scripts/static_volume.sh", ip}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	return nil
+}
+func Permision(keyName string, userName string, instanceId string, ctx utils.Context) error {
+	keyPath := "/app/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/static_volume.sh"}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return nil
+	}
+	return nil
+}
 func runScript(keyName string, userName string, instanceId string, ctx utils.Context) error {
 	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
@@ -1304,7 +1339,19 @@ func runStaticScript(keyName string, userName string, instanceId string, ctx uti
 	}
 	return nil
 }
-
+func delete(keyName string, userName string, instanceId string, ctx utils.Context) error {
+	keyPath := "/app/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/static_volume.sh"}
+	cmd := exec.Command(cmd1, args...)
+	err := cmd.Run()
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return err
+	}
+	return nil
+}
 func deleteScript(keyName string, userName string, instanceId string, ctx utils.Context) error {
 	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
