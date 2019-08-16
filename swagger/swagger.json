@@ -1431,7 +1431,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "504.0xc0429a0f30.false": {
+        "504.0xc04297b650.false": {
             "title": "false",
             "type": "object"
         },
@@ -1477,7 +1477,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/504.0xc0429a0f30.false"
+                    "$ref": "#/definitions/504.0xc04297b650.false"
                 },
                 "name": {
                     "type": "string"
