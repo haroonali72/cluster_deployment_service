@@ -674,7 +674,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	staticVolume := compute.DataDisk{
 		Lun:          to.Int32Ptr(int32(index)),
-		Name:         to.StringPtr("ext-kube-volume"),
+		Name:         to.StringPtr("ext-master-" + pool.Name),
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
 		DiskSizeGB:   to.Int32Ptr(5),
 		ManagedDisk: &compute.ManagedDiskParameters{
