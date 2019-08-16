@@ -374,6 +374,25 @@ func GetAllSSHKeyPair() (keys []string, err error) {
 	return keys, nil
 }
 
+func GetAllServiceAccounts(credentials GcpCredentials) (serviceAccounts []string, err error) {
+	gcp, err := GetGCP(credentials)
+	if err != nil {
+		return nil, err
+	}
+	err = gcp.init()
+	if err != nil {
+		return nil, err
+	}
+
+	serviceAccounts, err = gcp.listServiceAccounts()
+	if err != nil {
+		beego.Error("Cluster model: ServiceAccounts - Failed to list service accounts ", err.Error())
+		return nil, err
+	}
+
+	return serviceAccounts, err
+}
+
 func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials) error {
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()

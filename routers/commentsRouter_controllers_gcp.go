@@ -54,6 +54,15 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
         beego.ControllerComments{
+            Method: "GetServiceAccounts",
+            Router: `/serviceaccounts`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
+        beego.ControllerComments{
             Method: "GetSSHKeys",
             Router: `/sshkeys`,
             AllowHTTPMethods: []string{"get"},
