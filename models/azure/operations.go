@@ -581,7 +581,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 			return err
 		}
 	}
-	utils.SendLog("Public IP delete successfully: "+IPname, "info", projectId)
+	utils.SendLog("Public IP deleted successfully: "+IPname, "info", projectId)
 	return nil
 }
 func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx utils.Context) (network.Interface, error) {
@@ -635,7 +635,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 			return err
 		}
 	}
-	utils.SendLog("NIC delete successfully: "+nicName, "info", proId)
+	utils.SendLog("NIC deleted successfully: "+nicName, "info", proId)
 	return nil
 }
 
