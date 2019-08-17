@@ -496,13 +496,13 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	err = aws.EnableScaling(awsProfile, cluster, *ctx)
-	if err != nil {
+	go aws.EnableScaling(awsProfile, cluster, *ctx)
+	/*if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
 	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()
