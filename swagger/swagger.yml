@@ -945,7 +945,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  504.0xc04298aa50.false:
+  504.0xc04296cf30.false:
     title: "false"
     type: object
   aws.Ami:
@@ -978,7 +978,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/504.0xc04298aa50.false'
+        $ref: '#/definitions/504.0xc04296cf30.false'
       name:
         type: string
       network_name:
