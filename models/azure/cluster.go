@@ -275,14 +275,14 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 
 	return nil
 }
-func PrintError(confError error, name, projectId string, ctx utils.Context) {
+func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
 	if confError != nil {
 		ctx.SendSDLog(confError.Error(), "error")
-		utils.SendLog("Cluster creation failed : "+name, "error", projectId)
-		utils.SendLog(confError.Error(), "error", projectId)
+		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
+		utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) (confError error) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -293,31 +293,31 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 	confError = azure.init()
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		return confError
 	}
 
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		return confError
 	}
 
-	utils.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = azure.createCluster(cluster, ctx)
+	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	cluster, confError = azure.createCluster(cluster, ctx, companyId)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		beego.Info("going to cleanup")
-		confError = azure.CleanUp(cluster, ctx)
+		confError = azure.CleanUp(cluster, ctx, companyId)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
 		cluster.Status = "Cluster creation failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
@@ -327,11 +327,11 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
-	utils.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
@@ -368,7 +368,7 @@ func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Con
 	}*/
 	return c, nil
 }
-func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context) error {
+func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
@@ -400,21 +400,21 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		return err
 	}
 
-	err = azure.terminateCluster(cluster, ctx)
+	err = azure.terminateCluster(cluster, ctx, companyId)
 
 	if err != nil {
 
 		ctx.SendSDLog(err.Error(), "error")
 
-		utils.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
-		utils.SendLog(err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-			utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			utils.SendLog(err.Error(), "error", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return err
 		}
@@ -431,12 +431,12 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-		utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		utils.SendLog(err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
-	utils.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil

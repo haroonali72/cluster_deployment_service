@@ -24,11 +24,20 @@ type AWSTemplateController struct {
 // @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
 	templateId := c.GetString(":templateId")
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId)
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -74,13 +83,21 @@ func (c *AWSTemplateController) Get() {
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSTemplateController) GetAll() {
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-
-	token := c.Ctx.Input.Header("token")
-	allowed, err := rbac_athentication.GetAllAuthenticate("companyId", token, *ctx)
+	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -121,11 +138,20 @@ func (c *AWSTemplateController) GetAll() {
 func (c *AWSTemplateController) Post() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -159,7 +185,7 @@ func (c *AWSTemplateController) Post() {
 
 	team := c.Ctx.Input.Header("teams")
 	teams := strings.Split(team, ";")
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, "userName", "companyId", teams, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -189,11 +215,20 @@ func (c *AWSTemplateController) Post() {
 func (c *AWSTemplateController) Patch() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -241,11 +276,20 @@ func (c *AWSTemplateController) Patch() {
 // @router /:templateId [delete]
 func (c *AWSTemplateController) Delete() {
 	templateId := c.GetString(":templateId")
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "")
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(templateId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())

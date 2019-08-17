@@ -32,9 +32,20 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -71,10 +82,21 @@ func (c *GcpClusterController) Get() {
 // @router /all [get]
 func (c *GcpClusterController) GetAll() {
 	beego.Info("GcpClusterController: GetAll clusters.")
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
-	allowed, err := rbac_athentication.GetAllAuthenticate("comnpanyId", token, utils.Context{})
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -112,9 +134,20 @@ func (c *GcpClusterController) Post() {
 	var cluster gcp.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -162,9 +195,20 @@ func (c *GcpClusterController) Post() {
 func (c *GcpClusterController) Patch() {
 	var cluster gcp.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -210,9 +254,20 @@ func (c *GcpClusterController) Patch() {
 // @router /:projectId [delete]
 func (c *GcpClusterController) Delete() {
 	id := c.GetString(":projectId")
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -283,9 +338,20 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -337,7 +403,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 	beego.Info("GcpClusterController: Creating Cluster. ", cluster.Name)
 
-	go gcp.DeployCluster(cluster, credentials)
+	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -374,9 +440,20 @@ func (c *GcpClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -449,9 +526,20 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
@@ -496,7 +584,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 	beego.Info("GcpClusterController: Terminating Cluster. ", cluster.Name)
 
-	go gcp.TerminateCluster(cluster, credentials)
+	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -513,7 +601,18 @@ func (c *GcpClusterController) GetSSHKeys() {
 
 	token := c.Ctx.Input.Header("token")
 
-	//=============================================================================//
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	keys, err := gcp.GetAllSSHKeyPair(token)
 
 	if err != nil {
@@ -538,6 +637,21 @@ func (c *GcpClusterController) GetSSHKeys() {
 func (c *GcpClusterController) GetServiceAccounts() {
 	beego.Info("GcpClusterController: FetchExistingServiceAccounts.")
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(400)
@@ -546,7 +660,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", "")
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", "", "")
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}

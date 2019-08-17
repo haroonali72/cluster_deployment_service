@@ -11,22 +11,24 @@ type HeadersData struct {
 }
 
 type Data struct {
-	Message string `json:"message" bson : "message"`
-	ID      string `json:"id" bson : "id"`
-	Project string `json:"project" bson : "project"`
-	Service string `json:"service" bson : "service"`
-	Level   string `json:"level" bson : "level"`
+	Message   string `json:"message" bson : "message"`
+	ID        string `json:"id" bson : "id"`
+	Type      string `json:"type" bson : "type"`
+	Service   string `json:"service" bson : "service"`
+	Level     string `json:"level" bson : "level"`
+	CompanyId string `json:"companyId" bson : "companyId"`
 }
 
-func SendLog(msg, message_type, env_id string) (int, error) {
+func SendLog(companyId, msg, message_type, env_id string) (int, error) {
 
 	var data Data
 
 	data.ID = env_id
 	data.Service = "antelope"
-	data.Project = "project"
+	data.Type = "project"
 	data.Level = message_type
 	data.Message = msg
+	data.CompanyId = companyId
 
 	logger := InitReq()
 
@@ -58,6 +60,7 @@ func TransformData(data interface{}) ([]byte, error) {
 
 }
 func getLoggerHost() string {
-	return "http://" + beego.AppConfig.String("logger_url") + ":3500/api/v1/logger"
-	//return "https://dapis.cloudplex.cf/api/v1/logger"
+
+	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/frontend/logging/"
+	//return "https://dapis.cloudplex.cf/elephant/api/v1/frontend/logging/"
 }

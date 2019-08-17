@@ -241,15 +241,15 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 
 	return nil
 }
-func PrintError(confError error, name, projectId string, ctx utils.Context) {
+func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
 	if confError != nil {
 		ctx.SendSDLog(confError.Error(), "error")
-		utils.SendLog("Cluster creation failed : "+name, "error", projectId)
-		utils.SendLog(confError.Error(), "error", projectId)
+		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
+		utils.SendLog(companyId, confError.Error(), "error", projectId)
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string) (confError error) {
 
 	aws := AWS{
 		AccessKey: credentials.AccessKey,
@@ -258,32 +258,32 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	}
 	confError = aws.init()
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		return confError
 	}
 
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		return confError
 	}
 
-	utils.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	createdPools, confError := aws.createCluster(cluster, ctx)
+	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	createdPools, confError := aws.createCluster(cluster, ctx, companyId)
 
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 
 		confError = aws.CleanUp(cluster, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
@@ -293,16 +293,16 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx)
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
-	utils.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
 }
-func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
@@ -321,7 +321,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		return Cluster_Def{}, err
 	}
 
-	c, e := aws.fetchStatus(cluster, ctx)
+	c, e := aws.fetchStatus(cluster, ctx, companyId)
 	if e != nil {
 		ctx.SendSDLog("Cluster model: Status - Failed to get lastest status "+e.Error(), "error")
 		return Cluster_Def{}, e
@@ -333,7 +333,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		}*/
 	return c, nil
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context) error {
+func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId string) error {
 
 	aws := AWS{
 		AccessKey: profile.Profile.AccessKey,
@@ -360,23 +360,23 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		return err
 	}
 
-	utils.SendLog("Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = aws.terminateCluster(cluster, ctx)
+	err = aws.terminateCluster(cluster, ctx, companyId)
 
 	if err != nil {
 
 		ctx.SendSDLog(err.Error(), "error")
 
-		utils.SendLog("Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
-		utils.SendLog(err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-			utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			utils.SendLog(err.Error(), "error", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return err
 		}
@@ -392,12 +392,12 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
-		utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-		utils.SendLog(err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
-	utils.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil

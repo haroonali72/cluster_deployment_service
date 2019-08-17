@@ -26,11 +26,20 @@ func (c *AzureTemplateController) Get() {
 
 	id := c.GetString(":templateId")
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id)
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(id, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -72,13 +81,21 @@ func (c *AzureTemplateController) Get() {
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AzureTemplateController) GetAll() {
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
-	ctx.SendSDLog("AzureTemplateController: GetAll template.", "info")
-	//==========================RBAC Authentication==============================//
 
 	token := c.Ctx.Input.Header("token")
-	allowed, err := rbac_athentication.GetAllAuthenticate("companyId", token, *ctx)
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -117,12 +134,20 @@ func (c *AzureTemplateController) Post() {
 	var template azure.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-
-	token := c.Ctx.Input.Header("token")
 	allowed, err := rbac_athentication.Evaluate("Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -157,7 +182,7 @@ func (c *AzureTemplateController) Post() {
 
 	team := c.Ctx.Input.Header("teams")
 	teams := strings.Split(team, ";")
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, "userName", "companyId", teams, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -188,11 +213,20 @@ func (c *AzureTemplateController) Patch() {
 	var template azure.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId)
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -238,11 +272,20 @@ func (c *AzureTemplateController) Patch() {
 func (c *AzureTemplateController) Delete() {
 	id := c.GetString(":templateId")
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
-	//==========================RBAC Authentication==============================//
-
 	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())

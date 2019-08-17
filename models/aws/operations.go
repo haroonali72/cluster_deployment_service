@@ -197,7 +197,7 @@ type AWS struct {
 	Roles  IAMRoles.AWSIAMRoles
 }
 
-func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]CreatedPool, error) {
+func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string) ([]CreatedPool, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -226,7 +226,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]Creat
 
 	for _, pool := range cluster.NodePools {
 		var createdPool CreatedPool
-		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx)
+		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +234,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]Creat
 
 		result, err, subnetId := cloud.CreateInstance(pool, awsNetwork, ctx)
 		if err != nil {
-			utils.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return nil, err
 		}
 
@@ -242,15 +242,15 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]Creat
 			for index, instance := range result.Instances {
 				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.ProjectId, ctx)
 				if err != nil {
-					utils.SendLog("Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
+					utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 					return nil, err
 				}
 			}
 			if pool.IsExternal {
 				pool.KeyInfo.KeyMaterial = keyMaterial
-				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId, ctx)
+				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId, ctx, companyId)
 				if err != nil {
-					utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 					return nil, err
 				}
 			}
@@ -288,7 +288,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]Creat
 			for _, instance := range result.Instances {
 				ids = append(ids, aws.String(*instance.InstanceId))
 			}
-			latest_instances, err = cloud.GetInstances(ids, cluster.ProjectId, true, ctx)
+			latest_instances, err = cloud.GetInstances(ids, cluster.ProjectId, true, ctx, companyId)
 			if err != nil {
 				return nil, err
 			}
@@ -368,7 +368,7 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster_Def, error) {
+func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -398,7 +398,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster_D
 			var nodeId []*string
 			beego.Info(node.CloudId)
 			nodeId = append(nodeId, &node.CloudId)
-			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false, ctx)
+			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false, ctx, companyId)
 			if err != nil {
 				return Cluster_Def{}, err
 			}
@@ -482,7 +482,7 @@ func (cloud *AWS) KeyPairGenerator(keyName string) (string, string, error) {
 
 	return *resp.KeyMaterial, *resp.KeyFingerprint, nil
 }
-func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context) error {
+func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, companyId string) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -516,7 +516,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context) error
 			}
 		}
 
-		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx)
+		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
 		if err != nil {
 			return err
 		}
@@ -880,7 +880,7 @@ func (cloud *AWS) GetSubnets(pool *NodePool, network types.AWSNetwork) string {
 	return ""
 }
 
-func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, ctx utils.Context) (latest_instances []*ec2.Instance, err error) {
+func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, ctx utils.Context, companyId string) (latest_instances []*ec2.Instance, err error) {
 
 	instance_input := ec2.DescribeInstancesInput{InstanceIds: ids}
 	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
@@ -896,7 +896,7 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, c
 	}
 	for _, instance := range updated_instances.Reservations[0].Instances {
 		if creation {
-			utils.SendLog("Instance created successfully: "+*instance.InstanceId, "info", projectId)
+			utils.SendLog(companyId, "Instance created successfully: "+*instance.InstanceId, "info", projectId)
 		}
 		latest_instances = append(latest_instances, instance)
 	}
@@ -943,7 +943,7 @@ func (cloud *AWS) TerminateIns(instance_ids []*string) error {
 
 	return err
 }
-func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Context) error {
+func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Context, companyId string) error {
 
 	beego.Info("AWSOperations terminating nodes")
 	instance_ids := cloud.getIds(pool)
@@ -953,7 +953,7 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Cont
 		ctx.SendSDLog("Cluster model: Status - Failed to terminate node pool "+err.Error(), "error")
 		return err
 	}
-	utils.SendLog("Cluster pool terminated successfully: "+pool.Name, "info", projectId)
+	utils.SendLog(companyId, "Cluster pool terminated successfully: "+pool.Name, "info", projectId)
 	return nil
 }
 
@@ -1071,9 +1071,9 @@ func (cloud *AWS) describeAmi(ami *string, ctx utils.Context) ([]*ec2.BlockDevic
 	return nil
 
 }*/
-func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Context) (error, string) {
+func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Context, companyId string) (error, string) {
 	ids := []*string{&id}
-	latest_instances, err := cloud.GetInstances(ids, projectId, false, ctx)
+	latest_instances, err := cloud.GetInstances(ids, projectId, false, ctx, companyId)
 	if err != nil {
 		return err, ""
 	} else {
@@ -1086,7 +1086,7 @@ func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Cont
 		}
 	}
 }
-func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (keyMaterial string, err error) {
+func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string) (keyMaterial string, err error) {
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
 
@@ -1095,8 +1095,8 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (ke
 		if err != nil && err.Error() != "not found" {
 
 			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(err.Error(), "info", projectId)
+			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
+			utils.SendLog(companyId, err.Error(), "info", projectId)
 			return "", err
 
 		} else if err == nil {
@@ -1110,14 +1110,14 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (ke
 			}
 		} else if err != nil && err.Error() == "not found" {
 			ctx.SendSDLog("AWSOperations: creating key", "info")
-			utils.SendLog("Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
+			utils.SendLog(companyId, "Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
 
 			keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
 
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
-				utils.SendLog("Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
-				utils.SendLog(err.Error(), "info", projectId)
+				utils.SendLog(companyId, "Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
+				utils.SendLog(companyId, err.Error(), "info", projectId)
 				return "", err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
@@ -1125,8 +1125,8 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (ke
 
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
-				utils.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-				utils.SendLog(err.Error(), "info", projectId)
+				utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+				utils.SendLog(companyId, err.Error(), "info", projectId)
 				return "", err
 			}
 		}
@@ -1136,8 +1136,8 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (ke
 
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog("Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(err.Error(), "info", projectId)
+			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
+			utils.SendLog(companyId, err.Error(), "info", projectId)
 			return "", err
 		}
 		key, err := keyCoverstion(k, ctx)
@@ -1153,8 +1153,8 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (ke
 
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(err.Error(), "info", projectId)
+			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+			utils.SendLog(companyId, err.Error(), "info", projectId)
 			return "", err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
@@ -1165,8 +1165,8 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (ke
 
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog("Error in importing key: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(err.Error(), "info", projectId)
+			utils.SendLog(companyId, "Error in importing key: "+pool.KeyInfo.KeyName, "info", projectId)
+			utils.SendLog(companyId, err.Error(), "info", projectId)
 			return "", err
 		}
 
@@ -1174,8 +1174,8 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context) (ke
 
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog("Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(err.Error(), "info", projectId)
+			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
+			utils.SendLog(companyId, err.Error(), "info", projectId)
 			return "", err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
@@ -1198,7 +1198,7 @@ func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, e
 	return *resp.KeyName, err
 }
 
-func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string, ctx utils.Context) error {
+func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string, ctx utils.Context, companyId string) error {
 
 	for _, id := range ids {
 		err := fileWrite(key.KeyMaterial, key.KeyName)
@@ -1216,7 +1216,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 			beego.Error("waiting for public ip")
 			time.Sleep(time.Second * 50)
 			beego.Error("waited for public ip")
-			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId, ctx)
+			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId, ctx, companyId)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return err

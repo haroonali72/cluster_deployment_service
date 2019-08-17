@@ -1,7 +1,10 @@
 package rbac_athentication
 
 import (
+	"antelope/models/types"
 	"antelope/models/utils"
+	"encoding/json"
+	"io/ioutil"
 
 	"github.com/astaxie/beego"
 )
@@ -98,6 +101,40 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func GetInfo(token string) (types.Response, error) {
+
+	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/token/info")
+	if err != nil {
+		return types.Response{}, err
+	}
+	q := req.URL.Query()
+	req.Header.Set("token", token)
+	req.URL.RawQuery = q.Encode()
+
+	client := utils.InitReq()
+	response, err := client.SendRequest(req)
+	if err != nil {
+		return types.Response{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode == 200 {
+		return types.Response{}, nil
+	}
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+
+		return types.Response{}, err
+	}
+	var res types.Response
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+
+		return types.Response{}, err
+	}
+	return res, nil
 }
 
 func CreatePolicy(resourceId, token, userName, companyId string, teams []string, ctx utils.Context) (int, error) {
