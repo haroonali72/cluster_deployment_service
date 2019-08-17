@@ -28,19 +28,20 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID            bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name          string        `json:"name" bson:"name"`
-	NodeCount     int64         `json:"node_count" bson:"node_count"`
-	MachineType   string        `json:"machine_type" bson:"machine_type"`
-	Image         Image         `json:"image" bson:"image"`
-	Volume        Volume        `json:"volume" bson:"volume"`
-	EnableVolume  bool          `json:"is_external" bson:"is_external"`
-	PoolSubnet    string        `json:"subnet_id" bson:"subnet_id"`
-	PoolRole      string        `json:"pool_role" bson:"pool_role"`
-	Nodes         []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo       utils.Key     `json:"key_info" bson:"key_info"`
-	EnableScaling bool          `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling       AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
+	ID                  bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Name                string        `json:"name" bson:"name"`
+	NodeCount           int64         `json:"node_count" bson:"node_count"`
+	MachineType         string        `json:"machine_type" bson:"machine_type"`
+	Image               Image         `json:"image" bson:"image"`
+	Volume              Volume        `json:"volume" bson:"volume"`
+	EnableVolume        bool          `json:"is_external" bson:"is_external"`
+	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
+	PoolRole            string        `json:"pool_role" bson:"pool_role"`
+	ServiceAccountEmail string        `json:"service_account_email" bson:"service_account_email"`
+	Nodes               []*Node       `json:"nodes" bson:"nodes"`
+	KeyInfo             utils.Key     `json:"key_info" bson:"key_info"`
+	EnableScaling       bool          `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 
 type AutoScaling struct {
@@ -55,7 +56,7 @@ type Node struct {
 	Name      string        `json:"name" bson:"name,omitempty"`
 	PrivateIp string        `json:"private_ip" bson:"private_ip"`
 	PublicIp  string        `json:"public_ip" bson:"public_ip"`
-	Username  string        `json:"username" bson:"username"`
+	Username  string        `json:"user_name" bson:"user_name"`
 }
 
 type Image struct {
@@ -371,6 +372,25 @@ func GetAllSSHKeyPair(token string) (keys []string, err error) {
 		return keys, err
 	}
 	return keys, nil
+}
+
+func GetAllServiceAccounts(credentials GcpCredentials) (serviceAccounts []string, err error) {
+	gcp, err := GetGCP(credentials)
+	if err != nil {
+		return nil, err
+	}
+	err = gcp.init()
+	if err != nil {
+		return nil, err
+	}
+
+	serviceAccounts, err = gcp.listServiceAccounts()
+	if err != nil {
+		beego.Error("Cluster model: ServiceAccounts - Failed to list service accounts ", err.Error())
+		return nil, err
+	}
+
+	return serviceAccounts, err
 }
 
 func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials) error {

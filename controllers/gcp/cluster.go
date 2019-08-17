@@ -301,7 +301,6 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 	region, zone, err := gcp.GetRegion(projectId)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -352,6 +351,7 @@ func (c *GcpClusterController) StartCluster() {
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 206 {object} gcp.Cluster_Def
 // @Failure 400 {"error": "exception_message"}
+// @Failure 401 {"error": "authorization params missing or invalid"}
 // @Failure 500 {"error": "internal server error"}
 // @router /status/:projectId/ [get]
 func (c *GcpClusterController) GetStatus() {
@@ -392,7 +392,6 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 	region, zone, err := gcp.GetRegion(projectId)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -468,7 +467,6 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 	region, zone, err := gcp.GetRegion(projectId)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -526,5 +524,44 @@ func (c *GcpClusterController) GetSSHKeys() {
 	}
 
 	c.Data["json"] = keys
+	c.ServeJSON()
+}
+
+// @Title ListServiceAccounts
+// @Description returns list of service account emails
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Success 200 {object} []string
+// @Failure 400 {"error": "profile id is empty"}
+// @Failure 401 {"error": "authorization params missing or invalid"}
+// @Failure 500 {"error": "internal server error"}
+// @router /serviceaccounts [get]
+func (c *GcpClusterController) GetServiceAccounts() {
+	beego.Info("GcpClusterController: FetchExistingServiceAccounts.")
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", "")
+	if !isValid {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.ServeJSON()
+		return
+	}
+
+	serviceAccounts, err := gcp.GetAllServiceAccounts(credentials)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = serviceAccounts
 	c.ServeJSON()
 }

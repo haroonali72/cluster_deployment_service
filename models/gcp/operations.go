@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"math/rand"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 
 type GCP struct {
 	Client      *compute.Service
+	Iam         *iam.Service
 	Credentials string
 	ProjectId   string
 	Region      string
@@ -124,11 +126,24 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 		Metadata: &compute.Metadata{
 			Items: []*compute.MetadataItems{
 				{
+					Key:   "block-project-ssh-keys",
+					Value: to.StringPtr("true"),
+				},
+				{
 					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.PublicKey),
+					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 				},
 			},
 		},
+	}
+
+	if pool.ServiceAccountEmail != "" {
+		instance.ServiceAccounts = []*compute.ServiceAccount{
+			{
+				Email:  pool.ServiceAccountEmail,
+				Scopes: []string{"https://www.googleapis.com/auth/compute"},
+			},
+		}
 	}
 
 	if pool.EnableVolume {
@@ -252,6 +267,9 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		return "", err
 	}
 
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		NetworkInterfaces: []*compute.NetworkInterface{
@@ -277,11 +295,24 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		Metadata: &compute.Metadata{
 			Items: []*compute.MetadataItems{
 				{
+					Key:   "block-project-ssh-keys",
+					Value: to.StringPtr("true"),
+				},
+				{
 					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.PublicKey),
+					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 				},
 			},
 		},
+	}
+
+	if pool.ServiceAccountEmail != "" {
+		instanceProperties.ServiceAccounts = []*compute.ServiceAccount{
+			{
+				Email:  pool.ServiceAccountEmail,
+				Scopes: []string{"https://www.googleapis.com/auth/compute"},
+			},
+		}
 	}
 
 	if pool.EnableVolume {
@@ -300,9 +331,6 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 
 		instanceProperties.Disks = append(instanceProperties.Disks, &secondaryDisk)
 	}
-
-	s1 := rand.NewSource(time.Now().UnixNano())
-	r1 := rand.New(s1)
 
 	instanceTemplate := compute.InstanceTemplate{
 		Name:       strings.ToLower(pool.Name) + "-template" + strconv.Itoa(r1.Intn(1000)) + strconv.Itoa(r1.Intn(1000)),
@@ -477,8 +505,8 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 			beego.Error(err.Error())
 			return err
 		}
-		
-		newNode.Username = pool.Username
+
+		newNode.Username = pool.KeyInfo.Username
 		pool.Nodes = []*Node{&newNode}
 	} else {
 		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(ctx).Do()
@@ -498,7 +526,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool) error {
 				return err
 			}
 
-			newNode.Username = pool.Username
+			newNode.Username = pool.KeyInfo.Username
 			pool.Nodes = append(pool.Nodes, &newNode)
 		}
 	}
@@ -565,6 +593,29 @@ func (cloud *GCP) releaseExternalIp(nodeName string) error {
 	}
 
 	return nil
+}
+
+func (cloud *GCP) listServiceAccounts() ([]string, error) {
+	if cloud.Iam == nil {
+		err := cloud.init()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	ctx := context.Background()
+	accounts, err := cloud.Iam.Projects.ServiceAccounts.List("projects/" + cloud.ProjectId).Context(ctx).Do()
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, err
+	}
+
+	accountList := []string{}
+	for _, account := range accounts.Accounts {
+		accountList = append(accountList, account.Email)
+	}
+
+	return accountList, nil
 }
 
 func (cloud *GCP) waitForGlobalCompletion(op *compute.Operation) error {
@@ -644,6 +695,12 @@ func (cloud *GCP) init() error {
 		return err
 	}
 
+	cloud.Iam, err = iam.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -679,15 +736,21 @@ func fetchOrGenerateKey(keyInfo *utils.Key) error {
 		return err
 	}
 
-	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
-		keyInfo.PrivateKey = existingKey.PrivateKey
-		keyInfo.PublicKey = existingKey.PublicKey
-		return nil
-	}
-
-	username := "user@cloudplex.io"
+	username := "cloudplex"
 	if keyInfo.Username != "" {
 		username = keyInfo.Username
+	}
+
+	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
+		keyInfo.PrivateKey = existingKey.PrivateKey
+		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n")
+
+		keySplits := strings.Split(keyInfo.PublicKey, " ")
+		if len(keySplits) >= 3 && keySplits[2] != username {
+			keyInfo.PublicKey = keySplits[0] + " " + keySplits[1] + " " + username
+		}
+
+		return nil
 	}
 
 	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, username, utils.Context{})
@@ -699,7 +762,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key) error {
 	keyInfo.Username = username
 	keyInfo.Cloud = models.GCP
 	keyInfo.PrivateKey = res.PrivateKey
-	keyInfo.PublicKey = res.PublicKey
+	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
 
 	_, err = vault.PostGcpSSHKey(keyInfo, utils.Context{})
 	if err != nil {

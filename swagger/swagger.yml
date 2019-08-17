@@ -526,6 +526,31 @@ paths:
               $ref: '#/definitions/gcp.Cluster_Def'
         "500":
           description: '{"error": "internal server error"}'
+  /cluster/gcp/serviceaccounts:
+    get:
+      tags:
+      - cluster/gcp
+      description: returns list of service account emails
+      operationId: GcpClusterController.ListServiceAccounts
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              type: string
+        "400":
+          description: '{"error": "profile id is empty"}'
+        "401":
+          description: '{"error": "authorization params missing or invalid"}'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/gcp/sshkeys:
     get:
       tags:
@@ -563,8 +588,6 @@ paths:
           description: '{"msg": "cluster created successfully"}'
         "400":
           description: '{"error": "exception_message"}'
-        "404":
-          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/status/{projectId}/:
@@ -589,8 +612,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gcp.Cluster_Def'
-        "404":
-          description: '{"error": "project id is empty"}'
+        "206":
+          description: '{object} gcp.Cluster_Def'
+        "400":
+          description: '{"error": "exception_message"}'
+        "401":
+          description: '{"error": "authorization params missing or invalid"}'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/terminate/{projectId}/:
@@ -613,11 +640,11 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster terminated successfully"}'
+        "400":
+          description: '{"error": "exception_message"}'
         "401":
           description: '{"error": "Authorization format should be ''base64 encoded
             service_account_json''"}'
-        "404":
-          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "internal server error"}'
   /health/:
@@ -913,7 +940,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  504.0xc05a484ae0.false:
+  504.0xc04297b650.false:
     title: "false"
     type: object
   aws.Ami:
@@ -946,7 +973,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/504.0xc05a484ae0.false'
+        $ref: '#/definitions/504.0xc04297b650.false'
       name:
         type: string
       network_name:
@@ -1281,7 +1308,7 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
-    type: string
+    type: object
   gcp.AutoScaling:
     title: AutoScaling
     type: object
@@ -1293,8 +1320,6 @@ definitions:
     title: Cluster_Def
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
       name:
@@ -1313,8 +1338,6 @@ definitions:
     title: Image
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
       family:
         type: string
       project:
@@ -1323,20 +1346,24 @@ definitions:
     title: Node
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
-      current_action:
+      cloud_id:
         type: string
-      status:
+      name:
+        type: string
+      node_state:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
         type: string
       url:
+        type: string
+      user_name:
         type: string
   gcp.NodePool:
     title: NodePool
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
       auto_scaling:
         $ref: '#/definitions/gcp.AutoScaling'
       enable_scaling:
@@ -1359,6 +1386,8 @@ definitions:
         items:
           $ref: '#/definitions/gcp.Node'
       pool_role:
+        type: string
+      service_account_email:
         type: string
       subnet_id:
         type: string
@@ -1473,6 +1502,8 @@ definitions:
       private_key:
         type: string
       public_key:
+        type: string
+      username:
         type: string
 tags:
 - name: health

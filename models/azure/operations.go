@@ -136,7 +136,14 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 			return cluster, err
 		}
 		if pool.EnableVolume {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, pool.PoolRole)
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, pool.PoolRole, false)
+			if err != nil {
+				utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+				return cluster, err
+			}
+		}
+		if pool.PoolRole == "master" {
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, pool.PoolRole, true)
 			if err != nil {
 				utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
@@ -467,6 +474,12 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context) err
 					return err
 				}
 			}
+			//deleting master volume
+			err = cloud.deleteDisk(cluster.ResourceGroup, "ext-master-"+pool.Name, ctx)
+			if err != nil {
+				return err
+			}
+
 		} else {
 			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.ProjectId, ctx)
 			if err != nil {
@@ -568,7 +581,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 			return err
 		}
 	}
-	utils.SendLog("Public IP delete successfully: "+IPname, "info", projectId)
+	utils.SendLog("Public IP deleted successfully: "+IPname, "info", projectId)
 	return nil
 }
 func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx utils.Context) (network.Interface, error) {
@@ -622,7 +635,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 			return err
 		}
 	}
-	utils.SendLog("NIC delete successfully: "+nicName, "info", proId)
+	utils.SendLog("NIC deleted successfully: "+nicName, "info", proId)
 	return nil
 }
 
@@ -664,7 +677,18 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 
 	var storage = []compute.DataDisk{}
-	storage = append(storage, disk)
+
+	staticVolume := compute.DataDisk{
+		Lun:          to.Int32Ptr(int32(index)),
+		Name:         to.StringPtr("ext-master-" + pool.Name),
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(5),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
+	storage = append(storage, staticVolume)
 
 	vm := compute.VirtualMachine{
 		Name:     to.StringPtr(pool.Name),
@@ -701,9 +725,10 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		},
 	}
 	if pool.EnableVolume {
-		vm.StorageProfile.DataDisks = &storage
+		storage = append(storage, disk)
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 	}
+	vm.StorageProfile.DataDisks = &storage
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
@@ -990,6 +1015,12 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 					return err
 				}
 			}
+			if cloud.Resources["ext-master-"+pool.Name] != nil {
+				err := cloud.deleteDisk(cluster.ResourceGroup, "ext-master-"+pool.Name, ctx)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 
 			if cloud.Resources["Vmss-"+pool.Name] != nil {
@@ -1031,7 +1062,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
-func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx utils.Context, poleRole string) error {
+func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, projectId string, user string, resourceGroup string, poolName string, ctx utils.Context, poleRole string, masterVolume bool) error {
 
 	for _, vm := range vms {
 		err := fileWrite(privateKey, KeyName)
@@ -1069,10 +1100,17 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		timeToWait := 60 //seconds
 		retry := true
 		var errCopy error
+		fileName := ""
+
+		if masterVolume {
+			fileName = "static_volume.sh"
+		} else {
+			fileName = "azure-volume-mount.sh"
+		}
 
 		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
 
-			errCopy = copyFile(KeyName, user, *vm.PublicIP)
+			errCopy = copyFile(KeyName, user, *vm.PublicIP, fileName)
 			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
 
 				//ctx.SendSDLog(("time passed %6.2f sec\n"+ strconv.Itoa( int( time.Since(start).Seconds())))+"warning")
@@ -1085,15 +1123,15 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		if errCopy != nil {
 			return errCopy
 		}
-		err = setScriptPermision(KeyName, user, *vm.PublicIP, ctx)
+		err = setScriptPermision(KeyName, user, *vm.PublicIP, fileName, ctx)
 		if err != nil {
 			return err
 		}
-		err = runScript(KeyName, user, *vm.PublicIP, ctx)
+		err = runScript(KeyName, user, *vm.PublicIP, fileName, ctx)
 		if err != nil {
 			return err
 		}
-		err = deleteScript(KeyName, user, *vm.PublicIP, ctx)
+		err = deleteScript(KeyName, user, *vm.PublicIP, fileName, ctx)
 		if err != nil {
 			return err
 		}
@@ -1144,14 +1182,14 @@ func setPermission(keyName string) error {
 	}
 	return nil
 }
-func copyFile(keyName string, userName string, instanceId string) error {
+func copyFile(keyName string, userName string, instanceId string, file string) error {
 
 	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId + ":/home/" + userName
 	cmd1 := "scp"
 	beego.Info(keyPath)
 	beego.Info(ip)
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "/app/scripts/azure-volume-mount.sh", ip}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "/app/scripts/" + file, ip}
 	cmd := exec.Command(cmd1, args...)
 
 	cmd.Stdout = os.Stdout
@@ -1163,27 +1201,11 @@ func copyFile(keyName string, userName string, instanceId string) error {
 	}
 	return nil
 }
-func setScriptPermision(keyName string, userName string, instanceId string, ctx utils.Context) error {
+func setScriptPermision(keyName string, userName string, instanceId, fileName string, ctx utils.Context) error {
 	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/azure-volume-mount.sh"}
-	cmd := exec.Command(cmd1, args...)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
-		return nil
-	}
-	return nil
-}
-func runScript(keyName string, userName string, instanceId string, ctx utils.Context) error {
-	keyPath := "/app/keys/" + keyName + ".pem"
-	ip := userName + "@" + instanceId
-	cmd1 := "ssh"
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/azure-volume-mount.sh"}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/" + fileName}
 	cmd := exec.Command(cmd1, args...)
 
 	cmd.Stdout = os.Stdout
@@ -1196,11 +1218,28 @@ func runScript(keyName string, userName string, instanceId string, ctx utils.Con
 	return nil
 }
 
-func deleteScript(keyName string, userName string, instanceId string, ctx utils.Context) error {
+func runScript(keyName string, userName string, instanceId string, fileName string, ctx utils.Context) error {
 	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/azure-volume-mount.sh"}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/" + fileName}
+	cmd := exec.Command(cmd1, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return nil
+	}
+	return nil
+}
+
+func deleteScript(keyName string, userName string, instanceId string, fileName string, ctx utils.Context) error {
+	keyPath := "/app/keys/" + keyName + ".pem"
+	ip := userName + "@" + instanceId
+	cmd1 := "ssh"
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/" + fileName}
 	cmd := exec.Command(cmd1, args...)
 	err := cmd.Run()
 	if err != nil {
