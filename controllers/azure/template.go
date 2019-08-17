@@ -155,8 +155,9 @@ func (c *AzureTemplateController) Post() {
 	}
 	//==========================RBAC Policy Creation==============================//
 
-	token = c.Ctx.Input.Header("token")
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, "userName", "companyId", nil, *ctx)
+	team := c.Ctx.Input.Header("teams")
+	teams := strings.Split(team, ";")
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, "userName", "companyId", teams, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
