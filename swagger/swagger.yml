@@ -149,6 +149,11 @@ paths:
         name: X-Profile-Id
         description: profileId
         type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
       - in: body
         name: body
         description: body for cluster content
@@ -940,7 +945,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  504.0xc04297b650.false:
+  504.0xc04298aa50.false:
     title: "false"
     type: object
   aws.Ami:
@@ -973,7 +978,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/504.0xc04297b650.false'
+        $ref: '#/definitions/504.0xc04298aa50.false'
       name:
         type: string
       network_name:

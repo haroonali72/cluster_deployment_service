@@ -163,6 +163,13 @@
                         "type": "string"
                     },
                     {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -1431,7 +1438,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "504.0xc04297b650.false": {
+        "504.0xc04298aa50.false": {
             "title": "false",
             "type": "object"
         },
@@ -1477,7 +1484,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/504.0xc04297b650.false"
+                    "$ref": "#/definitions/504.0xc04298aa50.false"
                 },
                 "name": {
                     "type": "string"
