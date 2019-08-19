@@ -206,7 +206,6 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context) ([]Creat
 		}
 	}
 	var awsNetwork types.AWSNetwork
-
 	url := getNetworkHost("aws") + "/" + cluster.ProjectId
 	network, err := api_handler.GetAPIStatus(url, ctx)
 
@@ -1276,11 +1275,11 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context) error {
 			url := getNetworkHost("aws") + "/" + cluster.ProjectId
 			network, err := api_handler.GetAPIStatus(url, ctx)
 
-			//bytes, err := json.Marshal(network)
+			/*bytes, err := json.Marshal(network)
 			if err != nil {
 				beego.Error(err.Error())
-				return err
-			}
+				return nil, err
+			}*/
 
 			err = json.Unmarshal(network.([]byte), &awsNetwork)
 
