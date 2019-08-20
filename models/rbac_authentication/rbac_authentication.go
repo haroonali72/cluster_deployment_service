@@ -18,7 +18,7 @@ type Input struct {
 }
 
 func getRbacHost() string {
-	return beego.AppConfig.String("vault_url")
+	return beego.AppConfig.String("rbac_url")
 }
 func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool, error) {
 
