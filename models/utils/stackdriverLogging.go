@@ -16,7 +16,7 @@ type SDData struct {
 	Severity     string      `json:"severity"`
 	UserId       string      `json:"user_id"`
 	ResourceName string      `json:"resource_name"` ///??
-	Company      string      `json:"companyId" binding:"required"`
+	Company      string      `json:"company_id" binding:"required"`
 	LogName      string      `json:"log_name"`
 	Response     interface{} `json:"response"` ///???
 }

@@ -16,7 +16,7 @@ type Data struct {
 	Type      string `json:"type" bson : "type"`
 	Service   string `json:"service" bson : "service"`
 	Level     string `json:"level" bson : "level"`
-	CompanyId string `json:"companyId" bson : "companyId"`
+	CompanyId string `json:"company_id" bson : "company_id"`
 }
 
 func SendLog(companyId, msg, message_type, env_id string) (int, error) {
