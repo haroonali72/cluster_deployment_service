@@ -139,7 +139,7 @@ func (c *AWSTemplateController) Post() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 	token := c.Ctx.Input.Header("token")
-
+	beego.Info("token" + token)
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -148,11 +148,13 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+	beego.Info("company id " + userInfo.CompanyId)
+	beego.Info("user name " + userInfo.UserId)
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
+	allowed, err := rbac_athentication.Evaluate("Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -187,7 +189,7 @@ func (c *AWSTemplateController) Post() {
 	teams := strings.Split(team, ";")
 	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
 	if err != nil {
-		//beego.Error(err.Error())
+		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
 		c.ServeJSON()
