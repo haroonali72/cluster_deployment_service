@@ -11,7 +11,7 @@ import (
 
 type Input struct {
 	ResourceId  string   `json:"resource_id"`
-	ResouceType string   `json: "resource_type"`
+	ResouceType string   `json:"resource_type"`
 	Teams       []string `json:"teams"`
 	CompanyId   string   `json:"companyId"`
 	UserName    string   `json:"username"`
