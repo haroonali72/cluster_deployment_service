@@ -679,14 +679,14 @@ func (c *AWSClusterController) GetAMI() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	err, _ = rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	//err, _ = rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
 
 	//=============================================================================//
 	ctx.SendSDLog("AWSClusterController: FetchAMIs.", "info")
