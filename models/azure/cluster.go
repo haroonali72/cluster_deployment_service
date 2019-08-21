@@ -98,10 +98,10 @@ type Data struct {
 	Region string `json:"region"`
 }
 
-func GetRegion(projectId string, ctx utils.Context) (string, error) {
+func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
 
-	data, err := api_handler.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return "", err
@@ -115,11 +115,11 @@ func GetRegion(projectId string, ctx utils.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func GetNetwork(projectId string, ctx utils.Context, resourceGroup string) error {
+func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token string) error {
 
 	url := getNetworkHost("azure") + "/" + projectId
 
-	data, err := api_handler.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err
@@ -282,7 +282,7 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 		utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) (confError error) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -305,7 +305,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = azure.createCluster(cluster, ctx, companyId)
+	cluster, confError = azure.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		beego.Info("going to cleanup")

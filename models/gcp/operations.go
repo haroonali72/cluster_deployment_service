@@ -37,7 +37,7 @@ func getNetworkHost(cloudType string) string {
 	return host
 }
 
-func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
+func (cloud *GCP) createCluster(cluster Cluster_Def, token string) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -48,7 +48,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	var gcpNetwork types.GCPNetwork
 	url := getNetworkHost("gcp") + "/" + cluster.ProjectId
 
-	network, err := api_handler.GetAPIStatus(url, utils.Context{})
+	network, err := api_handler.GetAPIStatus(token, url, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err

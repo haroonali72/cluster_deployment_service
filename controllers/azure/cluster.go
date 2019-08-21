@@ -164,7 +164,7 @@ func (c *AzureClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 	beego.Info(cluster.ResourceGroup)
-	err = azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup)
+	err = azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -370,7 +370,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	beego.Info("AzureClusterController: StartCluster.")
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := azure.GetRegion(projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
@@ -409,7 +409,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 	ctx.SendSDLog("AzureClusterController: Creating Cluster. "+cluster.Name, "info")
 
-	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
+	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -457,7 +457,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := azure.GetRegion(projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
@@ -534,7 +534,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendSDLog("AzureClusterController: TerminateCluster.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := azure.GetRegion(projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 

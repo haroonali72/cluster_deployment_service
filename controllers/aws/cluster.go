@@ -188,7 +188,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	err = aws.GetNetwork(cluster.ProjectId, *ctx)
+	err = aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -418,7 +418,7 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -435,7 +435,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 	ctx.SendSDLog("AWSClusterController: Creating Cluster. "+cluster.Name, "info")
 
-	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId)
+	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -495,7 +495,7 @@ func (c *AWSClusterController) GetStatus() {
 	}
 
 	ctx.SendSDLog("AWSClusterController: Fetch Cluster Status of project. "+projectId, "info")
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -570,7 +570,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	ctx.SendSDLog("AWSNetworkController: TerminateCluster.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -706,7 +706,7 @@ func (c *AWSClusterController) GetAMI() {
 	}
 	ctx.SendSDLog("AWSClusterController: Get Ami from AWS", "info")
 
-	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx)
+	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx, token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -763,7 +763,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 
 	//=============================================================================//
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -788,7 +788,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	err = aws.EnableScaling(awsProfile, cluster, *ctx)
+	err = aws.EnableScaling(awsProfile, cluster, *ctx, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

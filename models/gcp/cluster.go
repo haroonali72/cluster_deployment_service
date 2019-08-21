@@ -100,10 +100,10 @@ type Data struct {
 	Zone   string `json:"zone"`
 }
 
-func GetRegion(projectId string) (string, string, error) {
+func GetRegion(token, projectId string) (string, string, error) {
 	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
 
-	data, err := api_handler.GetAPIStatus(url, utils.Context{})
+	data, err := api_handler.GetAPIStatus(token, url, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error(), "error")
 		return "", "", err
@@ -290,7 +290,7 @@ func PrintError(confError error, name, projectId string, companyId string) {
 	}
 }
 
-func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, token string) (confError error) {
 	gcp, err := GetGCP(credentials)
 	if err != nil {
 		return err
@@ -308,7 +308,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = gcp.createCluster(cluster)
+	cluster, confError = gcp.createCluster(cluster, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 

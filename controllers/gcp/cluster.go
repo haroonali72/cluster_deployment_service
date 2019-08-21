@@ -360,7 +360,7 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	region, zone, err := gcp.GetRegion(projectId)
+	region, zone, err := gcp.GetRegion(token, projectId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -397,7 +397,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 	beego.Info("GcpClusterController: Creating Cluster. ", cluster.Name)
 
-	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId)
+	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -462,7 +462,7 @@ func (c *GcpClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	region, zone, err := gcp.GetRegion(projectId)
+	region, zone, err := gcp.GetRegion(token, projectId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -548,7 +548,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	region, zone, err := gcp.GetRegion(projectId)
+	region, zone, err := gcp.GetRegion(token, projectId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

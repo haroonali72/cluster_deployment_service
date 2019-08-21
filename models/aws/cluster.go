@@ -109,10 +109,10 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 	return awsProfile, nil
 
 }
-func GetRegion(projectId string, ctx utils.Context) (string, error) {
+func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
 
-	data, err := api_handler.GetAPIStatus(url, ctx)
+	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return "", err
@@ -127,11 +127,11 @@ func GetRegion(projectId string, ctx utils.Context) (string, error) {
 
 }
 
-func GetNetwork(projectId string, ctx utils.Context) error {
+func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	url := getNetworkHost("aws") + "/" + projectId
 
-	_, err := api_handler.GetAPIStatus(url, ctx)
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err
@@ -252,7 +252,7 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string, token string) (confError error) {
 
 	aws := AWS{
 		AccessKey: credentials.AccessKey,
@@ -273,7 +273,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	createdPools, confError := aws.createCluster(cluster, ctx, companyId)
+	createdPools, confError := aws.createCluster(cluster, ctx, companyId, token)
 
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -504,7 +504,7 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 
 	return keys, nil
 }
-func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context) ([]*ec2.BlockDeviceMapping, error) {
+func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, token string) ([]*ec2.BlockDeviceMapping, error) {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -524,7 +524,7 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context) ([
 	}
 	return amis, nil
 }
-func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.Context) error {
+func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.Context, token string) error {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -537,7 +537,7 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 		return err
 	}
 
-	e := aws.enableScaling(cluster, ctx)
+	e := aws.enableScaling(cluster, ctx, token)
 	if e != nil {
 		ctx.SendSDLog("Cluster model: Status - Failed to enable  scaling"+e.Error(), "error")
 		return e

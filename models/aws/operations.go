@@ -197,7 +197,7 @@ type AWS struct {
 	Roles  IAMRoles.AWSIAMRoles
 }
 
-func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string) ([]CreatedPool, error) {
+func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token string) ([]CreatedPool, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -208,7 +208,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 	var awsNetwork types.AWSNetwork
 
 	url := getNetworkHost("aws") + "/" + cluster.ProjectId
-	network, err := api_handler.GetAPIStatus(url, ctx)
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
 
 	/*bytes, err := json.Marshal(network)
 	if err != nil {
@@ -1268,13 +1268,13 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 	return nil
 
 }
-func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context) error {
+func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token string) error {
 
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			var awsNetwork types.AWSNetwork
 			url := getNetworkHost("aws") + "/" + cluster.ProjectId
-			network, err := api_handler.GetAPIStatus(url, ctx)
+			network, err := api_handler.GetAPIStatus(token, url, ctx)
 
 			//bytes, err := json.Marshal(network)
 			if err != nil {

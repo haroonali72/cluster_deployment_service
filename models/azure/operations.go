@@ -106,7 +106,7 @@ func getNetworkHost(cloudType string) string {
 	return host
 
 }
-func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string) (Cluster_Def, error) {
+func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	if cloud == nil {
 		err := cloud.init()
@@ -118,7 +118,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 
 	var azureNetwork types.AzureNetwork
 	url := getNetworkHost("azure") + "/" + cluster.ProjectId
-	network, err := api_handler.GetAPIStatus(url, ctx)
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	err = json.Unmarshal(network.([]byte), &azureNetwork)
 
 	if err != nil {
