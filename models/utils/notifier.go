@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"antelope/constants"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
@@ -38,7 +39,8 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	//	beego.Error(err.Error())
 	//	return
 	//}
-	ctx.SendSDLog(cmd.String(), "info")
+	logType := []string{"backend-logging"}
+	ctx.SendLogs(cmd.String(), constants.LOGGING_LEVEL_INFO, logType)
 	if cmd != nil {
 		if cmd.Err() != nil {
 			beego.Error(cmd.Err().Error())

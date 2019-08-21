@@ -1,6 +1,7 @@
 package rbac_athentication
 
 import (
+	"antelope/constants"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
@@ -24,7 +25,8 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/list")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	q := req.URL.Query()
@@ -37,7 +39,9 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	defer response.Body.Close()
@@ -51,7 +55,9 @@ func Authenticate(resourceId string, action string, token string, ctx utils.Cont
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/allowed/")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	q := req.URL.Query()
@@ -65,7 +71,9 @@ func Authenticate(resourceId string, action string, token string, ctx utils.Cont
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	defer response.Body.Close()
@@ -80,7 +88,9 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/evaluate/")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	q := req.URL.Query()
@@ -92,7 +102,8 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	defer response.Body.Close()
@@ -148,18 +159,22 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	client := utils.InitReq()
 	request_data, err := utils.TransformData(input)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	req, err := utils.CreatePostRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	return response.StatusCode, err
@@ -172,7 +187,8 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 
 	req, err := utils.CreateDeleteRequest(getRbacHost() + "/security/api/rbac/policy")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	q := req.URL.Query()
@@ -183,7 +199,8 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	return response.StatusCode, err

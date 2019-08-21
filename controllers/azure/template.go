@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"antelope/constants"
 	"antelope/models/azure"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -54,7 +55,9 @@ func (c *AzureTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureTemplateController: Get template with id: "+id, "info")
+
+	logType := []string{"backend-logging"}
+	ctx.SendLogs("AzureTemplateController: Get template with id: "+id, constants.LOGGING_LEVEL_INFO, logType)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -162,8 +165,8 @@ func (c *AzureTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-
-	ctx.SendSDLog("AzureTemplateController: Post new template with name: "+template.Name, "info")
+	logType := []string{"backend-logging"}
+	ctx.SendLogs("AzureTemplateController: Post new template with name: "+template.Name, constants.LOGGING_LEVEL_INFO, logType)
 
 	err, id := azure.CreateTemplate(template, *ctx)
 	if err != nil {
@@ -241,7 +244,8 @@ func (c *AzureTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureTemplateController: Patch template with id: "+template.TemplateId, "info")
+	logType := []string{"backend-logging"}
+	ctx.SendLogs("AzureTemplateController: Patch template with id: "+template.TemplateId, constants.LOGGING_LEVEL_INFO, logType)
 
 	err = azure.UpdateTemplate(template, *ctx)
 	if err != nil {
@@ -300,7 +304,8 @@ func (c *AzureTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureTemplateController: Delete template with id: ", id)
+	logType := []string{"backend-logging"}
+	ctx.SendLogs("AzureTemplateController: Delete template with id: ", id, logType)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)

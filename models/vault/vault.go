@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"antelope/constants"
 	"antelope/models"
 	"antelope/models/utils"
 	"encoding/json"
@@ -54,13 +55,15 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return awsKey{}, err
 	}
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return awsKey{}, err
 	}
 	defer response.Body.Close()
@@ -73,13 +76,16 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return awsKey{}, err
 	}
 
 	err = json.Unmarshal(contents, &key)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+
 		return awsKey{}, err
 	}
 	return key, nil
@@ -92,13 +98,15 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, e
 	}
 	var key awsKey
 	e = json.Unmarshal(b, &key)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, e
 	}
 	key.Cloud = "aws"
@@ -110,19 +118,22 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	client := utils.InitReq()
 	request_data, err := utils.TransformData(keyObj)
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 
 	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 
@@ -136,13 +147,15 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, e
 	}
 	var key azureKey
 	e = json.Unmarshal(b, &key)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, e
 	}
 	key.Cloud = "azure"
@@ -156,19 +169,22 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 
 	request_data, err := utils.TransformData(keyObj)
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 
 	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	if response.StatusCode == 500 {
@@ -180,13 +196,15 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, e
 	}
 	var key azureKey
 	e = json.Unmarshal(b, &key)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, e
 	}
 	key.Cloud = models.GCP
@@ -200,19 +218,22 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 
 	request_data, err := utils.TransformData(keyObj)
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 
 	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	if response.StatusCode == 500 {
@@ -226,13 +247,15 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 	fmt.Print(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return azureKey{}, err
 	}
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return azureKey{}, err
 	}
 	defer response.Body.Close()
@@ -245,13 +268,15 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return azureKey{}, err
 	}
 
 	err = json.Unmarshal(contents, &key)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return azureKey{}, err
 	}
 	return key, nil
@@ -261,15 +286,16 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 	var keys []string
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return keys, err
 	}
 	client := utils.InitReq()
 	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
-
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return keys, err
 	}
 	defer response.Body.Close()
@@ -281,14 +307,16 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 
 		return keys, err
 	}
 
 	err = json.Unmarshal(contents, &keys)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 
 		return keys, err
 	}
@@ -299,14 +327,16 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/" + cloudType + "/credentials/" + profileId)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return []byte{}, err
 	}
 	req.Header.Add("token", token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return []byte{}, err
 	}
 	defer response.Body.Close()
@@ -318,7 +348,8 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		logType := []string{"backend-logging"}
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return []byte{}, err
 	}
 	return contents, nil
