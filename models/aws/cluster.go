@@ -180,6 +180,7 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 }
 
 func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
+	beego.Info("mongo session")
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
@@ -187,8 +188,10 @@ func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
+	beego.Info("cluster aws")
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
 	err = c.Find(bson.M{}).All(&clusters)
+	beego.Info("getting all clusters")
 	if err != nil {
 		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
 		return nil, err

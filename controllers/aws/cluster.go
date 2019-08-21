@@ -121,17 +121,18 @@ func (c *AWSClusterController) GetAll() {
 	}
 
 	//====================================================================================//
-
+	beego.Info("getting clusters")
 	ctx.SendSDLog("AWSClusterController: GetAll clusters.", "info")
 
 	clusters, err := aws.GetAllCluster(*ctx)
 	if err != nil {
+		beego.Info("error in clusters" + err.Error())
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-
+	beego.Info("fetched cluster")
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
