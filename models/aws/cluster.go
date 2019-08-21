@@ -305,7 +305,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 
 	return nil
 }
-func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
@@ -324,7 +324,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		return Cluster_Def{}, err
 	}
 
-	c, e := aws.fetchStatus(cluster, ctx, companyId)
+	c, e := aws.fetchStatus(cluster, ctx, companyId, token)
 	if e != nil {
 		ctx.SendSDLog("Cluster model: Status - Failed to get lastest status "+e.Error(), "error")
 		return Cluster_Def{}, e

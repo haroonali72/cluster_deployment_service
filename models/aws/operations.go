@@ -226,7 +226,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 
 	for _, pool := range cluster.NodePools {
 		var createdPool CreatedPool
-		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId)
+		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId, token)
 		if err != nil {
 			return nil, err
 		}
@@ -370,7 +370,7 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string) (Cluster_Def, error) {
+func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -430,7 +430,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			}
 		}
 
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return Cluster_Def{}, err
@@ -1088,11 +1088,11 @@ func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Cont
 		}
 	}
 }
-func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string) (keyMaterial string, err error) {
+func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string, token string) (keyMaterial string, err error) {
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
 
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 
 		if err != nil && err.Error() != "not found" {
 
@@ -1123,7 +1123,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 				return "", err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
-			_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
+			_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
@@ -1134,7 +1134,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
 
-		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
@@ -1151,7 +1151,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 
 	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
 
-		_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
+		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
@@ -1172,7 +1172,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 			return "", err
 		}
 
-		_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
+		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")

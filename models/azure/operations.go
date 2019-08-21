@@ -130,7 +130,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 
 		ctx.SendSDLog("AZUREOperations creating nodes", "info")
 
-		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId)
+		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId, token)
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return cluster, err
@@ -154,7 +154,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 
 	return cluster, nil
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string) ([]*VM, string, error) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, error) {
 
 	var cpVms []*VM
 
@@ -186,7 +186,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		cloud.Resources["Nic-"+projectId] = nicName
 
 		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", projectId)
-		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx)
+		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token)
 		if err != nil {
 			return nil, "", err
 		}
@@ -209,7 +209,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		return cpVms, private_key, nil
 
 	} else {
-		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx)
+		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token)
 		if err != nil {
 			return nil, "", err
 		}
@@ -639,7 +639,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 	return nil
 }
 
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context) (compute.VirtualMachine, string, string, error) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token string) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -780,7 +780,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			pool.KeyInfo.PublicKey = res.PublicKey
 			pool.KeyInfo.PrivateKey = res.PrivateKey
 
-			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx)
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
@@ -1258,7 +1258,7 @@ func deleteFile(keyName string, ctx utils.Context) error {
 	}
 	return nil
 }
-func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
+func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token string) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
 
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -1408,7 +1408,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			pool.KeyInfo.PublicKey = res.PublicKey
 			pool.KeyInfo.PrivateKey = res.PrivateKey
 
-			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx)
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""

@@ -65,13 +65,13 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string) (Cluster_Def,
 		beego.Info("GCPOperations creating nodes")
 
 		if pool.PoolRole == "master" {
-			err = cloud.deployMaster(pool, gcpNetwork)
+			err = cloud.deployMaster(pool, gcpNetwork, token)
 			if err != nil {
 				beego.Error(err.Error())
 				return cluster, err
 			}
 		} else {
-			err = cloud.deployWorkers(pool, gcpNetwork)
+			err = cloud.deployWorkers(pool, gcpNetwork, token)
 			if err != nil {
 				beego.Error(err.Error())
 				return cluster, err
@@ -82,7 +82,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string) (Cluster_Def,
 	return cluster, nil
 }
 
-func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
+func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token string) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -90,7 +90,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 		}
 	}
 
-	err := fetchOrGenerateKey(&pool.KeyInfo)
+	err := fetchOrGenerateKey(&pool.KeyInfo, token)
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 	return nil
 }
 
-func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork) error {
+func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token string) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -194,7 +194,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork) error 
 		}
 	}
 
-	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network)
+	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, token)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork) error 
 	return nil
 }
 
-func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwork) (string, error) {
+func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwork, token string) (string, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -262,7 +262,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		}
 	}
 
-	err := fetchOrGenerateKey(&pool.KeyInfo)
+	err := fetchOrGenerateKey(&pool.KeyInfo, token)
 	if err != nil {
 		return "", err
 	}
@@ -722,7 +722,7 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 	return ""
 }
 
-func fetchOrGenerateKey(keyInfo *utils.Key) error {
+func fetchOrGenerateKey(keyInfo *utils.Key, token string) error {
 	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, utils.Context{})
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
@@ -764,7 +764,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key) error {
 	keyInfo.PrivateKey = res.PrivateKey
 	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
 
-	_, err = vault.PostGcpSSHKey(keyInfo, utils.Context{})
+	_, err = vault.PostGcpSSHKey(keyInfo, utils.Context{}, token)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return err

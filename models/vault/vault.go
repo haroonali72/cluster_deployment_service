@@ -50,13 +50,14 @@ type azureKey struct {
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 
-func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}, error) {
+func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return awsKey{}, err
 	}
+	req.Header.Set("token", token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -88,7 +89,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url")
 }
-func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
@@ -119,6 +120,7 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
 	}
+	req.Header.Set("token", token)
 
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -133,7 +135,7 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		ctx.SendSDLog(e.Error(), "error")
@@ -165,7 +167,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
 	}
-
+	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendSDLog(e.Error(), "error")
@@ -177,7 +179,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		ctx.SendSDLog(e.Error(), "error")
@@ -209,6 +211,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
 	}
+	req.Header.Set("token", token)
 
 	response, err := client.SendRequest(req)
 	if err != nil {

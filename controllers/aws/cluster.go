@@ -511,7 +511,7 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId)
+	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
