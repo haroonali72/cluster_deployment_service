@@ -11,7 +11,7 @@ import (
 
 type Input struct {
 	ResourceId  string   `json:"resource_id"`
-	ResouceType string   `json:resource_type"`
+	ResouceType string   `json: "resource_type"`
 	Teams       []string `json:"teams"`
 	CompanyId   string   `json:"companyId"`
 	UserName    string   `json:"username"`
@@ -139,13 +139,18 @@ func GetInfo(token string) (types.Response, error) {
 }
 
 func CreatePolicy(resourceId, token, userName, companyId string, teams []string, ctx utils.Context) (int, error) {
-
+	beego.Info("hello")
+	beego.Info(resourceId)
+	beego.Info(token)
+	beego.Info(companyId)
+	beego.Info(userName)
 	var input Input
 	input.UserName = userName
 	input.CompanyId = companyId
 	input.ResouceType = "cluster"
 	input.ResourceId = resourceId
 	input.Teams = teams
+
 	client := utils.InitReq()
 	request_data, err := utils.TransformData(input)
 	if err != nil {
@@ -167,8 +172,19 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 		return 400, err
 	}
 	beego.Info(response.StatusCode)
+	var r s
+	contents, err := ioutil.ReadAll(response.Body)
+	err = json.Unmarshal(contents, &r)
+	if err != nil {
+		beego.Info(err.Error())
+	}
+	beego.Error(r.Msg)
 	return response.StatusCode, err
 
+}
+
+type s struct {
+	Msg string `json:"msg"`
 }
 
 func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, error) {
