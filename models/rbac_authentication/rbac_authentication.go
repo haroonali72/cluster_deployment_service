@@ -41,7 +41,7 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool
 		return false, err
 	}
 	defer response.Body.Close()
-
+	beego.Info(response.StatusCode)
 	if response.StatusCode == 200 {
 		return true, nil
 	}
@@ -84,7 +84,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 		return false, err
 	}
 	q := req.URL.Query()
-	q.Add("resource", "Cluster")
+	q.Add("resource", "cluster")
 	q.Add("action", action)
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
