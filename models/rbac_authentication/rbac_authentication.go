@@ -29,7 +29,7 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool
 	}
 	q := req.URL.Query()
 	q.Add("companyId", companyId)
-	q.Add("resource_type", "Cluster")
+	q.Add("resource_type", "cluster")
 
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
@@ -56,7 +56,7 @@ func Authenticate(resourceId string, action string, token string, ctx utils.Cont
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
-	q.Add("resource_type", "Cluster")
+	q.Add("resource_type", "cluster")
 	q.Add("action", action)
 
 	req.Header.Set("token", token)
@@ -142,7 +142,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	var input Input
 	input.UserName = userName
 	input.CompanyId = companyId
-	input.ResouceType = "Cluster"
+	input.ResouceType = "cluster"
 	input.ResourceId = resourceId
 	input.Teams = teams
 	client := utils.InitReq()
@@ -177,7 +177,7 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
-	q.Add("resouce_type", "Cluster")
+	q.Add("resouce_type", "cluster")
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 
