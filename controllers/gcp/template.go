@@ -183,7 +183,10 @@ func (c *GcpTemplateController) Post() {
 	//==========================RBAC Policy Creation==============================//
 
 	team := c.Ctx.Input.Header("teams")
-	teams := strings.Split(team, ";")
+	var teams []string
+	if team != "" {
+		teams = strings.Split(team, ";")
+	}
 	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, utils.Context{})
 	if err != nil {
 		//beego.Error(err.Error())
