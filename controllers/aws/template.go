@@ -196,7 +196,7 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	if statusCode != 200 {
-		//beego.Error(err.Error())
+		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
 		c.ServeJSON()

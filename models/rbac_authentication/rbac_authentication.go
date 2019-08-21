@@ -149,20 +149,24 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	client := utils.InitReq()
 	request_data, err := utils.TransformData(input)
 	if err != nil {
+		beego.Info(err.Error())
 		ctx.SendSDLog(err.Error(), "error")
 		return 400, err
 	}
 	req, err := utils.CreatePostRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
 	if err != nil {
+		beego.Info(err.Error())
 		ctx.SendSDLog(err.Error(), "error")
 		return 400, err
 	}
 	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
+		beego.Info(err.Error())
 		ctx.SendSDLog(err.Error(), "error")
 		return 400, err
 	}
+	beego.Info(response.StatusCode)
 	return response.StatusCode, err
 
 }
