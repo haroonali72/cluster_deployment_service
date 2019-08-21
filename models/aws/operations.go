@@ -330,7 +330,9 @@ func (cloud *AWS) init() error {
 	if cloud.Client != nil {
 		return nil
 	}
-
+	beego.Info(cloud.AccessKey)
+	beego.Info(cloud.SecretKey)
+	beego.Info(cloud.Region)
 	if cloud.AccessKey == "" || cloud.SecretKey == "" || cloud.Region == "" {
 		text := "invalid cloud credentials"
 		beego.Error(text)

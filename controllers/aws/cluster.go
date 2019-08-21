@@ -442,8 +442,8 @@ func (c *AWSClusterController) StartCluster() {
 }
 
 // @Title Status
-// @Description returns status of
-// @Param	token	header	string	 ""
+// @Description returns status of nodes
+// @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
@@ -525,8 +525,7 @@ func (c *AWSClusterController) GetStatus() {
 }
 
 // @Title Terminate
-// @Description terminates a  cluster
-// @Param	X-Profile-Id	X-Profile-Id	string	profileId	""
+// @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
