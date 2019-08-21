@@ -41,6 +41,7 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool
 		return false, err
 	}
 	defer response.Body.Close()
+	beego.Info("status code ")
 	beego.Info(response.StatusCode)
 	if response.StatusCode == 200 {
 		return true, nil
@@ -119,8 +120,8 @@ func GetInfo(token string) (types.Response, error) {
 		return types.Response{}, err
 	}
 	defer response.Body.Close()
-
-	if response.StatusCode == 200 {
+	beego.Info(response.StatusCode)
+	if response.StatusCode != 200 {
 		return types.Response{}, nil
 	}
 	contents, err := ioutil.ReadAll(response.Body)
