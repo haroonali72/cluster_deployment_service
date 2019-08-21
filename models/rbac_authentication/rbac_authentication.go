@@ -4,6 +4,7 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 
 	"github.com/astaxie/beego"
@@ -16,16 +17,19 @@ type Input struct {
 	CompanyId   string   `json:"companyId"`
 	UserName    string   `json:"username"`
 }
+type List struct {
+	Data []string `json:"data"`
+}
 
 func getRbacHost() string {
 	return beego.AppConfig.String("rbac_url")
 }
-func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool, error) {
+func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (error, List) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/list")
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
-		return false, err
+		return err, List{}
 	}
 	q := req.URL.Query()
 	q.Add("companyId", companyId)
@@ -38,15 +42,27 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (bool
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
-		return false, err
+		return err, List{}
 	}
 	defer response.Body.Close()
-	beego.Info("status code ")
-	beego.Info(response.StatusCode)
-	if response.StatusCode == 200 {
-		return true, nil
+	if response.StatusCode != 200 {
+		code := string(response.StatusCode)
+		return errors.New("Status Code: " + code), List{}
 	}
-	return false, nil
+
+	var data List
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return err, List{}
+	}
+	err = json.Unmarshal(contents, &data)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return err, List{}
+	}
+
+	return nil, data
 }
 func Authenticate(resourceId string, action string, token string, ctx utils.Context) (bool, error) {
 
@@ -132,7 +148,6 @@ func GetInfo(token string) (types.Response, error) {
 	var res types.Response
 	err = json.Unmarshal(contents, &res)
 	if err != nil {
-
 		return types.Response{}, err
 	}
 	return res, nil
