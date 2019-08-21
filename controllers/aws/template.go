@@ -184,7 +184,7 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	//==========================RBAC Policy Creation==============================//
-
+	beego.Info("template id " + id)
 	team := c.Ctx.Input.Header("teams")
 	teams := strings.Split(team, ";")
 	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
@@ -196,9 +196,9 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	if statusCode != 200 {
-		beego.Error(err.Error())
+		beego.Error(statusCode)
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.Data["json"] = map[string]string{"error": "Policy creation failed!"}
 		c.ServeJSON()
 		return
 	}
