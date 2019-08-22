@@ -51,13 +51,14 @@ type azureKey struct {
 }
 
 func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string) (interface{}, error) {
-
+	beego.Info(token)
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return awsKey{}, err
 	}
 	req.Header.Set("token", token)
+	beego.Info(token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -71,6 +72,9 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string
 	beego.Info(response.Status)
 	if response.StatusCode == 500 || response.StatusCode == 404 {
 		return awsKey{}, errors.New("not found")
+	}
+	if response.StatusCode != 200 {
+		return awsKey{}, errors.New("Status Code : " + string(response.StatusCode))
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -246,6 +250,9 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 	if response.StatusCode == 500 {
 		return azureKey{}, errors.New("not found")
 	}
+	if response.StatusCode != 200 {
+		return azureKey{}, errors.New("Status Code: " + string(response.StatusCode))
+	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -282,6 +289,9 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 	if response.StatusCode == 500 {
 		return keys, errors.New("not found")
 	}
+	if response.StatusCode != 200 {
+		return keys, errors.New("Status Code : " + string(response.StatusCode))
+	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -299,7 +309,6 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 
 }
 func GetCredentialProfile(cloudType string, profileId string, token string, ctx utils.Context) ([]byte, error) {
-
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/" + cloudType + "/credentials/" + profileId)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
