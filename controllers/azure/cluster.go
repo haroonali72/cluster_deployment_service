@@ -101,17 +101,11 @@ func (c *AzureClusterController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	err, _ = rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
@@ -173,7 +167,7 @@ func (c *AzureClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 	beego.Info(cluster.ResourceGroup)
-	err = azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup)
+	err = azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -382,7 +376,7 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, constants.LOGGING_LEVEL_ERROR, logType)
 	beego.Info("AzureClusterController: StartCluster.")
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := azure.GetRegion(projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
@@ -422,7 +416,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	ctx.SendLogs("AzureClusterController: Creating Cluster. "+cluster.Name, constants.LOGGING_LEVEL_INFO, logType)
 
-	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
+	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -470,7 +464,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := azure.GetRegion(projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
@@ -548,7 +542,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	logType := []string{"backend-logging"}
 	ctx.SendLogs("AzureClusterController: TerminateCluster.", constants.LOGGING_LEVEL_INFO, logType)
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := azure.GetRegion(projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 

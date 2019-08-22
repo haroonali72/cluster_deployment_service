@@ -98,17 +98,11 @@ func (c *AWSTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
@@ -117,7 +111,7 @@ func (c *AWSTemplateController) GetAll() {
 	logType := []string{"backend-logging"}
 	ctx.SendLogs("AWSTemplateController: GetAll template.", constants.LOGGING_LEVEL_INFO, logType)
 
-	templates, err := aws.GetAllTemplate(*ctx)
+	templates, err := aws.GetTemplates(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -141,7 +135,7 @@ func (c *AWSTemplateController) Post() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 	token := c.Ctx.Input.Header("token")
-
+	beego.Info("token" + token)
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -150,11 +144,13 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+	beego.Info("company id " + userInfo.CompanyId)
+	beego.Info("user name " + userInfo.UserId)
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
+	allowed, err := rbac_athentication.Evaluate("Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -185,21 +181,24 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	//==========================RBAC Policy Creation==============================//
-
+	beego.Info("template id " + id)
 	team := c.Ctx.Input.Header("teams")
-	teams := strings.Split(team, ";")
+	var teams []string
+	if team != "" {
+		teams = strings.Split(team, ";")
+	}
 	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
 	if err != nil {
-		//beego.Error(err.Error())
+		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
 		c.ServeJSON()
 		return
 	}
 	if statusCode != 200 {
-		//beego.Error(err.Error())
+		beego.Error(statusCode)
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.Data["json"] = map[string]string{"error": "Policy creation failed!"}
 		c.ServeJSON()
 		return
 	}

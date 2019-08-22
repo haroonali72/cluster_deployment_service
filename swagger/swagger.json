@@ -24,6 +24,12 @@
                 "operationId": "AWSClusterController.Update",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -60,6 +66,12 @@
                         "schema": {
                             "$ref": "#/definitions/aws.Cluster_Def"
                         }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -85,6 +97,14 @@
                 ],
                 "description": "get all the clusters",
                 "operationId": "AWSClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -113,6 +133,12 @@
                         "in": "header",
                         "name": "X-Profile-Id",
                         "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
                         "type": "string"
                     },
                     {
@@ -163,6 +189,19 @@
                         "type": "string"
                     },
                     {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -189,6 +228,14 @@
                 ],
                 "description": "returns ssh key pairs",
                 "operationId": "AWSClusterController.SSHKeyPair",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -213,6 +260,12 @@
                 "description": "starts a  cluster",
                 "operationId": "AWSClusterController.Start",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
@@ -253,6 +306,12 @@
                 "parameters": [
                     {
                         "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
                         "name": "X-Profile-Id",
                         "description": "profileId",
                         "type": "string"
@@ -286,13 +345,20 @@
                 "tags": [
                     "cluster/aws"
                 ],
-                "description": "terminates a  cluster",
                 "operationId": "AWSClusterController.Terminate",
                 "parameters": [
                     {
-                        "in": "X-Profile-Id",
+                        "in": "header",
                         "name": "X-Profile-Id",
                         "description": "profileId",
+                        "schema": {
+                            "$ref": "#/definitions/X-Profile-Id"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
                         "type": "string"
                     },
                     {
@@ -324,6 +390,12 @@
                 "description": "delete a cluster",
                 "operationId": "AWSClusterController.Delete",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "path",
                         "name": "projectId",
@@ -359,6 +431,12 @@
                         "description": "Id of the project",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -385,6 +463,12 @@
                 "description": "update an existing cluster",
                 "operationId": "AzureClusterController.Update",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -414,6 +498,12 @@
                 "description": "create a new cluster",
                 "operationId": "AzureClusterController.Create",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -447,6 +537,14 @@
                 ],
                 "description": "get all the clusters",
                 "operationId": "AzureClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -503,6 +601,12 @@
                     },
                     {
                         "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
                         "name": "X-Profile-Id",
                         "description": "false",
                         "type": "string"
@@ -532,6 +636,12 @@
                 "description": "returns status of nodes",
                 "operationId": "AzureClusterController.Status",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "path",
                         "name": "projectId",
@@ -582,6 +692,12 @@
                         "name": "X-Profile-Id",
                         "description": "false",
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -605,6 +721,12 @@
                 "description": "delete a cluster",
                 "operationId": "AzureClusterController.Delete",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "path",
                         "name": "projectId",
@@ -640,6 +762,12 @@
                         "description": "Id of the project",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -666,6 +794,12 @@
                 "description": "update an existing cluster",
                 "operationId": "GcpClusterController.Update",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -696,6 +830,12 @@
                 "operationId": "GcpClusterController.Create",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -725,6 +865,14 @@
                 ],
                 "description": "get all the clusters",
                 "operationId": "GcpClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -818,6 +966,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "path",
                         "name": "projectId",
                         "description": "Id of the project",
@@ -851,6 +1005,12 @@
                         "name": "X-Profile-Id",
                         "description": "vault credentials profile id",
                         "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
                         "type": "string"
                     },
                     {
@@ -904,6 +1064,12 @@
                         "description": "Id of the project",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -936,6 +1102,12 @@
                         "description": "project id of the cluster",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -964,6 +1136,12 @@
                         "name": "projectId",
                         "description": "Id of the project",
                         "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
                         "type": "string"
                     }
                 ],
@@ -1006,6 +1184,12 @@
                 "operationId": "AWSTemplateController.Update",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -1034,6 +1218,12 @@
                 "description": "create a new template",
                 "operationId": "AWSTemplateController.Create",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -1064,6 +1254,14 @@
                 ],
                 "description": "get all the templates",
                 "operationId": "AWSTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -1088,6 +1286,12 @@
                 "description": "delete a templates",
                 "operationId": "AWSTemplateController.Delete",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "path",
                         "name": "templateId",
@@ -1123,6 +1327,12 @@
                         "description": "Template Id of the template",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1149,6 +1359,12 @@
                 "description": "update an existing template",
                 "operationId": "AzureTemplateController.Update",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -1186,6 +1402,12 @@
                         "schema": {
                             "$ref": "#/definitions/azure.Template"
                         }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1238,6 +1460,12 @@
                         "description": "Name of the template",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1268,6 +1496,12 @@
                         "description": "Name of the template",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1291,6 +1525,12 @@
                 "description": "update an existing template",
                 "operationId": "GcpTemplateController.Update",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -1328,6 +1568,12 @@
                         "schema": {
                             "$ref": "#/definitions/gcp.Template"
                         }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1350,6 +1596,14 @@
                 ],
                 "description": "get all the templates",
                 "operationId": "GcpTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -1374,6 +1628,12 @@
                 "description": "get template",
                 "operationId": "GcpTemplateController.Get",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "path",
                         "name": "name",
@@ -1405,6 +1665,12 @@
                 "operationId": "GcpTemplateController.Delete",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "path",
                         "name": "name",
                         "description": "Name of the template",
@@ -1431,8 +1697,12 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "504.0xc04297b650.false": {
+        "484.0xc042a91500.false": {
             "title": "false",
+            "type": "object"
+        },
+        "X-Profile-Id": {
+            "title": "X-Profile-Id",
             "type": "object"
         },
         "aws.Ami": {
@@ -1477,7 +1747,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/504.0xc04297b650.false"
+                    "$ref": "#/definitions/484.0xc042a91500.false"
                 },
                 "name": {
                     "type": "string"
@@ -2091,6 +2361,9 @@
                 },
                 "pool_role": {
                     "type": "string"
+                },
+                "root_volume": {
+                    "$ref": "#/definitions/gcp.Volume"
                 },
                 "service_account_email": {
                     "type": "string"

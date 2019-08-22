@@ -198,7 +198,7 @@ type AWS struct {
 	Roles  IAMRoles.AWSIAMRoles
 }
 
-func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string) ([]CreatedPool, error) {
+func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token string) ([]CreatedPool, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -207,9 +207,8 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 		}
 	}
 	var awsNetwork types.AWSNetwork
-
 	url := getNetworkHost("aws") + "/" + cluster.ProjectId
-	network, err := api_handler.GetAPIStatus(url, ctx)
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
 
 	/*bytes, err := json.Marshal(network)
 	if err != nil {
@@ -227,7 +226,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 
 	for _, pool := range cluster.NodePools {
 		var createdPool CreatedPool
-		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId)
+		keyMaterial, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId, token)
 		if err != nil {
 			return nil, err
 		}
@@ -332,7 +331,9 @@ func (cloud *AWS) init() error {
 	if cloud.Client != nil {
 		return nil
 	}
-
+	beego.Info(cloud.AccessKey)
+	beego.Info(cloud.SecretKey)
+	beego.Info(cloud.Region)
 	if cloud.AccessKey == "" || cloud.SecretKey == "" || cloud.Region == "" {
 		text := "invalid cloud credentials"
 		beego.Error(text)
@@ -370,7 +371,7 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string) (Cluster_Def, error) {
+func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -432,7 +433,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			}
 		}
 
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 		if err != nil {
 			logType := []string{"backend-logging"}
 			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
@@ -1111,11 +1112,11 @@ func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Cont
 		}
 	}
 }
-func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string) (keyMaterial string, err error) {
+func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string, token string) (keyMaterial string, err error) {
 
 	if pool.KeyInfo.KeyType == models.NEWKey {
 
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
+		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 
 		if err != nil && err.Error() != "not found" {
 			logType := []string{"backend-logging"}
@@ -1148,7 +1149,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 				return "", err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
-			_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
+			_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 			if err != nil {
 				logType := []string{"backend-logging"}
@@ -1160,7 +1161,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 		}
 	} else if pool.KeyInfo.KeyType == models.CPKey {
 
-		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 
 		if err != nil {
 			logType := []string{"backend-logging"}
@@ -1178,7 +1179,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 
 	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
 
-		_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
+		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 		if err != nil {
 			logType := []string{"backend-logging"}
@@ -1201,7 +1202,7 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 			return "", err
 		}
 
-		_, err = vault.PostSSHKey(pool.KeyInfo, ctx)
+		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 		if err != nil {
 			logType := []string{"backend-logging"}
@@ -1309,19 +1310,19 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 	return nil
 
 }
-func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context) error {
+func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token string) error {
 
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			var awsNetwork types.AWSNetwork
 			url := getNetworkHost("aws") + "/" + cluster.ProjectId
-			network, err := api_handler.GetAPIStatus(url, ctx)
+			network, err := api_handler.GetAPIStatus(token, url, ctx)
 
-			//bytes, err := json.Marshal(network)
+			/*bytes, err := json.Marshal(network)
 			if err != nil {
 				beego.Error(err.Error())
-				return err
-			}
+				return nil, err
+			}*/
 
 			err = json.Unmarshal(network.([]byte), &awsNetwork)
 

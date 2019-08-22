@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 )
 
-func GetAPIStatus(host string, ctx utils.Context) (interface{}, error) {
+func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 
 	client := utils.InitReq()
 
@@ -17,7 +17,7 @@ func GetAPIStatus(host string, ctx utils.Context) (interface{}, error) {
 		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return nil, err
 	}
-
+	req.Header.Add("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		logType := []string{"backend-logging"}

@@ -51,7 +51,7 @@ type azureKey struct {
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 
-func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}, error) {
+func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
@@ -59,6 +59,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}
 		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return awsKey{}, err
 	}
+	req.Header.Set("token", token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -94,7 +95,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url")
 }
-func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
@@ -129,6 +130,7 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
+	req.Header.Set("token", token)
 
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -144,7 +146,7 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		logType := []string{"backend-logging"}
@@ -180,7 +182,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
-
+	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		logType := []string{"backend-logging"}
@@ -193,7 +195,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		logType := []string{"backend-logging"}
@@ -229,6 +231,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
+	req.Header.Set("token", token)
 
 	response, err := client.SendRequest(req)
 	if err != nil {

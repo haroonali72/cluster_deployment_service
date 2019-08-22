@@ -98,7 +98,7 @@ func (c *AzureTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -106,13 +106,8 @@ func (c *AzureTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-	templates, err := azure.GetAllTemplate(*ctx)
+
+	templates, err := azure.GetTemplates(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -184,7 +179,11 @@ func (c *AzureTemplateController) Post() {
 	//==========================RBAC Policy Creation==============================//
 
 	team := c.Ctx.Input.Header("teams")
-	teams := strings.Split(team, ";")
+	var teams []string
+	if team != "" {
+		teams = strings.Split(team, ";")
+	}
+
 	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())

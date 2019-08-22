@@ -25,6 +25,7 @@ var (
 	vault_url                       = ""
 	network_url                     = ""
 	raccoon_url                     = ""
+	rbac_url                        = ""
 )
 
 func InitFlags() error {
@@ -132,6 +133,12 @@ func InitFlags() error {
 			Destination: &raccoon_url,
 			EnvVar:      "racoon_url",
 		},
+		cli.StringFlag{
+			Name:        "rbac_url",
+			Usage:       "rbac_url",
+			Destination: &rbac_url,
+			EnvVar:      "rbac_url",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -165,5 +172,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("network_url", network_url)
 	beego.AppConfig.Set("vault_url", vault_url)
 	beego.AppConfig.Set("raccoon_url", raccoon_url)
+	beego.AppConfig.Set("rbac_url", rbac_url)
 	return nil
 }
