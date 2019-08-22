@@ -24,7 +24,7 @@ type List struct {
 func getRbacHost() string {
 	return beego.AppConfig.String("rbac_url")
 }
-func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (error, List) {
+func GetAllAuthenticate(resourceType, companyId string, token string, ctx utils.Context) (error, List) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/list")
 	if err != nil {
@@ -33,7 +33,7 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (erro
 	}
 	q := req.URL.Query()
 	q.Add("companyId", companyId)
-	q.Add("resource_type", "cluster")
+	q.Add("resource_type", resourceType)
 
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
@@ -101,7 +101,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 		return false, err
 	}
 	q := req.URL.Query()
-	q.Add("resource", "cluster")
+	q.Add("resource", "clusterTemplate")
 	q.Add("action", action)
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
@@ -158,7 +158,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	var input Input
 	input.UserName = userName
 	input.CompanyId = companyId
-	input.ResouceType = "cluster"
+	input.ResouceType = "clusterTemplate"
 	input.ResourceId = resourceId
 	input.Teams = teams
 
@@ -199,7 +199,7 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
-	q.Add("resouce_type", "cluster")
+	q.Add("resouce_type", "clusterTemplate")
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 
