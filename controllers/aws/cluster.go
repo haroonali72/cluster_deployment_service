@@ -721,6 +721,7 @@ func (c *AWSClusterController) GetAMI() {
 // @Title EnableScaling
 // @Description enables autoscaling
 // @Param	X-Profile-Id	header	string	profileId	""
+// @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
 // @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
 // @Success 200 {object} aws.AutoScaling
@@ -787,13 +788,13 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	err = aws.EnableScaling(awsProfile, cluster, *ctx, token)
-	if err != nil {
+	go aws.EnableScaling(awsProfile, cluster, *ctx, token)
+	/* err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
 	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()

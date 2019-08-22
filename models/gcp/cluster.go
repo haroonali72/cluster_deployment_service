@@ -34,6 +34,7 @@ type NodePool struct {
 	MachineType         string        `json:"machine_type" bson:"machine_type"`
 	Image               Image         `json:"image" bson:"image"`
 	Volume              Volume        `json:"volume" bson:"volume"`
+	RootVolume          Volume        `json:"root_volume" bson:"root_volume"`
 	EnableVolume        bool          `json:"is_external" bson:"is_external"`
 	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
 	PoolRole            string        `json:"pool_role" bson:"pool_role"`

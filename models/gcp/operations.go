@@ -120,6 +120,8 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 				Boot:       true,
 				InitializeParams: &compute.AttachedDiskInitializeParams{
 					SourceImage: "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family,
+					DiskSizeGb:  pool.RootVolume.Size,
+					DiskType:    "projects/" + pool.Image.Project + "/zones/" + cloud.Region + "-" + cloud.Zone + "/diskTypes/" + string(pool.RootVolume.DiskType),
 				},
 			},
 		},
@@ -289,6 +291,8 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 				Boot:       true,
 				InitializeParams: &compute.AttachedDiskInitializeParams{
 					SourceImage: "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family,
+					DiskSizeGb:  pool.RootVolume.Size,
+					DiskType:    string(pool.RootVolume.DiskType),
 				},
 			},
 		},

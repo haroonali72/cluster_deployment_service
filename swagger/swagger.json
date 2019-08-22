@@ -189,6 +189,13 @@
                         "type": "string"
                     },
                     {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "in": "header",
                         "name": "token",
                         "description": "token",
@@ -1690,7 +1697,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc042a799b0.false": {
+        "484.0xc042a97170.false": {
             "title": "false",
             "type": "object"
         },
@@ -1740,7 +1747,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc042a799b0.false"
+                    "$ref": "#/definitions/484.0xc042a97170.false"
                 },
                 "name": {
                     "type": "string"
@@ -2354,6 +2361,9 @@
                 },
                 "pool_role": {
                     "type": "string"
+                },
+                "root_volume": {
+                    "$ref": "#/definitions/gcp.Volume"
                 },
                 "service_account_email": {
                     "type": "string"
