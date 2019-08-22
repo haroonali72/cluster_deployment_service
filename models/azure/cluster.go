@@ -200,7 +200,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	}
 
 	logType := []string{"audit-trail"}
-	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"created", constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"created ", constants.LOGGING_LEVEL_ERROR, logType)
 
 	return nil
 }
@@ -300,7 +300,7 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 		return err
 	}
 	logType := []string{"audit-trail"}
-	ctx.SendLogs("Cluster of Project Id: "+projectId+"deleted", constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("Cluster of Project Id: "+projectId+"deleted ", constants.LOGGING_LEVEL_ERROR, logType)
 
 	return nil
 }
@@ -364,7 +364,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	logType := []string{"audit-trail"}
-	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"and company Id: "+companyId+" deployed "+"", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" deployed ", constants.LOGGING_LEVEL_INFO, logType)
 
 	return nil
 }
@@ -462,7 +462,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		loType := []string{"audit-trail"}
-		ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" and company Id: "+companyId+"terminated successfully", constants.LOGGING_LEVEL_ERROR, loType)
+		ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated successfully ", constants.LOGGING_LEVEL_ERROR, loType)
 
 		return nil
 	}

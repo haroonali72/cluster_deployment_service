@@ -268,7 +268,7 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 	}
 
 	logType := []string{"audit-trail"}
-	ctx.SendLogs("Cluster of Project Id: "+projectId+"deleted from database by "+"", constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("Cluster of Project Id: "+projectId+"deleted from database ", constants.LOGGING_LEVEL_ERROR, logType)
 	return nil
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
@@ -362,7 +362,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		return Cluster_Def{}, e
 	}
 	logType := []string{"audit-trail"}
-	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+projectId+"and of company Id"+companyId+"fetched ", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", constants.LOGGING_LEVEL_INFO, logType)
 	/*	err = UpdateCluster(c)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
@@ -444,7 +444,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	logType := []string{"audit-trail"}
-	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by "+"", constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", constants.LOGGING_LEVEL_ERROR, logType)
 	return nil
 }
 func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.Context) Cluster_Def {
