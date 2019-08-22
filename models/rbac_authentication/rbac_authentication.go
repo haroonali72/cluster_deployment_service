@@ -64,7 +64,7 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (erro
 
 	return nil, data
 }
-func Authenticate(resourceId string, action string, token string, ctx utils.Context) (bool, error) {
+func Authenticate(resourceType, resourceId string, action string, token string, ctx utils.Context) (bool, error) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/allowed/")
 	if err != nil {
@@ -73,7 +73,7 @@ func Authenticate(resourceId string, action string, token string, ctx utils.Cont
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
-	q.Add("resource_type", "cluster")
+	q.Add("resource_type", resourceType)
 	q.Add("action", action)
 
 	req.Header.Set("token", token)
