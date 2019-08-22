@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"antelope/models/gcp"
+	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -21,18 +22,23 @@ type GcpTemplateController struct {
 // @router /:templateId [get]
 func (c *GcpTemplateController) Get() {
 	id := c.GetString(":templateId")
-
 	beego.Info("GcpTemplateController: Get template with id: ", id)
 
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id)
+	ctx.SendSDLog("GcpTemplateController: Get template  id : "+id, "info")
+
 	if id == "" {
+		ctx.SendSDLog("GcpTemplateController: template id is empty", "error")
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "template id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	template, err := gcp.GetTemplate(id)
+	template, err := gcp.GetTemplate(id, *ctx) //done
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
@@ -51,8 +57,13 @@ func (c *GcpTemplateController) Get() {
 func (c *GcpTemplateController) GetAll() {
 	beego.Info("GcpTemplateController: GetAll template.")
 
-	templates, err := gcp.GetAllTemplate()
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("GcpTemplateController: GetAll template.", "info")
+
+	templates, err := gcp.GetAllTemplate(*ctx) //done
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController: internal server error "+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -77,8 +88,13 @@ func (c *GcpTemplateController) Post() {
 	beego.Info("GcpTemplateController: Post new template with name: ", template.Name)
 	beego.Info("GcpTemplateController: JSON Payload: ", template)
 
-	err, id := gcp.CreateTemplate(template)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("GcpTemplateController: Posting  new template .", "info")
+
+	err, id := gcp.CreateTemplate(template, *ctx) //from here
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "template with same name already exists"}

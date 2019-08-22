@@ -28,10 +28,11 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	}
 	b, err := json.Marshal(msg)
 	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
 		return
 	}
-	cmd := notifier.Client.Publish(channel, string(b))
+	cmd := notifier.Client.Publish(channel, string(b)) //no need
 	beego.Info(*cmd)
 	//b, err = json.Marshal(*cmd)
 	//if err != nil {
