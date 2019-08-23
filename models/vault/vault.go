@@ -329,7 +329,7 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 500 || response.StatusCode == 404 {
+	if response.StatusCode != 200 {
 		return []byte{}, errors.New("not found")
 	}
 	contents, err := ioutil.ReadAll(response.Body)

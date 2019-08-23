@@ -622,6 +622,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 
 // @Title ListServiceAccounts
 // @Description returns list of service account emails
+// @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "profile id is empty"}
@@ -654,7 +655,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", "", "")
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", token, "")
 	if !isValid {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}

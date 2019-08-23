@@ -899,6 +899,12 @@
                 "parameters": [
                     {
                         "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
                         "name": "X-Profile-Id",
                         "description": "vault credentials profile id",
                         "required": true,
@@ -1697,7 +1703,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc042a96ed0.false": {
+        "484.0xc042a99470.false": {
             "title": "false",
             "type": "object"
         },
@@ -1747,7 +1753,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc042a96ed0.false"
+                    "$ref": "#/definitions/484.0xc042a99470.false"
                 },
                 "name": {
                     "type": "string"

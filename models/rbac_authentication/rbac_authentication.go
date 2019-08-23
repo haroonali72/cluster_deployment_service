@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/astaxie/beego"
 )
@@ -138,7 +139,7 @@ func GetInfo(token string) (types.Response, error) {
 	defer response.Body.Close()
 	beego.Info(response.StatusCode)
 	if response.StatusCode != 200 {
-		return types.Response{}, nil
+		return types.Response{}, errors.New("RBAC: Unauthorized , " + strconv.Itoa(response.StatusCode))
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {

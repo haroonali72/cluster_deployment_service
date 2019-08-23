@@ -639,6 +639,10 @@ paths:
       operationId: GcpClusterController.ListServiceAccounts
       parameters:
       - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
         name: X-Profile-Id
         description: vault credentials profile id
         required: true
@@ -1115,7 +1119,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  484.0xc042a96ed0.false:
+  484.0xc042a99470.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1151,7 +1155,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/484.0xc042a96ed0.false'
+        $ref: '#/definitions/484.0xc042a99470.false'
       name:
         type: string
       network_name:
