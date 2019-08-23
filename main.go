@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -44,24 +44,24 @@ func main() {
 	beego.Run()
 }
 func setEnv() {
-	beego.BConfig.Listen.HTTPAddr = "localhost"
-	beego.AppConfig.Set("mongo_host", "localhost")
-	beego.AppConfig.Set("mongo_auth", "false")
-	beego.AppConfig.Set("mongo_db", "antelope")
-	beego.AppConfig.Set("mongo_user", "antelope")
-	beego.AppConfig.Set("mongo_pass", "antelope")
-	beego.AppConfig.Set("mongo_aws_template_collection", "aws_template")
-	beego.AppConfig.Set("mongo_aws_cluster_collection", "aws_cluster")
-	beego.AppConfig.Set("mongo_azure_template_collection", "azure_template")
-	beego.AppConfig.Set("mongo_azure_cluster_collection", "azure_cluster")
-	beego.AppConfig.Set("mongo_gcp_template_collection", "gcp_template")
-	beego.AppConfig.Set("mongo_gcp_cluster_collection", "gcp_cluster")
-	beego.AppConfig.Set("mongo_ssh_keys_collection", "ssh_key")
-	beego.AppConfig.Set("redis_url", "35.246.150.221:6379")
-	beego.AppConfig.Set("logger_url", "https://dapis.cloudplex.cf/api/v1/logger")
-	beego.AppConfig.Set("network_url", "https://dapis.cloudplex.cf/weasel/network/{cloud_provider}")
-	beego.AppConfig.Set("vault_url", "https://dapis.cloudplex.cf/robin/api/v1")
-	beego.AppConfig.Set("racoon_url", "https://dapis.cloudplex.cf/raccoon/projects")
+	os.Setenv("rbac_url", "http://35.246.150.221:31619")
+	os.Setenv("mongo_host", "35.246.150.221:32180")
+	os.Setenv("mongo_auth", "true")
+	os.Setenv("mongo_db", "antelope")
+	os.Setenv("mongo_user", "antelope")
+	os.Setenv("mongo_pass", "DbSn3hAzJU6pPVRcn61apb3KDEKmcSb7Bl..")
+	os.Setenv("mongo_aws_template_collection", "aws_template")
+	os.Setenv("mongo_aws_cluster_collection", "aws_cluster")
+	os.Setenv("mongo_azure_template_collection", "azure_template")
+	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
+	os.Setenv("mongo_gcp_template_collection", "gcp_template")
+	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
+	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
+	os.Setenv("redis_url", "35.246.150.221:6379")
+	os.Setenv("logger_url", "https://dapis.cloudplex.cf/api/v1/logger")
+	os.Setenv("network_url", "https://dapis.cloudplex.cf/weasel/network/{cloud_provider}")
+	os.Setenv("vault_url", "https://dapis.cloudplex.cf/robin/api/v1")
+	os.Setenv("racoon_url", "https://dapis.cloudplex.cf/raccoon/projects")
 }
 
 /*func setAppConf(){

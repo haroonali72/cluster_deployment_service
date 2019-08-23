@@ -36,7 +36,7 @@ func (c *GcpTemplateController) Get() {
 		return
 	}
 
-	template, err := gcp.GetTemplate(id, *ctx) //done
+	template, err := gcp.GetTemplate(id, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(404)
@@ -61,7 +61,7 @@ func (c *GcpTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("GcpTemplateController: GetAll template.", "info")
 
-	templates, err := gcp.GetAllTemplate(*ctx) //done
+	templates, err := gcp.GetAllTemplate(*ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpTemplateController: internal server error "+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
@@ -92,7 +92,7 @@ func (c *GcpTemplateController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("GcpTemplateController: Posting  new template .", "info")
 
-	err, id := gcp.CreateTemplate(template, *ctx) //from here
+	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		if strings.Contains(err.Error(), "already exists") {
@@ -125,8 +125,13 @@ func (c *GcpTemplateController) Patch() {
 	beego.Info("GcpTemplateController: Patch template with id: ", template.TemplateId)
 	beego.Info("GcpTemplateController: JSON Payload: ", template)
 
-	err := gcp.UpdateTemplate(template)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("GcpTemplateController: Patch template with templateId "+template.TemplateId, "info")
+
+	err := gcp.UpdateTemplate(template, *ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no template exists with this id"}
@@ -155,15 +160,21 @@ func (c *GcpTemplateController) Delete() {
 
 	beego.Info("GcpTemplateController: Delete template with id: ", id)
 
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "")
+	ctx.SendSDLog("GcpTemplateController: deleting template with templateId "+id, "info")
+
 	if id == "" {
+		ctx.SendSDLog("GcpTemplateController: templateId is empty", "error")
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	err := gcp.DeleteTemplate(id)
+	err := gcp.DeleteTemplate(id, *ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()

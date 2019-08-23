@@ -39,7 +39,7 @@ func getNetworkHost(cloudType string) string {
 
 func (cloud *GCP) createCluster(cluster Cluster_Def, ctx utils.Context) (Cluster_Def, error) {
 	if cloud.Client == nil {
-		err := cloud.init() //no need
+		err := cloud.init()
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return cluster, err
@@ -47,16 +47,16 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, ctx utils.Context) (Cluster
 	}
 
 	var gcpNetwork types.GCPNetwork
-	url := getNetworkHost("gcp") + "/" + cluster.ProjectId //no need
+	url := getNetworkHost("gcp") + "/" + cluster.ProjectId
 
-	network, err := api_handler.GetAPIStatus(url, ctx) //done
+	network, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
 		return cluster, err
 	}
 
-	err = json.Unmarshal(network.([]byte), &gcpNetwork) //no need
+	err = json.Unmarshal(network.([]byte), &gcpNetwork)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
@@ -68,14 +68,14 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, ctx utils.Context) (Cluster
 		beego.Info("GCPOperations creating nodes")
 
 		if pool.PoolRole == "master" {
-			err = cloud.deployMaster(pool, gcpNetwork, ctx) //done
+			err = cloud.deployMaster(pool, gcpNetwork, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				beego.Error(err.Error())
 				return cluster, err
 			}
 		} else {
-			err = cloud.deployWorkers(pool, gcpNetwork, ctx) //done
+			err = cloud.deployWorkers(pool, gcpNetwork, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				beego.Error(err.Error())
@@ -96,13 +96,13 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, ctx1 ut
 		}
 	}
 
-	err := fetchOrGenerateKey(&pool.KeyInfo, ctx1) //done
+	err := fetchOrGenerateKey(&pool.KeyInfo, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		return err
 	}
 
-	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx1) //done
+	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		beego.Warn("cannot reserve any external ip for: " + pool.Name)
@@ -110,11 +110,11 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, ctx1 ut
 	}
 
 	instance := compute.Instance{
-		Name:        strings.ToLower(pool.Name), //no need
+		Name:        strings.ToLower(pool.Name),
 		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{
-				Subnetwork: getSubnet(pool.PoolSubnet, network.Definition[0].Subnets), //no need
+				Subnetwork: getSubnet(pool.PoolSubnet, network.Definition[0].Subnets),
 				AccessConfigs: []*compute.AccessConfig{
 					{
 						NatIP: externalIp,
@@ -137,11 +137,11 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, ctx1 ut
 			Items: []*compute.MetadataItems{
 				{
 					Key:   "block-project-ssh-keys",
-					Value: to.StringPtr("true"), //no need
+					Value: to.StringPtr("true"),
 				},
 				{
 					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey), //no need
+					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 				},
 			},
 		},
@@ -181,13 +181,13 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, ctx1 ut
 		return err
 	}
 
-	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx1) //done
+	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		return err
 	}
 
-	newNode, err := cloud.fetchNodeInfo(instance.Name, ctx1) //done
+	newNode, err := cloud.fetchNodeInfo(instance.Name, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
@@ -208,7 +208,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, ctx1 u
 		}
 	}
 
-	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, ctx1) //done
+	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		return err
@@ -260,7 +260,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, ctx1 u
 		splits := strings.Split(node.Instance, "/")
 		nodeName := splits[len(splits)-1]
 
-		newNode, err := cloud.fetchNodeInfo(nodeName, ctx1) //done
+		newNode, err := cloud.fetchNodeInfo(nodeName, ctx1)
 		if err != nil {
 			ctx1.SendSDLog(err.Error(), "error")
 			beego.Error(err.Error())
@@ -282,14 +282,14 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		}
 	}
 
-	err := fetchOrGenerateKey(&pool.KeyInfo, ctx1) //done
+	err := fetchOrGenerateKey(&pool.KeyInfo, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		return "", err
 	}
 
-	s1 := rand.NewSource(time.Now().UnixNano()) //no need
-	r1 := rand.New(s1)                          //no need
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
 
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
@@ -368,7 +368,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		return "", err
 	}
 
-	err = cloud.waitForGlobalCompletion(result, ctx1) //done
+	err = cloud.waitForGlobalCompletion(result, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		return "", err
@@ -512,7 +512,7 @@ func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context) er
 	}
 
 	for _, pool := range cluster.NodePools {
-		err := cloud.fetchPoolStatus(pool, ctx) //done
+		err := cloud.fetchPoolStatus(pool, ctx)
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return err
@@ -533,7 +533,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx1 utils.Context) error {
 
 	ctx := context.Background()
 	if pool.PoolRole == "master" {
-		newNode, err := cloud.fetchNodeInfo(pool.Name, ctx1) //done
+		newNode, err := cloud.fetchNodeInfo(pool.Name, ctx1)
 		if err != nil {
 			ctx1.SendSDLog(err.Error(), "error")
 			beego.Error(err.Error())
@@ -555,7 +555,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx1 utils.Context) error {
 			splits := strings.Split(node.Instance, "/")
 			nodeName := splits[len(splits)-1]
 
-			newNode, err := cloud.fetchNodeInfo(nodeName, ctx1) //done
+			newNode, err := cloud.fetchNodeInfo(nodeName, ctx1)
 			if err != nil {
 				ctx1.SendSDLog(err.Error(), "error")
 				beego.Error(err.Error())
@@ -572,7 +572,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx1 utils.Context) error {
 
 func (cloud *GCP) reserveExternalIp(nodeName string, ctx1 utils.Context) (string, error) {
 	if cloud.Client == nil {
-		err := cloud.init() //no need
+		err := cloud.init()
 		if err != nil {
 			ctx1.SendSDLog(err.Error(), "error")
 			return "", err
@@ -580,15 +580,15 @@ func (cloud *GCP) reserveExternalIp(nodeName string, ctx1 utils.Context) (string
 	}
 
 	address := compute.Address{Name: "ip-" + strings.ToLower(nodeName) + "z"}
-	ctx := context.Background()                                                                             //no need
-	result, err := cloud.Client.Addresses.Insert(cloud.ProjectId, cloud.Region, &address).Context(ctx).Do() //no need
+	ctx := context.Background()
+	result, err := cloud.Client.Addresses.Insert(cloud.ProjectId, cloud.Region, &address).Context(ctx).Do()
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
 		return "", err
 	}
 
-	err = cloud.waitForRegionalCompletion(result, cloud.Region, ctx1) //done
+	err = cloud.waitForRegionalCompletion(result, cloud.Region, ctx1)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
@@ -598,7 +598,7 @@ func (cloud *GCP) reserveExternalIp(nodeName string, ctx1 utils.Context) (string
 	externalIp := ""
 	for externalIp == "" {
 		time.Sleep(1 * time.Second)
-		result, err := cloud.Client.Addresses.Get(cloud.ProjectId, cloud.Region, address.Name).Context(ctx).Do() //no need
+		result, err := cloud.Client.Addresses.Get(cloud.ProjectId, cloud.Region, address.Name).Context(ctx).Do()
 		if err != nil {
 			ctx1.SendSDLog(err.Error(), "error")
 			beego.Error(err.Error())
@@ -691,7 +691,7 @@ func (cloud *GCP) waitForRegionalCompletion(op *compute.Operation, region string
 	status := ""
 	for status != "DONE" {
 		time.Sleep(5 * time.Second)
-		result, err := cloud.Client.RegionOperations.Get(cloud.ProjectId, region, op.Name).Context(ctx).Do() //no need
+		result, err := cloud.Client.RegionOperations.Get(cloud.ProjectId, region, op.Name).Context(ctx).Do()
 		if err != nil {
 			ctx1.SendSDLog(err.Error(), "error")
 			beego.Error(err.Error())
@@ -713,7 +713,7 @@ func (cloud *GCP) waitForZonalCompletion(op *compute.Operation, zone string, ctx
 	status := ""
 	for status != "DONE" {
 		time.Sleep(5 * time.Second)
-		result, err := cloud.Client.ZoneOperations.Get(cloud.ProjectId, zone, op.Name).Context(ctx).Do() //no need
+		result, err := cloud.Client.ZoneOperations.Get(cloud.ProjectId, zone, op.Name).Context(ctx).Do()
 		if err != nil {
 			ctx1.SendSDLog(err.Error(), "error")
 			beego.Error(err.Error())
@@ -770,7 +770,7 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 }
 
 func fetchOrGenerateKey(keyInfo *utils.Key, ctx utils.Context) error {
-	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, ctx) //done
+	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, ctx)
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendSDLog(err.Error(), "error")
@@ -778,7 +778,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key, ctx utils.Context) error {
 		return err
 	}
 
-	existingKey, err := key_utils.KeyConversion(key, utils.Context{}) //done
+	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		beego.Error("vm creation failed with error: " + err.Error())
@@ -792,9 +792,9 @@ func fetchOrGenerateKey(keyInfo *utils.Key, ctx utils.Context) error {
 
 	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
 		keyInfo.PrivateKey = existingKey.PrivateKey
-		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n") //no need
+		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n")
 
-		keySplits := strings.Split(keyInfo.PublicKey, " ") //no need
+		keySplits := strings.Split(keyInfo.PublicKey, " ")
 		if len(keySplits) >= 3 && keySplits[2] != username {
 			keyInfo.PublicKey = keySplits[0] + " " + keySplits[1] + " " + username
 		}
@@ -802,7 +802,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key, ctx utils.Context) error {
 		return nil
 	}
 
-	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, username, ctx) //done
+	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, username, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		beego.Error("vm creation failed with error: " + err.Error())

@@ -31,24 +31,24 @@ func (c *GcpClusterController) Get() {
 	if projectId == "" {
 		ctx.SendSDLog("GcpClusterController: projectId is empty", "error")
 
-		c.Ctx.Output.SetStatus(404) // no need
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON() //no need
+		c.ServeJSON()
 		return
 	}
 
-	cluster, err := gcp.GetCluster(projectId, *ctx) //done
+	cluster, err := gcp.GetCluster(projectId, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpGetClusterController: error getting gcp cluster "+err.Error(), "error")
 
-		c.Ctx.Output.SetStatus(404) //no need
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
-		c.ServeJSON() //no need
+		c.ServeJSON()
 		return
 	}
 
 	c.Data["json"] = cluster
-	c.ServeJSON() // no need
+	c.ServeJSON()
 }
 
 // @Title Get All
@@ -59,22 +59,22 @@ func (c *GcpClusterController) Get() {
 func (c *GcpClusterController) GetAll() {
 	beego.Info("GcpClusterController: GetAll clusters.")
 
-	ctx := new(utils.Context)                                                     // no need
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "") //no need
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 	ctx.SendSDLog("GcpClusterController: getting all clusters ", "info")
 
-	clusters, err := gcp.GetAllCluster(*ctx) //done
+	clusters, err := gcp.GetAllCluster(*ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController: "+err.Error(), "error")
 
-		c.Ctx.Output.SetStatus(500) // no need
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
-		c.ServeJSON() // no need
+		c.ServeJSON()
 		return
 	}
 
 	c.Data["json"] = clusters
-	c.ServeJSON() //no need
+	c.ServeJSON()
 }
 
 // @Title Create
@@ -86,32 +86,32 @@ func (c *GcpClusterController) GetAll() {
 // @router / [post]
 func (c *GcpClusterController) Post() {
 	var cluster gcp.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster) //no need
+	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	ctx := new(utils.Context)                                                                     //no need
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId) //no need
-	ctx.SendSDLog("GcpClusterController: Post new cluster with name: "+cluster.Name, "info")      // no need
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId)
+	ctx.SendSDLog("GcpClusterController: Post new cluster with name: "+cluster.Name, "info")
 
-	beego.Info("GcpClusterController: Post new cluster with name: ", cluster.Name) //no need
-	beego.Info("GcpClusterController: JSON Payload: ", cluster)                    //no need
+	beego.Info("GcpClusterController: Post new cluster with name: ", cluster.Name)
+	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	err := gcp.CreateCluster(cluster, *ctx) //done
+	err := gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController: "+err.Error(), "error")
 		if strings.Contains(err.Error(), "already exists") {
-			c.Ctx.Output.SetStatus(409) //no need
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
-			c.ServeJSON() // no need
+			c.ServeJSON()
 			return
 		}
-		c.Ctx.Output.SetStatus(500) //no need
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
-		c.ServeJSON() //no need
+		c.ServeJSON()
 		return
 	}
 
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
-	c.ServeJSON() //no need
+	c.ServeJSON()
 }
 
 // @Title Update
@@ -123,32 +123,32 @@ func (c *GcpClusterController) Post() {
 // @router / [put]
 func (c *GcpClusterController) Patch() {
 	var cluster gcp.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster) //no need
+	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	ctx := new(utils.Context)                                                                      //no need
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)   //no need
-	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: "+cluster.Name, "info") // no need
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)
+	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: "+cluster.Name, "info")
 
-	err := gcp.UpdateCluster(cluster, true, *ctx) //done
+	err := gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController: "+err.Error(), "error")
 		if strings.Contains(err.Error(), "does not exist") {
-			c.Ctx.Output.SetStatus(404) //no need
+			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
-			c.ServeJSON() //no need
+			c.ServeJSON()
 			return
 		}
-		c.Ctx.Output.SetStatus(500) //no need
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
-		c.ServeJSON() // no need
+		c.ServeJSON()
 		return
 	}
 
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
-	c.ServeJSON() // no need
+	c.ServeJSON()
 }
 
 // @Title Delete
@@ -163,37 +163,37 @@ func (c *GcpClusterController) Delete() {
 
 	beego.Info("GcpClusterController: Delete cluster with project id: ", id)
 
-	ctx := new(utils.Context)                                                         //no need
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)  //no need
-	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: ", "info") // no need
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
+	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: ", "info")
 
 	if id == "" {
 		ctx.SendSDLog("GcpClusterController: projectId field is empty ", "error")
-		c.Ctx.Output.SetStatus(404) // no need
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
-		c.ServeJSON() // no need
+		c.ServeJSON()
 		return
 	}
 
-	cluster, err := gcp.GetCluster(id, *ctx) //done
+	cluster, err := gcp.GetCluster(id, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		ctx.SendSDLog("GcpClusterController: Cluster is in running state ", "error")
-		c.Ctx.Output.SetStatus(500) //no need
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
-		c.ServeJSON() // no need
+		c.ServeJSON()
 		return
 	}
-	err = gcp.DeleteCluster(id, *ctx) //done
+	err = gcp.DeleteCluster(id, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController: "+err.Error(), "error")
-		c.Ctx.Output.SetStatus(500) //no need
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
-		c.ServeJSON() //no need
+		c.ServeJSON()
 		return
 	}
 
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
-	c.ServeJSON() // no need
+	c.ServeJSON()
 }
 
 // @Title Start
@@ -207,19 +207,19 @@ func (c *GcpClusterController) Delete() {
 func (c *GcpClusterController) StartCluster() {
 	beego.Info("GcpClusterController: StartCluster.")
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id") // no need
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
-	projectId := c.GetString(":projectId") //no need
+	projectId := c.GetString(":projectId")
 
-	ctx := new(utils.Context) // no need
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
 	ctx.SendSDLog("GcpClusterController: Start Cluster ", "info")
 
 	if profileId == "" {
 		ctx.SendSDLog("GcpClusterController: ProfileId is empty ", "error")
-		c.Ctx.Output.SetStatus(400) //no need
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-		c.ServeJSON() //no need
+		c.ServeJSON()
 		return
 	}
 
@@ -227,11 +227,11 @@ func (c *GcpClusterController) StartCluster() {
 		ctx.SendSDLog("GcpClusterController: ProjectId is empty ", "error")
 		c.Ctx.Output.SetStatus(400) //no need
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON() //no need
+		c.ServeJSON()
 		return
 	}
 
-	region, zone, err := gcp.GetRegion(projectId, *ctx) //done
+	region, zone, err := gcp.GetRegion(projectId, *ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
@@ -240,7 +240,7 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx) //done
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx)
 	if !isValid {
 		ctx.SendSDLog("gcpClusterController : authorization params missing or invalid", "error")
 		c.Ctx.Output.SetStatus(401)
@@ -253,7 +253,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
 
-	cluster, err = gcp.GetCluster(projectId, *ctx) //done
+	cluster, err = gcp.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		ctx.SendSDLog("gcpClusterController :"+err.Error(), "error")
@@ -315,7 +315,7 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	region, zone, err := gcp.GetRegion(projectId, *ctx) //done
+	region, zone, err := gcp.GetRegion(projectId, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
@@ -324,7 +324,7 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx) //done
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx)
 	if !isValid {
 		ctx.SendSDLog("GcpClusterController : Gcp credentials not valid ", "error")
 		c.Ctx.Output.SetStatus(401)
@@ -335,7 +335,7 @@ func (c *GcpClusterController) GetStatus() {
 
 	beego.Info("GcpClusterController: Fetch Cluster Status of project. ", projectId)
 
-	cluster, err := gcp.FetchStatus(credentials, projectId, *ctx) //done
+	cluster, err := gcp.FetchStatus(credentials, projectId, *ctx)
 
 	if err != nil {
 		ctx.SendSDLog("gcpClusterController :"+err.Error(), "error")
@@ -382,7 +382,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	region, zone, err := gcp.GetRegion(projectId, *ctx) //done
+	region, zone, err := gcp.GetRegion(projectId, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
@@ -391,7 +391,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx) //done
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx)
 	if !isValid {
 		ctx.SendSDLog("GcpClusterController: athorization params missing or invalid", "error")
 		c.Ctx.Output.SetStatus(401)
@@ -404,7 +404,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
 
-	cluster, err = gcp.GetCluster(projectId, *ctx) //done
+	cluster, err = gcp.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
@@ -415,7 +415,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 	beego.Info("GcpClusterController: Terminating Cluster. ", cluster.Name)
 
-	go gcp.TerminateCluster(cluster, credentials, *ctx) //done
+	go gcp.TerminateCluster(cluster, credentials, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -434,7 +434,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 
 	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
 
-	keys, err := gcp.GetAllSSHKeyPair(*ctx) //done
+	keys, err := gcp.GetAllSSHKeyPair(*ctx)
 
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
@@ -474,7 +474,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", "", *ctx) //done
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", "", *ctx)
 	if !isValid {
 		ctx.SendSDLog("GcpClusterController: authorization params missing or invalid ", "error")
 		c.Ctx.Output.SetStatus(401)
@@ -483,7 +483,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 		return
 	}
 
-	serviceAccounts, err := gcp.GetAllServiceAccounts(credentials, *ctx) //done
+	serviceAccounts, err := gcp.GetAllServiceAccounts(credentials, *ctx)
 	if err != nil {
 		ctx.SendSDLog("gcpClusterController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)

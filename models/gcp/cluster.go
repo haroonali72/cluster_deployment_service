@@ -102,9 +102,9 @@ type Data struct {
 }
 
 func GetRegion(projectId string, ctx utils.Context) (string, string, error) {
-	url := beego.AppConfig.String("raccoon_url") + "/" + projectId //no need
+	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
 
-	data, err := api_handler.GetAPIStatus(url, ctx) //done
+	data, err := api_handler.GetAPIStatus(url, ctx)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error(), "error")
@@ -132,20 +132,20 @@ func checkClusterSize(cluster Cluster_Def) error {
 func IsValidGcpCredentials(profileId, region, zone string, ctx utils.Context) (bool, GcpCredentials) {
 	credentials := GcpResponse{}
 
-	response, err := vault.GetCredentialProfile("gcp", profileId, ctx) //done
+	response, err := vault.GetCredentialProfile("gcp", profileId, ctx)
 	if err != nil {
 		ctx.SendSDLog("gcpClusterModel :"+err.Error(), "error")
 		return false, GcpCredentials{}
 	}
 
-	err = json.Unmarshal(response, &credentials) //no need
+	err = json.Unmarshal(response, &credentials)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
 		return false, GcpCredentials{}
 	}
 
-	jsonData, err := json.Marshal(credentials.Credentials.AccountData) //no need
+	jsonData, err := json.Marshal(credentials.Credentials.AccountData)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
@@ -166,27 +166,27 @@ func IsValidGcpCredentials(profileId, region, zone string, ctx utils.Context) (b
 }
 
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
-	_, err := GetCluster(cluster.ProjectId, ctx) //done
-	if err == nil {                              //cluster found
+	_, err := GetCluster(cluster.ProjectId, ctx)
+	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
 		ctx.SendSDLog("GcpClusterModel: "+text+err.Error(), "error")
 
-		beego.Error(text, err)  //no need
-		return errors.New(text) //no need
+		beego.Error(text, err)
+		return errors.New(text)
 	}
 
-	session, err := db.GetMongoSession() //no need
+	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel: error while connecting to database "+err.Error(), "error")
-		beego.Error("Cluster model: Delete - Got error while connecting to the database: ", err) //no need
+		beego.Error("Cluster model: Delete - Got error while connecting to the database: ", err)
 		return err
 	}
 	defer session.Close()
 
-	err = checkClusterSize(cluster) //no need
-	if err != nil {                 //cluster found
+	err = checkClusterSize(cluster)
+	if err != nil { //cluster found
 		ctx.SendSDLog("GcpClusterModel: "+err.Error(), "error")
-		beego.Error(err.Error()) //no need
+		beego.Error(err.Error())
 		return err
 	}
 
@@ -199,8 +199,8 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		cluster.Cloud = models.GCP
 	}
 
-	mc := db.GetMongoConf()                                       //no need
-	err = db.InsertInMongo(mc.MongoGcpClusterCollection, cluster) //no need
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoGcpClusterCollection, cluster)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel: error inserting cluster to database "+err.Error(), "error")
 		beego.Error("Cluster model: Create - Got error inserting cluster to the database: ", err)
@@ -211,7 +211,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 }
 
 func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err error) {
-	session, err1 := db.GetMongoSession() //no need
+	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("GcpGetClusterModel: error while connecting to database "+err1.Error(), "error")
 
@@ -219,10 +219,10 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 		return Cluster_Def{}, err1
 	}
 
-	defer session.Close()                                       // no need
-	mc := db.GetMongoConf()                                     // no need
-	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection) //no need
-	err = c.Find(bson.M{"project_id": projectId}).One(&cluster) //no need
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
+	err = c.Find(bson.M{"project_id": projectId}).One(&cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
@@ -232,17 +232,17 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 }
 
 func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
-	session, err1 := db.GetMongoSession() //no need
+	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("GcpClusterModel: error while connecting to database "+err1.Error(), "error")
 
 		beego.Error("Cluster model: GetAll - Got error while connecting to the database: ", err1)
 		return nil, err1
 	}
-	defer session.Close()                                       // no need
-	mc := db.GetMongoConf()                                     //no need
-	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection) // no need
-	err = c.Find(bson.M{}).All(&clusters)                       // no need
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
+	err = c.Find(bson.M{}).All(&clusters)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err
@@ -252,7 +252,7 @@ func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
 }
 
 func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
-	oldCluster, err := GetCluster(cluster.ProjectId, ctx) //done
+	oldCluster, err := GetCluster(cluster.ProjectId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
 		ctx.SendSDLog("GcpClusterModel: "+err.Error(), "error")
@@ -266,7 +266,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New("Cluster is in runnning state")
 	}
 
-	err = DeleteCluster(cluster.ProjectId, ctx) //done
+	err = DeleteCluster(cluster.ProjectId, ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel: Update - Got error deleting cluster "+err.Error(), "error")
 		beego.Error("Cluster model: Update - Got error deleting cluster: ", err)
@@ -276,7 +276,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(cluster, ctx) //done
+	err = CreateCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel: Update - Got error creating cluster "+err.Error(), "error")
 		beego.Error("Cluster model: Update - Got error creating cluster: ", err)
@@ -287,15 +287,15 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 }
 
 func DeleteCluster(projectId string, ctx utils.Context) error {
-	session, err := db.GetMongoSession() //no need
+	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel: error while connecting to database "+err.Error(), "error")
 		beego.Error("Cluster model: Delete - Got error while connecting to the database: ", err)
 		return err
 	}
 	defer session.Close()
-	mc := db.GetMongoConf()                                     //no need
-	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection) //no need
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
 	err = c.Remove(bson.M{"project_id": projectId})
 	if err != nil {
 		beego.Error(err.Error())
@@ -315,19 +315,19 @@ func PrintError(confError error, name, projectId string) {
 }
 
 func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils.Context) (confError error) {
-	gcp, err := GetGCP(credentials) //done
+	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendSDLog("gcpClusterModel :"+err.Error(), "error")
 		return err
 	}
-	err = gcp.init() //no need
+	err = gcp.init()
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier() //done
+	confError = publisher.Init_notifier()
 	if confError != nil {
 		ctx.SendSDLog(confError.Error(), "error")
 		PrintError(confError, cluster.Name, cluster.ProjectId)
@@ -336,19 +336,19 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils.Co
 
 	utils.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 
-	cluster, confError = gcp.createCluster(cluster, ctx) //done
+	cluster, confError = gcp.createCluster(cluster, ctx)
 	if confError != nil {
 		ctx.SendSDLog("gcpClusterModel :"+confError.Error(), "error")
 		PrintError(confError, cluster.Name, cluster.ProjectId)
 
-		confError = gcp.deleteCluster(cluster, ctx) //done
+		confError = gcp.deleteCluster(cluster, ctx)
 		if confError != nil {
 			ctx.SendSDLog("gcpClusterModel :"+confError.Error(), "error")
 			PrintError(confError, cluster.Name, cluster.ProjectId)
 		}
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster(cluster, false, ctx) //done
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			ctx.SendSDLog("gcpClusterModel :"+confError.Error(), "error")
 			PrintError(confError, cluster.Name, cluster.ProjectId)
@@ -359,7 +359,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils.Co
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster(cluster, false, ctx) //done
+	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		ctx.SendSDLog("gcpClusterModel :"+confError.Error(), "error")
 		PrintError(confError, cluster.Name, cluster.ProjectId)
@@ -374,25 +374,25 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils.Co
 }
 
 func FetchStatus(credentials GcpCredentials, projectId string, ctx utils.Context) (Cluster_Def, error) {
-	cluster, err := GetCluster(projectId, ctx) //done
+	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return cluster, err
 	}
 
-	gcp, err := GetGCP(credentials) //no need
+	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		return cluster, err
 	}
-	err = gcp.init() //no need
+	err = gcp.init()
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		return cluster, err
 	}
 
-	err = gcp.fetchClusterStatus(&cluster, ctx) //done
+	err = gcp.fetchClusterStatus(&cluster, ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		beego.Error("Cluster model: Status - Failed to get latest status ", err.Error())
@@ -403,7 +403,7 @@ func FetchStatus(credentials GcpCredentials, projectId string, ctx utils.Context
 }
 
 func GetAllSSHKeyPair(ctx utils.Context) (keys []string, err error) {
-	keys, err = vault.GetAllSSHKey(string(models.GCP), ctx) //done
+	keys, err = vault.GetAllSSHKey(string(models.GCP), ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		beego.Error(err.Error())
@@ -413,18 +413,18 @@ func GetAllSSHKeyPair(ctx utils.Context) (keys []string, err error) {
 }
 
 func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (serviceAccounts []string, err error) {
-	gcp, err := GetGCP(credentials) //no need
+	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		return nil, err
 	}
-	err = gcp.init() //no need
+	err = gcp.init()
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		return nil, err
 	}
 
-	serviceAccounts, err = gcp.listServiceAccounts(ctx) //done
+	serviceAccounts, err = gcp.listServiceAccounts(ctx)
 	if err != nil {
 		ctx.SendSDLog("gcpClusterModel :"+err.Error(), "error")
 		beego.Error("Cluster model: ServiceAccounts - Failed to list service accounts ", err.Error())
@@ -436,14 +436,14 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 
 func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils.Context) error {
 	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier() //no need
+	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendSDLog("gcpClusterModel :"+pub_err.Error(), "error")
 		beego.Error(pub_err.Error())
 		return pub_err
 	}
 
-	cluster, err := GetCluster(cluster.ProjectId, ctx) //done
+	cluster, err := GetCluster(cluster.ProjectId, ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		beego.Error("Cluster model: Terminate - Got error while connecting to the database: ", err.Error())
@@ -456,18 +456,18 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils
 		return err
 	}
 
-	gcp, err := GetGCP(credentials) //no need
+	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		return err
 	}
-	err = gcp.init() //no need
+	err = gcp.init()
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		return err
 	}
 
-	err = gcp.deleteCluster(cluster, ctx) //done
+	err = gcp.deleteCluster(cluster, ctx)
 
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
@@ -478,17 +478,17 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils
 		utils.SendLog(err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster, false, ctx) //done
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 
 			beego.Error("Cluster model: Terminate - Got error while connecting to the database: ", err.Error())
 			utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.ProjectId, "Status Available", ctx) //done
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return err
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx) //done
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
 
@@ -498,18 +498,18 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, ctx utils
 		var nodes []*Node
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster(cluster, false, ctx) //done
+	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 
 		beego.Error("Cluster model: Terminate - Got error while connecting to the database: ", err.Error())
 		utils.SendLog("Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(err.Error(), "error", cluster.ProjectId)
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx) //done
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 	utils.SendLog("Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx) //done
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
 }
