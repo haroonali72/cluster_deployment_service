@@ -77,6 +77,7 @@ func (c *AzureTemplateController) Get() {
 
 // @Title Get All
 // @Description get all the templates
+// @Param	token	header	string	token ""
 // @Success 200 {object} []azure.Template
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
@@ -120,6 +121,7 @@ func (c *AzureTemplateController) GetAll() {
 // @Description create a new template
 // @Param	body	body	azure.Template	true	"body for template content"
 // @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}

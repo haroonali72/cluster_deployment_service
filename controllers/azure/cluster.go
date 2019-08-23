@@ -574,6 +574,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
+// @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /sshkeys [get]

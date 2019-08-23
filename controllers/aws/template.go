@@ -124,6 +124,7 @@ func (c *AWSTemplateController) GetAll() {
 // @Title Create
 // @Description create a new template
 // @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}

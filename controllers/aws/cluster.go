@@ -476,6 +476,7 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 	if !allowed {
+
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -502,6 +503,7 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+	beego.Info("********" + token + "********")
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {

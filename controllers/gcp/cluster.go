@@ -586,6 +586,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
+// @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkeys [get]

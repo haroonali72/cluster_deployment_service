@@ -422,6 +422,11 @@ paths:
       - cluster/azure
       description: returns ssh key pairs
       operationId: AzureClusterController.SSHKeyPair
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       responses:
         "200":
           description: ""
@@ -666,6 +671,11 @@ paths:
       - cluster/gcp
       description: returns ssh key pairs
       operationId: GcpClusterController.SSHKeyPair
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       responses:
         "200":
           description: ""
@@ -811,6 +821,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -932,6 +946,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
       responses:
         "200":
           description: '{"msg": "template created successfully"}'
@@ -992,6 +1010,11 @@ paths:
       - template/azure
       description: get all the templates
       operationId: AzureTemplateController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       responses:
         "200":
           description: ""
@@ -1040,6 +1063,10 @@ paths:
       - in: header
         name: token
         description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
         type: string
       responses:
         "200":
@@ -1119,7 +1146,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  484.0xc042a99470.false:
+  484.0xc042acd1d0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1155,7 +1182,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/484.0xc042a99470.false'
+        $ref: '#/definitions/484.0xc042acd1d0.false'
       name:
         type: string
       network_name:
