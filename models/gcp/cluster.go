@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -217,7 +218,11 @@ func GetCluster(projectId string) (cluster Cluster_Def, err error) {
 	return cluster, nil
 }
 
-func GetAllCluster() (clusters []Cluster_Def, err error) {
+func GetAllCluster(data rbac_athentication.List) (clusters []Cluster_Def, err error) {
+	var copyData []string
+	for _, d := range data.Data {
+		copyData = append(copyData, d)
+	}
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		beego.Error("Cluster model: GetAll - Got error while connecting to the database: ", err1)
@@ -226,7 +231,7 @@ func GetAllCluster() (clusters []Cluster_Def, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err

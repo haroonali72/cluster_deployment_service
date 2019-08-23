@@ -99,7 +99,7 @@ func (c *AzureClusterController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	err, _ = rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -107,7 +107,7 @@ func (c *AzureClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	clusters, err := azure.GetAllCluster(*ctx)
+	clusters, err := azure.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

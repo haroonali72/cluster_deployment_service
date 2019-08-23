@@ -104,7 +104,7 @@ func (c *AWSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, _ = rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
 
 	if err != nil {
 		beego.Error(err.Error())
@@ -118,7 +118,7 @@ func (c *AWSClusterController) GetAll() {
 	beego.Info("getting clusters")
 	ctx.SendSDLog("AWSClusterController: GetAll clusters.", "info")
 
-	clusters, err := aws.GetAllCluster(*ctx)
+	clusters, err := aws.GetAllCluster(*ctx, data)
 	if err != nil {
 		beego.Info("error in clusters" + err.Error())
 		c.Ctx.Output.SetStatus(500)

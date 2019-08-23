@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -179,8 +180,11 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 	return cluster, nil
 }
 
-func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
-	beego.Info("mongo session")
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
+	var copyData []string
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
@@ -190,7 +194,7 @@ func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
 	mc := db.GetMongoConf()
 	beego.Info("cluster aws")
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
 	beego.Info("getting all clusters")
 	if err != nil {
 		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")

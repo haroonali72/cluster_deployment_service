@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -215,7 +216,11 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 	return cluster, nil
 }
 
-func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []Cluster_Def, err error) {
+	var copyData []string
+	for _, d := range list.Data {
+		copyData = append(copyData, d)
+	}
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
@@ -224,7 +229,7 @@ func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
