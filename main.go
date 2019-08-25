@@ -43,6 +43,7 @@ func main() {
 
 	beego.Run()
 }
+
 func setEnv() {
 	os.Setenv("rbac_url", "http://35.246.150.221:31619")
 	os.Setenv("mongo_host", "35.246.150.221:32180")
@@ -63,26 +64,3 @@ func setEnv() {
 	os.Setenv("vault_url", "https://dapis.cloudplex.cf/robin/api/v1")
 	os.Setenv("racoon_url", "https://dapis.cloudplex.cf/raccoon/projects")
 }
-
-/*func setAppConf(){
-	iniconf, err := config.NewConfig("ini", "conf/app.conf")
-	if err != nil {
-		beego.Error(err)
-	}
-	iniconf.Set("mongo_host","10.248.9.173")
-	beego.Info(iniconf.String("appname"))
-	beego.Info(iniconf.String("mongo_host"))
-	beego.AppConfig.String("mongo_host")
-	err = iniconf.SaveConfigFile("conf/app.conf")
-	if err != nil {
-		beego.Error(err)
-	}
-	beego.Info(iniconf.String("mongo_host"))
-	beego.Info(iniconf.String("mongo_host"))
-	beego.Info(beego.AppConfig.String("mongo_host"))
-	beego.AppConfig.Set("mongo_host","10.248.9.173")
-	beego.Info(beego.AppConfig.String("mongo_host"))
-	/*beego.Info("going into sleep mode")
-	time.Sleep(1*time.Minute)
-    beego.Info("returing from set conf method")*/
-//}

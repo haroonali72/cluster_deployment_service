@@ -50,13 +50,15 @@ type azureKey struct {
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 
-func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}, error) {
+func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return awsKey{}, err
 	}
+	req.Header.Set("token", token)
+
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -66,10 +68,17 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}
 	defer response.Body.Close()
 
 	var key awsKey
-	beego.Info(response.StatusCode)
+	//	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 500 || response.StatusCode == 404 {
+	//if response.StatusCode == 500 || response.StatusCode == 404 {
+	//	return awsKey{}, errors.New("not found")
+	//}
+	if response.StatusCode == 400 || response.StatusCode == 403 {
+
 		return awsKey{}, errors.New("not found")
+	}
+	if response.StatusCode != 200 {
+		return awsKey{}, errors.New("Error : " + response.Status)
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -88,7 +97,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url")
 }
-func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
@@ -119,6 +128,7 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
 	}
+	req.Header.Set("token", token)
 
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -133,7 +143,7 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		ctx.SendSDLog(e.Error(), "error")
@@ -165,7 +175,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
 	}
-
+	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendSDLog(e.Error(), "error")
@@ -177,7 +187,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 	return response.StatusCode, err
 
 }
-func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
+func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		ctx.SendSDLog(e.Error(), "error")
@@ -209,6 +219,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context) (int, error) {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
 	}
+	req.Header.Set("token", token)
 
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -243,6 +254,9 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 	if response.StatusCode == 500 {
 		return azureKey{}, errors.New("not found")
 	}
+	if response.StatusCode != 200 {
+		return azureKey{}, errors.New("Status Code: " + string(response.StatusCode))
+	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -257,7 +271,7 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 	return key, nil
 
 }
-func GetAllSSHKey(cloudType string, ctx utils.Context) ([]string, error) {
+func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, error) {
 	var keys []string
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType)
 	if err != nil {
@@ -265,6 +279,7 @@ func GetAllSSHKey(cloudType string, ctx utils.Context) ([]string, error) {
 		return keys, err
 	}
 	client := utils.InitReq()
+	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -277,6 +292,9 @@ func GetAllSSHKey(cloudType string, ctx utils.Context) ([]string, error) {
 	beego.Info(response.Status)
 	if response.StatusCode == 500 {
 		return keys, errors.New("not found")
+	}
+	if response.StatusCode != 200 {
+		return keys, errors.New("Status Code : " + string(response.StatusCode))
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -294,13 +312,13 @@ func GetAllSSHKey(cloudType string, ctx utils.Context) ([]string, error) {
 	return keys, nil
 
 }
-func GetCredentialProfile(cloudType string, profileId string, ctx utils.Context) ([]byte, error) {
-
+func GetCredentialProfile(cloudType string, profileId string, token string, ctx utils.Context) ([]byte, error) {
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/" + cloudType + "/credentials/" + profileId)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return []byte{}, err
 	}
+	req.Header.Add("token", token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -311,7 +329,7 @@ func GetCredentialProfile(cloudType string, profileId string, ctx utils.Context)
 
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 500 || response.StatusCode == 404 {
+	if response.StatusCode != 200 {
 		return []byte{}, errors.New("not found")
 	}
 	contents, err := ioutil.ReadAll(response.Body)

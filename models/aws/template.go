@@ -3,6 +3,7 @@ package aws
 import (
 	"antelope/models"
 	"antelope/models/db"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"errors"
 	"fmt"
@@ -95,7 +96,27 @@ func GetTemplate(templateId string, ctx utils.Context) (template Template, err e
 
 	return template, nil
 }
+func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []Template, err error) {
+	var copyData []string
+	for _, d := range data.Data {
+		copyData = append(copyData, d)
+	}
+	session, err1 := db.GetMongoSession()
+	if err1 != nil {
+		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
+		return nil, err1
+	}
+	defer session.Close()
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
+	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}}).All(&templates)
+	if err != nil {
+		ctx.SendSDLog(err.Error(), "error")
+		return nil, err
+	}
 
+	return templates, nil
+}
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {

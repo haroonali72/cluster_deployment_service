@@ -106,7 +106,7 @@ func getNetworkHost(cloudType string) string {
 	return host
 
 }
-func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Cluster_Def, error) {
+func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	if cloud == nil {
 		err := cloud.init()
@@ -118,7 +118,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 
 	var azureNetwork types.AzureNetwork
 	url := getNetworkHost("azure") + "/" + cluster.ProjectId
-	network, err := api_handler.GetAPIStatus(url, ctx)
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	err = json.Unmarshal(network.([]byte), &azureNetwork)
 
 	if err != nil {
@@ -130,7 +130,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 
 		ctx.SendSDLog("AZUREOperations creating nodes", "info")
 
-		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx)
+		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId, token)
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return cluster, err
@@ -138,14 +138,14 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 		if pool.EnableVolume {
 			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, pool.PoolRole, false)
 			if err != nil {
-				utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
 			}
 		}
 		if pool.PoolRole == "master" {
 			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, pool.PoolRole, true)
 			if err != nil {
-				utils.SendLog("Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
 			}
 		}
@@ -154,7 +154,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context) (Clust
 
 	return cluster, nil
 }
-func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context) ([]*VM, string, error) {
+func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, error) {
 
 	var cpVms []*VM
 
@@ -166,31 +166,31 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 	//sgIds = append(sgIds, &sid)
 	if pool.PoolRole == "master" {
 		IPname := "pip-" + pool.Name
-		utils.SendLog("Creating Public IP : "+projectId, "info", projectId)
+		utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
 		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
 		if err != nil {
 			return nil, "", err
 		}
-		utils.SendLog("Public IP created successfully : "+IPname, "info", projectId)
+		utils.SendLog(companyId, "Public IP created successfully : "+IPname, "info", projectId)
 		cloud.Resources["Pip-"+projectId] = IPname
 		/*
 			making network interface
 		*/
 		nicName := "NIC-" + pool.Name
-		utils.SendLog("Creating NIC : "+nicName, "info", projectId)
+		utils.SendLog(companyId, "Creating NIC : "+nicName, "info", projectId)
 		nicParameters, err := cloud.createNIC(pool, resourceGroup, publicIPaddress, subnetId, sgIds, nicName, ctx)
 		if err != nil {
 			return nil, "", err
 		}
-		utils.SendLog("NIC created successfully : "+nicName, "info", projectId)
+		utils.SendLog(companyId, "NIC created successfully : "+nicName, "info", projectId)
 		cloud.Resources["Nic-"+projectId] = nicName
 
-		utils.SendLog("Creating node  : "+pool.Name, "info", projectId)
-		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx)
+		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", projectId)
+		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token)
 		if err != nil {
 			return nil, "", err
 		}
-		utils.SendLog("Node created successfully : "+pool.Name, "info", projectId)
+		utils.SendLog(companyId, "Node created successfully : "+pool.Name, "info", projectId)
 		cloud.Resources["Disk-"+projectId] = pool.Name
 		cloud.Resources["NodeName-"+projectId] = pool.Name
 
@@ -209,7 +209,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		return cpVms, private_key, nil
 
 	} else {
-		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx)
+		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token)
 		if err != nil {
 			return nil, "", err
 		}
@@ -428,7 +428,7 @@ func (cloud *AZURE) GetVMPIP(resourceGroup, IPname string, ctx utils.Context) (n
 	}
 	return publicIPaddress, nil
 }
-func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context) error {
+func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, companyId string) error {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
@@ -436,26 +436,26 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context) err
 			return err
 		}
 	}
-	utils.SendLog("Terminating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	for poolIndex, pool := range cluster.NodePools {
 
-		utils.SendLog("Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
 		if pool.PoolRole == "master" {
 
-			utils.SendLog("Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
 			err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx)
 			if err != nil {
 				return err
 			}
 
 			nicName := "NIC-" + pool.Name
-			err = cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+			err = cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 			if err != nil {
 				return err
 			}
 
 			IPname := "pip-" + pool.Name
-			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx)
+			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 			if err != nil {
 				return err
 			}
@@ -491,7 +491,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context) err
 				return err
 			}
 		}
-		utils.SendLog("Node Pool terminated successfully: "+pool.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Node Pool terminated successfully: "+pool.Name, "info", cluster.ProjectId)
 	}
 	return nil
 }
@@ -568,8 +568,8 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 	return publicIPaddress, err
 }
 
-func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string, ctx utils.Context) error {
-	utils.SendLog("Deleting Public IP: "+IPname, "info", projectId)
+func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string, ctx utils.Context, companyId string) error {
+	utils.SendLog(companyId, "Deleting Public IP: "+IPname, "info", projectId)
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -581,7 +581,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 			return err
 		}
 	}
-	utils.SendLog("Public IP deleted successfully: "+IPname, "info", projectId)
+	utils.SendLog(companyId, "Public IP deleted successfully: "+IPname, "info", projectId)
 	return nil
 }
 func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx utils.Context) (network.Interface, error) {
@@ -622,8 +622,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 	nicParameters, err = cloud.GetVMNIC(resourceGroup, nicName, ctx)
 	return nicParameters, nil
 }
-func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx utils.Context) error {
-	utils.SendLog("Deleting NIC: "+nicName, "info", proId)
+func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx utils.Context, companyId string) error {
+	utils.SendLog(companyId, "Deleting NIC: "+nicName, "info", proId)
 	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -635,11 +635,11 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 			return err
 		}
 	}
-	utils.SendLog("NIC deleted successfully: "+nicName, "info", proId)
+	utils.SendLog(companyId, "NIC deleted successfully: "+nicName, "info", proId)
 	return nil
 }
 
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context) (compute.VirtualMachine, string, string, error) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token string) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -780,7 +780,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			pool.KeyInfo.PublicKey = res.PublicKey
 			pool.KeyInfo.PrivateKey = res.PrivateKey
 
-			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx)
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachine{}, "", "", err
@@ -919,7 +919,7 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 	}
 	return nil
 }
-func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
+func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId string) error {
 	for _, pool := range cluster.NodePools {
 		if pool.PoolRole == "master" {
 			if cloud.Resources["NodeName-"+cluster.ProjectId] != nil {
@@ -955,7 +955,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 					beego.Info(e.Error())
 					return e
 				}
-				err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 				if err != nil {
 					beego.Info(e.Error())
 					return err
@@ -972,7 +972,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 				if e != nil {
 					return e
 				}
-				err := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx)
+				err := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 				if err != nil {
 					return err
 				}
@@ -1258,7 +1258,7 @@ func deleteFile(keyName string, ctx utils.Context) error {
 	}
 	return nil
 }
-func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
+func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token string) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
 
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -1408,7 +1408,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			pool.KeyInfo.PublicKey = res.PublicKey
 			pool.KeyInfo.PrivateKey = res.PrivateKey
 
-			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx)
+			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""

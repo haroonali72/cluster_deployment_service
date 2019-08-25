@@ -2,6 +2,7 @@ package aws
 
 import (
 	"antelope/models/aws"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
@@ -18,6 +19,7 @@ type AWSClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
+// @Param	token	header	string	token ""
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error <error msg>"}
@@ -25,8 +27,38 @@ type AWSClusterController struct {
 func (c *AWSClusterController) Get() {
 	projectId := c.GetString(":projectId")
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//====================================================================================//
+
 	ctx.SendSDLog("AWSClusterController: Get cluster with project id: "+projectId, "info")
 
 	if projectId == "" {
@@ -51,23 +83,50 @@ func (c *AWSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
+// @Param	token	header	string	token ""
 // @Success 200 {object} []aws.Cluster_Def
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
+	token := c.Ctx.Input.Header("token")
+	beego.Info(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	beego.Info(userInfo.CompanyId)
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
+	//==========================RBAC Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
+
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//====================================================================================//
+	beego.Info("getting clusters")
 	ctx.SendSDLog("AWSClusterController: GetAll clusters.", "info")
 
-	clusters, err := aws.GetAllCluster(*ctx)
+	clusters, err := aws.GetAllCluster(*ctx, data)
 	if err != nil {
+		beego.Info("error in clusters" + err.Error())
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-
+	beego.Info("fetched cluster")
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -75,24 +134,53 @@ func (c *AWSClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
+// @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 409 {"error": "cluster against this project already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AWSClusterController) Post() {
+
 	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	cluster.CreationDate = time.Now()
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Create", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 
 	ctx.SendSDLog("AWSClusterController: Post new cluster with name: "+cluster.Name, "info")
 
 	res, err := govalidator.ValidateStruct(cluster)
-	beego.Info("hello -- validated cluster")
 	if !res || err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -100,7 +188,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	err = aws.GetNetwork(cluster.ProjectId, *ctx)
+	err = aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -120,13 +208,13 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
 
 // @Title Update
 // @Description update an existing cluster
+// @Param	token	header	string	token ""
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
@@ -136,12 +224,40 @@ func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Update", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 
 	ctx.SendSDLog("AWSClusterController: Patch cluster with name: "+cluster.Name, "info")
 
-	err := aws.UpdateCluster(cluster, true, *ctx)
+	err = aws.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -161,6 +277,7 @@ func (c *AWSClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
+// @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 404 {"error": "project id is empty"}
@@ -169,8 +286,36 @@ func (c *AWSClusterController) Patch() {
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", id, "Delete", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 
 	ctx.SendSDLog("AWSClusterController: Delete cluster with project id: "+id, "info")
 
@@ -202,6 +347,7 @@ func (c *AWSClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
+// @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -213,8 +359,36 @@ func (c *AWSClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Start", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 
 	ctx.SendSDLog("AWSNetworkController: StartCluster.", "info")
 
@@ -230,7 +404,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 
 	ctx.SendSDLog("AWSClusterController: Getting Cluster of project. "+projectId, "info")
-	cluster, err := aws.GetCluster(projectId, *ctx)
+	cluster, err = aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -244,14 +418,14 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -261,7 +435,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 	ctx.SendSDLog("AWSClusterController: Creating Cluster. "+cluster.Name, "info")
 
-	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx)
+	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -269,6 +443,7 @@ func (c *AWSClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
+// @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
@@ -278,9 +453,37 @@ func (c *AWSClusterController) StartCluster() {
 func (c *AWSClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
+	token := c.Ctx.Input.Header("token")
 
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSNetworkController: FetchStatus.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
@@ -293,14 +496,15 @@ func (c *AWSClusterController) GetStatus() {
 	}
 
 	ctx.SendSDLog("AWSClusterController: Fetch Cluster Status of project. "+projectId, "info")
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	beego.Info("********" + token + "********")
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -309,7 +513,7 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx)
+	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -323,8 +527,8 @@ func (c *AWSClusterController) GetStatus() {
 }
 
 // @Title Terminate
-// @Description terminates a  cluster
-// @Param	X-Profile-Id	X-Profile-Id	string	profileId	""
+// @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
+// @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
@@ -334,13 +538,40 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
+	token := c.Ctx.Input.Header("token")
 
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Terminate", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSNetworkController: TerminateCluster.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -348,7 +579,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -378,7 +609,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 	ctx.SendSDLog("AWSClusterController: Terminating Cluster. "+cluster.Name, "info")
 
-	go aws.TerminateCluster(cluster, awsProfile, *ctx)
+	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -386,17 +617,31 @@ func (c *AWSClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
+// @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	token := c.Ctx.Input.Header("token")
 
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
 
-	keys, err := aws.GetAllSSHKeyPair(*ctx)
+	keys, err := aws.GetAllSSHKeyPair(*ctx, token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -412,6 +657,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @Title AwsAmis
 // @Description returns aws ami details
 // @Param	X-Profile-Id	header	string	profileId	""
+// @Param	token	header	string	token ""
 // @Param	X-Region	header	string	false	""
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
@@ -420,15 +666,36 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @router /amis/:amiId [get]
 func (c *AWSClusterController) GetAMI() {
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+	token := c.Ctx.Input.Header("token")
 
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	//err, _ = rbac_athentication.GetAllAuthenticate("cluster",userInfo.CompanyId, token, *ctx)
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+
+	//=============================================================================//
 	ctx.SendSDLog("AWSClusterController: FetchAMIs.", "info")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region := c.Ctx.Input.Header("X-Region")
 
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	amiId := c.GetString(":amiId")
 
@@ -440,7 +707,7 @@ func (c *AWSClusterController) GetAMI() {
 	}
 	ctx.SendSDLog("AWSClusterController: Get Ami from AWS", "info")
 
-	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx)
+	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx, token)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -457,6 +724,7 @@ func (c *AWSClusterController) GetAMI() {
 // @Description enables autoscaling
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
+// @Param	token	header	string	token ""
 // @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
@@ -466,12 +734,38 @@ func (c *AWSClusterController) EnableAutoScaling() {
 
 	projectId := c.GetString(":projectId")
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "")
-	ctx.SendSDLog("AWSClusterController: EnableScaling.", "info")
+	token := c.Ctx.Input.Header("token")
 
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Start", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := aws.GetRegion(projectId, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -479,7 +773,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, *ctx)
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -496,8 +790,8 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	go aws.EnableScaling(awsProfile, cluster, *ctx)
-	/*if err != nil {
+	go aws.EnableScaling(awsProfile, cluster, *ctx, token)
+	/* err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()

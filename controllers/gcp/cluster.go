@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"antelope/models/gcp"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
@@ -16,26 +17,55 @@ type GcpClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
+// @Param	token	header	string	token ""
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
 // @router /:projectId/ [get]
 func (c *GcpClusterController) Get() {
 	projectId := c.GetString(":projectId")
-	beego.Info("GcpClusterController: Get cluster with project id: ", projectId)
 
+	//beego.Info("GcpClusterController: Get cluster with project id: ", projectId)
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
-	ctx.SendSDLog("GcpClusterController: Get cluster with project id "+projectId, "info")
 
 	if projectId == "" {
 		ctx.SendSDLog("GcpClusterController: projectId is empty", "error")
-
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
+
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpClusterController: Get cluster with project id "+projectId, "info")
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	beego.Info("GcpClusterController: Get cluster with project id: ", projectId)
 
 	cluster, err := gcp.GetCluster(projectId, *ctx)
 	if err != nil {
@@ -53,20 +83,41 @@ func (c *GcpClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
+// @Param	token	header	string	token ""
 // @Success 200 {object} []gcp.Cluster_Def
 // @Failure 500 {"error": "internal server error"}
 // @router /all [get]
 func (c *GcpClusterController) GetAll() {
 	beego.Info("GcpClusterController: GetAll clusters.")
+	token := c.Ctx.Input.Header("token")
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+
+	//clusters, err := gcp.GetAllCluster(*ctx)
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("GcpClusterController: getting all clusters ", "info")
 
-	clusters, err := gcp.GetAllCluster(*ctx)
+	//==========================RBAC Authentication==============================//
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	clusters, err := gcp.GetAllCluster(data, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController: "+err.Error(), "error")
-
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -79,6 +130,7 @@ func (c *GcpClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
+// @Param	token	header	string	token ""
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
@@ -89,13 +141,40 @@ func (c *GcpClusterController) Post() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId)
+
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("GcpClusterController: Post new cluster with name: "+cluster.Name, "info")
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	beego.Info("GcpClusterController: Post new cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	err := gcp.CreateCluster(cluster, *ctx)
+	err = gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController: "+err.Error(), "error")
 		if strings.Contains(err.Error(), "already exists") {
@@ -116,6 +195,7 @@ func (c *GcpClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
+// @Param	token	header	string	token ""
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
@@ -124,15 +204,40 @@ func (c *GcpClusterController) Post() {
 func (c *GcpClusterController) Patch() {
 	var cluster gcp.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	token := c.Ctx.Input.Header("token")
 
+	ctx := new(utils.Context)
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: "+cluster.Name, "info")
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId)
-	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: "+cluster.Name, "info")
-
-	err := gcp.UpdateCluster(cluster, true, *ctx)
+	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController: "+err.Error(), "error")
 		if strings.Contains(err.Error(), "does not exist") {
@@ -154,18 +259,44 @@ func (c *GcpClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "internal server error"}
 // @router /:projectId [delete]
 func (c *GcpClusterController) Delete() {
 	id := c.GetString(":projectId")
-
-	beego.Info("GcpClusterController: Delete cluster with project id: ", id)
+	token := c.Ctx.Input.Header("token")
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id)
-	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: ", "info")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpClusterController: delete cluster with id "+id, "info")
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", id, "Delete", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	beego.Info("GcpClusterController: Delete cluster with project id: ", id)
 
 	if id == "" {
 		ctx.SendSDLog("GcpClusterController: projectId field is empty ", "error")
@@ -199,6 +330,7 @@ func (c *GcpClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "exception_message"}
@@ -208,12 +340,9 @@ func (c *GcpClusterController) StartCluster() {
 	beego.Info("GcpClusterController: StartCluster.")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-
 	projectId := c.GetString(":projectId")
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
-	ctx.SendSDLog("GcpClusterController: Start Cluster ", "info")
 
 	if profileId == "" {
 		ctx.SendSDLog("GcpClusterController: ProfileId is empty ", "error")
@@ -230,8 +359,36 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+	token := c.Ctx.Input.Header("token")
 
-	region, zone, err := gcp.GetRegion(projectId, *ctx)
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpClusterController: Start Cluster ", "info")
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Start", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
+
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
@@ -240,7 +397,7 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
 		ctx.SendSDLog("gcpClusterController : authorization params missing or invalid", "error")
 		c.Ctx.Output.SetStatus(401)
@@ -272,7 +429,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 	beego.Info("GcpClusterController: Creating Cluster. ", cluster.Name)
 
-	go gcp.DeployCluster(cluster, credentials, *ctx)
+	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -281,6 +438,7 @@ func (c *GcpClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 206 {object} gcp.Cluster_Def
@@ -295,9 +453,6 @@ func (c *GcpClusterController) GetStatus() {
 	projectId := c.GetString(":projectId")
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId)
-
-	ctx.SendSDLog("GcpNetworkController: FetchStatus.", "info")
 
 	if profileId == "" {
 		ctx.SendSDLog("GcpClusterController: ProfileId is empty ", "error")
@@ -314,8 +469,35 @@ func (c *GcpClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+	token := c.Ctx.Input.Header("token")
 
-	region, zone, err := gcp.GetRegion(projectId, *ctx)
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpNetworkController: FetchStatus.", "info")
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
@@ -324,7 +506,7 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
 		ctx.SendSDLog("GcpClusterController : Gcp credentials not valid ", "error")
 		c.Ctx.Output.SetStatus(401)
@@ -336,7 +518,6 @@ func (c *GcpClusterController) GetStatus() {
 	beego.Info("GcpClusterController: Fetch Cluster Status of project. ", projectId)
 
 	cluster, err := gcp.FetchStatus(credentials, projectId, *ctx)
-
 	if err != nil {
 		ctx.SendSDLog("gcpClusterController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(206)
@@ -350,6 +531,7 @@ func (c *GcpClusterController) GetStatus() {
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 400 {"error": "exception_message"}
@@ -362,9 +544,6 @@ func (c *GcpClusterController) TerminateCluster() {
 	projectId := c.GetString(":projectId")
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId)
-
-	ctx.SendSDLog("GcpNetworkController: TerminateCluster.", "info")
 
 	if profileId == "" {
 		ctx.SendSDLog("GcpClusterController: ProfileId is empty ", "error")
@@ -381,8 +560,35 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+	token := c.Ctx.Input.Header("token")
 
-	region, zone, err := gcp.GetRegion(projectId, *ctx)
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpNetworkController: TerminateCluster.", "info")
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Terminate", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
@@ -391,7 +597,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, zone, *ctx)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
 		ctx.SendSDLog("GcpClusterController: athorization params missing or invalid", "error")
 		c.Ctx.Output.SetStatus(401)
@@ -415,7 +621,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 	beego.Info("GcpClusterController: Terminating Cluster. ", cluster.Name)
 
-	go gcp.TerminateCluster(cluster, credentials, *ctx)
+	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -423,19 +629,31 @@ func (c *GcpClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
+// @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkeys [get]
 func (c *GcpClusterController) GetSSHKeys() {
 	beego.Info("GcpClusterController: FetchExistingSSHKeys.")
+	//==========================RBAC Authentication==============================//
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
 
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
 
-	keys, err := gcp.GetAllSSHKeyPair(*ctx)
-
+	//==========================RBAC Authentication==============================//
+	keys, err := gcp.GetAllSSHKeyPair(token, *ctx)
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
 
@@ -451,6 +669,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 
 // @Title ListServiceAccounts
 // @Description returns list of service account emails
+// @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "profile id is empty"}
@@ -460,12 +679,24 @@ func (c *GcpClusterController) GetSSHKeys() {
 func (c *GcpClusterController) GetServiceAccounts() {
 	beego.Info("GcpClusterController: FetchExistingServiceAccounts.")
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "")
+
+	token := c.Ctx.Input.Header("token")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("AWSNetworkController: Getting service accounts ", "info")
 
+	//==========================RBAC Authentication==============================//
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		ctx.SendSDLog("GcpClusterController: ProfileId is empty ", "error")
 		c.Ctx.Output.SetStatus(400)
@@ -474,7 +705,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", "", *ctx)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", token, "", *ctx)
 	if !isValid {
 		ctx.SendSDLog("GcpClusterController: authorization params missing or invalid ", "error")
 		c.Ctx.Output.SetStatus(401)
