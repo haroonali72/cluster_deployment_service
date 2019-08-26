@@ -140,8 +140,9 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 			ctx.SendSDLog("Resource group is incorrect", "error")
 			return errors.New("Resource Group is in correct")
 		}
+	} else {
+		return errors.New("Network not found")
 	}
-
 	return nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
