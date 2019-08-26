@@ -304,6 +304,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 	}
 
 	_, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx1)
+	//_, err := fetchOrGenerateKey(&pool.KeyInfo, token)
 	if err != nil {
 		ctx1.SendSDLog(err.Error(), "error")
 		return "", err
@@ -840,8 +841,9 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (st
 		return "", err
 	}
 
-	return "", nil
+	return keyInfo.PrivateKey, nil
 }
+
 func mountVolume(privateKey, keyName, username, ipAddress string) error {
 	t := time.Now().Local()
 	tstamp := t.Format("20060102150405")
@@ -884,6 +886,7 @@ func mountVolume(privateKey, keyName, username, ipAddress string) error {
 
 	return errCmd
 }
+
 func copyScriptFile(sshKeyFileName, connectionString string) error {
 	args := []string{
 		"-o",
