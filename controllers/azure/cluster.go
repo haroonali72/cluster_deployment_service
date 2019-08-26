@@ -477,7 +477,7 @@ func (c *AzureClusterController) GetStatus() {
 
 	ctx.SendSDLog("AzureClusterController: Fetch Cluster Status of project. "+projectId, "info")
 
-	cluster, err := azure.FetchStatus(azureProfile, projectId, *ctx)
+	cluster, err := azure.FetchStatus(azureProfile, token, projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

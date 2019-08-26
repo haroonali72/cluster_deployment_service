@@ -280,7 +280,7 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	return ""
 }
 
-func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster_Def, error) {
+func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Context) (Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
@@ -292,7 +292,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster
 	for in, pool := range cluster.NodePools {
 		var keyInfo utils.Key
 		if pool.KeyInfo.CredentialType == models.SSHKey {
-			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 			if err != nil {
 				ctx.SendSDLog(err.Error(), "error")
 				return Cluster_Def{}, err
@@ -732,7 +732,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 
 		if err != nil && err.Error() != "not found" {
 			ctx.SendSDLog("vm creation failed", "error")
@@ -792,7 +792,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachine{}, "", "", err
@@ -1361,7 +1361,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	// public := ""
 
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 
 		if err != nil && err.Error() != "not found" {
 			ctx.SendSDLog(err.Error(), "error")
@@ -1420,7 +1420,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""

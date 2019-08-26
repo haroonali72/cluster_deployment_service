@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/google/uuid"
 	"runtime"
@@ -61,6 +62,7 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 	}
 
 	req, err := CreatePostRequest(request_data, getHost())
+	fmt.Println("this is host for sending logs", getHost())
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -78,17 +80,18 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 func (c *Context) InitializeLogger(requestURL, method, path string, projectId string, companyId string, userId string) {
 
 	c.data.ServiceName = "antelope"
-	c.data.Request.Url = requestURL
-	c.data.Request.Method = method
-	c.data.Request.Path = path
-	c.data.Request.RequestId = uuid.New().String()
-	c.data.ProjectId = projectId
+	c.data.Request.Url = requestURL                //localhost:9081
+	c.data.Request.Method = method                 //GET
+	c.data.Request.Path = path                     ///antelope/cluster/gcp/dayendprojct1/
+	c.data.Request.RequestId = uuid.New().String() //3d25a6b5-dcd6-4f24-b736-7023a2ae6133
+	c.data.ProjectId = projectId                   //dayendprojct1
 	c.data.LogName = "backend-logging"
-	c.data.Company = companyId
-	c.data.UserId = userId
+	c.data.Company = companyId //5d5e2afb017aa2000be6b9b3
+	c.data.UserId = userId     //""
 }
 
 func getHost() string {
 	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
-	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/backend/logging"
+	//return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/backend/logging"
+	return beego.AppConfig.String("logger_url") + "/elephant/api/v1/backend/logging" //for sending logs
 }

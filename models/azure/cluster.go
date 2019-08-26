@@ -135,11 +135,14 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	//beego.Info(string(data.([]byte)))
 	//beego.Info(network)
 	//beego.Info(network.Definition[0].ResourceGroup + " " + resourceGroup)
-	if network.Definition[0].ResourceGroup != resourceGroup {
-		ctx.SendSDLog("Resource group is incorrect", "error")
-		return errors.New("Resource Group is in correct")
+	if network.Definition != nil {
+		if network.Definition[0].ResourceGroup != resourceGroup {
+			ctx.SendSDLog("Resource group is incorrect", "error")
+			return errors.New("Resource Group is in correct")
+		}
+	} else {
+		return errors.New("Network not found")
 	}
-
 	return nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
@@ -345,7 +348,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	return nil
 }
-func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, token, projectId string, ctx utils.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
@@ -365,7 +368,7 @@ func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Con
 		return Cluster_Def{}, err
 	}
 
-	c, e := azure.fetchStatus(cluster, ctx)
+	c, e := azure.fetchStatus(cluster, token, ctx)
 	if e != nil {
 		ctx.SendSDLog("Cluster model: Status - Failed to get lastest status "+e.Error(), "error")
 		return Cluster_Def{}, e

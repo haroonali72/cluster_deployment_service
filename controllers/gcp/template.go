@@ -26,7 +26,6 @@ func (c *GcpTemplateController) Get() {
 	id := c.GetString(":templateId")
 
 	ctx := new(utils.Context)
-	ctx.SendSDLog("GcpTemplateController: Get template  id : "+id, "info")
 
 	if id == "" {
 		ctx.SendSDLog("GcpTemplateController: template id is empty", "error")
@@ -47,7 +46,9 @@ func (c *GcpTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: Get template  id : "+id, "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "View", token, utils.Context{})
@@ -90,7 +91,6 @@ func (c *GcpTemplateController) GetAll() {
 	token := c.Ctx.Input.Header("token")
 
 	ctx := new(utils.Context)
-	ctx.SendSDLog("GcpTemplateController: GetAll template.", "info")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -100,7 +100,9 @@ func (c *GcpTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: GetAll template.", "info")
 
 	//==========================RBAC Authentication==============================//
 	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, utils.Context{})
@@ -144,7 +146,6 @@ func (c *GcpTemplateController) Post() {
 	token := c.Ctx.Input.Header("token")
 
 	ctx := new(utils.Context)
-	ctx.SendSDLog("GcpTemplateController: Posting  new template .", "info")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -154,7 +155,9 @@ func (c *GcpTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: Posting  new template .", "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
@@ -228,7 +231,6 @@ func (c *GcpTemplateController) Patch() {
 	token := c.Ctx.Input.Header("token")
 
 	ctx := new(utils.Context)
-	ctx.SendSDLog("GcpTemplateController: Patch template with templateId "+template.TemplateId, "info")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -238,7 +240,9 @@ func (c *GcpTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: Patch template with templateId "+template.TemplateId, "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
@@ -293,7 +297,6 @@ func (c *GcpTemplateController) Delete() {
 	beego.Info("GcpTemplateController: Delete template with id: ", id)
 
 	ctx := new(utils.Context)
-	ctx.SendSDLog("GcpTemplateController: deleting template with templateId "+id, "info")
 
 	if id == "" {
 		ctx.SendSDLog("GcpTemplateController: templateId is empty", "error")
@@ -312,7 +315,9 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: deleting template with templateId "+id, "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "Delete", token, utils.Context{})

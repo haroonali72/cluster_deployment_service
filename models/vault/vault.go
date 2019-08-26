@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"io/ioutil"
+	"strconv"
 )
 
 type Key struct {
@@ -232,7 +233,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, er
 	return response.StatusCode, err
 
 }
-func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interface{}, error) {
+func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Context) (interface{}, error) {
 
 	fmt.Print(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
 	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
@@ -241,6 +242,7 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 		return azureKey{}, err
 	}
 	client := utils.InitReq()
+	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
@@ -255,7 +257,7 @@ func GetAzureSSHKey(cloudType string, keyName string, ctx utils.Context) (interf
 		return azureKey{}, errors.New("not found")
 	}
 	if response.StatusCode != 200 {
-		return azureKey{}, errors.New("Status Code: " + string(response.StatusCode))
+		return azureKey{}, errors.New("Status Code: " + strconv.Itoa(response.StatusCode))
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -294,7 +296,7 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 		return keys, errors.New("not found")
 	}
 	if response.StatusCode != 200 {
-		return keys, errors.New("Status Code : " + string(response.StatusCode))
+		return keys, errors.New("Status Code : " + strconv.Itoa(response.StatusCode))
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {

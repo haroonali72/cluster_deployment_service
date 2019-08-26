@@ -216,7 +216,7 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("GcpClusterController: update cluster cluster with name: "+cluster.Name, "info")
 
 	//==========================RBAC Authentication==============================//
@@ -278,7 +278,7 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("GcpClusterController: delete cluster with id "+id, "info")
 
 	//==========================RBAC Authentication==============================//
@@ -369,7 +369,7 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("GcpClusterController: Start Cluster ", "info")
 
 	//==========================RBAC Authentication==============================//
@@ -570,7 +570,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendSDLog("GcpNetworkController: TerminateCluster.", "info")
 
 	//==========================RBAC Authentication==============================//
@@ -654,6 +654,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 
 	//==========================RBAC Authentication==============================//
 	keys, err := gcp.GetAllSSHKeyPair(token, *ctx)
+
 	if err != nil {
 		ctx.SendSDLog("GcpClusterController :"+err.Error(), "error")
 
