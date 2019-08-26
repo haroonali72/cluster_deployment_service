@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 )
 
-func GetAPIStatus(host string, ctx utils.Context) (interface{}, error) {
+func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 
 	client := utils.InitReq()
 
@@ -15,7 +15,7 @@ func GetAPIStatus(host string, ctx utils.Context) (interface{}, error) {
 		ctx.SendSDLog(err.Error(), "error")
 		return nil, err
 	}
-
+	req.Header.Add("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")

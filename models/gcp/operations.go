@@ -39,7 +39,7 @@ func getNetworkHost(cloudType string) string {
 	return host
 }
 
-func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
+func (cloud *GCP) createCluster(cluster Cluster_Def, token string) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -50,7 +50,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	var gcpNetwork types.GCPNetwork
 	url := getNetworkHost("gcp") + "/" + cluster.ProjectId
 
-	network, err := api_handler.GetAPIStatus(url, utils.Context{})
+	network, err := api_handler.GetAPIStatus(token, url, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err
@@ -67,13 +67,13 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 		beego.Info("GCPOperations creating nodes")
 
 		if pool.PoolRole == "master" {
-			err = cloud.deployMaster(pool, gcpNetwork)
+			err = cloud.deployMaster(pool, gcpNetwork, token)
 			if err != nil {
 				beego.Error(err.Error())
 				return cluster, err
 			}
 		} else {
-			err = cloud.deployWorkers(pool, gcpNetwork)
+			err = cloud.deployWorkers(pool, gcpNetwork, token)
 			if err != nil {
 				beego.Error(err.Error())
 				return cluster, err
@@ -84,7 +84,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def) (Cluster_Def, error) {
 	return cluster, nil
 }
 
-func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
+func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token string) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -92,7 +92,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo)
+	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token)
 	if err != nil {
 		return err
 	}
@@ -160,6 +160,10 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 			},
 		}
 
+		if !pool.Volume.IsBlank {
+			secondaryDisk.InitializeParams.SourceImage = "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family
+		}
+
 		instance.Disks = append(instance.Disks, &secondaryDisk)
 	}
 
@@ -192,7 +196,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork) error {
 	return nil
 }
 
-func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork) error {
+func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token string) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -200,12 +204,12 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork) error 
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo)
+	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token)
 	if err != nil {
 		return err
 	}
 
-	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network)
+	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, token)
 	if err != nil {
 		return err
 	}
@@ -271,12 +275,17 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork) error 
 	return nil
 }
 
-func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwork) (string, error) {
+func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwork, token string) (string, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
 			return "", err
 		}
+	}
+
+	_, err := fetchOrGenerateKey(&pool.KeyInfo, token)
+	if err != nil {
+		return "", err
 	}
 
 	s1 := rand.NewSource(time.Now().UnixNano())
@@ -337,6 +346,10 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 				DiskSizeGb: pool.Volume.Size,
 				DiskType:   string(pool.Volume.DiskType),
 			},
+		}
+
+		if !pool.Volume.IsBlank {
+			secondaryDisk.InitializeParams.SourceImage = "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family
 		}
 
 		instanceProperties.Disks = append(instanceProperties.Disks, &secondaryDisk)
@@ -732,8 +745,8 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 	return ""
 }
 
-func fetchOrGenerateKey(keyInfo *utils.Key) (string, error) {
-	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, utils.Context{})
+func fetchOrGenerateKey(keyInfo *utils.Key, token string) (string, error) {
+	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, token, utils.Context{})
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		beego.Error("vm creation failed with error: " + err.Error())
@@ -774,7 +787,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key) (string, error) {
 	keyInfo.PrivateKey = res.PrivateKey
 	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
 
-	_, err = vault.PostGcpSSHKey(keyInfo, utils.Context{})
+	_, err = vault.PostGcpSSHKey(keyInfo, utils.Context{}, token)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", err
@@ -795,7 +808,7 @@ func mountVolume(privateKey, keyName, username, ipAddress string) error {
 		return err
 	}
 
-	err = copyScriptFile(sshKeyFileName,connectionString + ":/home/" + username)
+	err = copyScriptFile(sshKeyFileName, connectionString+":/home/"+username)
 	if err != nil {
 		beego.Error(err.Error())
 		return err
