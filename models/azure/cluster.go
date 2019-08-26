@@ -348,7 +348,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	return nil
 }
-func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, token, projectId string, ctx utils.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
@@ -368,7 +368,7 @@ func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Con
 		return Cluster_Def{}, err
 	}
 
-	c, e := azure.fetchStatus(cluster, ctx)
+	c, e := azure.fetchStatus(cluster, token, ctx)
 	if e != nil {
 		ctx.SendSDLog("Cluster model: Status - Failed to get lastest status "+e.Error(), "error")
 		return Cluster_Def{}, e
