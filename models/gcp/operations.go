@@ -15,6 +15,8 @@ import (
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"math/rand"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -90,7 +92,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		}
 	}
 
-	err := fetchOrGenerateKey(&pool.KeyInfo, token)
+	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token)
 	if err != nil {
 		return err
 	}
@@ -185,6 +187,12 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 
 	pool.Nodes = []*Node{&newNode}
 
+	err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -194,6 +202,11 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		if err != nil {
 			return err
 		}
+	}
+
+	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token)
+	if err != nil {
+		return err
 	}
 
 	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, token)
@@ -251,6 +264,12 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		}
 
 		pool.Nodes = append(pool.Nodes, &newNode)
+
+		err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+		if err != nil {
+			beego.Error(err.Error())
+			return err
+		}
 	}
 
 	return nil
@@ -264,7 +283,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		}
 	}
 
-	err := fetchOrGenerateKey(&pool.KeyInfo, token)
+	_, err := fetchOrGenerateKey(&pool.KeyInfo, token)
 	if err != nil {
 		return "", err
 	}
@@ -726,18 +745,18 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 	return ""
 }
 
-func fetchOrGenerateKey(keyInfo *utils.Key, token string) error {
+func fetchOrGenerateKey(keyInfo *utils.Key, token string) (string, error) {
 	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, token, utils.Context{})
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		beego.Error("vm creation failed with error: " + err.Error())
-		return err
+		return "", err
 	}
 
 	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
-		return err
+		return "", err
 	}
 
 	username := "cloudplex"
@@ -754,13 +773,13 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string) error {
 			keyInfo.PublicKey = keySplits[0] + " " + keySplits[1] + " " + username
 		}
 
-		return nil
+		return keyInfo.PrivateKey, nil
 	}
 
 	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, username, utils.Context{})
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
-		return err
+		return "", err
 	}
 
 	keyInfo.Username = username
@@ -771,6 +790,172 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string) error {
 	_, err = vault.PostGcpSSHKey(keyInfo, utils.Context{}, token)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
+		return "", err
+	}
+
+	return keyInfo.PrivateKey, nil
+}
+
+func mountVolume(privateKey, keyName, username, ipAddress string) error {
+	t := time.Now().Local()
+	tstamp := t.Format("20060102150405")
+	sshKeyFileName := keyName + "_" + tstamp + ".pem"
+	connectionString := username + "@" + ipAddress
+
+	err := writeFile(privateKey, sshKeyFileName)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	err = copyScriptFile(sshKeyFileName, connectionString+":/home/"+username)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	errPer := setScriptPermission(sshKeyFileName, username, connectionString)
+	if errPer != nil {
+		beego.Error(errPer.Error())
+	}
+
+	errCmd := runScript(sshKeyFileName, username, connectionString)
+	if errCmd != nil {
+		beego.Error(errCmd.Error())
+	}
+
+	err = deleteScript(sshKeyFileName, username, connectionString)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	err = deleteFile(sshKeyFileName)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	return errCmd
+}
+
+func copyScriptFile(sshKeyFileName, connectionString string) error {
+	args := []string{
+		"-o",
+		"StrictHostKeyChecking=no",
+		"-i",
+		sshKeyFileName,
+		"scripts/gcp-volume-mount.sh",
+		connectionString,
+	}
+
+	i := 0
+	for i < 5 {
+		cmd := exec.Command("scp", args...)
+
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			beego.Warn("error while copying script, sleeping 20s before retrying", err.Error())
+			time.Sleep(20 * time.Second)
+		} else {
+			break
+		}
+		i++
+	}
+
+	return nil
+}
+
+func setScriptPermission(sshKeyFileName, username, connectionString string) error {
+	args := []string{
+		"-o",
+		"StrictHostKeyChecking=no",
+		"-i",
+		sshKeyFileName,
+		connectionString,
+		"chmod 700 /home/" + username + "/gcp-volume-mount.sh",
+	}
+	cmd := exec.Command("ssh", args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return nil
+	}
+
+	return nil
+}
+
+func runScript(sshKeyFileName, username, connectionString string) error {
+	args := []string{
+		"-o",
+		"StrictHostKeyChecking=no",
+		"-i",
+		sshKeyFileName,
+		connectionString,
+		"/home/" + username + "/gcp-volume-mount.sh",
+	}
+	cmd := exec.Command("ssh", args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return nil
+	}
+
+	return nil
+}
+
+func deleteScript(sshKeyFileName, username, connectionString string) error {
+	args := []string{
+		"-o",
+		"StrictHostKeyChecking=no",
+		"-i",
+		sshKeyFileName,
+		connectionString,
+		"rm",
+		"/home/" + username + "/gcp-volume-mount.sh",
+	}
+	cmd := exec.Command("ssh", args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
+func writeFile(content string, fileName string) error {
+	file, err := os.Create(fileName)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+	defer file.Close()
+
+	fileContent := []byte(content)
+	_, err = file.Write(fileContent)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func deleteFile(fileName string) error {
+	err := os.Remove(fileName)
+	if err != nil {
+		beego.Error(err.Error())
 		return err
 	}
 
