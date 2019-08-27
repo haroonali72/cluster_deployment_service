@@ -342,9 +342,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	cluster, confError = gcp.createCluster(cluster, token, ctx)
-	//utils.SendLog("Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 
-	//cluster, confError = gcp.createCluster(cluster, ctx)
 	if confError != nil {
 		ctx.SendSDLog("gcpClusterModel :"+confError.Error(), "error")
 		//PrintError(confError, cluster.Name, cluster.ProjectId)
