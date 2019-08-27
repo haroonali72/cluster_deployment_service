@@ -103,7 +103,7 @@ type Data struct {
 }
 
 func GetRegion(token, projectId string) (string, string, error) {
-	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
+	url := "http://" + beego.AppConfig.String("raccoon_url") + "/raccoon/projects/" + projectId
 
 	data, err := api_handler.GetAPIStatus(token, url, utils.Context{})
 	if err != nil {
