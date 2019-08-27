@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"antelope/models"
 	"antelope/models/gcp"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -101,7 +102,7 @@ func (c *GcpClusterController) GetAll() {
 	ctx.SendSDLog("GcpClusterController: getting all clusters ", "info")
 
 	//==========================RBAC Authentication==============================//
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.GCP, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

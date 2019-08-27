@@ -149,12 +149,6 @@ func InitFlags() error {
 		return err
 	}
 
-	mongo = mongo
-	redis_url = redis_url + ":6379"
-	network_url = "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
-	vault_url = "http://" + vault_url + ":8092/robin/api/v1"
-	raccoon_url := "http://" + raccoon_url + "/raccoon/projects/"
-
 	beego.AppConfig.Set("mongo_host", mongo)
 	beego.AppConfig.Set("mongo_user", mongo_user)
 	beego.AppConfig.Set("mongo_pass", mongo_pass)

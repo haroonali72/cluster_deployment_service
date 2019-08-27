@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"antelope/models"
 	"antelope/models/aws"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -97,7 +98,7 @@ func (c *AWSTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AWS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -185,7 +186,7 @@ func (c *AWSTemplateController) Post() {
 	if team != "" {
 		teams = strings.Split(team, ";")
 	}
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, models.AWS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)

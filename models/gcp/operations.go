@@ -32,7 +32,7 @@ type GCP struct {
 }
 
 func getNetworkHost(cloudType string) string {
-	host := beego.AppConfig.String("network_url")
+	host := "http://" + beego.AppConfig.String("network_url") + "/weasel/network/{cloud_provider}"
 	if strings.Contains(host, "{cloud_provider}") {
 		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
 	}
