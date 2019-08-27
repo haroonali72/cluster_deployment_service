@@ -61,6 +61,6 @@ func TransformData(data interface{}) ([]byte, error) {
 }
 func getLoggerHost() string {
 
-	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/frontend/logging/"
+	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/frontend/logging/"
 	//return "https://dapis.cloudplex.cf/elephant/api/v1/frontend/logging/"
 }

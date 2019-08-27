@@ -96,7 +96,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string
 
 }
 func getVaultHost() string {
-	return beego.AppConfig.String("vault_url")
+	return "http://" + beego.AppConfig.String("vault_url") + "/robin/api/v1"
 }
 func PostSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 
