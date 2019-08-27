@@ -808,6 +808,12 @@ func mountVolume(privateKey, keyName, username, ipAddress string) error {
 		return err
 	}
 
+	err = setFilePermission(sshKeyFileName, 600)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
 	err = copyScriptFile(sshKeyFileName, connectionString+":/home/"+username)
 	if err != nil {
 		beego.Error(err.Error())
@@ -944,6 +950,16 @@ func writeFile(content string, fileName string) error {
 
 	fileContent := []byte(content)
 	_, err = file.Write(fileContent)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func setFilePermission(fileName string, mode int) error {
+	err := os.Chmod(fileName, os.FileMode(mode))
 	if err != nil {
 		beego.Error(err.Error())
 		return err
