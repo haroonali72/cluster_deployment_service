@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"antelope/models"
 	"antelope/models/gcp"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -96,7 +97,7 @@ func (c *GcpTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, utils.Context{})
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -182,7 +183,7 @@ func (c *GcpTemplateController) Post() {
 	if team != "" {
 		teams = strings.Split(team, ";")
 	}
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, utils.Context{})
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, models.GCP, utils.Context{})
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

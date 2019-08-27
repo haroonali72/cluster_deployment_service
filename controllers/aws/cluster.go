@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"antelope/models"
 	"antelope/models/aws"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -104,7 +105,7 @@ func (c *AWSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
 
 	if err != nil {
 		beego.Error(err.Error())

@@ -1,6 +1,7 @@
 package rbac_athentication
 
 import (
+	"antelope/models"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
@@ -12,11 +13,12 @@ import (
 )
 
 type Input struct {
-	ResourceId  string   `json:"resource_id"`
-	ResouceType string   `json:"resource_type"`
-	Teams       []string `json:"teams"`
-	CompanyId   string   `json:"companyId"`
-	UserName    string   `json:"username"`
+	ResourceId  string       `json:"resource_id"`
+	ResouceType string       `json:"resource_type"`
+	Teams       []string     `json:"teams"`
+	CompanyId   string       `json:"companyId"`
+	UserName    string       `json:"username"`
+	CloudType   models.Cloud `json:"sub_type"`
 }
 type List struct {
 	Data []string `json:"data"`
@@ -25,7 +27,7 @@ type List struct {
 func getRbacHost() string {
 	return beego.AppConfig.String("rbac_url")
 }
-func GetAllAuthenticate(resourceType, companyId string, token string, ctx utils.Context) (error, List) {
+func GetAllAuthenticate(resourceType, companyId string, token string, cloudType models.Cloud, ctx utils.Context) (error, List) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/list")
 	if err != nil {
@@ -35,6 +37,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, ctx utils.
 	q := req.URL.Query()
 	q.Add("companyId", companyId)
 	q.Add("resource_type", resourceType)
+	q.Add("sub_type", string(cloudType))
 
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
@@ -154,7 +157,7 @@ func GetInfo(token string) (types.Response, error) {
 	return res, nil
 }
 
-func CreatePolicy(resourceId, token, userName, companyId string, teams []string, ctx utils.Context) (int, error) {
+func CreatePolicy(resourceId, token, userName, companyId string, teams []string, cloudType models.Cloud, ctx utils.Context) (int, error) {
 
 	var input Input
 	input.UserName = userName
@@ -162,6 +165,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	input.ResouceType = "clusterTemplate"
 	input.ResourceId = resourceId
 	input.Teams = teams
+	input.CloudType = cloudType
 
 	client := utils.InitReq()
 	request_data, err := utils.TransformData(input)
