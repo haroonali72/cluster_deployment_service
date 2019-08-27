@@ -25,7 +25,11 @@ type GcpTemplateController struct {
 // @router /:templateId [get]
 func (c *GcpTemplateController) Get() {
 	id := c.GetString(":templateId")
+
+	ctx := new(utils.Context)
+
 	if id == "" {
+		ctx.SendSDLog("GcpTemplateController: template id is empty", "error")
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "template id is empty"}
 		c.ServeJSON()
@@ -43,8 +47,9 @@ func (c *GcpTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: Get template  id : "+id, "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "View", token, utils.Context{})
@@ -63,8 +68,9 @@ func (c *GcpTemplateController) Get() {
 	}
 
 	//==================================================================================//
-	template, err := gcp.GetTemplate(id)
+	template, err := gcp.GetTemplate(id, *ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
@@ -85,6 +91,8 @@ func (c *GcpTemplateController) GetAll() {
 	beego.Info("GcpTemplateController: GetAll template.")
 	token := c.Ctx.Input.Header("token")
 
+	ctx := new(utils.Context)
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -93,8 +101,9 @@ func (c *GcpTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: GetAll template.", "info")
 
 	//==========================RBAC Authentication==============================//
 	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
@@ -107,8 +116,9 @@ func (c *GcpTemplateController) GetAll() {
 	}
 
 	//==================================================================================
-	templates, err := gcp.GetTemplates(utils.Context{}, data)
+	templates, err := gcp.GetTemplates(*ctx, data)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController: internal server error "+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -136,6 +146,8 @@ func (c *GcpTemplateController) Post() {
 	beego.Info("GcpTemplateController: JSON Payload: ", template)
 	token := c.Ctx.Input.Header("token")
 
+	ctx := new(utils.Context)
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -144,8 +156,9 @@ func (c *GcpTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: Posting  new template .", "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
@@ -163,8 +176,9 @@ func (c *GcpTemplateController) Post() {
 		return
 	}
 
-	err, id := gcp.CreateTemplate(template)
+	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
@@ -183,7 +197,7 @@ func (c *GcpTemplateController) Post() {
 	if team != "" {
 		teams = strings.Split(team, ";")
 	}
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, models.GCP, utils.Context{})
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, models.GCP, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -216,6 +230,8 @@ func (c *GcpTemplateController) Patch() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 	token := c.Ctx.Input.Header("token")
 
+	ctx := new(utils.Context)
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -224,8 +240,9 @@ func (c *GcpTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: Patch template with templateId "+template.TemplateId, "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
@@ -247,8 +264,9 @@ func (c *GcpTemplateController) Patch() {
 	beego.Info("GcpTemplateController: Patch template with id: ", template.TemplateId)
 	beego.Info("GcpTemplateController: JSON Payload: ", template)
 
-	err = gcp.UpdateTemplate(template)
+	err = gcp.UpdateTemplate(template, *ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no template exists with this id"}
@@ -278,7 +296,10 @@ func (c *GcpTemplateController) Delete() {
 
 	beego.Info("GcpTemplateController: Delete template with id: ", id)
 
+	ctx := new(utils.Context)
+
 	if id == "" {
+		ctx.SendSDLog("GcpTemplateController: templateId is empty", "error")
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
@@ -294,8 +315,9 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendSDLog("GcpTemplateController: deleting template with templateId "+id, "info")
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "Delete", token, utils.Context{})
@@ -315,8 +337,9 @@ func (c *GcpTemplateController) Delete() {
 
 	//==================================================================================
 
-	err = gcp.DeleteTemplate(id)
+	err = gcp.DeleteTemplate(id, *ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()

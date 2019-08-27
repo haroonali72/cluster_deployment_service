@@ -37,10 +37,11 @@ type NodePoolT struct {
 	KeyInfo     utils.Key     `json:"key_info" bson:"key_info"`
 }
 
-func CreateTemplate(template Template) (error, string) {
-	_, err := GetTemplate(template.TemplateId)
+func CreateTemplate(template Template, ctx utils.Context) (error, string) {
+	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
+		ctx.SendSDLog("gcpTemplateModel :"+text+err.Error(), "error")
 		beego.Error(text, err)
 		return errors.New(text), ""
 	}
@@ -59,9 +60,10 @@ func CreateTemplate(template Template) (error, string) {
 	return nil, template.TemplateId
 }
 
-func GetTemplate(templateName string) (template Template, err error) {
+func GetTemplate(templateName string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
+		ctx.SendSDLog("GcpTemplateModel :"+err1.Error(), "error")
 		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
 		return Template{}, err1
 	}
@@ -70,6 +72,7 @@ func GetTemplate(templateName string) (template Template, err error) {
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpTemplateCollection)
 	err = c.Find(bson.M{"name": templateName}).One(&template)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateModel :"+err.Error(), "error")
 		beego.Error(err.Error())
 		return Template{}, err
 	}
@@ -97,12 +100,14 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 
 	return templates, nil
 }
-func GetAllTemplate() (templates []Template, err error) {
+func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
+		ctx.SendSDLog("GcpTemplateModel : error connecting to database "+err1.Error(), "error")
 		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
 		return nil, err1
 	}
+
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpTemplateCollection)
@@ -115,16 +120,18 @@ func GetAllTemplate() (templates []Template, err error) {
 	return templates, nil
 }
 
-func UpdateTemplate(template Template) error {
-	oldTemplate, err := GetTemplate(template.TemplateId)
+func UpdateTemplate(template Template, ctx utils.Context) error {
+	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
+		ctx.SendSDLog("GcpTemplateModel "+text+err.Error(), "error")
 		beego.Error(text, err)
 		return errors.New(text)
 	}
 
-	err = DeleteTemplate(template.TemplateId)
+	err = DeleteTemplate(template.TemplateId, ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateModel :"+err.Error(), "error")
 		beego.Error("Template model: Update - Got error deleting template: ", err)
 		return err
 	}
@@ -132,8 +139,9 @@ func UpdateTemplate(template Template) error {
 	template.CreationDate = oldTemplate.CreationDate
 	template.ModificationDate = time.Now()
 
-	err, _ = CreateTemplate(template)
+	err, _ = CreateTemplate(template, ctx)
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateModel :"+err.Error(), "error")
 		beego.Error("Template model: Update - Got error creating template: ", err)
 		return err
 	}
@@ -141,12 +149,14 @@ func UpdateTemplate(template Template) error {
 	return nil
 }
 
-func DeleteTemplate(templateName string) error {
+func DeleteTemplate(templateName string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
+		ctx.SendSDLog("GcpTemplateModel : erro with connecting database "+err.Error(), "error")
 		beego.Error("Template model: Delete - Got error while connecting to the database: ", err)
 		return err
 	}
+
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpTemplateCollection)
