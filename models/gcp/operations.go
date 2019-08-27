@@ -160,10 +160,6 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 			},
 		}
 
-		if !pool.Volume.IsBlank {
-			secondaryDisk.InitializeParams.SourceImage = "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family
-		}
-
 		instance.Disks = append(instance.Disks, &secondaryDisk)
 	}
 
@@ -350,10 +346,6 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 				DiskSizeGb: pool.Volume.Size,
 				DiskType:   string(pool.Volume.DiskType),
 			},
-		}
-
-		if !pool.Volume.IsBlank {
-			secondaryDisk.InitializeParams.SourceImage = "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family
 		}
 
 		instanceProperties.Disks = append(instanceProperties.Disks, &secondaryDisk)
