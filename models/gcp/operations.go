@@ -187,10 +187,12 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 
 	pool.Nodes = []*Node{&newNode}
 
-	err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
+	if pool.EnableVolume {
+		err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+		if err != nil {
+			beego.Error(err.Error())
+			return err
+		}
 	}
 
 	return nil
@@ -265,10 +267,12 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 
 		pool.Nodes = append(pool.Nodes, &newNode)
 
-		err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
-		if err != nil {
-			beego.Error(err.Error())
-			return err
+		if pool.EnableVolume {
+			err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+			if err != nil {
+				beego.Error(err.Error())
+				return err
+			}
 		}
 	}
 
@@ -799,7 +803,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string) (string, error) {
 func mountVolume(privateKey, keyName, username, ipAddress string) error {
 	t := time.Now().Local()
 	tstamp := t.Format("20060102150405")
-	sshKeyFileName := keyName + "_" + tstamp + ".pem"
+	sshKeyFileName := "/app/keys/" + keyName + "_" + tstamp + ".pem"
 	connectionString := username + "@" + ipAddress
 
 	err := writeFile(privateKey, sshKeyFileName)
@@ -808,7 +812,7 @@ func mountVolume(privateKey, keyName, username, ipAddress string) error {
 		return err
 	}
 
-	err = setFilePermission(sshKeyFileName, 600)
+	err = setFilePermission(sshKeyFileName)
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -851,7 +855,7 @@ func copyScriptFile(sshKeyFileName, connectionString string) error {
 		"StrictHostKeyChecking=no",
 		"-i",
 		sshKeyFileName,
-		"scripts/gcp-volume-mount.sh",
+		"/app/scripts/gcp-volume-mount.sh",
 		connectionString,
 	}
 
@@ -958,13 +962,17 @@ func writeFile(content string, fileName string) error {
 	return nil
 }
 
-func setFilePermission(fileName string, mode int) error {
-	err := os.Chmod(fileName, os.FileMode(mode))
+func setFilePermission(fileName string) error {
+	args := []string{"600", fileName}
+	cmd := exec.Command("chmod", args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
 	if err != nil {
 		beego.Error(err.Error())
 		return err
 	}
-
 	return nil
 }
 
