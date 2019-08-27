@@ -89,24 +89,24 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 	return cluster, nil
 }
 
-func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token string, ctx1 utils.Context) error {
+func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx1.SendSDLog(err.Error(), "error")
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx1)
+	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
 	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 
-	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx1)
+	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx)
 	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		beego.Warn("cannot reserve any external ip for: " + pool.Name)
 		beego.Warn("creating instance '" + pool.Name + "' without external ip")
 	}
@@ -175,55 +175,57 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		instance.Disks = append(instance.Disks, &secondaryDisk)
 	}
 
-	ctx := context.Background()
-	result, err := cloud.Client.Instances.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instance).Context(ctx).Do()
-	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+	ctx1 := context.Background()
+	result, err := cloud.Client.Instances.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instance).Context(ctx1).Do()
+	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
+		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
 		return err
 	}
 
-	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx1)
+	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
 	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 
-	newNode, err := cloud.fetchNodeInfo(instance.Name, ctx1)
+	newNode, err := cloud.fetchNodeInfo(instance.Name, ctx)
 	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
 		return err
 	}
 
 	pool.Nodes = []*Node{&newNode}
 
-	err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
-	if err != nil {
-		beego.Error(err.Error())
-		return err
+	if pool.EnableVolume {
+		err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+		if err != nil {
+			beego.Error(err.Error())
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token string, ctx1 utils.Context) error {
+func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx1.SendSDLog(err.Error(), "error")
+			ctx.SendSDLog(err.Error(), "error")
 			return err
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx1)
+	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
 	if err != nil {
 		return err
 	}
 
-	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, token, ctx1)
+	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, token, ctx)
 	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 
@@ -234,17 +236,17 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		InstanceTemplate: instanceTemplateUrl,
 	}
 
-	ctx := context.Background()
-	result, err := cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instanceGroup).Context(ctx).Do()
+	ctx1 := context.Background()
+	result, err := cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instanceGroup).Context(ctx1).Do()
 	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		beego.Error(err.Error())
 		return err
 	}
 
-	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx1)
+	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
 	if err != nil {
-		ctx1.SendSDLog(err.Error(), "error")
+		ctx.SendSDLog(err.Error(), "error")
 		return err
 	}
 
@@ -252,9 +254,9 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 	allNodesDeployed := false
 	for !allNodesDeployed {
 		time.Sleep(5 * time.Second)
-		createdNodes, err = cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, instanceGroup.Name).Context(ctx).Do()
+		createdNodes, err = cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, instanceGroup.Name).Context(ctx1).Do()
 		if err != nil {
-			ctx1.SendSDLog(err.Error(), "error")
+			ctx.SendSDLog(err.Error(), "error")
 			beego.Error(err.Error())
 			return err
 		}
@@ -273,19 +275,21 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		splits := strings.Split(node.Instance, "/")
 		nodeName := splits[len(splits)-1]
 
-		newNode, err := cloud.fetchNodeInfo(nodeName, ctx1)
+		newNode, err := cloud.fetchNodeInfo(nodeName, ctx)
 		if err != nil {
-			ctx1.SendSDLog(err.Error(), "error")
+			ctx.SendSDLog(err.Error(), "error")
 			beego.Error(err.Error())
 			return err
 		}
 
 		pool.Nodes = append(pool.Nodes, &newNode)
 
-		err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
-		if err != nil {
-			beego.Error(err.Error())
-			return err
+		if pool.EnableVolume {
+			err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+			if err != nil {
+				beego.Error(err.Error())
+				return err
+			}
 		}
 	}
 
@@ -365,10 +369,6 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 				DiskSizeGb: pool.Volume.Size,
 				DiskType:   string(pool.Volume.DiskType),
 			},
-		}
-
-		if !pool.Volume.IsBlank {
-			secondaryDisk.InitializeParams.SourceImage = "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family
 		}
 
 		instanceProperties.Disks = append(instanceProperties.Disks, &secondaryDisk)
@@ -478,7 +478,7 @@ func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) error {
 			return err
 		}
 
-		err = cloud.releaseExternalIp(pool.Name)
+		err = cloud.releaseExternalIp(pool.Name, ctx)
 		if err != nil {
 			return err
 		}
@@ -629,7 +629,7 @@ func (cloud *GCP) reserveExternalIp(nodeName string, ctx utils.Context) (string,
 	return externalIp, nil
 }
 
-func (cloud *GCP) releaseExternalIp(nodeName string) error {
+func (cloud *GCP) releaseExternalIp(nodeName string, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -638,14 +638,14 @@ func (cloud *GCP) releaseExternalIp(nodeName string) error {
 	}
 
 	addressName := "ip-" + strings.ToLower(nodeName) + "z"
-	ctx := context.Background()
-	result, err := cloud.Client.Addresses.Delete(cloud.ProjectId, cloud.Region, addressName).Context(ctx).Do()
+	ctx1 := context.Background()
+	result, err := cloud.Client.Addresses.Delete(cloud.ProjectId, cloud.Region, addressName).Context(ctx1).Do()
 	if err != nil {
 		beego.Error(err.Error())
 		return err
 	}
 
-	err = cloud.waitForRegionalCompletion(result, cloud.Region, utils.Context{})
+	err = cloud.waitForRegionalCompletion(result, cloud.Region, ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -751,15 +751,15 @@ func (cloud *GCP) init() error {
 	}
 
 	var err error
-	ctx1 := context.Background()
+	ctx := context.Background()
 
-	cloud.Client, err = compute.NewService(ctx1, option.WithCredentialsJSON([]byte(cloud.Credentials)))
+	cloud.Client, err = compute.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
 	if err != nil {
 		beego.Error(err.Error())
 		return err
 	}
 
-	cloud.Iam, err = iam.NewService(ctx1, option.WithCredentialsJSON([]byte(cloud.Credentials)))
+	cloud.Iam, err = iam.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -842,10 +842,16 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (st
 func mountVolume(privateKey, keyName, username, ipAddress string) error {
 	t := time.Now().Local()
 	tstamp := t.Format("20060102150405")
-	sshKeyFileName := keyName + "_" + tstamp + ".pem"
+	sshKeyFileName := "/app/keys/" + keyName + "_" + tstamp + ".pem"
 	connectionString := username + "@" + ipAddress
 
 	err := writeFile(privateKey, sshKeyFileName)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	err = setFilePermission(sshKeyFileName)
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -888,7 +894,7 @@ func copyScriptFile(sshKeyFileName, connectionString string) error {
 		"StrictHostKeyChecking=no",
 		"-i",
 		sshKeyFileName,
-		"scripts/gcp-volume-mount.sh",
+		"/app/scripts/gcp-volume-mount.sh",
 		connectionString,
 	}
 
@@ -992,6 +998,20 @@ func writeFile(content string, fileName string) error {
 		return err
 	}
 
+	return nil
+}
+
+func setFilePermission(fileName string) error {
+	args := []string{"600", fileName}
+	cmd := exec.Command("chmod", args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
 	return nil
 }
 
