@@ -169,7 +169,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 
 	ctx := context.Background()
 	result, err := cloud.Client.Instances.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instance).Context(ctx).Do()
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
 		beego.Error(err.Error())
 		return err
 	}
