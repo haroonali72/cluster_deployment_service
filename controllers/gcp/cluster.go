@@ -101,7 +101,7 @@ func (c *GcpClusterController) GetAll() {
 	ctx.SendSDLog("GcpClusterController: getting all clusters ", "info")
 
 	//==========================RBAC Authentication==============================//
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, utils.Context{})
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

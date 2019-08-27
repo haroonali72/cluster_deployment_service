@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/google/uuid"
 	"runtime"
@@ -38,7 +37,7 @@ type Context struct {
 func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 
 	_, file, line, _ := runtime.Caller(1)
-	c.data.Severity = message_type //this is other type of data instead of cluster
+	c.data.Severity = message_type
 	c.data.Message = file + ":" + strconv.Itoa(line) + " " + msg
 
 	if message_type == "error" {
@@ -62,7 +61,6 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 	}
 
 	req, err := CreatePostRequest(request_data, getHost())
-	fmt.Println("this is host for sending logs", getHost())
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -92,5 +90,5 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 
 func getHost() string {
 	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
-	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/backend/logging"
+	return beego.AppConfig.String("logger_url") + "/elephant/api/v1/backend/logging"
 }

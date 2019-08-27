@@ -149,7 +149,7 @@ func InitFlags() error {
 		return err
 	}
 
-	mongo = mongo + ":27017"
+	mongo = mongo
 	redis_url = redis_url + ":6379"
 	network_url = "http://" + network_url + ":9080/weasel/network/{cloud_provider}"
 	vault_url = "http://" + vault_url + ":8092/robin/api/v1"

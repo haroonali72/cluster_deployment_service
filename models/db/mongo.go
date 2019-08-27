@@ -9,7 +9,7 @@ import (
 )
 
 func GetMongoSession() (session *mgo.Session, err error) {
-	conf := GetMongoConf() //no need here
+	conf := GetMongoConf()
 	beego.Info("connecting to mongo host: " + conf.mongoHost)
 
 	if !conf.mongoAuth {

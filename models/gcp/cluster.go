@@ -168,7 +168,7 @@ func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Cont
 
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, ctx)
-	if err == nil { //cluster found
+	if err == nil {
 		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
 		ctx.SendSDLog("GcpClusterModel: "+text+err.Error(), "error")
 
@@ -373,13 +373,12 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendSDLog("gcpClusterModel :"+confError.Error(), "error")
 		//PrintError(confError, cluster.Name, cluster.ProjectId)
-		publisher.Notify(cluster.ProjectId, "Status Available", utils.Context{})
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
-	//utils.SendLog("Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", utils.Context{})
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil
 }
@@ -463,7 +462,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	if cluster.Status == "" || cluster.Status == "new" {
 		ctx.SendSDLog("GcpClusterModel :"+err.Error(), "error")
 		beego.Error("Cluster model: Cannot terminate a new cluster")
-		publisher.Notify(cluster.ProjectId, "Status Available", utils.Context{})
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
