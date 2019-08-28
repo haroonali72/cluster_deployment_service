@@ -74,7 +74,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string
 	//if response.StatusCode == 500 || response.StatusCode == 404 {
 	//	return awsKey{}, errors.New("not found")
 	//}
-	if response.StatusCode == 400 || response.StatusCode == 403 {
+	if response.StatusCode == 404 || response.StatusCode == 403 {
 
 		return awsKey{}, errors.New("not found")
 	}
@@ -253,7 +253,7 @@ func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Co
 	var key azureKey
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 500 {
+	if response.StatusCode == 403 || response.StatusCode == 404 {
 		return azureKey{}, errors.New("not found")
 	}
 	if response.StatusCode != 200 {
