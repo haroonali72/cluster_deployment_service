@@ -112,7 +112,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}}).All(&templates)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 
