@@ -13,29 +13,25 @@ func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 	req.Header.Add("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 
 	if response.StatusCode == 404 {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs("no network exists for this project id", models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs("no network exists for this project id", models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, errors.New("no network exists for this project id")
 	}
 	defer response.Body.Close()
 	//	var network AzureNetwork
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 	return contents, nil

@@ -29,7 +29,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	}
 	b, err := json.Marshal(msg)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error(err.Error())
 		return
 	}
@@ -40,8 +40,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	//	beego.Error(err.Error())
 	//	return
 	//}
-	logType := []string{"backend-logging"}
-	ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Log)
 	if cmd != nil {
 		if cmd.Err() != nil {
 			beego.Error(cmd.Err().Error())

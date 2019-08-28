@@ -140,16 +140,16 @@ func (cloud *AWSIAMRoles) CreatePolicy(name string, policyDef []byte, ctx utils.
 	})
 
 	if err_1 != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err_1.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err_1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return "", err_1
 	}
 	attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
 	_, err_2 := cloud.IAMService.AttachRolePolicy(&attach)
 
 	if err_2 != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err_2.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err_2.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 
 		return "", err_2
 	}
@@ -164,15 +164,15 @@ func (cloud *AWSIAMRoles) CreateIAMProfile(name string, ctx utils.Context) (stri
 	profileInput := iam.CreateInstanceProfileInput{InstanceProfileName: &roleName}
 	outtt, err := cloud.IAMService.CreateInstanceProfile(&profileInput)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return "", err
 	}
 	testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
 	_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return "", err
 	}
 
@@ -246,8 +246,8 @@ func (cloud *AWSIAMRoles) DeletePolicy(policyName string, ctx utils.Context) err
 	policy_out, err_1 := cloud.IAMService.DeletePolicy(&policy_input)
 
 	if err_1 != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err_1.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err_1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err_1
 	}
 
@@ -266,16 +266,16 @@ func (cloud *AWSIAMRoles) GetPolicyARN(policyName string) (error, string) {
 func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	err, policyArn := cloud.GetPolicyARN(roleName)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 
 		return err
 	}
 	policy := iam.DetachRolePolicyInput{RoleName: &roleName, PolicyArn: &policyArn}
 	out, err := cloud.IAMService.DetachRolePolicy(&policy)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 
@@ -284,8 +284,8 @@ func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	roleInput := iam.DeleteRoleInput{RoleName: &roleName}
 	out_, err := cloud.IAMService.DeleteRole(&roleInput)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 
@@ -296,8 +296,8 @@ func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx utils.Context) e
 	profile := iam.RemoveRoleFromInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
 	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	beego.Info(outtt.GoString())
@@ -305,8 +305,8 @@ func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx utils.Context) e
 	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
 	outt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	beego.Info(outt.GoString())

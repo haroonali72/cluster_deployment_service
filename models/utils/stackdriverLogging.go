@@ -59,15 +59,13 @@ type AuditTrailRequest struct {
 }
 */
 
-func (c *Context) SendLogs(message, severity string, logType []string) {
-	for i := 0; i < len(logType); i++ {
-		switch models.Logger(logType[i]) {
-		case models.Backend_Logging:
-			c.SendSDLog(message, severity)
-		case models.Audit_Trails:
-			c.SendAuditTrails(message, severity)
+func (c *Context) SendLogs(message, severity string, logType string) {
+	switch models.Logger(logType) {
+	case models.Backend_Logging:
+		c.SendSDLog(message, severity)
+	case models.Audit_Trails:
+		c.SendAuditTrails(message, severity)
 
-		}
 	}
 }
 

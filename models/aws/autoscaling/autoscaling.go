@@ -103,8 +103,7 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imag
 	_, config_err := cloud.AutoScaling.CreateLaunchConfiguration(&config_input)
 
 	if config_err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return config_err, m
 	}
 	m[projectId+"_scale_launchConfig"] = projectId
@@ -127,8 +126,7 @@ func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId strin
 	beego.Info("after sleep")
 	err, m := cloud.ConfigLauncher(name, nodeIp, imageId, ctx)
 	if err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err, m
 	}
 	min := int64(0)
@@ -160,8 +158,7 @@ func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId strin
 	_, config_err := cloud.AutoScaling.CreateAutoScalingGroup(&config_input)
 
 	if config_err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return config_err, m
 	}
 	m[name+"_scale_autoScaler"] = name
@@ -190,8 +187,7 @@ func (cloud *AWSAutoScaler) GetAutoScaler(projectId string, name string, ctx uti
 	out, config_err := cloud.AutoScaling.DescribeAutoScalingGroups(&config_input)
 
 	if config_err != nil {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return config_err, nil
 	}
 	if out != nil && out.AutoScalingGroups != nil && out.AutoScalingGroups[0].Instances != nil {
