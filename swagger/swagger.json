@@ -568,6 +568,14 @@
                 ],
                 "description": "returns ssh key pairs",
                 "operationId": "AzureClusterController.SSHKeyPair",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -899,6 +907,12 @@
                 "parameters": [
                     {
                         "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
                         "name": "X-Profile-Id",
                         "description": "vault credentials profile id",
                         "required": true,
@@ -934,6 +948,14 @@
                 ],
                 "description": "returns ssh key pairs",
                 "operationId": "GcpClusterController.SSHKeyPair",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -1225,6 +1247,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -1408,6 +1436,12 @@
                         "name": "token",
                         "description": "token",
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1430,6 +1464,14 @@
                 ],
                 "description": "get all the templates",
                 "operationId": "AzureTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -1574,6 +1616,12 @@
                         "name": "token",
                         "description": "token",
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1697,7 +1745,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc042a91500.false": {
+        "484.0xc042acd1d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -1747,7 +1795,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc042a91500.false"
+                    "$ref": "#/definitions/484.0xc042acd1d0.false"
                 },
                 "name": {
                     "type": "string"

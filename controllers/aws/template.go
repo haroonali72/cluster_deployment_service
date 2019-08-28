@@ -2,6 +2,7 @@ package aws
 
 import (
 	"antelope/constants"
+	"antelope/models"
 	"antelope/models/aws"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -39,7 +40,7 @@ func (c *AWSTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(templateId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("clusterTemplate", templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -98,7 +99,7 @@ func (c *AWSTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	err, data := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AWS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -126,6 +127,7 @@ func (c *AWSTemplateController) GetAll() {
 // @Title Create
 // @Description create a new template
 // @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
@@ -187,7 +189,7 @@ func (c *AWSTemplateController) Post() {
 	if team != "" {
 		teams = strings.Split(team, ";")
 	}
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, models.AWS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -231,7 +233,7 @@ func (c *AWSTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(template.TemplateId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -293,7 +295,7 @@ func (c *AWSTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(templateId, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("clusterTemplate", templateId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

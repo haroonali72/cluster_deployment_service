@@ -5,6 +5,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -100,7 +101,7 @@ type Data struct {
 }
 
 func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
-	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
+	url := "http://" + beego.AppConfig.String("raccoon_url") + "/raccoon/projects/" + projectId
 
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -131,15 +132,22 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 
 	var network types.AzureNetwork
 	err = json.Unmarshal(data.([]byte), &network)
-	beego.Info(string(data.([]byte)))
-	beego.Info(network)
-	beego.Info(network.Definition[0].ResourceGroup + " " + resourceGroup)
-	if network.Definition[0].ResourceGroup != resourceGroup {
-		logType := []string{"backend-logging"}
-		ctx.SendLogs("Resource group is incorrect", constants.LOGGING_LEVEL_ERROR, logType)
-		return errors.New("Resource Group is in correct")
+	if err != nil {
+		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		return err
 	}
-
+	//beego.Info(string(data.([]byte)))
+	//beego.Info(network)
+	//beego.Info(network.Definition[0].ResourceGroup + " " + resourceGroup)
+	if network.Definition != nil {
+		if network.Definition[0].ResourceGroup != resourceGroup {
+			logType := []string{"backend-logging"}
+			ctx.SendLogs("Resource group is incorrect", constants.LOGGING_LEVEL_ERROR, logType)
+			return errors.New("Resource Group is in correct")
+		}
+	} else {
+		return errors.New("Network not found")
+	}
 	return nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
@@ -227,7 +235,11 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 	return cluster, nil
 }
 
-func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []Cluster_Def, err error) {
+	var copyData []string
+	for _, d := range list.Data {
+		copyData = append(copyData, d)
+	}
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		logType := []string{"backend-logging"}
@@ -237,7 +249,7 @@ func GetAllCluster(ctx utils.Context) (clusters []Cluster_Def, err error) {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
 	if err != nil {
 
 		logType := []string{"backend-logging"}
@@ -368,7 +380,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	return nil
 }
-func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, token, projectId string, ctx utils.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
@@ -389,7 +401,7 @@ func FetchStatus(credentials vault.AzureProfile, projectId string, ctx utils.Con
 		return Cluster_Def{}, err
 	}
 
-	c, e := azure.fetchStatus(cluster, ctx)
+	c, e := azure.fetchStatus(cluster, token, ctx)
 	if e != nil {
 		logType := []string{"backend-logging"}
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), constants.LOGGING_LEVEL_ERROR, logType)

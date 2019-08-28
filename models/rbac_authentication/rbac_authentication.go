@@ -2,21 +2,24 @@ package rbac_athentication
 
 import (
 	"antelope/constants"
+	"antelope/models"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/astaxie/beego"
 )
 
 type Input struct {
-	ResourceId  string   `json:"resource_id"`
-	ResouceType string   `json:"resource_type"`
-	Teams       []string `json:"teams"`
-	CompanyId   string   `json:"companyId"`
-	UserName    string   `json:"username"`
+	ResourceId  string       `json:"resource_id"`
+	ResouceType string       `json:"resource_type"`
+	Teams       []string     `json:"teams"`
+	CompanyId   string       `json:"companyId"`
+	UserName    string       `json:"username"`
+	CloudType   models.Cloud `json:"sub_type"`
 }
 type List struct {
 	Data []string `json:"data"`
@@ -25,7 +28,7 @@ type List struct {
 func getRbacHost() string {
 	return beego.AppConfig.String("rbac_url")
 }
-func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (error, List) {
+func GetAllAuthenticate(resourceType, companyId string, token string, cloudType models.Cloud, ctx utils.Context) (error, List) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/list")
 	if err != nil {
@@ -35,7 +38,8 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (erro
 	}
 	q := req.URL.Query()
 	q.Add("companyId", companyId)
-	q.Add("resource_type", "cluster")
+	q.Add("resource_type", resourceType)
+	q.Add("sub_type", string(cloudType))
 
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
@@ -68,7 +72,7 @@ func GetAllAuthenticate(companyId string, token string, ctx utils.Context) (erro
 
 	return nil, data
 }
-func Authenticate(resourceId string, action string, token string, ctx utils.Context) (bool, error) {
+func Authenticate(resourceType, resourceId string, action string, token string, ctx utils.Context) (bool, error) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/allowed/")
 	if err != nil {
@@ -79,7 +83,7 @@ func Authenticate(resourceId string, action string, token string, ctx utils.Cont
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
-	q.Add("resource_type", "cluster")
+	q.Add("resource_type", resourceType)
 	q.Add("action", action)
 
 	req.Header.Set("token", token)
@@ -111,7 +115,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 		return false, err
 	}
 	q := req.URL.Query()
-	q.Add("resource", "cluster")
+	q.Add("resource", "clusterTemplate")
 	q.Add("action", action)
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
@@ -149,7 +153,7 @@ func GetInfo(token string) (types.Response, error) {
 	defer response.Body.Close()
 	beego.Info(response.StatusCode)
 	if response.StatusCode != 200 {
-		return types.Response{}, nil
+		return types.Response{}, errors.New("RBAC: Unauthorized , " + strconv.Itoa(response.StatusCode))
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -164,18 +168,15 @@ func GetInfo(token string) (types.Response, error) {
 	return res, nil
 }
 
-func CreatePolicy(resourceId, token, userName, companyId string, teams []string, ctx utils.Context) (int, error) {
-	beego.Info("hello")
-	beego.Info(resourceId)
-	beego.Info(token)
-	beego.Info(companyId)
-	beego.Info(userName)
+func CreatePolicy(resourceId, token, userName, companyId string, teams []string, cloudType models.Cloud, ctx utils.Context) (int, error) {
+
 	var input Input
 	input.UserName = userName
 	input.CompanyId = companyId
-	input.ResouceType = "cluster"
+	input.ResouceType = "clusterTemplate"
 	input.ResourceId = resourceId
 	input.Teams = teams
+	input.CloudType = cloudType
 
 	client := utils.InitReq()
 	request_data, err := utils.TransformData(input)
@@ -202,19 +203,9 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 		return 400, err
 	}
 	beego.Info(response.StatusCode)
-	var r s
-	contents, err := ioutil.ReadAll(response.Body)
-	err = json.Unmarshal(contents, &r)
-	if err != nil {
-		beego.Info(err.Error())
-	}
-	beego.Error(r.Msg)
+
 	return response.StatusCode, err
 
-}
-
-type s struct {
-	Msg string `json:"msg"`
 }
 
 func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, error) {
@@ -229,7 +220,7 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
-	q.Add("resouce_type", "cluster")
+	q.Add("resouce_type", "clusterTemplate")
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 

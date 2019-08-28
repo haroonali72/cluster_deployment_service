@@ -37,7 +37,7 @@ type GCPDiskType string
 
 const (
 	PdStandard GCPDiskType = "pd-standard"
-	PdSSD GCPDiskType = "pd-ssd"
+	PdSSD      GCPDiskType = "pd-ssd"
 )
 
 type CredentialsType string

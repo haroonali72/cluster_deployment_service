@@ -2,6 +2,7 @@ package azure
 
 import (
 	"antelope/constants"
+	"antelope/models"
 	"antelope/models/azure"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -42,7 +43,7 @@ func (c *AzureClusterController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -101,7 +102,7 @@ func (c *AzureClusterController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	err, _ = rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.Azure, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -109,7 +110,7 @@ func (c *AzureClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	clusters, err := azure.GetAllCluster(*ctx)
+	clusters, err := azure.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -148,7 +149,7 @@ func (c *AzureClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(cluster.ProjectId, "Create", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -227,7 +228,7 @@ func (c *AzureClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(cluster.ProjectId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -287,7 +288,7 @@ func (c *AzureClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(id, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -358,7 +359,7 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "Start", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -449,7 +450,7 @@ func (c *AzureClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -485,7 +486,7 @@ func (c *AzureClusterController) GetStatus() {
 	logType := []string{"backend-logging"}
 	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, constants.LOGGING_LEVEL_INFO, logType)
 
-	cluster, err := azure.FetchStatus(azureProfile, projectId, *ctx)
+	cluster, err := azure.FetchStatus(azureProfile, token, projectId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -525,7 +526,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "Terminate", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -582,6 +583,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
+// @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /sshkeys [get]

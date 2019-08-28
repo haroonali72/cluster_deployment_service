@@ -100,7 +100,7 @@ func (cloud *AZURE) init() error {
 	return nil
 }
 func getNetworkHost(cloudType string) string {
-	host := beego.AppConfig.String("network_url")
+	host := "http://" + beego.AppConfig.String("network_url") + "/weasel/network/{cloud_provider}"
 	if strings.Contains(host, "{cloud_provider}") {
 		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
 	}
@@ -284,7 +284,7 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	return ""
 }
 
-func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster_Def, error) {
+func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Context) (Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
@@ -297,7 +297,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, ctx utils.Context) (Cluster
 	for in, pool := range cluster.NodePools {
 		var keyInfo utils.Key
 		if pool.KeyInfo.CredentialType == models.SSHKey {
-			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 			if err != nil {
 
 				logType := []string{"backend-logging"}
@@ -765,7 +765,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 
 		if err != nil && err.Error() != "not found" {
 			logType := []string{"backend-logging"}
@@ -828,7 +828,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			logType := []string{"backend-logging"}
 			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
@@ -1410,7 +1410,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	// public := ""
 
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 
 		if err != nil && err.Error() != "not found" {
 			logType := []string{"backend-logging"}
@@ -1472,7 +1472,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			logType := []string{"backend-logging"}
 			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)

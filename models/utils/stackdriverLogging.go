@@ -98,6 +98,7 @@ func (c *Context) Log(msg, message_type string) (int, error) {
 	} else {
 		beego.Info(c.data.Message)
 	}
+
 	logger := InitReq()
 
 	request_data, err := TransformData(c.data)
@@ -120,6 +121,7 @@ func (c *Context) Log(msg, message_type string) (int, error) {
 	return response.StatusCode, err
 
 }
+
 func (c *Context) InitializeLogger(requestURL, method, path string, projectId string, companyId string, userId string) {
 
 	c.data.ServiceName = "antelope"
@@ -135,5 +137,5 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 
 func getHost() string {
 	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
-	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/backend/logging"
+	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/backend/logging"
 }

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"antelope/constants"
+	"antelope/models"
 	"antelope/models/aws"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -44,7 +45,7 @@ func (c *AWSClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(projectId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -105,17 +106,12 @@ func (c *AWSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
+
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
@@ -125,7 +121,7 @@ func (c *AWSClusterController) GetAll() {
 	logType := []string{"backend-logging"}
 	ctx.SendLogs("AWSClusterController: GetAll clusters.", constants.LOGGING_LEVEL_INFO, logType)
 
-	clusters, err := aws.GetAllCluster(*ctx)
+	clusters, err := aws.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -167,7 +163,7 @@ func (c *AWSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(cluster.ProjectId, "Create", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -195,7 +191,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	err = aws.GetNetwork(cluster.ProjectId, *ctx)
+	err = aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -245,7 +241,7 @@ func (c *AWSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(cluster.ProjectId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -308,7 +304,7 @@ func (c *AWSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(id, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -382,7 +378,7 @@ func (c *AWSClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "Start", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -478,7 +474,7 @@ func (c *AWSClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -487,6 +483,7 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 	if !allowed {
+
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -514,6 +511,7 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+	beego.Info("********" + token + "********")
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
@@ -563,7 +561,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "Terminate", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -689,20 +687,14 @@ func (c *AWSClusterController) GetAMI() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
+	//err, _ = rbac_athentication.GetAllAuthenticate("cluster",userInfo.CompanyId, token, *ctx)
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
 
 	//=============================================================================//
 	logType := []string{"backend-logging"}
@@ -763,7 +755,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(projectId, "Start", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -805,7 +797,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	err = aws.EnableScaling(awsProfile, cluster, *ctx)
+	err = aws.EnableScaling(awsProfile, cluster, *ctx, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

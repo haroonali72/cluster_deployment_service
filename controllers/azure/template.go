@@ -2,6 +2,7 @@ package azure
 
 import (
 	"antelope/constants"
+	"antelope/models"
 	"antelope/models/azure"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -41,7 +42,7 @@ func (c *AzureTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(id, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -80,6 +81,7 @@ func (c *AzureTemplateController) Get() {
 
 // @Title Get All
 // @Description get all the templates
+// @Param	token	header	string	token ""
 // @Success 200 {object} []azure.Template
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router /all [get]
@@ -98,7 +100,7 @@ func (c *AzureTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	err, data := rbac_athentication.GetAllAuthenticate(userInfo.CompanyId, token, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.Azure, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -123,6 +125,7 @@ func (c *AzureTemplateController) GetAll() {
 // @Description create a new template
 // @Param	body	body	azure.Template	true	"body for template content"
 // @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "internal server error <error msg>"}
@@ -184,7 +187,7 @@ func (c *AzureTemplateController) Post() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, models.Azure, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -229,7 +232,7 @@ func (c *AzureTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(template.TemplateId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -289,7 +292,7 @@ func (c *AzureTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(id, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

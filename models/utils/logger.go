@@ -30,15 +30,15 @@ func SendLog(companyId, msg, message_type, env_id string) (int, error) {
 	data.Message = msg
 	data.CompanyId = companyId
 
-	logger := InitReq()
+	logger := InitReq() //returns httpclient
 
-	request_data, err := TransformData(data)
+	request_data, err := TransformData(data) //transforms data to json
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
 	}
 
-	req, err := CreatePostRequest(request_data, getLoggerHost())
+	req, err := CreatePostRequest(request_data, getLoggerHost()) // req is generated
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -61,6 +61,6 @@ func TransformData(data interface{}) ([]byte, error) {
 }
 func getLoggerHost() string {
 
-	return "http://" + beego.AppConfig.String("logger_url") + ":3500/elephant/api/v1/frontend/logging/"
+	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/frontend/logging/"
 	//return "https://dapis.cloudplex.cf/elephant/api/v1/frontend/logging/"
 }
