@@ -176,7 +176,7 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" Get AWS Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Get AWS Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 	return cluster, nil
 }
 
@@ -198,7 +198,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
-	ctx.SendLogs(" Get all AWS Cluster ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Get all AWS Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return clusters, nil
 }
@@ -248,7 +248,7 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 		return err
 	}
 
-	ctx.SendLogs(" Aws Cluster of Project Id: "+projectId+"deleted from database ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Aws Cluster of Project Id: "+projectId+"deleted from database ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 	return nil
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
@@ -411,7 +411,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs("Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 	return nil
 }
 func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.Context) Cluster_Def {
@@ -445,8 +445,8 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.C
 					beego.Info("Cluster model: Instances added")
 				}
 			}
-
 			ctx.SendLogs("Pool "+nodepool.Name+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
+
 		}
 
 		ctx.SendLogs("Cluster model: updated nodes in pools", models.LOGGING_LEVEL_INFO, models.Backend_Log)

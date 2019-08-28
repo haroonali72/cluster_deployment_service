@@ -197,7 +197,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		return err
 	}
 
-	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
@@ -218,7 +218,7 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" Get Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Get Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return cluster, nil
 }
@@ -243,7 +243,7 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 		return nil, err
 	}
 
-	ctx.SendLogs(" Get all azure Cluster ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Get all azure Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return clusters, nil
 }
@@ -273,7 +273,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
-	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
@@ -292,7 +292,7 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
-	ctx.SendLogs(" Azure Cluster of Project Id: "+projectId+" deleted ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Azure Cluster of Project Id: "+projectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
@@ -449,7 +449,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-		ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated successfully ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+		ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated successfully ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 		return nil
 	}

@@ -231,7 +231,7 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" Get gcp Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Get gcp Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return cluster, nil
 }
@@ -256,7 +256,7 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 		return nil, err
 	}
 
-	ctx.SendLogs(" Get all GCP Cluster ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" Get all GCP Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return clusters, nil
 }
@@ -312,7 +312,7 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 		beego.Error(err.Error())
 		return err
 	}
-	ctx.SendLogs(" GCP Cluster of Project Id: "+projectId+"deleted from database ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" GCP Cluster of Project Id: "+projectId+"deleted from database ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
@@ -527,7 +527,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_ERROR, models.Audit_Trail)
+	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
