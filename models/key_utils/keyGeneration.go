@@ -1,7 +1,7 @@
 package key_utils
 
 import (
-	"antelope/constants"
+	"antelope/models"
 	"antelope/models/utils"
 	"encoding/json"
 	"io/ioutil"
@@ -14,14 +14,14 @@ func KeyConversion(keyInfo interface{}, ctx utils.Context) (utils.Key, error) {
 	var k utils.Key
 	if e != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, logType)
 
 		return utils.Key{}, e
 	}
 	e = json.Unmarshal(b, &k)
 	if e != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(e.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return utils.Key{}, e
 	}
 	return k, nil
@@ -39,16 +39,16 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (utils.KeyPair
 	args := []string{"-t", "rsa", "-b", "4096", "-C", username, "-f", keyName}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return utils.KeyPairResponse{}, err
 	}
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("Successfully generated sshkeys", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("Successfully generated sshkeys", models.LOGGING_LEVEL_INFO, logType)
 	arr, err1 := ioutil.ReadFile(keyName)
 	str := string(arr)
 	if err1 != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err1.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return utils.KeyPairResponse{}, err1
 	}
 
@@ -59,7 +59,7 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (utils.KeyPair
 	str = string(arr)
 	if err1 != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err1.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return utils.KeyPairResponse{}, err1
 	}
 	res.PublicKey = str

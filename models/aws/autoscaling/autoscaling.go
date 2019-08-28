@@ -1,7 +1,7 @@
 package autoscaling
 
 import (
-	"antelope/constants"
+	"antelope/models"
 	"antelope/models/aws/IAMRoles"
 	"antelope/models/utils"
 	"errors"
@@ -104,7 +104,7 @@ func (cloud *AWSAutoScaler) ConfigLauncher(projectId string, nodeId string, imag
 
 	if config_err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(config_err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return config_err, m
 	}
 	m[projectId+"_scale_launchConfig"] = projectId
@@ -128,7 +128,7 @@ func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId strin
 	err, m := cloud.ConfigLauncher(name, nodeIp, imageId, ctx)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err, m
 	}
 	min := int64(0)
@@ -161,7 +161,7 @@ func (cloud *AWSAutoScaler) AutoScaler(name string, nodeIp string, imageId strin
 
 	if config_err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(config_err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return config_err, m
 	}
 	m[name+"_scale_autoScaler"] = name
@@ -191,7 +191,7 @@ func (cloud *AWSAutoScaler) GetAutoScaler(projectId string, name string, ctx uti
 
 	if config_err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(config_err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(config_err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return config_err, nil
 	}
 	if out != nil && out.AutoScalingGroups != nil && out.AutoScalingGroups[0].Instances != nil {

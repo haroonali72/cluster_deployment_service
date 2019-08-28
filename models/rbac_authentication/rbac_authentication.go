@@ -1,7 +1,6 @@
 package rbac_athentication
 
 import (
-	"antelope/constants"
 	"antelope/models"
 	"antelope/models/types"
 	"antelope/models/utils"
@@ -33,7 +32,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/list")
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err, List{}
 	}
 	q := req.URL.Query()
@@ -49,7 +48,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	if err != nil {
 
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err, List{}
 	}
 	defer response.Body.Close()
@@ -78,7 +77,7 @@ func Authenticate(resourceType, resourceId string, action string, token string, 
 	if err != nil {
 
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	q := req.URL.Query()
@@ -94,7 +93,7 @@ func Authenticate(resourceType, resourceId string, action string, token string, 
 	if err != nil {
 
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	defer response.Body.Close()
@@ -111,7 +110,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 	if err != nil {
 
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	q := req.URL.Query()
@@ -124,7 +123,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 	response, err := client.SendRequest(req)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return false, err
 	}
 	defer response.Body.Close()
@@ -184,14 +183,14 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 
 		beego.Info(err.Error())
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	req, err := utils.CreatePostRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
 	if err != nil {
 		beego.Info(err.Error())
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	req.Header.Set("token", token)
@@ -199,7 +198,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 	if err != nil {
 		beego.Info(err.Error())
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	beego.Info(response.StatusCode)
@@ -215,7 +214,7 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 	req, err := utils.CreateDeleteRequest(getRbacHost() + "/security/api/rbac/policy")
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	q := req.URL.Query()
@@ -227,7 +226,7 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 	response, err := client.SendRequest(req)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return 400, err
 	}
 	return response.StatusCode, err

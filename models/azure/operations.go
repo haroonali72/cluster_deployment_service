@@ -1,7 +1,6 @@
 package azure
 
 import (
-	"antelope/constants"
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/key_utils"
@@ -124,19 +123,19 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return cluster, err
 	}
 
 	for i, pool := range cluster.NodePools {
 
 		logType := []string{"backend-logging"}
-		ctx.SendLogs("AZUREOperations creating nodes", constants.LOGGING_LEVEL_INFO, logType)
+		ctx.SendLogs("AZUREOperations creating nodes", models.LOGGING_LEVEL_INFO, logType)
 
 		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId, token)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return cluster, err
 		}
 		if pool.EnableVolume {
@@ -289,7 +288,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 		err := cloud.init()
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return Cluster_Def{}, err
 		}
 	}
@@ -301,7 +300,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			if err != nil {
 
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return Cluster_Def{}, err
 			}
 			keyInfo, err = key_utils.KeyConversion(k1, ctx)
@@ -316,7 +315,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			vm, err := cloud.GetInstance(pool.Name, cluster.ResourceGroup, ctx)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return Cluster_Def{}, err
 			}
 			beego.Info("getting nic")
@@ -324,7 +323,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			nicParameters, err := cloud.GetVMNIC(cluster.ResourceGroup, nicName, ctx)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return Cluster_Def{}, err
 			}
 			beego.Info("getting pip")
@@ -332,7 +331,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			publicIPaddress, err := cloud.GetVMPIP(cluster.ResourceGroup, IPname, ctx)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return Cluster_Def{}, err
 			}
 
@@ -355,7 +354,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			if err != nil {
 
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return Cluster_Def{}, err
 			}
 			for _, vm := range vms.Values() {
@@ -404,7 +403,7 @@ func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx utils.Con
 	vm, err := cloud.VMClient.Get(cloud.context, resourceGroup, name, compute.InstanceView)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return compute.VirtualMachine{}, err
 	}
 	return vm, nil
@@ -413,7 +412,7 @@ func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx utils.Co
 	nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.context, resourceGroup, vmss, vm, nicName, "")
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return network.Interface{}, err
 	}
 	return nicParameters, nil
@@ -422,7 +421,7 @@ func (cloud *AZURE) GetPIP(resourceGroup, vmss, vm, nic, ipConfig, ipAddress str
 	publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.context, resourceGroup, vmss, vm, nic, ipConfig, ipAddress, "")
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return network.PublicIPAddress{}, err
 	}
 	return publicIPaddress, nil
@@ -431,7 +430,7 @@ func (cloud *AZURE) GetVMNIC(resourceGroup, nicName string, ctx utils.Context) (
 	nicParameters, err := cloud.InterfacesClient.Get(cloud.context, resourceGroup, nicName, "")
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return network.Interface{}, err
 	}
 	return nicParameters, nil
@@ -440,7 +439,7 @@ func (cloud *AZURE) GetVMPIP(resourceGroup, IPname string, ctx utils.Context) (n
 	publicIPaddress, err := cloud.AddressClient.Get(cloud.context, resourceGroup, IPname, "")
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return network.PublicIPAddress{}, err
 	}
 	return publicIPaddress, nil
@@ -450,7 +449,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 		err := cloud.init()
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return err
 		}
 	}
@@ -516,24 +515,24 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId string, ctx utils.Context) error {
 
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AZUREOperations: terminating node pools", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AZUREOperations: terminating node pools", models.LOGGING_LEVEL_INFO, logType)
 	future, err := cloud.VMSSCLient.Delete(cloud.context, resourceGroup, name)
 
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	} else {
 		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return err
 		}
 	}
 
-	ctx.SendLogs("Node pool terminated successfully: "+name, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("Node pool terminated successfully: "+name, models.LOGGING_LEVEL_INFO, logType)
 	return nil
 }
 func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, ctx utils.Context) error {
@@ -541,7 +540,7 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	beego.Info("AZUREOperations: terminating nodes")
 
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("Terminating node: "+name, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("Terminating node: "+name, models.LOGGING_LEVEL_INFO, logType)
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
 	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
@@ -559,7 +558,7 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		beego.Info("Deleted Node" + name)
 	}
 
-	ctx.SendLogs("Node terminated successfully: "+name, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("Node terminated successfully: "+name, models.LOGGING_LEVEL_INFO, logType)
 	return nil
 }
 
@@ -577,19 +576,19 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 	address, err := cloud.AddressClient.CreateOrUpdate(cloud.context, resourceGroup, IPname, pipParameters)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return network.PublicIPAddress{}, err
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return network.PublicIPAddress{}, err
 		}
 	}
 
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("Get public IP address info...", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("Get public IP address info...", models.LOGGING_LEVEL_INFO, logType)
 	publicIPaddress, err := cloud.GetVMPIP(resourceGroup, IPname, ctx)
 	return publicIPaddress, err
 }
@@ -599,13 +598,13 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return err
 		}
 	}
@@ -638,13 +637,13 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 	future, err := cloud.InterfacesClient.CreateOrUpdate(cloud.context, resourceGroup, nicName, nicParameters)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return network.Interface{}, err
 	} else {
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return network.Interface{}, err
 		}
 	}
@@ -657,14 +656,14 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 
 		return err
 	} else {
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return err
 		}
 	}
@@ -769,8 +768,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 		if err != nil && err.Error() != "not found" {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs("vm creation failed", constants.LOGGING_LEVEL_ERROR, logType)
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs("vm creation failed", models.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return compute.VirtualMachine{}, "", "", err
 		} else if err == nil {
 
@@ -798,7 +797,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, "azure@example.com", ctx)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return compute.VirtualMachine{}, "", "", err
 			}
 			key := []compute.SSHPublicKey{{
@@ -818,7 +817,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return compute.VirtualMachine{}, "", "", err
 			}
 
@@ -831,7 +830,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return compute.VirtualMachine{}, "", "", err
 		}
 
@@ -868,7 +867,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return compute.VirtualMachine{}, "", "", err
 			}
 			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
@@ -890,13 +889,13 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, vm)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return compute.VirtualMachine{}, "", "", err
 	} else {
 		err = vmFuture.WaitForCompletion(cloud.context, cloud.VMClient.Client)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return compute.VirtualMachine{}, "", "", err
 		}
 	}
@@ -904,7 +903,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	vm, err = cloud.GetInstance(pool.Name, resourceGroup, ctx)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return compute.VirtualMachine{}, "", "", err
 	}
 	return vm, private, public, nil
@@ -945,7 +944,7 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 	if err != nil {
 		beego.Error("Disk deletion failed" + err.Error())
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 	return nil
@@ -957,7 +956,7 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 	if err != nil {
 		beego.Error("Storage account deletion failed")
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 	return nil
@@ -1119,9 +1118,9 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 
 		if vm.PublicIP == nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs("waiting for public ip", constants.LOGGING_LEVEL_WARNING, logType)
+			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, logType)
 			time.Sleep(time.Second * 50)
-			ctx.SendLogs("waiting for public ip", constants.LOGGING_LEVEL_WARNING, logType)
+			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, logType)
 			IPname := fmt.Sprintf("pip-%s", *vm.Name)
 			beego.Info(IPname)
 			if poleRole == "master" {
@@ -1159,7 +1158,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 
 				//ctx.SendSDLog(("time passed %6.2f sec\n"+ strconv.Itoa( int( time.Since(start).Seconds())))+"warning")
 				logType := []string{"backend-logging"}
-				ctx.SendLogs("waiting 5 seconds before retry", constants.LOGGING_LEVEL_WARNING, logType)
+				ctx.SendLogs("waiting 5 seconds before retry", models.LOGGING_LEVEL_WARNING, logType)
 				time.Sleep(5 * time.Second)
 			} else {
 				retry = false
@@ -1258,7 +1257,7 @@ func setScriptPermision(keyName string, userName string, instanceId, fileName st
 	err := cmd.Run()
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return nil
 	}
 	return nil
@@ -1276,7 +1275,7 @@ func runScript(keyName string, userName string, instanceId string, fileName stri
 	err := cmd.Run()
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return nil
 	}
 	return nil
@@ -1291,7 +1290,7 @@ func deleteScript(keyName string, userName string, instanceId string, fileName s
 	err := cmd.Run()
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 	return nil
@@ -1302,7 +1301,7 @@ func deleteFile(keyName string, ctx utils.Context) error {
 	err := os.Remove(keyPath)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 	return nil
@@ -1414,7 +1413,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 		if err != nil && err.Error() != "not found" {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		} else if err == nil {
 
@@ -1442,7 +1441,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, "azure@example.com", ctx)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 			key := []compute.SSHPublicKey{{
@@ -1462,7 +1461,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 
@@ -1475,7 +1474,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 
@@ -1512,7 +1511,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
 			if err != nil {
 				logType := []string{"backend-logging"}
-				ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 			params.VirtualMachineProfile.DiagnosticsProfile = &compute.DiagnosticsProfile{
@@ -1537,13 +1536,13 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	address, err := cloud.VMSSCLient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, params)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
 			logType := []string{"backend-logging"}
-			ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 	}
@@ -1551,7 +1550,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	vms, err := cloud.VMSSVMClient.List(cloud.context, resourceGroup, pool.Name, "", "", "")
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	}
 	return vms, nil, private

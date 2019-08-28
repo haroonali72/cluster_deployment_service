@@ -1,7 +1,6 @@
 package azure
 
 import (
-	"antelope/constants"
 	"antelope/models"
 	"antelope/models/azure"
 	rbac_athentication "antelope/models/rbac_authentication"
@@ -58,7 +57,7 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AZUREClusterController: Get cluster with project id "+projectId, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AZUREClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, logType)
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -164,7 +163,7 @@ func (c *AzureClusterController) Post() {
 		return
 	}
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AzureClusterController: Post new cluster with name: "+cluster.Name, constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("AzureClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_ERROR, logType)
 
 	cluster.CreationDate = time.Now()
 	beego.Info(cluster.ResourceGroup)
@@ -243,7 +242,7 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, logType)
 
 	err = azure.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
@@ -304,7 +303,7 @@ func (c *AzureClusterController) Delete() {
 	}
 
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AzureClusterController: Delete cluster with project id: "+id, constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("AzureClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_ERROR, logType)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -374,7 +373,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, models.LOGGING_LEVEL_ERROR, logType)
 	beego.Info("AzureClusterController: StartCluster.")
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(token, projectId, *ctx)
@@ -397,7 +396,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, logType)
 
 	cluster, err = azure.GetCluster(projectId, *ctx)
 
@@ -415,7 +414,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Creating Cluster. "+cluster.Name, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AzureClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, logType)
 
 	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
 
@@ -484,7 +483,7 @@ func (c *AzureClusterController) GetStatus() {
 	}
 
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, logType)
 
 	cluster, err := azure.FetchStatus(azureProfile, token, projectId, *ctx)
 
@@ -541,7 +540,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AzureClusterController: TerminateCluster.", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AzureClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, logType)
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(token, projectId, *ctx)
 
@@ -563,7 +562,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, logType)
 
 	cluster, err = azure.GetCluster(projectId, *ctx)
 
@@ -574,7 +573,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, logType)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
@@ -606,7 +605,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 
 	//=============================================================================//
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AZUREClusterController: FetchExistingSSHKeys.", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AZUREClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, logType)
 
 	keys, err := azure.GetAllSSHKeyPair(*ctx, token)
 

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"antelope/constants"
 	"antelope/models"
 	"antelope/models/aws"
 	rbac_athentication "antelope/models/rbac_authentication"
@@ -57,7 +56,7 @@ func (c *AWSTemplateController) Get() {
 
 	//=============================================================================//
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AWSTemplateController: Get template  id : "+templateId, constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AWSTemplateController: Get template  id : "+templateId, models.LOGGING_LEVEL_INFO, logType)
 
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -110,7 +109,7 @@ func (c *AWSTemplateController) GetAll() {
 
 	//=============================================================================//
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AWSTemplateController: GetAll template.", constants.LOGGING_LEVEL_INFO, logType)
+	ctx.SendLogs("AWSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, logType)
 
 	templates, err := aws.GetTemplates(*ctx, data)
 	if err != nil {
@@ -167,7 +166,7 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AWSTemplateController: Post new template with name: "+template.Name, constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("AWSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, logType)
 
 	err, id := aws.CreateTemplate(template, *ctx)
 	if err != nil {
@@ -251,7 +250,7 @@ func (c *AWSTemplateController) Patch() {
 	//=============================================================================//
 
 	logType := []string{"backend-logging"}
-	ctx.SendLogs("AWSTemplateController: Patch template with template id : "+template.TemplateId, constants.LOGGING_LEVEL_ERROR, logType)
+	ctx.SendLogs("AWSTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_ERROR, logType)
 
 	err = aws.UpdateTemplate(template, *ctx)
 	if err != nil {

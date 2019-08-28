@@ -1,7 +1,7 @@
 package IAMRoles
 
 import (
-	"antelope/constants"
+	"antelope/models"
 	"antelope/models/utils"
 	"errors"
 	"github.com/astaxie/beego"
@@ -141,7 +141,7 @@ func (cloud *AWSIAMRoles) CreatePolicy(name string, policyDef []byte, ctx utils.
 
 	if err_1 != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err_1.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err_1.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return "", err_1
 	}
 	attach := iam.AttachRolePolicyInput{RoleName: &roleName, PolicyArn: policy_out.Policy.Arn}
@@ -149,7 +149,7 @@ func (cloud *AWSIAMRoles) CreatePolicy(name string, policyDef []byte, ctx utils.
 
 	if err_2 != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err_2.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err_2.Error(), models.LOGGING_LEVEL_ERROR, logType)
 
 		return "", err_2
 	}
@@ -165,14 +165,14 @@ func (cloud *AWSIAMRoles) CreateIAMProfile(name string, ctx utils.Context) (stri
 	outtt, err := cloud.IAMService.CreateInstanceProfile(&profileInput)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return "", err
 	}
 	testProfile := iam.AddRoleToInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
 	_, err = cloud.IAMService.AddRoleToInstanceProfile(&testProfile)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return "", err
 	}
 
@@ -247,7 +247,7 @@ func (cloud *AWSIAMRoles) DeletePolicy(policyName string, ctx utils.Context) err
 
 	if err_1 != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err_1.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err_1.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err_1
 	}
 
@@ -267,7 +267,7 @@ func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	err, policyArn := cloud.GetPolicyARN(roleName)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 
 		return err
 	}
@@ -275,7 +275,7 @@ func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	out, err := cloud.IAMService.DetachRolePolicy(&policy)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 
@@ -285,7 +285,7 @@ func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	out_, err := cloud.IAMService.DeleteRole(&roleInput)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 
@@ -297,7 +297,7 @@ func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx utils.Context) e
 	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 	beego.Info(outtt.GoString())
@@ -306,7 +306,7 @@ func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx utils.Context) e
 	outt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
 	if err != nil {
 		logType := []string{"backend-logging"}
-		ctx.SendLogs(err.Error(), constants.LOGGING_LEVEL_ERROR, logType)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, logType)
 		return err
 	}
 	beego.Info(outt.GoString())
