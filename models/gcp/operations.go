@@ -558,6 +558,13 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) error {
 		newNode.Username = pool.KeyInfo.Username
 		pool.Nodes = []*Node{&newNode}
 	} else {
+		managedGroup, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
+		if err != nil {
+			ctx.SendSDLog(err.Error(), "error")
+			beego.Error(err.Error())
+			return err
+		}
+		pool.PoolId = managedGroup.InstanceGroup
 		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
 			ctx.SendSDLog(err.Error(), "error")

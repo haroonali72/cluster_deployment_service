@@ -31,6 +31,7 @@ type Cluster_Def struct {
 type NodePool struct {
 	ID                  bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	Name                string        `json:"name" bson:"name"`
+	PoolId              string        `json:"pool_id" bson:"pool_id"`
 	NodeCount           int64         `json:"node_count" bson:"node_count"`
 	MachineType         string        `json:"machine_type" bson:"machine_type"`
 	Image               Image         `json:"image" bson:"image"`
