@@ -39,7 +39,7 @@ var docker_master_policy = []byte(`{
 	 },
      {
       	"Sid": "VisualEditor0",
-		"Effect": "Allow",constants
+		"Effect": "Allow",
          "Action": [
                 "ec2:AttachVolume",
                 "elasticloadbalancing:ModifyListener",
