@@ -96,6 +96,7 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.data.Request.Path = path
 	c.data.Request.RequestId = uuid.New().String()
 	c.data.ProjectId = projectId
+	//c.data.LogName = "backend-logging"
 	c.data.Company = companyId
 	c.data.UserId = userId
 }
