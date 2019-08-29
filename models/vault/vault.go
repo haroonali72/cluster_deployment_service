@@ -5,10 +5,10 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"strconv"
+	"strings"
 )
 
 type Key struct {
@@ -53,7 +53,16 @@ type azureKey struct {
 
 func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string) (interface{}, error) {
 
-	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
+	host := getVaultHost() + models.VaultGetKeyURI
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{keyName}") {
+		host = strings.Replace(host, "{keyName}", keyName, -1)
+	}
+	req, err := utils.CreateGetRequest(getVaultHost() + host)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return awsKey{}, err
@@ -96,7 +105,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string
 
 }
 func getVaultHost() string {
-	return "http://" + beego.AppConfig.String("vault_url") + "/robin/api/v1"
+	return beego.AppConfig.String("vault_url") + models.VaultEndpoint
 }
 func PostSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
 
@@ -124,7 +133,7 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+models.VaultCreateKeyURI)
 	if err != nil {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
@@ -171,7 +180,7 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, 
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+models.VaultCreateKeyURI)
 	if err != nil {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
@@ -215,7 +224,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, er
 		return 400, err
 	}
 
-	req, err := utils.CreatePostRequest(request_data, getVaultHost()+"/template/sshKey/")
+	req, err := utils.CreatePostRequest(request_data, getVaultHost()+models.VaultCreateKeyURI)
 	if err != nil {
 		ctx.SendSDLog(e.Error(), "error")
 		return 400, err
@@ -235,8 +244,16 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, er
 }
 func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Context) (interface{}, error) {
 
-	fmt.Print(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
-	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType + "/" + keyName)
+	host := getVaultHost() + models.VaultGetKeyURI
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{keyName}") {
+		host = strings.Replace(host, "{keyName}", keyName, -1)
+	}
+	req, err := utils.CreateGetRequest(getVaultHost() + host)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return azureKey{}, err
@@ -275,7 +292,12 @@ func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Co
 }
 func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, error) {
 	var keys []string
-	req, err := utils.CreateGetRequest(getVaultHost() + "/template/sshKey/" + cloudType)
+	host := getVaultHost() + models.VaultGetAllKeysURI
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+	req, err := utils.CreateGetRequest(getVaultHost() + host)
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return keys, err
@@ -315,7 +337,17 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 
 }
 func GetCredentialProfile(cloudType string, profileId string, token string, ctx utils.Context) ([]byte, error) {
-	req, err := utils.CreateGetRequest(getVaultHost() + "/template/" + cloudType + "/credentials/" + profileId)
+	host := getVaultHost() + models.VaultGetProfileURI
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{profileId}") {
+		host = strings.Replace(host, "{profileId}", profileId, -1)
+	}
+	req, err := utils.CreateGetRequest(getVaultHost() + host)
+
 	if err != nil {
 		ctx.SendSDLog(err.Error(), "error")
 		return []byte{}, err

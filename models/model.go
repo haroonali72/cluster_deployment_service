@@ -46,3 +46,34 @@ const (
 	Password CredentialsType = "password"
 	SSHKey   CredentialsType = "key"
 )
+const (
+	ProjectGetEndpoint = "/raccoon/projects/{projectId}"
+	WeaselGetEndpoint  = "/weasel/network/{cloud}/{projectId}"
+)
+
+const (
+	VaultEndpoint = "/robin/api/v1"
+
+	VaultGetKeyURI     = "/template/sshKey/{cloud}/{keyName}"
+	VaultGetAllKeysURI = "/template/sshKey/{cloud}"
+	VaultGetProfileURI = "/template/{cloud}/credentials/{profileId}"
+	VaultCreateKeyURI  = "/template/sshKey/"
+)
+
+const (
+	LoggingEndpoint = "/elephant/api/v1/"
+
+	BackEndLoggingURI  = "backend/logging/"
+	FrontEndLoggingURI = "frontend/logging/"
+	AuditEndpoint      = "audit/store"
+)
+
+const (
+	RbacEndpoint = "/security/api/rbac/"
+
+	RbacListURI     = "list/"
+	RbacAccessURI   = "allowed/"
+	RbacEvaluateURI = "evaluate/"
+	RbacInfoURI     = "token/info/"
+	RbacPolicyURI   = "policy/"
+)

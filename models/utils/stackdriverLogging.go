@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"antelope/models"
 	"github.com/astaxie/beego"
 	"github.com/google/uuid"
 	"runtime"
@@ -89,6 +90,5 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 }
 
 func getHost() string {
-	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
-	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/backend/logging"
+	return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.BackEndLoggingURI
 }

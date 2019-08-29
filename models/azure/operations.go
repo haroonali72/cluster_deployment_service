@@ -98,11 +98,16 @@ func (cloud *AZURE) init() error {
 
 	return nil
 }
-func getNetworkHost(cloudType string) string {
-	host := "http://" + beego.AppConfig.String("network_url") + "/weasel/network/{cloud_provider}"
-	if strings.Contains(host, "{cloud_provider}") {
-		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+func getNetworkHost(cloudType, projectId string) string {
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", projectId, -1)
+	}
+
 	return host
 
 }
@@ -117,7 +122,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 	}
 
 	var azureNetwork types.AzureNetwork
-	url := getNetworkHost("azure") + "/" + cluster.ProjectId
+	url := getNetworkHost("azure", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	err = json.Unmarshal(network.([]byte), &azureNetwork)
 
@@ -594,8 +599,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress:           &publicIPaddress,
+						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress: &publicIPaddress,
 					},
 				},
 			},
@@ -873,7 +878,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location:                          &cloud.Region,
+		Location: &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
