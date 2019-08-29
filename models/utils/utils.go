@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"github.com/astaxie/beego"
 	"net/http"
+	"time"
 )
 
 type HTTPClient struct {
@@ -75,12 +76,22 @@ func CreateDeleteRequest(url string) (*http.Request, error) {
 }
 
 func (httpReq *HTTPClient) SendRequest(req *http.Request) (*http.Response, error) {
+	start := time.Now()
 
 	response, err := httpReq.client.Do(req)
+
 	if err != nil {
 		beego.Error("%s", err)
+
+		elapsed := time.Since(start)
+		beego.Warn("SEGMENT: "+req.Host+" took:", elapsed)
+
 		return nil, err
 	}
+
+	elapsed := time.Since(start)
+	beego.Warn("SEGMENT: "+req.Host+" took:", elapsed)
+
 	return response, err
 }
 
