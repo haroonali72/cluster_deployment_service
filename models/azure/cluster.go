@@ -107,13 +107,13 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return "", err
 	}
 	var region Project
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return region.ProjectData.Region, err
 	}
 	return region.ProjectData.Region, nil
@@ -125,14 +125,14 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 
 	var network types.AzureNetwork
 	err = json.Unmarshal(data.([]byte), &network)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	//beego.Info(string(data.([]byte)))
@@ -140,7 +140,7 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	//beego.Info(network.Definition[0].ResourceGroup + " " + resourceGroup)
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
-			ctx.SendSDLog("Resource group is incorrect", "error")
+			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return errors.New("Resource Group is in correct")
 		}
 	} else {
@@ -151,13 +151,13 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
 	data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return vault.AzureProfile{}, err
 	}
 	azureProfile := vault.AzureProfile{}
 	err = json.Unmarshal(data, &azureProfile)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return vault.AzureProfile{}, err
 	}
 	azureProfile.Profile.Location = region
@@ -177,27 +177,30 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, ctx)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
-		ctx.SendSDLog(text+err.Error(), "error")
+		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return errors.New(text)
 	}
 	session, err := db.GetMongoSession()
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	defer session.Close()
 
 	err = checkClusterSize(cluster)
 	if err != nil { //cluster found
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureClusterCollection, cluster)
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), "error")
+
+		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
+
+	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
@@ -206,7 +209,7 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
-		ctx.SendSDLog("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), "error")
+		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Cluster_Def{}, err1
 	}
 
@@ -215,9 +218,10 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
 	err = c.Find(bson.M{"project_id": projectId}).One(&cluster)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Cluster_Def{}, err
 	}
+	ctx.SendLogs(" Get Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return cluster, nil
 }
@@ -229,7 +233,7 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 	}
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
-		ctx.SendSDLog("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
+		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err1
 	}
 	defer session.Close()
@@ -237,9 +241,12 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
 	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
+
+	ctx.SendLogs(" Get all azure Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return clusters, nil
 }
@@ -248,16 +255,16 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
-		ctx.SendSDLog(text, "error")
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return errors.New(text)
 	}
 	if oldCluster.Status == "Cluster Created" && update {
-		ctx.SendSDLog("Cluster is in runnning state", "error")
+		ctx.SendLogs("Cluster is in runnning state", models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return errors.New("Cluster is in runnning state")
 	}
 	err = DeleteCluster(cluster.ProjectId, ctx)
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Update - Got error deleting cluster: "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 
@@ -266,9 +273,10 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 
 	err = CreateCluster(cluster, ctx)
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Update - Got error creating cluster: "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
+	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
@@ -276,7 +284,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 func DeleteCluster(projectId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	defer session.Close()
@@ -284,15 +292,16 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
 	err = c.Remove(bson.M{"project_id": projectId})
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
+	ctx.SendLogs(" Azure Cluster of Project Id: "+projectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
 
 	return nil
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
 	if confError != nil {
-		ctx.SendSDLog(confError.Error(), "error")
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
 		utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
@@ -349,13 +358,15 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
+	ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
+
 	return nil
 }
 func FetchStatus(credentials vault.AzureProfile, token, projectId string, ctx utils.Context) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, ctx)
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Cluster_Def{}, err
 	}
 
@@ -373,7 +384,9 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, ctx ut
 
 	c, e := azure.fetchStatus(cluster, token, ctx)
 	if e != nil {
-		ctx.SendSDLog("Cluster model: Status - Failed to get lastest status "+e.Error(), "error")
+
+		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+
 		return Cluster_Def{}, e
 	}
 	/*err = UpdateCluster(c)
@@ -381,6 +394,9 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, ctx ut
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}*/
+
+	ctx.SendLogs(" AZURE Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
+
 	return c, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {
@@ -388,17 +404,17 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
-		ctx.SendSDLog(pub_err.Error(), "error")
+		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return pub_err
 	}
 
 	cluster, err := GetCluster(cluster.ProjectId, ctx)
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	if cluster.Status != "Cluster Created" {
-		ctx.SendSDLog("Cluster model: Cluster is not in created state ", "error")
+		ctx.SendLogs("Cluster model: Cluster is not in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
@@ -419,7 +435,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 
 	if err != nil {
 
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
@@ -427,13 +443,17 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
-			ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
+			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return err
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+
+		ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated successfully ", models.LOGGING_LEVEL_INFO, models.Audit_Trail)
+
 		return nil
 	}
 
@@ -445,7 +465,8 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	}
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)

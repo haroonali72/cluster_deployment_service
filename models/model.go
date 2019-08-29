@@ -61,14 +61,6 @@ const (
 )
 
 const (
-	LoggingEndpoint = "/elephant/api/v1/"
-
-	BackEndLoggingURI  = "backend/logging/"
-	FrontEndLoggingURI = "frontend/logging/"
-	AuditEndpoint      = "audit/store"
-)
-
-const (
 	RbacEndpoint = "/security/api/rbac/"
 
 	RbacListURI     = "list/"
@@ -76,4 +68,28 @@ const (
 	RbacEvaluateURI = "evaluate/"
 	RbacInfoURI     = "token/info/"
 	RbacPolicyURI   = "policy/"
+)
+
+type Logger string
+
+const (
+	//////logging///////////
+	Backend_Logging Logger = "backend-logging"
+	Audit_Trails    Logger = "auditTrails"
+
+	AUDIT_TRAIL_ENDPOINT  = "elephant/api/v1/audit/store/" //need
+	LOGGING_LEVEL_INFO    = "info"
+	LOGGING_LEVEL_ERROR   = "error"
+	LOGGING_LEVEL_WARNING = "warning"
+	//////logging///////////
+	Backend_Log = "backend-logging"
+	Audit_Trail = "auditTrails"
+)
+
+const (
+	LoggingEndpoint = "/elephant/api/v1/"
+
+	BackEndLoggingURI    = "backend/logging/"
+	FrontEndLoggingURI   = "frontend/logging/"
+	AuditTrailLoggingURI = "audit/store"
 )

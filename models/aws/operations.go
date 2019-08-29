@@ -317,11 +317,10 @@ func (cloud *AWS) updateInstanceTags(instance_id *string, nodepool_name string, 
 	}
 	out, err := cloud.Client.CreateTags(&input)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
-
-	ctx.SendSDLog(out.String(), "info")
+	ctx.SendLogs(out.String(), models.LOGGING_LEVEL_INFO, models.Backend_Log)
 	return nil
 }
 
@@ -373,7 +372,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendSDLog("Failed to get latest status"+err.Error(), "error")
+			ctx.SendLogs("Failed to get latest status"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return Cluster_Def{}, err
 		}
 	}
@@ -431,7 +430,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 
 		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return Cluster_Def{}, err
 		}
 		k, err := keyCoverstion(keyInfo, ctx)
@@ -446,12 +445,12 @@ func keyCoverstion(keyInfo interface{}, ctx utils.Context) (Key, error) {
 	b, e := json.Marshal(keyInfo)
 	var k Key
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Key{}, e
 	}
 	e = json.Unmarshal(b, &k)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Key{}, e
 	}
 	return k, nil
@@ -487,7 +486,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return err
 		}
 	}
@@ -499,7 +498,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	}
 	confError := roles.Init()
 	if confError != nil {
-		ctx.SendSDLog(confError.Error(), "error")
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return confError
 	}
 
@@ -507,12 +506,12 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 				return err
 			}
 			err = cloud.Scaler.DeleteConfiguration(pool.Name)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 				return err
 			}
 		}
@@ -589,7 +588,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 
 			err := cloud.Scaler.DeleteConfiguration(pool.Name)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 				return err
 			}
 		}
@@ -597,7 +596,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 				return err
 			}
 		}
@@ -666,7 +665,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 			}
 			err := cloud.TerminateIns(ids)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 				return err
 			}
 		}
@@ -766,19 +765,19 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	//sgIds := []*string{&sid}
 	_, err := cloud.Roles.CreateRole(pool.Name)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_role"] = pool.Name
 	_, err = cloud.Roles.CreatePolicy(pool.Name, docker_master_policy, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_policy"] = pool.Name
 	_, err = cloud.Roles.CreateIAMProfile(pool.Name, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_iamProfile"] = pool.Name
@@ -797,7 +796,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	beego.Info("updating root volume ")
 	ebs, err := cloud.describeAmi(&pool.Ami.AmiId, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err, ""
 	}
 	if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
@@ -807,8 +806,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 			ebs[0].Ebs.Iops = &pool.Ami.RootVolume.Iops
 		}
 	}
-
-	ctx.SendSDLog("attaching external volume", "info")
+	ctx.SendLogs("attaching external volume", models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 	if pool.IsExternal {
 		var external_volume ec2.BlockDeviceMapping
 
@@ -835,12 +833,12 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(pool.Name)}
 		input.IamInstanceProfile = &iamProfile
 	} else {
-		ctx.SendSDLog("failed in attaching", "info")
+		ctx.SendLogs("failed in attaching", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 	}
 
 	result, err := cloud.Client.RunInstances(input)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err, ""
 	}
 	if result != nil && result.Instances != nil && len(result.Instances) > 0 {
@@ -887,8 +885,7 @@ func (cloud *AWS) GetInstances(ids []*string, projectId string, creation bool, c
 	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
 
 	if err != nil {
-
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
@@ -913,7 +910,7 @@ func (cloud *AWS) GetInstancesByDNS(privateDns []*string, projectId string, ctx 
 	updated_instances, err := cloud.Client.DescribeInstances(&instance_input)
 
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
@@ -951,10 +948,10 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Cont
 
 	err := cloud.TerminateIns(instance_ids)
 	if err != nil {
-		ctx.SendSDLog("Cluster model: Status - Failed to terminate node pool "+err.Error(), "error")
+		ctx.SendLogs("Cluster model: Status - Failed to terminate node pool "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
-	utils.SendLog(companyId, "Cluster pool terminated successfully: "+pool.Name, "info", projectId)
+	utils.SendLog(companyId, "Cluster pool terminated successfully: "+pool.Name, models.LOGGING_LEVEL_INFO, projectId)
 	return nil
 }
 
@@ -1022,7 +1019,7 @@ func (cloud *AWS) describeAmi(ami *string, ctx utils.Context) ([]*ec2.BlockDevic
 	amiInput := &ec2.DescribeImagesInput{ImageIds: amis}
 	res, err := cloud.Client.DescribeImages(amiInput)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return ebsVolumes, err
 	}
 
@@ -1101,10 +1098,9 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 
 		if err != nil && err.Error() != "not found" {
-
-			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(companyId, err.Error(), "info", projectId)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
 			return "", err
 
 		} else if err == nil {
@@ -1117,24 +1113,25 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 				keyMaterial = key.KeyMaterial
 			}
 		} else if err != nil && err.Error() == "not found" {
-			ctx.SendSDLog("AWSOperations: creating key", "info")
-			utils.SendLog(companyId, "Creating Key "+pool.KeyInfo.KeyName, "info", projectId)
+			ctx.SendLogs("AWSOperations: creating key", models.LOGGING_LEVEL_INFO, models.Backend_Log)
+			utils.SendLog(companyId, "Creating Key "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
 
 			keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
 
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
-				utils.SendLog(companyId, "Error in key creation: "+pool.KeyInfo.KeyName, "info", projectId)
-				utils.SendLog(companyId, err.Error(), "info", projectId)
+
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+				utils.SendLog(companyId, "Error in key creation: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+				utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
 				return "", err
 			}
 			pool.KeyInfo.KeyMaterial = keyMaterial
 			_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
-				utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-				utils.SendLog(companyId, err.Error(), "info", projectId)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+				utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+				utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
 				return "", err
 			}
 		}
@@ -1143,9 +1140,10 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
 
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(companyId, err.Error(), "info", projectId)
+
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Log)
+			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_ERROR, projectId)
+			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
 			return "", err
 		}
 		key, err := keyCoverstion(k, ctx)
@@ -1160,9 +1158,9 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(companyId, err.Error(), "info", projectId)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
 			return "", err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
@@ -1172,18 +1170,18 @@ func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, com
 		_, err = cloud.ImportSSHKeyPair(pool.KeyInfo.KeyName, pool.KeyInfo.KeyMaterial)
 
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog(companyId, "Error in importing key: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(companyId, err.Error(), "info", projectId)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			utils.SendLog(companyId, "Error in importing key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
 			return "", err
 		}
 
 		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
 
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
-			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, "info", projectId)
-			utils.SendLog(companyId, err.Error(), "info", projectId)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
 			return "", err
 		}
 		keyMaterial = pool.KeyInfo.KeyMaterial
@@ -1211,12 +1209,12 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 	for _, id := range ids {
 		err := fileWrite(key.KeyMaterial, key.KeyName)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return err
 		}
 		err = setPermission(key.KeyName)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return err
 		}
 		publicIp := ""
@@ -1226,7 +1224,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 			beego.Error("waited for public ip")
 			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId, ctx, companyId)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 				return err
 			}
 		}
@@ -1249,27 +1247,28 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId s
 			}
 		}
 		if errCopy != nil {
-			ctx.SendSDLog(errCopy.Error(), "error")
+			ctx.SendLogs(errCopy.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return errCopy
 		}
 		err = setScriptPermision(key.KeyName, ami.Username, publicIp)
 		if err != nil {
-			ctx.SendSDLog(errCopy.Error(), "error")
+			ctx.SendLogs(errCopy.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+
 			return err
 		}
 		err = runScript(key.KeyName, ami.Username, publicIp)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return err
 		}
 		err = deleteScript(key.KeyName, ami.Username, publicIp)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return err
 		}
 		err = deleteFile(key.KeyName)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 			return err
 		}
 	}
@@ -1303,7 +1302,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 
 					err := cloud.Scaler.DeleteConfiguration(pool.Name)
 					if err != nil {
-						ctx.SendSDLog(err.Error(), "error")
+						ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 						return err
 					}
 				}
@@ -1311,7 +1310,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 
 					err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 					if err != nil {
-						ctx.SendSDLog(err.Error(), "error")
+						ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 						return err
 					}
 				}

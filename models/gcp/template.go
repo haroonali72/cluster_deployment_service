@@ -41,7 +41,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
-		ctx.SendSDLog("gcpTemplateModel :"+text+err.Error(), "error")
+		ctx.SendLogs("gcpTemplateModel :"+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error(text, err)
 		return errors.New(text), ""
 	}
@@ -63,7 +63,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 func GetTemplate(templateName string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
-		ctx.SendSDLog("GcpTemplateModel :"+err1.Error(), "error")
+		ctx.SendLogs("GcpTemplateModel :"+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
 		return Template{}, err1
 	}
@@ -72,7 +72,7 @@ func GetTemplate(templateName string, ctx utils.Context) (template Template, err
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpTemplateCollection)
 	err = c.Find(bson.M{"name": templateName}).One(&template)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateModel :"+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error(err.Error())
 		return Template{}, err
 	}
@@ -91,10 +91,11 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	}
 	defer session.Close()
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoGcpTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}}).All(&templates)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+
 		return nil, err
 	}
 
@@ -103,7 +104,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
-		ctx.SendSDLog("GcpTemplateModel : error connecting to database "+err1.Error(), "error")
+		ctx.SendLogs("GcpTemplateModel : error connecting to database "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
 		return nil, err1
 	}
@@ -124,14 +125,14 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
-		ctx.SendSDLog("GcpTemplateModel "+text+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateModel "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error(text, err)
 		return errors.New(text)
 	}
 
 	err = DeleteTemplate(template.TemplateId, ctx)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateModel :"+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error("Template model: Update - Got error deleting template: ", err)
 		return err
 	}
@@ -141,7 +142,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 
 	err, _ = CreateTemplate(template, ctx)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateModel :"+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error("Template model: Update - Got error creating template: ", err)
 		return err
 	}
@@ -152,7 +153,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 func DeleteTemplate(templateName string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateModel : erro with connecting database "+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateModel : erro with connecting database "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		beego.Error("Template model: Delete - Got error while connecting to the database: ", err)
 		return err
 	}
