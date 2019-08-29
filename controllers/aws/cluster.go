@@ -443,8 +443,8 @@ func (c *AWSClusterController) StartCluster() {
 }
 
 // @Title Status
-// @Description returns status of
-// @Param	token	header	string	 ""
+// @Description returns status of nodes
+// @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
@@ -721,6 +721,7 @@ func (c *AWSClusterController) GetAMI() {
 // @Title EnableScaling
 // @Description enables autoscaling
 // @Param	X-Profile-Id	header	string	profileId	""
+// @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
 // @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
 // @Success 200 {object} aws.AutoScaling

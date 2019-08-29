@@ -70,14 +70,14 @@ func (c *Context) SendLogs(message, severity string, logType string) {
 }
 
 func (c *Context) SendAuditTrails(msg, message_type string) (int, error) {
-	c.data.LogName = "audit-trail"
+	c.data.LogName = models.Audit_Trail
 	msg = msg + "by User: " + c.data.UserId + " of Company: " + c.data.Company
 	StatusCode, err := c.Log(msg, message_type)
 	return StatusCode, err
 }
 
 func (c *Context) SendSDLog(msg, message_type string) (int, error) {
-	c.data.LogName = "backend-logging"
+	c.data.LogName = models.Backend_Log
 	StatusCode, err := c.Log(msg, message_type)
 	return StatusCode, err
 }
