@@ -59,8 +59,8 @@ type AuditTrailRequest struct {
 }
 */
 
-func (c *Context) SendLogs(message, severity string, logType string) {
-	switch models.Logger(logType) {
+func (c *Context) SendLogs(message, severity string, logType models.Logger) {
+	switch logType {
 	case models.Backend_Logging:
 		c.SendSDLog(message, severity)
 	case models.Audit_Trails:
@@ -70,14 +70,14 @@ func (c *Context) SendLogs(message, severity string, logType string) {
 }
 
 func (c *Context) SendAuditTrails(msg, message_type string) (int, error) {
-	c.data.LogName = models.Audit_Trail
+	c.data.LogName = string(models.Audit_Trails)
 	msg = msg + "by User: " + c.data.UserId + " of Company: " + c.data.Company
 	StatusCode, err := c.Log(msg, message_type)
 	return StatusCode, err
 }
 
 func (c *Context) SendSDLog(msg, message_type string) (int, error) {
-	c.data.LogName = models.Backend_Log
+	c.data.LogName = string(models.Backend_Logging)
 	StatusCode, err := c.Log(msg, message_type)
 	return StatusCode, err
 }
@@ -135,10 +135,10 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 
 func getHost(c *Context) string {
 	switch c.data.LogName {
-	case "backend-logging":
+	case string(models.Backend_Logging):
 		s := getBackendLogHost()
 		return s
-	case "audit-trails":
+	case string(models.Audit_Trails):
 		s := getAuditTrailsHost()
 		return s
 	}
