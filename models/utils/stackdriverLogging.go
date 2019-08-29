@@ -54,7 +54,7 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 		_, file, line, _ := runtime.Caller(2)
 		c.data.Message = file + ":" + strconv.Itoa(line) + " " + msg
 	} else {
-		c.data.Message = msg + "by User: " + c.data.UserId + " of Company: " + c.data.Company
+		c.data.Message = msg + " by User: " + c.data.UserId
 	}
 	c.data.Severity = message_type
 
