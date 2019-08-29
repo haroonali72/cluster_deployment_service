@@ -23,7 +23,7 @@ func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 	}
 
 	if response.StatusCode == 404 {
-		ctx.SendSDLog("no network exists for this project id", "error")
+		ctx.SendSDLog("no entity exists for this project id", "error")
 		return nil, errors.New("no network exists for this project id")
 	}
 	defer response.Body.Close()
