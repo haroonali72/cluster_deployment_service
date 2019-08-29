@@ -62,7 +62,7 @@ func GetSSHKey(cloudType string, keyName string, ctx utils.Context, token string
 	if strings.Contains(host, "{keyName}") {
 		host = strings.Replace(host, "{keyName}", keyName, -1)
 	}
-	req, err := utils.CreateGetRequest(getVaultHost() + host)
+	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -261,7 +261,7 @@ func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Co
 	if strings.Contains(host, "{keyName}") {
 		host = strings.Replace(host, "{keyName}", keyName, -1)
 	}
-	req, err := utils.CreateGetRequest(getVaultHost() + host)
+	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return azureKey{}, err
@@ -305,7 +305,7 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
-	req, err := utils.CreateGetRequest(getVaultHost() + host)
+	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return keys, err
@@ -353,7 +353,7 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 	if strings.Contains(host, "{profileId}") {
 		host = strings.Replace(host, "{profileId}", profileId, -1)
 	}
-	req, err := utils.CreateGetRequest(getVaultHost() + host)
+	req, err := utils.CreateGetRequest(host)
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

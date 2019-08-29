@@ -83,7 +83,7 @@ func (c *Context) SendSDLog(msg, message_type string) (int, error) {
 }
 
 func (c *Context) Log(msg, message_type string) (int, error) {
-	_, file, line, _ := runtime.Caller(1)
+	_, file, line, _ := runtime.Caller(3)
 	c.data.Severity = message_type
 	c.data.Message = file + ":" + strconv.Itoa(line) + " " + msg
 	if message_type == models.LOGGING_LEVEL_ERROR {
