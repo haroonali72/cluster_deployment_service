@@ -52,7 +52,7 @@ type Logger string
 const (
 	//////logging///////////
 	Backend_Logging Logger = "backend-logging"
-	Audit_Trails    Logger = "auditTrails"
+	Audit_Trails    Logger = "audit-trails"
 
 	AUDIT_TRAIL_ENDPOINT  = "elephant/api/v1/audit/store/"
 	LOGGING_LEVEL_INFO    = "info"
