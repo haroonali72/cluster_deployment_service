@@ -37,7 +37,7 @@ func (c *GcpClusterController) Get() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: Get cluster with project id "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Log)
+	ctx.SendLogs("GcpClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	if projectId == "" {
 		ctx.SendLogs("GcpClusterController: projectId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Log)
