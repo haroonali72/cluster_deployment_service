@@ -37,10 +37,10 @@ func (c *GcpClusterController) Get() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: Get cluster with project id "+err.Error(), models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpClusterController: Get cluster with project id "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: projectId is empty", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: projectId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -67,7 +67,7 @@ func (c *GcpClusterController) Get() {
 
 	cluster, err := gcp.GetCluster(projectId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpGetClusterController: error getting gcp cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpGetClusterController: error getting gcp cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
 		c.ServeJSON()
@@ -98,7 +98,7 @@ func (c *GcpClusterController) GetAll() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: getting all clusters ", models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpClusterController: getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.GCP, *ctx)
@@ -111,7 +111,7 @@ func (c *GcpClusterController) GetAll() {
 	}
 	clusters, err := gcp.GetAllCluster(data, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -146,7 +146,7 @@ func (c *GcpClusterController) Post() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Create", token, utils.Context{})
@@ -169,7 +169,7 @@ func (c *GcpClusterController) Post() {
 
 	err = gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
@@ -209,7 +209,7 @@ func (c *GcpClusterController) Patch() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Update", token, utils.Context{})
@@ -231,7 +231,7 @@ func (c *GcpClusterController) Patch() {
 
 	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
@@ -270,7 +270,7 @@ func (c *GcpClusterController) Delete() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: delete cluster with id "+id, models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpClusterController: delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("cluster", id, "Delete", token, utils.Context{})
@@ -290,7 +290,7 @@ func (c *GcpClusterController) Delete() {
 	beego.Info("GcpClusterController: Delete cluster with project id: ", id)
 
 	if id == "" {
-		ctx.SendLogs("GcpClusterController: projectId field is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: projectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
@@ -299,7 +299,7 @@ func (c *GcpClusterController) Delete() {
 
 	cluster, err := gcp.GetCluster(id, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
-		ctx.SendLogs("GcpClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
 		c.ServeJSON()
@@ -307,7 +307,7 @@ func (c *GcpClusterController) Delete() {
 	}
 	err = gcp.DeleteCluster(id, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -344,10 +344,10 @@ func (c *GcpClusterController) StartCluster() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -355,7 +355,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400) //no need
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -380,7 +380,7 @@ func (c *GcpClusterController) StartCluster() {
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
@@ -389,7 +389,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
-		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
@@ -403,7 +403,7 @@ func (c *GcpClusterController) StartCluster() {
 	cluster, err = gcp.GetCluster(projectId, *ctx)
 
 	if err != nil {
-		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -411,7 +411,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	if cluster.Status == "Cluster Created" {
-		ctx.SendLogs("gcpClusterController : cluster is already running", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("gcpClusterController : cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
 		c.ServeJSON()
@@ -453,10 +453,10 @@ func (c *GcpClusterController) GetStatus() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpNetworkController: FetchStatus.", models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpNetworkController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -464,7 +464,7 @@ func (c *GcpClusterController) GetStatus() {
 	}
 
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -488,7 +488,7 @@ func (c *GcpClusterController) GetStatus() {
 	}
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
@@ -497,7 +497,7 @@ func (c *GcpClusterController) GetStatus() {
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
-		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
@@ -508,7 +508,7 @@ func (c *GcpClusterController) GetStatus() {
 
 	cluster, err := gcp.FetchStatus(credentials, projectId, *ctx)
 	if err != nil {
-		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
 	}
 
@@ -543,10 +543,10 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpNetworkController: TerminateCluster.", models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("GcpNetworkController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -554,7 +554,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -578,7 +578,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
@@ -587,7 +587,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
-		ctx.SendLogs("GcpClusterController: athorization params missing or invalid", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: athorization params missing or invalid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
@@ -602,7 +602,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	cluster, err = gcp.GetCluster(projectId, *ctx)
 
 	if err != nil {
-		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -638,13 +638,13 @@ func (c *GcpClusterController) GetSSHKeys() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AWSNetworkController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("AWSNetworkController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	keys, err := gcp.GetAllSSHKeyPair(token, *ctx)
 
 	if err != nil {
-		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
@@ -680,13 +680,13 @@ func (c *GcpClusterController) GetServiceAccounts() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AWSNetworkController: Getting service accounts ", models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
+	ctx.SendLogs("AWSNetworkController: Getting service accounts ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -695,7 +695,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", token, "", *ctx)
 	if !isValid {
-		ctx.SendLogs("GcpClusterController: authorization params missing or invalid ", models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("GcpClusterController: authorization params missing or invalid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
@@ -704,7 +704,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 
 	serviceAccounts, err := gcp.GetAllServiceAccounts(credentials, *ctx)
 	if err != nil {
-		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
+		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()

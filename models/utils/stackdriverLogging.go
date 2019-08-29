@@ -59,8 +59,8 @@ type AuditTrailRequest struct {
 }
 */
 
-func (c *Context) SendLogs(message, severity string, logType string) {
-	switch models.Logger(logType) {
+func (c *Context) SendLogs(message, severity string, logType models.Logger) {
+	switch logType {
 	case models.Backend_Logging:
 		c.SendSDLog(message, severity)
 	case models.Audit_Trails:
