@@ -133,7 +133,22 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.data.UserId = userId
 }
 
-func getHost() string {
+func getHost(c *Context) string {
+	switch c.data.LogName {
+	case "backend-logging":
+		s := getBackendLogHost()
+		return s
+	case "audit-trails":
+		s := getAuditTrailsHost()
+		return s
+	}
+	return "Host Connection Error"
+}
+func getBackendLogHost() string {
 	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
 	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/backend/logging"
+}
+func getAuditTrailsHost() string {
+	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
+	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/audit/store"
 }
