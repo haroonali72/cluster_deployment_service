@@ -105,7 +105,7 @@ func (c *Context) Log(msg, message_type string) (int, error) {
 		return 400, err
 	}
 
-	req, err := CreatePostRequest(request_data, getHost())
+	req, err := CreatePostRequest(request_data, getHost(c))
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -145,10 +145,10 @@ func getHost(c *Context) string {
 	return "Host Connection Error"
 }
 func getBackendLogHost() string {
-	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
-	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/backend/logging"
+
+	return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.BackEndLoggingURI
 }
 func getAuditTrailsHost() string {
-	//return "https://dapis.cloudplex.cf/api/v1/backend/logging"
-	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/audit/store"
+
+	return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.AuditTrailLoggingURI
 }

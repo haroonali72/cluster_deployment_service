@@ -13,6 +13,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 	"time"
 )
 
@@ -104,8 +105,10 @@ type Data struct {
 }
 
 func GetRegion(token, projectId string, ctx utils.Context) (string, string, error) {
-	url := "http://" + beego.AppConfig.String("raccoon_url") + "/raccoon/projects/" + projectId
-
+	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
+	if strings.Contains(url, "{projectId}") {
+		url = strings.Replace(url, "{projectId}", projectId, -1)
+	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)

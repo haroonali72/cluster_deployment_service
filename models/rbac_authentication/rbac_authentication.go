@@ -29,7 +29,7 @@ func getRbacHost() string {
 }
 func GetAllAuthenticate(resourceType, companyId string, token string, cloudType models.Cloud, ctx utils.Context) (error, List) {
 
-	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/list")
+	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacListURI)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err, List{}
@@ -70,7 +70,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 }
 func Authenticate(resourceType, resourceId string, action string, token string, ctx utils.Context) (bool, error) {
 
-	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/allowed/")
+	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacAccessURI)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return false, err
@@ -99,7 +99,7 @@ func Authenticate(resourceType, resourceId string, action string, token string, 
 
 func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 
-	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/evaluate/")
+	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacEvaluateURI)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return false, err
@@ -126,7 +126,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 
 func GetInfo(token string) (types.Response, error) {
 
-	req, err := utils.CreateGetRequest(getRbacHost() + "/security/api/rbac/token/info")
+	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacInfoURI)
 	if err != nil {
 		return types.Response{}, err
 	}
@@ -175,7 +175,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, teams []string,
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return 400, err
 	}
-	req, err := utils.CreatePostRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
+	req, err := utils.CreatePostRequest(request_data, getRbacHost()+models.RbacEndpoint+models.RbacPolicyURI)
 	if err != nil {
 		beego.Info(err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
@@ -198,7 +198,7 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 
 	client := utils.InitReq()
 
-	req, err := utils.CreateDeleteRequest(getRbacHost() + "/security/api/rbac/policy")
+	req, err := utils.CreateDeleteRequest(getRbacHost() + models.RbacEndpoint + models.RbacPolicyURI)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return 400, err
