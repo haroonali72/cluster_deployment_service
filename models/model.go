@@ -58,7 +58,4 @@ const (
 	LOGGING_LEVEL_INFO    = "info"
 	LOGGING_LEVEL_ERROR   = "error"
 	LOGGING_LEVEL_WARNING = "warning"
-	//////logging///////////
-	Backend_Log = "backend-logging"
-	Audit_Trail = "auditTrails"
 )

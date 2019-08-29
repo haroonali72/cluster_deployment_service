@@ -56,7 +56,7 @@ func (c *AzureTemplateController) Get() {
 		return
 	}
 
-	ctx.SendLogs("AzureTemplateController: Get template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Log)
+	ctx.SendLogs("AzureTemplateController: Get template with id: "+id, models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -161,7 +161,7 @@ func (c *AzureTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AzureTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Log)
+	ctx.SendLogs("AzureTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
 
 	err, id := azure.CreateTemplate(template, *ctx)
 	if err != nil {
@@ -243,7 +243,7 @@ func (c *AzureTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AzureTemplateController: Patch template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Log)
+	ctx.SendLogs("AzureTemplateController: Patch template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, string(models.Backend_Logging))
 
 	err = azure.UpdateTemplate(template, *ctx)
 	if err != nil {
@@ -302,7 +302,7 @@ func (c *AzureTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AzureTemplateController: Delete template with id: ", id, models.Backend_Log)
+	ctx.SendLogs("AzureTemplateController: Delete template with id: ", id, string(models.Backend_Logging))
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)

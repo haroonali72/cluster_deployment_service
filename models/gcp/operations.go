@@ -43,7 +43,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return cluster, err
 		}
 	}
@@ -53,14 +53,14 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return cluster, err
 	}
 
 	err = json.Unmarshal(network.([]byte), &gcpNetwork)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return cluster, err
 	}
@@ -72,14 +72,14 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 		if pool.PoolRole == "master" {
 			err = cloud.deployMaster(pool, gcpNetwork, token, ctx)
 			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 				beego.Error(err.Error())
 				return cluster, err
 			}
 		} else {
 			err = cloud.deployWorkers(pool, gcpNetwork, token, ctx)
 			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 				beego.Error(err.Error())
 				return cluster, err
 			}
@@ -93,20 +93,20 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return err
 		}
 	}
 
 	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		return err
 	}
 
 	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Warn("cannot reserve any external ip for: " + pool.Name)
 		beego.Warn("creating instance '" + pool.Name + "' without external ip")
 	}
@@ -174,20 +174,20 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 	reqCtx := context.Background()
 	result, err := cloud.Client.Instances.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instance).Context(reqCtx).Do()
 	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return err
 	}
 
 	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		return err
 	}
 
 	newNode, err := cloud.fetchNodeInfo(instance.Name, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return err
 	}
@@ -209,7 +209,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return err
 		}
 	}
@@ -221,7 +221,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 
 	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, token, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		return err
 	}
 
@@ -235,14 +235,14 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 	reqCtx := context.Background()
 	result, err := cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instanceGroup).Context(reqCtx).Do()
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return err
 	}
 
 	err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		return err
 	}
 
@@ -252,7 +252,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		time.Sleep(5 * time.Second)
 		createdNodes, err = cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, instanceGroup.Name).Context(reqCtx).Do()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 			return err
 		}
@@ -273,7 +273,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 
 		newNode, err := cloud.fetchNodeInfo(nodeName, ctx)
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 			return err
 		}
@@ -296,14 +296,14 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return "", err
 		}
 	}
 
 	_, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		return "", err
 	}
 
@@ -378,20 +378,20 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 	reqCtx := context.Background()
 	result, err := cloud.Client.InstanceTemplates.Insert(cloud.ProjectId, &instanceTemplate).Context(reqCtx).Do()
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "already exists") {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return "", err
 	}
 
 	err = cloud.waitForGlobalCompletion(result, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		return "", err
 	}
 
 	createdTemplate, err := cloud.Client.InstanceTemplates.Get(cloud.ProjectId, instanceTemplate.Name).Context(reqCtx).Do()
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return "", err
 	}
@@ -403,7 +403,7 @@ func (cloud *GCP) fetchNodeInfo(nodeName string, ctx utils.Context) (Node, error
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return Node{}, err
 		}
 	}
@@ -411,7 +411,7 @@ func (cloud *GCP) fetchNodeInfo(nodeName string, ctx utils.Context) (Node, error
 	reqCtx := context.Background()
 	createdNode, err := cloud.Client.Instances.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, nodeName).Context(reqCtx).Do()
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return Node{}, err
 	}
@@ -437,7 +437,7 @@ func (cloud *GCP) deleteCluster(cluster Cluster_Def, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return err
 		}
 	}
@@ -445,7 +445,7 @@ func (cloud *GCP) deleteCluster(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pool := range cluster.NodePools {
 		err := cloud.deletePool(pool, ctx)
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return err
 		}
 	}
@@ -521,7 +521,7 @@ func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context) er
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return err
 		}
 	}
@@ -529,7 +529,7 @@ func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context) er
 	for _, pool := range cluster.NodePools {
 		err := cloud.fetchPoolStatus(pool, ctx)
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return err
 		}
 	}
@@ -541,7 +541,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return err
 		}
 	}
@@ -550,7 +550,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) error {
 	if pool.PoolRole == "master" {
 		newNode, err := cloud.fetchNodeInfo(pool.Name, ctx)
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 			return err
 		}
@@ -560,14 +560,14 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) error {
 	} else {
 		managedGroup, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 			return err
 		}
 		pool.PoolId = managedGroup.InstanceGroup
 		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 			return err
 		}
@@ -579,7 +579,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) error {
 
 			newNode, err := cloud.fetchNodeInfo(nodeName, ctx)
 			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 				beego.Error(err.Error())
 				return err
 			}
@@ -596,7 +596,7 @@ func (cloud *GCP) reserveExternalIp(nodeName string, ctx utils.Context) (string,
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return "", err
 		}
 	}
@@ -605,14 +605,14 @@ func (cloud *GCP) reserveExternalIp(nodeName string, ctx utils.Context) (string,
 	reqCtx := context.Background()
 	result, err := cloud.Client.Addresses.Insert(cloud.ProjectId, cloud.Region, &address).Context(reqCtx).Do()
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return "", err
 	}
 
 	err = cloud.waitForRegionalCompletion(result, cloud.Region, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return "", err
 	}
@@ -622,7 +622,7 @@ func (cloud *GCP) reserveExternalIp(nodeName string, ctx utils.Context) (string,
 		time.Sleep(1 * time.Second)
 		result, err := cloud.Client.Addresses.Get(cloud.ProjectId, cloud.Region, address.Name).Context(reqCtx).Do()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 			return "", err
 		}
@@ -661,7 +661,7 @@ func (cloud *GCP) listServiceAccounts(ctx utils.Context) ([]string, error) {
 	if cloud.Iam == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			return nil, err
 		}
 	}
@@ -669,7 +669,7 @@ func (cloud *GCP) listServiceAccounts(ctx utils.Context) ([]string, error) {
 	reqCtx := context.Background()
 	accounts, err := cloud.Iam.Projects.ServiceAccounts.List("projects/" + cloud.ProjectId).Context(reqCtx).Do()
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error(err.Error())
 		return nil, err
 	}
@@ -693,7 +693,7 @@ func (cloud *GCP) waitForGlobalCompletion(op *compute.Operation, ctx utils.Conte
 		time.Sleep(5 * time.Second)
 		result, err := cloud.Client.GlobalOperations.Get(cloud.ProjectId, op.Name).Context(reqCtx).Do()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 		}
 		if result != nil {
@@ -715,7 +715,7 @@ func (cloud *GCP) waitForRegionalCompletion(op *compute.Operation, region string
 		time.Sleep(5 * time.Second)
 		result, err := cloud.Client.RegionOperations.Get(cloud.ProjectId, region, op.Name).Context(reqCtx).Do()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 		}
 		if result != nil {
@@ -737,7 +737,7 @@ func (cloud *GCP) waitForZonalCompletion(op *compute.Operation, zone string, ctx
 		time.Sleep(5 * time.Second)
 		result, err := cloud.Client.ZoneOperations.Get(cloud.ProjectId, zone, op.Name).Context(reqCtx).Do()
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 			beego.Error(err.Error())
 		}
 		if result != nil {
@@ -793,14 +793,14 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (st
 	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, token, ctx)
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", err
 	}
 
 	existingKey, err := key_utils.KeyConversion(key, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, string(models.Backend_Logging))
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", err
 	}
