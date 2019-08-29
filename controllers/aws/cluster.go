@@ -39,6 +39,7 @@ func (c *AWSClusterController) Get() {
 		return
 	}
 	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
@@ -60,7 +61,7 @@ func (c *AWSClusterController) Get() {
 
 	//====================================================================================//
 
-	ctx.SendSDLog("AWSClusterController: Get cluster with project id: "+projectId, "info")
+	ctx.SendLogs("AWSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -90,7 +91,7 @@ func (c *AWSClusterController) Get() {
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
 	token := c.Ctx.Input.Header("token")
-	beego.Info(token)
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -99,7 +100,6 @@ func (c *AWSClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info(userInfo.CompanyId)
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
@@ -116,18 +116,17 @@ func (c *AWSClusterController) GetAll() {
 	}
 
 	//====================================================================================//
-	beego.Info("getting clusters")
-	ctx.SendSDLog("AWSClusterController: GetAll clusters.", "info")
+
+	ctx.SendLogs("AWSClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	clusters, err := aws.GetAllCluster(*ctx, data)
 	if err != nil {
-		beego.Info("error in clusters" + err.Error())
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-	beego.Info("fetched cluster")
+
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -179,7 +178,7 @@ func (c *AWSClusterController) Post() {
 
 	//=============================================================================//
 
-	ctx.SendSDLog("AWSClusterController: Post new cluster with name: "+cluster.Name, "info")
+	ctx.SendLogs("AWSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	res, err := govalidator.ValidateStruct(cluster)
 	if !res || err != nil {
@@ -256,7 +255,7 @@ func (c *AWSClusterController) Patch() {
 
 	//=============================================================================//
 
-	ctx.SendSDLog("AWSClusterController: Patch cluster with name: "+cluster.Name, "info")
+	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	err = aws.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
@@ -318,7 +317,7 @@ func (c *AWSClusterController) Delete() {
 
 	//=============================================================================//
 
-	ctx.SendSDLog("AWSClusterController: Delete cluster with project id: "+id, "info")
+	ctx.SendLogs("AWSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -391,7 +390,7 @@ func (c *AWSClusterController) StartCluster() {
 
 	//=============================================================================//
 
-	ctx.SendSDLog("AWSNetworkController: StartCluster.", "info")
+	ctx.SendLogs("AWSNetworkController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
@@ -404,7 +403,8 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendSDLog("AWSClusterController: Getting Cluster of project. "+projectId, "info")
+	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Log)
+
 	cluster, err = aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
@@ -434,7 +434,7 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AWSClusterController: Creating Cluster. "+cluster.Name, "info")
+	ctx.SendLogs("AWSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
 
@@ -485,7 +485,7 @@ func (c *AWSClusterController) GetStatus() {
 	}
 
 	//=============================================================================//
-	ctx.SendSDLog("AWSNetworkController: FetchStatus.", "info")
+	ctx.SendLogs("AWSNetworkController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
@@ -495,8 +495,8 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs("AWSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
-	ctx.SendSDLog("AWSClusterController: Fetch Cluster Status of project. "+projectId, "info")
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -528,6 +528,7 @@ func (c *AWSClusterController) GetStatus() {
 }
 
 // @Title Terminate
+// @Description terminates a  cluster
 // @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
@@ -569,8 +570,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 
 	//=============================================================================//
-	ctx.SendSDLog("AWSNetworkController: TerminateCluster.", "info")
-
+	ctx.SendLogs("AWSNetworkController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
@@ -597,9 +597,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
-	ctx.SendSDLog("AWSClusterController: Getting Cluster of project. "+projectId, "info")
-
+	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 	cluster, err = aws.GetCluster(projectId, *ctx)
 
 	if err != nil {
@@ -608,7 +606,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AWSClusterController: Terminating Cluster. "+cluster.Name, "info")
+	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId)
 
@@ -640,8 +638,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 	//==========================RBAC Authentication==============================//
 
 	//=============================================================================//
-	ctx.SendSDLog("AWSNetworkController: FetchExistingSSHKeys.", "info")
-
+	ctx.SendLogs("AWSNetworkController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 	keys, err := aws.GetAllSSHKeyPair(*ctx, token)
 
 	if err != nil {
@@ -691,7 +688,7 @@ func (c *AWSClusterController) GetAMI() {
 	//}
 
 	//=============================================================================//
-	ctx.SendSDLog("AWSClusterController: FetchAMIs.", "info")
+	ctx.SendLogs("AWSClusterController: FetchAMIs.", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region := c.Ctx.Input.Header("X-Region")
@@ -706,7 +703,7 @@ func (c *AWSClusterController) GetAMI() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AWSClusterController: Get Ami from AWS", "info")
+	ctx.SendLogs("AWSClusterController: Get Ami from AWS", models.LOGGING_LEVEL_INFO, models.Backend_Log)
 
 	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx, token)
 
@@ -792,13 +789,15 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	}
 
 	go aws.EnableScaling(awsProfile, cluster, *ctx, token)
-	/* err != nil {
+
+	/*err = aws.EnableScaling(awsProfile, cluster, *ctx, token)
+	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
-	}*/
-
+	}
+	*/
 	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()
 }

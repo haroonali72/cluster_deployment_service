@@ -55,7 +55,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
-		ctx.SendSDLog(text, "error")
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return errors.New(text), ""
 	}
 	i := rand.Int()
@@ -66,13 +66,15 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 
 	err = checkTemplateSize(template)
 	if err != nil { //cluster found
-		ctx.SendSDLog(err.Error(), "error")
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err, ""
 	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureTemplateCollection, template)
 	if err != nil {
-		ctx.SendSDLog("Template model: Create - Got error inserting template to the database: "+err.Error(), "error")
+
+		ctx.SendLogs("Template model: Create - Got error inserting template to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err, ""
 	}
 
@@ -82,7 +84,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 func GetTemplate(templateName string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
-		ctx.SendSDLog("Template model: Get - Got error while connecting to the database: "+err1.Error(), "error")
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Template{}, err1
 	}
 	defer session.Close()
@@ -90,7 +92,7 @@ func GetTemplate(templateName string, ctx utils.Context) (template Template, err
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Find(bson.M{"name": templateName}).One(&template)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return Template{}, err
 	}
 	return template, nil
@@ -107,10 +109,10 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	}
 	defer session.Close()
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoAzureTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}}).All(&templates)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 
@@ -119,7 +121,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
-		ctx.SendSDLog("Template model: GetAll - Got error while connecting to the database: "+err1.Error(), "error")
+		ctx.SendLogs("Template model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err1
 	}
 	defer session.Close()
@@ -127,7 +129,7 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Find(bson.M{}).All(&templates)
 	if err != nil {
-		ctx.SendSDLog("Template model: GetAll - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Template model: GetAll - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return nil, err
 	}
 
@@ -138,7 +140,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return errors.New(text)
 	}
 
@@ -153,7 +155,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 
 	err, _ = CreateTemplate(template, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 
@@ -163,8 +165,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 func DeleteTemplate(templateName string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
-
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 	defer session.Close()
@@ -172,7 +173,7 @@ func DeleteTemplate(templateName string, ctx utils.Context) error {
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
 	err = c.Remove(bson.M{"name": templateName})
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Log)
 		return err
 	}
 
