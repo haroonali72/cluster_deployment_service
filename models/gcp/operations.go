@@ -31,10 +31,14 @@ type GCP struct {
 	Zone        string
 }
 
-func getNetworkHost(cloudType string) string {
-	host := "http://" + beego.AppConfig.String("network_url") + "/weasel/network/{cloud_provider}"
-	if strings.Contains(host, "{cloud_provider}") {
-		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+func getNetworkHost(cloudType, projectId string) string {
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", projectId, -1)
 	}
 	return host
 }
@@ -49,7 +53,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 	}
 
 	var gcpNetwork types.GCPNetwork
-	url := getNetworkHost("gcp") + "/" + cluster.ProjectId
+	url := getNetworkHost("gcp", cluster.ProjectId)
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {

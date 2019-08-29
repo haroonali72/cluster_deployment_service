@@ -111,8 +111,10 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
-	url := beego.AppConfig.String("raccoon_url") + "/" + projectId
-
+	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
+	if strings.Contains(url, "{projectId}") {
+		url = strings.Replace(url, "{projectId}", projectId, -1)
+	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -130,7 +132,7 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
-	url := getNetworkHost("aws") + "/" + projectId
+	url := getNetworkHost("aws", projectId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {

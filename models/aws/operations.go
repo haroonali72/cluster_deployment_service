@@ -206,7 +206,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 		}
 	}
 	var awsNetwork types.AWSNetwork
-	url := getNetworkHost("aws") + "/" + cluster.ProjectId
+	url := getNetworkHost("aws", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 
 	/*bytes, err := json.Marshal(network)
@@ -998,11 +998,18 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Cont
 func getKubeEngineHost() string {
 	return beego.AppConfig.String("network_url")
 }
-func getNetworkHost(cloudType string) string {
-	host := "http://" + beego.AppConfig.String("network_url") + "/weasel/network/{cloud_provider}"
-	if strings.Contains(host, "{cloud_provider}") {
-		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+func getNetworkHost(cloudType, projectId string) string {
+
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
+
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", cloudType, -1)
+	}
+
 	return host
 }
 func (cloud *AWS) describeAmi(ami *string, ctx utils.Context) ([]*ec2.BlockDeviceMapping, error) {
@@ -1273,7 +1280,7 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			var awsNetwork types.AWSNetwork
-			url := getNetworkHost("aws") + "/" + cluster.ProjectId
+			url := getNetworkHost("aws", cluster.ProjectId)
 			network, err := api_handler.GetAPIStatus(token, url, ctx)
 
 			/*bytes, err := json.Marshal(network)

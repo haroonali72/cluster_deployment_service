@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"antelope/models"
 	"encoding/json"
 	"github.com/astaxie/beego"
 )
@@ -60,7 +61,5 @@ func TransformData(data interface{}) ([]byte, error) {
 
 }
 func getLoggerHost() string {
-
-	return "http://" + beego.AppConfig.String("logger_url") + "/elephant/api/v1/frontend/logging/"
-	//return "https://dapis.cloudplex.cf/elephant/api/v1/frontend/logging/"
+	return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.FrontEndLoggingURI
 }
