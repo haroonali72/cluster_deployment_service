@@ -109,19 +109,9 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 func getHost(c *Context) string {
 	switch c.data.LogName {
 	case string(models.Backend_Logging):
-		s := getBackendLogHost()
-		return s
+		return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.BackEndLoggingURI
 	case string(models.Audit_Trails):
-		s := getAuditTrailsHost()
-		return s
+		return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.AuditTrailLoggingURI
 	}
 	return "Host Connection Error"
-}
-func getBackendLogHost() string {
-
-	return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.BackEndLoggingURI
-}
-func getAuditTrailsHost() string {
-
-	return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.AuditTrailLoggingURI
 }
