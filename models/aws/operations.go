@@ -1007,7 +1007,7 @@ func getNetworkHost(cloudType, projectId string) string {
 	}
 
 	if strings.Contains(host, "{projectId}") {
-		host = strings.Replace(host, "{projectId}", cloudType, -1)
+		host = strings.Replace(host, "{projectId}", projectId, -1)
 	}
 
 	return host
