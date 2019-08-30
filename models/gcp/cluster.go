@@ -90,7 +90,7 @@ type AccountData struct {
 	PrivateKeyId  string `json:"private_key_id" valid:"required"`
 	PrivateKey    string `json:"private_key" valid:"required"`
 	ClientEmail   string `json:"client_email" valid:"required"`
-	ClientId      string `json:"client_models/aws/operations.go:8id" valid:"required"`
+	ClientId      string `json:"client_id" valid:"required"`
 	AuthUri       string `json:"auth_uri" valid:"required"`
 	TokenUri      string `json:"token_uri" valid:"required"`
 	AuthProvider  string `json:"auth_provider_x509_cert_url" valid:"required"`
@@ -139,8 +139,8 @@ func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Cont
 
 	response, err := vault.GetCredentialProfile("gcp", profileId, token, ctx)
 	if err != nil {
-
-		ctx.SendLogs("gcpClusterModel :", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return false, GcpCredentials{}
 	}
 
@@ -150,14 +150,12 @@ func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Cont
 		beego.Error(err.Error())
 		return false, GcpCredentials{}
 	}
-
 	jsonData, err := json.Marshal(credentials.Credentials.AccountData)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
 		return false, GcpCredentials{}
 	}
-
 	credentials.Credentials.RawData = string(jsonData)
 	credentials.Credentials.Region = region
 	credentials.Credentials.Zone = zone
