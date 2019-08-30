@@ -38,11 +38,11 @@ type Context struct {
 func (c *Context) SendLogs(message, severity string, logType models.Logger) (int, error) {
 	switch logType {
 	case models.Backend_Logging:
-		c.data.LogName = string(models.Audit_Trails)
+		c.data.LogName = string(models.Backend_Logging)
 		StatusCode, err := c.Log(message, severity, logType)
 		return StatusCode, err
 	case models.Audit_Trails:
-		c.data.LogName = string(models.Backend_Logging)
+		c.data.LogName = string(models.Audit_Trails)
 		StatusCode, err := c.Log(message, severity, logType)
 		return StatusCode, err
 	}

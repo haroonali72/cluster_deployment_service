@@ -606,7 +606,6 @@ func (c *AzureClusterController) GetSSHKeys() {
 		c.ServeJSON()
 		return
 	}
-
 	c.Data["json"] = keys
 	c.ServeJSON()
 }
