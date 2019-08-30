@@ -39,21 +39,25 @@ func (c *Context) SendLogs(message, severity string, logType models.Logger) (int
 	switch logType {
 	case models.Backend_Logging:
 		c.data.LogName = string(models.Audit_Trails)
-		message = message + "by User: " + c.data.UserId + " of Company: " + c.data.Company
-		StatusCode, err := c.Log(message, severity)
+		StatusCode, err := c.Log(message, severity, logType)
 		return StatusCode, err
 	case models.Audit_Trails:
 		c.data.LogName = string(models.Backend_Logging)
-		StatusCode, err := c.Log(message, severity)
+		StatusCode, err := c.Log(message, severity, logType)
 		return StatusCode, err
 	}
 	return 0, nil
 }
 
-func (c *Context) Log(msg, message_type string) (int, error) {
-	_, file, line, _ := runtime.Caller(2)
+func (c *Context) Log(msg, message_type string, logType models.Logger) (int, error) {
+	if logType == models.Backend_Logging {
+		_, file, line, _ := runtime.Caller(2)
+		c.data.Message = file + ":" + strconv.Itoa(line) + " " + msg
+	} else {
+		c.data.Message = msg + " by User: " + c.data.UserId
+	}
 	c.data.Severity = message_type
-	c.data.Message = file + ":" + strconv.Itoa(line) + " " + msg
+
 	if message_type == models.LOGGING_LEVEL_ERROR {
 		c.data.MessageType = "stderr"
 	} else if message_type == models.LOGGING_LEVEL_INFO {
@@ -90,6 +94,7 @@ func (c *Context) Log(msg, message_type string) (int, error) {
 
 func (c *Context) InitializeLogger(requestURL, method, path string, projectId string, companyId string, userId string) {
 
+	c.data.ResourceName = "Cluster"
 	c.data.ServiceName = "antelope"
 	c.data.Request.Url = requestURL
 	c.data.Request.Method = method
