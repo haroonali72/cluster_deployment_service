@@ -131,7 +131,7 @@ func InitFlags() error {
 			Name:        "raccoon_url",
 			Usage:       "raccoon_url",
 			Destination: &raccoon_url,
-			EnvVar:      "racoon_url",
+			EnvVar:      "raccoon_url",
 		},
 		cli.StringFlag{
 			Name:        "rbac_url",

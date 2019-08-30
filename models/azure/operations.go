@@ -98,11 +98,16 @@ func (cloud *AZURE) init() error {
 
 	return nil
 }
-func getNetworkHost(cloudType string) string {
-	host := "http://" + beego.AppConfig.String("network_url") + "/weasel/network/{cloud_provider}"
-	if strings.Contains(host, "{cloud_provider}") {
-		host = strings.Replace(host, "{cloud_provider}", cloudType, -1)
+func getNetworkHost(cloudType, projectId string) string {
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", projectId, -1)
+	}
+
 	return host
 
 }
@@ -117,22 +122,21 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 	}
 
 	var azureNetwork types.AzureNetwork
-	url := getNetworkHost("azure") + "/" + cluster.ProjectId
+	url := getNetworkHost("azure", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	err = json.Unmarshal(network.([]byte), &azureNetwork)
 
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
 
 	for i, pool := range cluster.NodePools {
-
-		ctx.SendSDLog("AZUREOperations creating nodes", "info")
+		ctx.SendLogs("AZUREOperations creating nodes", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId, token)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
 		if pool.EnableVolume {
@@ -284,7 +288,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendSDLog("Cluster model: Status - Failed to get lastest status "+err.Error(), "error")
+			ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return Cluster_Def{}, err
 		}
 	}
@@ -294,7 +298,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 		if pool.KeyInfo.CredentialType == models.SSHKey {
 			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return Cluster_Def{}, err
 			}
 			keyInfo, err = key_utils.KeyConversion(k1, ctx)
@@ -308,21 +312,21 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			beego.Info("getting instance")
 			vm, err := cloud.GetInstance(pool.Name, cluster.ResourceGroup, ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return Cluster_Def{}, err
 			}
 			beego.Info("getting nic")
 			nicName := "NIC-" + pool.Name
 			nicParameters, err := cloud.GetVMNIC(cluster.ResourceGroup, nicName, ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return Cluster_Def{}, err
 			}
 			beego.Info("getting pip")
 			IPname := "pip-" + pool.Name
 			publicIPaddress, err := cloud.GetVMPIP(cluster.ResourceGroup, IPname, ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return Cluster_Def{}, err
 			}
 
@@ -343,7 +347,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 		} else {
 			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, pool.Name, "", "", "")
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return Cluster_Def{}, err
 			}
 			for _, vm := range vms.Values() {
@@ -391,7 +395,7 @@ func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx utils.Con
 
 	vm, err := cloud.VMClient.Get(cloud.context, resourceGroup, name, compute.InstanceView)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, err
 	}
 	return vm, nil
@@ -399,7 +403,7 @@ func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx utils.Con
 func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx utils.Context) (network.Interface, error) {
 	nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.context, resourceGroup, vmss, vm, nicName, "")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.Interface{}, err
 	}
 	return nicParameters, nil
@@ -407,7 +411,7 @@ func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx utils.Co
 func (cloud *AZURE) GetPIP(resourceGroup, vmss, vm, nic, ipConfig, ipAddress string, ctx utils.Context) (network.PublicIPAddress, error) {
 	publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.context, resourceGroup, vmss, vm, nic, ipConfig, ipAddress, "")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.PublicIPAddress{}, err
 	}
 	return publicIPaddress, nil
@@ -415,7 +419,7 @@ func (cloud *AZURE) GetPIP(resourceGroup, vmss, vm, nic, ipConfig, ipAddress str
 func (cloud *AZURE) GetVMNIC(resourceGroup, nicName string, ctx utils.Context) (network.Interface, error) {
 	nicParameters, err := cloud.InterfacesClient.Get(cloud.context, resourceGroup, nicName, "")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.Interface{}, err
 	}
 	return nicParameters, nil
@@ -423,7 +427,7 @@ func (cloud *AZURE) GetVMNIC(resourceGroup, nicName string, ctx utils.Context) (
 func (cloud *AZURE) GetVMPIP(resourceGroup, IPname string, ctx utils.Context) (network.PublicIPAddress, error) {
 	publicIPaddress, err := cloud.AddressClient.Get(cloud.context, resourceGroup, IPname, "")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.PublicIPAddress{}, err
 	}
 	return publicIPaddress, nil
@@ -432,7 +436,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -497,29 +501,29 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 }
 func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId string, ctx utils.Context) error {
 
-	ctx.SendSDLog("AZUREOperations: terminating node pools", "info")
-
+	ctx.SendLogs("AZUREOperations: terminating node pools", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	future, err := cloud.VMSSCLient.Delete(cloud.context, resourceGroup, name)
 
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else {
 		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
-	ctx.SendSDLog("Node pool terminated successfully: "+name, "info")
 
+	ctx.SendLogs("Node pool terminated successfully: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return nil
 }
 func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, ctx utils.Context) error {
 
 	beego.Info("AZUREOperations: terminating nodes")
-	ctx.SendSDLog("Terminating node: "+name, "info")
+
+	ctx.SendLogs("Terminating node: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
 	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
@@ -536,7 +540,8 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		}
 		beego.Info("Deleted Node" + name)
 	}
-	ctx.SendSDLog("Node terminated successfully: "+name, "info")
+
+	ctx.SendLogs("Node terminated successfully: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return nil
 }
 
@@ -553,17 +558,16 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 
 	address, err := cloud.AddressClient.CreateOrUpdate(cloud.context, resourceGroup, IPname, pipParameters)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.PublicIPAddress{}, err
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return network.PublicIPAddress{}, err
 		}
 	}
-
-	ctx.SendSDLog("Get public IP address info...", "info")
+	ctx.SendLogs("Get public IP address info...", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	publicIPaddress, err := cloud.GetVMPIP(resourceGroup, IPname, ctx)
 	return publicIPaddress, err
 }
@@ -572,12 +576,12 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 	utils.SendLog(companyId, "Deleting Public IP: "+IPname, "info", projectId)
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -609,12 +613,12 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 
 	future, err := cloud.InterfacesClient.CreateOrUpdate(cloud.context, resourceGroup, nicName, nicParameters)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.Interface{}, err
 	} else {
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return network.Interface{}, err
 		}
 	}
@@ -626,12 +630,13 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 	utils.SendLog(companyId, "Deleting NIC: "+nicName, "info", proId)
 	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 		return err
 	} else {
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -735,8 +740,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 
 		if err != nil && err.Error() != "not found" {
-			ctx.SendSDLog("vm creation failed", "error")
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs("vm creation failed", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
 		} else if err == nil {
 
@@ -763,7 +768,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, "azure@example.com", ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return compute.VirtualMachine{}, "", "", err
 			}
 			key := []compute.SSHPublicKey{{
@@ -782,7 +787,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return compute.VirtualMachine{}, "", "", err
 			}
 
@@ -794,7 +799,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
 		}
 
@@ -830,7 +835,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			storageId := "https://" + sName + ".blob.core.windows.net/"
 			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return compute.VirtualMachine{}, "", "", err
 			}
 			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
@@ -851,19 +856,19 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, vm)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, "", "", err
 	} else {
 		err = vmFuture.WaitForCompletion(cloud.context, cloud.VMClient.Client)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
 		}
 	}
 	beego.Info("Get VM  by name", pool.Name)
 	vm, err = cloud.GetInstance(pool.Name, resourceGroup, ctx)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, "", "", err
 	}
 	return vm, private, public, nil
@@ -903,7 +908,7 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 	_, err := cloud.DiskClient.Delete(context.Background(), resouceGroup, diskName)
 	if err != nil {
 		beego.Error("Disk deletion failed" + err.Error())
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
@@ -914,7 +919,7 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, acccountName)
 	if err != nil {
 		beego.Error("Storage account deletion failed")
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
@@ -1075,9 +1080,9 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		}
 
 		if vm.PublicIP == nil {
-			ctx.SendSDLog("waiting for public ip", "warning")
+			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
 			time.Sleep(time.Second * 50)
-			ctx.SendSDLog("waited for public ip", "warning")
+			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
 			IPname := fmt.Sprintf("pip-%s", *vm.Name)
 			beego.Info(IPname)
 			if poleRole == "master" {
@@ -1112,9 +1117,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 
 			errCopy = copyFile(KeyName, user, *vm.PublicIP, fileName)
 			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
-
-				//ctx.SendSDLog(("time passed %6.2f sec\n"+ strconv.Itoa( int( time.Since(start).Seconds())))+"warning")
-				ctx.SendSDLog("waiting 5 seconds before retry", "warning")
+				ctx.SendLogs("waiting 5 seconds before retry", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
 				time.Sleep(5 * time.Second)
 			} else {
 				retry = false
@@ -1212,7 +1215,7 @@ func setScriptPermision(keyName string, userName string, instanceId, fileName st
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil
 	}
 	return nil
@@ -1229,7 +1232,7 @@ func runScript(keyName string, userName string, instanceId string, fileName stri
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil
 	}
 	return nil
@@ -1243,7 +1246,7 @@ func deleteScript(keyName string, userName string, instanceId string, fileName s
 	cmd := exec.Command(cmd1, args...)
 	err := cmd.Run()
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
@@ -1253,7 +1256,7 @@ func deleteFile(keyName string, ctx utils.Context) error {
 	keyPath := "/app/keys/" + keyName + ".pem"
 	err := os.Remove(keyPath)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
@@ -1364,7 +1367,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 
 		if err != nil && err.Error() != "not found" {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		} else if err == nil {
 
@@ -1391,7 +1394,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, "azure@example.com", ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 			key := []compute.SSHPublicKey{{
@@ -1410,7 +1413,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 
@@ -1422,7 +1425,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 
@@ -1458,7 +1461,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			storageId := "https://" + sName + ".blob.core.windows.net/"
 			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
 			if err != nil {
-				ctx.SendSDLog(err.Error(), "error")
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 			}
 			params.VirtualMachineProfile.DiagnosticsProfile = &compute.DiagnosticsProfile{
@@ -1482,19 +1485,19 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	}
 	address, err := cloud.VMSSCLient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, params)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	} else {
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
-			ctx.SendSDLog(err.Error(), "error")
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 	}
 
 	vms, err := cloud.VMSSVMClient.List(cloud.context, resourceGroup, pool.Name, "", "", "")
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	}
 	return vms, nil, private

@@ -1,6 +1,7 @@
 package key_utils
 
 import (
+	"antelope/models"
 	"antelope/models/utils"
 	"encoding/json"
 	"io/ioutil"
@@ -12,12 +13,13 @@ func KeyConversion(keyInfo interface{}, ctx utils.Context) (utils.Key, error) {
 	b, e := json.Marshal(keyInfo)
 	var k utils.Key
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 		return utils.Key{}, e
 	}
 	e = json.Unmarshal(b, &k)
 	if e != nil {
-		ctx.SendSDLog(e.Error(), "error")
+		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return utils.Key{}, e
 	}
 	return k, nil
@@ -34,15 +36,15 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (utils.KeyPair
 	cmd := "ssh-keygen"
 	args := []string{"-t", "rsa", "-b", "4096", "-C", username, "-f", keyName}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return utils.KeyPairResponse{}, err
 	}
-	ctx.SendSDLog("Successfully generated sshkeys", "info")
 
+	ctx.SendLogs("Successfully generated sshkeys", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	arr, err1 := ioutil.ReadFile(keyName)
 	str := string(arr)
 	if err1 != nil {
-		ctx.SendSDLog(err1.Error(), "error")
+		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return utils.KeyPairResponse{}, err1
 	}
 
@@ -52,7 +54,7 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (utils.KeyPair
 	arr, err1 = ioutil.ReadFile(keyName + ".pub")
 	str = string(arr)
 	if err1 != nil {
-		ctx.SendSDLog(err1.Error(), "error")
+		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return utils.KeyPairResponse{}, err1
 	}
 	res.PublicKey = str

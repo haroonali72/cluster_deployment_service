@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"antelope/models"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
@@ -28,7 +29,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	}
 	b, err := json.Marshal(msg)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
 		return
 	}
@@ -39,7 +40,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	//	beego.Error(err.Error())
 	//	return
 	//}
-	ctx.SendSDLog(cmd.String(), "info")
+	ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	if cmd != nil {
 		if cmd.Err() != nil {
 			beego.Error(cmd.Err().Error())

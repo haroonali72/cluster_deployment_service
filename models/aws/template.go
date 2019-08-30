@@ -65,14 +65,14 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 
 	err := checkTemplateSize(template, ctx)
 	if err != nil { //cluster found
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err, ""
 	}
 
 	s := db.GetMongoConf()
 	err = db.InsertInMongo(s.MongoAwsTemplateCollection, template)
 	if err != nil {
-		ctx.SendSDLog("Template model: Create - Got error inserting template to the database: "+err.Error(), "error")
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err, ""
 	}
 
@@ -82,7 +82,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 func GetTemplate(templateId string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
-		ctx.SendSDLog("Template model: Get - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err1
 	}
 	defer session.Close()
@@ -90,7 +90,7 @@ func GetTemplate(templateId string, ctx utils.Context) (template Template, err e
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{"template_id": templateId}).One(&template)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err
 	}
 
@@ -111,7 +111,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}}).All(&templates)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
@@ -128,7 +128,7 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{}).All(&templates)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
@@ -139,13 +139,15 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.TemplateId)
-		ctx.SendSDLog(text, "error")
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
 
 	err = DeleteTemplate(template.TemplateId, ctx)
 	if err != nil {
-		ctx.SendSDLog("Template model: Update - Got error deleting template: "+err.Error(), "error")
+
+		ctx.SendLogs("Template model: Update - Got error deleting template: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 		return err
 	}
 
@@ -154,7 +156,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 
 	err, _ = CreateTemplate(template, ctx)
 	if err != nil {
-		ctx.SendSDLog("Template model: Update - Got error creating template: "+err.Error(), "error")
+		ctx.SendLogs("Template model: Update - Got error creating template: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -164,7 +166,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 func DeleteTemplate(templateId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
-		ctx.SendSDLog("Template model: Delete - Got error while connecting to the database: "+err.Error(), "error")
+		ctx.SendLogs("Template model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	defer session.Close()
@@ -172,7 +174,7 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Remove(bson.M{"template_id": templateId})
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
