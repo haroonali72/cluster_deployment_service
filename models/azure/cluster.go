@@ -32,6 +32,7 @@ type Cluster_Def struct {
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required"`
+	CompanyId        string        `json:"company_id" bson:"company_id"`
 }
 
 type NodePool struct {
@@ -174,7 +175,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 }
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 
-	_, err := GetCluster(cluster.ProjectId, ctx)
+	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -205,7 +206,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	return nil
 }
 
-func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err error) {
+func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
@@ -216,7 +217,7 @@ func GetCluster(projectId string, ctx utils.Context) (cluster Cluster_Def, err e
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
-	err = c.Find(bson.M{"project_id": projectId}).One(&cluster)
+	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
@@ -252,7 +253,7 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 }
 
 func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
-	oldCluster, err := GetCluster(cluster.ProjectId, ctx)
+	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -362,9 +363,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	return nil
 }
-func FetchStatus(credentials vault.AzureProfile, token, projectId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, token, projectId string, companyId string, ctx utils.Context) (Cluster_Def, error) {
 
-	cluster, err := GetCluster(projectId, ctx)
+	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
@@ -408,7 +409,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		return pub_err
 	}
 
-	cluster, err := GetCluster(cluster.ProjectId, ctx)
+	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
