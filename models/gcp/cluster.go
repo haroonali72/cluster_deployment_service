@@ -533,9 +533,9 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	return nil
 }
 
-func GetSSHkey(keyName, token string, ctx utils.Context) (privateKey string, err error) {
+func GetSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
-	privateKey, err = fetchOrGenerateKey(keyName, token, ctx)
+	privateKey, err = fetchOrGenerateKey(keyName, token, teams, ctx)
 	fmt.Println("Private key:" + privateKey)
 	if err != nil {
 		return "", err

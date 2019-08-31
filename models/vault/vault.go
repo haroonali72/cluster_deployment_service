@@ -250,7 +250,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, er
 	return response.StatusCode, err
 
 }
-func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Context) (interface{}, error) {
+func GetAzureSSHKey(cloudType, keyName, token, teams string, ctx utils.Context) (interface{}, error) {
 
 	host := getVaultHost() + models.VaultGetKeyURI
 
@@ -268,6 +268,7 @@ func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Co
 	}
 	client := utils.InitReq()
 	req.Header.Set("token", token)
+	req.Header.Set("teams", teams)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
