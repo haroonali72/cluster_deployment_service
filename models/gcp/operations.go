@@ -802,7 +802,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (st
 		return "", err
 	}
 
-	existingKey, err := key_utils.KeyConversion(key, ctx)
+	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("vm creation failed with error: " + err.Error())
