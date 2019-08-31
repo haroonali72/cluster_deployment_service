@@ -276,6 +276,7 @@ paths:
     post:
       tags:
       - cluster/aws
+      description: terminates a  cluster
       operationId: AWSClusterController.Terminate
       parameters:
       - in: header
@@ -663,6 +664,34 @@ paths:
           description: '{"error": "profile id is empty"}'
         "401":
           description: '{"error": "authorization params missing or invalid"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/sshkey:
+    post:
+      tags:
+      - cluster/gcp
+      description: Generates new SSH key
+      operationId: GcpClusterController.CreateSSHKey
+      parameters:
+      - in: header
+        name: SSHKey
+        description: SSH Key Name
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/utils.Key'
+        "404":
+          description: '{"error": exception_message}'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/sshkeys:
@@ -1146,7 +1175,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  484.0xc042acd1d0.false:
+  542.0xc00063d440.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1182,7 +1211,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/484.0xc042acd1d0.false'
+        $ref: '#/definitions/542.0xc00063d440.false'
       name:
         type: string
       network_name:
@@ -1594,6 +1623,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gcp.Node'
+      pool_id:
+        type: string
       pool_role:
         type: string
       root_volume:

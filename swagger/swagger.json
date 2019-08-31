@@ -345,6 +345,7 @@
                 "tags": [
                     "cluster/aws"
                 ],
+                "description": "terminates a  cluster",
                 "operationId": "AWSClusterController.Terminate",
                 "parameters": [
                     {
@@ -934,6 +935,49 @@
                     },
                     "401": {
                         "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gcp/sshkey": {
+            "post": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "GcpClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "SSHKey",
+                        "description": "SSH Key Name",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Key"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
@@ -1745,7 +1789,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc042acd1d0.false": {
+        "542.0xc00063d440.false": {
             "title": "false",
             "type": "object"
         },
@@ -1795,7 +1839,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc042acd1d0.false"
+                    "$ref": "#/definitions/542.0xc00063d440.false"
                 },
                 "name": {
                     "type": "string"
@@ -2406,6 +2450,9 @@
                     "items": {
                         "$ref": "#/definitions/gcp.Node"
                     }
+                },
+                "pool_id": {
+                    "type": "string"
                 },
                 "pool_role": {
                     "type": "string"
