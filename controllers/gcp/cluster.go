@@ -717,7 +717,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
-// @Param	SSHKey	header	string	SSHKey	"SSH Key Name"
+// @Param	SSHKey	path	string	true	"SSHKey"
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {object} utils.Key
@@ -730,6 +730,7 @@ func (c *GcpClusterController) GetSSHKey() {
 
 	//==========================RBAC Authentication==============================//
 
+	ctx := new(utils.Context)
 	token := c.Ctx.Input.Header("token")
 	userInfo, err := rbac_athentication.GetInfo(token)
 
@@ -740,15 +741,23 @@ func (c *GcpClusterController) GetSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AWSNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GCPNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	var key utils.Key
-	key.KeyName = c.GetString("SSHKey")
-	beego.Info("Key name read:" + key.KeyName)
-	key.PrivateKey, err = gcp.GetSSHkey(key.KeyName, token, *ctx)
-	c.Data["json"] = key.PrivateKey
+	//var key utils.Key
+	keyName := c.GetString(":SSHKey")
+	//keyName := c.Ctx.Input.Header("SSHKey")
+	beego.Info("Key name read:" + keyName)
+	privateKey, err := gcp.GetSSHkey(keyName, token, *ctx)
+	if err != nil {
+		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = privateKey
 	c.ServeJSON()
 }

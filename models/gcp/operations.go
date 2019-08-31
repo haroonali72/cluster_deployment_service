@@ -102,7 +102,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
+	privateKey, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -218,7 +218,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
+	privateKey, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, token, ctx)
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		}
 	}
 
-	_, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
+	_, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
@@ -793,8 +793,10 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 	return ""
 }
 
-func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (string, error) {
-	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, token, ctx)
+//func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (string, error) {
+func fetchOrGenerateKey(keyName, token string, ctx utils.Context) (string, error) {
+	var keyInfo *utils.Key
+	key, err := vault.GetAzureSSHKey(string(models.GCP), keyName, token, ctx)
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -832,6 +834,7 @@ func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (st
 		return "", err
 	}
 
+	keyInfo.KeyName = keyName
 	keyInfo.Username = username
 	keyInfo.Cloud = models.GCP
 	keyInfo.PrivateKey = res.PrivateKey

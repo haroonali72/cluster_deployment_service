@@ -289,7 +289,6 @@ func GetAzureSSHKey(cloudType string, keyName string, token string, ctx utils.Co
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return azureKey{}, err
 	}
-
 	err = json.Unmarshal(contents, &key)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
