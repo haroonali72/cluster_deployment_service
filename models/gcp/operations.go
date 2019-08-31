@@ -796,7 +796,13 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (string, error) {
 	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, token, ctx)
 
-	existingKey, err := key_utils.KeyConversion(key, ctx)
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", err
+	}
+
+	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("vm creation failed with error: " + err.Error())
