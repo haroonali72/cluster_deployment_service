@@ -76,7 +76,6 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 		beego.Error("%s", err)
 		return 400, err
 	}
-
 	req, err := CreatePostRequest(request_data, getHost(c))
 	if err != nil {
 		beego.Error("%s", err)
@@ -88,6 +87,7 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 		beego.Error("%s", err)
 		return 400, err
 	}
+	beego.Info(response.StatusCode)
 	return response.StatusCode, err
 
 }
@@ -101,9 +101,9 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.data.Request.Path = path
 	c.data.Request.RequestId = uuid.New().String()
 	c.data.ProjectId = projectId
-	//c.data.LogName = "backend-logging"
 	c.data.Company = companyId
 	c.data.UserId = userId
+
 }
 
 func getHost(c *Context) string {
