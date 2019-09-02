@@ -805,7 +805,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 			ebs[0].Ebs.Iops = &pool.Ami.RootVolume.Iops
 		}
 	}
-	ctx.SendLogs("attaching external volume", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	ctx.SendLogs("attaching external volume", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	if pool.IsExternal {
 		var external_volume ec2.BlockDeviceMapping
 

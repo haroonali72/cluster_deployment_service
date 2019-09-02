@@ -57,17 +57,17 @@ const (
 	VaultGetKeyURI     = "/template/sshKey/{cloud}/{keyName}"
 	VaultGetAllKeysURI = "/template/sshKey/{cloud}"
 	VaultGetProfileURI = "/template/{cloud}/credentials/{profileId}"
-	VaultCreateKeyURI  = "/template/sshKey/"
+	VaultCreateKeyURI  = "/template/sshKey"
 )
 
 const (
 	RbacEndpoint = "/security/api/rbac/"
 
-	RbacListURI     = "list/"
-	RbacAccessURI   = "allowed/"
-	RbacEvaluateURI = "evaluate/"
-	RbacInfoURI     = "token/info/"
-	RbacPolicyURI   = "policy/"
+	RbacListURI     = "list"
+	RbacAccessURI   = "allowed"
+	RbacEvaluateURI = "evaluate"
+	RbacInfoURI     = "token/info"
+	RbacPolicyURI   = "policy"
 )
 
 type Logger string
@@ -85,7 +85,7 @@ const (
 const (
 	LoggingEndpoint = "/elephant/api/v1/"
 
-	BackEndLoggingURI    = "backend/logging/"
-	FrontEndLoggingURI   = "frontend/logging/"
+	BackEndLoggingURI    = "backend/logging"
+	FrontEndLoggingURI   = "frontend/logging"
 	AuditTrailLoggingURI = "audit/store"
 )
