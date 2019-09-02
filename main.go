@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -59,8 +59,8 @@ func setEnv() {
 	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
 	os.Setenv("redis_url", "35.246.150.221:6379")
-	os.Setenv("logger_url", "https://dapis.cloudplex.cf")
-	os.Setenv("network_url", "https://dapis.cloudplex.cf/weasel/network/{cloud_provider}")
-	os.Setenv("vault_url", "https://dapis.cloudplex.cf/robin/api/v1")
-	os.Setenv("raccoon_url", "https://dapis.cloudplex.cf/raccoon/projects")
+	os.Setenv("logger_url", "http://192.168.48.184:3500")
+	os.Setenv("network_url", "https://dapis.cloudplex.cf")
+	os.Setenv("vault_url", "https://dapis.cloudplex.cf")
+	os.Setenv("raccoon_url", "https://dapis.cloudplex.cf")
 }
