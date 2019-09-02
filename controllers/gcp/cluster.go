@@ -718,12 +718,13 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Title CreateSSHKey
 // @Description Generates new SSH key
 // @Param	keyname	 path	string	true	"SSHKey"
+// @Param	username	 path	string	true	"UserName"
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {object} utils.Key
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /sshkey/:keyname [post]
+// @router /sshkey/:keyname/:username [post]
 func (c *GcpClusterController) GetSSHKey() {
 
 	beego.Info("GcpClusterController: CreateSSHKey.")
@@ -748,8 +749,10 @@ func (c *GcpClusterController) GetSSHKey() {
 	//==========================RBAC Authentication==============================//
 	//projectId := c.GetString(":projectId")
 	keyName := c.GetString(":keyname")
+	userName := c.GetString(":keyname")
 	beego.Info("Key name read:" + keyName)
-	privateKey, err := gcp.GetSSHkey(keyName, token, teams, *ctx)
+
+	privateKey, err := gcp.GetSSHkey(keyName, userName, token, teams, *ctx)
 
 	beego.Info("Private Key :" + privateKey)
 	if err != nil {

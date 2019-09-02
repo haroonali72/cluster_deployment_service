@@ -41,7 +41,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
-		ctx.SendLogs("gcpTemplateModel :"+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("gcpTemplateModel :"+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(text, err)
 		return errors.New(text), ""
 	}

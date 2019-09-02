@@ -102,7 +102,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, token, "", ctx)
+	privateKey, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, "", token, "", ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -218,7 +218,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, token, "", ctx)
+	privateKey, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, "", token, "", ctx)
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		}
 	}
 
-	_, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, token, "", ctx)
+	_, err := fetchOrGenerateKey(pool.KeyInfo.KeyName, "", token, "", ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
@@ -793,9 +793,9 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 	return ""
 }
 
-func fetchOrGenerateKey(keyName, token, teams string, ctx utils.Context) (string, error) {
+func fetchOrGenerateKey(keyName, userName, token, teams string, ctx utils.Context) (string, error) {
 	var keyInfo utils.Key
-	key, err := vault.GetAzureSSHKey(string(models.GCP), keyName, token, teams, ctx)
+	_, err := vault.GetAzureSSHKey(string(models.GCP), keyName, token, teams, ctx)
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 
@@ -803,34 +803,14 @@ func fetchOrGenerateKey(keyName, token, teams string, ctx utils.Context) (string
 		beego.Error(err.Error())
 		return "", err
 	}
-	existingKey, err := key_utils.KeyConversion(key, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("vm creation failed with error: " + err.Error())
-		return "", err
-	}
-
-	username := "cloudplex"
-	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
-		keyInfo.PrivateKey = existingKey.PrivateKey
-		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n")
-
-		keySplits := strings.Split(keyInfo.PublicKey, " ")
-		if len(keySplits) >= 3 && keySplits[2] != username {
-			keyInfo.PublicKey = keySplits[0] + " " + keySplits[1] + " " + username
-		}
-
-		return keyInfo.PrivateKey, nil
-	}
-
-	res, err := key_utils.GenerateKeyPair(keyName, username, ctx)
+	res, err := key_utils.GenerateKeyPair(keyName, userName, ctx)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", err
 	}
 
 	keyInfo.KeyName = keyName
-	keyInfo.Username = username
+	keyInfo.Username = userName
 	keyInfo.Cloud = models.GCP
 	keyInfo.PrivateKey = res.PrivateKey
 	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
