@@ -538,6 +538,7 @@ func GetSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey stri
 	privateKey, err = fetchOrGenerateKey(keyName, token, teams, ctx)
 	fmt.Println("Private key:" + privateKey)
 	if err != nil {
+
 		return "", err
 	}
 	return privateKey, err

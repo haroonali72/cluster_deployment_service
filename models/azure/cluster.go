@@ -517,3 +517,15 @@ func GetSSHKeyPair(keyname string) (keys *utils.Key, err error) {
 	}
 	return keys, nil
 }
+
+/*
+func GetSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey string, err error) {
+
+	privateKey, err = fetchOrGenerateKey(keyName, token, teams, ctx)
+	fmt.Println("Private key:" + privateKey)
+	if err != nil {
+		return "", err
+	}
+	return privateKey, err
+}
+*/
