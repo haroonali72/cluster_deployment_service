@@ -942,7 +942,7 @@
                 }
             }
         },
-        "/cluster/gcp/sshkey": {
+        "/cluster/gcp/sshkey/{keyname}/{username}": {
             "post": {
                 "tags": [
                     "cluster/gcp"
@@ -951,9 +951,17 @@
                 "operationId": "GcpClusterController.CreateSSHKey",
                 "parameters": [
                     {
-                        "in": "header",
-                        "name": "SSHKey",
-                        "description": "SSH Key Name",
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "username",
+                        "description": "UserName",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1789,7 +1797,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "542.0xc00063d440.false": {
+        "542.0xc0006595c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -1839,7 +1847,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/542.0xc00063d440.false"
+                    "$ref": "#/definitions/542.0xc0006595c0.false"
                 },
                 "name": {
                     "type": "string"
