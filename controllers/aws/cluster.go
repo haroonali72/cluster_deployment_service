@@ -70,7 +70,7 @@ func (c *AWSClusterController) Get() {
 		return
 	}
 
-	cluster, err := aws.GetCluster(projectId, *ctx)
+	cluster, err := aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -195,6 +195,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+	cluster.CompanyId = userInfo.CompanyId
 	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -326,7 +327,7 @@ func (c *AWSClusterController) Delete() {
 		return
 	}
 
-	cluster, err := aws.GetCluster(id, *ctx)
+	cluster, err := aws.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error ," + "Cluster is in running state"}
@@ -405,7 +406,7 @@ func (c *AWSClusterController) StartCluster() {
 
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = aws.GetCluster(projectId, *ctx)
+	cluster, err = aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -598,7 +599,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	cluster, err = aws.GetCluster(projectId, *ctx)
+	cluster, err = aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -779,7 +780,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		c.ServeJSON()
 		return
 	}
-	cluster, err := aws.GetCluster(projectId, *ctx)
+	cluster, err := aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

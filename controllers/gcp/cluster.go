@@ -65,7 +65,7 @@ func (c *GcpClusterController) Get() {
 
 	beego.Info("GcpClusterController: Get cluster with project id: ", projectId)
 
-	cluster, err := gcp.GetCluster(projectId, *ctx)
+	cluster, err := gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpGetClusterController: error getting gcp cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
@@ -166,6 +166,8 @@ func (c *GcpClusterController) Post() {
 
 	beego.Info("GcpClusterController: Post new cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
+
+	cluster.CompanyId = userInfo.CompanyId
 
 	err = gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
@@ -297,7 +299,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	cluster, err := gcp.GetCluster(id, *ctx)
+	cluster, err := gcp.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		ctx.SendLogs("GcpClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -400,7 +402,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
 
-	cluster, err = gcp.GetCluster(projectId, *ctx)
+	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -506,7 +508,7 @@ func (c *GcpClusterController) GetStatus() {
 
 	beego.Info("GcpClusterController: Fetch Cluster Status of project. ", projectId)
 
-	cluster, err := gcp.FetchStatus(credentials, projectId, *ctx)
+	cluster, err := gcp.FetchStatus(credentials, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
@@ -599,7 +601,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
 
-	cluster, err = gcp.GetCluster(projectId, *ctx)
+	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

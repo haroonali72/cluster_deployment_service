@@ -65,7 +65,7 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	cluster, err := azure.GetCluster(projectId, *ctx)
+	cluster, err := azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
@@ -179,7 +179,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	cluster.CompanyId = userInfo.CompanyId
 	err = azure.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -307,7 +307,7 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	cluster, err := azure.GetCluster(id, *ctx)
+	cluster, err := azure.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
@@ -393,7 +393,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = azure.GetCluster(projectId, *ctx)
+	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -478,7 +478,7 @@ func (c *AzureClusterController) GetStatus() {
 	}
 	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := azure.FetchStatus(azureProfile, token, projectId, *ctx)
+	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -556,7 +556,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = azure.GetCluster(projectId, *ctx)
+	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
