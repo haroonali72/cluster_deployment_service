@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	setEnv()
+	//	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -43,6 +43,7 @@ func main() {
 
 	beego.Run()
 }
+
 func setEnv() {
 	os.Setenv("rbac_url", "http://35.246.150.221:31619")
 	os.Setenv("mongo_host", "35.246.150.221:32180")

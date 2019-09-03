@@ -35,37 +35,38 @@ type Context struct {
 	data    SDData
 }
 
-func (c *Context) SendLogs(message, severity string, logType models.Logger) (int, error) {
+func (c *Context) SendLogs(message, severity string, logType models.Logger) {
 	switch logType {
 	case models.Backend_Logging:
+
 		c.data.LogName = string(models.Backend_Logging)
-		StatusCode, err := c.Log(message, severity, logType)
-		return StatusCode, err
+
+		_, file, line, _ := runtime.Caller(1)
+		c.data.Message = file + ":" + strconv.Itoa(line) + " " + message
+
+		go c.Log(message, severity, logType)
+
 	case models.Audit_Trails:
 		c.data.LogName = string(models.Audit_Trails)
-		StatusCode, err := c.Log(message, severity, logType)
-		return StatusCode, err
+		c.data.Message = message + " by User: " + c.data.UserId
+		go c.Log(message, severity, logType)
+
 	}
-	return 0, nil
+
 }
 
 func (c *Context) Log(msg, message_type string, logType models.Logger) (int, error) {
-	if logType == models.Backend_Logging {
-		_, file, line, _ := runtime.Caller(2)
-		c.data.Message = file + ":" + strconv.Itoa(line) + " " + msg
-	} else {
-		c.data.Message = msg + " by User: " + c.data.UserId
-	}
+
 	c.data.Severity = message_type
 
 	if message_type == models.LOGGING_LEVEL_ERROR {
+
 		c.data.MessageType = "stderr"
-	} else if message_type == models.LOGGING_LEVEL_INFO {
-		c.data.MessageType = "stdout"
-	}
-	if c.data.Severity == models.LOGGING_LEVEL_ERROR {
 		beego.Error(c.data.Message)
-	} else {
+
+	} else if message_type == models.LOGGING_LEVEL_INFO {
+
+		c.data.MessageType = "stdout"
 		beego.Info(c.data.Message)
 	}
 
@@ -76,8 +77,7 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 		beego.Error("%s", err)
 		return 400, err
 	}
-
-	req, err := CreatePostRequest(request_data, getHost(c))
+	req, err := CreatePostRequest(request_data, c.getHost())
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -88,6 +88,7 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 		beego.Error("%s", err)
 		return 400, err
 	}
+	beego.Info(response.StatusCode)
 	return response.StatusCode, err
 
 }
@@ -101,12 +102,12 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.data.Request.Path = path
 	c.data.Request.RequestId = uuid.New().String()
 	c.data.ProjectId = projectId
-	//c.data.LogName = "backend-logging"
 	c.data.Company = companyId
 	c.data.UserId = userId
+
 }
 
-func getHost(c *Context) string {
+func (c *Context) getHost() string {
 	switch c.data.LogName {
 	case string(models.Backend_Logging):
 		return beego.AppConfig.String("logger_url") + models.LoggingEndpoint + models.BackEndLoggingURI

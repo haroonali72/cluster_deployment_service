@@ -209,11 +209,10 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 	url := getNetworkHost("aws", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 
-	/*bytes, err := json.Marshal(network)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err
-	}*/
+	}
 
 	err = json.Unmarshal(network.([]byte), &awsNetwork)
 
@@ -806,7 +805,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 			ebs[0].Ebs.Iops = &pool.Ami.RootVolume.Iops
 		}
 	}
-	ctx.SendLogs("attaching external volume", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	ctx.SendLogs("attaching external volume", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	if pool.IsExternal {
 		var external_volume ec2.BlockDeviceMapping
 
@@ -1283,11 +1282,10 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 			url := getNetworkHost("aws", cluster.ProjectId)
 			network, err := api_handler.GetAPIStatus(token, url, ctx)
 
-			/*bytes, err := json.Marshal(network)
 			if err != nil {
 				beego.Error(err.Error())
-				return nil, err
-			}*/
+				return err
+			}
 
 			err = json.Unmarshal(network.([]byte), &awsNetwork)
 
