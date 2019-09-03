@@ -278,7 +278,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New("Cluster is in runnning state")
 	}
 
-	err = DeleteCluster(cluster.ProjectId, ctx)
+	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Update - Got error deleting cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("Cluster model: Update - Got error deleting cluster: ", err)
@@ -299,7 +299,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteCluster(projectId string, ctx utils.Context) error {
+func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: error while connecting to database "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -309,7 +309,7 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpClusterCollection)
-	err = c.Remove(bson.M{"project_id": projectId})
+	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
 	if err != nil {
 		beego.Error(err.Error())
 		return err

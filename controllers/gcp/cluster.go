@@ -307,7 +307,7 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	err = gcp.DeleteCluster(id, *ctx)
+	err = gcp.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
