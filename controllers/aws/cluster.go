@@ -334,7 +334,7 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	err = aws.DeleteCluster(id, *ctx)
+	err = aws.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}

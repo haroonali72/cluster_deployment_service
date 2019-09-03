@@ -216,7 +216,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in runnning state")
 	}
-	err = DeleteCluster(cluster.ProjectId, ctx)
+	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -235,7 +235,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteCluster(projectId string, ctx utils.Context) error {
+func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 
@@ -245,7 +245,7 @@ func DeleteCluster(projectId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Remove(bson.M{"project_id": projectId})
+	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
