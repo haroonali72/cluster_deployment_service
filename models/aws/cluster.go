@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -564,4 +565,15 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 	ctx.SendLogs("Cluster: "+cluster.Name+" scaled", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
+}
+
+func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
+
+	privateKey, err = key_utils.GenerateKey(models.AWS, keyName, userName, token, teams, ctx)
+
+	if err != nil {
+
+		return "", err
+	}
+	return privateKey, err
 }

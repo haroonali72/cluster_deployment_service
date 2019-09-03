@@ -802,3 +802,55 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()
 }
+
+// @Title CreateSSHKey
+// @Description Generates new SSH key
+// @Param	keyname	 path	string	true	"SSHKey"
+// @Param	username	 path	string	true	"UserName"
+// @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
+// @Success 200 {object} utils.Key
+// @Failure 404 {"error": exception_message}
+// @Failure 500 {"error": "internal server error"}
+// @router /sshkey/:keyname/:username [post]
+func (c *AWSClusterController) GetSSHKey() {
+
+	beego.Info("GcpClusterController: CreateSSHKey.")
+
+	//==========================RBAC Authentication==============================//
+
+	ctx := new(utils.Context)
+	token := c.Ctx.Input.Header("token")
+	teams := c.Ctx.Input.Header("teams")
+	userInfo, err := rbac_athentication.GetInfo(token)
+
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("GCPNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	//==========================RBAC Authentication==============================//
+	//projectId := c.GetString(":projectId")
+	keyName := c.GetString(":keyname")
+	userName := c.GetString(":username")
+	beego.Info("Key name read:" + keyName)
+
+	privateKey, err := aws.GetSSHkey(keyName, userName, token, teams, *ctx)
+
+	beego.Info("Private Key :" + privateKey)
+	if err != nil {
+		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = privateKey
+	c.ServeJSON()
+}

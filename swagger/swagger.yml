@@ -194,6 +194,40 @@ paths:
           description: '{"msg": "cluster autoscaled successfully"}'
         "500":
           description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/sshkey/{keyname}/{username}:
+    post:
+      tags:
+      - cluster/aws
+      description: Generates new SSH key
+      operationId: AWSClusterController.CreateSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: SSHKey
+        required: true
+        type: string
+      - in: path
+        name: username
+        description: UserName
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/utils.Key'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/aws/sshkeys:
     get:
       tags:
@@ -417,6 +451,40 @@ paths:
               $ref: '#/definitions/azure.Cluster_Def'
         "500":
           description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/sshkey/{keyname}/{username}:
+    post:
+      tags:
+      - cluster/azure
+      description: Generates new SSH key
+      operationId: AzureClusterController.CreateSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: SSHKey
+        required: true
+        type: string
+      - in: path
+        name: username
+        description: UserName
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/utils.Key'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/azure/sshkeys:
     get:
       tags:
@@ -1181,7 +1249,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  542.0xc0006595c0.false:
+  571.0xc0006b3bc0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1216,8 +1284,10 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       kube_credentials:
-        $ref: '#/definitions/542.0xc0006595c0.false'
+        $ref: '#/definitions/571.0xc0006b3bc0.false'
       name:
         type: string
       network_name:
@@ -1378,6 +1448,8 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1566,6 +1638,8 @@ definitions:
     properties:
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:

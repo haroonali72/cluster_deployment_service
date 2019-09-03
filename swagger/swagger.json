@@ -221,6 +221,57 @@
                 }
             }
         },
+        "/cluster/aws/sshkey/{keyname}/{username}": {
+            "post": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "AWSClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "username",
+                        "description": "UserName",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Key"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/sshkeys": {
             "get": {
                 "tags": [
@@ -558,6 +609,57 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/sshkey/{keyname}/{username}": {
+            "post": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "AzureClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "username",
+                        "description": "UserName",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Key"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
                     }
                 }
             }
@@ -1797,7 +1899,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "542.0xc0006595c0.false": {
+        "571.0xc0006b3bc0.false": {
             "title": "false",
             "type": "object"
         },
@@ -1846,8 +1948,11 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "kube_credentials": {
-                    "$ref": "#/definitions/542.0xc0006595c0.false"
+                    "$ref": "#/definitions/571.0xc0006b3bc0.false"
                 },
                 "name": {
                     "type": "string"
@@ -2085,6 +2190,9 @@
                 },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -2364,6 +2472,9 @@
             "properties": {
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
