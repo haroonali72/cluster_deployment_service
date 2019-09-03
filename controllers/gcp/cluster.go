@@ -751,7 +751,7 @@ func (c *GcpClusterController) GetSSHKey() {
 	//==========================RBAC Authentication==============================//
 	//projectId := c.GetString(":projectId")
 	keyName := c.GetString(":keyname")
-	userName := c.GetString(":keyname")
+	userName := c.GetString(":username")
 	beego.Info("Key name read:" + keyName)
 
 	privateKey, err := gcp.GetSSHkey(keyName, userName, token, teams, *ctx)

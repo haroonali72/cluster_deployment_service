@@ -3,9 +3,12 @@ package key_utils
 import (
 	"antelope/models"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"encoding/json"
+	"github.com/astaxie/beego"
 	"io/ioutil"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -59,4 +62,59 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (utils.KeyPair
 	}
 	res.PublicKey = str
 	return res, nil
+}
+
+func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx utils.Context) (string, error) {
+	var keyInfo utils.Key
+	_, err := vault.GetAzureSSHKey(string(cloud), keyName, token, ctx)
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		return "", err
+	}
+
+	res, err := GenerateKeyPair(keyName, userName, ctx)
+	if err != nil {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", err
+	}
+
+	keyInfo.Cloud = cloud
+	keyInfo.KeyName = keyName
+	keyInfo.Username = userName
+	keyInfo.PrivateKey = res.PrivateKey
+	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
+
+	beego.Info("Private Key in fetch ", keyInfo.PrivateKey)
+
+	_, err = vault.PostAzureSSHKey(cloud, keyInfo, ctx, token, teams)
+	if err != nil {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", err
+	}
+
+	return keyInfo.PrivateKey, nil
+}
+func FetchKey(cloud models.Cloud, keyName, userName, token string, ctx utils.Context) (utils.Key, error) {
+
+	var err error
+	var key interface{}
+	var empty utils.Key
+
+	key, err = vault.GetAzureSSHKey(string(cloud), keyName, token, ctx)
+
+	if err != nil && strings.Contains(strings.ToLower(err.Error()), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("vm creation failed with error: " + err.Error())
+		return empty, err
+	}
+
+	existingKey, err := KeyConversion(key, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("vm creation failed with error: " + err.Error())
+		return empty, err
+	}
+
+	return existingKey, nil
 }

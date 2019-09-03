@@ -6,7 +6,6 @@ import (
 	"antelope/models/key_utils"
 	"antelope/models/types"
 	"antelope/models/utils"
-	"antelope/models/vault"
 	"context"
 	"encoding/json"
 	"errors"
@@ -295,16 +294,14 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 	var cpVms []*VM
 	for in, pool := range cluster.NodePools {
 		var keyInfo utils.Key
+		var err error
 		if pool.KeyInfo.CredentialType == models.SSHKey {
-			k1, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, "", ctx)
+			keyInfo, err = key_utils.FetchKey(models.Azure, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return Cluster_Def{}, err
 			}
-			keyInfo, err = key_utils.KeyConversion(k1, ctx)
-			if err != nil {
-				return Cluster_Def{}, err
-			}
+
 		}
 		pool.KeyInfo = keyInfo
 		if pool.PoolRole == "master" {
@@ -540,7 +537,6 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		}
 		beego.Info("Deleted Node" + name)
 	}
-
 	ctx.SendLogs("Node terminated successfully: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return nil
 }
@@ -644,6 +640,364 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 	return nil
 }
 
+/*
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token string) (compute.VirtualMachine, string, string, error) {
+	var satype compute.StorageAccountTypes
+	if pool.OsDisk == models.StandardSSD {
+		satype = compute.StorageAccountTypesStandardSSDLRS
+	} else if pool.OsDisk == models.PremiumSSD {
+		satype = compute.StorageAccountTypesPremiumLRS
+	} else if pool.OsDisk == models.StandardHDD {
+		satype = compute.StorageAccountTypesStandardLRS
+
+	}
+	osDisk := &compute.OSDisk{
+		CreateOption: compute.DiskCreateOptionTypesFromImage,
+		Name:         to.StringPtr(pool.Name),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+	if pool.Volume.DataDisk == models.StandardSSD {
+		satype = compute.StorageAccountTypesStandardSSDLRS
+	} else if pool.Volume.DataDisk == models.PremiumSSD {
+		satype = compute.StorageAccountTypesPremiumLRS
+	} else if pool.Volume.DataDisk == models.StandardHDD {
+		satype = compute.StorageAccountTypesStandardLRS
+
+	}
+
+	storageName := "ext-" + pool.Name
+	disk := compute.DataDisk{
+		Lun:          to.Int32Ptr(int32(index)),
+		Name:         to.StringPtr(storageName),
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+
+	var storage = []compute.DataDisk{}
+
+	staticVolume := compute.DataDisk{
+		Lun:          to.Int32Ptr(int32(index)),
+		Name:         to.StringPtr("ext-master-" + pool.Name),
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(5),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
+	storage = append(storage, staticVolume)
+
+	vm := compute.VirtualMachine{
+		Name:     to.StringPtr(pool.Name),
+		Location: to.StringPtr(cloud.Region),
+		VirtualMachineProperties: &compute.VirtualMachineProperties{
+			HardwareProfile: &compute.HardwareProfile{
+				VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),
+			},
+			StorageProfile: &compute.StorageProfile{
+				ImageReference: &compute.ImageReference{
+					Offer:     to.StringPtr(pool.Image.Offer),
+					Sku:       to.StringPtr(pool.Image.Sku),
+					Publisher: to.StringPtr(pool.Image.Publisher),
+					Version:   to.StringPtr(pool.Image.Version),
+				},
+				OsDisk: osDisk,
+				//DataDisks: &storage,
+			},
+			OsProfile: &compute.OSProfile{
+				ComputerName:  to.StringPtr(pool.Name),
+				AdminUsername: to.StringPtr(pool.AdminUser),
+			},
+			NetworkProfile: &compute.NetworkProfile{
+
+				NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+					{
+						ID: &(*nicParameters.ID),
+						NetworkInterfaceReferenceProperties: &compute.NetworkInterfaceReferenceProperties{
+							Primary: to.BoolPtr(true),
+						},
+					},
+				},
+			},
+		},
+	}
+	if pool.EnableVolume {
+		storage = append(storage, disk)
+		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
+	}
+	vm.StorageProfile.DataDisks = &storage
+	privateKey := ""
+	publicKey := ""
+	if pool.KeyInfo.CredentialType == models.SSHKey  {
+		_, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
+
+		if err != nil && err.Error() != "not found" {
+			ctx.SendLogs("vm creation failed", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachine{}, "", "", err
+
+		} else if err == nil {
+			key,err := key_utils.FetchAzureKey("keyName", "userName", token, ctx )
+			if err != nil {
+				return compute.VirtualMachine{}, "", "", err
+			}
+			if key.PublicKey != "" && key.PrivateKey != "" {
+				keyy := []compute.SSHPublicKey{{
+					Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
+					KeyData: to.StringPtr(key.PublicKey),
+				},
+				}
+				linux := &compute.LinuxConfiguration{
+					SSH: &compute.SSHConfiguration{
+						PublicKeys: &keyy,
+					},
+				}
+				vm.OsProfile.LinuxConfiguration = linux
+				privateKey = key.PrivateKey
+				publicKey = key.PublicKey
+			}
+		} else if err != nil && err.Error() == "not found" {
+			privateKey,publicKey,err =key_utils.GenerateAzureKey("keyName", "userName", token, "teams", ctx )
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return compute.VirtualMachine{}, "", "", err
+			}
+			key := []compute.SSHPublicKey{{
+				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
+				KeyData: to.StringPtr(publicKey),
+			},
+			}
+			linux := &compute.LinuxConfiguration{
+				SSH: &compute.SSHConfiguration{
+					PublicKeys: &key,
+				},
+			}
+			vm.OsProfile.LinuxConfiguration = linux
+			pool.KeyInfo.PublicKey = publicKey
+			pool.KeyInfo.PrivateKey = privateKey
+
+
+		}
+
+	}
+
+	if pool.BootDiagnostics.Enable {
+
+		if pool.BootDiagnostics.NewStroageAccount {
+			sName := strings.Replace(pool.Name, "-", "", -1)
+			sName = strings.ToLower(sName)
+			storageId := "https://" + sName + ".blob.core.windows.net/"
+			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return compute.VirtualMachine{}, "", "", err
+			}
+			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
+				&compute.BootDiagnostics{
+					Enabled: to.BoolPtr(true), StorageURI: &storageId,
+				},
+			}
+			cloud.Resources["SA-"+pool.Name] = pool.Name
+		} else {
+
+			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
+			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
+				&compute.BootDiagnostics{
+					Enabled: to.BoolPtr(true), StorageURI: &storageId,
+				},
+			}
+		}
+	}
+	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, vm)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachine{}, "", "", err
+	} else {
+		err = vmFuture.WaitForCompletion(cloud.context, cloud.VMClient.Client)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachine{}, "", "", err
+		}
+	}
+	beego.Info("Get VM  by name", pool.Name)
+	vm, err = cloud.GetInstance(pool.Name, resourceGroup, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachine{}, "", "", err
+	}
+	return vm, privateKey, publicKey, nil
+}
+*/
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token string) (compute.VirtualMachine, string, string, error) {
+	var satype compute.StorageAccountTypes
+	if pool.OsDisk == models.StandardSSD {
+		satype = compute.StorageAccountTypesStandardSSDLRS
+	} else if pool.OsDisk == models.PremiumSSD {
+		satype = compute.StorageAccountTypesPremiumLRS
+	} else if pool.OsDisk == models.StandardHDD {
+		satype = compute.StorageAccountTypesStandardLRS
+
+	}
+	osDisk := &compute.OSDisk{
+		CreateOption: compute.DiskCreateOptionTypesFromImage,
+		Name:         to.StringPtr(pool.Name),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+	if pool.Volume.DataDisk == models.StandardSSD {
+		satype = compute.StorageAccountTypesStandardSSDLRS
+	} else if pool.Volume.DataDisk == models.PremiumSSD {
+		satype = compute.StorageAccountTypesPremiumLRS
+	} else if pool.Volume.DataDisk == models.StandardHDD {
+		satype = compute.StorageAccountTypesStandardLRS
+
+	}
+
+	storageName := "ext-" + pool.Name
+	disk := compute.DataDisk{
+		Lun:          to.Int32Ptr(int32(index)),
+		Name:         to.StringPtr(storageName),
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+
+	var storage = []compute.DataDisk{}
+
+	staticVolume := compute.DataDisk{
+		Lun:          to.Int32Ptr(int32(index)),
+		Name:         to.StringPtr("ext-master-" + pool.Name),
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(5),
+		ManagedDisk: &compute.ManagedDiskParameters{
+			StorageAccountType: satype,
+		},
+	}
+	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
+	storage = append(storage, staticVolume)
+
+	vm := compute.VirtualMachine{
+		Name:     to.StringPtr(pool.Name),
+		Location: to.StringPtr(cloud.Region),
+		VirtualMachineProperties: &compute.VirtualMachineProperties{
+			HardwareProfile: &compute.HardwareProfile{
+				VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),
+			},
+			StorageProfile: &compute.StorageProfile{
+				ImageReference: &compute.ImageReference{
+					Offer:     to.StringPtr(pool.Image.Offer),
+					Sku:       to.StringPtr(pool.Image.Sku),
+					Publisher: to.StringPtr(pool.Image.Publisher),
+					Version:   to.StringPtr(pool.Image.Version),
+				},
+				OsDisk: osDisk,
+				//DataDisks: &storage,
+			},
+			OsProfile: &compute.OSProfile{
+				ComputerName:  to.StringPtr(pool.Name),
+				AdminUsername: to.StringPtr(pool.AdminUser),
+			},
+			NetworkProfile: &compute.NetworkProfile{
+
+				NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+					{
+						ID: &(*nicParameters.ID),
+						NetworkInterfaceReferenceProperties: &compute.NetworkInterfaceReferenceProperties{
+							Primary: to.BoolPtr(true),
+						},
+					},
+				},
+			},
+		},
+	}
+	if pool.EnableVolume {
+		storage = append(storage, disk)
+		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
+	}
+	vm.StorageProfile.DataDisks = &storage
+	private := ""
+	public := ""
+	if pool.KeyInfo.CredentialType == models.SSHKey {
+
+		existingKey, err := key_utils.FetchKey(models.Azure, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+		if err != nil {
+			return compute.VirtualMachine{}, "", "", err
+		}
+		if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
+			key := []compute.SSHPublicKey{{
+				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
+				KeyData: to.StringPtr(existingKey.PublicKey),
+			},
+			}
+			linux := &compute.LinuxConfiguration{
+				SSH: &compute.SSHConfiguration{
+					PublicKeys: &key,
+				},
+			}
+			vm.OsProfile.LinuxConfiguration = linux
+			private = existingKey.PrivateKey
+			public = existingKey.PublicKey
+		}
+	} else if pool.KeyInfo.CredentialType == models.Password {
+		vm.OsProfile.AdminPassword = to.StringPtr(pool.KeyInfo.AdminPassword)
+	}
+
+	if pool.BootDiagnostics.Enable {
+
+		if pool.BootDiagnostics.NewStroageAccount {
+			sName := strings.Replace(pool.Name, "-", "", -1)
+			sName = strings.ToLower(sName)
+			storageId := "https://" + sName + ".blob.core.windows.net/"
+			err := cloud.createStorageAccount(resourceGroup, sName, ctx)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return compute.VirtualMachine{}, "", "", err
+			}
+			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
+				&compute.BootDiagnostics{
+					Enabled: to.BoolPtr(true), StorageURI: &storageId,
+				},
+			}
+			cloud.Resources["SA-"+pool.Name] = pool.Name
+		} else {
+
+			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
+			vm.VirtualMachineProperties.DiagnosticsProfile = &compute.DiagnosticsProfile{
+				&compute.BootDiagnostics{
+					Enabled: to.BoolPtr(true), StorageURI: &storageId,
+				},
+			}
+		}
+	}
+	vmFuture, err := cloud.VMClient.CreateOrUpdate(cloud.context, resourceGroup, pool.Name, vm)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachine{}, "", "", err
+	} else {
+		err = vmFuture.WaitForCompletion(cloud.context, cloud.VMClient.Client)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachine{}, "", "", err
+		}
+	}
+	beego.Info("Get VM  by name", pool.Name)
+	vm, err = cloud.GetInstance(pool.Name, resourceGroup, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachine{}, "", "", err
+	}
+	return vm, private, public, nil
+}
+
+/*
 func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token string) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -737,7 +1091,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, "", ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 
 		if err != nil && err.Error() != "not found" {
 			ctx.SendLogs("vm creation failed", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -797,7 +1151,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
 
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, "", ctx)
+		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
@@ -873,6 +1227,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	return vm, private, public, nil
 }
+*/
 func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName string, ctx utils.Context) error {
 	accountParameters := storage.AccountCreateParameters{
 		Sku: &storage.Sku{
@@ -1363,43 +1718,15 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	private := ""
 	// public := ""
 
-	if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.NEWKey {
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, "", ctx)
-
-		if err != nil && err.Error() != "not found" {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if pool.KeyInfo.CredentialType == models.SSHKey {
+		existingKey, err := key_utils.FetchKey(models.Azure, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+		if err != nil {
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
-		} else if err == nil {
-
-			existingKey, err := key_utils.KeyConversion(k, ctx)
-			if err != nil {
-				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
-			}
-			if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
-				key := []compute.SSHPublicKey{{
-					Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
-					KeyData: to.StringPtr(existingKey.PublicKey),
-				},
-				}
-				linux := &compute.LinuxConfiguration{
-					SSH: &compute.SSHConfiguration{
-						PublicKeys: &key,
-					},
-				}
-				params.VirtualMachineProfile.OsProfile.LinuxConfiguration = linux
-				private = existingKey.PrivateKey
-				//public = existingKey.PublicKey
-			}
-		} else if err != nil && err.Error() == "not found" {
-
-			res, err := key_utils.GenerateKeyPair(pool.KeyInfo.KeyName, "azure@example.com", ctx)
-			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
-			}
+		}
+		if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
 			key := []compute.SSHPublicKey{{
 				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
-				KeyData: to.StringPtr(res.PublicKey),
+				KeyData: to.StringPtr(existingKey.PublicKey),
 			},
 			}
 			linux := &compute.LinuxConfiguration{
@@ -1408,48 +1735,10 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 				},
 			}
 			params.VirtualMachineProfile.OsProfile.LinuxConfiguration = linux
-			pool.KeyInfo.PublicKey = res.PublicKey
-			pool.KeyInfo.PrivateKey = res.PrivateKey
-
-			_, err = vault.PostAzureSSHKey(pool.KeyInfo, ctx, token)
-			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
-			}
-
-			//public = res.PublicKey
-			private = res.PrivateKey
+			private = existingKey.PrivateKey
+			//public = existingKey.PublicKey
 		}
-
-	} else if pool.KeyInfo.CredentialType == models.SSHKey && pool.KeyInfo.NewKey == models.CPKey {
-
-		k, err := vault.GetAzureSSHKey("azure", pool.KeyInfo.KeyName, token, "", ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
-		}
-
-		existingKey, err := key_utils.KeyConversion(k, ctx)
-		if err != nil {
-			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
-		}
-
-		key := []compute.SSHPublicKey{{
-			Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
-			KeyData: to.StringPtr(existingKey.PublicKey),
-		}}
-
-		linux := &compute.LinuxConfiguration{
-			SSH: &compute.SSHConfiguration{
-
-				PublicKeys: &key,
-			},
-		}
-		params.VirtualMachineProfile.OsProfile.LinuxConfiguration = linux
-
-		private = existingKey.PrivateKey
-		//	public = existingKey.PublicKey
-	} else {
+	} else if pool.KeyInfo.CredentialType == models.Password {
 		params.VirtualMachineProfile.OsProfile.AdminPassword = to.StringPtr(pool.KeyInfo.AdminPassword)
 	}
 

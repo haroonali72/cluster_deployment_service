@@ -6,7 +6,6 @@ import (
 	"antelope/models/key_utils"
 	"antelope/models/types"
 	"antelope/models/utils"
-	"antelope/models/vault"
 	"context"
 	"encoding/json"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -101,8 +100,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 			return err
 		}
 	}
-
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
+	fetchedKey, err := key_utils.FetchKey(models.GCP, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -199,7 +197,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 	pool.Nodes = []*Node{&newNode}
 
 	if pool.EnableVolume {
-		err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+		err = mountVolume(fetchedKey.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 		if err != nil {
 			beego.Error(err.Error())
 			return err
@@ -218,7 +216,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		}
 	}
 
-	privateKey, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
+	fetchedKey, err := key_utils.FetchKey(models.GCP, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
 	if err != nil {
 		return err
 	}
@@ -285,7 +283,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		pool.Nodes = append(pool.Nodes, &newNode)
 
 		if pool.EnableVolume {
-			err = mountVolume(privateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+			err = mountVolume(fetchedKey.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 			if err != nil {
 				beego.Error(err.Error())
 				return err
@@ -305,7 +303,7 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 		}
 	}
 
-	_, err := fetchOrGenerateKey(&pool.KeyInfo, token, ctx)
+	_, err := key_utils.FetchKey(models.GCP, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
@@ -791,59 +789,6 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 		}
 	}
 	return ""
-}
-
-func fetchOrGenerateKey(keyInfo *utils.Key, token string, ctx utils.Context) (string, error) {
-	key, err := vault.GetAzureSSHKey(string(models.GCP), keyInfo.KeyName, token, ctx)
-
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("vm creation failed with error: " + err.Error())
-		return "", err
-	}
-
-	existingKey, err := key_utils.KeyConversion(key, utils.Context{})
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("vm creation failed with error: " + err.Error())
-		return "", err
-	}
-
-	username := "cloudplex"
-	if keyInfo.Username != "" {
-		username = keyInfo.Username
-	}
-
-	if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
-		keyInfo.PrivateKey = existingKey.PrivateKey
-		keyInfo.PublicKey = strings.TrimSuffix(existingKey.PublicKey, "\n")
-
-		keySplits := strings.Split(keyInfo.PublicKey, " ")
-		if len(keySplits) >= 3 && keySplits[2] != username {
-			keyInfo.PublicKey = keySplits[0] + " " + keySplits[1] + " " + username
-		}
-
-		return keyInfo.PrivateKey, nil
-	}
-
-	res, err := key_utils.GenerateKeyPair(keyInfo.KeyName, username, ctx)
-	if err != nil {
-		beego.Error("vm creation failed with error: " + err.Error())
-		return "", err
-	}
-
-	keyInfo.Username = username
-	keyInfo.Cloud = models.GCP
-	keyInfo.PrivateKey = res.PrivateKey
-	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
-
-	_, err = vault.PostGcpSSHKey(keyInfo, ctx, token)
-	if err != nil {
-		beego.Error("vm creation failed with error: " + err.Error())
-		return "", err
-	}
-
-	return keyInfo.PrivateKey, nil
 }
 
 func mountVolume(privateKey, keyName, username, ipAddress string) error {

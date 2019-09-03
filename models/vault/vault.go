@@ -160,7 +160,8 @@ func PostSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error
 	return response.StatusCode, err
 
 }
-func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
+
+func PostAzureSSHKey(cloud models.Cloud, keyRaw interface{}, ctx utils.Context, token, teams string) (int, error) {
 	b, e := json.Marshal(keyRaw)
 	if e != nil {
 		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -172,55 +173,11 @@ func PostAzureSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, 
 		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 400, e
 	}
-	key.Cloud = "azure"
+	key.Cloud = cloud
 
 	var keyObj Key
 	keyObj.KeyInfo = key
-	keyObj.Cloud = "azure"
-	keyObj.KeyName = key.KeyName
-
-	client := utils.InitReq()
-
-	request_data, err := utils.TransformData(keyObj)
-	if err != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
-	}
-
-	req, err := utils.CreatePostRequest(request_data, getVaultHost()+models.VaultCreateKeyURI)
-	if err != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
-	}
-	req.Header.Set("token", token)
-	response, err := client.SendRequest(req)
-	if err != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
-	}
-	if response.StatusCode == 500 {
-		return 0, errors.New("error in saving key")
-	}
-	return response.StatusCode, err
-
-}
-func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, error) {
-	b, e := json.Marshal(keyRaw)
-	if e != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, e
-	}
-	var key azureKey
-	e = json.Unmarshal(b, &key)
-	if e != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, e
-	}
-	key.Cloud = models.GCP
-
-	var keyObj Key
-	keyObj.KeyInfo = key
-	keyObj.Cloud = string(models.GCP)
+	keyObj.Cloud = string(cloud)
 	keyObj.KeyName = key.KeyName
 
 	client := utils.InitReq()
@@ -238,7 +195,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, er
 		return 400, err
 	}
 	req.Header.Set("token", token)
-
+	req.Header.Set("teams", teams)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -250,7 +207,7 @@ func PostGcpSSHKey(keyRaw interface{}, ctx utils.Context, token string) (int, er
 	return response.StatusCode, err
 
 }
-func GetAzureSSHKey(cloudType, keyName, token, teams string, ctx utils.Context) (interface{}, error) {
+func GetAzureSSHKey(cloudType, keyName, token string, ctx utils.Context) (interface{}, error) {
 
 	host := getVaultHost() + models.VaultGetKeyURI
 
@@ -268,7 +225,6 @@ func GetAzureSSHKey(cloudType, keyName, token, teams string, ctx utils.Context) 
 	}
 	client := utils.InitReq()
 	req.Header.Set("token", token)
-	req.Header.Set("teams", teams)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

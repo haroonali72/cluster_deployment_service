@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
@@ -519,14 +520,13 @@ func GetSSHKeyPair(keyname string) (keys *utils.Key, err error) {
 	return keys, nil
 }
 
-/*
-func GetSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey string, err error) {
+func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
-	privateKey, err = fetchOrGenerateKey(keyName, token, teams, ctx)
+	privateKey, err = key_utils.GenerateKey(models.Azure, keyName, userName, token, teams, ctx)
 	fmt.Println("Private key:" + privateKey)
 	if err != nil {
+
 		return "", err
 	}
 	return privateKey, err
 }
-*/

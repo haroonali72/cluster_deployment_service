@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -536,7 +537,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 
 func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
-	privateKey, err = fetchOrGenerateKey(keyName, userName, token, teams, ctx)
+	privateKey, err = key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
 	fmt.Println("Private key:" + privateKey)
 	if err != nil {
 
