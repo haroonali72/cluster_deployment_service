@@ -24,7 +24,7 @@ type Response struct {
 func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	msg := Response{
 		Status:    status,
-		ID:        channel,
+		ID:        channel + "_" + ctx.data.Company,
 		Component: "Cluster",
 	}
 	b, err := json.Marshal(msg)
