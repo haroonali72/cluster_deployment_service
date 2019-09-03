@@ -115,6 +115,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		beego.Warn("creating instance '" + pool.Name + "' without external ip")
 	}
 
+	pool.Name = pool.Name + "-master"
 	instance := compute.Instance{
 		Name:        strings.ToLower(pool.Name),
 		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
@@ -223,6 +224,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		return err
 	}
 
+	pool.Name = pool.Name + "-slave"
 	instanceTemplateUrl, err := cloud.createInstanceTemplate(pool, network, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

@@ -24,17 +24,26 @@ type Template struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
 	NetworkName      string        `json:"network_name" bson:"network_name"`
-	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
+	CompanyId        string        `json:"company_id" bson:"company_id"`
 }
 
 type NodePoolT struct {
-	ID          bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name        string        `json:"name" bson:"name"`
-	NodeCount   int64         `json:"node_count" bson:"node_count"`
-	MachineType string        `json:"machine_type" bson:"machine_type"`
-	Image       Image         `json:"image" bson:"image"`
-	PoolSubnet  string        `json:"subnet_id" bson:"subnet_id"`
-	KeyInfo     utils.Key     `json:"key_info" bson:"key_info"`
+	ID                  bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Name                string        `json:"name" bson:"name"`
+	PoolId              string        `json:"pool_id" bson:"pool_id"`
+	NodeCount           int64         `json:"node_count" bson:"node_count"`
+	MachineType         string        `json:"machine_type" bson:"machine_type"`
+	Image               Image         `json:"image" bson:"image"`
+	Volume              Volume        `json:"volume" bson:"volume"`
+	RootVolume          Volume        `json:"root_volume" bson:"root_volume"`
+	EnableVolume        bool          `json:"is_external" bson:"is_external"`
+	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
+	PoolRole            string        `json:"pool_role" bson:"pool_role"`
+	ServiceAccountEmail string        `json:"service_account_email" bson:"service_account_email"`
+	Nodes               []*Node       `json:"nodes" bson:"nodes"`
+	KeyInfo             utils.Key     `json:"key_info" bson:"key_info"`
+	EnableScaling       bool          `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
