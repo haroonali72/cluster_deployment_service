@@ -24,7 +24,7 @@ type Response struct {
 func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	msg := Response{
 		Status:    status,
-		ID:        channel + "_" + ctx.data.Company,
+		ID:        ctx.data.Company + "_" + channel,
 		Component: "Cluster",
 	}
 	b, err := json.Marshal(msg)
@@ -33,7 +33,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 		beego.Error(err.Error())
 		return
 	}
-	cmd := notifier.Client.Publish(channel, string(b))
+	cmd := notifier.Client.Publish(ctx.data.Company+"_"+channel, string(b))
 	beego.Info(*cmd)
 	//b, err = json.Marshal(*cmd)
 	//if err != nil {
