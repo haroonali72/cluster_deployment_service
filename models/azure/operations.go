@@ -6,6 +6,7 @@ import (
 	"antelope/models/key_utils"
 	"antelope/models/types"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"context"
 	"encoding/json"
 	"errors"
@@ -297,10 +298,16 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 	}
 	var cpVms []*VM
 	for in, pool := range cluster.NodePools {
-		var keyInfo utils.Key
-		var err error
+		var keyInfo key_utils.AZUREKey
+
 		if pool.KeyInfo.CredentialType == models.SSHKey {
-			keyInfo, err = key_utils.FetchKey(models.Azure, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+			bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				beego.Error("vm creation failed with error: " + err.Error())
+				return Cluster_Def{}, err
+			}
+			keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return Cluster_Def{}, err
@@ -598,8 +605,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress: &publicIPaddress,
+						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress:           &publicIPaddress,
 					},
 				},
 			},
@@ -931,10 +938,18 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey {
 
-		existingKey, err := key_utils.FetchKey(models.Azure, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			beego.Error("vm creation failed with error: " + err.Error())
 			return compute.VirtualMachine{}, "", "", err
 		}
+		existingKey, err := key_utils.AzureKeyConversion(bytes, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachine{}, "", "", err
+		}
+
 		if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
 			key := []compute.SSHPublicKey{{
 				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),
@@ -1237,7 +1252,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location: &cloud.Region,
+		Location:                          &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
@@ -1723,10 +1738,19 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	// public := ""
 
 	if pool.KeyInfo.CredentialType == models.SSHKey {
-		existingKey, err := key_utils.FetchKey(models.Azure, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+
+		bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			beego.Error("vm creation failed with error: " + err.Error())
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
+		existingKey, err := key_utils.AzureKeyConversion(bytes, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
+		}
+
 		if existingKey.PublicKey != "" && existingKey.PrivateKey != "" {
 			key := []compute.SSHPublicKey{{
 				Path:    to.StringPtr("/home/" + pool.AdminUser + "/.ssh/authorized_keys"),

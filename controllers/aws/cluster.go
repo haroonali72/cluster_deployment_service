@@ -809,7 +809,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Param	username	 path	string	true	"UserName"
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
-// @Success 200 {object} utils.Key
+// @Success 200 {object} key_utils.AWSKey
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkey/:keyname/:username [post]
@@ -832,13 +832,11 @@ func (c *AWSClusterController) GetSSHKey() {
 		return
 	}
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GCPNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	//projectId := c.GetString(":projectId")
 	keyName := c.GetString(":keyname")
 	userName := c.GetString(":username")
-	beego.Info("Key name read:" + keyName)
 
 	privateKey, err := aws.GetSSHkey(keyName, userName, token, teams, *ctx)
 
@@ -851,6 +849,7 @@ func (c *AWSClusterController) GetSSHKey() {
 		c.ServeJSON()
 		return
 	}
+
 	c.Data["json"] = privateKey
 	c.ServeJSON()
 }

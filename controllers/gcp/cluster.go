@@ -723,7 +723,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Param	username	 path	string	true	"UserName"
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
-// @Success 200 {object} utils.Key
+// @Success 200 {object} key_utils.AZUREKey
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkey/:keyname/:username [post]
@@ -749,14 +749,9 @@ func (c *GcpClusterController) GetSSHKey() {
 	ctx.SendLogs("GCPNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	//projectId := c.GetString(":projectId")
 	keyName := c.GetString(":keyname")
 	userName := c.GetString(":username")
-	beego.Info("Key name read:" + keyName)
-
 	privateKey, err := gcp.GetSSHkey(keyName, userName, token, teams, *ctx)
-
-	beego.Info("Private Key :" + privateKey)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 

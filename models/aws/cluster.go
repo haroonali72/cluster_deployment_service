@@ -32,20 +32,20 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name               string        `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64         `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType        string        `json:"machine_type" bson:"machine_type" valid:"required"`
-	Ami                Ami           `json:"ami" bson:"ami"`
-	PoolSubnet         string        `json:"subnet_id" bson:"subnet_id" valid:"required"`
-	PoolSecurityGroups []*string     `json:"security_group_id" bson:"security_group_id" valid:"required"`
-	Nodes              []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo            Key           `json:"key_info" bson:"key_info"`
-	PoolRole           string        `json:"pool_role" bson:"pool_role" valid:"required"`
-	EnableScaling      bool          `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling            AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
-	IsExternal         bool          `json:"is_external" bson:"is_external"`
-	ExternalVolume     Volume        `json:"external_volume" bson:"external_volume"`
+	ID                 bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
+	Name               string           `json:"name" bson:"name" valid:"required"`
+	NodeCount          int64            `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType        string           `json:"machine_type" bson:"machine_type" valid:"required"`
+	Ami                Ami              `json:"ami" bson:"ami"`
+	PoolSubnet         string           `json:"subnet_id" bson:"subnet_id" valid:"required"`
+	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"required"`
+	Nodes              []*Node          `json:"nodes" bson:"nodes"`
+	KeyInfo            key_utils.AWSKey `json:"key_info" bson:"key_info"`
+	PoolRole           string           `json:"pool_role" bson:"pool_role" valid:"required"`
+	EnableScaling      bool             `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling            AutoScaling      `json:"auto_scaling" bson:"auto_scaling"`
+	IsExternal         bool             `json:"is_external" bson:"is_external"`
+	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume"`
 }
 type AutoScaling struct {
 	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
@@ -62,12 +62,7 @@ type Node struct {
 	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
 	UserName   string `json:"user_name" bson:"user_name",omitempty"`
 }
-type Key struct {
-	KeyName     string         `json:"key_name" bson:"key_name" valid:"required"`
-	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required, in(new|cp|aws|user)"`
-	KeyMaterial string         `json:"private_key" bson:"private_key"`
-	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
-}
+
 type Ami struct {
 	ID         bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	Name       string        `json:"name" bson:"name"`
@@ -468,7 +463,7 @@ func GetAllSSHKeyPair(ctx utils.Context, token string) (keys []string, err error
 	}
 	return keys, nil
 }
-func GetSSHKeyPair(keyname string) (keys *Key, err error) {
+func GetSSHKeyPair(keyname string) (keys *key_utils.AWSKey, err error) {
 
 	session, err := db.GetMongoSession()
 	if err != nil {
@@ -484,7 +479,7 @@ func GetSSHKeyPair(keyname string) (keys *Key, err error) {
 	}
 	return keys, nil
 }
-func InsertSSHKeyPair(key Key) (err error) {
+func InsertSSHKeyPair(key key_utils.AWSKey) (err error) {
 	key.Cloud = models.AWS
 	session, err := db.GetMongoSession()
 	if err != nil {

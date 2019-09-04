@@ -6,6 +6,7 @@ import (
 	"antelope/models/key_utils"
 	"antelope/models/types"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"context"
 	"encoding/json"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -100,7 +101,13 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 			return err
 		}
 	}
-	fetchedKey, err := key_utils.FetchKey(models.GCP, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("vm creation failed with error: " + err.Error())
+		return err
+	}
+	fetchedKey, err := key_utils.AzureKeyConversion(bytes, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -216,8 +223,15 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		}
 	}
 
-	fetchedKey, err := key_utils.FetchKey(models.GCP, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("vm creation failed with error: " + err.Error())
+		return err
+	}
+	fetchedKey, err := key_utils.AzureKeyConversion(bytes, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -302,10 +316,10 @@ func (cloud *GCP) createInstanceTemplate(pool *NodePool, network types.GCPNetwor
 			return "", err
 		}
 	}
-
-	_, err := key_utils.FetchKey(models.GCP, pool.KeyInfo.KeyName, pool.KeyInfo.Username, token, ctx)
+	_, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("Key Not Found:  " + err.Error())
 		return "", err
 	}
 

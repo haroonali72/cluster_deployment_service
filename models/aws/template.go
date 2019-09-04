@@ -3,6 +3,7 @@ package aws
 import (
 	"antelope/models"
 	"antelope/models/db"
+	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"errors"
@@ -26,15 +27,15 @@ type Template struct {
 }
 
 type NodePoolT struct {
-	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name            string        `json:"name" bson:"name"`
-	Ami             Ami           `json:"ami" bson:"ami"`
-	NodeCount       int32         `json:"node_count" bson:"node_count"`
-	MachineType     string        `json:"machine_type" bson:"machine_type"`
-	SubnetId        string        `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []string      `json:"security_group_id" bson:"security_group_id"`
-	KeyInfo         Key           `json:"key_info" bson:"key_info"`
-	PoolRole        string        `json:"pool_role" bson:"pool_role"`
+	ID              bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
+	Name            string           `json:"name" bson:"name"`
+	Ami             Ami              `json:"ami" bson:"ami"`
+	NodeCount       int32            `json:"node_count" bson:"node_count"`
+	MachineType     string           `json:"machine_type" bson:"machine_type"`
+	SubnetId        string           `json:"subnet_id" bson:"subnet_id"`
+	SecurityGroupId []string         `json:"security_group_id" bson:"security_group_id"`
+	KeyInfo         key_utils.AWSKey `json:"key_info" bson:"key_info"`
+	PoolRole        string           `json:"pool_role" bson:"pool_role"`
 }
 
 func checkTemplateSize(template Template, ctx utils.Context) error {

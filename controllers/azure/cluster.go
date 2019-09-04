@@ -616,7 +616,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Param	username	 path	string	true	"UserName"
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
-// @Success 200 {object} utils.Key
+// @Success 200 {object} key_utils.AZUREKey
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
 // @router /sshkey/:keyname/:username [post]
@@ -639,12 +639,11 @@ func (c *AzureClusterController) GetSSHKey() {
 		return
 	}
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GCPNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AZURENetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	keyName := c.GetString(":keyname")
 	userName := c.GetString(":username")
-	beego.Info("Key name read:" + keyName)
 
 	privateKey, err := azure.GetSSHkey(keyName, userName, token, teams, *ctx)
 
@@ -657,7 +656,7 @@ func (c *AzureClusterController) GetSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("Private Key :" + privateKey)
+
 	c.Data["json"] = privateKey
 	c.ServeJSON()
 }
