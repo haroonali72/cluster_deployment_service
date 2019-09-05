@@ -612,21 +612,22 @@ func (c *AzureClusterController) GetSSHKeys() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
+// @Param	projectId	path	string	true	"Id of the project"
 // @Param	keyname	 path	string	true	"SSHKey"
-// @Param	username	 path	string	true	"UserName"
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {object} key_utils.AZUREKey
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /sshkey/:keyname/:username [post]
+// @router /sshkey/:keyname [post]
 func (c *AzureClusterController) GetSSHKey() {
 
-	beego.Info("GcpClusterController: CreateSSHKey.")
+	beego.Info("AzureClusterController: CreateSSHKey.")
 
 	//==========================RBAC Authentication==============================//
 
 	ctx := new(utils.Context)
+	projectId := c.GetString(":projectId")
 	token := c.Ctx.Input.Header("token")
 	teams := c.Ctx.Input.Header("teams")
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -638,19 +639,18 @@ func (c *AzureClusterController) GetSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AZURENetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("AZURENetworkController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
+
 	keyName := c.GetString(":keyname")
-	userName := c.GetString(":username")
 
-	privateKey, err := azure.GetSSHkey(keyName, userName, token, teams, *ctx)
-
+	privateKey, err := azure.GetSSHkey(keyName, token, teams, *ctx)
 	beego.Info("Private Key :" + privateKey)
-	if err != nil {
-		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
+	if err != nil {
+		ctx.SendLogs("AzureClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()

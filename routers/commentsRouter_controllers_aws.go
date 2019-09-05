@@ -73,7 +73,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
 		beego.ControllerComments{
 			Method:           "GetSSHKey",
-			Router:           `/sshkey/:keyname/:username`,
+			Router:           `/sshkey/:projectId/:keyname`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

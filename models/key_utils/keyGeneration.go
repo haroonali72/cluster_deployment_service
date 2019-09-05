@@ -103,8 +103,12 @@ func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
-		beego.Error("Get Key failed")
+		beego.Error("Key Already Exist ")
 		return "", err
+	}
+
+	if userName == "" {
+		userName = "cloudplex"
 	}
 
 	res, err := GenerateKeyPair(keyName, userName, ctx)
@@ -119,7 +123,8 @@ func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx
 	keyInfo.PrivateKey = res.PrivateKey
 	keyInfo.PublicKey = strings.TrimSuffix(res.PublicKey, "\n")
 
-	beego.Info("Private Key in fetch ", keyInfo.PrivateKey)
+	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	beego.Info("SSHKey Created. ", keyInfo.PrivateKey)
 
 	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams)
 	if err != nil {

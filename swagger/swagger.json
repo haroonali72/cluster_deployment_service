@@ -221,7 +221,7 @@
                 }
             }
         },
-        "/cluster/aws/sshkey/{keyname}/{username}": {
+        "/cluster/aws/sshkey/{projectId}/{keyname}": {
             "post": {
                 "tags": [
                     "cluster/aws"
@@ -231,16 +231,22 @@
                 "parameters": [
                     {
                         "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
                         "name": "keyname",
                         "description": "SSHKey",
                         "required": true,
                         "type": "string"
                     },
                     {
-                        "in": "path",
-                        "name": "username",
-                        "description": "UserName",
-                        "required": true,
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
                         "type": "string"
                     },
                     {
@@ -609,6 +615,50 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/sshkey/{keyname}": {
+            "post": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "AzureClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/key_utils.AZUREKey"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
                     }
                 }
             }
@@ -986,6 +1036,57 @@
                     },
                     "401": {
                         "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gcp/sshkey/{keyname}/{username}": {
+            "post": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "GcpClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "username",
+                        "description": "UserName",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/key_utils.AZUREKey"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
@@ -1797,7 +1898,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "542.0xc0006aef30.false": {
+        "571.0xc00071e270.false": {
             "title": "false",
             "type": "object"
         },
@@ -1850,7 +1951,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/542.0xc0006aef30.false"
+                    "$ref": "#/definitions/571.0xc00071e270.false"
                 },
                 "name": {
                     "type": "string"
@@ -1868,24 +1969,6 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "aws.Key": {
-            "title": "Key",
-            "type": "object",
-            "properties": {
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "key_name": {
-                    "type": "string"
-                },
-                "key_type": {
-                    "$ref": "#/definitions/models.KeyType"
-                },
-                "private_key": {
                     "type": "string"
                 }
             }
@@ -1949,7 +2032,7 @@
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/aws.Key"
+                    "$ref": "#/definitions/key_utils.AWSKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -1992,7 +2075,7 @@
                     "$ref": "#/definitions/aws.Ami"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/aws.Key"
+                    "$ref": "#/definitions/key_utils.AWSKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2177,7 +2260,7 @@
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2232,7 +2315,7 @@
                     "$ref": "#/definitions/azure.ImageReference"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2450,7 +2533,7 @@
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2505,7 +2588,7 @@
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2592,6 +2675,54 @@
                 }
             }
         },
+        "key_utils.AWSKey": {
+            "title": "AWSKey",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "key_name": {
+                    "type": "string"
+                },
+                "key_type": {
+                    "$ref": "#/definitions/models.KeyType"
+                },
+                "private_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "key_utils.AZUREKey": {
+            "title": "AZUREKey",
+            "type": "object",
+            "properties": {
+                "admin_password": {
+                    "type": "string"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "credential_type": {
+                    "$ref": "#/definitions/models.CredentialsType"
+                },
+                "key_name": {
+                    "type": "string"
+                },
+                "key_type": {
+                    "$ref": "#/definitions/models.KeyType"
+                },
+                "private_key": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Cloud": {
             "title": "Cloud",
             "type": "string",
@@ -2641,36 +2772,6 @@
                 "PremiumSSD = \"premium ssd\""
             ],
             "example": "standard hdd"
-        },
-        "utils.Key": {
-            "title": "Key",
-            "type": "object",
-            "properties": {
-                "admin_password": {
-                    "type": "string"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "credential_type": {
-                    "$ref": "#/definitions/models.CredentialsType"
-                },
-                "key_name": {
-                    "type": "string"
-                },
-                "key_type": {
-                    "$ref": "#/definitions/models.KeyType"
-                },
-                "private_key": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
         }
     },
     "tags": [

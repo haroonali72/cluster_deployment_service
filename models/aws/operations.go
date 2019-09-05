@@ -1390,3 +1390,42 @@ func deleteFile(keyName string) error {
 	}
 	return nil
 }
+func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (string, error) {
+	aws := AWS{
+		AccessKey: credentials.AccessKey,
+		SecretKey: credentials.SecretKey,
+		Region:    credentials.Region,
+	}
+	confError := aws.init()
+	if confError != nil {
+		return "", confError
+	}
+
+	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx)
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		beego.Error("Key Already Exist ")
+		return "", err
+	}
+	keyMaterial, _, err := aws.KeyPairGenerator(keyName)
+
+	if err != nil {
+
+		return "", err
+	}
+	var keyInfo key_utils.AWSKey
+	keyInfo.KeyName = keyName
+	keyInfo.KeyMaterial = keyMaterial
+	keyInfo.KeyType = models.NEWKey
+	keyInfo.Cloud = models.AWS
+	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	beego.Info("keyMaterial fetched ", keyMaterial)
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams)
+	if err != nil {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", err
+	}
+
+	return keyMaterial, err
+}

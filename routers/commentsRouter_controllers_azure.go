@@ -54,15 +54,6 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
-			Method:           "GetSSHKey",
-			Router:           `/sshkey/:keyname/:username`,
-			AllowHTTPMethods: []string{"post"},
-			MethodParams:     param.Make(),
-			Filters:          nil,
-			Params:           nil})
-
-	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
-		beego.ControllerComments{
 			Method:           "GetSSHKeys",
 			Router:           `/sshkeys`,
 			AllowHTTPMethods: []string{"get"},

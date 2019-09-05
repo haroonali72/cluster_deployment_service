@@ -562,13 +562,12 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 	return nil
 }
 
-func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
+func GetSSHkey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (keyMaterial string, err error) {
 
-	privateKey, err = key_utils.GenerateKey(models.AWS, keyName, userName, token, teams, ctx)
-
+	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, ctx)
 	if err != nil {
-
+		beego.Error("SSH not generated " + err.Error())
 		return "", err
 	}
-	return privateKey, err
+	return keyMaterial, err
 }

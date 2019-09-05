@@ -719,6 +719,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
+// @Param	projectId	path	string	true	"Id of the project"
 // @Param	keyname	 path	string	true	"SSHKey"
 // @Param	username	 path	string	true	"UserName"
 // @Param	token	header	string	token ""
@@ -734,6 +735,7 @@ func (c *GcpClusterController) GetSSHKey() {
 	//==========================RBAC Authentication==============================//
 
 	ctx := new(utils.Context)
+	projectId := c.GetString(":projectId")
 	token := c.Ctx.Input.Header("token")
 	teams := c.Ctx.Input.Header("teams")
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -745,7 +747,7 @@ func (c *GcpClusterController) GetSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GCPNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
