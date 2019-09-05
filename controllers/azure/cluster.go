@@ -619,7 +619,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Success 200 {object} key_utils.AZUREKey
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /sshkey/:keyname [post]
+// @router /sshkey/:keyname/:projectId [post]
 func (c *AzureClusterController) GetSSHKey() {
 
 	beego.Info("AzureClusterController: CreateSSHKey.")

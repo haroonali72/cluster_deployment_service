@@ -455,13 +455,18 @@ paths:
               $ref: '#/definitions/azure.Cluster_Def'
         "500":
           description: '{"error": "internal server error <error msg>"}'
-  /cluster/azure/sshkey/{keyname}:
+  /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
       - cluster/azure
       description: Generates new SSH key
       operationId: AzureClusterController.CreateSSHKey
       parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
       - in: path
         name: keyname
         description: SSHKey
@@ -733,13 +738,18 @@ paths:
           description: '{"error": "authorization params missing or invalid"}'
         "500":
           description: '{"error": "internal server error"}'
-  /cluster/gcp/sshkey/{keyname}/{username}:
+  /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
     post:
       tags:
       - cluster/gcp
       description: Generates new SSH key
       operationId: GcpClusterController.CreateSSHKey
       parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
       - in: path
         name: keyname
         description: SSHKey
@@ -1248,7 +1258,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  571.0xc00071e270.false:
+  571.0xc0006f6510.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1286,7 +1296,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/571.0xc00071e270.false'
+        $ref: '#/definitions/571.0xc0006f6510.false'
       name:
         type: string
       network_name:

@@ -727,7 +727,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Success 200 {object} key_utils.AZUREKey
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
-// @router /sshkey/:keyname/:username [post]
+// @router /sshkey/:keyname/:username/:projectId [post]
 func (c *GcpClusterController) GetSSHKey() {
 
 	beego.Info("GcpClusterController: CreateSSHKey.")
