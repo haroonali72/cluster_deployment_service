@@ -46,12 +46,12 @@ func checkTemplateSize(template Template, ctx utils.Context) error {
 	return nil
 }
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
-	/*_, err := GetTemplate(template.TemplateId)
+	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
-		beego.Error(text, err)
+		beego.Error(text)
 		return errors.New(text), ""
-	}*/
+	}
 
 	template.CreationDate = time.Now()
 	i := rand.Int()
@@ -63,7 +63,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 
 	beego.Info(template.TemplateId)
 
-	err := checkTemplateSize(template, ctx)
+	err = checkTemplateSize(template, ctx)
 	if err != nil { //cluster found
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err, ""
