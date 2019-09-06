@@ -55,8 +55,7 @@ func (c *AWSTemplateController) Get() {
 	}
 
 	//=============================================================================//
-
-	ctx.SendSDLog("AWSTemplateController: Get template  id : "+templateId, "info")
+	ctx.SendLogs("AWSTemplateController: Get template  id : "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -108,7 +107,7 @@ func (c *AWSTemplateController) GetAll() {
 	}
 
 	//=============================================================================//
-	ctx.SendSDLog("AWSTemplateController: GetAll template.", "info")
+	ctx.SendLogs("AWSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	templates, err := aws.GetTemplates(*ctx, data)
 	if err != nil {
@@ -164,7 +163,7 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AWSTemplateController: Post new template with name: "+template.Name, "error")
+	ctx.SendLogs("AWSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	err, id := aws.CreateTemplate(template, *ctx)
 	if err != nil {
@@ -246,8 +245,7 @@ func (c *AWSTemplateController) Patch() {
 	}
 
 	//=============================================================================//
-
-	ctx.SendSDLog("AWSTemplateController: Patch template with template id : "+template.TemplateId, "error")
+	ctx.SendLogs("AWSTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	err = aws.UpdateTemplate(template, *ctx)
 	if err != nil {

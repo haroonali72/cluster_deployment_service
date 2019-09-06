@@ -29,7 +29,7 @@ func (c *GcpTemplateController) Get() {
 	ctx := new(utils.Context)
 
 	if id == "" {
-		ctx.SendSDLog("GcpTemplateController: template id is empty", "error")
+		ctx.SendLogs("GcpTemplateController: template id is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "template id is empty"}
 		c.ServeJSON()
@@ -49,7 +49,7 @@ func (c *GcpTemplateController) Get() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendSDLog("GcpTemplateController: Get template  id : "+id, "info")
+	ctx.SendLogs("GcpTemplateController: Get template  id : "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "View", token, utils.Context{})
@@ -70,7 +70,8 @@ func (c *GcpTemplateController) Get() {
 	//==================================================================================//
 	template, err := gcp.GetTemplate(id, *ctx)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
@@ -103,7 +104,7 @@ func (c *GcpTemplateController) GetAll() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendSDLog("GcpTemplateController: GetAll template.", "info")
+	ctx.SendLogs("GcpTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
@@ -118,7 +119,7 @@ func (c *GcpTemplateController) GetAll() {
 	//==================================================================================
 	templates, err := gcp.GetTemplates(*ctx, data)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateController: internal server error "+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateController: internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
@@ -158,7 +159,7 @@ func (c *GcpTemplateController) Post() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendSDLog("GcpTemplateController: Posting  new template .", "info")
+	ctx.SendLogs("GcpTemplateController: Posting  new template .", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
@@ -178,7 +179,8 @@ func (c *GcpTemplateController) Post() {
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
@@ -242,7 +244,7 @@ func (c *GcpTemplateController) Patch() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendSDLog("GcpTemplateController: Patch template with templateId "+template.TemplateId, "info")
+	ctx.SendLogs("GcpTemplateController: Patch template with templateId "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
@@ -266,7 +268,7 @@ func (c *GcpTemplateController) Patch() {
 
 	err = gcp.UpdateTemplate(template, *ctx)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no template exists with this id"}
@@ -299,7 +301,8 @@ func (c *GcpTemplateController) Delete() {
 	ctx := new(utils.Context)
 
 	if id == "" {
-		ctx.SendSDLog("GcpTemplateController: templateId is empty", "error")
+		ctx.SendLogs("GcpTemplateController: templateId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "name is empty"}
 		c.ServeJSON()
@@ -317,7 +320,7 @@ func (c *GcpTemplateController) Delete() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendSDLog("GcpTemplateController: deleting template with templateId "+id, "info")
+	ctx.SendLogs("GcpTemplateController: deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "Delete", token, utils.Context{})
@@ -339,7 +342,7 @@ func (c *GcpTemplateController) Delete() {
 
 	err = gcp.DeleteTemplate(id, *ctx)
 	if err != nil {
-		ctx.SendSDLog("GcpTemplateController :"+err.Error(), "error")
+		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()

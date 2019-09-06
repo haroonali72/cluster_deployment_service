@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"antelope/models"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
@@ -23,23 +24,23 @@ type Response struct {
 func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	msg := Response{
 		Status:    status,
-		ID:        channel,
+		ID:        ctx.data.Company + "_" + channel,
 		Component: "Cluster",
 	}
 	b, err := json.Marshal(msg)
 	if err != nil {
-		ctx.SendSDLog(err.Error(), "error")
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
 		return
 	}
-	cmd := notifier.Client.Publish(channel, string(b))
+	cmd := notifier.Client.Publish(ctx.data.Company+"_"+channel, string(b))
 	beego.Info(*cmd)
 	//b, err = json.Marshal(*cmd)
 	//if err != nil {
 	//	beego.Error(err.Error())
 	//	return
 	//}
-	ctx.SendSDLog(cmd.String(), "info")
+	ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	if cmd != nil {
 		if cmd.Err() != nil {
 			beego.Error(cmd.Err().Error())

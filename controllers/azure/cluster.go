@@ -56,7 +56,7 @@ func (c *AzureClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AZUREClusterController: Get cluster with project id "+projectId, "info")
+	ctx.SendLogs("AZUREClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -65,7 +65,7 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	cluster, err := azure.GetCluster(projectId, *ctx)
+	cluster, err := azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
@@ -161,7 +161,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureClusterController: Post new cluster with name: "+cluster.Name, "error ")
+	ctx.SendLogs("AzureClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	cluster.CreationDate = time.Now()
 	beego.Info(cluster.ResourceGroup)
@@ -179,7 +179,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	cluster.CompanyId = userInfo.CompanyId
 	err = azure.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -239,7 +239,7 @@ func (c *AzureClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureClusterController: Patch cluster with name: "+cluster.Name, "info")
+	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = azure.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
@@ -298,7 +298,8 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureClusterController: Delete cluster with project id: "+id, "error")
+
+	ctx.SendLogs("AzureClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -306,14 +307,14 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	cluster, err := azure.GetCluster(id, *ctx)
+	cluster, err := azure.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
-	err = azure.DeleteCluster(id, *ctx)
+	err = azure.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
@@ -367,8 +368,7 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureClusterController: POST cluster with project id: "+projectId, "error")
-
+	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	beego.Info("AzureClusterController: StartCluster.")
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(token, projectId, *ctx)
@@ -391,9 +391,9 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendSDLog("AzureClusterController: Getting Cluster of project. "+projectId, "info")
+	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = azure.GetCluster(projectId, *ctx)
+	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -408,7 +408,8 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureClusterController: Creating Cluster. "+cluster.Name, "info")
+
+	ctx.SendLogs("AzureClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
 
@@ -475,10 +476,9 @@ func (c *AzureClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendSDLog("AzureClusterController: Fetch Cluster Status of project. "+projectId, "info")
-
-	cluster, err := azure.FetchStatus(azureProfile, token, projectId, *ctx)
+	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -532,8 +532,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureClusterController: TerminateCluster.", "info")
-
+	ctx.SendLogs("AzureClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(token, projectId, *ctx)
 
@@ -555,9 +554,9 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendSDLog("AzureClusterController: Getting Cluster of project. "+projectId, "info")
+	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = azure.GetCluster(projectId, *ctx)
+	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -565,8 +564,8 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendSDLog("AzureClusterController: Terminating Cluster. "+cluster.Name, "info")
 
+	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
@@ -597,7 +596,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 	//==========================RBAC Authentication==============================//
 
 	//=============================================================================//
-	ctx.SendSDLog("AZUREClusterController: FetchExistingSSHKeys.", "info")
+	ctx.SendLogs("AZUREClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	keys, err := azure.GetAllSSHKeyPair(*ctx, token)
 
