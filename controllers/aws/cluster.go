@@ -810,6 +810,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
+// @Param	X-Region	header	string	false	""
 // @Success 200 {object} key_utils.AWSKey
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
@@ -829,7 +830,7 @@ func (c *AWSClusterController) GetSSHKey() {
 
 	token := c.Ctx.Input.Header("token")
 	teams := c.Ctx.Input.Header("teams")
-
+	region := c.Ctx.Input.Header("X-Region")
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -846,14 +847,13 @@ func (c *AWSClusterController) GetSSHKey() {
 	keyName := c.GetString(":keyname")
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
-	region, err := aws.GetRegion(token, projectId, *ctx)
+	//region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
 		c.ServeJSON()
 		return
 	}
-
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
