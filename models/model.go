@@ -89,3 +89,19 @@ const (
 	FrontEndLoggingURI   = "frontend/logging"
 	AuditTrailLoggingURI = "audit/store"
 )
+
+type Subscription string
+
+const (
+	SubBronze Subscription = "Bronze-Subscription"
+	SubSilver Subscription = "Silver-Subscription"
+	SubGold   Subscription = "Gold-Subscription"
+)
+
+type CoreLimit int64
+
+const (
+	BronzeLimit CoreLimit = 50
+	SilverLimit CoreLimit = 50
+	GoldLimit   CoreLimit = 50
+)

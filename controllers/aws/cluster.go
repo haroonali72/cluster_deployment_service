@@ -802,3 +802,76 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()
 }
+
+// @Title CreateSSHKey
+// @Description Generates new SSH key
+// @Param	projectId	path	string	true	"Id of the project"
+// @Param	keyname	 path	string	true	"SSHKey"
+// @Param	X-Profile-Id	header	string	profileId	""
+// @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
+// @Param	X-Region	header	string	false	""
+// @Success 200 {object} key_utils.AWSKey
+// @Failure 404 {"error": exception_message}
+// @Failure 500 {"error": "internal server error"}
+// @router /sshkey/:projectId/:keyname [post]
+func (c *AWSClusterController) GetSSHKey() {
+
+	beego.Info("AWSClusterController: CreateSSHKey.")
+	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+	//==========================RBAC Authentication==============================//
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("token")
+	teams := c.Ctx.Input.Header("teams")
+	region := c.Ctx.Input.Header("X-Region")
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("AWSNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	//==========================RBAC Authentication==============================//
+	keyName := c.GetString(":keyname")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	keyMaterial, err := aws.GetSSHkey(keyName, awsProfile.Profile, token, teams, *ctx)
+
+	beego.Info("Key Material :" + keyMaterial)
+	if err != nil {
+		ctx.SendLogs("AWS ClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = keyMaterial
+	c.ServeJSON()
+}
