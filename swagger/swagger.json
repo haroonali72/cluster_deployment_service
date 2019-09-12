@@ -345,6 +345,7 @@
                 "tags": [
                     "cluster/aws"
                 ],
+                "description": "terminates a  cluster",
                 "operationId": "AWSClusterController.Terminate",
                 "parameters": [
                     {
@@ -1212,6 +1213,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -1391,6 +1398,12 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
                         "type": "string"
                     },
                     {
@@ -1574,6 +1587,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -1745,7 +1764,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc042acd1d0.false": {
+        "563.0xc042c16090.false": {
             "title": "false",
             "type": "object"
         },
@@ -1794,8 +1813,11 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc042acd1d0.false"
+                    "$ref": "#/definitions/563.0xc042c16090.false"
                 },
                 "name": {
                     "type": "string"
@@ -2033,6 +2055,9 @@
                 },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -2313,6 +2338,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2407,6 +2435,9 @@
                         "$ref": "#/definitions/gcp.Node"
                     }
                 },
+                "pool_id": {
+                    "type": "string"
+                },
                 "pool_role": {
                     "type": "string"
                 },
@@ -2428,11 +2459,17 @@
             "title": "NodePoolT",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
+                "auto_scaling": {
+                    "$ref": "#/definitions/gcp.AutoScaling"
+                },
+                "enable_scaling": {
+                    "type": "boolean"
                 },
                 "image": {
                     "$ref": "#/definitions/gcp.Image"
+                },
+                "is_external": {
+                    "type": "boolean"
                 },
                 "key_info": {
                     "$ref": "#/definitions/utils.Key"
@@ -2447,8 +2484,29 @@
                     "type": "integer",
                     "format": "int64"
                 },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gcp.Node"
+                    }
+                },
+                "pool_id": {
+                    "type": "string"
+                },
+                "pool_role": {
+                    "type": "string"
+                },
+                "root_volume": {
+                    "$ref": "#/definitions/gcp.Volume"
+                },
+                "service_account_email": {
+                    "type": "string"
+                },
                 "subnet_id": {
                     "type": "string"
+                },
+                "volume": {
+                    "$ref": "#/definitions/gcp.Volume"
                 }
             }
         },
@@ -2462,6 +2520,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2473,9 +2534,6 @@
                     "items": {
                         "$ref": "#/definitions/gcp.NodePoolT"
                     }
-                },
-                "resource_group": {
-                    "type": "string"
                 },
                 "status": {
                     "type": "string"

@@ -222,6 +222,7 @@ func (c *GcpTemplateController) Post() {
 // @Title Update
 // @Description update an existing template
 // @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
 // @Param	body	body	gcp.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 404 {"error": "no template exists with this name"}
