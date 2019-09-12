@@ -207,6 +207,7 @@ func (c *AWSTemplateController) Post() {
 // @Title Update
 // @Description update an existing template
 // @Param	token	header	string	token ""
+// @Param	teams	header	string	token ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 404 {"error": "no template exists with this name"}
@@ -260,7 +261,26 @@ func (c *AWSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	team := c.Ctx.Input.Header("teams")
+	var teams []string
+	if team != "" {
+		teams = strings.Split(team, ";")
+	}
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, teams, models.AWS, *ctx)
+	if err != nil {
+		beego.Error("error" + err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.ServeJSON()
+		return
+	}
+	if statusCode != 200 {
+		beego.Error(statusCode)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed!"}
+		c.ServeJSON()
+		return
+	}
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
