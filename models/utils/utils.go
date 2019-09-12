@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"antelope/models"
 	"bytes"
 	"github.com/astaxie/beego"
 	"net/http"
@@ -11,6 +12,37 @@ type HTTPClient struct {
 	client *http.Client
 }
 
+type Key struct {
+	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
+	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
+	KeyName        string                 `json:"key_name" bson:"key_name"`
+	Username       string                 `json:"username" bson:"username,omitempty"`
+	AdminPassword  string                 `json:"admin_password" bson:"admin_password,omitempty"`
+	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty"`
+	PublicKey      string                 `json:"public_key" bson:"public_key,omitempty"`
+	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
+}
+
+type KeyPairResponse struct {
+	KeyName    string `json:"key_name"`
+	PrivateKey string `json:"private_key"`
+	PublicKey  string `json:"public_key"`
+}
+
+func CreatePutRequest(request_data []byte, url string) (*http.Request, error) {
+
+	//beego.Info("requesting ", url)
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(request_data))
+
+	if err != nil {
+		beego.Error("%s", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	return req, nil
+}
 func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 
 	//beego.Info("requesting ", url)

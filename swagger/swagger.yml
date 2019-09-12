@@ -910,6 +910,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1029,6 +1033,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1147,6 +1155,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1258,7 +1270,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  571.0xc0006f6510.false:
+  563.0xc042b90b70.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1296,7 +1308,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/571.0xc0006f6510.false'
+        $ref: '#/definitions/563.0xc042b90b70.false'
       name:
         type: string
       network_name:
