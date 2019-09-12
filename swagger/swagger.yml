@@ -194,6 +194,48 @@ paths:
           description: '{"msg": "cluster autoscaled successfully"}'
         "500":
           description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/sshkey/{projectId}/{keyname}:
+    post:
+      tags:
+      - cluster/aws
+      description: Generates new SSH key
+      operationId: AWSClusterController.CreateSSHKey
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: path
+        name: keyname
+        description: SSHKey
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: header
+        name: X-Region
+        description: X-Region
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/key_utils.AWSKey'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/aws/sshkeys:
     get:
       tags:
@@ -417,6 +459,40 @@ paths:
               $ref: '#/definitions/azure.Cluster_Def'
         "500":
           description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/sshkey/{keyname}/{projectId}:
+    post:
+      tags:
+      - cluster/azure
+      description: Generates new SSH key
+      operationId: AzureClusterController.CreateSSHKey
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: path
+        name: keyname
+        description: SSHKey
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/key_utils.AZUREKey'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/azure/sshkeys:
     get:
       tags:
@@ -664,6 +740,45 @@ paths:
           description: '{"error": "profile id is empty"}'
         "401":
           description: '{"error": "authorization params missing or invalid"}'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
+    post:
+      tags:
+      - cluster/gcp
+      description: Generates new SSH key
+      operationId: GcpClusterController.CreateSSHKey
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: path
+        name: keyname
+        description: SSHKey
+        required: true
+        type: string
+      - in: path
+        name: username
+        description: UserName
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/key_utils.AZUREKey'
+        "404":
+          description: '{"error": exception_message}'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/sshkeys:
@@ -1159,7 +1274,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  563.0xc042b90b70.false:
+  571.0xc0006ed050.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1197,7 +1312,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/563.0xc042b90b70.false'
+        $ref: '#/definitions/571.0xc0006ed050.false'
       name:
         type: string
       network_name:
@@ -1209,18 +1324,6 @@ definitions:
       project_id:
         type: string
       status:
-        type: string
-  aws.Key:
-    title: Key
-    type: object
-    properties:
-      cloud:
-        $ref: '#/definitions/models.Cloud'
-      key_name:
-        type: string
-      key_type:
-        $ref: '#/definitions/models.KeyType'
-      private_key:
         type: string
   aws.Node:
     title: Node
@@ -1263,7 +1366,7 @@ definitions:
       is_external:
         type: boolean
       key_info:
-        $ref: '#/definitions/aws.Key'
+        $ref: '#/definitions/key_utils.AWSKey'
       machine_type:
         type: string
       name:
@@ -1292,7 +1395,7 @@ definitions:
       ami:
         $ref: '#/definitions/aws.Ami'
       key_info:
-        $ref: '#/definitions/aws.Key'
+        $ref: '#/definitions/key_utils.AWSKey'
       machine_type:
         type: string
       name:
@@ -1417,7 +1520,7 @@ definitions:
       is_external:
         type: boolean
       key_info:
-        $ref: '#/definitions/utils.Key'
+        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:
@@ -1454,7 +1557,7 @@ definitions:
       image:
         $ref: '#/definitions/azure.ImageReference'
       key_info:
-        $ref: '#/definitions/utils.Key'
+        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:
@@ -1601,7 +1704,7 @@ definitions:
       is_external:
         type: boolean
       key_info:
-        $ref: '#/definitions/utils.Key'
+        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:
@@ -1638,7 +1741,7 @@ definitions:
       is_external:
         type: boolean
       key_info:
-        $ref: '#/definitions/utils.Key'
+        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:
@@ -1695,6 +1798,38 @@ definitions:
         $ref: '#/definitions/models.GCPDiskType'
       is_blank:
         type: boolean
+  key_utils.AWSKey:
+    title: AWSKey
+    type: object
+    properties:
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      key_name:
+        type: string
+      key_type:
+        $ref: '#/definitions/models.KeyType'
+      private_key:
+        type: string
+  key_utils.AZUREKey:
+    title: AZUREKey
+    type: object
+    properties:
+      admin_password:
+        type: string
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      credential_type:
+        $ref: '#/definitions/models.CredentialsType'
+      key_name:
+        type: string
+      key_type:
+        $ref: '#/definitions/models.KeyType'
+      private_key:
+        type: string
+      public_key:
+        type: string
+      username:
+        type: string
   models.Cloud:
     title: Cloud
     type: string
@@ -1735,26 +1870,6 @@ definitions:
     - StandardSSD = "standard ssd"
     - PremiumSSD = "premium ssd"
     example: standard hdd
-  utils.Key:
-    title: Key
-    type: object
-    properties:
-      admin_password:
-        type: string
-      cloud:
-        $ref: '#/definitions/models.Cloud'
-      credential_type:
-        $ref: '#/definitions/models.CredentialsType'
-      key_name:
-        type: string
-      key_type:
-        $ref: '#/definitions/models.KeyType'
-      private_key:
-        type: string
-      public_key:
-        type: string
-      username:
-        type: string
 tags:
 - name: health
   description: |

@@ -716,3 +716,79 @@ func (c *GcpClusterController) GetServiceAccounts() {
 	c.Data["json"] = serviceAccounts
 	c.ServeJSON()
 }
+
+// @Title CreateSSHKey
+// @Description Generates new SSH key
+// @Param	projectId	path	string	true	"Id of the project"
+// @Param	keyname	 	path	string	true	"SSHKey"
+// @Param	username	path	string	true	"UserName"
+// @Param	token		header	string	token 	""
+// @Param	teams		header	string	teams 	""
+// @Success 200 		{object} key_utils.AZUREKey
+// @Failure 404 		{"error": exception_message}
+// @Failure 500 		{"error": "internal server error"}
+// @router /sshkey/:keyname/:username/:projectId [post]
+func (c *GcpClusterController) PostSSHKey() {
+
+	beego.Info("GcpClusterController: CreateSSHKey.")
+
+	//==========================RBAC Authentication==============================//
+
+	ctx := new(utils.Context)
+	projectId := c.GetString(":projectId")
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	teams := c.Ctx.Input.Header("teams")
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("GCPNetworkController: PostSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	//==========================RBAC Authentication==============================//
+
+	keyName := c.GetString(":keyname")
+	if keyName == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "key name is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userName := c.GetString(":username")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "username is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	privateKey, err := gcp.GetSSHkey(keyName, userName, token, teams, *ctx)
+	if err != nil {
+		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.ServeJSON()
+		return
+	}
+
+	beego.Info("Private Key :" + privateKey)
+
+	c.Data["json"] = privateKey
+	c.ServeJSON()
+}

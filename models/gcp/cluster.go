@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -31,22 +32,22 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                  bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name                string        `json:"name" bson:"name"`
-	PoolId              string        `json:"pool_id" bson:"pool_id"`
-	NodeCount           int64         `json:"node_count" bson:"node_count"`
-	MachineType         string        `json:"machine_type" bson:"machine_type"`
-	Image               Image         `json:"image" bson:"image"`
-	Volume              Volume        `json:"volume" bson:"volume"`
-	RootVolume          Volume        `json:"root_volume" bson:"root_volume"`
-	EnableVolume        bool          `json:"is_external" bson:"is_external"`
-	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
-	PoolRole            string        `json:"pool_role" bson:"pool_role"`
-	ServiceAccountEmail string        `json:"service_account_email" bson:"service_account_email"`
-	Nodes               []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo             utils.Key     `json:"key_info" bson:"key_info"`
-	EnableScaling       bool          `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
+	ID                  bson.ObjectId      `json:"-" bson:"_id,omitempty"`
+	Name                string             `json:"name" bson:"name"`
+	PoolId              string             `json:"pool_id" bson:"pool_id"`
+	NodeCount           int64              `json:"node_count" bson:"node_count"`
+	MachineType         string             `json:"machine_type" bson:"machine_type"`
+	Image               Image              `json:"image" bson:"image"`
+	Volume              Volume             `json:"volume" bson:"volume"`
+	RootVolume          Volume             `json:"root_volume" bson:"root_volume"`
+	EnableVolume        bool               `json:"is_external" bson:"is_external"`
+	PoolSubnet          string             `json:"subnet_id" bson:"subnet_id"`
+	PoolRole            string             `json:"pool_role" bson:"pool_role"`
+	ServiceAccountEmail string             `json:"service_account_email" bson:"service_account_email"`
+	Nodes               []*Node            `json:"nodes" bson:"nodes"`
+	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
+	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 }
 
 type AutoScaling struct {
@@ -532,4 +533,15 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
+}
+
+func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
+
+	privateKey, err = key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
+	fmt.Println("Private key:" + privateKey)
+	if err != nil {
+
+		return "", err
+	}
+	return privateKey, err
 }

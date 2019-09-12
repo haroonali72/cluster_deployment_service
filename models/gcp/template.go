@@ -3,6 +3,7 @@ package gcp
 import (
 	"antelope/models"
 	"antelope/models/db"
+	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"errors"
@@ -28,29 +29,29 @@ type Template struct {
 }
 
 type NodePoolT struct {
-	ID                  bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name                string        `json:"name" bson:"name"`
-	PoolId              string        `json:"pool_id" bson:"pool_id"`
-	NodeCount           int64         `json:"node_count" bson:"node_count"`
-	MachineType         string        `json:"machine_type" bson:"machine_type"`
-	Image               Image         `json:"image" bson:"image"`
-	Volume              Volume        `json:"volume" bson:"volume"`
-	RootVolume          Volume        `json:"root_volume" bson:"root_volume"`
-	EnableVolume        bool          `json:"is_external" bson:"is_external"`
-	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
-	PoolRole            string        `json:"pool_role" bson:"pool_role"`
-	ServiceAccountEmail string        `json:"service_account_email" bson:"service_account_email"`
-	Nodes               []*Node       `json:"nodes" bson:"nodes"`
-	KeyInfo             utils.Key     `json:"key_info" bson:"key_info"`
-	EnableScaling       bool          `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
+	ID                  bson.ObjectId      `json:"-" bson:"_id,omitempty"`
+	Name                string             `json:"name" bson:"name"`
+	PoolId              string             `json:"pool_id" bson:"pool_id"`
+	NodeCount           int64              `json:"node_count" bson:"node_count"`
+	MachineType         string             `json:"machine_type" bson:"machine_type"`
+	Image               Image              `json:"image" bson:"image"`
+	Volume              Volume             `json:"volume" bson:"volume"`
+	RootVolume          Volume             `json:"root_volume" bson:"root_volume"`
+	EnableVolume        bool               `json:"is_external" bson:"is_external"`
+	PoolSubnet          string             `json:"subnet_id" bson:"subnet_id"`
+	PoolRole            string             `json:"pool_role" bson:"pool_role"`
+	ServiceAccountEmail string             `json:"service_account_email" bson:"service_account_email"`
+	Nodes               []*Node            `json:"nodes" bson:"nodes"`
+	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
+	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling"`
+	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 }
 
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
-		ctx.SendLogs("gcpTemplateModel :"+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("gcpTemplateModel :"+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(text, err)
 		return errors.New(text), ""
 	}
