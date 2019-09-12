@@ -594,7 +594,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription, 
 		for nodepool.MachineType != machine.InstanceType {
 			if nodepool.MachineType == machine.InstanceType {
 				if nodepool.EnableScaling == true {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * machine.Cores)
+					coreCount = coreCount + ((nodepool.NodeCount * nodepool.Scaling.MaxScalingGroupSize) * machine.Cores)
 				}
 				coreCount = coreCount + (nodepool.NodeCount * machine.Cores)
 			}

@@ -876,11 +876,40 @@ func (c *AWSClusterController) GetSSHKey() {
 	c.ServeJSON()
 }
 
-// @Title CoresCheck
+// @Title CoresLimitCheck
 // @Description Checking the subscription core limit
 // @Param	subscriptionType	path	string	true	"Type of subscription"
 // @Param	token	header	string	token ""
-// @Success 200 {object} key_utils.AWSKey
+// @Success 200 {"msg": "Cores limit not exceeded"}
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
-// @router /sshkey/:projectId/:keyname [post]
+// @Failure 500 {"error": "cores limit exceed"}
+// @router /coreLimitCheck/:subscriptionType [get]
+func (c *AWSClusterController) CheckCoreLimit() {
+
+	beego.Info("AWSClusterController: Checking Core Limit ")
+
+	subscriptionType := c.GetString(":subscriptionType")
+	if subscriptionType == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscriptionType is empty"}
+		c.ServeJSON()
+		return
+	}
+	//==========================RBAC Authentication==============================//
+	ctx := new(utils.Context)
+	token := c.Ctx.Input.Header("token")
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("AWSNetworkController: FetchSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	//==========================RBAC Authentication==============================//
+
+}
