@@ -223,6 +223,10 @@ paths:
         name: teams
         description: teams
         type: string
+      - in: header
+        name: X-Region
+        description: X-Region
+        type: string
       responses:
         "200":
           description: ""
@@ -1270,7 +1274,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  563.0xc042b90b70.false:
+  571.0xc0006ddbf0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1308,7 +1312,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/563.0xc042b90b70.false'
+        $ref: '#/definitions/571.0xc0006ddbf0.false'
       name:
         type: string
       network_name:

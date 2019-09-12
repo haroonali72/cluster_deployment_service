@@ -520,7 +520,7 @@ func GetSSHKeyPair(keyname string) (keys *key_utils.AZUREKey, err error) {
 	return keys, nil
 }
 
-func GetSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey string, err error) {
+func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
 	privateKey, err = key_utils.GenerateKey(models.Azure, keyName, "azure@example.com", token, teams, ctx)
 	if err != nil {

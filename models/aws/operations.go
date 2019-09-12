@@ -1408,19 +1408,22 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 		beego.Error("Key Already Exist ")
 		return "", err
 	}
+
 	keyMaterial, _, err := aws.KeyPairGenerator(keyName)
 
 	if err != nil {
-
 		return "", err
 	}
+
 	var keyInfo key_utils.AWSKey
 	keyInfo.KeyName = keyName
 	keyInfo.KeyMaterial = keyMaterial
 	keyInfo.KeyType = models.NEWKey
 	keyInfo.Cloud = models.AWS
+
 	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("keyMaterial fetched ", keyMaterial)
+
 	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
