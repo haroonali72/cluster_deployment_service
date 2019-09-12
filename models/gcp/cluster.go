@@ -179,6 +179,12 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
+	err = checkCoresLimit(cluster, models.SubBronze, ctx)
+	if err != nil { //core size limit exceed
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
 	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: error while connecting to database "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -530,6 +536,38 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	return nil
+}
+
+func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription, ctx utils.Context) error {
+
+	var coreCount int64 = 0
+	var machine models.Machine
+
+	if err := json.Unmarshal(models.Cores, &machine); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
+
+	for _, nodepool := range cluster.NodePools {
+		for nodepool.MachineType != machine.InstanceType {
+			if nodepool.MachineType == machine.InstanceType {
+				if nodepool.EnableScaling == true {
+					coreCount = coreCount + ((nodepool.NodeCount * nodepool.Scaling.MaxScalingGroupSize) * machine.Cores)
+				}
+				coreCount = coreCount + (nodepool.NodeCount * machine.Cores)
+			}
+		}
+	}
+
+	if subscriptionType == models.SubGold && coreCount > int64(models.GoldLimit) {
+		return errors.New("Exceeds the cores limit")
+	} else if subscriptionType == models.SubSilver && coreCount > int64(models.SilverLimit) {
+		return errors.New("Exceeds the cores limit")
+	} else if subscriptionType == models.SubBronze && coreCount > int64(models.BronzeLimit) {
+		return errors.New("Exceeds the cores limit")
+	}
 
 	return nil
 }
