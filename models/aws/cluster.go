@@ -583,7 +583,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription, 
 	var coreCount int64 = 0
 	var machine models.Machine
 
-	if err := json.Unmarshal(models.Cores, &machine); err != nil {
+	if err := json.Unmarshal(models.AWSCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
