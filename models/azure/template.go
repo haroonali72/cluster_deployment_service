@@ -91,7 +91,7 @@ func GetTemplate(templateName string, ctx utils.Context) (template Template, err
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
-	err = c.Find(bson.M{"name": templateName}).One(&template)
+	err = c.Find(bson.M{"template_id": templateName}).One(&template)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err
