@@ -52,7 +52,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		ctx.SendLogs("gcpTemplateModel :"+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(text, err)
+		beego.Error(text)
 		return errors.New(text), ""
 	}
 	i := rand.Int()
