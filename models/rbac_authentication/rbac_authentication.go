@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 
 	"github.com/astaxie/beego"
@@ -156,7 +157,7 @@ func GetInfo(token string) (types.Response, error) {
 	}
 	return res, nil
 }
-func UpdatePolicy(resourceId, token, userName, companyId string, teams []string, cloudType models.Cloud, ctx utils.Context) (int, error) {
+func CreatePolicy(resourceId, token, userName, companyId string, requestType models.RequestType, teams []string, cloudType models.Cloud, ctx utils.Context) (int, error) {
 
 	var input Input
 	input.UserName = userName
@@ -174,7 +175,14 @@ func UpdatePolicy(resourceId, token, userName, companyId string, teams []string,
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 400, err
 	}
-	req, err := utils.CreatePutRequest(request_data, getRbacHost()+models.RbacEndpoint+models.RbacPolicyURI)
+	var req *http.Request
+	if requestType == models.POST {
+
+		req, err = utils.CreatePostRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
+	} else if requestType == models.PUT {
+
+		req, err = utils.CreatePutRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
+	}
 	if err != nil {
 		beego.Info(err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -192,43 +200,6 @@ func UpdatePolicy(resourceId, token, userName, companyId string, teams []string,
 	return response.StatusCode, err
 
 }
-func CreatePolicy(resourceId, token, userName, companyId string, teams []string, cloudType models.Cloud, ctx utils.Context) (int, error) {
-
-	var input Input
-	input.UserName = userName
-	input.CompanyId = companyId
-	input.ResouceType = "clusterTemplate"
-	input.ResourceId = resourceId
-	input.Teams = teams
-	input.CloudType = cloudType
-
-	client := utils.InitReq()
-	request_data, err := utils.TransformData(input)
-	if err != nil {
-
-		beego.Info(err.Error())
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
-	}
-	req, err := utils.CreatePostRequest(request_data, getRbacHost()+models.RbacEndpoint+models.RbacPolicyURI)
-	if err != nil {
-		beego.Info(err.Error())
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
-	}
-	req.Header.Set("token", token)
-	response, err := client.SendRequest(req)
-	if err != nil {
-		beego.Info(err.Error())
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
-	}
-	beego.Info(response.StatusCode)
-
-	return response.StatusCode, err
-
-}
-
 func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, error) {
 
 	client := utils.InitReq()
