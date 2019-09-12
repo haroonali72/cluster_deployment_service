@@ -258,7 +258,26 @@ func (c *AzureTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	team := c.Ctx.Input.Header("teams")
+	var teams []string
+	if team != "" {
+		teams = strings.Split(team, ";")
+	}
+	statusCode, err := rbac_athentication.UpdatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, teams, models.AWS, *ctx)
+	if err != nil {
+		beego.Error("error" + err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.ServeJSON()
+		return
+	}
+	if statusCode != 200 {
+		beego.Error(statusCode)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed!"}
+		c.ServeJSON()
+		return
+	}
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
