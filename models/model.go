@@ -105,3 +105,8 @@ const (
 	SilverLimit CoreLimit = 50
 	GoldLimit   CoreLimit = 50
 )
+
+type Machine struct {
+	InstanceType string `json: "instanceType" `
+	Cores        int64  `json: "cores" `
+}

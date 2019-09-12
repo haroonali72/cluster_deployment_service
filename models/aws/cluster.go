@@ -8,6 +8,7 @@ import (
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
@@ -146,10 +147,17 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
 	err = checkClusterSize(cluster, ctx)
-	if err != nil { //cluster found
+	if err != nil { //cluster size limit exeed
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+
+	err = checkCoresLimit(cluster, models.SubBronze, ctx)
+	if err != nil { //core size limit exceed
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
 	if err != nil {
@@ -562,7 +570,6 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 	return nil
 }
 
-/*
 func GetSSHkey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (keyMaterial string, err error) {
 
 	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, ctx)
@@ -572,14 +579,23 @@ func GetSSHkey(keyName string, credentials vault.AwsCredentials, token, teams st
 	}
 	return keyMaterial, err
 }
-*/
-func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription) error {
+
+func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription, ctx utils.Context) error {
+
 	var coreCount int64 = 0
-	machine := models.UnMarshal()
+	var machine models.Machine
+
+	if err := json.Unmarshal(models.Cores, &machine); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
 
 	for _, nodepool := range cluster.NodePools {
 		for nodepool.MachineType != machine.InstanceType {
 			if nodepool.MachineType == machine.InstanceType {
+				if nodepool.EnableScaling == true {
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * machine.Cores)
+				}
 				coreCount = coreCount + (nodepool.NodeCount * machine.Cores)
 			}
 		}
@@ -592,5 +608,6 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription) 
 	} else if subscriptionType == models.SubBronze && coreCount > int64(models.BronzeLimit) {
 		return errors.New("Exceeds the cores limit")
 	}
+
 	return nil
 }

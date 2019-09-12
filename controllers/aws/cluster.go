@@ -875,3 +875,12 @@ func (c *AWSClusterController) GetSSHKey() {
 	c.Data["json"] = keyMaterial
 	c.ServeJSON()
 }
+
+// @Title CoresCheck
+// @Description Checking the subscription core limit
+// @Param	subscriptionType	path	string	true	"Type of subscription"
+// @Param	token	header	string	token ""
+// @Success 200 {object} key_utils.AWSKey
+// @Failure 404 {"error": exception_message}
+// @Failure 500 {"error": "internal server error"}
+// @router /sshkey/:projectId/:keyname [post]
