@@ -199,7 +199,7 @@ func (c *GcpTemplateController) Post() {
 	if team != "" {
 		teams = strings.Split(team, ";")
 	}
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, teams, models.GCP, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.GCP, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -222,6 +222,7 @@ func (c *GcpTemplateController) Post() {
 // @Title Update
 // @Description update an existing template
 // @Param	token	header	string	token ""
+// @Param	teams	header	string	teams ""
 // @Param	body	body	gcp.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 404 {"error": "no template exists with this name"}
@@ -280,7 +281,26 @@ func (c *GcpTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	team := c.Ctx.Input.Header("teams")
+	var teams []string
+	if team != "" {
+		teams = strings.Split(team, ";")
+	}
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AWS, *ctx)
+	if err != nil {
+		beego.Error("error" + err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.ServeJSON()
+		return
+	}
+	if statusCode != 200 {
+		beego.Error(statusCode)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed!"}
+		c.ServeJSON()
+		return
+	}
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }

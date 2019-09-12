@@ -221,6 +221,69 @@
                 }
             }
         },
+        "/cluster/aws/sshkey/{projectId}/{keyname}": {
+            "post": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "AWSClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Region",
+                        "description": "X-Region",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/key_utils.AWSKey"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/sshkeys": {
             "get": {
                 "tags": [
@@ -345,6 +408,7 @@
                 "tags": [
                     "cluster/aws"
                 ],
+                "description": "terminates a  cluster",
                 "operationId": "AWSClusterController.Terminate",
                 "parameters": [
                     {
@@ -557,6 +621,57 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/sshkey/{keyname}/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "AzureClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/key_utils.AZUREKey"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
                     }
                 }
             }
@@ -941,6 +1056,64 @@
                 }
             }
         },
+        "/cluster/gcp/sshkey/{keyname}/{username}/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "GcpClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "username",
+                        "description": "UserName",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/key_utils.AZUREKey"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/sshkeys": {
             "get": {
                 "tags": [
@@ -1212,6 +1385,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -1391,6 +1570,12 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
                         "type": "string"
                     },
                     {
@@ -1574,6 +1759,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -1745,7 +1936,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "484.0xc042acd1d0.false": {
+        "571.0xc0006ed050.false": {
             "title": "false",
             "type": "object"
         },
@@ -1794,8 +1985,11 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "kube_credentials": {
-                    "$ref": "#/definitions/484.0xc042acd1d0.false"
+                    "$ref": "#/definitions/571.0xc0006ed050.false"
                 },
                 "name": {
                     "type": "string"
@@ -1813,24 +2007,6 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "aws.Key": {
-            "title": "Key",
-            "type": "object",
-            "properties": {
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "key_name": {
-                    "type": "string"
-                },
-                "key_type": {
-                    "$ref": "#/definitions/models.KeyType"
-                },
-                "private_key": {
                     "type": "string"
                 }
             }
@@ -1894,7 +2070,7 @@
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/aws.Key"
+                    "$ref": "#/definitions/key_utils.AWSKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -1937,7 +2113,7 @@
                     "$ref": "#/definitions/aws.Ami"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/aws.Key"
+                    "$ref": "#/definitions/key_utils.AWSKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2034,6 +2210,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2119,7 +2298,7 @@
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2174,7 +2353,7 @@
                     "$ref": "#/definitions/azure.ImageReference"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2313,6 +2492,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2389,7 +2571,7 @@
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2406,6 +2588,9 @@
                     "items": {
                         "$ref": "#/definitions/gcp.Node"
                     }
+                },
+                "pool_id": {
+                    "type": "string"
                 },
                 "pool_role": {
                     "type": "string"
@@ -2428,14 +2613,20 @@
             "title": "NodePoolT",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
+                "auto_scaling": {
+                    "$ref": "#/definitions/gcp.AutoScaling"
+                },
+                "enable_scaling": {
+                    "type": "boolean"
                 },
                 "image": {
                     "$ref": "#/definitions/gcp.Image"
                 },
+                "is_external": {
+                    "type": "boolean"
+                },
                 "key_info": {
-                    "$ref": "#/definitions/utils.Key"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -2447,8 +2638,29 @@
                     "type": "integer",
                     "format": "int64"
                 },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gcp.Node"
+                    }
+                },
+                "pool_id": {
+                    "type": "string"
+                },
+                "pool_role": {
+                    "type": "string"
+                },
+                "root_volume": {
+                    "$ref": "#/definitions/gcp.Volume"
+                },
+                "service_account_email": {
+                    "type": "string"
+                },
                 "subnet_id": {
                     "type": "string"
+                },
+                "volume": {
+                    "$ref": "#/definitions/gcp.Volume"
                 }
             }
         },
@@ -2462,6 +2674,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2473,9 +2688,6 @@
                     "items": {
                         "$ref": "#/definitions/gcp.NodePoolT"
                     }
-                },
-                "resource_group": {
-                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -2498,6 +2710,54 @@
                 },
                 "is_blank": {
                     "type": "boolean"
+                }
+            }
+        },
+        "key_utils.AWSKey": {
+            "title": "AWSKey",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "key_name": {
+                    "type": "string"
+                },
+                "key_type": {
+                    "$ref": "#/definitions/models.KeyType"
+                },
+                "private_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "key_utils.AZUREKey": {
+            "title": "AZUREKey",
+            "type": "object",
+            "properties": {
+                "admin_password": {
+                    "type": "string"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "credential_type": {
+                    "$ref": "#/definitions/models.CredentialsType"
+                },
+                "key_name": {
+                    "type": "string"
+                },
+                "key_type": {
+                    "$ref": "#/definitions/models.KeyType"
+                },
+                "private_key": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -2550,36 +2810,6 @@
                 "PremiumSSD = \"premium ssd\""
             ],
             "example": "standard hdd"
-        },
-        "utils.Key": {
-            "title": "Key",
-            "type": "object",
-            "properties": {
-                "admin_password": {
-                    "type": "string"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "credential_type": {
-                    "$ref": "#/definitions/models.CredentialsType"
-                },
-                "key_name": {
-                    "type": "string"
-                },
-                "key_type": {
-                    "$ref": "#/definitions/models.KeyType"
-                },
-                "private_key": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
         }
     },
     "tags": [

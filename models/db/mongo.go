@@ -14,6 +14,7 @@ func GetMongoSession() (session *mgo.Session, err error) {
 
 	if !conf.mongoAuth {
 		session, err = mgo.Dial(conf.mongoHost)
+		beego.Info("Mongo host connected" + conf.mongoHost)
 		return session, err
 	}
 	session, err = mgo.DialWithInfo(&mgo.DialInfo{

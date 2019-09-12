@@ -8,7 +8,6 @@ import (
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
-	"context"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
@@ -157,7 +156,6 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
 	if err != nil {
@@ -570,16 +568,16 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 	return nil
 }
 
-func GetSSHkey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (keyMaterial string, err error) {
+func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (keyMaterial string, err error) {
 
 	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, ctx)
 	if err != nil {
 		beego.Error("SSH not generated " + err.Error())
 		return "", err
 	}
+
 	return keyMaterial, err
 }
-
 func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription, ctx utils.Context) error {
 
 	var coreCount int64 = 0

@@ -5,6 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/aws/IAMRoles"
 	autoscaling2 "antelope/models/aws/autoscaling"
+	"antelope/models/key_utils"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -209,10 +210,11 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 	url := getNetworkHost("aws", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 
+	/*bytes, err := json.Marshal(network)
 	if err != nil {
 		beego.Error(err.Error())
 		return nil, err
-	}
+	}*/
 
 	err = json.Unmarshal(network.([]byte), &awsNetwork)
 
@@ -427,33 +429,21 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			}
 		}
 
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
+		keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return Cluster_Def{}, err
 		}
-		k, err := keyCoverstion(keyInfo, ctx)
+		k, err := key_utils.AWSKeyCoverstion(keyInfo, ctx)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return Cluster_Def{}, err
 		}
 		cluster.NodePools[in].KeyInfo = k
 	}
 	return cluster, nil
 }
-func keyCoverstion(keyInfo interface{}, ctx utils.Context) (Key, error) {
-	b, e := json.Marshal(keyInfo)
-	var k Key
-	if e != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Key{}, e
-	}
-	e = json.Unmarshal(b, &k)
-	if e != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Key{}, e
-	}
-	return k, nil
-}
+
 func (cloud *AWS) getSSHKey() ([]*ec2.KeyPairInfo, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -1092,101 +1082,55 @@ func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Cont
 }
 func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string, token string) (keyMaterial string, err error) {
 
-	if pool.KeyInfo.KeyType == models.NEWKey {
-
-		keyInfo, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
-
-		if err != nil && err.Error() != "not found" {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
-			return "", err
-
-		} else if err == nil {
-			key, err := keyCoverstion(keyInfo, ctx)
-			if err != nil {
-				return "", err
-			}
-			pool.KeyInfo = key
-			if key.KeyMaterial != "" && key.KeyMaterial != " " {
-				keyMaterial = key.KeyMaterial
-			}
-		} else if err != nil && err.Error() == "not found" {
-			ctx.SendLogs("AWSOperations: creating key", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-			utils.SendLog(companyId, "Creating Key "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-
-			keyMaterial, _, err = cloud.KeyPairGenerator(pool.KeyInfo.KeyName)
-
-			if err != nil {
-
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(companyId, "Error in key creation: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-				utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
-				return "", err
-			}
-			pool.KeyInfo.KeyMaterial = keyMaterial
-			_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
-
-			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-				utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
-				return "", err
-			}
-		}
-	} else if pool.KeyInfo.KeyType == models.CPKey {
-
-		k, err := vault.GetSSHKey("aws", pool.KeyInfo.KeyName, ctx, token)
-
-		if err != nil {
-
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-			utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_ERROR, projectId)
-			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
-			return "", err
-		}
-		key, err := keyCoverstion(k, ctx)
-		if err != nil {
-			return "", err
-		}
-
-		keyMaterial = key.KeyMaterial
-
-	} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
-
-		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
-
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
-			return "", err
-		}
-		keyMaterial = pool.KeyInfo.KeyMaterial
-
-	} else if pool.KeyInfo.KeyType == models.USERKey { ///not integrated
-
-		_, err = cloud.ImportSSHKeyPair(pool.KeyInfo.KeyName, pool.KeyInfo.KeyMaterial)
-
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(companyId, "Error in importing key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
-			return "", err
-		}
-
-		_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
-
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
-			utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
-			return "", err
-		}
-		keyMaterial = pool.KeyInfo.KeyMaterial
+	//if pool.KeyInfo.KeyType == models.NEWKey {
+	keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+		return "", err
 	}
+	key, err := key_utils.AWSKeyCoverstion(keyInfo, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+		return "", err
+	}
+	keyMaterial = key.KeyMaterial
+
+	//} else if pool.KeyInfo.KeyType == models.AWSKey { //not integrated
+	//	_, err = vault.PostSSHKey(pool.KeyInfo, ctx, token)
+	//	if err != nil {
+	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//		utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+	//		return "", err
+	//	}
+	//	keyMaterial = pool.KeyInfo.KeyMaterial
+	//} else if pool.KeyInfo.KeyType == models.USERKey { ///not integrated
+	//
+	//	_, err = cloud.ImportSSHKeyPair(pool.KeyInfo.KeyName, pool.KeyInfo.KeyMaterial)
+	//
+	//	if err != nil {
+	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//		utils.SendLog(companyId, "Error in importing key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+	//		return "", err
+	//	}
+	//
+	//	_, err = vault.PostSSHKey(pool.KeyInfo, pool.KeyInfo.KeyName,pool.KeyInfo.Cloud,ctx, token, "")
+	//	if err != nil {
+	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//		utils.SendLog(companyId, "Error in key insertion: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
+	//		utils.SendLog(companyId, err.Error(), models.LOGGING_LEVEL_INFO, projectId)
+	//		return "", err
+	//	}
+	//	keyMaterial = pool.KeyInfo.KeyMaterial
+	//}
 	return keyMaterial, nil
 }
+
 func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, error) {
 
 	input := &ec2.ImportKeyPairInput{
@@ -1203,7 +1147,7 @@ func (cloud *AWS) ImportSSHKeyPair(key_name string, publicKey string) (string, e
 	return *resp.KeyName, err
 }
 
-func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key Key, projectId string, ctx utils.Context, companyId string) error {
+func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key key_utils.AWSKey, projectId string, ctx utils.Context, companyId string) error {
 
 	for _, id := range ids {
 		err := fileWrite(key.KeyMaterial, key.KeyName)
@@ -1282,11 +1226,12 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 			url := getNetworkHost("aws", cluster.ProjectId)
 			network, err := api_handler.GetAPIStatus(token, url, ctx)
 
+			/*bytes, err := json.Marshal(network)
 			if err != nil {
 				beego.Error(err.Error())
 				return err
 			}
-
+			*/
 			err = json.Unmarshal(network.([]byte), &awsNetwork)
 
 			if err != nil {
@@ -1444,4 +1389,46 @@ func deleteFile(keyName string) error {
 		return err
 	}
 	return nil
+}
+func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (string, error) {
+	aws := AWS{
+		AccessKey: credentials.AccessKey,
+		SecretKey: credentials.SecretKey,
+		Region:    credentials.Region,
+	}
+	confError := aws.init()
+	if confError != nil {
+		return "", confError
+	}
+
+	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx)
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		beego.Error("Key Already Exist ")
+		return "", err
+	}
+
+	keyMaterial, _, err := aws.KeyPairGenerator(keyName)
+
+	if err != nil {
+		return "", err
+	}
+
+	var keyInfo key_utils.AWSKey
+	keyInfo.KeyName = keyName
+	keyInfo.KeyMaterial = keyMaterial
+	keyInfo.KeyType = models.NEWKey
+	keyInfo.Cloud = models.AWS
+
+	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	beego.Info("keyMaterial fetched ", keyMaterial)
+
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams)
+	if err != nil {
+		beego.Error("vm creation failed with error: " + err.Error())
+		return "", err
+	}
+
+	return keyMaterial, err
 }

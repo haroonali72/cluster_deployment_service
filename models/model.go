@@ -7,6 +7,13 @@ const (
 	New      Type = "new"
 )
 
+type RequestType string
+
+const (
+	POST RequestType = "post"
+	PUT  RequestType = "put"
+)
+
 type Cloud string
 
 const (
