@@ -1936,7 +1936,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "571.0xc0006ed050.false": {
+        "571.0xc0006e9f80.false": {
             "title": "false",
             "type": "object"
         },
@@ -1989,7 +1989,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/571.0xc0006ed050.false"
+                    "$ref": "#/definitions/571.0xc0006e9f80.false"
                 },
                 "name": {
                     "type": "string"
