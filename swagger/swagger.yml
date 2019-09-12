@@ -276,6 +276,7 @@ paths:
     post:
       tags:
       - cluster/aws
+      description: terminates a  cluster
       operationId: AWSClusterController.Terminate
       parameters:
       - in: header
@@ -798,6 +799,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -917,6 +922,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1035,6 +1044,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1146,7 +1159,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  484.0xc042acd1d0.false:
+  563.0xc042c16090.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1181,8 +1194,10 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       kube_credentials:
-        $ref: '#/definitions/484.0xc042acd1d0.false'
+        $ref: '#/definitions/563.0xc042c16090.false'
       name:
         type: string
       network_name:
@@ -1343,6 +1358,8 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1531,6 +1548,8 @@ definitions:
     properties:
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1594,6 +1613,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gcp.Node'
+      pool_id:
+        type: string
       pool_role:
         type: string
       root_volume:
@@ -1608,10 +1629,14 @@ definitions:
     title: NodePoolT
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
+      auto_scaling:
+        $ref: '#/definitions/gcp.AutoScaling'
+      enable_scaling:
+        type: boolean
       image:
         $ref: '#/definitions/gcp.Image'
+      is_external:
+        type: boolean
       key_info:
         $ref: '#/definitions/utils.Key'
       machine_type:
@@ -1621,8 +1646,22 @@ definitions:
       node_count:
         type: integer
         format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/gcp.Node'
+      pool_id:
+        type: string
+      pool_role:
+        type: string
+      root_volume:
+        $ref: '#/definitions/gcp.Volume'
+      service_account_email:
+        type: string
       subnet_id:
         type: string
+      volume:
+        $ref: '#/definitions/gcp.Volume'
   gcp.Template:
     title: Template
     type: object
@@ -1631,6 +1670,8 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1639,8 +1680,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gcp.NodePoolT'
-      resource_group:
-        type: string
       status:
         type: string
       template_id:
