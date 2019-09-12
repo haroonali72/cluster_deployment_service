@@ -805,15 +805,15 @@ func (c *AWSClusterController) EnableAutoScaling() {
 
 // @Title CreateSSHKey
 // @Description Generates new SSH key
-// @Param	projectId	path	string	true	"Id of the project"
-// @Param	keyname	 path	string	true	"SSHKey"
+// @Param	projectId		path	string	true		"Id of the project"
+// @Param	keyname	 		path	string	true		"SSHKey"
 // @Param	X-Profile-Id	header	string	profileId	""
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	teams ""
-// @Param	X-Region	header	string	X-Region	""
-// @Success 200 {object} key_utils.AWSKey
-// @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Param	token			header	string	token 		""
+// @Param	teams			header	string	teams 		""
+// @Param	X-Region		header	string	X-Region	""
+// @Success 200 			{object} key_utils.AWSKey
+// @Failure 404 			{"error": exception_message}
+// @Failure 500 			{"error": "internal server error"}
 // @router /sshkey/:projectId/:keyname [post]
 func (c *AWSClusterController) PostSSHKey() {
 

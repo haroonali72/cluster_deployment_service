@@ -720,13 +720,13 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Title CreateSSHKey
 // @Description Generates new SSH key
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	keyname	 path	string	true	"SSHKey"
-// @Param	username	 path	string	true	"UserName"
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	teams ""
-// @Success 200 {object} key_utils.AZUREKey
-// @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Param	keyname	 	path	string	true	"SSHKey"
+// @Param	username	path	string	true	"UserName"
+// @Param	token		header	string	token 	""
+// @Param	teams		header	string	teams 	""
+// @Success 200 		{object} key_utils.AZUREKey
+// @Failure 404 		{"error": exception_message}
+// @Failure 500 		{"error": "internal server error"}
 // @router /sshkey/:keyname/:username/:projectId [post]
 func (c *GcpClusterController) PostSSHKey() {
 
