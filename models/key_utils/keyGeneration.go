@@ -36,14 +36,14 @@ type KeyPairResponse struct {
 	PublicKey  string `json:"public_key"`
 }
 
-func AWSKeyCoverstion(keyInfo interface{}, ctx utils.Context) (AWSKey, error) {
-	b, e := json.Marshal(keyInfo)
+func AWSKeyCoverstion(keyInfo []byte, ctx utils.Context) (AWSKey, error) {
+	//b, e := json.Marshal(keyInfo)
 	var k AWSKey
-	if e != nil {
-		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return AWSKey{}, e
-	}
-	e = json.Unmarshal(b, &k)
+	//	if e != nil {
+	//		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//		return AWSKey{}, e
+	//	}
+	e := json.Unmarshal(keyInfo, &k)
 	if e != nil {
 		ctx.SendLogs(e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return AWSKey{}, e
