@@ -82,7 +82,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	return nil, template.TemplateId
 }
 
-func GetTemplate(templateName string, ctx utils.Context) (template Template, err error) {
+func GetTemplate(templateId string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -91,7 +91,7 @@ func GetTemplate(templateName string, ctx utils.Context) (template Template, err
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
-	err = c.Find(bson.M{"template_id": templateName}).One(&template)
+	err = c.Find(bson.M{"template_id": templateId}).One(&template)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err
