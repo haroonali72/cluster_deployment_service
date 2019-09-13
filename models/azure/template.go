@@ -59,9 +59,11 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text), ""
 	}
-	i := rand.Int()
 
-	template.TemplateId = template.Name + strconv.Itoa(i)
+	if template.TemplateId == "" {
+		i := rand.Int()
+		template.TemplateId = template.Name + strconv.Itoa(i)
+	}
 
 	template.CreationDate = time.Now()
 

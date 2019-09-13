@@ -55,12 +55,11 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	}
 
 	template.CreationDate = time.Now()
-	i := rand.Int()
 
-	beego.Info(i)
-	beego.Info(strconv.Itoa(i))
-
-	template.TemplateId = template.Name + strconv.Itoa(i)
+	if template.TemplateId == "" {
+		i := rand.Int()
+		template.TemplateId = template.Name + strconv.Itoa(i)
+	}
 
 	beego.Info(template.TemplateId)
 

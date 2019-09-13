@@ -55,10 +55,11 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 		beego.Error(text)
 		return errors.New(text), ""
 	}
-	i := rand.Int()
 
-	template.TemplateId = template.Name + strconv.Itoa(i)
-
+	if template.TemplateId == "" {
+		i := rand.Int()
+		template.TemplateId = template.Name + strconv.Itoa(i)
+	}
 	template.CreationDate = time.Now()
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoGcpTemplateCollection, template)
