@@ -64,7 +64,7 @@ func (c *AWSTemplateController) Get() {
 		return
 	}
 
-	template, err := aws.GetTemplate(templateId, *ctx)
+	template, err := aws.GetTemplate(templateId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
@@ -143,8 +143,6 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("company id " + userInfo.CompanyId)
-	beego.Info("user name " + userInfo.UserId)
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
@@ -164,7 +162,7 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	ctx.SendLogs("AWSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
+	template.CompanyId = userInfo.CompanyId
 	err, id := aws.CreateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
