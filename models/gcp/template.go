@@ -48,7 +48,7 @@ type NodePoolT struct {
 }
 
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
-	_, err := GetTemplate(template.TemplateId, ctx)
+	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		ctx.SendLogs("gcpTemplateModel :"+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -71,7 +71,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	return nil, template.TemplateId
 }
 
-func GetTemplate(templateId string, ctx utils.Context) (template Template, err error) {
+func GetTemplate(templateId, companyId string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendLogs("GcpTemplateModel :"+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -81,7 +81,7 @@ func GetTemplate(templateId string, ctx utils.Context) (template Template, err e
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGcpTemplateCollection)
-	err = c.Find(bson.M{"template_id": templateId}).One(&template)
+	err = c.Find(bson.M{"template_id": templateId, "company_id": companyId}).One(&template)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
@@ -133,7 +133,7 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 }
 
 func UpdateTemplate(template Template, ctx utils.Context) error {
-	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
+	oldTemplate, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
 		ctx.SendLogs("GcpTemplateModel "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

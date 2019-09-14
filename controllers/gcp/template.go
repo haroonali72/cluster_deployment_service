@@ -68,7 +68,7 @@ func (c *GcpTemplateController) Get() {
 	}
 
 	//==================================================================================//
-	template, err := gcp.GetTemplate(id, *ctx)
+	template, err := gcp.GetTemplate(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -176,7 +176,7 @@ func (c *GcpTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	userInfo.CompanyId = template.CompanyId
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
