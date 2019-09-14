@@ -494,7 +494,7 @@ func InsertSSHKeyPair(key key_utils.AZUREKey) (err error) {
 	}
 	return nil
 }
-func GetAllSSHKeyPair(ctx utils.Context, token string) (keys []string, err error) {
+func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
 
 	keys, err = vault.GetAllSSHKey("azure", ctx, token)
 	if err != nil {

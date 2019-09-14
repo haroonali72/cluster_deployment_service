@@ -422,7 +422,7 @@ func FetchStatus(credentials GcpCredentials, projectId, companyId string, ctx ut
 	return cluster, nil
 }
 
-func GetAllSSHKeyPair(token string, ctx utils.Context) (keys []string, err error) {
+func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err error) {
 	keys, err = vault.GetAllSSHKey(string(models.GCP), ctx, token)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

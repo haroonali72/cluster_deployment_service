@@ -114,8 +114,8 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, err
 	return contents, nil
 
 }
-func GetAllSSHKey(cloudType string, ctx utils.Context, token string) ([]string, error) {
-	var keys []string
+func GetAllSSHKey(cloudType string, ctx utils.Context, token string) (interface{}, error) {
+	var keys interface{}
 	host := getVaultHost() + models.VaultGetAllKeysURI
 
 	if strings.Contains(host, "{cloud}") {
