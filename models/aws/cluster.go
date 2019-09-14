@@ -454,7 +454,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.C
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetAllSSHKeyPair(ctx utils.Context, token string) (keys []string, err error) {
+func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
 
 	keys, err = vault.GetAllSSHKey("aws", ctx, token)
 	if err != nil {
