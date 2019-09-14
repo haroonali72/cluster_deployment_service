@@ -391,7 +391,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	return nil
 }
 
-func FetchStatus(credentials GcpCredentials, projectId, companyId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, error) {
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -417,12 +417,29 @@ func FetchStatus(credentials GcpCredentials, projectId, companyId string, ctx ut
 		return cluster, err
 	}
 
+	for _, pool := range cluster.NodePools {
+		var keyInfo key_utils.AZUREKey
+		bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			beego.Error("vm creation failed with error: " + err.Error())
+			return Cluster_Def{}, err
+		}
+		keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return Cluster_Def{}, err
+
+		}
+		pool.KeyInfo = keyInfo
+	}
+
 	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return cluster, nil
 }
 
-func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err error) {
+func GetAllSSHKeyPair(token string, ctx utils.Context) (keys []string, err error) {
 	keys, err = vault.GetAllSSHKey(string(models.GCP), ctx, token)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
