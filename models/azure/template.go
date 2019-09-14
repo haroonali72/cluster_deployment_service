@@ -166,7 +166,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteTemplate(templateName string, ctx utils.Context) error {
+func DeleteTemplate(templateId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -175,7 +175,7 @@ func DeleteTemplate(templateName string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
-	err = c.Remove(bson.M{"name": templateName})
+	err = c.Remove(bson.M{"template_id": templateId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
