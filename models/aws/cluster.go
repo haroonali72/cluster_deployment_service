@@ -48,8 +48,8 @@ type NodePool struct {
 	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64  `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
-	State               string `json:"status" bson:"status"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	State               models.Type `json:"status" bson:"status"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -312,7 +312,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	}
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
-
+	UpdateScalingStatus(&cluster)
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -569,12 +569,21 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 
 		return e
 	}
-
+	UpdateScalingStatus(&cluster)
+	err = UpdateCluster(cluster, false, ctx)
+	if e != nil {
+		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
 	ctx.SendLogs("Cluster: "+cluster.Name+" scaled", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
 }
-
+func UpdateScalingStatus(cluster *Cluster_Def) {
+	for _, pool := range cluster.NodePools {
+		pool.Scaling.State = models.Created
+	}
+}
 func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (keyMaterial string, err error) {
 
 	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, ctx)
