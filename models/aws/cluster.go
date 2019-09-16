@@ -48,7 +48,8 @@ type NodePool struct {
 	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MaxScalingGroupSize int64  `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	State               string `json:"status" bson:"status"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -83,13 +84,17 @@ type Data struct {
 	Region string `json:"region"`
 }
 
-func checkScalingChanges(existingCluster, updatedCluster Cluster_Def) bool {
+func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
+	update := false
 	for index, node_pool := range existingCluster.NodePools {
-		if node_pool.EnableScaling && node_pool.EnableScaling != updatedCluster.NodePools[index].EnableScaling {
-			return true
+		if (!node_pool.EnableScaling && node_pool.EnableScaling != updatedCluster.NodePools[index].EnableScaling) || (node_pool.EnableScaling && node_pool.Scaling.MaxScalingGroupSize != updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize) {
+			update = true
+			existingCluster.NodePools[index].EnableScaling = updatedCluster.NodePools[index].EnableScaling
+			existingCluster.NodePools[index].Scaling.MaxScalingGroupSize = updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize
+
 		}
 	}
-	return false
+	return update
 }
 func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pools := range cluster.NodePools {
@@ -215,7 +220,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 	if oldCluster.Status == "Cluster Created" && update {
-		if !checkScalingChanges(oldCluster, cluster) {
+		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return errors.New("Cluster is in runnning state")
 		}
