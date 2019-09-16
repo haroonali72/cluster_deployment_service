@@ -508,7 +508,7 @@ func (c *GcpClusterController) GetStatus() {
 
 	beego.Info("GcpClusterController: Fetch Cluster Status of project. ", projectId)
 
-	cluster, err := gcp.FetchStatus(credentials, projectId, userInfo.CompanyId, *ctx)
+	cluster, err := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
@@ -786,8 +786,6 @@ func (c *GcpClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
-	beego.Info("Private Key :" + privateKey)
 
 	c.Data["json"] = privateKey
 	c.ServeJSON()

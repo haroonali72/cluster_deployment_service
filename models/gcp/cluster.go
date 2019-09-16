@@ -391,7 +391,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	return nil
 }
 
-func FetchStatus(credentials GcpCredentials, projectId, companyId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, error) {
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -415,6 +415,23 @@ func FetchStatus(credentials GcpCredentials, projectId, companyId string, ctx ut
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("Cluster model: Status - Failed to get latest status ", err.Error())
 		return cluster, err
+	}
+
+	for _, pool := range cluster.NodePools {
+		var keyInfo key_utils.AZUREKey
+		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			beego.Error("vm fetched failed with error: " + err.Error())
+			return Cluster_Def{}, err
+		}
+		keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return Cluster_Def{}, err
+
+		}
+		pool.KeyInfo = keyInfo
 	}
 
 	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
@@ -538,7 +555,6 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
 	privateKey, err = key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
-	fmt.Println("Private key:" + privateKey)
 	if err != nil {
 
 		return "", err
