@@ -891,8 +891,6 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 
-	beego.Info("Key Material :" + keyMaterial)
-
 	c.Data["json"] = keyMaterial
 	c.ServeJSON()
 }

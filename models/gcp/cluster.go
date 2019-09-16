@@ -419,10 +419,10 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 
 	for _, pool := range cluster.NodePools {
 		var keyInfo key_utils.AZUREKey
-		bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx)
+		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			beego.Error("vm creation failed with error: " + err.Error())
+			beego.Error("vm fetched failed with error: " + err.Error())
 			return Cluster_Def{}, err
 		}
 		keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
@@ -439,7 +439,7 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 	return cluster, nil
 }
 
-func GetAllSSHKeyPair(token string, ctx utils.Context) (keys []string, err error) {
+func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err error) {
 	keys, err = vault.GetAllSSHKey(string(models.GCP), ctx, token)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -555,7 +555,6 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
 	privateKey, err = key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
-	fmt.Println("Private key:" + privateKey)
 	if err != nil {
 
 		return "", err

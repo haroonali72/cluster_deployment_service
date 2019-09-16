@@ -787,8 +787,6 @@ func (c *GcpClusterController) PostSSHKey() {
 		return
 	}
 
-	beego.Info("Private Key :" + privateKey)
-
 	c.Data["json"] = privateKey
 	c.ServeJSON()
 }
