@@ -223,6 +223,8 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return errors.New("Cluster is in runnning state")
+		} else {
+			cluster = oldCluster
 		}
 	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
