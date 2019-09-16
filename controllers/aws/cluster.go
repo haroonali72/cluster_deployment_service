@@ -724,7 +724,6 @@ func (c *AWSClusterController) GetAMI() {
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
-// @Param	body	body 	aws.AutoScaling	true	"body for cluster content"
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
 // @Failure 500 {"error": "internal server error <error msg>"}
