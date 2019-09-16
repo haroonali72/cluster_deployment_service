@@ -83,6 +83,14 @@ type Data struct {
 	Region string `json:"region"`
 }
 
+func checkScalingChanges(existingCluster, updatedCluster Cluster_Def) bool {
+	for index, node_pool := range existingCluster.NodePools {
+		if node_pool.EnableScaling && node_pool.EnableScaling != updatedCluster.NodePools[index].EnableScaling {
+			return true
+		}
+	}
+	return false
+}
 func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pools := range cluster.NodePools {
 		if pools.NodeCount > 3 {
@@ -180,7 +188,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 }
 
 func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
-	beego.Info("mongo session")
+
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -189,10 +197,8 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	beego.Info("cluster aws")
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
 	err = c.Find(bson.M{}).All(&clusters)
-	beego.Info("getting all clusters")
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
@@ -209,8 +215,10 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 	if oldCluster.Status == "Cluster Created" && update {
-		ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("Cluster is in runnning state")
+		if !checkScalingChanges(oldCluster, cluster) {
+			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("Cluster is in runnning state")
+		}
 	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {

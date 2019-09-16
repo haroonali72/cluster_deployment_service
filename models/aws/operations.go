@@ -1405,7 +1405,7 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
-		beego.Error("Key Already Exist ")
+		beego.Error("Key Already Exist")
 		return "", err
 	}
 
