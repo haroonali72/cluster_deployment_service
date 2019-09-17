@@ -112,7 +112,8 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
+	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
+	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -240,7 +241,8 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
+	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
+	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 	instanceGroup := compute.InstanceGroupManager{
 		Name:             strings.ToLower(pool.Name),
 		BaseInstanceName: strings.ToLower(pool.Name),
@@ -297,7 +299,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		pool.Nodes = append(pool.Nodes, &newNode)
 
 		if pool.EnableVolume {
-			err = mountVolume(fetchedKey.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+			err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 			if err != nil {
 				beego.Error(err.Error())
 				return err
