@@ -52,7 +52,7 @@ func (c *GcpTemplateController) Get() {
 	ctx.SendLogs("GcpTemplateController: Get template  id : "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "View", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "clusterTemplate", id, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -248,7 +248,7 @@ func (c *GcpTemplateController) Patch() {
 	ctx.SendLogs("GcpTemplateController: Patch template with templateId "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -343,7 +343,7 @@ func (c *GcpTemplateController) Delete() {
 	ctx.SendLogs("GcpTemplateController: deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "Delete", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "clusterTemplate", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

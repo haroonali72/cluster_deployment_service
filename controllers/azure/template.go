@@ -41,7 +41,7 @@ func (c *AzureTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.Azure, "clusterTemplate", id, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -230,7 +230,7 @@ func (c *AzureTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.Azure, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -308,7 +308,7 @@ func (c *AzureTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.Azure, "clusterTemplate", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
