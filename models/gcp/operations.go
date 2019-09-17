@@ -120,10 +120,9 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		beego.Warn("creating instance '" + pool.Name + "' without external ip")
 	}
 
-	beego.Info("Key Name:", pool.KeyInfo.KeyName)
-	beego.Info("Key fetched:", fetchedKey)
-	beego.Info("Private Key:", pool.KeyInfo.PrivateKey)
-	beego.Info("Public Key:", pool.KeyInfo.PublicKey)
+	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
+	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
+
 	instance := compute.Instance{
 		Name:        strings.ToLower(pool.Name),
 		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
@@ -208,7 +207,7 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 	pool.Nodes = []*Node{&newNode}
 
 	if pool.EnableVolume {
-		err = mountVolume(fetchedKey.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+		err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 		if err != nil {
 			beego.Error(err.Error())
 			return err
@@ -244,7 +243,8 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
+	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
+	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 	instanceGroup := compute.InstanceGroupManager{
 		Name:             strings.ToLower(pool.Name),
 		BaseInstanceName: strings.ToLower(pool.Name),
@@ -304,7 +304,7 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		pool.Nodes = append(pool.Nodes, &newNode)
 
 		if pool.EnableVolume {
-			err = mountVolume(fetchedKey.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+			err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 			if err != nil {
 				beego.Error(err.Error())
 				return err
