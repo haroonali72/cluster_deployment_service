@@ -896,3 +896,21 @@ func (c *AWSClusterController) PostSSHKey() {
 	c.Data["json"] = keyMaterial
 	c.ServeJSON()
 }
+
+// @Title GetCores
+// @Description Get AWS Machine instance cores
+// @Success 200 			{object} models.Machine
+// @Failure 500 			{"error": "internal server error"}
+// @router /cores/ [get]
+func (c *AWSClusterController) GetCores() {
+	var machine []models.Machine
+	if err := json.Unmarshal(models.AWSCores, &machine); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = machine
+	c.ServeJSON()
+}

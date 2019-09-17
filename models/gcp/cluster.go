@@ -180,11 +180,11 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	err = checkCoresLimit(cluster, models.SubBronze, ctx)
-	if err != nil { //core size limit exceed
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
+	//err = checkCoresLimit(cluster, models.SubBronze, ctx)
+	//if err != nil { //core size limit exceed
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	return err
+	//}
 
 	session, err := db.GetMongoSession()
 	if err != nil {
@@ -195,12 +195,12 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	}
 	defer session.Close()
 
-	err = checkClusterSize(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs("GcpClusterModel: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
-		return err
-	}
+	//	err = checkClusterSize(cluster)
+	//	if err != nil { //cluster found
+	//		ctx.SendLogs("GcpClusterModel: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//		beego.Error(err.Error())
+	//		return err
+	//	}
 
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()

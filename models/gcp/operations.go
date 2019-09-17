@@ -120,6 +120,10 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		beego.Warn("creating instance '" + pool.Name + "' without external ip")
 	}
 
+	beego.Info("Key Name:", pool.KeyInfo.KeyName)
+	beego.Info("Key fetched:", fetchedKey)
+	beego.Info("Private Key:", pool.KeyInfo.PrivateKey)
+	beego.Info("Public Key:", pool.KeyInfo.PublicKey)
 	instance := compute.Instance{
 		Name:        strings.ToLower(pool.Name),
 		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
@@ -247,7 +251,10 @@ func (cloud *GCP) deployWorkers(pool *NodePool, network types.GCPNetwork, token 
 		TargetSize:       pool.NodeCount,
 		InstanceTemplate: instanceTemplateUrl,
 	}
-
+	beego.Info("Key Name:", pool.KeyInfo.KeyName)
+	beego.Info("Key fetched:", fetchedKey)
+	beego.Info("Private Key:", pool.KeyInfo.PrivateKey)
+	beego.Info("Public Key:", pool.KeyInfo.PublicKey)
 	reqCtx := context.Background()
 	result, err := cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instanceGroup).Context(reqCtx).Do()
 	if err != nil {

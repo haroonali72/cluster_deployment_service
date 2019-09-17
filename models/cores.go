@@ -1,8 +1,7 @@
 package models
 
 var AWSCores = []byte(
-	`{
-"MachineType" :[
+	`[
 			{"instanceType":"t1.micro","cores": 1 },
 			{"instanceType":"t2.nano","cores": 1},
 			{"instanceType":"t2.micro","cores": 1},
@@ -173,11 +172,10 @@ var AWSCores = []byte(
 			{"instanceType":"db.r3.2xlarge","cores": 4},
 			{"instanceType":"db.r3.4xlarge","cores": 8},
 			{"instanceType":"db.r3.8xlarge","cores": 16 }
-	]}`)
+	]`)
 
 var AzureCores = []byte(
-	`{
-"MachineType" :[
+	`[
 			{"instanceType":"Standard_B1ls1","cores": 1 },
 			{"instanceType":"Standard_B1s","cores": 1},
 			{"instanceType":"Standard_B1ms","cores": 1},
@@ -339,12 +337,10 @@ var AzureCores = []byte(
 			{"instanceType":"Standard_H16m","cores": 16},
 			{"instanceType":"Standard_H16r 1","cores":16},
 			{"instanceType":"Standard_H16mr 1","cores": 16 }
-			]
-}`)
+			]`)
 
 var GCPCores = []byte(
-	`{
-"MachineType" :[
+	`[
 			{"instanceType":"n1-standard-1","cores": 1 },
 			{"instanceType":"n1-standard-2","cores": 2},
 			{"instanceType":"n1-standard-4","cores": 4},
@@ -402,7 +398,6 @@ var GCPCores = []byte(
 			{"instanceType":"c2-standard-16","cores":16},
 			{"instanceType":"c2-standard-30","cores": 30 },
 			{"instanceType":"c2-standard-60","cores": 60},
-			{"instanceType":"f1-micro","cores":0.2},
-			{"instanceType":"g1-small","cores": 0.5 }
-]
-}`)
+			{"instanceType":"f1-micro","cores":0},
+			{"instanceType":"g1-small","cores": 0 }
+]`)
