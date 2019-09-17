@@ -80,7 +80,7 @@ func Authenticate(cloud models.Cloud, resourceType, resourceId string, action st
 	q.Add("resource_id", resourceId)
 	q.Add("resource_type", resourceType)
 	q.Add("action", action)
-	q.Add("type_sub", string(cloud))
+	q.Add("sub_type", string(cloud))
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 
