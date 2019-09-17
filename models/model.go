@@ -5,6 +5,7 @@ type Type string
 const (
 	Existing Type = "existing"
 	New      Type = "new"
+	Created  Type = "created"
 )
 
 type RequestType string

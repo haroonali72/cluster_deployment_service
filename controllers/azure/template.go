@@ -41,7 +41,7 @@ func (c *AzureTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.Azure, "clusterTemplate", id, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -65,7 +65,7 @@ func (c *AzureTemplateController) Get() {
 		return
 	}
 
-	template, err := azure.GetTemplate(id, *ctx)
+	template, err := azure.GetTemplate(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id " + err.Error()}
@@ -162,7 +162,7 @@ func (c *AzureTemplateController) Post() {
 		return
 	}
 	ctx.SendLogs("AzureTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	template.CompanyId = userInfo.CompanyId
 	err, id := azure.CreateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -230,7 +230,7 @@ func (c *AzureTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.Azure, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -308,7 +308,7 @@ func (c *AzureTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", id, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.Azure, "clusterTemplate", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

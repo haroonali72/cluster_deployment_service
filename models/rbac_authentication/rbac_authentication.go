@@ -69,7 +69,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 
 	return nil, data
 }
-func Authenticate(resourceType, resourceId string, action string, token string, ctx utils.Context) (bool, error) {
+func Authenticate(cloud models.Cloud, resourceType, resourceId string, action string, token string, ctx utils.Context) (bool, error) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacAccessURI)
 	if err != nil {
@@ -80,7 +80,7 @@ func Authenticate(resourceType, resourceId string, action string, token string, 
 	q.Add("resource_id", resourceId)
 	q.Add("resource_type", resourceType)
 	q.Add("action", action)
-
+	q.Add("type_sub", string(cloud))
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 

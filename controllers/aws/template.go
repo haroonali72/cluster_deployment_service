@@ -39,7 +39,7 @@ func (c *AWSTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", templateId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -64,7 +64,7 @@ func (c *AWSTemplateController) Get() {
 		return
 	}
 
-	template, err := aws.GetTemplate(templateId, *ctx)
+	template, err := aws.GetTemplate(templateId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
@@ -143,8 +143,6 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("company id " + userInfo.CompanyId)
-	beego.Info("user name " + userInfo.UserId)
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
@@ -164,7 +162,7 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	ctx.SendLogs("AWSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
+	template.CompanyId = userInfo.CompanyId
 	err, id := aws.CreateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -230,7 +228,7 @@ func (c *AWSTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -309,7 +307,7 @@ func (c *AWSTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("clusterTemplate", templateId, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", templateId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)

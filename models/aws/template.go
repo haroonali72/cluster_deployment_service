@@ -24,6 +24,7 @@ type Template struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
 	NetworkName      string        `json:"network_name" bson:"network_name"`
+	CompanyId        string        `json:"company_id" bson:"company_id"`
 }
 
 type NodePoolT struct {
@@ -47,7 +48,7 @@ func checkTemplateSize(template Template, ctx utils.Context) error {
 	return nil
 }
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
-	_, err := GetTemplate(template.TemplateId, ctx)
+	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text)
@@ -55,12 +56,11 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	}
 
 	template.CreationDate = time.Now()
-	i := rand.Int()
 
-	beego.Info(i)
-	beego.Info(strconv.Itoa(i))
-
-	template.TemplateId = template.Name + strconv.Itoa(i)
+	if template.TemplateId == "" {
+		i := rand.Int()
+		template.TemplateId = template.Name + strconv.Itoa(i)
+	}
 
 	beego.Info(template.TemplateId)
 
@@ -80,7 +80,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	return nil, template.TemplateId
 }
 
-func GetTemplate(templateId string, ctx utils.Context) (template Template, err error) {
+func GetTemplate(templateId, companyId string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -89,7 +89,7 @@ func GetTemplate(templateId string, ctx utils.Context) (template Template, err e
 	defer session.Close()
 	s := db.GetMongoConf()
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
-	err = c.Find(bson.M{"template_id": templateId}).One(&template)
+	err = c.Find(bson.M{"template_id": templateId, "company_id": companyId}).One(&template)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err
@@ -137,7 +137,7 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 }
 
 func UpdateTemplate(template Template, ctx utils.Context) error {
-	oldTemplate, err := GetTemplate(template.TemplateId, ctx)
+	oldTemplate, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.TemplateId)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

@@ -48,7 +48,8 @@ type NodePool struct {
 	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	State               models.Type `json:"status" bson:"status"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -83,6 +84,18 @@ type Data struct {
 	Region string `json:"region"`
 }
 
+func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
+	update := false
+	for index, node_pool := range existingCluster.NodePools {
+		if (!node_pool.EnableScaling && node_pool.EnableScaling != updatedCluster.NodePools[index].EnableScaling) || (node_pool.EnableScaling && node_pool.Scaling.MaxScalingGroupSize != updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize) {
+			update = true
+			existingCluster.NodePools[index].EnableScaling = updatedCluster.NodePools[index].EnableScaling
+			existingCluster.NodePools[index].Scaling.MaxScalingGroupSize = updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize
+
+		}
+	}
+	return update
+}
 func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pools := range cluster.NodePools {
 		if pools.NodeCount > 3 {
@@ -186,7 +199,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 }
 
 func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
-	beego.Info("mongo session")
+
 	session, err1 := db.GetMongoSession()
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -195,10 +208,8 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	beego.Info("cluster aws")
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
 	err = c.Find(bson.M{}).All(&clusters)
-	beego.Info("getting all clusters")
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
@@ -215,8 +226,12 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 	if oldCluster.Status == "Cluster Created" && update {
-		ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("Cluster is in runnning state")
+		if !checkScalingChanges(&oldCluster, &cluster) {
+			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("Cluster is in runnning state")
+		} else {
+			cluster = oldCluster
+		}
 	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
@@ -305,7 +320,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	}
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
-
+	UpdateScalingStatus(&cluster)
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -460,7 +475,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.C
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetAllSSHKeyPair(ctx utils.Context, token string) (keys []string, err error) {
+func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
 
 	keys, err = vault.GetAllSSHKey("aws", ctx, token)
 	if err != nil {
@@ -562,12 +577,21 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 
 		return e
 	}
-
+	UpdateScalingStatus(&cluster)
+	err = UpdateCluster(cluster, false, ctx)
+	if e != nil {
+		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
 	ctx.SendLogs("Cluster: "+cluster.Name+" scaled", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
 }
-
+func UpdateScalingStatus(cluster *Cluster_Def) {
+	for _, pool := range cluster.NodePools {
+		pool.Scaling.State = models.Created
+	}
+}
 func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (keyMaterial string, err error) {
 
 	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, ctx)

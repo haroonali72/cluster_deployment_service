@@ -48,7 +48,7 @@ func (c *GcpClusterController) Get() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -149,7 +149,7 @@ func (c *GcpClusterController) Post() {
 	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -214,7 +214,7 @@ func (c *GcpClusterController) Patch() {
 	ctx.SendLogs("GcpClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -275,7 +275,7 @@ func (c *GcpClusterController) Delete() {
 	ctx.SendLogs("GcpClusterController: delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("cluster", id, "Delete", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -365,7 +365,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Start", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -474,7 +474,7 @@ func (c *GcpClusterController) GetStatus() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "View", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -510,7 +510,7 @@ func (c *GcpClusterController) GetStatus() {
 
 	beego.Info("GcpClusterController: Fetch Cluster Status of project. ", projectId)
 
-	cluster, err := gcp.FetchStatus(credentials, projectId, userInfo.CompanyId, *ctx)
+	cluster, err := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
@@ -566,7 +566,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate("cluster", projectId, "Terminate", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -788,8 +788,6 @@ func (c *GcpClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
-	beego.Info("Private Key :" + privateKey)
 
 	c.Data["json"] = privateKey
 	c.ServeJSON()
