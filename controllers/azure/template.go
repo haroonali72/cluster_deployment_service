@@ -340,7 +340,7 @@ func (c *AzureTemplateController) Delete() {
 	}
 	//==========================RBAC Authentication==============================//
 
-	status_code, err := rbac_athentication.DeletePolicy(id, token, utils.Context{})
+	status_code, err := rbac_athentication.DeletePolicy(models.Azure, id, token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
