@@ -341,7 +341,7 @@ func (c *AWSTemplateController) Delete() {
 	}
 	//==========================RBAC Authentication==============================//
 
-	status_code, err := rbac_athentication.DeletePolicy(templateId, token, utils.Context{})
+	status_code, err := rbac_athentication.DeletePolicy(models.AWS, templateId, token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
