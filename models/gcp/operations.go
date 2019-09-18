@@ -112,7 +112,8 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
+	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
+	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

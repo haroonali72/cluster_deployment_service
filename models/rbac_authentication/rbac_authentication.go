@@ -80,7 +80,7 @@ func Authenticate(cloud models.Cloud, resourceType, resourceId string, action st
 	q.Add("resource_id", resourceId)
 	q.Add("resource_type", resourceType)
 	q.Add("action", action)
-	q.Add("type_sub", string(cloud))
+	q.Add("sub_type", string(cloud))
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 
@@ -200,7 +200,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 	return response.StatusCode, err
 
 }
-func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, error) {
+func DeletePolicy(cloud models.Cloud, resourceId string, token string, ctx utils.Context) (int, error) {
 
 	client := utils.InitReq()
 
@@ -212,6 +212,7 @@ func DeletePolicy(resourceId string, token string, ctx utils.Context) (int, erro
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
 	q.Add("resouce_type", "clusterTemplate")
+	q.Add("sub_type", string(cloud))
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 
