@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"antelope/models"
+	"antelope/models/cores"
 	"antelope/models/gcp"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -124,6 +125,7 @@ func (c *GcpClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
+// @Param	subscriptionId	header	string	subscriptionId ""
 // @Param	token	header	string	token ""
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -135,6 +137,8 @@ func (c *GcpClusterController) Post() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
+
+	subscriptionId := c.Ctx.Input.Header("subscriptionId")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -169,7 +173,7 @@ func (c *GcpClusterController) Post() {
 
 	cluster.CompanyId = userInfo.CompanyId
 
-	err = gcp.CreateCluster(cluster, *ctx)
+	err = gcp.CreateCluster(subscriptionId, cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
@@ -191,6 +195,7 @@ func (c *GcpClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
+// @Param	subscriptionId	header	string	subscriptionId ""
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
@@ -200,7 +205,7 @@ func (c *GcpClusterController) Patch() {
 	var cluster gcp.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	token := c.Ctx.Input.Header("token")
-
+	subscriptionId := c.Ctx.Input.Header("subscriptionId")
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -231,7 +236,7 @@ func (c *GcpClusterController) Patch() {
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	err = gcp.UpdateCluster(cluster, true, *ctx)
+	err = gcp.UpdateCluster(subscriptionId, cluster, true, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "does not exist") {
@@ -794,20 +799,19 @@ func (c *GcpClusterController) PostSSHKey() {
 }
 
 // @Title GetCores
-// @Description Get AWS Machine instance cores
+// @Description Get GCP Machine instance cores
 // @Success 200 			{object} models.Machine
 // @Failure 500 			{"error": "internal server error"}
 // @router /cores/ [get]
 func (c *GcpClusterController) GetCores() {
-	var machine []models.Machine
-	if err := json.Unmarshal(models.GCPCores, &machine); err != nil {
+	var machine []models.GCPMachine
+	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	beego.Info(machine)
 	c.Data["json"] = machine
 	c.ServeJSON()
 }

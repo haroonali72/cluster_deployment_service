@@ -1,4 +1,4 @@
-package models
+package cores
 
 var AWSCores = []byte(
 	`[
@@ -398,6 +398,6 @@ var GCPCores = []byte(
 			{"instanceType":"c2-standard-16","cores":16},
 			{"instanceType":"c2-standard-30","cores": 30 },
 			{"instanceType":"c2-standard-60","cores": 60},
-			{"instanceType":"f1-micro","cores":0},
-			{"instanceType":"g1-small","cores": 0 }
+			{"instanceType":"f1-micro","cores":0.2},
+			{"instanceType":"g1-small","cores": 0.5 }
 ]`)

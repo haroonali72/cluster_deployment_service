@@ -3,6 +3,7 @@ package aws
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
+	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
@@ -152,22 +153,24 @@ func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	return nil
 }
-func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
 	err = checkClusterSize(cluster, ctx)
-	if err != nil { //cluster size limit exeed
+	if err != nil { //cluster size limit exceed
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	err = checkCoresLimit(cluster, models.SubBronze, ctx)
-	if err != nil { //core size limit exceed
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if subscriptionID != "" {
+		err = checkCoresLimit(cluster, subscriptionID, ctx)
+		if err != nil { //core size limit exceed
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
@@ -219,7 +222,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	return clusters, nil
 }
 
-func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Cluster   does not exist in the database: "+cluster.Name+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -242,7 +245,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(cluster, ctx)
+	err = CreateCluster(subscriptionId, cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -311,7 +314,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		}
 
 		cluster.Status = "Cluster Creation Failed"
-		confError = UpdateCluster(cluster, false, ctx)
+		confError = UpdateCluster("", cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -321,7 +324,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
 	UpdateScalingStatus(&cluster)
-	confError = UpdateCluster(cluster, false, ctx)
+	confError = UpdateCluster("", cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -404,7 +407,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster, false, ctx)
+		err = UpdateCluster("", cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -421,7 +424,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		pools.Nodes = nodes
 	}
 	cluster.Status = "Cluster Terminated"
-	err = UpdateCluster(cluster, false, ctx)
+	err = UpdateCluster("", cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -578,7 +581,7 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 		return e
 	}
 	UpdateScalingStatus(&cluster)
-	err = UpdateCluster(cluster, false, ctx)
+	err = UpdateCluster("", cluster, false, ctx)
 	if e != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -602,32 +605,35 @@ func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams
 
 	return keyMaterial, err
 }
-func checkCoresLimit(cluster Cluster_Def, subscriptionType models.Subscription, ctx utils.Context) error {
+
+func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
 
 	var coreCount int64 = 0
 	var machine models.Machine
 
-	if err := json.Unmarshal(models.AWSCores, &machine); err != nil {
+	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
 	for _, nodepool := range cluster.NodePools {
-		for nodepool.MachineType != machine.InstanceType {
+		for range machine.InstanceType {
 			if nodepool.MachineType == machine.InstanceType {
 				if nodepool.EnableScaling == true {
 					coreCount = coreCount + ((nodepool.NodeCount * nodepool.Scaling.MaxScalingGroupSize) * machine.Cores)
 				}
 				coreCount = coreCount + (nodepool.NodeCount * machine.Cores)
+				break
 			}
 		}
 	}
 
-	if subscriptionType == models.SubGold && coreCount > int64(models.GoldLimit) {
-		return errors.New("Exceeds the cores limit")
-	} else if subscriptionType == models.SubSilver && coreCount > int64(models.SilverLimit) {
-		return errors.New("Exceeds the cores limit")
-	} else if subscriptionType == models.SubBronze && coreCount > int64(models.BronzeLimit) {
+	coreLimit, err := cores.GetCoresLimit(subscriptionId)
+	if err != nil {
+		return err
+	}
+
+	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}
 

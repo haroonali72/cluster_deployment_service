@@ -98,23 +98,18 @@ const (
 	AuditTrailLoggingURI = "audit/store"
 )
 
-type Subscription string
-
-const (
-	SubBronze Subscription = "Bronze-Subscription"
-	SubSilver Subscription = "Silver-Subscription"
-	SubGold   Subscription = "Gold-Subscription"
-)
-
-type CoreLimit int64
-
-const (
-	BronzeLimit CoreLimit = 50
-	SilverLimit CoreLimit = 50
-	GoldLimit   CoreLimit = 50
-)
-
 type Machine struct {
 	InstanceType string `json: "instanceType" `
 	Cores        int64  `json: "cores" `
+}
+type GCPMachine struct {
+	InstanceType string  `json: "instanceType" `
+	Cores        float64 `json: "cores" `
+}
+
+type Limits struct {
+	CoreCount      int64 `json: "CoreCount" `
+	DeveloperCount int64 `json: "DeveloperCount" `
+	MeshCount      int64 `json: "MeshCount" `
+	MeshSize       int64 `json: "MeshSize" `
 }
