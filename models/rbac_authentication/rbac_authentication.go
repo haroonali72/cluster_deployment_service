@@ -211,7 +211,7 @@ func DeletePolicy(cloud models.Cloud, resourceId string, token string, ctx utils
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
-	q.Add("resouce_type", "clusterTemplate")
+	q.Add("resource_type", "clusterTemplate")
 	q.Add("sub_type", string(cloud))
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()

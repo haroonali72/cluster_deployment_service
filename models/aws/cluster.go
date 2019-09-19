@@ -91,7 +91,7 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 			update = true
 			existingCluster.NodePools[index].EnableScaling = updatedCluster.NodePools[index].EnableScaling
 			existingCluster.NodePools[index].Scaling.MaxScalingGroupSize = updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize
-
+			existingCluster.NodePools[index].Scaling.State = updatedCluster.NodePools[index].Scaling.State
 		}
 	}
 	return update
