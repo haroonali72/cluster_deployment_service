@@ -137,9 +137,6 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	//beego.Info(string(data.([]byte)))
-	//beego.Info(network)
-	//beego.Info(network.Definition[0].ResourceGroup + " " + resourceGroup)
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
 			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
