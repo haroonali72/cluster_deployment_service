@@ -106,6 +106,18 @@ type Data struct {
 	Zone   string `json:"zone"`
 }
 
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("gcp", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
 func GetRegion(token, projectId string, ctx utils.Context) (string, string, error) {
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
 	if strings.Contains(url, "{projectId}") {

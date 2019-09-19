@@ -166,7 +166,13 @@ func (c *GcpClusterController) Post() {
 
 	beego.Info("GcpClusterController: Post new cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
-
+	err = gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	cluster.CompanyId = userInfo.CompanyId
 
 	err = gcp.CreateCluster(cluster, *ctx)

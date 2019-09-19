@@ -23,12 +23,11 @@ func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	if response.StatusCode == 404 {
-		ctx.SendLogs("no entity exists for this project id", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, errors.New("no network exists for this project id")
+	if response.StatusCode != 200 {
+		ctx.SendLogs("network not fetched", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, errors.New("network not fetched")
 	}
 	defer response.Body.Close()
-	//	var network AzureNetwork
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
