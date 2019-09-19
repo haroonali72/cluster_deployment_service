@@ -74,7 +74,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 		beego.Info("GCPOperations creating nodes")
 
 		if pool.PoolRole == "master" {
-			err = cloud.deployMaster(pool, gcpNetwork, token, ctx)
+			err = cloud.deployMaster(cluster.ProjectId, pool, gcpNetwork, token, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				beego.Error(err.Error())
@@ -93,7 +93,7 @@ func (cloud *GCP) createCluster(cluster Cluster_Def, token string, ctx utils.Con
 	return cluster, nil
 }
 
-func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) error {
+func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -124,6 +124,9 @@ func (cloud *GCP) deployMaster(pool *NodePool, network types.GCPNetwork, token s
 	instance := compute.Instance{
 		Name:        strings.ToLower(pool.Name),
 		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
+		Tags: &compute.Tags{
+			Items: []string{projectId},
+		},
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{
 				Subnetwork: getSubnet(pool.PoolSubnet, network.Definition[0].Subnets),
