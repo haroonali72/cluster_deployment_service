@@ -246,6 +246,12 @@ func (c *GcpClusterController) Patch() {
 			c.ServeJSON()
 			return
 		}
+		if strings.Contains(err.Error(), "Cluster is in runnning state") {
+			c.Ctx.Output.SetStatus(402)
+			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "internal server error"}
 		c.ServeJSON()
