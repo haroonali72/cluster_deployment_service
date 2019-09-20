@@ -51,7 +51,8 @@ type NodePool struct {
 }
 
 type AutoScaling struct {
-	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	State               models.Type `json:"status" bson:"status"`
 }
 
 type Node struct {
@@ -106,6 +107,18 @@ type Data struct {
 	Zone   string `json:"zone"`
 }
 
+func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
+	update := false
+	for index, node_pool := range existingCluster.NodePools {
+		if (!node_pool.EnableScaling && node_pool.EnableScaling != updatedCluster.NodePools[index].EnableScaling) || (node_pool.EnableScaling && node_pool.Scaling.MaxScalingGroupSize != updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize) {
+			update = true
+			existingCluster.NodePools[index].EnableScaling = updatedCluster.NodePools[index].EnableScaling
+			existingCluster.NodePools[index].Scaling.MaxScalingGroupSize = updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize
+			existingCluster.NodePools[index].Scaling.State = updatedCluster.NodePools[index].Scaling.State
+		}
+	}
+	return update
+}
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	url := getNetworkHost("gcp", projectId)
@@ -286,9 +299,12 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	}
 
 	if oldCluster.Status == "Cluster Created" && update {
-		ctx.SendLogs("GcpClusterModel: cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("Cluster is in runnning state")
-		return errors.New("Cluster is in runnning state")
+		if !checkScalingChanges(&oldCluster, &cluster) {
+			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("Cluster is in runnning state")
+		} else {
+			cluster = oldCluster
+		}
 	}
 
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
