@@ -56,7 +56,8 @@ type NodePool struct {
 	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	State               models.Type `json:"status" bson:"status"`
 }
 type Key struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" valid:"required, in(password|key)"`
@@ -102,6 +103,18 @@ type Data struct {
 	Region string `json:"region"`
 }
 
+func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
+	update := false
+	for index, node_pool := range existingCluster.NodePools {
+		if (!node_pool.EnableScaling && node_pool.EnableScaling != updatedCluster.NodePools[index].EnableScaling) || (node_pool.EnableScaling && node_pool.Scaling.MaxScalingGroupSize != updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize) {
+			update = true
+			existingCluster.NodePools[index].EnableScaling = updatedCluster.NodePools[index].EnableScaling
+			existingCluster.NodePools[index].Scaling.MaxScalingGroupSize = updatedCluster.NodePools[index].Scaling.MaxScalingGroupSize
+			existingCluster.NodePools[index].Scaling.State = updatedCluster.NodePools[index].Scaling.State
+		}
+	}
+	return update
+}
 func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
 	if strings.Contains(url, "{projectId}") {
@@ -258,8 +271,12 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New(text)
 	}
 	if oldCluster.Status == "Cluster Created" && update {
-		ctx.SendLogs("Cluster is in runnning state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("Cluster is in runnning state")
+		if !checkScalingChanges(&oldCluster, &cluster) {
+			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("Cluster is in runnning state")
+		} else {
+			cluster = oldCluster
+		}
 	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
