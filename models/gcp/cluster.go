@@ -181,6 +181,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		return errors.New(text)
 	}
 	if subscriptionId != "" {
+
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -573,7 +574,7 @@ func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (priva
 func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
 
 	var coreCount int64 = 0
-	var machine models.Machine
+	var machine []models.GCPMachine
 
 	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
@@ -581,12 +582,12 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	}
 
 	for _, nodepool := range cluster.NodePools {
-		for range machine.InstanceType {
-			if nodepool.MachineType == machine.InstanceType {
+		for index := range machine {
+			if nodepool.MachineType == machine[index].InstanceType {
 				if nodepool.EnableScaling == true {
-					coreCount = coreCount + ((nodepool.NodeCount * nodepool.Scaling.MaxScalingGroupSize) * machine.Cores)
+					coreCount = coreCount + ((nodepool.NodeCount * nodepool.Scaling.MaxScalingGroupSize) * int64(machine[index].Cores))
 				}
-				coreCount = coreCount + (nodepool.NodeCount * machine.Cores)
+				coreCount = coreCount + (nodepool.NodeCount * int64(machine[index].Cores))
 				break
 			}
 		}
