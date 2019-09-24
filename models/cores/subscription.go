@@ -10,8 +10,8 @@ import (
 func GetCoresLimit(subscriptionId string) (int64, error) {
 
 	subscriptionClient := d_duck.Init{Client: d_duck.Client{
-		Host: "122.129.74.5",
-		Port: "8080",
+		Host: beego.AppConfig.String("Host"),
+		Port: beego.AppConfig.String("Port"),
 	}}
 
 	limits, err := subscriptionClient.GetLimitsWithSubscriptionId(subscriptionId)

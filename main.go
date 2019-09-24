@@ -45,6 +45,8 @@ func main() {
 }
 
 func setEnv() {
+	os.Setenv("subscription_host", "122.129.74.5")
+	os.Setenv("subscription_port", "8080")
 	os.Setenv("rbac_url", "http://35.246.150.221:31619")
 	os.Setenv("mongo_host", "35.246.150.221:32180")
 	os.Setenv("mongo_auth", "true")

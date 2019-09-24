@@ -613,7 +613,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		for index := range machine {
 			if nodepool.MachineType == machine[index].InstanceType {
 				if nodepool.EnableScaling == true {
-					coreCount = coreCount + ((nodepool.NodeCount * nodepool.Scaling.MaxScalingGroupSize) * int64(machine[index].Cores))
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * int64(machine[index].Cores))
 				}
 				coreCount = coreCount + (nodepool.NodeCount * int64(machine[index].Cores))
 				break
