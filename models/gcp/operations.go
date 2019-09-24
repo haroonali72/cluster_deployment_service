@@ -241,14 +241,14 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
+	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
+	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 	instanceTemplateUrl, err := cloud.createInstanceTemplate(projectId, pool, network, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
-	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
+
 	instanceGroup := compute.InstanceGroupManager{
 		Name:             strings.ToLower(pool.Name),
 		BaseInstanceName: strings.ToLower(pool.Name),
