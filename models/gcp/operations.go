@@ -114,6 +114,9 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 	}
 	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
 	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
+	beego.Info("Private Key in master: ", pool.KeyInfo.PrivateKey)
+	beego.Info("Public Key in master : ", pool.KeyInfo.PublicKey)
+	beego.Info("Key Name in master: ", pool.KeyInfo.KeyName)
 	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -243,6 +246,9 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 	}
 	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
 	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
+	beego.Info("Private Key in worker: ", pool.KeyInfo.PrivateKey)
+	beego.Info("Public Key in worker: ", pool.KeyInfo.PublicKey)
+	beego.Info("Key Name in worker: ", pool.KeyInfo.KeyName)
 	instanceTemplateUrl, err := cloud.createInstanceTemplate(projectId, pool, network, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
