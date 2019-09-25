@@ -255,10 +255,7 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 		TargetSize:       pool.NodeCount,
 		InstanceTemplate: instanceTemplateUrl,
 	}
-	beego.Info("Key Name:", pool.KeyInfo.KeyName)
-	beego.Info("Key fetched:", fetchedKey)
-	beego.Info("Private Key:", pool.KeyInfo.PrivateKey)
-	beego.Info("Public Key:", pool.KeyInfo.PublicKey)
+
 	reqCtx := context.Background()
 	result, err := cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instanceGroup).Context(reqCtx).Do()
 	if err != nil {

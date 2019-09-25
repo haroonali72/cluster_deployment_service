@@ -151,7 +151,6 @@ func (c *AWSClusterController) Post() {
 
 	token := c.Ctx.Input.Header("token")
 	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	beego.Info("subscriptionId", subscriptionId)
 	if subscriptionId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
@@ -237,7 +236,12 @@ func (c *AWSClusterController) Patch() {
 
 	token := c.Ctx.Input.Header("token")
 	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	beego.Info("subscriptionId: ", subscriptionId)
+	if subscriptionId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
