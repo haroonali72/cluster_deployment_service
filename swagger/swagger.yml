@@ -22,6 +22,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
       - in: body
         name: body
         description: body for cluster content
@@ -47,6 +51,10 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/aws.Cluster_Def'
+      - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
       - in: header
         name: token
         description: token
@@ -163,6 +171,19 @@ paths:
           description: '{"error": "ami id is empty"}'
         "500":
           description: '{"error": "internal server error"}'
+  /cluster/aws/cores/:
+    get:
+      tags:
+      - cluster/aws
+      description: Get AWS Machine instance cores
+      operationId: AWSClusterController.GetCores
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/models.Machine'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/aws/enablescaling/{projectId}/:
     post:
       tags:
@@ -183,12 +204,6 @@ paths:
         name: token
         description: token
         type: string
-      - in: body
-        name: body
-        description: body for cluster content
-        required: true
-        schema:
-          $ref: '#/definitions/aws.AutoScaling'
       responses:
         "200":
           description: '{"msg": "cluster autoscaled successfully"}'
@@ -353,6 +368,11 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: subscription_id
+        description: token
+        schema:
+          $ref: '#/definitions/subscriptionId'
       - in: body
         name: body
         description: body for cluster content
@@ -375,6 +395,10 @@ paths:
       - in: header
         name: token
         description: token
+        type: string
+      - in: header
+        name: subscription_id
+        description: subscriptionId
         type: string
       - in: body
         name: body
@@ -459,6 +483,19 @@ paths:
               $ref: '#/definitions/azure.Cluster_Def'
         "500":
           description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/cores/:
+    get:
+      tags:
+      - cluster/azure
+      description: Get AWS Machine instance cores
+      operationId: AzureClusterController.GetCores
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/models.Machine'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -609,6 +646,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
       - in: body
         name: body
         description: body for cluster content
@@ -628,6 +669,10 @@ paths:
       description: create a new cluster
       operationId: GcpClusterController.Create
       parameters:
+      - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
       - in: header
         name: token
         description: token
@@ -711,6 +756,19 @@ paths:
             type: array
             items:
               $ref: '#/definitions/gcp.Cluster_Def'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/cores/:
+    get:
+      tags:
+      - cluster/gcp
+      description: Get GCP Machine instance cores
+      operationId: GcpClusterController.GetCores
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/models.Machine'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/serviceaccounts:
@@ -1274,7 +1332,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  571.0xc0006e9f80.false:
+  596.0xc0007edb00.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1301,6 +1359,8 @@ definitions:
       max_scaling_group_size:
         type: integer
         format: int64
+      status:
+        $ref: '#/definitions/models.Type'
   aws.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -1312,7 +1372,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/571.0xc0006e9f80.false'
+        $ref: '#/definitions/596.0xc0007edb00.false'
       name:
         type: string
       network_name:
@@ -1419,6 +1479,8 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1453,6 +1515,8 @@ definitions:
       max_scaling_group_size:
         type: integer
         format: int64
+      status:
+        $ref: '#/definitions/models.Type'
   azure.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -1589,6 +1653,8 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1645,6 +1711,8 @@ definitions:
       max_scaling_group_size:
         type: integer
         format: int64
+      status:
+        $ref: '#/definitions/models.Type'
   gcp.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -1862,6 +1930,15 @@ definitions:
     - AZUREKey = "azure"
     - USERKey = "user"
     example: new
+  models.Machine:
+    title: Machine
+    type: object
+    properties:
+      Cores:
+        type: integer
+        format: int64
+      InstanceType:
+        type: string
   models.OsDiskType:
     title: OsDiskType
     type: string
@@ -1870,6 +1947,17 @@ definitions:
     - StandardSSD = "standard ssd"
     - PremiumSSD = "premium ssd"
     example: standard hdd
+  models.Type:
+    title: Type
+    type: string
+    enum:
+    - Existing = "existing"
+    - New = "new"
+    - Created = "created"
+    example: existing
+  subscriptionId:
+    title: subscriptionId
+    type: object
 tags:
 - name: health
   description: |

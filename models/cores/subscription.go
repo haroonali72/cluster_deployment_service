@@ -5,13 +5,17 @@ import (
 	"antelope/models"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"strings"
 )
 
 func GetCoresLimit(subscriptionId string) (int64, error) {
-
+	s := strings.Split(beego.AppConfig.String("subscription_host"), ":")
+	ip, port := string(s[0]), string(s[1])
+	beego.Info("ip", ip)
+	beego.Info("port", port)
 	subscriptionClient := d_duck.Init{Client: d_duck.Client{
-		Host: beego.AppConfig.String("Host"),
-		Port: beego.AppConfig.String("Port"),
+		Host: ip,
+		Port: port,
 	}}
 
 	limits, err := subscriptionClient.GetLimitsWithSubscriptionId(subscriptionId)

@@ -125,7 +125,7 @@ func (c *GcpClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	subscriptionId	header	string	subscriptionId ""
+// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	token	header	string	token ""
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -134,12 +134,19 @@ func (c *GcpClusterController) GetAll() {
 // @router / [post]
 func (c *GcpClusterController) Post() {
 	var cluster gcp.Cluster_Def
+	ctx := new(utils.Context)
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
 
-	subscriptionId := c.Ctx.Input.Header("subscriptionId")
-
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	if subscriptionId == "" {
+		ctx.SendLogs("GcpClusterController: subscriptionId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(400) //no need
+		c.Data["json"] = map[string]string{"error": "subscriptionId is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -148,7 +155,7 @@ func (c *GcpClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -201,17 +208,27 @@ func (c *GcpClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	subscriptionId	header	string	subscriptionId ""
+// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
 // @Failure 500 {"error": "internal server error"}
 // @router / [put]
 func (c *GcpClusterController) Patch() {
+
+	ctx := new(utils.Context)
+
 	var cluster gcp.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	token := c.Ctx.Input.Header("token")
-	subscriptionId := c.Ctx.Input.Header("subscriptionId")
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	if subscriptionId == "" {
+		ctx.SendLogs("GcpClusterController: subscriptionId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscriptionId is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -220,7 +237,7 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

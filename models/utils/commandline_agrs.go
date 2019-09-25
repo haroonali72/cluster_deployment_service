@@ -26,11 +26,18 @@ var (
 	network_url                     = ""
 	raccoon_url                     = ""
 	rbac_url                        = ""
+	subscription_host               = ""
 )
 
 func InitFlags() error {
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "subscription_host",
+			Usage:       "subscription_host",
+			Destination: &subscription_host,
+			EnvVar:      "subscription_host",
+		},
 		cli.StringFlag{
 			Name:        "mongo_host",
 			Usage:       "mongo db host",
@@ -167,5 +174,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("vault_url", vault_url)
 	beego.AppConfig.Set("raccoon_url", raccoon_url)
 	beego.AppConfig.Set("rbac_url", rbac_url)
+	beego.AppConfig.Set("subscription_host", subscription_host)
+
 	return nil
 }

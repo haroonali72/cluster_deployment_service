@@ -124,7 +124,7 @@ func (c *AzureClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	token	header	string	token ""
-// @Param	subscriptionId	header	string	subscriptionId ""
+// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	azure.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
@@ -136,7 +136,13 @@ func (c *AzureClusterController) Post() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
-	subscriptionId := c.Ctx.Input.Header("subscriptionId")
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	if subscriptionId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscription_id is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -203,7 +209,7 @@ func (c *AzureClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	subscriptionId	header	subscriptionId	token ""
+// @Param	subscription_id	header	subscriptionId	token ""
 // @Param	body	body 	azure.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
@@ -215,7 +221,13 @@ func (c *AzureClusterController) Patch() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
-	subscriptionId := c.Ctx.Input.Header("subscriptionId")
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	if subscriptionId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscription_id is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())

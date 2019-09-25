@@ -603,19 +603,18 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	var coreCount int64 = 0
 	var machine []models.GCPMachine
-
 	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
 	for _, nodepool := range cluster.NodePools {
-		for index := range machine {
-			if nodepool.MachineType == machine[index].InstanceType {
+		for i := range machine {
+			if nodepool.MachineType == machine[i].InstanceType {
 				if nodepool.EnableScaling == true {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * int64(machine[index].Cores))
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * int64(machine[i].Cores))
 				}
-				coreCount = coreCount + (nodepool.NodeCount * int64(machine[index].Cores))
+				coreCount = coreCount + (nodepool.NodeCount * int64(machine[i].Cores))
 				break
 			}
 		}

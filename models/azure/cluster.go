@@ -558,20 +558,19 @@ func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey s
 func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
 
 	var coreCount int64 = 0
-	var machine models.Machine
-
-	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
+	var machine []models.Machine
+	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
 	for _, nodepool := range cluster.NodePools {
-		for range machine.InstanceType {
-			if nodepool.MachineType == machine.InstanceType {
+		for i := range machine {
+			if nodepool.MachineType == machine[i].InstanceType {
 				if nodepool.EnableScaling == true {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * machine.Cores)
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * machine[i].Cores)
 				}
-				coreCount = coreCount + (nodepool.NodeCount * machine.Cores)
+				coreCount = coreCount + (nodepool.NodeCount * machine[i].Cores)
 				break
 			}
 		}

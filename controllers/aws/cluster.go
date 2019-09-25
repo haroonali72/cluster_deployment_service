@@ -135,7 +135,7 @@ func (c *AWSClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
-// @Param	subscriptionId	header	string	subscriptionId ""
+// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
@@ -150,7 +150,14 @@ func (c *AWSClusterController) Post() {
 	cluster.CreationDate = time.Now()
 
 	token := c.Ctx.Input.Header("token")
-	subscriptionId := c.Ctx.Input.Header("subscriptionId")
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	beego.Info("subscriptionId", subscriptionId)
+	if subscriptionId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -218,7 +225,7 @@ func (c *AWSClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	subscriptionId	header	string	subscriptionId ""
+// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
@@ -229,7 +236,8 @@ func (c *AWSClusterController) Patch() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
-	subscriptionId := c.Ctx.Input.Header("subscriptionId")
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	beego.Info("subscriptionId: ", subscriptionId)
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
