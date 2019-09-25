@@ -919,7 +919,7 @@ func (c *AWSClusterController) PostSSHKey() {
 // @Description Get AWS Machine instance cores
 // @Success 200 			{object} models.Machine
 // @Failure 500 			{"error": "internal server error"}
-// @router /get/cores/ [get]
+// @router /machine/info [get]
 func (c *AWSClusterController) GetCores() {
 	var machine []models.Machine
 	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {

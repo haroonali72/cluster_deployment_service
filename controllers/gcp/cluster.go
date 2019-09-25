@@ -831,7 +831,7 @@ func (c *GcpClusterController) PostSSHKey() {
 // @Description Get GCP Machine instance cores
 // @Success 200 			{object} models.Machine
 // @Failure 500 			{"error": "internal server error"}
-// @router /get/cores/ [get]
+// @router /machine/info [get]
 func (c *GcpClusterController) GetCores() {
 	var machine []models.GCPMachine
 	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {

@@ -186,26 +186,6 @@
                 }
             }
         },
-        "/cluster/aws/cores/": {
-            "get": {
-                "tags": [
-                    "cluster/aws"
-                ],
-                "description": "Get AWS Machine instance cores",
-                "operationId": "AWSClusterController.GetCores",
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Machine"
-                        }
-                    },
-                    "500": {
-                        "description": "{\"error\": \"internal server error\"}"
-                    }
-                }
-            }
-        },
         "/cluster/aws/enablescaling/{projectId}/": {
             "post": {
                 "tags": [
@@ -240,6 +220,26 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/machine/info": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Get AWS Machine instance cores",
+                "operationId": "AWSClusterController.GetCores",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Machine"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
                     }
                 }
             }
@@ -662,7 +662,7 @@
                 }
             }
         },
-        "/cluster/azure/cores/": {
+        "/cluster/azure/machine/info": {
             "get": {
                 "tags": [
                     "cluster/azure"
@@ -1081,7 +1081,7 @@
                 }
             }
         },
-        "/cluster/gcp/cores/": {
+        "/cluster/gcp/machine/info": {
             "get": {
                 "tags": [
                     "cluster/gcp"
@@ -2025,7 +2025,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "596.0xc0008093b0.false": {
+        "596.0xc000894840.false": {
             "title": "false",
             "type": "object"
         },
@@ -2081,7 +2081,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/596.0xc0008093b0.false"
+                    "$ref": "#/definitions/596.0xc000894840.false"
                 },
                 "name": {
                     "type": "string"

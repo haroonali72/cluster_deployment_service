@@ -697,7 +697,7 @@ func (c *AzureClusterController) PostSSHKey() {
 // @Description Get AWS Machine instance cores
 // @Success 200 			{object} models.Machine
 // @Failure 500 			{"error": "internal server error"}
-// @router /get/cores/ [get]
+// @router /machine/info [get]
 func (c *AzureClusterController) GetCores() {
 	var machine []models.Machine
 	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
