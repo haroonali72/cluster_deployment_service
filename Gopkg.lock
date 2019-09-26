@@ -9,7 +9,7 @@
 
 [[projects]]
   name = "github.com/Azure/azure-sdk-for-go"
-  packages = ["services/compute/mgmt/2018-04-01/compute","services/network/mgmt/2018-02-01/network","services/preview/authorization/mgmt/2018-01-01-preview/authorization","services/storage/mgmt/2017-10-01/storage","version"]
+  packages = ["services/authorization/mgmt/2015-07-01/authorization","services/compute/mgmt/2018-04-01/compute","services/network/mgmt/2018-02-01/network","services/storage/mgmt/2017-10-01/storage","version"]
   revision = "32916f57ad7b421f5fdaab86b73a795632fff117"
   version = "v21.4.0"
 
@@ -182,6 +182,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0a809608b63b0854d023f97324e371c1514d20ce5022396d91da421a906bf4f3"
+  inputs-digest = "cd847dda143ea9078e712ae7edd83274e80ebf89b7493d4be54b725cce593e64"
   solver-name = "gps-cdcl"
   solver-version = 1
