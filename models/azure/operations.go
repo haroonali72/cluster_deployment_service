@@ -184,13 +184,13 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 		PrincipalID:      vmPrincipalId,
 	}
 
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
+	bytes := make([]byte, 16)
+	_, err := rand.Read(bytes)
 	if err != nil {
 		log.Fatal(err)
 	}
 	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
-		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
 
 	result, err := cloud.RoleAssignment.Create(context.Background(), *vmId, uuid, RoleAssignmentParam)
 	if err != nil {
@@ -201,13 +201,13 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 	}
 
 	RoleAssignmentParam.Properties.RoleDefinitionID = to.StringPtr(BasePath + NetworkContibutorRoleId)
-	b = make([]byte, 16)
-	_, err = rand.Read(b)
+	bytes = make([]byte, 16)
+	_, err = rand.Read(bytes)
 	if err != nil {
 		log.Fatal(err)
 	}
 	uuid = fmt.Sprintf("%x-%x-%x-%x-%x",
-		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
 
 	result, err = cloud.RoleAssignment.Create(context.Background(), *vmId, uuid, RoleAssignmentParam)
 	if err != nil {
