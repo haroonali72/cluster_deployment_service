@@ -5,7 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/key_utils"
-	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -73,14 +73,15 @@ type Volume struct {
 	Size     int32             `json:"disk_size" bson:"disk_size"`
 }
 type VM struct {
-	CloudId      *string `json:"cloud_id" bson:"cloud_id,omitempty"`
-	NodeState    *string `json:"node_state" bson:"node_state,omitempty"`
-	Name         *string `json:"name" bson:"name,omitempty"`
-	PrivateIP    *string `json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP     *string `json:"public_ip" bson:"public_ip,omitempty"`
-	UserName     *string `json:"user_name" bson:"user_name,omitempty"`
-	PAssword     *string `json:"password" bson:"password,omitempty"`
-	ComputerName *string `json:"computer_name" bson:"computer_name,omitempty"`
+	CloudId             *string `json:"cloud_id" bson:"cloud_id,omitempty"`
+	NodeState           *string `json:"node_state" bson:"node_state,omitempty"`
+	Name                *string `json:"name" bson:"name,omitempty"`
+	PrivateIP           *string `json:"private_ip" bson:"private_ip,omitempty"`
+	PublicIP            *string `json:"public_ip" bson:"public_ip,omitempty"`
+	UserName            *string `json:"user_name" bson:"user_name,omitempty"`
+	PAssword            *string `json:"password" bson:"password,omitempty"`
+	ComputerName        *string `json:"computer_name" bson:"computer_name,omitempty"`
+	IdentityPrincipalId *string `json:"identity_principal_id" bson:"identity_principal_id"`
 }
 type DiagnosticsProfile struct {
 	Enable            bool   `json:"enable" bson:"enable"`
@@ -372,8 +373,44 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		return confError
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	/***************************************************************
+	*           Roles Assignments part on created VMs			   *
+	*                                                              *
+	***************************************************************/
+	/*
+		NetworkContibutorRoleId:="4d97b98b-1d4f-4787-a291-c67834d212e7"
+		VmContributorId:="9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
+		BasePath:="/subscriptions/"+azure.Subscription+"/providers/Microsoft.Authorization/roleDefinitions/"
 
+		for _,pool:=range cluster.NodePools{
+
+			for _,node:=range pool.Nodes{
+				RoleAssignmentParam:=authorization.RoleAssignmentCreateParameters{}
+				RoleAssignmentParam.Properties=&authorization.RoleAssignmentProperties{
+					RoleDefinitionID: to.StringPtr(BasePath+VmContributorId),
+				}
+				if node.IdentityPrincipalId!=nil{
+					RoleAssignmentParam.Properties.PrincipalID=node.IdentityPrincipalId
+				}
+				result,err:=azure.RoleAssignment.Create(context.Background(),*node.CloudId,VmContributorId,RoleAssignmentParam)
+				if err!=nil{
+					utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+				}else{
+					x,_:=json.Marshal(result)
+					utils.SendLog(companyId, "VM contributor role: "+string(x), "info", cluster.ProjectId)
+				}
+
+				RoleAssignmentParam.Properties.RoleDefinitionID=to.StringPtr(BasePath+NetworkContibutorRoleId)
+				result,err=azure.RoleAssignment.Create(context.Background(),*node.CloudId,NetworkContibutorRoleId,RoleAssignmentParam)
+				if err!=nil{
+					utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+				}else{
+					x,_:=json.Marshal(result)
+					utils.SendLog(companyId, "Network contributor role: "+string(x), "info", cluster.ProjectId)
+				}
+			}
+		}*/
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
