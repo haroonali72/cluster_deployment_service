@@ -1,8 +1,8 @@
 package cores
 
 import (
-	d_duck "antelope/d-duck"
 	"antelope/models"
+	d_duck "bitbucket.org/cloudplex-devs/d-duck"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"

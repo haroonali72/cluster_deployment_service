@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:af5cd7852ffa88f779e3218c50ce18ca3c9c04f87f8b61a75b622565ea2c555d"
+  name = "bitbucket.org/cloudplex-devs/d-duck"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e68f129d1bf59dff4eb93cdb2a945f371e7a3ab1"
+
+[[projects]]
   digest = "1:80004fcc5cf64e591486b3e11b406f1e0d17bf85d475d64203c8494f5da4fcd1"
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
@@ -441,6 +449,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "bitbucket.org/cloudplex-devs/d-duck",
     "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute",
     "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network",
     "github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage",
