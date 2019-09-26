@@ -616,6 +616,8 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 				}
 				coreCount = coreCount + (nodepool.NodeCount * int64(machine[i].Cores))
 				break
+			} else {
+				return errors.New("Machine type not found")
 			}
 		}
 	}

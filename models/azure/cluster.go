@@ -559,7 +559,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	var coreCount int64 = 0
 	var machine []models.Machine
-	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {
+	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
@@ -572,6 +572,8 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 				}
 				coreCount = coreCount + (nodepool.NodeCount * machine[i].Cores)
 				break
+			} else {
+				return errors.New("Machine type not found")
 			}
 		}
 	}
