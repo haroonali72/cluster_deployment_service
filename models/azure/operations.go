@@ -21,7 +21,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
-	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -174,9 +173,9 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 	return cluster, nil
 }
 
-func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup string, projectId string, vmId *string, vmPrincipalId *string) {
-	NetworkContibutorRoleId := "4d97b98b-1d4f-4787-a291-c67834d212e7"
-	VmContributorId := "9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
+func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup string, projectId string, vmId *string, vmPrincipalId *string) error {
+	NetworkContibutorRoleId := models.NETWORK_CONTRIBUTOR_GUID
+	VmContributorId := models.VM_CONTRIBUTOR_GUID
 	BasePath := "/subscriptions/" + cloud.Subscription + "/providers/Microsoft.Authorization/roleDefinitions/"
 	RoleAssignmentParam := authorization.RoleAssignmentCreateParameters{}
 	RoleAssignmentParam.Properties = &authorization.RoleAssignmentProperties{
@@ -187,7 +186,8 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 	bytes := make([]byte, 16)
 	_, err := rand.Read(bytes)
 	if err != nil {
-		log.Fatal(err)
+		utils.SendLog(companyId, "Error creating UUID for roles: "+err.Error(), "error", projectId)
+		return err
 	}
 	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
 		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
@@ -195,6 +195,7 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 	result, err := cloud.RoleAssignment.Create(context.Background(), *vmId, uuid, RoleAssignmentParam)
 	if err != nil {
 		utils.SendLog(companyId, err.Error(), "error", projectId)
+		return err
 	} else {
 		x, _ := json.Marshal(result)
 		utils.SendLog(companyId, "VM contributor role: "+string(x), "info", projectId)
@@ -204,7 +205,7 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 	bytes = make([]byte, 16)
 	_, err = rand.Read(bytes)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	uuid = fmt.Sprintf("%x-%x-%x-%x-%x",
 		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
@@ -212,10 +213,12 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 	result, err = cloud.RoleAssignment.Create(context.Background(), *vmId, uuid, RoleAssignmentParam)
 	if err != nil {
 		utils.SendLog(companyId, err.Error(), "error", projectId)
+		return err
 	} else {
 		x, _ := json.Marshal(result)
 		utils.SendLog(companyId, "Network contributor role: "+string(x), "info", projectId)
 	}
+	return nil
 }
 func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, error) {
 
@@ -268,7 +271,10 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		vmObj.ComputerName = vm.OsProfile.ComputerName
 		vmObj.IdentityPrincipalId = vm.Identity.PrincipalID
 		cpVms = append(cpVms, &vmObj)
-		cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vm.ID, vm.Identity.PrincipalID)
+		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vm.ID, vm.Identity.PrincipalID)
+		if err != nil {
+			return nil, "", err
+		}
 		return cpVms, private_key, nil
 
 	} else {
@@ -314,8 +320,10 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		if err != nil {
 			return nil, "", err
 		}
-		cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vmScaleSet.ID, vmScaleSet.Identity.PrincipalID)
-
+		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vmScaleSet.ID, vmScaleSet.Identity.PrincipalID)
+		if err != nil {
+			return nil, "", err
+		}
 		utils.SendLog(companyId, *vmScaleSet.ID, "info", projectId)
 		return cpVms, private_key, nil
 	}
@@ -1581,7 +1589,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 }
 func fileWrite(key string, keyName string) error {
 
-	f, err := os.Create("/home/hasnain/Documents/cloud-native/src/antelope/keys/" + keyName + ".pem")
+	f, err := os.Create("/app/keys/" + keyName + ".pem")
 	if err != nil {
 		beego.Error(err.Error())
 		return err
@@ -1595,7 +1603,7 @@ func fileWrite(key string, keyName string) error {
 	}
 	beego.Info("wrote %d bytes\n", n2)
 
-	err = os.Chmod("/home/hasnain/Documents/cloud-native/src/antelope/keys/"+keyName+".pem", 0777)
+	err = os.Chmod("/app/keys/"+keyName+".pem", 0777)
 	if err != nil {
 		beego.Error(err)
 		return err
@@ -1603,7 +1611,7 @@ func fileWrite(key string, keyName string) error {
 	return nil
 }
 func setPermission(keyName string) error {
-	keyPath := "/home/hasnain/Documents/cloud-native/src/antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	cmd1 := "chmod"
 	beego.Info(keyPath)
 	args := []string{"600", keyPath}
@@ -1620,12 +1628,12 @@ func setPermission(keyName string) error {
 }
 func copyFile(keyName string, userName string, instanceId string, file string) error {
 
-	keyPath := "/home/hasnain/Documents/cloud-native/src/antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId + ":/home/" + userName
 	cmd1 := "scp"
 	beego.Info(keyPath)
 	beego.Info(ip)
-	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "/home/hasnain/Documents/cloud-native/src/antelope/scripts/" + file, ip}
+	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, "/app/scripts/" + file, ip}
 	cmd := exec.Command(cmd1, args...)
 
 	cmd.Stdout = os.Stdout
@@ -1638,7 +1646,7 @@ func copyFile(keyName string, userName string, instanceId string, file string) e
 	return nil
 }
 func setScriptPermision(keyName string, userName string, instanceId, fileName string, ctx utils.Context) error {
-	keyPath := "/home/hasnain/Documents/cloud-native/src/antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "chmod 700 /home/" + userName + "/" + fileName}
@@ -1655,7 +1663,7 @@ func setScriptPermision(keyName string, userName string, instanceId, fileName st
 }
 
 func runScript(keyName string, userName string, instanceId string, fileName string, ctx utils.Context) error {
-	keyPath := "/home/hasnain/Documents/cloud-native/src/antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "/home/" + userName + "/" + fileName}
@@ -1672,7 +1680,7 @@ func runScript(keyName string, userName string, instanceId string, fileName stri
 }
 
 func deleteScript(keyName string, userName string, instanceId string, fileName string, ctx utils.Context) error {
-	keyPath := "/home/hasnain/Documents/cloud-native/src/antelope/keys/" + keyName + ".pem"
+	keyPath := "/app/keys/" + keyName + ".pem"
 	ip := userName + "@" + instanceId
 	cmd1 := "ssh"
 	args := []string{"-o", "StrictHostKeyChecking=no", "-i", keyPath, ip, "rm", "/home/" + userName + "/" + fileName}
