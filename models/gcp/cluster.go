@@ -206,7 +206,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		return errors.New(text)
 	}
 	if subscriptionId != "" {
-
+		beego.Info("Checking subscription")
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -332,7 +332,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		beego.Error("Cluster model: Update - Got error creating cluster: ", err)
 		return err
 	}
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"updated in database ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" updated in database ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
 }
@@ -608,25 +608,33 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
+	/*for i,ma := range machine{
+		beego.Info("index :",i)
+		beego.Info("machine :",ma.InstanceType)
+	}*/
+	found := false
 	for _, nodepool := range cluster.NodePools {
-		for i := range machine {
-			if nodepool.MachineType == machine[i].InstanceType {
+		for _, mach := range machine {
+			beego.Info("i:", nodepool.ID)
+			beego.Info("machine type:", mach.InstanceType)
+			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * int64(machine[i].Cores))
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * int64(mach.Cores))
 				}
-				coreCount = coreCount + (nodepool.NodeCount * int64(machine[i].Cores))
-				break
-			} else {
-				return errors.New("Machine type not found")
+				coreCount = coreCount + (nodepool.NodeCount * int64(mach.Cores))
+				found = true
 			}
 		}
 	}
-
+	if !found {
+		return errors.New("Machine not found")
+	}
 	coreLimit, err := cores.GetCoresLimit(subscriptionId)
 	if err != nil {
 		return err
 	}
-
+	beego.Info("CORElimit:", coreLimit)
+	beego.Info("COREcount:", coreCount)
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}

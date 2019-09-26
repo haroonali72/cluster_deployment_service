@@ -26,7 +26,7 @@ var (
 	network_url                     = ""
 	raccoon_url                     = ""
 	rbac_url                        = ""
-	subscription_host               = ""
+	subscription_host               = "35.246.150.221:30906"
 )
 
 func InitFlags() error {

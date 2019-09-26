@@ -166,6 +166,7 @@ func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context
 	}
 
 	if subscriptionID != "" {
+		beego.Info("Checking subscription")
 		err = checkCoresLimit(cluster, subscriptionID, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -633,7 +634,8 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if err != nil {
 		return err
 	}
-
+	beego.Info("CORElimit:", coreLimit)
+	beego.Info("COREcount:", coreCount)
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}
