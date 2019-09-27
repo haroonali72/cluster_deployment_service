@@ -565,20 +565,22 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
+	found := false
 	for _, nodepool := range cluster.NodePools {
-		for i := range machine {
-			if nodepool.MachineType == machine[i].InstanceType {
+		for _, mach := range machine {
+			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * machine[i].Cores)
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * mach.Cores)
 				}
-				coreCount = coreCount + (nodepool.NodeCount * machine[i].Cores)
+				coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
+				found = true
 				break
-			} else {
-				return errors.New("Machine type not found")
 			}
 		}
 	}
-
+	if !found {
+		return errors.New("Machine not found")
+	}
 	coreLimit, err := cores.GetCoresLimit(subscriptionId)
 	if err != nil {
 		beego.Error("Supscription library error")

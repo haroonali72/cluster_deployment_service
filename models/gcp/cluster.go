@@ -608,15 +608,9 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
-	/*for i,ma := range machine{
-		beego.Info("index :",i)
-		beego.Info("machine :",ma.InstanceType)
-	}*/
 	found := false
 	for _, nodepool := range cluster.NodePools {
 		for _, mach := range machine {
-			beego.Info("i:", nodepool.ID)
-			beego.Info("machine type:", mach.InstanceType)
 			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
 					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * int64(mach.Cores))
