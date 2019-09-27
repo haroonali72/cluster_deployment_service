@@ -2025,7 +2025,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc0007e0840.false": {
+        "577.0xc0007a9560.false": {
             "title": "false",
             "type": "object"
         },
@@ -2081,7 +2081,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc0007e0840.false"
+                    "$ref": "#/definitions/577.0xc0007a9560.false"
                 },
                 "name": {
                     "type": "string"
