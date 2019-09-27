@@ -6,7 +6,7 @@ import (
 	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
-	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -166,6 +166,7 @@ func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context
 	}
 
 	if subscriptionID != "" {
+		beego.Info("Checking subscription")
 		err = checkCoresLimit(cluster, subscriptionID, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -615,23 +616,28 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
+	found := true
 	for _, nodepool := range cluster.NodePools {
-		for i := range machine {
-			if nodepool.MachineType == machine[i].InstanceType {
+		for _, mach := range machine {
+			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * machine[i].Cores)
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * mach.Cores)
 				}
-				coreCount = coreCount + (nodepool.NodeCount * machine[i].Cores)
+				coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
+				found = true
 				break
 			}
 		}
 	}
-
+	if !found {
+		return errors.New("Machine not found")
+	}
 	coreLimit, err := cores.GetCoresLimit(subscriptionId)
 	if err != nil {
 		return err
 	}
-
+	beego.Info("CORElimit:", coreLimit)
+	beego.Info("COREcount:", coreCount)
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}

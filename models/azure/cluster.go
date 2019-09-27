@@ -6,7 +6,7 @@ import (
 	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
-	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -74,14 +74,15 @@ type Volume struct {
 	Size     int32             `json:"disk_size" bson:"disk_size"`
 }
 type VM struct {
-	CloudId      *string `json:"cloud_id" bson:"cloud_id,omitempty"`
-	NodeState    *string `json:"node_state" bson:"node_state,omitempty"`
-	Name         *string `json:"name" bson:"name,omitempty"`
-	PrivateIP    *string `json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP     *string `json:"public_ip" bson:"public_ip,omitempty"`
-	UserName     *string `json:"user_name" bson:"user_name,omitempty"`
-	PAssword     *string `json:"password" bson:"password,omitempty"`
-	ComputerName *string `json:"computer_name" bson:"computer_name,omitempty"`
+	CloudId             *string `json:"cloud_id" bson:"cloud_id,omitempty"`
+	NodeState           *string `json:"node_state" bson:"node_state,omitempty"`
+	Name                *string `json:"name" bson:"name,omitempty"`
+	PrivateIP           *string `json:"private_ip" bson:"private_ip,omitempty"`
+	PublicIP            *string `json:"public_ip" bson:"public_ip,omitempty"`
+	UserName            *string `json:"user_name" bson:"user_name,omitempty"`
+	PAssword            *string `json:"password" bson:"password,omitempty"`
+	ComputerName        *string `json:"computer_name" bson:"computer_name,omitempty"`
+	IdentityPrincipalId *string `json:"identity_principal_id" bson:"identity_principal_id"`
 }
 type DiagnosticsProfile struct {
 	Enable            bool   `json:"enable" bson:"enable"`
@@ -195,6 +196,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 	}
 
 	if subscriptionId != "" {
+		beego.Info("CHECKING SUBSCRIPTION")
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -383,7 +385,6 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-
 	ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
@@ -559,28 +560,35 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	var coreCount int64 = 0
 	var machine []models.Machine
-	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {
+	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
+	found := false
 	for _, nodepool := range cluster.NodePools {
-		for i := range machine {
-			if nodepool.MachineType == machine[i].InstanceType {
+		for _, mach := range machine {
+			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * machine[i].Cores)
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * mach.Cores)
 				}
-				coreCount = coreCount + (nodepool.NodeCount * machine[i].Cores)
+				coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
+				found = true
 				break
 			}
 		}
 	}
-
+	if !found {
+		return errors.New("Machine not found")
+	}
 	coreLimit, err := cores.GetCoresLimit(subscriptionId)
 	if err != nil {
+		beego.Error("Supscription library error")
 		return err
-	}
 
+	}
+	beego.Info("CORElimit:", coreLimit)
+	beego.Info("COREcount:", coreCount)
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}

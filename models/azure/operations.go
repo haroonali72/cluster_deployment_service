@@ -8,9 +8,11 @@ import (
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
@@ -48,6 +50,8 @@ type AZURE struct {
 	Subscription     string
 	Region           string
 	Resources        map[string]interface{}
+	RoleAssignment   authorization.RoleAssignmentsClient
+	RoleDefinition   authorization.RoleDefinitionsClient
 }
 
 func (cloud *AZURE) init() error {
@@ -93,6 +97,12 @@ func (cloud *AZURE) init() error {
 
 	cloud.DiskClient = compute.NewDisksClient(cloud.Subscription)
 	cloud.DiskClient.Authorizer = cloud.Authorizer
+
+	cloud.RoleAssignment = authorization.NewRoleAssignmentsClient(cloud.Subscription)
+	cloud.RoleAssignment.Authorizer = cloud.Authorizer
+
+	cloud.RoleDefinition = authorization.NewRoleDefinitionsClient(cloud.Subscription)
+	cloud.RoleDefinition.Authorizer = cloud.Authorizer
 
 	cloud.Resources = make(map[string]interface{})
 
@@ -162,6 +172,54 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 
 	return cluster, nil
 }
+
+func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup string, projectId string, vmId *string, vmPrincipalId *string) error {
+	NetworkContibutorRoleId := models.NETWORK_CONTRIBUTOR_GUID
+	VmContributorId := models.VM_CONTRIBUTOR_GUID
+	BasePath := "/subscriptions/" + cloud.Subscription + "/providers/Microsoft.Authorization/roleDefinitions/"
+	RoleAssignmentParam := authorization.RoleAssignmentCreateParameters{}
+	RoleAssignmentParam.Properties = &authorization.RoleAssignmentProperties{
+		RoleDefinitionID: to.StringPtr(BasePath + VmContributorId),
+		PrincipalID:      vmPrincipalId,
+	}
+
+	bytes := make([]byte, 16)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		utils.SendLog(companyId, "Error creating UUID for roles: "+err.Error(), "error", projectId)
+		return err
+	}
+	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
+		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
+
+	result, err := cloud.RoleAssignment.Create(context.Background(), *vmId, uuid, RoleAssignmentParam)
+	if err != nil {
+		utils.SendLog(companyId, err.Error(), "error", projectId)
+		return err
+	} else {
+		x, _ := json.Marshal(result)
+		utils.SendLog(companyId, "VM contributor role: "+string(x), "info", projectId)
+	}
+
+	RoleAssignmentParam.Properties.RoleDefinitionID = to.StringPtr(BasePath + NetworkContibutorRoleId)
+	bytes = make([]byte, 16)
+	_, err = rand.Read(bytes)
+	if err != nil {
+		return err
+	}
+	uuid = fmt.Sprintf("%x-%x-%x-%x-%x",
+		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
+
+	result, err = cloud.RoleAssignment.Create(context.Background(), *vmId, uuid, RoleAssignmentParam)
+	if err != nil {
+		utils.SendLog(companyId, err.Error(), "error", projectId)
+		return err
+	} else {
+		x, _ := json.Marshal(result)
+		utils.SendLog(companyId, "Network contributor role: "+string(x), "info", projectId)
+	}
+	return nil
+}
 func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, error) {
 
 	var cpVms []*VM
@@ -211,9 +269,12 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
 		vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
 		vmObj.ComputerName = vm.OsProfile.ComputerName
-
+		vmObj.IdentityPrincipalId = vm.Identity.PrincipalID
 		cpVms = append(cpVms, &vmObj)
-
+		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vm.ID, vm.Identity.PrincipalID)
+		if err != nil {
+			return nil, "", err
+		}
 		return cpVms, private_key, nil
 
 	} else {
@@ -231,11 +292,9 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 				nicId = *nic.ID
 				break
 			}
-			beego.Info(nicId)
 			arr := strings.Split(nicId, "/")
 			nicName := arr[12]
-			beego.Info(nicName)
-			beego.Info(arr[10])
+
 			nicParameters, err := cloud.GetNIC(resourceGroup, pool.Name, arr[10], nicName, ctx)
 			if err != nil {
 				return nil, "", err
@@ -245,8 +304,6 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			arr = strings.Split(pipId, "/")
 			pipConf := arr[14]
 			pipAddress := arr[16]
-			beego.Info(pipId)
-			beego.Info(arr[10])
 			pip, err := cloud.GetPIP(resourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 			if err != nil {
 				return nil, "", err
@@ -259,7 +316,15 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			cpVms = append(cpVms, &vmObj)
 
 		}
-
+		vmScaleSet, err := cloud.VMSSCLient.Get(context.Background(), resourceGroup, pool.Name)
+		if err != nil {
+			return nil, "", err
+		}
+		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vmScaleSet.ID, vmScaleSet.Identity.PrincipalID)
+		if err != nil {
+			return nil, "", err
+		}
+		utils.SendLog(companyId, *vmScaleSet.ID, "info", projectId)
 		return cpVms, private_key, nil
 	}
 
@@ -347,7 +412,6 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
 			vmObj.ComputerName = vm.OsProfile.ComputerName
-
 			//cpVms = append(cpVms, &vmObj)
 			beego.Info("updated node pool")
 			cluster.NodePools[in].Nodes = ([]*VM{&vmObj})
@@ -605,8 +669,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress:           &publicIPaddress,
+						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress: &publicIPaddress,
 					},
 				},
 			},
@@ -898,6 +962,9 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	vm := compute.VirtualMachine{
 		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
+		Identity: &compute.VirtualMachineIdentity{
+			Type: compute.ResourceIdentityTypeSystemAssigned,
+		},
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			HardwareProfile: &compute.HardwareProfile{
 				VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),
@@ -1252,7 +1319,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location:                          &cloud.Region,
+		Location: &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
@@ -1676,6 +1743,9 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	params := compute.VirtualMachineScaleSet{
 		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
+		Identity: &compute.VirtualMachineScaleSetIdentity{
+			Type: compute.ResourceIdentityTypeSystemAssigned,
+		},
 		Sku: &compute.Sku{
 			Capacity: to.Int64Ptr(pool.NodeCount),
 			Name:     to.StringPtr(pool.MachineType),
@@ -1811,7 +1881,6 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 	}
-
 	vms, err := cloud.VMSSVMClient.List(cloud.context, resourceGroup, pool.Name, "", "", "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

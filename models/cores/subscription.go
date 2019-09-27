@@ -20,13 +20,13 @@ func GetCoresLimit(subscriptionId string) (int64, error) {
 
 	limits, err := subscriptionClient.GetLimitsWithSubscriptionId(subscriptionId)
 	if err != nil {
-		beego.Error(err.Error())
+		beego.Error("subscription host not connected" + err.Error())
 		return 0, err
 	}
 
 	coresLimit, err := json.MarshalIndent(limits, "", "  ")
 	if err != nil {
-		beego.Error(err.Error())
+		beego.Error("marshalling of cores limits failed" + err.Error())
 		return 0, err
 	}
 
