@@ -2,20 +2,16 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "bitbucket.org/cloudplex-devs/d-duck"
-  packages = ["."]
-  revision = "e68f129d1bf59dff4eb93cdb2a945f371e7a3ab1"
-
-[[projects]]
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
+  pruneopts = "UT"
   revision = "cdaaf98f9226c39dc162b8e55083b2fbc67b4674"
   version = "v0.43.0"
 
 [[projects]]
+  digest = "1:ed87ffcb5185566de46754eae0b6c5a7314052640014982790aa1f01397e35b3"
   name = "github.com/Azure/azure-sdk-for-go"
-  packages = ["services/compute/mgmt/2018-04-01/compute","services/network/mgmt/2018-02-01/network","services/storage/mgmt/2017-10-01/storage","version"]
+  packages = ["services/authorization/mgmt/2015-07-01/authorization","services/compute/mgmt/2018-04-01/compute","services/network/mgmt/2018-02-01/network","services/storage/mgmt/2017-10-01/storage","version"]
   revision = "32916f57ad7b421f5fdaab86b73a795632fff117"
   version = "v21.4.0"
 
@@ -188,6 +184,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fd8e4c7abb37dace2a524e200b2a4db21bc634a2cd62887959e373b898d425d4"
+  inputs-digest = "cd847dda143ea9078e712ae7edd83274e80ebf89b7493d4be54b725cce593e64"
   solver-name = "gps-cdcl"
   solver-version = 1

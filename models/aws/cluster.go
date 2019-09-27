@@ -6,7 +6,7 @@ import (
 	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
-	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
