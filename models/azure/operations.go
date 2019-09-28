@@ -174,50 +174,33 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 }
 
 func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup string, projectId string, vmId *string, vmPrincipalId *string) error {
-	NetworkContibutorRoleId := models.NETWORK_CONTRIBUTOR_GUID
-	VmContributorId := models.VM_CONTRIBUTOR_GUID
+	RolesID := []string{models.VM_CONTRIBUTOR_GUID, models.NETWORK_CONTRIBUTOR_GUID, models.STORAGE_CONTRIBUTOR_GUID}
 	BasePath := "/subscriptions/" + cloud.Subscription + "/providers/Microsoft.Authorization/roleDefinitions/"
 	scope := "/subscriptions/" + cloud.Subscription + "/resourceGroups/" + resourceGroup
 	RoleAssignmentParam := authorization.RoleAssignmentCreateParameters{}
 	RoleAssignmentParam.Properties = &authorization.RoleAssignmentProperties{
-		RoleDefinitionID: to.StringPtr(BasePath + VmContributorId),
-		PrincipalID:      vmPrincipalId,
+		PrincipalID: vmPrincipalId,
 	}
+	utils.SendLog(companyId, "Attaching access roles to "+*vmId, "info", projectId)
+	for _, id := range RolesID {
+		RoleAssignmentParam.Properties.RoleDefinitionID = to.StringPtr(BasePath + id)
+		bytes := make([]byte, 16)
+		_, err := rand.Read(bytes)
+		if err != nil {
+			utils.SendLog(companyId, "Error creating UUID for role: "+err.Error(), "error", projectId)
+			return err
+		}
+		uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
+			bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
 
-	bytes := make([]byte, 16)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		utils.SendLog(companyId, "Error creating UUID for roles: "+err.Error(), "error", projectId)
-		return err
-	}
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
-		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
-
-	result, err := cloud.RoleAssignment.Create(context.Background(), scope, uuid, RoleAssignmentParam)
-	if err != nil {
-		utils.SendLog(companyId, err.Error(), "error", projectId)
-		return err
-	} else {
-		x, _ := json.Marshal(result)
-		utils.SendLog(companyId, "VM contributor role: "+string(x), "info", projectId)
-	}
-
-	RoleAssignmentParam.Properties.RoleDefinitionID = to.StringPtr(BasePath + NetworkContibutorRoleId)
-	bytes = make([]byte, 16)
-	_, err = rand.Read(bytes)
-	if err != nil {
-		return err
-	}
-	uuid = fmt.Sprintf("%x-%x-%x-%x-%x",
-		bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
-
-	result, err = cloud.RoleAssignment.Create(context.Background(), scope, uuid, RoleAssignmentParam)
-	if err != nil {
-		utils.SendLog(companyId, err.Error(), "error", projectId)
-		return err
-	} else {
-		x, _ := json.Marshal(result)
-		utils.SendLog(companyId, "Network contributor role: "+string(x), "info", projectId)
+		result, err := cloud.RoleAssignment.Create(context.Background(), scope, uuid, RoleAssignmentParam)
+		if err != nil {
+			utils.SendLog(companyId, err.Error(), "error", projectId)
+			return err
+		} else {
+			x, _ := json.Marshal(result)
+			utils.SendLog(companyId, "Role: "+string(x), "info", projectId)
+		}
 	}
 	return nil
 }
@@ -272,7 +255,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		vmObj.ComputerName = vm.OsProfile.ComputerName
 		vmObj.IdentityPrincipalId = vm.Identity.PrincipalID
 		cpVms = append(cpVms, &vmObj)
-		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vm.ID, vm.Identity.PrincipalID)
+		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vm.Name, vm.Identity.PrincipalID)
 		if err != nil {
 			return nil, "", err
 		}
@@ -321,7 +304,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		if err != nil {
 			return nil, "", err
 		}
-		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vmScaleSet.ID, vmScaleSet.Identity.PrincipalID)
+		err = cloud.AddRoles(ctx, companyId, resourceGroup, projectId, vmScaleSet.Name, vmScaleSet.Identity.PrincipalID)
 		if err != nil {
 			return nil, "", err
 		}
