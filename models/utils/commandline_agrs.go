@@ -169,6 +169,9 @@ func InitFlags() error {
 		log.Println(err)
 		return err
 	}
+	beego.AppConfig.Set("caCertificate", ca_cert)
+	beego.AppConfig.Set("clientCert", client_cert)
+	beego.AppConfig.Set("clientPem", client_pem)
 
 	beego.AppConfig.Set("mongo_host", mongo)
 	beego.AppConfig.Set("mongo_user", mongo_user)

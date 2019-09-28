@@ -200,15 +200,6 @@
                         "name": "token",
                         "description": "token",
                         "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "body for cluster content",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/aws.AutoScaling"
-                        }
                     }
                 ],
                 "responses": {
@@ -1936,7 +1927,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "571.0xc0006ed050.false": {
+        "552.0xc0007a4360.false": {
             "title": "false",
             "type": "object"
         },
@@ -1972,6 +1963,9 @@
                 "max_scaling_group_size": {
                     "type": "integer",
                     "format": "int64"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -1989,7 +1983,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/571.0xc0006ed050.false"
+                    "$ref": "#/definitions/552.0xc0007a4360.false"
                 },
                 "name": {
                     "type": "string"
@@ -2149,6 +2143,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2197,6 +2194,9 @@
                 "max_scaling_group_size": {
                     "type": "integer",
                     "format": "int64"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -2401,6 +2401,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2432,6 +2435,9 @@
                     "type": "string"
                 },
                 "computer_name": {
+                    "type": "string"
+                },
+                "identity_principal_id": {
                     "type": "string"
                 },
                 "name": {
@@ -2482,6 +2488,9 @@
                 "max_scaling_group_size": {
                     "type": "integer",
                     "format": "int64"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -2810,6 +2819,16 @@
                 "PremiumSSD = \"premium ssd\""
             ],
             "example": "standard hdd"
+        },
+        "models.Type": {
+            "title": "Type",
+            "type": "string",
+            "enum": [
+                "Existing = \"existing\"",
+                "New = \"new\"",
+                "Created = \"created\""
+            ],
+            "example": "existing"
         }
     },
     "tags": [

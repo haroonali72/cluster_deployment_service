@@ -34,7 +34,7 @@ spec:
       containers:
       - env:
         - name: mongo_host
-          value: mongodb:27017
+          value: "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017"
         - name: mongo_pass
           valueFrom:
             secretKeyRef:
@@ -76,8 +76,12 @@ spec:
           value: gcp_cluster
         - name: mongo_gcp_template_collection
           value: gcp_template
-        - name: rbac_url
-          value: http://rbac:7777
+        - name: caCertificate
+          value: /cloudplex/certificates/cloudplex.crt
+        - name: clientCert
+            value: /certificates/mongodb.crt
+        - name: clientPem
+            value: /certificates/mongodb.pem
         image: gcr.io/cloudplex-nextgen/antelope:186
         imagePullPolicy: IfNotPresent
         name: antelope
@@ -85,6 +89,13 @@ spec:
         - containerPort: 9081
           protocol: TCP
       dnsPolicy: ClusterFirst
+      volumeMounts:
+        - mountPath: /certificates/
+            name: mongodb-goose-certificates
+            readOnly: true
+        - mountPath: /cloudplex/certificates/
+            name: cloudplex-certificates
+            readOnly: true
       volumes:
       - name: antelope-database-credentials
         secret:

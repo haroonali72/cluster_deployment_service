@@ -8,10 +8,12 @@ import (
 	"gopkg.in/mgo.v2"
 	"io/ioutil"
 	"net"
+	"strings"
 )
 
 func GetMongoSession() (session *mgo.Session, err error) {
 	conf := GetMongoConf()
+
 	beego.Info("connecting to mongo host: " + conf.mongoHost)
 
 	tlsconfig := getTLSCertificate()
@@ -25,7 +27,7 @@ func GetMongoSession() (session *mgo.Session, err error) {
 		return session, err
 	}
 	session, err = mgo.DialWithInfo(&mgo.DialInfo{
-		Addrs:    []string{conf.mongoHost},
+		Addrs:    strings.Split(conf.mongoHost, ","),
 		Username: conf.mongoUser,
 		Password: conf.mongoPass,
 		DialServer: func(addr *mgo.ServerAddr) (net.Conn, error) {

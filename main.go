@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -45,11 +45,11 @@ func main() {
 }
 
 func setEnv() {
-	os.Setenv("cACert", "")
-	os.Setenv("clientCert", "")
-	os.Setenv("clientPem", "")
+	os.Setenv("cACert", "/home/zunaira/Downloads/mongoCA.crt")
+	os.Setenv("clientCert", "/home/zunaira/Downloads/antelope.crt")
+	os.Setenv("clientPem", "/home/zunaira/Downloads/keychecksat.pem")
 	os.Setenv("rbac_url", "http://35.246.150.221:31619")
-	os.Setenv("mongo_host", "35.246.150.221:32180")
+	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
 	os.Setenv("mongo_auth", "true")
 	os.Setenv("mongo_db", "antelope")
 	os.Setenv("mongo_user", "antelope")
