@@ -29,6 +29,7 @@ type Cluster_Def struct {
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
 	NetworkName      string        `json:"network_name" bson:"network_name"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
+	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
 type NodePool struct {
