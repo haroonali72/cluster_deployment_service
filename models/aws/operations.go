@@ -490,19 +490,19 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
-			if err != nil && (!strings.Contains(err.Error(), "not found") || !strings.Contains(err.Error(), "doesn't exist")) {
+			if err != nil && !strings.Contains(err.Error(), "not found") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				flag = true
 			}
 			err = cloud.Scaler.DeleteConfiguration(pool.Name)
-			if err != nil && (!strings.Contains(err.Error(), "not found") || !strings.Contains(err.Error(), "doesn't exist")) {
+			if err != nil && !strings.Contains(err.Error(), "not found") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				flag = true
 			}
 		}
 
 		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
-		if err != nil && (!strings.Contains(err.Error(), "not found") || !strings.Contains(err.Error(), "doesn't exist")) {
+		if err != nil && !strings.Contains(err.Error(), "not found") {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			flag = true
 		}
