@@ -523,6 +523,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 			cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name, ctx)
 
 			beego.Info("terminating master pool disk: " + pool.Name)
+
 			cloud.deleteDisk(cluster.ResourceGroup, pool.Name, ctx)
 
 			if pool.EnableVolume {
