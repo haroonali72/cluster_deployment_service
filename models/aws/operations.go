@@ -465,12 +465,14 @@ func (cloud *AWS) KeyPairGenerator(keyName string) (string, string, error) {
 
 	return *resp.KeyMaterial, *resp.KeyFingerprint, nil
 }
-func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, companyId string) error {
+
+func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, companyId string) bool {
+	flag := false
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
+			return !flag
 		}
 	}
 
@@ -482,34 +484,38 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	confError := roles.Init()
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return confError
+		return !flag
 	}
 
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
-			if err != nil {
+			if err != nil && (!strings.Contains(err.Error(), "not found") || !strings.Contains(err.Error(), "doesn't exist")) {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return err
+				flag = true
 			}
 			err = cloud.Scaler.DeleteConfiguration(pool.Name)
-			if err != nil {
+			if err != nil && (!strings.Contains(err.Error(), "not found") || !strings.Contains(err.Error(), "doesn't exist")) {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return err
+				flag = true
 			}
 		}
 
 		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
-		if err != nil {
-			return err
+		if err != nil && (!strings.Contains(err.Error(), "not found") || !strings.Contains(err.Error(), "doesn't exist")) {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			flag = true
 		}
+
 		err = cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err != nil {
-			return err
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			flag = true
 		}
 	}
-	return nil
+	return flag
 }
+
 func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 
 	for _, pool := range cluster.NodePools {
