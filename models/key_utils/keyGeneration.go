@@ -63,7 +63,8 @@ func AzureKeyConversion(keyInfo []byte, ctx utils.Context) (AZUREKey, error) {
 func GenerateKeyPair(keyName, username string, ctx utils.Context) (KeyPairResponse, error) {
 
 	res := KeyPairResponse{}
-
+	keyName = strings.TrimSpace(keyName)
+	username = strings.TrimSpace(username)
 	t := time.Now().Local()
 	tstamp := t.Format("20060102150405")
 	keyName = keyName + "_" + tstamp
