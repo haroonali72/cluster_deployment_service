@@ -131,7 +131,7 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 		Name:        strings.ToLower(pool.Name),
 		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
 		Tags: &compute.Tags{
-			Items: []string{projectId},
+			Items: append(pool.Tags, projectId),
 		},
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{
@@ -343,7 +343,7 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		Tags: &compute.Tags{
-			Items: []string{projectId},
+			Items: append(pool.Tags, projectId),
 		},
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{

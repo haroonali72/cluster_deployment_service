@@ -49,6 +49,7 @@ type NodePool struct {
 	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
 	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
+	Tags                []string           `json:"tags" bson:"tags"`
 }
 
 type AutoScaling struct {
