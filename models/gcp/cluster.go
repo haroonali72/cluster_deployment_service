@@ -29,6 +29,7 @@ type Cluster_Def struct {
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
 	NetworkName      string        `json:"network_name" bson:"network_name"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
+	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
 type NodePool struct {
@@ -48,6 +49,7 @@ type NodePool struct {
 	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
 	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
+	Tags                []string           `json:"tags" bson:"tags"`
 }
 
 type AutoScaling struct {
