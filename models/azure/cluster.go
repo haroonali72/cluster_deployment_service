@@ -35,6 +35,7 @@ type Cluster_Def struct {
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
+	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
 type NodePool struct {
