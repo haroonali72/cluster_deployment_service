@@ -490,29 +490,47 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	for _, pool := range cluster.NodePools {
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
-			if err != nil && !strings.Contains(err.Error(), "not found") {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				flag = true
+			if err != nil {
+				if !strings.Contains(err.Error(), "not found") {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					flag = true
+				} else {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
 			}
+
 			err = cloud.Scaler.DeleteConfiguration(pool.Name)
-			if err != nil && !strings.Contains(err.Error(), "not found") {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				flag = true
+			if err != nil {
+				if !strings.Contains(err.Error(), "not found") {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					flag = true
+				} else {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
 			}
 		}
 
 		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
-		if err != nil && !strings.Contains(err.Error(), "not found") {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			flag = true
+		if err != nil {
+			if !strings.Contains(err.Error(), "not found") {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				flag = true
+			} else {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
 		}
 
 		err = cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			flag = true
+			if !strings.Contains(err.Error(), "not found") {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				flag = true
+			} else {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
 		}
 	}
+
 	return flag
 }
 
