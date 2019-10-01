@@ -29,7 +29,7 @@ var (
 	ca_cert                         = ""
 	client_cert                     = ""
 	client_pem                      = ""
-	subscription_host               = "35.246.150.221:30906"
+	subscription_host               = ""
 )
 
 func InitFlags() error {
