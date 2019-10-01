@@ -399,6 +399,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
+			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -415,6 +416,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	cluster.Status = "Cluster Terminated"
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
+		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
