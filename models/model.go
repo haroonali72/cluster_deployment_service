@@ -15,6 +15,13 @@ const (
 	PUT  RequestType = "put"
 )
 
+type PoolRole string
+
+const (
+	Master PoolRole = "master"
+	Slave  PoolRole = "slave"
+)
+
 type Cloud string
 
 const (

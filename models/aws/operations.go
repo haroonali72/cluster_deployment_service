@@ -849,6 +849,7 @@ func (cloud *AWS) GetSecurityGroups(pool *NodePool, network types.AWSNetwork) []
 			}
 		}
 	}
+
 	return sgId
 }
 func (cloud *AWS) GetSubnets(pool *NodePool, network types.AWSNetwork) string {
