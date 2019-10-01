@@ -284,7 +284,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 				return nil, "", err
 			}
 			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-			pipId := (*(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID)
+			pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
 			arr = strings.Split(pipId, "/")
 			pipConf := arr[14]
 			pipAddress := arr[16]
@@ -397,7 +397,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			vmObj.ComputerName = vm.OsProfile.ComputerName
 			//cpVms = append(cpVms, &vmObj)
 			beego.Info("updated node pool")
-			cluster.NodePools[in].Nodes = ([]*VM{&vmObj})
+			cluster.NodePools[in].Nodes = []*VM{&vmObj}
 
 		} else {
 			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, pool.Name, "", "", "")
@@ -421,7 +421,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 					return Cluster_Def{}, err
 				}
 				vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-				pipId := (*(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID)
+				pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
 				arr = strings.Split(pipId, "/")
 				pipConf := arr[14]
 				pipAddress := arr[16]
@@ -488,6 +488,9 @@ func (cloud *AZURE) GetVMPIP(resourceGroup, IPname string, ctx utils.Context) (n
 	return publicIPaddress, nil
 }
 func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, companyId string) error {
+
+	terminate := true
+
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
@@ -495,62 +498,76 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 			return err
 		}
 	}
-	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+
+	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
+
 	for poolIndex, pool := range cluster.NodePools {
 
-		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 		if pool.PoolRole == "master" {
 
-			utils.SendLog(companyId, "Terminating node pool: "+pool.Name, "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
+
 			err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx)
 			if err != nil {
-				return err
+				terminate = false
+				break
 			}
 
 			nicName := "NIC-" + pool.Name
+
 			err = cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 			if err != nil {
-				return err
+				terminate = false
 			}
 
 			IPname := "pip-" + pool.Name
 			err = cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 			if err != nil {
-				return err
+				terminate = false
 			}
+
 			err = cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name, ctx)
 			if err != nil {
-				return err
+				terminate = false
 			}
+
 			beego.Info("terminating master pool disk: " + pool.Name)
+
 			err = cloud.deleteDisk(cluster.ResourceGroup, pool.Name, ctx)
 			if err != nil {
-				return err
+				terminate = false
 			}
+
 			if pool.EnableVolume {
-				err := cloud.deleteDisk(cluster.ResourceGroup, "ext-"+pool.Name, ctx)
+				err = cloud.deleteDisk(cluster.ResourceGroup, "ext-"+pool.Name, ctx)
 				if err != nil {
-					return err
+					terminate = false
 				}
 			}
 			//deleting master volume
 			err = cloud.deleteDisk(cluster.ResourceGroup, "ext-master-"+pool.Name, ctx)
 			if err != nil {
-				return err
+				terminate = false
 			}
 
 		} else {
 			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.ProjectId, ctx)
 			if err != nil {
-				return err
+				terminate = false
+				break
 			}
 
 			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex), ctx)
 			if err != nil {
-				return err
+				terminate = false
 			}
+
 		}
-		utils.SendLog(companyId, "Node Pool terminated successfully: "+pool.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Node Pool terminated successfully: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
+	}
+	if terminate == false {
+		return errors.New("Termination failed")
 	}
 	return nil
 }
@@ -558,11 +575,13 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 
 	ctx.SendLogs("AZUREOperations: terminating node pools", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	future, err := cloud.VMSSCLient.Delete(cloud.context, resourceGroup, name)
-
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else {
+		if err != nil && strings.Contains(err.Error(), "not found") {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		}
 		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
@@ -582,11 +601,13 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
 	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
-
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		beego.Error(err)
 		return err
 	} else {
+		if err != nil && strings.Contains(err.Error(), "not found") {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		}
 		err = future.WaitForCompletion(cloud.context, vmClient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
@@ -627,19 +648,24 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 }
 
 func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string, ctx utils.Context, companyId string) error {
+
 	utils.SendLog(companyId, "Deleting Public IP: "+IPname, "info", projectId)
+
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		}
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
-	utils.SendLog(companyId, "Public IP deleted successfully: "+IPname, "info", projectId)
+	utils.SendLog(companyId, "Public IP deleted successfully: "+IPname, models.LOGGING_LEVEL_INFO, projectId)
 	return nil
 }
 func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx utils.Context) (network.Interface, error) {
@@ -652,8 +678,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress: &publicIPaddress,
+						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress:           &publicIPaddress,
 					},
 				},
 			},
@@ -661,7 +687,7 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 	}
 	if sgIds != nil {
 		nicParameters.InterfacePropertiesFormat.NetworkSecurityGroup = &network.SecurityGroup{
-			ID: (sgIds[0]),
+			ID: sgIds[0],
 		}
 	}
 
@@ -681,20 +707,24 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 	return nicParameters, nil
 }
 func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx utils.Context, companyId string) error {
-	utils.SendLog(companyId, "Deleting NIC: "+nicName, "info", proId)
-	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
+	utils.SendLog(companyId, "Deleting NIC: "+nicName, "info", proId)
+
+	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		}
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
-	utils.SendLog(companyId, "NIC deleted successfully: "+nicName, "info", proId)
+	utils.SendLog(companyId, "NIC deleted successfully: "+nicName, models.LOGGING_LEVEL_INFO, proId)
 	return nil
 }
 
@@ -1302,7 +1332,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location: &cloud.Region,
+		Location:                          &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
@@ -1330,10 +1360,14 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.Context) error {
 
 	_, err := cloud.DiskClient.Delete(context.Background(), resouceGroup, diskName)
-	if err != nil {
+
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+
 		beego.Error("Disk deletion failed" + err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	} else if err != nil && strings.Contains(err.Error(), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 	return nil
 }
@@ -1341,10 +1375,12 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 
 	acccountName = strings.ToLower(acccountName)
 	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, acccountName)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		beego.Error("Storage account deletion failed")
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	} else if err != nil && strings.Contains(err.Error(), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 	return nil
 }
