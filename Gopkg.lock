@@ -13,6 +13,7 @@
   digest = "1:80004fcc5cf64e591486b3e11b406f1e0d17bf85d475d64203c8494f5da4fcd1"
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
+  pruneopts = "UT"
   revision = "cdaaf98f9226c39dc162b8e55083b2fbc67b4674"
   version = "v0.43.0"
 
