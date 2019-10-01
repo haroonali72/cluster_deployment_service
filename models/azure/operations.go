@@ -561,7 +561,6 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex), ctx)
 			if err != nil {
 				terminate = false
-				break
 			}
 
 		}
