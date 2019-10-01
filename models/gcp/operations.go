@@ -9,6 +9,7 @@ import (
 	"antelope/models/vault"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/astaxie/beego"
 	"google.golang.org/api/compute/v1"
@@ -468,77 +469,104 @@ func (cloud *GCP) deleteCluster(cluster Cluster_Def, ctx utils.Context) error {
 
 	for _, pool := range cluster.NodePools {
 		err := cloud.deletePool(pool, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
+		if err {
+			return errors.New("Error occured during termination")
 		}
 	}
 
 	return nil
 }
 
-func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) error {
+func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
+	error_occured := false
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
-			return err
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+			return true
 		}
 	}
 
 	if pool.PoolRole == "master" {
 		reqCtx := context.Background()
 		result, err := cloud.Client.Instances.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
-		if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-			beego.Error(err.Error())
-			return err
-		}
-
-		err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
 		if err != nil {
-			return err
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				error_occured = true
+			} else {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+			}
+		} else {
+			err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				error_occured = true
+			}
 		}
 
 		err = cloud.releaseExternalIp(pool.Name, ctx)
 		if err != nil {
-			return err
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				error_occured = true
+			} else {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+			}
 		}
 	} else {
 		reqCtx := context.Background()
-		instanceGroupManager, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
-		if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-			beego.Error(err.Error())
-			return err
-		}
 
 		result, err := cloud.Client.InstanceGroupManagers.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
-		if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-			beego.Error(err.Error())
-			return err
-		}
-
-		err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
 		if err != nil {
-			return err
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				error_occured = true
+			} else {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+			}
+		} else {
+			err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				error_occured = true
+			}
 		}
 
-		if instanceGroupManager != nil {
-			splits := strings.Split(instanceGroupManager.InstanceTemplate, "/")
-			instanceTemplateName := splits[len(splits)-1]
-			result, err := cloud.Client.InstanceTemplates.Delete(cloud.ProjectId, instanceTemplateName).Context(reqCtx).Do()
-			if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-				beego.Error(err.Error())
-				return err
-			}
+		instanceGroupManager, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
 
-			err = cloud.waitForGlobalCompletion(result, ctx)
-			if err != nil {
-				return err
+		if err != nil {
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				error_occured = true
+			} else {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+			}
+		} else {
+			if instanceGroupManager != nil {
+				splits := strings.Split(instanceGroupManager.InstanceTemplate, "/")
+				instanceTemplateName := splits[len(splits)-1]
+				result, err := cloud.Client.InstanceTemplates.Delete(cloud.ProjectId, instanceTemplateName).Context(reqCtx).Do()
+				if err != nil {
+					if !strings.Contains(strings.ToLower(err.Error()), "not found") {
+						ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						error_occured = true
+					} else {
+						ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+					}
+				} else {
+					err = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+					if err != nil {
+						ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						error_occured = true
+					}
+				}
 			}
 		}
 	}
 
 	pool.Nodes = []*Node{}
-	return nil
+	return error_occured
 }
 
 func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context) error {
