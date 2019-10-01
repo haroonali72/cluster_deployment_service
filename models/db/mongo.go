@@ -2,15 +2,24 @@ package db
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2"
+	"io/ioutil"
 	"net"
+	"strings"
 )
 
 func GetMongoSession() (session *mgo.Session, err error) {
 	conf := GetMongoConf()
+
 	beego.Info("connecting to mongo host: " + conf.mongoHost)
+
+	tlsconfig := getTLSCertificate()
+	if tlsconfig == nil {
+		return
+	}
 
 	if !conf.mongoAuth {
 		session, err = mgo.Dial(conf.mongoHost)
@@ -18,13 +27,11 @@ func GetMongoSession() (session *mgo.Session, err error) {
 		return session, err
 	}
 	session, err = mgo.DialWithInfo(&mgo.DialInfo{
-		Addrs:    []string{conf.mongoHost},
+		Addrs:    strings.Split(conf.mongoHost, ","),
 		Username: conf.mongoUser,
 		Password: conf.mongoPass,
 		DialServer: func(addr *mgo.ServerAddr) (net.Conn, error) {
-			conf := &tls.Config{
-				InsecureSkipVerify: true,
-			}
+			conf := tlsconfig
 			return tls.Dial("tcp", addr.String(), conf)
 		},
 	})
@@ -68,6 +75,7 @@ func InsertInMongo(collection string, data interface{}) error {
 func GetMongoConf() mongConf {
 
 	var conf mongConf
+	var conft tlsConfig
 	conf.mongoHost = beego.AppConfig.String("mongo_host")
 	conf.mongoUser = beego.AppConfig.String("mongo_user")
 	conf.mongoPass = beego.AppConfig.String("mongo_pass")
@@ -80,6 +88,9 @@ func GetMongoConf() mongConf {
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
 	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
+	conft.CaCert = beego.AppConfig.String("ca_certificate")
+	conft.ClientCert = beego.AppConfig.String("client_cert")
+	conft.ClientPem = beego.AppConfig.String("client_pem")
 	return conf
 }
 
@@ -96,4 +107,43 @@ type mongConf struct {
 	MongoGcpTemplateCollection   string
 	MongoGcpClusterCollection    string
 	MongoSshKeyCollection        string
+}
+type tlsConfig struct {
+	ClientCert string
+	ClientPem  string
+	CaCert     string
+}
+
+func getTLSCertificate() *tls.Config {
+	var conf tlsConfig
+	tlsConfig := &tls.Config{}
+	if conf.CaCert != "" {
+		rootCAs := x509.NewCertPool()
+		rootCert, err := ioutil.ReadFile(conf.ClientCert)
+		if err != nil {
+			return nil
+		}
+		rootCAs.AppendCertsFromPEM(rootCert)
+		if conf.ClientCert == "" || conf.ClientPem == "" {
+			return nil
+		}
+		clientCrt, err := ioutil.ReadFile(conf.ClientCert)
+		if err != nil {
+			return nil
+		}
+		clientPem, err := ioutil.ReadFile(conf.ClientPem)
+		if err != nil {
+			return nil
+		}
+		clientCertificate, err := tls.X509KeyPair(clientCrt, clientPem)
+		if err != nil {
+			return nil
+		}
+		tlsConfig.Certificates = append(tlsConfig.Certificates, clientCertificate)
+		tlsConfig.RootCAs = rootCAs
+		tlsConfig.BuildNameToCertificate()
+	} else {
+		tlsConfig.InsecureSkipVerify = true
+	}
+	return tlsConfig
 }

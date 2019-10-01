@@ -545,12 +545,8 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	err = gcp.deleteCluster(cluster, ctx)
 
 	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
-		beego.Error(err.Error())
 
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
-		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster("", cluster, false, ctx)
