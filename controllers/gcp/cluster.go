@@ -536,9 +536,6 @@ func (c *GcpClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("Region:", region)
-	beego.Info("Zone:", zone)
-
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
 		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
