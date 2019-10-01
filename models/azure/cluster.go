@@ -352,6 +352,13 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 }
 func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) (confError error) {
 
+	publisher := utils.Notifier{}
+	confError = publisher.Init_notifier()
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		return confError
+	}
+
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
 		Key:          credentials.Profile.ClientSecret,
@@ -362,13 +369,13 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	confError = azure.init()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		return confError
-	}
 
-	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = "Cluster creation failed"
+		confError = UpdateCluster("", cluster, false, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
@@ -471,6 +478,19 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	}
 	err = azure.init()
 	if err != nil {
+
+		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		cluster.Status = "Cluster Termination Failed"
+		err = UpdateCluster("", cluster, false, ctx)
+		if err != nil {
+			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+
+			return err
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 

@@ -384,6 +384,14 @@ func PrintError(confError error, name, projectId string, companyId string) {
 }
 
 func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, token string, ctx utils.Context) (confError error) {
+	publisher := utils.Notifier{}
+	confError = publisher.Init_notifier()
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		//PrintError(confError, cluster.Name, cluster.ProjectId)
+		return confError
+	}
 	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendLogs("gcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -392,16 +400,14 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	err = gcp.init()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cluster.Status = "Cluster creation failed"
+		confError = UpdateCluster("", cluster, false, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
-	}
-
-	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
-		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		//PrintError(confError, cluster.Name, cluster.ProjectId)
-		return confError
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
@@ -555,6 +561,18 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	err = gcp.init()
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cluster.Status = "Cluster Termination Failed"
+		err = UpdateCluster("", cluster, false, ctx)
+		if err != nil {
+			ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+			beego.Error("Cluster model: Terminate - Got error while connecting to the database: ", err.Error())
+			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+
+			return err
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
