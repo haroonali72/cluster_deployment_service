@@ -18,7 +18,7 @@ type GcpTemplateController struct {
 // @Title Get
 // @Description get template
 // @Param	token	header	string	token ""
-// @Param	name	path	string	true	"Name of the template"
+// @Param	templateId	path	string	true	"Name of the template"
 // @Success 200 {object} gcp.Template
 // @Failure 404 {"error": exception_message}
 // @Failure 500 {"error": "internal server error"}
@@ -308,7 +308,7 @@ func (c *GcpTemplateController) Patch() {
 // @Title Delete
 // @Description delete a templates
 // @Param	token	header	string	token ""
-// @Param	name	path	string	true	"Name of the template"
+// @Param	templateId	path	string	true	"Name of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 500 {"error": "internal server error"}
@@ -340,7 +340,6 @@ func (c *GcpTemplateController) Delete() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpTemplateController: deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(models.GCP, "clusterTemplate", id, "Delete", token, utils.Context{})
@@ -368,6 +367,7 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs("GcpTemplateController: deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	//==========================RBAC Authentication==============================//
 
 	status_code, err := rbac_athentication.DeletePolicy(models.GCP, id, token, utils.Context{})

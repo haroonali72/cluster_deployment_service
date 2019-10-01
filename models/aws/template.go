@@ -37,6 +37,8 @@ type NodePoolT struct {
 	SecurityGroupId []string         `json:"security_group_id" bson:"security_group_id"`
 	KeyInfo         key_utils.AWSKey `json:"key_info" bson:"key_info"`
 	PoolRole        string           `json:"pool_role" bson:"pool_role"`
+	IsExternal      bool             `json:"is_external" bson:"is_external"`
+	ExternalVolume  Volume           `json:"external_volume" bson:"external_volume"`
 }
 
 func checkTemplateSize(template Template, ctx utils.Context) error {
