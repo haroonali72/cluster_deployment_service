@@ -22,6 +22,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
       - in: body
         name: body
         description: body for cluster content
@@ -48,6 +52,10 @@ paths:
         schema:
           $ref: '#/definitions/aws.Cluster_Def'
       - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
+      - in: header
         name: token
         description: token
         type: string
@@ -58,6 +66,8 @@ paths:
           description: '{"msg": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "internal server error <error msg>"}'
   /cluster/aws/{projectId}:
@@ -183,17 +193,24 @@ paths:
         name: token
         description: token
         type: string
-      - in: body
-        name: body
-        description: body for cluster content
-        required: true
-        schema:
-          $ref: '#/definitions/aws.AutoScaling'
       responses:
         "200":
           description: '{"msg": "cluster autoscaled successfully"}'
         "500":
           description: '{"error": "internal server error <error msg>"}'
+  /cluster/aws/machine/info:
+    get:
+      tags:
+      - cluster/aws
+      description: Get AWS Machine instance cores
+      operationId: AWSClusterController.GetCores
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/models.Machine'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/aws/sshkey/{projectId}/{keyname}:
     post:
       tags:
@@ -353,6 +370,11 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: subscription_id
+        description: token
+        schema:
+          $ref: '#/definitions/subscriptionId'
       - in: body
         name: body
         description: body for cluster content
@@ -376,6 +398,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
       - in: body
         name: body
         description: body for cluster content
@@ -389,6 +415,8 @@ paths:
           description: '{"msg": "error message"}'
         "409":
           description: '{"error": "cluster against same project id already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "internal server error <error msg>"}'
   /cluster/azure/{projectId}:
@@ -459,6 +487,19 @@ paths:
               $ref: '#/definitions/azure.Cluster_Def'
         "500":
           description: '{"error": "internal server error <error msg>"}'
+  /cluster/azure/machine/info:
+    get:
+      tags:
+      - cluster/azure
+      description: Get AWS Machine instance cores
+      operationId: AzureClusterController.GetCores
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/models.Machine'
+        "500":
+          description: '{"error": "internal server error"}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -609,6 +650,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
       - in: body
         name: body
         description: body for cluster content
@@ -629,6 +674,10 @@ paths:
       operationId: GcpClusterController.Create
       parameters:
       - in: header
+        name: subscription_id
+        description: subscriptionId
+        type: string
+      - in: header
         name: token
         description: token
         type: string
@@ -643,6 +692,8 @@ paths:
           description: '{"msg": "cluster created successfully"}'
         "409":
           description: '{"error": "cluster against same project id already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/{projectId}:
@@ -711,6 +762,19 @@ paths:
             type: array
             items:
               $ref: '#/definitions/gcp.Cluster_Def'
+        "500":
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/machine/info:
+    get:
+      tags:
+      - cluster/gcp
+      description: Get GCP Machine instance cores
+      operationId: GcpClusterController.GetCores
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/models.Machine'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/serviceaccounts:
@@ -1274,7 +1338,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  571.0xc0006ed050.false:
+  577.0xc0007afc50.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1301,6 +1365,8 @@ definitions:
       max_scaling_group_size:
         type: integer
         format: int64
+      status:
+        $ref: '#/definitions/models.Type'
   aws.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -1312,7 +1378,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/571.0xc0006ed050.false'
+        $ref: '#/definitions/577.0xc0007afc50.false'
       name:
         type: string
       network_name:
@@ -1324,6 +1390,8 @@ definitions:
       project_id:
         type: string
       status:
+        type: string
+      token_name:
         type: string
   aws.Node:
     title: Node
@@ -1419,6 +1487,8 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1453,6 +1523,8 @@ definitions:
       max_scaling_group_size:
         type: integer
         format: int64
+      status:
+        $ref: '#/definitions/models.Type'
   azure.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -1476,6 +1548,8 @@ definitions:
       resource_group:
         type: string
       status:
+        type: string
+      token_name:
         type: string
   azure.DiagnosticsProfile:
     title: DiagnosticsProfile
@@ -1589,6 +1663,8 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
       name:
         type: string
       network_name:
@@ -1610,6 +1686,8 @@ definitions:
       cloud_id:
         type: string
       computer_name:
+        type: string
+      identity_principal_id:
         type: string
       name:
         type: string
@@ -1645,6 +1723,8 @@ definitions:
       max_scaling_group_size:
         type: integer
         format: int64
+      status:
+        $ref: '#/definitions/models.Type'
   gcp.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -1664,6 +1744,8 @@ definitions:
       project_id:
         type: string
       status:
+        type: string
+      token_name:
         type: string
   gcp.Image:
     title: Image
@@ -1726,6 +1808,10 @@ definitions:
         type: string
       subnet_id:
         type: string
+      tags:
+        type: array
+        items:
+          type: string
       volume:
         $ref: '#/definitions/gcp.Volume'
   gcp.NodePoolT:
@@ -1862,6 +1948,15 @@ definitions:
     - AZUREKey = "azure"
     - USERKey = "user"
     example: new
+  models.Machine:
+    title: Machine
+    type: object
+    properties:
+      Cores:
+        type: integer
+        format: int64
+      InstanceType:
+        type: string
   models.OsDiskType:
     title: OsDiskType
     type: string
@@ -1870,6 +1965,17 @@ definitions:
     - StandardSSD = "standard ssd"
     - PremiumSSD = "premium ssd"
     example: standard hdd
+  models.Type:
+    title: Type
+    type: string
+    enum:
+    - Existing = "existing"
+    - New = "new"
+    - Created = "created"
+    example: existing
+  subscriptionId:
+    title: subscriptionId
+    type: object
 tags:
 - name: health
   description: |

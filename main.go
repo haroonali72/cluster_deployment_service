@@ -45,6 +45,7 @@ func main() {
 }
 
 func setEnv() {
+	os.Setenv("subscription_host", "35.246.150.221:30906")
 	os.Setenv("rbac_url", "http://35.246.150.221:31619")
 	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
 	os.Setenv("mongo_auth", "true")

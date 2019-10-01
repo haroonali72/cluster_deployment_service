@@ -115,12 +115,16 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 	}
 	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
 	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
+
 	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Warn("cannot reserve any external ip for: " + pool.Name)
 		beego.Warn("creating instance '" + pool.Name + "' without external ip")
 	}
+
+	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
+	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 
 	instance := compute.Instance{
 		Name:        strings.ToLower(pool.Name),
@@ -209,7 +213,7 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 	pool.Nodes = []*Node{&newNode}
 
 	if pool.EnableVolume {
-		err = mountVolume(fetchedKey.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
+		err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 		if err != nil {
 			beego.Error(err.Error())
 			return err
@@ -241,6 +245,7 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 	}
 	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
 	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
+
 	instanceTemplateUrl, err := cloud.createInstanceTemplate(projectId, pool, network, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

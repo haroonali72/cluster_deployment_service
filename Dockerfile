@@ -7,6 +7,16 @@ WORKDIR /go/src/antelope
 
 RUN go get -u github.com/golang/dep/cmd/dep
 
+ARG SSH_PRIVATE_KEY
+RUN mkdir -p ~/.ssh && umask 0077 && echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa \
+    && git config --global url."git@bitbucket.org:".insteadOf https://bitbucket.org/ \
+    && ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
+
+WORKDIR /go/src
+RUN git clone git@bitbucket.org:cloudplex-devs/d-duck.git
+
+WORKDIR /go/src/antelope
+
 COPY Gopkg.toml Gopkg.lock ./
 RUN dep ensure -vendor-only
 

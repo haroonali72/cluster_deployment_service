@@ -3,6 +3,7 @@ package aws
 import (
 	"antelope/models"
 	"antelope/models/aws"
+	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
@@ -134,10 +135,12 @@ func (c *AWSClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
+// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 409 {"error": "cluster against this project already exists"}
+// @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AWSClusterController) Post() {
@@ -148,7 +151,13 @@ func (c *AWSClusterController) Post() {
 	cluster.CreationDate = time.Now()
 
 	token := c.Ctx.Input.Header("token")
-
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	if subscriptionId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -196,11 +205,16 @@ func (c *AWSClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err = aws.CreateCluster(cluster, *ctx)
+	err = aws.CreateCluster(subscriptionId, cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against this project id  already exists"}
+			c.ServeJSON()
+			return
+		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
+			c.Ctx.Output.SetStatus(410)
+			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
 			c.ServeJSON()
 			return
 		}
@@ -216,6 +230,7 @@ func (c *AWSClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
+// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
@@ -226,7 +241,13 @@ func (c *AWSClusterController) Patch() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
-
+	subscriptionId := c.Ctx.Input.Header("subscription_id")
+	if subscriptionId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -258,7 +279,7 @@ func (c *AWSClusterController) Patch() {
 
 	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = aws.UpdateCluster(cluster, true, *ctx)
+	err = aws.UpdateCluster(subscriptionId, cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -897,5 +918,23 @@ func (c *AWSClusterController) PostSSHKey() {
 	}
 
 	c.Data["json"] = keyMaterial
+	c.ServeJSON()
+}
+
+// @Title GetCores
+// @Description Get AWS Machine instance cores
+// @Success 200 			{object} models.Machine
+// @Failure 500 			{"error": "internal server error"}
+// @router /machine/info [get]
+func (c *AWSClusterController) GetCores() {
+	var machine []models.Machine
+	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = machine
 	c.ServeJSON()
 }

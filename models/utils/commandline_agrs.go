@@ -29,6 +29,7 @@ var (
 	ca_cert                         = ""
 	client_cert                     = ""
 	client_pem                      = ""
+	subscription_host               = ""
 )
 
 func InitFlags() error {
@@ -51,6 +52,12 @@ func InitFlags() error {
 			Usage:       "client_pem",
 			Destination: &client_pem,
 			EnvVar:      "client_pem",
+		},
+		cli.StringFlag{
+			Name:        "subscription_host",
+			Usage:       "subscription_host",
+			Destination: &subscription_host,
+			EnvVar:      "subscription_host",
 		},
 		cli.StringFlag{
 			Name:        "mongo_host",
@@ -191,5 +198,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("vault_url", vault_url)
 	beego.AppConfig.Set("raccoon_url", raccoon_url)
 	beego.AppConfig.Set("rbac_url", rbac_url)
+	beego.AppConfig.Set("subscription_host", subscription_host)
+
 	return nil
 }
