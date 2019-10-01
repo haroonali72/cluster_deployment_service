@@ -645,14 +645,16 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 }
 
 func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId string, ctx utils.Context, companyId string) error {
+
 	utils.SendLog(companyId, "Deleting Public IP: "+IPname, "info", projectId)
+
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err != nil && !strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil
 	} else {
 		if strings.Contains(err.Error(), "not found") {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		}
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
@@ -660,7 +662,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 			return err
 		}
 	}
-	utils.SendLog(companyId, "Public IP deleted successfully: "+IPname, "info", projectId)
+	utils.SendLog(companyId, "Public IP deleted successfully: "+IPname, models.LOGGING_LEVEL_INFO, projectId)
 	return nil
 }
 func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddress network.PublicIPAddress, subnetId string, sgIds []*string, nicName string, ctx utils.Context) (network.Interface, error) {
@@ -702,7 +704,9 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 	return nicParameters, nil
 }
 func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx utils.Context, companyId string) error {
+
 	utils.SendLog(companyId, "Deleting NIC: "+nicName, "info", proId)
+
 	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
 	if err != nil && !strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -717,7 +721,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 			return err
 		}
 	}
-	utils.SendLog(companyId, "NIC deleted successfully: "+nicName, "info", proId)
+	utils.SendLog(companyId, "NIC deleted successfully: "+nicName, models.LOGGING_LEVEL_INFO, proId)
 	return nil
 }
 
