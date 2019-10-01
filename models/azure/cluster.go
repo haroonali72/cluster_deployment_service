@@ -3,6 +3,7 @@ package azure
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
+	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	"antelope/models/rbac_authentication"
@@ -186,7 +187,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context) error {
 
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
@@ -194,6 +195,15 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
+
+	if subscriptionId != "" {
+		err = checkCoresLimit(cluster, subscriptionId, ctx)
+		if err != nil { //core size limit exceed
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+	}
+
 	session, err := db.GetMongoSession()
 	if err != nil {
 		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -265,7 +275,7 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 	return clusters, nil
 }
 
-func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
@@ -289,7 +299,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(cluster, ctx)
+	err = CreateCluster(subscriptionId, cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -357,7 +367,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		}
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster(cluster, false, ctx)
+		confError = UpdateCluster("", cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -367,7 +377,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster(cluster, false, ctx)
+	confError = UpdateCluster("", cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -458,7 +468,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster, false, ctx)
+		err = UpdateCluster("", cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -480,7 +490,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		var nodes []*VM
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster(cluster, false, ctx)
+	err = UpdateCluster("", cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -544,4 +554,41 @@ func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey s
 	}
 
 	return privateKey, err
+}
+
+func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
+
+	var coreCount int64 = 0
+	var machine []models.Machine
+	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
+		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
+
+	found := false
+	for _, nodepool := range cluster.NodePools {
+		for _, mach := range machine {
+			if nodepool.MachineType == mach.InstanceType {
+				if nodepool.EnableScaling {
+					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * mach.Cores)
+				}
+				coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
+				found = true
+				break
+			}
+		}
+	}
+	if !found {
+		return errors.New("Machine not found")
+	}
+	coreLimit, err := cores.GetCoresLimit(subscriptionId)
+	if err != nil {
+		beego.Error("Supscription library error")
+		return err
+
+	}
+	if coreCount > coreLimit {
+		return errors.New("Exceeds the cores limit")
+	}
+
+	return nil
 }

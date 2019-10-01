@@ -30,6 +30,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "subscription_id",
+                        "description": "subscriptionId",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -69,6 +75,12 @@
                     },
                     {
                         "in": "header",
+                        "name": "subscription_id",
+                        "description": "subscriptionId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
                         "name": "token",
                         "description": "token",
                         "type": "string"
@@ -83,6 +95,9 @@
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against this project already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
@@ -208,6 +223,26 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/machine/info": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Get AWS Machine instance cores",
+                "operationId": "AWSClusterController.GetCores",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Machine"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
                     }
                 }
             }
@@ -525,6 +560,14 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "subscription_id",
+                        "description": "token",
+                        "schema": {
+                            "$ref": "#/definitions/subscriptionId"
+                        }
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -560,6 +603,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "subscription_id",
+                        "description": "subscriptionId",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -578,6 +627,9 @@
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
@@ -612,6 +664,26 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/machine/info": {
+            "get": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Get AWS Machine instance cores",
+                "operationId": "AzureClusterController.GetCores",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Machine"
+                        }
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
                     }
                 }
             }
@@ -915,6 +987,12 @@
                         "type": "string"
                     },
                     {
+                        "in": "header",
+                        "name": "subscription_id",
+                        "description": "subscriptionId",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -945,6 +1023,12 @@
                 "parameters": [
                     {
                         "in": "header",
+                        "name": "subscription_id",
+                        "description": "subscriptionId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
                         "name": "token",
                         "description": "token",
                         "type": "string"
@@ -965,6 +1049,9 @@
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
@@ -995,6 +1082,26 @@
                             "items": {
                                 "$ref": "#/definitions/gcp.Cluster_Def"
                             }
+                        }
+                    },
+                    "500": {
+                        "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gcp/machine/info": {
+            "get": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "Get GCP Machine instance cores",
+                "operationId": "GcpClusterController.GetCores",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Machine"
                         }
                     },
                     "500": {
@@ -1927,7 +2034,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "552.0xc0007a4360.false": {
+        "577.0xc0007afc50.false": {
             "title": "false",
             "type": "object"
         },
@@ -1983,7 +2090,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/552.0xc0007a4360.false"
+                    "$ref": "#/definitions/577.0xc0007afc50.false"
                 },
                 "name": {
                     "type": "string"
@@ -2001,6 +2108,9 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "token_name": {
                     "type": "string"
                 }
             }
@@ -2232,6 +2342,9 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "token_name": {
                     "type": "string"
                 }
             }
@@ -2521,6 +2634,9 @@
                 },
                 "status": {
                     "type": "string"
+                },
+                "token_name": {
+                    "type": "string"
                 }
             }
         },
@@ -2612,6 +2728,12 @@
                 },
                 "subnet_id": {
                     "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "volume": {
                     "$ref": "#/definitions/gcp.Volume"
@@ -2810,6 +2932,19 @@
             ],
             "example": "new"
         },
+        "models.Machine": {
+            "title": "Machine",
+            "type": "object",
+            "properties": {
+                "Cores": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "InstanceType": {
+                    "type": "string"
+                }
+            }
+        },
         "models.OsDiskType": {
             "title": "OsDiskType",
             "type": "string",
@@ -2829,6 +2964,10 @@
                 "Created = \"created\""
             ],
             "example": "existing"
+        },
+        "subscriptionId": {
+            "title": "subscriptionId",
+            "type": "object"
         }
     },
     "tags": [
