@@ -26,11 +26,32 @@ var (
 	network_url                     = ""
 	raccoon_url                     = ""
 	rbac_url                        = ""
+	ca_cert                         = ""
+	client_cert                     = ""
+	client_pem                      = ""
 )
 
 func InitFlags() error {
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "ca_cert",
+			Usage:       "ca_cert",
+			Destination: &ca_cert,
+			EnvVar:      "ca_cert",
+		},
+		cli.StringFlag{
+			Name:        "client_cert",
+			Usage:       "client_cert",
+			Destination: &client_cert,
+			EnvVar:      "client_cert",
+		},
+		cli.StringFlag{
+			Name:        "client_pem",
+			Usage:       "client_pem",
+			Destination: &client_pem,
+			EnvVar:      "client_pem",
+		},
 		cli.StringFlag{
 			Name:        "mongo_host",
 			Usage:       "mongo db host",
@@ -148,6 +169,9 @@ func InitFlags() error {
 		log.Println(err)
 		return err
 	}
+	beego.AppConfig.Set("ca_certificate", ca_cert)
+	beego.AppConfig.Set("client_cert", client_cert)
+	beego.AppConfig.Set("client_pem", client_pem)
 
 	beego.AppConfig.Set("mongo_host", mongo)
 	beego.AppConfig.Set("mongo_user", mongo_user)
