@@ -43,7 +43,7 @@ type NodePool struct {
 	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"required"`
 	Nodes              []*Node          `json:"nodes" bson:"nodes"`
 	KeyInfo            key_utils.AWSKey `json:"key_info" bson:"key_info"`
-	PoolRole           string           `json:"pool_role" bson:"pool_role" valid:"required"`
+	PoolRole           models.PoolRole  `json:"pool_role" bson:"pool_role" valid:"required"`
 	EnableScaling      bool             `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling      `json:"auto_scaling" bson:"auto_scaling"`
 	IsExternal         bool             `json:"is_external" bson:"is_external"`
@@ -97,6 +97,18 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 		}
 	}
 	return update
+}
+func checkMasterPools(cluster Cluster_Def) error {
+	noOfMasters := 0
+	for _, pools := range cluster.NodePools {
+		if pools.PoolRole == models.Master {
+			noOfMasters += 1
+			if noOfMasters == 2 {
+				return errors.New("Cluster can't have more than 1 master")
+			}
+		}
+	}
+	return nil
 }
 func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pools := range cluster.NodePools {
@@ -160,6 +172,12 @@ func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
+	err = checkMasterPools(cluster)
+	if err != nil { //cluster found
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
 	err = checkClusterSize(cluster, ctx)
 	if err != nil { //cluster size limit exceed
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

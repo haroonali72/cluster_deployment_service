@@ -49,7 +49,7 @@ type NodePool struct {
 	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" valid:"required"`
 	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
 	Nodes              []*VM              `json:"nodes" bson:"nodes"`
-	PoolRole           string             `json:"pool_role" bson:"pool_role"`
+	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role"`
 	AdminUser          string             `json:"user_name" bson:"user_name,omitempty"`
 	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
@@ -106,6 +106,18 @@ type Data struct {
 	Region string `json:"region"`
 }
 
+func checkMasterPools(cluster Cluster_Def) error {
+	noOfMasters := 0
+	for _, pools := range cluster.NodePools {
+		if pools.PoolRole == models.Master {
+			noOfMasters += 1
+			if noOfMasters == 2 {
+				return errors.New("Cluster can't have more than 1 master")
+			}
+		}
+	}
+	return nil
+}
 func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	update := false
 	for index, node_pool := range existingCluster.NodePools {
@@ -195,7 +207,11 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
-
+	err = checkMasterPools(cluster)
+	if err != nil { //cluster found
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
 	if subscriptionId != "" {
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed

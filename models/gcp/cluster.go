@@ -44,7 +44,7 @@ type NodePool struct {
 	RootVolume          Volume             `json:"root_volume" bson:"root_volume"`
 	EnableVolume        bool               `json:"is_external" bson:"is_external"`
 	PoolSubnet          string             `json:"subnet_id" bson:"subnet_id"`
-	PoolRole            string             `json:"pool_role" bson:"pool_role"`
+	PoolRole            models.PoolRole    `json:"pool_role" bson:"pool_role"`
 	ServiceAccountEmail string             `json:"service_account_email" bson:"service_account_email"`
 	Nodes               []*Node            `json:"nodes" bson:"nodes"`
 	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
@@ -110,6 +110,18 @@ type Data struct {
 	Zone   string `json:"zone"`
 }
 
+func checkMasterPools(cluster Cluster_Def) error {
+	noOfMasters := 0
+	for _, pools := range cluster.NodePools {
+		if pools.PoolRole == models.Master {
+			noOfMasters += 1
+			if noOfMasters == 2 {
+				return errors.New("Cluster can't have more than 1 master")
+			}
+		}
+	}
+	return nil
+}
 func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	update := false
 	for index, node_pool := range existingCluster.NodePools {
@@ -307,7 +319,11 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		beego.Error(text, err)
 		return errors.New(text)
 	}
-
+	err = checkMasterPools(cluster)
+	if err != nil { //cluster found
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
 	if oldCluster.Status == "Cluster Created" && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
