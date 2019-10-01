@@ -128,6 +128,7 @@ func (c *AzureClusterController) GetAll() {
 // @Param	body	body 	azure.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
+// @Failure 410 {"error": "Core limit exceeded"}
 // @Success 400 {"msg": "error message"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
@@ -193,6 +194,11 @@ func (c *AzureClusterController) Post() {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
+			c.ServeJSON()
+			return
+		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
+			c.Ctx.Output.SetStatus(410)
+			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
 			c.ServeJSON()
 			return
 		}

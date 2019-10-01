@@ -140,6 +140,7 @@ func (c *AWSClusterController) GetAll() {
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 409 {"error": "cluster against this project already exists"}
+// @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "internal server error <error msg>"}
 // @router / [post]
 func (c *AWSClusterController) Post() {
@@ -209,6 +210,11 @@ func (c *AWSClusterController) Post() {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against this project id  already exists"}
+			c.ServeJSON()
+			return
+		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
+			c.Ctx.Output.SetStatus(410)
+			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
 			c.ServeJSON()
 			return
 		}
