@@ -88,9 +88,9 @@ func GetMongoConf() mongConf {
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
 	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
-	conft.CaCert = beego.AppConfig.String("caCertificate")
-	conft.ClientCert = beego.AppConfig.String("clientCert")
-	conft.ClientPem = beego.AppConfig.String("clientPem")
+	conft.CaCert = beego.AppConfig.String("ca_certificate")
+	conft.ClientCert = beego.AppConfig.String("client_cert")
+	conft.ClientPem = beego.AppConfig.String("client_pem")
 	return conf
 }
 
