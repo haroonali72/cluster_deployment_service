@@ -66,6 +66,8 @@ paths:
           description: '{"msg": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "internal server error <error msg>"}'
   /cluster/aws/{projectId}:
@@ -413,6 +415,8 @@ paths:
           description: '{"msg": "error message"}'
         "409":
           description: '{"error": "cluster against same project id already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "internal server error <error msg>"}'
   /cluster/azure/{projectId}:
@@ -688,6 +692,8 @@ paths:
           description: '{"msg": "cluster created successfully"}'
         "409":
           description: '{"error": "cluster against same project id already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "internal server error"}'
   /cluster/gcp/{projectId}:
@@ -1332,7 +1338,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc0007a9560.false:
+  577.0xc0007a3ad0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1372,7 +1378,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc0007a9560.false'
+        $ref: '#/definitions/577.0xc0007a3ad0.false'
       name:
         type: string
       network_name:
@@ -1384,6 +1390,8 @@ definitions:
       project_id:
         type: string
       status:
+        type: string
+      token_name:
         type: string
   aws.Node:
     title: Node
@@ -1540,6 +1548,8 @@ definitions:
       resource_group:
         type: string
       status:
+        type: string
+      token_name:
         type: string
   azure.DiagnosticsProfile:
     title: DiagnosticsProfile
@@ -1735,6 +1745,8 @@ definitions:
         type: string
       status:
         type: string
+      token_name:
+        type: string
   gcp.Image:
     title: Image
     type: object
@@ -1796,6 +1808,10 @@ definitions:
         type: string
       subnet_id:
         type: string
+      tags:
+        type: array
+        items:
+          type: string
       volume:
         $ref: '#/definitions/gcp.Volume'
   gcp.NodePoolT:

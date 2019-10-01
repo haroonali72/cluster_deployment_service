@@ -96,6 +96,9 @@
                     "409": {
                         "description": "{\"error\": \"cluster against this project already exists\"}"
                     },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
                     }
@@ -625,6 +628,9 @@
                     "409": {
                         "description": "{\"error\": \"cluster against same project id already exists\"}"
                     },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
                     "500": {
                         "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
                     }
@@ -1043,6 +1049,9 @@
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
@@ -2025,7 +2034,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc0007a9560.false": {
+        "577.0xc0007a3ad0.false": {
             "title": "false",
             "type": "object"
         },
@@ -2081,7 +2090,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc0007a9560.false"
+                    "$ref": "#/definitions/577.0xc0007a3ad0.false"
                 },
                 "name": {
                     "type": "string"
@@ -2099,6 +2108,9 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "token_name": {
                     "type": "string"
                 }
             }
@@ -2330,6 +2342,9 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "token_name": {
                     "type": "string"
                 }
             }
@@ -2619,6 +2634,9 @@
                 },
                 "status": {
                     "type": "string"
+                },
+                "token_name": {
+                    "type": "string"
                 }
             }
         },
@@ -2710,6 +2728,12 @@
                 },
                 "subnet_id": {
                     "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "volume": {
                     "$ref": "#/definitions/gcp.Volume"
