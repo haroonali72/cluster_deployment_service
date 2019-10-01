@@ -515,22 +515,41 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 			}
 
 			nicName := "NIC-" + pool.Name
-			cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+
+			err1 := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+			if err1 != nil {
+				terminate = false
+			}
 
 			IPname := "pip-" + pool.Name
-			cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+			err2 := cloud.deletePublicIp(IPname, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+			if err2 != nil {
+				terminate = false
+			}
 
-			cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name, ctx)
+			err3 := cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name, ctx)
+			if err3 != nil {
+				terminate = false
+			}
 
 			beego.Info("terminating master pool disk: " + pool.Name)
 
-			cloud.deleteDisk(cluster.ResourceGroup, pool.Name, ctx)
+			err4 := cloud.deleteDisk(cluster.ResourceGroup, pool.Name, ctx)
+			if err4 != nil {
+				terminate = false
+			}
 
 			if pool.EnableVolume {
-				cloud.deleteDisk(cluster.ResourceGroup, "ext-"+pool.Name, ctx)
+				err5 := cloud.deleteDisk(cluster.ResourceGroup, "ext-"+pool.Name, ctx)
+				if err5 != nil {
+					terminate = false
+				}
 			}
 			//deleting master volume
-			cloud.deleteDisk(cluster.ResourceGroup, "ext-master-"+pool.Name, ctx)
+			err = cloud.deleteDisk(cluster.ResourceGroup, "ext-master-"+pool.Name, ctx)
+			if err != nil {
+				terminate = false
+			}
 
 		} else {
 			err := cloud.TerminatePool(pool.Name, cluster.ResourceGroup, cluster.ProjectId, ctx)
@@ -626,7 +645,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 	address, err := cloud.AddressClient.Delete(cloud.context, resourceGroup, IPname)
 	if err.Error() == "not found" {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		return err
+		return nil
 	} else if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -683,7 +702,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 	future, err := cloud.InterfacesClient.Delete(cloud.context, resourceGroup, nicName)
 	if err.Error() == "not found" {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		return err
+		return nil
 	} else if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -1332,7 +1351,7 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 	_, err := cloud.DiskClient.Delete(context.Background(), resouceGroup, diskName)
 	if err.Error() == "not found" {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		return err
+		return nil
 	} else if err != nil {
 		beego.Error("Disk deletion failed" + err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1346,7 +1365,7 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, acccountName)
 	if err.Error() == "not found" {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		return err
+		return nil
 	} else if err != nil {
 		beego.Error("Storage account deletion failed")
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
