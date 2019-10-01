@@ -302,7 +302,12 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 	}
 }
 func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string, token string) (confError error) {
-
+	publisher := utils.Notifier{}
+	confError = publisher.Init_notifier()
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		return confError
+	}
 	aws := AWS{
 		AccessKey: credentials.AccessKey,
 		SecretKey: credentials.SecretKey,
@@ -311,13 +316,12 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	confError = aws.init()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		return confError
-	}
-
-	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = "Cluster Creation Failed"
+		confError = UpdateCluster("", cluster, false, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
@@ -389,6 +393,12 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 }
 func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId string) error {
 
+	publisher := utils.Notifier{}
+	pub_err := publisher.Init_notifier()
+	if pub_err != nil {
+		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return pub_err
+	}
 	aws := AWS{
 		AccessKey: profile.Profile.AccessKey,
 		SecretKey: profile.Profile.SecretKey,
@@ -397,16 +407,15 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	err := aws.init()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
+		cluster.Status = "Cluster Termination Failed"
+		err = UpdateCluster("", cluster, false, ctx)
+		if err != nil {
+			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
-	}
-
-	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
-		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
-		return pub_err
 	}
 
 	if cluster.Status != "Cluster Created" && cluster.Status == "Cluster Termination Failed" {
