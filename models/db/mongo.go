@@ -116,6 +116,9 @@ type tlsConfig struct {
 
 func getTLSCertificate() *tls.Config {
 	var conf tlsConfig
+	conf.CaCert = beego.AppConfig.String("ca_certificate")
+	conf.ClientCert = beego.AppConfig.String("client_cert")
+	conf.ClientPem = beego.AppConfig.String("client_pem")
 	tlsConfig := &tls.Config{}
 	if conf.CaCert != "" {
 		rootCAs := x509.NewCertPool()
