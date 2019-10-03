@@ -656,7 +656,7 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else {
-		if strings.Contains(err.Error(), "not found") {
+		if err != nil && strings.Contains(err.Error(), "not found") {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		}
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
@@ -678,8 +678,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress:           &publicIPaddress,
+						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress: &publicIPaddress,
 					},
 				},
 			},
@@ -715,7 +715,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else {
-		if strings.Contains(err.Error(), "not found") {
+		if err != nil && strings.Contains(err.Error(), "not found") {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		}
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
@@ -1332,7 +1332,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location:                          &cloud.Region,
+		Location: &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
