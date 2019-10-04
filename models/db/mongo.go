@@ -18,6 +18,7 @@ func GetMongoSession() (session *mgo.Session, err error) {
 
 	tlsconfig := getTLSCertificate()
 	if tlsconfig == nil {
+		beego.Error("Error in getting certificate")
 		return
 	}
 
@@ -75,7 +76,6 @@ func InsertInMongo(collection string, data interface{}) error {
 func GetMongoConf() mongConf {
 
 	var conf mongConf
-	var conft tlsConfig
 	conf.mongoHost = beego.AppConfig.String("mongo_host")
 	conf.mongoUser = beego.AppConfig.String("mongo_user")
 	conf.mongoPass = beego.AppConfig.String("mongo_pass")
@@ -88,9 +88,6 @@ func GetMongoConf() mongConf {
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
 	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
-	conft.CaCert = beego.AppConfig.String("ca_certificate")
-	conft.ClientCert = beego.AppConfig.String("client_cert")
-	conft.ClientPem = beego.AppConfig.String("client_pem")
 	return conf
 }
 
@@ -122,7 +119,7 @@ func getTLSCertificate() *tls.Config {
 	tlsConfig := &tls.Config{}
 	if conf.CaCert != "" {
 		rootCAs := x509.NewCertPool()
-		rootCert, err := ioutil.ReadFile(conf.ClientCert)
+		rootCert, err := ioutil.ReadFile(conf.CaCert)
 		if err != nil {
 			return nil
 		}
