@@ -907,7 +907,23 @@ func (c *AWSClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	//==========================RBAC Authentication==============================//
+	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + keyName
+	subType := "ssh/" + string(models.AWS)
+	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Create", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 	keyMaterial, err := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWS ClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
