@@ -625,7 +625,6 @@ func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams
 
 	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, ctx)
 	if err != nil {
-		beego.Error("SSH not generated " + err.Error())
 		return "", err
 	}
 
