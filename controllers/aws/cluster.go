@@ -839,7 +839,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Param	X-Region		header	string	X-Region	""
 // @Success 200 			{object} key_utils.AWSKey
 // @Failure 404 			{"error": exception_message}
-// @Failure 500 			{"error": "internal server error"}
+// @Failure 500 			{"error": error msg}
 // @router /sshkey/:projectId/:keyname [post]
 func (c *AWSClusterController) PostSSHKey() {
 
@@ -903,7 +903,7 @@ func (c *AWSClusterController) PostSSHKey() {
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -912,7 +912,7 @@ func (c *AWSClusterController) PostSSHKey() {
 	if err != nil {
 		ctx.SendLogs("AWS ClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}

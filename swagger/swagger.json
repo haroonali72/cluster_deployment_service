@@ -305,7 +305,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": error msg}"
                     }
                 }
             }
@@ -734,7 +734,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": error msg}"
                     }
                 }
             }
@@ -1207,7 +1207,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": error msg}"
                     }
                 }
             }
@@ -1973,7 +1973,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "name",
+                        "name": "templateId",
                         "description": "Name of the template",
                         "required": true,
                         "type": "string"
@@ -2009,7 +2009,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "name",
+                        "name": "templateId",
                         "description": "Name of the template",
                         "required": true,
                         "type": "string"
@@ -2034,7 +2034,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc0007afc50.false": {
+        "577.0xc00058c510.false": {
             "title": "false",
             "type": "object"
         },
@@ -2090,7 +2090,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc0007afc50.false"
+                    "$ref": "#/definitions/577.0xc00058c510.false"
                 },
                 "name": {
                     "type": "string"
@@ -2193,7 +2193,7 @@
                     }
                 },
                 "pool_role": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.PoolRole"
                 },
                 "security_group_id": {
                     "type": "array",
@@ -2215,6 +2215,12 @@
                 },
                 "ami": {
                     "$ref": "#/definitions/aws.Ami"
+                },
+                "external_volume": {
+                    "$ref": "#/definitions/aws.Volume"
+                },
+                "is_external": {
+                    "type": "boolean"
                 },
                 "key_info": {
                     "$ref": "#/definitions/key_utils.AWSKey"
@@ -2433,7 +2439,7 @@
                     "$ref": "#/definitions/models.OsDiskType"
                 },
                 "pool_role": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.PoolRole"
                 },
                 "security_group_id": {
                     "type": "array",
@@ -2464,6 +2470,9 @@
                 },
                 "image": {
                     "$ref": "#/definitions/azure.ImageReference"
+                },
+                "is_external": {
+                    "type": "boolean"
                 },
                 "key_info": {
                     "$ref": "#/definitions/key_utils.AZUREKey"
@@ -2501,6 +2510,9 @@
                 },
                 "user_name": {
                     "type": "string"
+                },
+                "volume": {
+                    "$ref": "#/definitions/azure.Volume"
                 }
             }
         },
@@ -2718,7 +2730,7 @@
                     "type": "string"
                 },
                 "pool_role": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.PoolRole"
                 },
                 "root_volume": {
                     "$ref": "#/definitions/gcp.Volume"
@@ -2954,6 +2966,15 @@
                 "PremiumSSD = \"premium ssd\""
             ],
             "example": "standard hdd"
+        },
+        "models.PoolRole": {
+            "title": "PoolRole",
+            "type": "string",
+            "enum": [
+                "Master = \"master\"",
+                "Slave = \"slave\""
+            ],
+            "example": "master"
         },
         "models.Type": {
             "title": "Type",
