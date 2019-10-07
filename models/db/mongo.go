@@ -18,7 +18,6 @@ func GetMongoSession() (session *mgo.Session, err error) {
 
 	tlsconfig := getTLSCertificate()
 	if tlsconfig == nil {
-		beego.Error("Error in getting certificate")
 		return
 	}
 

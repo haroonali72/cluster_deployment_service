@@ -5,6 +5,7 @@ import (
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
+	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"os/exec"
@@ -104,10 +105,11 @@ func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
-		beego.Error("Key Already Exist ")
 		return "", err
 	}
-
+	if err == nil{
+		return "", errors.New("Key already exist")
+	}
 	if userName == "" {
 		userName = "cloudplex"
 	}

@@ -624,7 +624,6 @@ func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (priva
 
 	privateKey, err = key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
 	if err != nil {
-
 		return "", err
 	}
 	return privateKey, err

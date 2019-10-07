@@ -585,7 +585,6 @@ func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey s
 
 	privateKey, err = key_utils.GenerateKey(models.Azure, keyName, "azure@example.com", token, teams, ctx)
 	if err != nil {
-		beego.Error("Private Key not found " + err.Error())
 		return "", err
 	}
 

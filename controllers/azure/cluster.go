@@ -170,7 +170,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AzureClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster.CreationDate = time.Now()
 	beego.Info(cluster.ResourceGroup)
@@ -645,7 +645,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Param	teams		header	string	teams 	""
 // @Success 200 		{object} key_utils.AZUREKey
 // @Failure 404 		{"error": exception_message}
-// @Failure 500 		{"error": "internal server error"}
+// @Failure 500 		{"error": error msg}
 // @router /sshkey/:keyname/:projectId [post]
 func (c *AzureClusterController) PostSSHKey() {
 
@@ -690,7 +690,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	if err != nil {
 		ctx.SendLogs("AzureClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}

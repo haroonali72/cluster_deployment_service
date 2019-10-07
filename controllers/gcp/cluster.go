@@ -765,7 +765,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Param	teams		header	string	teams 	""
 // @Success 200 		{object} key_utils.AZUREKey
 // @Failure 404 		{"error": exception_message}
-// @Failure 500 		{"error": "internal server error"}
+// @Failure 500 		{"error": error msg}
 // @router /sshkey/:keyname/:username/:projectId [post]
 func (c *GcpClusterController) PostSSHKey() {
 
@@ -821,7 +821,7 @@ func (c *GcpClusterController) PostSSHKey() {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
