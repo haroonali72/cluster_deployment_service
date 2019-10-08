@@ -294,14 +294,14 @@ paths:
         required: true
         type: string
       responses:
-        "40":
-          description: '{"error": "exception_message"}'
         "200":
           description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "exception_message"}'
         "404":
           description: '{"error": "name is empty"}'
         "500":
-          description: '{"error": "internal server error <error msg>"}'
+          description: '{"error": "error msg"}'
   /cluster/aws/status/{projectId}/:
     get:
       tags:
@@ -582,7 +582,7 @@ paths:
         "404":
           description: '{"error": "project id is empty"}'
         "500":
-          description: '{"error": "internal server error <error msg>"}'
+          description: '{"error": "error msg"}'
   /cluster/azure/status/{projectId}/:
     get:
       tags:
@@ -1338,7 +1338,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc00058c510.false:
+  600.0xc04246e090.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1378,7 +1378,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc00058c510.false'
+        $ref: '#/definitions/600.0xc04246e090.false'
       name:
         type: string
       network_name:
@@ -1723,7 +1723,7 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
-    type: object
+    type: string
   gcp.AutoScaling:
     title: AutoScaling
     type: object
