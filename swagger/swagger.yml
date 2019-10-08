@@ -211,6 +211,36 @@ paths:
             $ref: '#/definitions/models.Machine'
         "500":
           description: '{"error": "internal server error"}'
+  /cluster/aws/sshkey/{keyname}:
+    delete:
+      tags:
+      - cluster/aws
+      description: Delete SSH key
+      operationId: AWSClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: "true"
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Region
+        description: X-Region
+        type: string
+      responses:
+        "200":
+          description: '{"msg": key deleted successfully}'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": error msg}'
   /cluster/aws/sshkey/{projectId}/{keyname}:
     post:
       tags:
@@ -249,41 +279,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/key_utils.AWSKey'
-        "404":
-          description: '{"error": exception_message}'
-        "500":
-          description: '{"error": error msg}'
-    delete:
-      tags:
-      - cluster/aws
-      description: Delete SSH key
-      operationId: AWSClusterController.DeleteSSHKey
-      parameters:
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      - in: path
-        name: keyname
-        description: SSHKey
-        required: true
-        type: string
-      - in: header
-        name: X-Profile-Id
-        description: profileId
-        type: string
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: header
-        name: X-Region
-        description: X-Region
-        type: string
-      responses:
-        "200":
-          description: '{"msg": key deleted successfully}'
         "404":
           description: '{"error": exception_message}'
         "500":
@@ -535,6 +530,28 @@ paths:
             $ref: '#/definitions/models.Machine'
         "500":
           description: '{"error": "internal server error"}'
+  /cluster/azure/sshkey/{keyname}:
+    delete:
+      tags:
+      - cluster/azure
+      description: Delete SSH key
+      operationId: AzureClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: "true"
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: '{"msg": key deleted successfully}'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": error msg}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -841,6 +858,28 @@ paths:
           description: '{"error": "authorization params missing or invalid"}'
         "500":
           description: '{"error": "internal server error"}'
+  /cluster/gcp/sshkey/{keyname}:
+    delete:
+      tags:
+      - cluster/gcp
+      description: Delete SSH key
+      operationId: GcpClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: "true"
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: '{"msg": key deleted successfully}'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": error msg}'
   /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
     post:
       tags:
@@ -1373,7 +1412,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  49735.0xc000750630.false:
+  49762.0xc00074b5f0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1413,7 +1452,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/49735.0xc000750630.false'
+        $ref: '#/definitions/49762.0xc00074b5f0.false'
       name:
         type: string
       network_name:

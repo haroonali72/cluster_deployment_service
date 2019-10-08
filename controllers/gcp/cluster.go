@@ -847,3 +847,61 @@ func (c *GcpClusterController) GetCores() {
 	c.Data["json"] = machine
 	c.ServeJSON()
 }
+
+// @Title DeleteSSHKey
+// @Description Delete SSH key
+// @Param	keyname	 	path	string	true	""
+// @Param	token		header	string	token 	""
+// @Success 200 		{"msg": key deleted successfully}
+// @Failure 404 		{"error": exception_message}
+// @Failure 500 		{"error": error msg}
+// @router /sshkey/:keyname [delete]
+func (c *GcpClusterController) DeleteSSHKey() {
+
+	beego.Info("GcpClusterController: CreateSSHKey.")
+
+	//==========================RBAC Authentication==============================//
+
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("GCPNetworkController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	//==========================RBAC Authentication==============================//
+
+	keyName := c.GetString(":keyname")
+	if keyName == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "key name is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	err = gcp.DeleteSSHkey(keyName, token, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
+	c.ServeJSON()
+}

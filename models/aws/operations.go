@@ -1468,17 +1468,15 @@ func DeleteAWSKey(keyName, token string, credentials vault.AwsCredentials, ctx u
 		return confError
 	}
 
-	err = aws.DeleteKeyPair(keyName)
+	err = aws.DeleteKeyPair(keyName, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (cloud *AWS) DeleteKeyPair(keyName string) error {
+func (cloud *AWS) DeleteKeyPair(keyName string, ctx utils.Context) error {
 	params := &ec2.DeleteKeyPairInput{
 		KeyName: aws.String(keyName),
 		DryRun:  aws.Bool(false),
@@ -1486,6 +1484,8 @@ func (cloud *AWS) DeleteKeyPair(keyName string) error {
 
 	_, err := cloud.Client.DeleteKeyPair(params)
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
 		return err
 	}
 

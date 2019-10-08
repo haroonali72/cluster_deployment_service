@@ -627,3 +627,13 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	return nil
 }
+
+func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
+
+	err := vault.DeleteSSHkey(string(models.Azure), keyName, token, ctx)
+	if err != nil {
+		return err
+	}
+
+	return err
+}

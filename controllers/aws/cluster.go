@@ -957,26 +957,17 @@ func (c *AWSClusterController) GetCores() {
 
 // @Title DeleteSSHKey
 // @Description Delete SSH key
-// @Param	projectId		path	string	true		"Id of the project"
-// @Param	keyname	 		path	string	true		"SSHKey"
+// @Param	keyname	 		path	string	true		""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	token			header	string	token 		""
 // @Param	X-Region		header	string	X-Region	""
 // @Success 200 			{"msg": key deleted successfully}
 // @Failure 404 			{"error": exception_message}
 // @Failure 500 			{"error": error msg}
-// @router /sshkey/:projectId/:keyname [delete]
+// @router /sshkey/:keyname [delete]
 func (c *AWSClusterController) DeleteSSHKey() {
 
 	beego.Info("AWSClusterController: DeleteSSHKey.")
-
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	//==========================RBAC Authentication==============================//
 
@@ -1007,7 +998,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	ctx.SendLogs("AWSNetworkController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1031,7 +1022,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1058,7 +1049,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 	err = aws.DeleteSSHkey(keyName, token, awsProfile.Profile, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

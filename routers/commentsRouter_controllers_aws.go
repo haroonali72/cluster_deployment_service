@@ -82,7 +82,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
 		beego.ControllerComments{
 			Method:           "DeleteSSHKey",
-			Router:           `/sshkey/:projectId/:keyname`,
+			Router:           `/sshkey/:keyname`,
 			AllowHTTPMethods: []string{"delete"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
