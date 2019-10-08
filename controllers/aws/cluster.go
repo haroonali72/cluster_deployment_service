@@ -380,8 +380,8 @@ func (c *AWSClusterController) Delete() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "name is empty"}
-// @Failure 40 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 400 {"error": "exception_message"}
+// @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *AWSClusterController) StartCluster() {
 
@@ -437,7 +437,7 @@ func (c *AWSClusterController) StartCluster() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -450,15 +450,17 @@ func (c *AWSClusterController) StartCluster() {
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
+		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}

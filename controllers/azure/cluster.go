@@ -361,7 +361,7 @@ func (c *AzureClusterController) Delete() {
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 400 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "internal server error"}
 // @router /start/:projectId [post]
 func (c *AzureClusterController) StartCluster() {
 
@@ -400,15 +400,6 @@ func (c *AzureClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	region, err := azure.GetRegion(token, projectId, *ctx)
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
-
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
-		c.ServeJSON()
-		return
-	}
-
 	var cluster azure.Cluster_Def
 
 	if projectId == "" {
@@ -432,6 +423,16 @@ func (c *AzureClusterController) StartCluster() {
 	if cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+		c.ServeJSON()
+		return
+	}
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+
+	if err != nil {
+		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
+		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
