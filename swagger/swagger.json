@@ -419,14 +419,14 @@
                     "200": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
-                    "40": {
+                    "400": {
                         "description": "{\"error\": \"exception_message\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"name is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -889,7 +889,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -2148,7 +2148,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "49762.0xc00074b5f0.false": {
+        "600.0xc04246e090.false": {
             "title": "false",
             "type": "object"
         },
@@ -2718,7 +2718,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "object"
+            "type": "string"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",

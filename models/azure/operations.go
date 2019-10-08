@@ -344,7 +344,6 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			return Cluster_Def{}, err
 		}
 	}
-	var cpVms []*VM
 	for in, pool := range cluster.NodePools {
 		var keyInfo key_utils.AZUREKey
 
@@ -400,6 +399,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			cluster.NodePools[in].Nodes = []*VM{&vmObj}
 
 		} else {
+			var cpVms []*VM
 			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, pool.Name, "", "", "")
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -678,8 +678,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress: &publicIPaddress,
+						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress:           &publicIPaddress,
 					},
 				},
 			},
@@ -1332,7 +1332,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location: &cloud.Region,
+		Location:                          &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
