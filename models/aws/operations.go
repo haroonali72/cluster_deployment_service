@@ -1421,8 +1421,8 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 		beego.Error(err.Error())
 		return "", err
 	}
-	if err != nil{
-		return "",errors.New("Key already exist")
+	if err != nil {
+		return "", errors.New("Key already exist")
 	}
 
 	keyMaterial, _, err := aws.KeyPairGenerator(keyName)
@@ -1446,4 +1446,48 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 	}
 
 	return keyMaterial, err
+}
+
+func DeleteAWSKey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) error {
+
+	err := vault.DeleteSSHkey(string(models.AWS), keyName, token, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		return err
+	}
+
+	aws := AWS{
+		AccessKey: credentials.AccessKey,
+		SecretKey: credentials.SecretKey,
+		Region:    credentials.Region,
+	}
+
+	confError := aws.init()
+	if confError != nil {
+		return confError
+	}
+
+	err = aws.DeleteKeyPair(keyName)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (cloud *AWS) DeleteKeyPair(keyName string) error {
+	params := &ec2.DeleteKeyPairInput{
+		KeyName: aws.String(keyName),
+		DryRun:  aws.Bool(false),
+	}
+
+	_, err := cloud.Client.DeleteKeyPair(params)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

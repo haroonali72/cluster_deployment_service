@@ -197,3 +197,40 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 	return contents, nil
 
 }
+
+func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context) error {
+	host := getVaultHost() + models.VaultDeleteKeyURI
+	if strings.Contains(host, "{cloudType}") {
+		host = strings.Replace(host, "{cloudType}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{name}") {
+		host = strings.Replace(host, "{name}", keyName, -1)
+	}
+
+	req, err := utils.CreateDeleteRequest(host)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	client := utils.InitReq()
+	req.Header.Set("token", token)
+	response, err := client.SendRequest(req)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	defer response.Body.Close()
+
+	beego.Info(response.StatusCode)
+	beego.Info(response.Status)
+	if response.StatusCode == 403 || response.StatusCode == 404 {
+		return errors.New("not found")
+	}
+	if response.StatusCode != 200 {
+		return errors.New("Status Code: " + strconv.Itoa(response.StatusCode))
+	}
+
+	return nil
+
+}

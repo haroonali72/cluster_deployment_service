@@ -73,6 +73,7 @@ const (
 	VaultGetAllKeysURI = "/template/sshKey/{cloud}"
 	VaultGetProfileURI = "/template/{cloud}/credentials/{profileId}"
 	VaultCreateKeyURI  = "/template/sshKey"
+	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{name}"
 )
 
 const (

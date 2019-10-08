@@ -253,6 +253,41 @@ paths:
           description: '{"error": exception_message}'
         "500":
           description: '{"error": error msg}'
+    delete:
+      tags:
+      - cluster/aws
+      description: Delete SSH key
+      operationId: AWSClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: path
+        name: keyname
+        description: SSHKey
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Region
+        description: X-Region
+        type: string
+      responses:
+        "200":
+          description: '{"msg": key deleted successfully}'
+        "404":
+          description: '{"error": exception_message}'
+        "500":
+          description: '{"error": error msg}'
   /cluster/aws/sshkeys:
     get:
       tags:
@@ -1338,7 +1373,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc00058c510.false:
+  49735.0xc000750630.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1378,7 +1413,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc00058c510.false'
+        $ref: '#/definitions/49735.0xc000750630.false'
       name:
         type: string
       network_name:
