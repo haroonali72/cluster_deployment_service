@@ -361,7 +361,7 @@ func (c *AzureClusterController) Delete() {
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 400 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *AzureClusterController) StartCluster() {
 
