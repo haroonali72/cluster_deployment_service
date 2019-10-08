@@ -1411,7 +1411,7 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 		Region:    credentials.Region,
 	}
 	confError := aws.init()
-	if confError == nil {
+	if confError != nil {
 		return "", confError
 	}
 
@@ -1421,7 +1421,7 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 		beego.Error(err.Error())
 		return "", err
 	}
-	if err != nil {
+	if err == nil {
 		return "", errors.New("Key already exist")
 	}
 
