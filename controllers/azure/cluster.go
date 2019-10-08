@@ -24,7 +24,7 @@ type AzureClusterController struct {
 // @Param	token	header	string	token ""
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": ""error msg""}
 // @router /:projectId/ [get]
 func (c *AzureClusterController) Get() {
 	projectId := c.GetString(":projectId")
@@ -82,7 +82,7 @@ func (c *AzureClusterController) Get() {
 // @Description get all the clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []azure.Cluster_Def
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AzureClusterController) GetAll() {
 	beego.Info("AzureClusterController: GetAll clusters.")
@@ -112,7 +112,7 @@ func (c *AzureClusterController) GetAll() {
 	clusters, err := azure.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -130,7 +130,7 @@ func (c *AzureClusterController) GetAll() {
 // @Failure 409 {"error": "cluster against same project id already exists"}
 // @Failure 410 {"error": "Core limit exceeded"}
 // @Success 400 {"msg": "error message"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router / [post]
 func (c *AzureClusterController) Post() {
 	var cluster azure.Cluster_Def
@@ -203,7 +203,7 @@ func (c *AzureClusterController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -219,7 +219,7 @@ func (c *AzureClusterController) Post() {
 // @Param	body	body 	azure.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *AzureClusterController) Patch() {
 
@@ -292,7 +292,7 @@ func (c *AzureClusterController) Patch() {
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router /:projectId [delete]
 func (c *AzureClusterController) Delete() {
 	id := c.GetString(":projectId")
@@ -337,14 +337,14 @@ func (c *AzureClusterController) Delete() {
 	cluster, err := azure.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
+		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
 	err = azure.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -415,7 +415,7 @@ func (c *AzureClusterController) StartCluster() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -452,7 +452,7 @@ func (c *AzureClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
 func (c *AzureClusterController) GetStatus() {
 
@@ -493,7 +493,7 @@ func (c *AzureClusterController) GetStatus() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -510,7 +510,7 @@ func (c *AzureClusterController) GetStatus() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error: " + err.Error()}
+		c.Data["json"] = map[string]string{"error":  err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -526,7 +526,7 @@ func (c *AzureClusterController) GetStatus() {
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
 func (c *AzureClusterController) TerminateCluster() {
 
@@ -568,7 +568,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -588,7 +588,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error":  err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -604,7 +604,7 @@ func (c *AzureClusterController) TerminateCluster() {
 // @Description returns ssh key pairs
 // @Param	token	header	string	token ""
 // @Success 200 {object} []string
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router /sshkeys [get]
 func (c *AzureClusterController) GetSSHKeys() {
 
@@ -630,7 +630,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -646,7 +646,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Param	teams		header	string	teams 	""
 // @Success 200 		{object} key_utils.AZUREKey
 // @Failure 404 		{"error": exception_message}
-// @Failure 500 		{"error": error msg}
+// @Failure 500 		{"error": "error msg"}
 // @router /sshkey/:keyname/:projectId [post]
 func (c *AzureClusterController) PostSSHKey() {
 
@@ -703,7 +703,7 @@ func (c *AzureClusterController) PostSSHKey() {
 // @Title GetCores
 // @Description Get AWS Machine instance cores
 // @Success 200 			{object} models.Machine
-// @Failure 500 			{"error": "internal server error"}
+// @Failure 500 			{"error": "error msg"}
 // @router /machine/info [get]
 func (c *AzureClusterController) GetCores() {
 	var machine []models.Machine

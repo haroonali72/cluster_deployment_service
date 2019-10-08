@@ -22,7 +22,7 @@ type GcpClusterController struct {
 // @Param	token	header	string	token ""
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /:projectId/ [get]
 func (c *GcpClusterController) Get() {
 	projectId := c.GetString(":projectId")
@@ -83,7 +83,7 @@ func (c *GcpClusterController) Get() {
 // @Description get all the clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []gcp.Cluster_Def
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *GcpClusterController) GetAll() {
 	beego.Info("GcpClusterController: GetAll clusters.")
@@ -114,7 +114,7 @@ func (c *GcpClusterController) GetAll() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -131,7 +131,7 @@ func (c *GcpClusterController) GetAll() {
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
 // @Failure 410 {"error": "Core limit exceeded"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router / [post]
 func (c *GcpClusterController) Post() {
 	var cluster gcp.Cluster_Def
@@ -202,7 +202,7 @@ func (c *GcpClusterController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -218,7 +218,7 @@ func (c *GcpClusterController) Post() {
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 404 {"error": "no cluster exists with this name"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *GcpClusterController) Patch() {
 
@@ -281,7 +281,7 @@ func (c *GcpClusterController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -296,7 +296,7 @@ func (c *GcpClusterController) Patch() {
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /:projectId [delete]
 func (c *GcpClusterController) Delete() {
 	id := c.GetString(":projectId")
@@ -343,7 +343,7 @@ func (c *GcpClusterController) Delete() {
 	if err == nil && cluster.Status == "Cluster Created" {
 		ctx.SendLogs("GcpClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + "Cluster is in running state"}
+		c.Data["json"] = map[string]string{"error": err.Error() + "Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
@@ -351,7 +351,7 @@ func (c *GcpClusterController) Delete() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -367,7 +367,7 @@ func (c *GcpClusterController) Delete() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *GcpClusterController) StartCluster() {
 	beego.Info("GcpClusterController: StartCluster.")
@@ -424,7 +424,7 @@ func (c *GcpClusterController) StartCluster() {
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -447,7 +447,7 @@ func (c *GcpClusterController) StartCluster() {
 	if err != nil {
 		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -476,7 +476,7 @@ func (c *GcpClusterController) StartCluster() {
 // @Failure 206 {object} gcp.Cluster_Def
 // @Failure 400 {"error": "exception_message"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
 func (c *GcpClusterController) GetStatus() {
 	beego.Info("GcpClusterController: FetchStatus.")
@@ -532,7 +532,7 @@ func (c *GcpClusterController) GetStatus() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error":  err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -565,7 +565,7 @@ func (c *GcpClusterController) GetStatus() {
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 400 {"error": "exception_message"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
 func (c *GcpClusterController) TerminateCluster() {
 	beego.Info("GcpClusterController: TerminateCluster.")
@@ -621,7 +621,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error":  err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -645,7 +645,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -661,7 +661,7 @@ func (c *GcpClusterController) TerminateCluster() {
 // @Description returns ssh key pairs
 // @Param	token	header	string	token ""
 // @Success 200 {object} []string
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /sshkeys [get]
 func (c *GcpClusterController) GetSSHKeys() {
 	beego.Info("GcpClusterController: FetchExistingSSHKeys.")
@@ -688,7 +688,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -704,7 +704,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 // @Success 200 {object} []string
 // @Failure 400 {"error": "profile id is empty"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error":  "error msg"}
 // @router /serviceaccounts [get]
 func (c *GcpClusterController) GetServiceAccounts() {
 	beego.Info("GcpClusterController: FetchExistingServiceAccounts.")
@@ -747,7 +747,7 @@ func (c *GcpClusterController) GetServiceAccounts() {
 	if err != nil {
 		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -833,7 +833,7 @@ func (c *GcpClusterController) PostSSHKey() {
 // @Title GetCores
 // @Description Get GCP Machine instance cores
 // @Success 200 			{object} models.Machine
-// @Failure 500 			{"error": "internal server error"}
+// @Failure 500 			{"error":  "error msg"}
 // @router /machine/info [get]
 func (c *GcpClusterController) GetCores() {
 	var machine []models.GCPMachine
