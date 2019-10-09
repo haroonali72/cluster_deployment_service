@@ -24,7 +24,7 @@ type AzureClusterController struct {
 // @Param	token	header	string	token ""
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": ""error msg""}
+// @Failure 500 {"error": "error msg"}
 // @router /:projectId/ [get]
 func (c *AzureClusterController) Get() {
 	projectId := c.GetString(":projectId")
