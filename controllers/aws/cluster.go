@@ -142,7 +142,7 @@ func (c *AWSClusterController) GetAll() {
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 401 {"error": "error msg"}
-// @Success 404 {"msg": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 409 {"error": "cluster against this project already exists"}
 // @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "error msg"}
