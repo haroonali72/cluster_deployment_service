@@ -210,7 +210,39 @@ paths:
           schema:
             $ref: '#/definitions/models.Machine'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "internal server error"}'
+  /cluster/aws/sshkey/{keyname}:
+    delete:
+      tags:
+      - cluster/aws
+      description: Delete SSH key
+      operationId: AWSClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: "true"
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Region
+        description: X-Region
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "key deleted successfully"}'
+        "400":
+          description: '{"error": exception_message}'
+        "401":
+          description: '{"error": "User is unauthorized to perform this action"}'
+        "404":
+          description: '{"error": exception_message}'
   /cluster/aws/sshkey/{projectId}/{keyname}:
     post:
       tags:
@@ -252,7 +284,7 @@ paths:
         "404":
           description: '{"error": exception_message}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": error msg}'
   /cluster/aws/sshkeys:
     get:
       tags:
@@ -272,7 +304,7 @@ paths:
             items:
               type: string
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "internal server error <error msg>"}'
   /cluster/aws/start/{projectId}:
     post:
       tags:
@@ -330,7 +362,7 @@ paths:
         "404":
           description: '{"error": "project id is empty"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "internal server error <error msg>"}'
   /cluster/aws/terminate/{projectId}/:
     post:
       tags:
@@ -466,7 +498,7 @@ paths:
         "404":
           description: '{"error": exception_message}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "internal server error"}'
   /cluster/azure/all:
     get:
       tags:
@@ -499,7 +531,29 @@ paths:
           schema:
             $ref: '#/definitions/models.Machine'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "internal server error"}'
+  /cluster/azure/sshkey/{keyname}:
+    delete:
+      tags:
+      - cluster/azure
+      description: Delete SSH key
+      operationId: AzureClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: "true"
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: '{"msg": key deleted successfully}'
+        "400":
+          description: '{"error": exception_message}'
+        "404":
+          description: '{"error": exception_message}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -805,7 +859,29 @@ paths:
         "401":
           description: '{"error": "authorization params missing or invalid"}'
         "500":
-          description: '{"error":  "error msg"}'
+          description: '{"error": "internal server error"}'
+  /cluster/gcp/sshkey/{keyname}:
+    delete:
+      tags:
+      - cluster/gcp
+      description: Delete SSH key
+      operationId: GcpClusterController.DeleteSSHKey
+      parameters:
+      - in: path
+        name: keyname
+        description: "true"
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: '{"msg": key deleted successfully}'
+        "400":
+          description: '{"error": exception_message}'
+        "404":
+          description: '{"error": exception_message}'
   /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
     post:
       tags:
@@ -1338,7 +1414,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc0005dab70.false:
+  49763.0xc00079ae10.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1378,7 +1454,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc0005dab70.false'
+        $ref: '#/definitions/49763.0xc00079ae10.false'
       name:
         type: string
       network_name:

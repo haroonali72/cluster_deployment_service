@@ -247,10 +247,10 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
-	session, err1 := db.GetMongoSession()
-	if err1 != nil {
+	session, err := db.GetMongoSession()
+	if err != nil {
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, err1
+		return Cluster_Def{}, err
 	}
 
 	defer session.Close()
@@ -626,4 +626,14 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	}
 
 	return nil
+}
+
+func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
+
+	err := vault.DeleteSSHkey(string(models.Azure), keyName, token, ctx)
+	if err != nil {
+		return err
+	}
+
+	return err
 }

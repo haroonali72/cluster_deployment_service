@@ -665,3 +665,13 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	return nil
 }
+
+func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) error {
+
+	err := DeleteAWSKey(keyName, token, credentials, ctx)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
