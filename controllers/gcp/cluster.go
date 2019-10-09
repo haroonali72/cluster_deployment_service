@@ -854,6 +854,7 @@ func (c *GcpClusterController) GetCores() {
 // @Param	token		header	string	token 	""
 // @Success 200 		{"msg": key deleted successfully}
 // @Failure 404 		{"error": exception_message}
+// @Failure 400 		{"error": exception_message}
 // @router /sshkey/:keyname [delete]
 func (c *GcpClusterController) DeleteSSHKey() {
 
@@ -895,7 +896,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 
 	err = gcp.DeleteSSHkey(keyName, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

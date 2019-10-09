@@ -550,6 +550,8 @@ paths:
       responses:
         "200":
           description: '{"msg": key deleted successfully}'
+        "400":
+          description: '{"error": exception_message}'
         "404":
           description: '{"error": exception_message}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
@@ -876,6 +878,8 @@ paths:
       responses:
         "200":
           description: '{"msg": key deleted successfully}'
+        "400":
+          description: '{"error": exception_message}'
         "404":
           description: '{"error": exception_message}'
   /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
@@ -1410,7 +1414,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  49763.0xc00074fce0.false:
+  49763.0xc00079ae10.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1450,7 +1454,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/49763.0xc00074fce0.false'
+        $ref: '#/definitions/49763.0xc00079ae10.false'
       name:
         type: string
       network_name:

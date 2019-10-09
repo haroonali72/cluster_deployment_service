@@ -1052,7 +1052,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 	err = aws.DeleteSSHkey(keyName, token, awsProfile.Profile, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
