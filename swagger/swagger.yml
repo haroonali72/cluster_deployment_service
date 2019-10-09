@@ -75,7 +75,7 @@ paths:
         "401":
           description: '{"error": "error msg"}'
         "404":
-          description: '{"msg": "error msg"}'
+          description: '{"error": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
         "410":
@@ -1560,7 +1560,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc000633fb0.false:
+  577.0xc000666270.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1600,7 +1600,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc000633fb0.false'
+        $ref: '#/definitions/577.0xc000666270.false'
       name:
         type: string
       network_name:
