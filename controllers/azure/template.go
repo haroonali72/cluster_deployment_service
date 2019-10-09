@@ -20,8 +20,10 @@ type AzureTemplateController struct {
 // @Param	name	path	string	true	"Name of the template"
 // @Param	token	header	string	token ""
 // @Success 200 {object} azure.Template
-// @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
 // @router /:templateId [get]
 func (c *AzureTemplateController) Get() {
 
@@ -81,7 +83,8 @@ func (c *AzureTemplateController) Get() {
 // @Description get all the templates
 // @Param	token	header	string	token ""
 // @Success 200 {object} []azure.Template
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AzureTemplateController) GetAll() {
 
@@ -110,7 +113,7 @@ func (c *AzureTemplateController) GetAll() {
 	templates, err := azure.GetTemplates(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -125,8 +128,10 @@ func (c *AzureTemplateController) GetAll() {
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {"msg": "template created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 409 {"error": "template with same name already exists"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router / [post]
 func (c *AzureTemplateController) Post() {
 
@@ -172,7 +177,7 @@ func (c *AzureTemplateController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error":  err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -209,8 +214,10 @@ func (c *AzureTemplateController) Post() {
 // @Param	teams	header	string	teams ""
 // @Param	body	body	azure.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "no template exists with this name"}
-// @Failure 500 {"error": "internal server error <error msg> "}
+// @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *AzureTemplateController) Patch() {
 	var template azure.Template
@@ -255,7 +262,7 @@ func (c *AzureTemplateController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -288,8 +295,10 @@ func (c *AzureTemplateController) Patch() {
 // @Param	name	path	string	true	"Name of the template"
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "template deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "name is empty"}
-// @Failure 500 {"error": "internal server error <error msg>"}
+// @Failure 500 {"error": "error msg"}
 // @router /:templateId [delete]
 func (c *AzureTemplateController) Delete() {
 	id := c.GetString(":templateId")
@@ -334,7 +343,7 @@ func (c *AzureTemplateController) Delete() {
 	err = azure.DeleteTemplate(id, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error " + err.Error()}
+		c.Data["json"] = map[string]string{"error":  err.Error()}
 		c.ServeJSON()
 		return
 	}

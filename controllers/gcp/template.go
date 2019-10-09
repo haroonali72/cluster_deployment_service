@@ -20,8 +20,8 @@ type GcpTemplateController struct {
 // @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"Name of the template"
 // @Success 200 {object} gcp.Template
-// @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @router /:templateId [get]
 func (c *GcpTemplateController) Get() {
 	id := c.GetString(":templateId")
@@ -86,7 +86,8 @@ func (c *GcpTemplateController) Get() {
 // @Description get all the templates
 // @Param	token	header	string	token ""
 // @Success 200 {object} []gcp.Template
-// @Failure 500 {"error": "internal server error"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *GcpTemplateController) GetAll() {
 	beego.Info("GcpTemplateController: GetAll template.")
@@ -121,7 +122,7 @@ func (c *GcpTemplateController) GetAll() {
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController: internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -136,8 +137,10 @@ func (c *GcpTemplateController) GetAll() {
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {"msg": "template created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 409 {"error": "template with same name already exists"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router / [post]
 func (c *GcpTemplateController) Post() {
 	var template gcp.Template
@@ -188,7 +191,7 @@ func (c *GcpTemplateController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -225,8 +228,10 @@ func (c *GcpTemplateController) Post() {
 // @Param	teams	header	string	teams ""
 // @Param	body	body	gcp.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "no template exists with this name"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *GcpTemplateController) Patch() {
 	var template gcp.Template
@@ -277,7 +282,7 @@ func (c *GcpTemplateController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -310,8 +315,10 @@ func (c *GcpTemplateController) Patch() {
 // @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"Name of the template"
 // @Success 200 {"msg": "template deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "name is empty"}
-// @Failure 500 {"error": "internal server error"}
+// @Failure 500 {"error": "error msg"}
 // @router /:templateId [delete]
 func (c *GcpTemplateController) Delete() {
 	id := c.GetString(":templateId")
@@ -363,7 +370,7 @@ func (c *GcpTemplateController) Delete() {
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "internal server error"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
