@@ -72,6 +72,15 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
 		beego.ControllerComments{
+			Method:           "DeleteSSHKey",
+			Router:           `/sshkey/:keyname`,
+			AllowHTTPMethods: []string{"delete"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
+		beego.ControllerComments{
 			Method:           "PostSSHKey",
 			Router:           `/sshkey/:keyname/:username/:projectId`,
 			AllowHTTPMethods: []string{"post"},

@@ -247,6 +247,55 @@
                 }
             }
         },
+        "/cluster/aws/sshkey/{keyname}": {
+            "delete": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Delete SSH key",
+                "operationId": "AWSClusterController.DeleteSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Region",
+                        "description": "X-Region",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"key deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"User is unauthorized to perform this action\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/sshkey/{projectId}/{keyname}": {
             "post": {
                 "tags": [
@@ -684,6 +733,40 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/sshkey/{keyname}": {
+            "delete": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Delete SSH key",
+                "operationId": "AzureClusterController.DeleteSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": key deleted successfully}"
+                    },
+                    "400": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
                     }
                 }
             }
@@ -1150,6 +1233,40 @@
                     },
                     "500": {
                         "description": "{\"error\": \"internal server error\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gcp/sshkey/{keyname}": {
+            "delete": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "Delete SSH key",
+                "operationId": "GcpClusterController.DeleteSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": key deleted successfully}"
+                    },
+                    "400": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "404": {
+                        "description": "{\"error\": exception_message}"
                     }
                 }
             }
@@ -2034,7 +2151,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc04246e090.false": {
+        "49763.0xc00079ae10.false": {
             "title": "false",
             "type": "object"
         },
@@ -2090,7 +2207,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc04246e090.false"
+                    "$ref": "#/definitions/49763.0xc00079ae10.false"
                 },
                 "name": {
                     "type": "string"
@@ -2604,7 +2721,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
