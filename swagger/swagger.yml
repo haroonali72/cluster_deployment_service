@@ -210,7 +210,7 @@ paths:
           schema:
             $ref: '#/definitions/models.Machine'
         "500":
-          description: '{"error": "internal server error"}'
+          description: '{"error": "error msg"}'
   /cluster/aws/sshkey/{keyname}:
     delete:
       tags:
@@ -284,7 +284,7 @@ paths:
         "404":
           description: '{"error": exception_message}'
         "500":
-          description: '{"error": error msg}'
+          description: '{"error": "error msg"}'
   /cluster/aws/sshkeys:
     get:
       tags:
@@ -304,7 +304,7 @@ paths:
             items:
               type: string
         "500":
-          description: '{"error": "internal server error <error msg>"}'
+          description: '{"error": "error msg"}'
   /cluster/aws/start/{projectId}:
     post:
       tags:
@@ -362,7 +362,7 @@ paths:
         "404":
           description: '{"error": "project id is empty"}'
         "500":
-          description: '{"error": "internal server error <error msg>"}'
+          description: '{"error": "error msg"}'
   /cluster/aws/terminate/{projectId}/:
     post:
       tags:
@@ -498,7 +498,7 @@ paths:
         "404":
           description: '{"error": exception_message}'
         "500":
-          description: '{"error": "internal server error"}'
+          description: '{"error": "error msg"}'
   /cluster/azure/all:
     get:
       tags:
@@ -531,7 +531,7 @@ paths:
           schema:
             $ref: '#/definitions/models.Machine'
         "500":
-          description: '{"error": "internal server error"}'
+          description: '{"error": "error msg"}'
   /cluster/azure/sshkey/{keyname}:
     delete:
       tags:
@@ -859,7 +859,7 @@ paths:
         "401":
           description: '{"error": "authorization params missing or invalid"}'
         "500":
-          description: '{"error": "internal server error"}'
+          description: '{"error":  "error msg"}'
   /cluster/gcp/sshkey/{keyname}:
     delete:
       tags:
@@ -1414,7 +1414,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  49763.0xc00079ae10.false:
+  577.0xc000658ba0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1454,7 +1454,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/49763.0xc00079ae10.false'
+        $ref: '#/definitions/577.0xc000658ba0.false'
       name:
         type: string
       network_name:
