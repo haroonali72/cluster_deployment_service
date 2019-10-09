@@ -236,11 +236,13 @@ paths:
         type: string
       responses:
         "200":
-          description: '{"msg": key deleted successfully}'
+          description: '{"msg": "key deleted successfully"}'
+        "400":
+          description: '{"error": exception_message}'
+        "401":
+          description: '{"error": "User is unauthorized to perform this action"}'
         "404":
           description: '{"error": exception_message}'
-        "500":
-          description: '{"error": error msg}'
   /cluster/aws/sshkey/{projectId}/{keyname}:
     post:
       tags:
@@ -550,8 +552,6 @@ paths:
           description: '{"msg": key deleted successfully}'
         "404":
           description: '{"error": exception_message}'
-        "500":
-          description: '{"error": error msg}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -878,8 +878,6 @@ paths:
           description: '{"msg": key deleted successfully}'
         "404":
           description: '{"error": exception_message}'
-        "500":
-          description: '{"error": error msg}'
   /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
     post:
       tags:
@@ -1412,7 +1410,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  600.0xc04246e090.false:
+  49763.0xc00074fce0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1452,7 +1450,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/600.0xc04246e090.false'
+        $ref: '#/definitions/49763.0xc00074fce0.false'
       name:
         type: string
       network_name:
@@ -1797,7 +1795,7 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
-    type: string
+    type: object
   gcp.AutoScaling:
     title: AutoScaling
     type: object

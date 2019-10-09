@@ -963,9 +963,10 @@ func (c *AWSClusterController) GetCores() {
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	token			header	string	token 		""
 // @Param	X-Region		header	string	X-Region	""
-// @Success 200 			{"msg": key deleted successfully}
+// @Success 200 			{"msg": "key deleted successfully"}
 // @Failure 404 			{"error": exception_message}
-// @Failure 500 			{"error": error msg}
+// @Failure 401 			{"error": "User is unauthorized to perform this action"}
+// @Failure 400 			{"error": exception_message}
 // @router /sshkey/:keyname [delete]
 func (c *AWSClusterController) DeleteSSHKey() {
 
@@ -994,7 +995,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

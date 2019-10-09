@@ -724,7 +724,6 @@ func (c *AzureClusterController) GetCores() {
 // @Param	token		header	string	token 	""
 // @Success 200 		{"msg": key deleted successfully}
 // @Failure 404 		{"error": exception_message}
-// @Failure 500 		{"error": error msg}
 // @router /sshkey/:keyname [delete]
 func (c *AzureClusterController) DeleteSSHKey() {
 

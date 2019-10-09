@@ -854,7 +854,6 @@ func (c *GcpClusterController) GetCores() {
 // @Param	token		header	string	token 	""
 // @Success 200 		{"msg": key deleted successfully}
 // @Failure 404 		{"error": exception_message}
-// @Failure 500 		{"error": error msg}
 // @router /sshkey/:keyname [delete]
 func (c *GcpClusterController) DeleteSSHKey() {
 
@@ -875,7 +874,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

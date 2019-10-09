@@ -282,13 +282,16 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": key deleted successfully}"
+                        "description": "{\"msg\": \"key deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": exception_message}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"User is unauthorized to perform this action\"}"
                     },
                     "404": {
                         "description": "{\"error\": exception_message}"
-                    },
-                    "500": {
-                        "description": "{\"error\": error msg}"
                     }
                 }
             }
@@ -761,9 +764,6 @@
                     },
                     "404": {
                         "description": "{\"error\": exception_message}"
-                    },
-                    "500": {
-                        "description": "{\"error\": error msg}"
                     }
                 }
             }
@@ -1261,9 +1261,6 @@
                     },
                     "404": {
                         "description": "{\"error\": exception_message}"
-                    },
-                    "500": {
-                        "description": "{\"error\": error msg}"
                     }
                 }
             }
@@ -2148,7 +2145,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc04246e090.false": {
+        "49763.0xc00074fce0.false": {
             "title": "false",
             "type": "object"
         },
@@ -2204,7 +2201,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/49762.0xc00074b5f0.false"
+                    "$ref": "#/definitions/49763.0xc00074fce0.false"
                 },
                 "name": {
                     "type": "string"
@@ -2718,7 +2715,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
