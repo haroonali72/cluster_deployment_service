@@ -20,8 +20,8 @@ type GcpTemplateController struct {
 // @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"Name of the template"
 // @Success 200 {object} gcp.Template
-// @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @router /:templateId [get]
 func (c *GcpTemplateController) Get() {
 	id := c.GetString(":templateId")
@@ -86,6 +86,7 @@ func (c *GcpTemplateController) Get() {
 // @Description get all the templates
 // @Param	token	header	string	token ""
 // @Success 200 {object} []gcp.Template
+// @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *GcpTemplateController) GetAll() {
@@ -136,6 +137,8 @@ func (c *GcpTemplateController) GetAll() {
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {"msg": "template created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
@@ -225,6 +228,8 @@ func (c *GcpTemplateController) Post() {
 // @Param	teams	header	string	teams ""
 // @Param	body	body	gcp.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "no template exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
@@ -310,6 +315,8 @@ func (c *GcpTemplateController) Patch() {
 // @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"Name of the template"
 // @Success 200 {"msg": "template deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId [delete]

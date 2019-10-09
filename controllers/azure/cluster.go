@@ -23,8 +23,9 @@ type AzureClusterController struct {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
 // @Success 200 {object} azure.Cluster_Def
-// @Failure 404 {"error": exception_message}
-// @Failure 500 {"error": "error msg"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @router /:projectId/ [get]
 func (c *AzureClusterController) Get() {
 	projectId := c.GetString(":projectId")
@@ -82,6 +83,7 @@ func (c *AzureClusterController) Get() {
 // @Description get all the clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []azure.Cluster_Def
+// @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AzureClusterController) GetAll() {
@@ -127,9 +129,11 @@ func (c *AzureClusterController) GetAll() {
 // @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	azure.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
+// @Success 400 {"msg": "error message"}
+// @Success 401 {"msg": "error message"}
+// @Success 404 {"msg": "error message"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
 // @Failure 410 {"error": "Core limit exceeded"}
-// @Success 400 {"msg": "error message"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
 func (c *AzureClusterController) Post() {
@@ -218,6 +222,9 @@ func (c *AzureClusterController) Post() {
 // @Param	subscription_id	header	subscriptionId	token ""
 // @Param	body	body 	azure.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 402 {"error": "error msg"}
 // @Failure 404 {"error": "no cluster exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
@@ -291,6 +298,8 @@ func (c *AzureClusterController) Patch() {
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Success 200 {"msg": "cluster deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId [delete]
@@ -359,8 +368,9 @@ func (c *AzureClusterController) Delete() {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {"msg": "cluster created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
-// @Failure 400 {"error": "exception_message"}
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *AzureClusterController) StartCluster() {
@@ -451,6 +461,8 @@ func (c *AzureClusterController) StartCluster() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {object} azure.Cluster_Def
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
@@ -526,6 +538,8 @@ func (c *AzureClusterController) GetStatus() {
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
 func (c *AzureClusterController) TerminateCluster() {
@@ -604,6 +618,7 @@ func (c *AzureClusterController) TerminateCluster() {
 // @Description returns ssh key pairs
 // @Param	token	header	string	token ""
 // @Success 200 {object} []string
+// @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /sshkeys [get]
 func (c *AzureClusterController) GetSSHKeys() {
@@ -723,8 +738,8 @@ func (c *AzureClusterController) GetCores() {
 // @Param	keyname	 	path	string	true	""
 // @Param	token		header	string	token 	""
 // @Success 200 		{"msg": key deleted successfully}
-// @Failure 404 		{"error": exception_message}
-// @Failure 400 		{"error": exception_message}
+// @Failure 400 		{"error": "error msg"}
+// @Failure 404 		{"error": "error msg"}
 // @router /sshkey/:keyname [delete]
 func (c *AzureClusterController) DeleteSSHKey() {
 

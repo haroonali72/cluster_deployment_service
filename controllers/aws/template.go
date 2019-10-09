@@ -20,7 +20,9 @@ type AWSTemplateController struct {
 // @Param	templateId	path	string	true	"Template Id of the template"
 // @Param	token	header	string	token ""
 // @Success 200 {object} aws.Template
-// @Failure 404 {"error": exception_message}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
@@ -80,6 +82,7 @@ func (c *AWSTemplateController) Get() {
 // @Description get all the templates
 // @Param	token	header	string	token ""
 // @Success 200 {object} []aws.Template
+// @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AWSTemplateController) GetAll() {
@@ -127,6 +130,8 @@ func (c *AWSTemplateController) GetAll() {
 // @Param	teams	header	string	teams ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
@@ -208,6 +213,8 @@ func (c *AWSTemplateController) Post() {
 // @Param	teams	header	string	token ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "no template exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
@@ -288,6 +295,8 @@ func (c *AWSTemplateController) Patch() {
 // @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId [delete]

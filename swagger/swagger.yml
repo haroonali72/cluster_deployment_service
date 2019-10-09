@@ -35,8 +35,16 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "402":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "error msg"}'
+        "405":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
     post:
@@ -64,6 +72,10 @@ paths:
           description: '{"msg": "cluster created successfully"}'
         "400":
           description: '{"msg": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"msg": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
         "410":
@@ -89,6 +101,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -114,9 +130,11 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aws.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
-        "500":
           description: '{"error": "error msg"}'
   /cluster/aws/all:
     get:
@@ -136,6 +154,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/aws.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/amis/{amiId}:
@@ -169,6 +189,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/*ec2.BlockDeviceMapping'
+        "400":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "ami id is empty"}'
         "500":
@@ -196,6 +218,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster autoscaled successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/machine/info:
@@ -238,11 +264,11 @@ paths:
         "200":
           description: '{"msg": "key deleted successfully"}'
         "400":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "User is unauthorized to perform this action"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
   /cluster/aws/sshkey/{projectId}/{keyname}:
     post:
       tags:
@@ -281,8 +307,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/key_utils.AWSKey'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/sshkeys:
@@ -303,6 +333,8 @@ paths:
             type: array
             items:
               type: string
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/start/{projectId}:
@@ -329,9 +361,11 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": "exception_message"}'
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "name is empty"}'
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/status/{projectId}/:
@@ -359,6 +393,10 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aws.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -387,6 +425,8 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster terminated successfully"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -416,6 +456,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "402":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "no cluster exists with this name"}'
         "500":
@@ -445,6 +491,10 @@ paths:
           description: '{"msg": "cluster created successfully"}'
         "400":
           description: '{"msg": "error message"}'
+        "401":
+          description: '{"msg": "error message"}'
+        "404":
+          description: '{"msg": "error message"}'
         "409":
           description: '{"error": "cluster against same project id already exists"}'
         "410":
@@ -470,6 +520,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -495,9 +549,11 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/azure.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
-        "500":
           description: '{"error": "error msg"}'
   /cluster/azure/all:
     get:
@@ -517,6 +573,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/azure.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/azure/machine/info:
@@ -551,9 +609,9 @@ paths:
         "200":
           description: '{"msg": key deleted successfully}'
         "400":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -606,6 +664,8 @@ paths:
             type: array
             items:
               type: string
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/azure/start/{projectId}:
@@ -632,7 +692,9 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": "exception_message"}'
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -662,6 +724,10 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/azure.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -689,6 +755,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster terminated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -717,6 +787,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "402":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "no cluster exists with this name"}'
         "500":
@@ -744,6 +820,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "409":
           description: '{"error": "cluster against same project id already exists"}'
         "410":
@@ -769,6 +849,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -794,8 +878,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gcp.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/gcp/all:
@@ -816,6 +904,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/gcp.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/gcp/machine/info:
@@ -879,9 +969,9 @@ paths:
         "200":
           description: '{"msg": key deleted successfully}'
         "400":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": error msg}'
   /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
     post:
       tags:
@@ -917,10 +1007,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
+        "400":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "500":
-          description: '{"error": error msg}'
+          description: '{"error": "error msg"}'
   /cluster/gcp/sshkeys:
     get:
       tags:
@@ -939,6 +1031,8 @@ paths:
             type: array
             items:
               type: string
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/gcp/start/{projectId}:
@@ -966,7 +1060,9 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": "exception_message"}'
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/gcp/status/{projectId}/:
@@ -998,7 +1094,7 @@ paths:
         "206":
           description: '{object} gcp.Cluster_Def'
         "400":
-          description: '{"error": "exception_message"}'
+          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "authorization params missing or invalid"}'
         "500":
@@ -1028,7 +1124,7 @@ paths:
         "200":
           description: '{"msg": "cluster terminated successfully"}'
         "400":
-          description: '{"error": "exception_message"}'
+          description: '{"error": "error_msg"}'
         "401":
           description: '{"error": "Authorization format should be ''base64 encoded
             service_account_json''"}'
@@ -1067,6 +1163,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "no template exists with this name"}'
         "500":
@@ -1094,6 +1194,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "409":
           description: '{"error": "template with same name already exists"}'
         "500":
@@ -1117,6 +1221,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -1142,8 +1250,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aws.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /template/aws/all:
@@ -1164,6 +1276,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/aws.Template'
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /template/azure/:
@@ -1190,6 +1304,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "no template exists with this name"}'
         "500":
@@ -1217,6 +1335,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "409":
           description: '{"error": "template with same name already exists"}'
         "500":
@@ -1242,8 +1364,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/azure.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
     delete:
@@ -1264,6 +1390,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "name is empty"}'
         "500":
@@ -1286,6 +1416,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/azure.Template'
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /template/gcp/:
@@ -1312,6 +1444,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "no template exists with this name"}'
         "500":
@@ -1339,6 +1475,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "409":
           description: '{"error": "template with same name already exists"}'
         "500":
@@ -1364,9 +1504,9 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gcp.Template'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": exception_message}'
-        "500":
           description: '{"error": "error msg"}'
     delete:
       tags:
@@ -1386,6 +1526,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "name is empty"}'
         "500":
@@ -1408,13 +1552,15 @@ paths:
             type: array
             items:
               $ref: '#/definitions/gcp.Template'
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc000658ba0.false:
+  577.0xc000633fb0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1454,7 +1600,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc000658ba0.false'
+        $ref: '#/definitions/577.0xc000633fb0.false'
       name:
         type: string
       network_name:

@@ -20,7 +20,9 @@ type AzureTemplateController struct {
 // @Param	name	path	string	true	"Name of the template"
 // @Param	token	header	string	token ""
 // @Success 200 {object} azure.Template
-// @Failure 404 {"error": exception_message}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId [get]
 func (c *AzureTemplateController) Get() {
@@ -81,6 +83,7 @@ func (c *AzureTemplateController) Get() {
 // @Description get all the templates
 // @Param	token	header	string	token ""
 // @Success 200 {object} []azure.Template
+// @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AzureTemplateController) GetAll() {
@@ -125,6 +128,8 @@ func (c *AzureTemplateController) GetAll() {
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {"msg": "template created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
@@ -209,6 +214,8 @@ func (c *AzureTemplateController) Post() {
 // @Param	teams	header	string	teams ""
 // @Param	body	body	azure.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "no template exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
@@ -288,6 +295,8 @@ func (c *AzureTemplateController) Patch() {
 // @Param	name	path	string	true	"Name of the template"
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "template deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "name is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId [delete]
