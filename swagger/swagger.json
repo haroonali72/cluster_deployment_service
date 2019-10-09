@@ -53,7 +53,7 @@
                         "description": "{\"error\": \"no cluster exists with this name\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -100,7 +100,7 @@
                         "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -131,7 +131,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -184,7 +184,7 @@
                         "description": "{\"error\": \"ami id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -222,7 +222,7 @@
                         "description": "{\"msg\": \"cluster autoscaled successfully\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -242,7 +242,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -305,7 +305,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": error msg}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -336,7 +336,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -424,7 +424,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -467,7 +467,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -502,7 +502,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -540,7 +540,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -585,7 +585,7 @@
                         "description": "{\"error\": \"no cluster exists with this name\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -632,7 +632,7 @@
                         "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -663,7 +663,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -683,7 +683,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -734,7 +734,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": error msg}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -765,7 +765,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -853,7 +853,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -894,7 +894,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -929,7 +929,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -967,7 +967,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1010,7 +1010,7 @@
                         "description": "{\"error\": \"no cluster exists with this name\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -1054,7 +1054,7 @@
                         "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1085,7 +1085,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1105,7 +1105,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\":  \"error msg\"}"
                     }
                 }
             }
@@ -1149,7 +1149,7 @@
                         "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\":  \"error msg\"}"
                     }
                 }
             }
@@ -1238,7 +1238,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1280,7 +1280,7 @@
                         "description": "{\"error\": \"exception_message\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1331,7 +1331,7 @@
                         "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1376,7 +1376,7 @@
                         "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1411,7 +1411,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1449,7 +1449,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1506,7 +1506,7 @@
                         "description": "{\"error\": \"no template exists with this name\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -1547,7 +1547,7 @@
                         "description": "{\"error\": \"template with same name already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1578,7 +1578,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1613,7 +1613,7 @@
                         "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1651,7 +1651,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1694,7 +1694,7 @@
                         "description": "{\"error\": \"no template exists with this name\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e \"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -1735,7 +1735,7 @@
                         "description": "{\"error\": \"template with same name already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1766,7 +1766,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1804,7 +1804,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -1837,7 +1837,7 @@
                         "description": "{\"error\": \"name is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error \u003cerror msg\u003e\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1880,7 +1880,7 @@
                         "description": "{\"error\": \"no template exists with this name\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -1921,7 +1921,7 @@
                         "description": "{\"error\": \"template with same name already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1952,7 +1952,7 @@
                         }
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -1990,7 +1990,7 @@
                         "description": "{\"error\": exception_message}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -2023,7 +2023,7 @@
                         "description": "{\"error\": \"name is empty\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"internal server error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -2034,7 +2034,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc04246e090.false": {
+        "577.0xc0005dab70.false": {
             "title": "false",
             "type": "object"
         },
@@ -2090,7 +2090,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc04246e090.false"
+                    "$ref": "#/definitions/577.0xc0005dab70.false"
                 },
                 "name": {
                     "type": "string"
@@ -2604,7 +2604,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
