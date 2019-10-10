@@ -69,11 +69,11 @@ const (
 const (
 	VaultEndpoint = "/robin/api/v1"
 
-	VaultGetKeyURI     = "/template/sshKey/{cloud}/{keyName}/{region}"
+	VaultGetKeyURI     = "/template/sshKey/{cloud}/{region}/{keyName}"
 	VaultGetAllKeysURI = "/template/sshKey/{cloud}/{region}"
 	VaultGetProfileURI = "/template/{cloud}/credentials/{profileId}"
 	VaultCreateKeyURI  = "/template/sshKey"
-	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{name}/{region}"
+	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{region}/{name}"
 )
 
 const (

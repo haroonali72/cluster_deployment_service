@@ -408,6 +408,12 @@
                         "name": "token",
                         "description": "token",
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Region",
+                        "description": "X-Region",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -421,6 +427,9 @@
                         }
                     },
                     "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -2370,7 +2379,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc000666270.false": {
+        "50183.0xc0007cb1d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -2426,7 +2435,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc000666270.false"
+                    "$ref": "#/definitions/50183.0xc0007cb1d0.false"
                 },
                 "name": {
                     "type": "string"

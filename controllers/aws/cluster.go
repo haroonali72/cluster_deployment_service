@@ -662,7 +662,7 @@ func (c *AWSClusterController) TerminateCluster() {
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
 // @Param	token	header	string	token ""
-// @Param	region	header	string	region ""
+// @Param	X-Region  header	string	X-Region	""
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -681,7 +681,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("region")
+	region := c.Ctx.Input.Header("X-Region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -1065,7 +1065,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 	//==========================RBAC Authentication==============================//
 	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + keyName
-	subType := "ssh/" + string(models.AWS)
+	subType := "ssh/" + string(models.AWS) + "/" + region
 	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())

@@ -83,14 +83,13 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
 	}
 
-	if strings.Contains(host, "{keyName}") {
-		host = strings.Replace(host, "{keyName}", keyName, -1)
-	}
-
 	if strings.Contains(host, "{region}") {
 		host = strings.Replace(host, "{region}", region, -1)
 	}
 
+	if strings.Contains(host, "{keyName}") {
+		host = strings.Replace(host, "{keyName}", keyName, -1)
+	}
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -215,12 +214,12 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region st
 		host = strings.Replace(host, "{cloudType}", cloudType, -1)
 	}
 
-	if strings.Contains(host, "{name}") {
-		host = strings.Replace(host, "{name}", keyName, -1)
-	}
-
 	if strings.Contains(host, "{region}") {
 		host = strings.Replace(host, "{region}", region, -1)
+	}
+
+	if strings.Contains(host, "{name}") {
+		host = strings.Replace(host, "{name}", keyName, -1)
 	}
 
 	req, err := utils.CreateDeleteRequest(host)

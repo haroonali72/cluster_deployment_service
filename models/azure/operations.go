@@ -571,6 +571,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 	}
 	return nil
 }
+
 func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId string, ctx utils.Context) error {
 
 	ctx.SendLogs("AZUREOperations: terminating node pools", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
