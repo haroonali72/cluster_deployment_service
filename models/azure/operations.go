@@ -508,7 +508,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 
 			utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
-			err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx)
+			err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx, companyId)
 			if err != nil {
 				terminate = false
 				break
@@ -579,9 +579,9 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-			return nil
-	} else{
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		return nil
+	} else {
 		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
@@ -593,11 +593,13 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 	ctx.SendLogs("Node pool terminated successfully: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return nil
 }
-func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, ctx utils.Context) error {
+func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, ctx utils.Context, companyId string) error {
 
 	beego.Info("AZUREOperations: terminating nodes")
 
 	ctx.SendLogs("Terminating node: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	utils.SendLog(companyId, "Terminating node: "+name, "info", projectId)
+
 	vmClient := compute.NewVirtualMachinesClient(cloud.Subscription)
 	vmClient.Authorizer = cloud.Authorizer
 	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
@@ -605,13 +607,13 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		beego.Error(err)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-			return nil
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		utils.SendLog(companyId, err.Error(), "error", projectId)
+		return nil
 	} else {
 		err = future.WaitForCompletion(cloud.context, vmClient.Client)
 		if err != nil {
-			beego.Error("vm deletion failed")
-			beego.Error(err)
+			utils.SendLog(companyId, err.Error(), "error", projectId)
 			return err
 		}
 		beego.Info("Deleted Node" + name)
@@ -678,8 +680,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress:           &publicIPaddress,
+						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress: &publicIPaddress,
 					},
 				},
 			},
@@ -1333,7 +1335,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location:                          &cloud.Region,
+		Location: &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
@@ -1401,7 +1403,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 					return e
 				}
 
-				err := cloud.TerminateMasterNode(nodeName, cluster.ProjectId, cluster.ResourceGroup, ctx)
+				err := cloud.TerminateMasterNode(nodeName, cluster.ProjectId, cluster.ResourceGroup, ctx, companyId)
 				if err != nil {
 					beego.Info(e.Error())
 					return err
@@ -1532,10 +1534,12 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 	for _, vm := range vms {
 		err := fileWrite(privateKey, KeyName)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		err = setPermission(KeyName)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 
@@ -1543,18 +1547,20 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
 			time.Sleep(time.Second * 50)
 			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
-			IPname := fmt.Sprintf("pip-%s", *vm.Name)
-			beego.Info(IPname)
+			//IPname := fmt.Sprintf("pip-%s", *vm.Name)
+			//beego.Info(IPname)
 			if poleRole == "master" {
 				IPname := "pip-" + poolName
 				publicIp, err := cloud.GetVMPIP(resourceGroup, IPname, ctx)
 				if err != nil {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					return err
 				}
 				vm.PublicIP = publicIp.IPAddress
 			} else {
 				publicIp, err := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
 				if err != nil {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					return err
 				}
 				vm.PublicIP = publicIp.IPAddress
@@ -1562,7 +1568,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		}
 
 		start := time.Now()
-		timeToWait := 60 //seconds
+		timeToWait := 90 //seconds
 		retry := true
 		var errCopy error
 		fileName := ""
@@ -1577,6 +1583,7 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 
 			errCopy = copyFile(KeyName, user, *vm.PublicIP, fileName)
 			if errCopy != nil && strings.Contains(errCopy.Error(), "exit status 1") {
+				ctx.SendLogs(errCopy.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				ctx.SendLogs("waiting 5 seconds before retry", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
 				time.Sleep(5 * time.Second)
 			} else {
@@ -1588,18 +1595,22 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 		}
 		err = setScriptPermision(KeyName, user, *vm.PublicIP, fileName, ctx)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		err = runScript(KeyName, user, *vm.PublicIP, fileName, ctx)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		err = deleteScript(KeyName, user, *vm.PublicIP, fileName, ctx)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		err = deleteFile(KeyName, ctx)
 		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
