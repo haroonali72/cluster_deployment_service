@@ -578,10 +578,10 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 	if err != nil && !strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
-	} else {
-		if err != nil && strings.Contains(err.Error(), "not found") {
+	} else if err != nil && strings.Contains(err.Error(), "not found") {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		}
+			return nil
+	} else{
 		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
@@ -604,10 +604,9 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	if err != nil && !strings.Contains(err.Error(), "not found") {
 		beego.Error(err)
 		return err
-	} else {
-		if err != nil && strings.Contains(err.Error(), "not found") {
+	} else if err != nil && strings.Contains(err.Error(), "not found") {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		}
+	} else {
 		err = future.WaitForCompletion(cloud.context, vmClient.Client)
 		if err != nil {
 			beego.Error("vm deletion failed")
@@ -655,10 +654,10 @@ func (cloud *AZURE) deletePublicIp(IPname, resourceGroup string, projectId strin
 	if err != nil && !strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	} else if err != nil && strings.Contains(err.Error(), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		return nil
 	} else {
-		if err != nil && strings.Contains(err.Error(), "not found") {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		}
 		err = address.WaitForCompletionRef(cloud.context, cloud.AddressClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -714,10 +713,11 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 	if err != nil && !strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	} else if err != nil && strings.Contains(err.Error(), "not found") {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		return nil
 	} else {
-		if err != nil && strings.Contains(err.Error(), "not found") {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		}
+
 		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1362,12 +1362,12 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 	_, err := cloud.DiskClient.Delete(context.Background(), resouceGroup, diskName)
 
 	if err != nil && !strings.Contains(err.Error(), "not found") {
-
 		beego.Error("Disk deletion failed" + err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		return nil
 	}
 	return nil
 }
@@ -1381,6 +1381,7 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		return nil
 	}
 	return nil
 }
