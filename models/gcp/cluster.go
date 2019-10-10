@@ -479,7 +479,7 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 
 	for _, pool := range cluster.NodePools {
 		var keyInfo key_utils.AZUREKey
-		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
+		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			beego.Error("vm fetched failed with error: " + err.Error())
@@ -500,7 +500,7 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 }
 
 func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err error) {
-	keys, err = vault.GetAllSSHKey(string(models.GCP), ctx, token)
+	keys, err = vault.GetAllSSHKey(string(models.GCP), ctx, token, "")
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
@@ -665,7 +665,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 
-	err := vault.DeleteSSHkey(string(models.GCP), keyName, token, ctx)
+	err := vault.DeleteSSHkey(string(models.GCP), keyName, token, ctx, "")
 	if err != nil {
 		return err
 	}

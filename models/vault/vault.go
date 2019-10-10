@@ -15,6 +15,7 @@ type Key struct {
 	KeyInfo interface{}  `json:"key_info"`
 	KeyName string       `json:"key_name"`
 	Cloud   models.Cloud `json:"cloud_type"`
+	Region  string       `json:"region"`
 }
 
 type AzureProfile struct {
@@ -39,12 +40,13 @@ type AwsCredentials struct {
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url") + models.VaultEndpoint
 }
-func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx utils.Context, token, teams string) (int, error) {
+func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx utils.Context, token, teams, region string) (int, error) {
 	var keyObj Key
 
 	keyObj.KeyInfo = keyRaw
 	keyObj.Cloud = cloudType
 	keyObj.KeyName = keyName
+	keyObj.Region = region
 
 	client := utils.InitReq()
 
@@ -73,7 +75,7 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 	return response.StatusCode, err
 
 }
-func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, error) {
+func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region string) ([]byte, error) {
 
 	host := getVaultHost() + models.VaultGetKeyURI
 
@@ -84,6 +86,11 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, err
 	if strings.Contains(host, "{keyName}") {
 		host = strings.Replace(host, "{keyName}", keyName, -1)
 	}
+
+	if strings.Contains(host, "{region}") {
+		host = strings.Replace(host, "{region}", region, -1)
+	}
+
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -114,12 +121,16 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, err
 	return contents, nil
 
 }
-func GetAllSSHKey(cloudType string, ctx utils.Context, token string) (interface{}, error) {
+func GetAllSSHKey(cloudType string, ctx utils.Context, token, region string) (interface{}, error) {
 	var keys interface{}
 	host := getVaultHost() + models.VaultGetAllKeysURI
 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{region}") {
+		host = strings.Replace(host, "{region}", region, -1)
 	}
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
@@ -198,7 +209,7 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 
 }
 
-func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context) error {
+func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region string) error {
 	host := getVaultHost() + models.VaultDeleteKeyURI
 	if strings.Contains(host, "{cloudType}") {
 		host = strings.Replace(host, "{cloudType}", cloudType, -1)
@@ -206,6 +217,10 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context) error {
 
 	if strings.Contains(host, "{name}") {
 		host = strings.Replace(host, "{name}", keyName, -1)
+	}
+
+	if strings.Contains(host, "{region}") {
+		host = strings.Replace(host, "{region}", region, -1)
 	}
 
 	req, err := utils.CreateDeleteRequest(host)
