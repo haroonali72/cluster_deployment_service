@@ -32,10 +32,11 @@ func GetMongoSession() (session *mgo.Session, err error) {
 		Password: conf.mongoPass,
 		DialServer: func(addr *mgo.ServerAddr) (net.Conn, error) {
 			conf := tlsconfig
+			dial,err := tls.Dial("tcp", addr.String(), conf)
 			if err != nil {
 				beego.Error(err)
 			}
-			return tls.Dial("tcp", addr.String(), conf)
+			return dial,err
 		},
 	})
 
