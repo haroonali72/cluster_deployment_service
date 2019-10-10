@@ -606,6 +606,7 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+			return nil
 	} else {
 		err = future.WaitForCompletion(cloud.context, vmClient.Client)
 		if err != nil {
@@ -1367,7 +1368,6 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		return nil
 	}
 	return nil
 }
@@ -1381,7 +1381,6 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		return nil
 	}
 	return nil
 }
