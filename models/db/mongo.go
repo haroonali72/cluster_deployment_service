@@ -1,6 +1,8 @@
 package db
 
 import (
+	"antelope/models"
+	"antelope/models/utils"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -11,7 +13,7 @@ import (
 	"strings"
 )
 
-func GetMongoSession() (session *mgo.Session, err error) {
+func GetMongoSession(ctx utils.Context) (session *mgo.Session, err error) {
 	conf := GetMongoConf()
 
 	beego.Info("connecting to mongo host: " + conf.mongoHost)
@@ -35,6 +37,7 @@ func GetMongoSession() (session *mgo.Session, err error) {
 			dial,err := tls.Dial("tcp", addr.String(), conf)
 			if err != nil {
 				beego.Error(err)
+				ctx.SendLogs(" Db connection: ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			return dial,err
 		},
@@ -46,7 +49,8 @@ func GetMongoSession() (session *mgo.Session, err error) {
 func IsMongoAlive() bool {
 
 	conf := GetMongoConf()
-	_, err := GetMongoSession()
+	ctx := new(utils.Context)
+	_, err := GetMongoSession(*ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		beego.Error("unable to establish connection to " + conf.mongoHost + " mongo db")
@@ -59,7 +63,8 @@ func IsMongoAlive() bool {
 
 func InsertInMongo(collection string, data interface{}) error {
 	conf := GetMongoConf()
-	session, err := GetMongoSession()
+	ctx := new(utils.Context)
+	session, err := GetMongoSession(*ctx)
 	if err != nil {
 		errorText := "unable to establish connection to " + conf.mongoHost + " db"
 		beego.Error(errorText)
