@@ -942,7 +942,7 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 	//==========================RBAC Authentication==============================//
-	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + keyName
+	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + region + "/" + keyName
 	subType := "ssh/" + string(models.AWS)
 	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Create", token, *ctx)
 	if err != nil {
@@ -1064,7 +1064,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + keyName
+	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + region + "/" + keyName
 	subType := "ssh/" + string(models.AWS) + "/" + region
 	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Delete", token, *ctx)
 	if err != nil {
