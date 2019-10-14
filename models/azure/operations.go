@@ -952,7 +952,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	storageName := "ext-" + pool.Name
 	disk := compute.DataDisk{
-		Lun:          to.Int32Ptr(int32(index)),
+		Lun:          to.Int32Ptr(int32(60)),
 		Name:         to.StringPtr(storageName),
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
 		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),

@@ -203,7 +203,7 @@ func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context
 
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
-	session, err1 := db.GetMongoSession()
+	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err1
@@ -222,7 +222,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 
 func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
 
-	session, err1 := db.GetMongoSession()
+	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -275,7 +275,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 }
 
 func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
-	session, err := db.GetMongoSession()
+	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 
 		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -514,8 +514,8 @@ func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err er
 	return keys, nil
 }
 func GetSSHKeyPair(keyname string) (keys *key_utils.AWSKey, err error) {
-
-	session, err := db.GetMongoSession()
+	ctx := new(utils.Context)
+	session, err := db.GetMongoSession(*ctx)
 	if err != nil {
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
 		return keys, err
@@ -531,7 +531,8 @@ func GetSSHKeyPair(keyname string) (keys *key_utils.AWSKey, err error) {
 }
 func InsertSSHKeyPair(key key_utils.AWSKey) (err error) {
 	key.Cloud = models.AWS
-	session, err := db.GetMongoSession()
+	ctx := new(utils.Context)
+	session, err := db.GetMongoSession(*ctx)
 	if err != nil {
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err)
 		return err
@@ -644,9 +645,10 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		for _, mach := range machine {
 			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * mach.Cores)
+					coreCount = coreCount + (nodepool.Scaling.MaxScalingGroupSize * mach.Cores)
+				}else{
+					coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
 				}
-				coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
 				found = true
 				break
 			}
