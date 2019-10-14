@@ -186,6 +186,9 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
+	if response.StatusCode == 403 {
+		return []byte{}, errors.New("User is not authorized for credential profile - " + profileId)
+	}
 	if response.StatusCode != 200 {
 		return []byte{}, errors.New("not found")
 	}
