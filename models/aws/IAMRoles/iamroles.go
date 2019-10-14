@@ -239,7 +239,6 @@ var testInstanceMap = map[string]string{
 func (cloud *AWSIAMRoles) DeletePolicy(policyName string, ctx utils.Context) error {
 	err, policyArn := cloud.GetPolicyARN(policyName)
 	if err != nil {
-		beego.Error(err.Error())
 		return err
 	}
 	policy_input := iam.DeletePolicyInput{PolicyArn: &policyArn}
@@ -247,7 +246,6 @@ func (cloud *AWSIAMRoles) DeletePolicy(policyName string, ctx utils.Context) err
 
 	if err_1 != nil {
 
-		ctx.SendLogs(err_1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err_1
 	}
 
@@ -257,7 +255,6 @@ func (cloud *AWSIAMRoles) DeletePolicy(policyName string, ctx utils.Context) err
 func (cloud *AWSIAMRoles) GetPolicyARN(policyName string) (error, string) {
 	id, err := cloud.getAccountId()
 	if err != nil {
-		beego.Error(err.Error())
 		return err, ""
 	}
 	policyArn := "arn:aws:iam::" + id + ":policy/" + policyName
@@ -266,16 +263,11 @@ func (cloud *AWSIAMRoles) GetPolicyARN(policyName string) (error, string) {
 func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	err, policyArn := cloud.GetPolicyARN(roleName)
 	if err != nil {
-
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 		return err
 	}
 	policy := iam.DetachRolePolicyInput{RoleName: &roleName, PolicyArn: &policyArn}
 	out, err := cloud.IAMService.DetachRolePolicy(&policy)
 	if err != nil {
-
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -284,8 +276,6 @@ func (cloud *AWSIAMRoles) DeleteRole(roleName string, ctx utils.Context) error {
 	roleInput := iam.DeleteRoleInput{RoleName: &roleName}
 	out_, err := cloud.IAMService.DeleteRole(&roleInput)
 	if err != nil {
-
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -296,8 +286,6 @@ func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx utils.Context) e
 	profile := iam.RemoveRoleFromInstanceProfileInput{InstanceProfileName: &roleName, RoleName: &roleName}
 	outtt, err := cloud.IAMService.RemoveRoleFromInstanceProfile(&profile)
 	if err != nil {
-
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	beego.Info(outtt.GoString())
@@ -305,8 +293,6 @@ func (cloud *AWSIAMRoles) DeleteIAMProfile(roleName string, ctx utils.Context) e
 	profileInput := iam.DeleteInstanceProfileInput{InstanceProfileName: &roleName}
 	outt, err := cloud.IAMService.DeleteInstanceProfile(&profileInput)
 	if err != nil {
-
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	beego.Info(outt.GoString())
@@ -317,15 +303,25 @@ func (cloud *AWSIAMRoles) DeleteIAMRole(name string, ctx utils.Context) error {
 	roleName := name
 	err := cloud.DeleteIAMProfile(roleName, ctx)
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	} else {
+		ctx.SendLogs(roleName+" IAM profile deleted successfully", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 	err = cloud.DeleteRole(roleName, ctx)
 	if err != nil {
+
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	} else {
+		ctx.SendLogs(roleName+"  IAM role deleted successfully", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 	err = cloud.DeletePolicy(roleName, ctx)
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	} else {
+		ctx.SendLogs(roleName+" IAM policy deleted successfully", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 	return nil
 
