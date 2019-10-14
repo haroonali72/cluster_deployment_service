@@ -680,8 +680,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress: &publicIPaddress,
+						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress:           &publicIPaddress,
 					},
 				},
 			},
@@ -952,7 +952,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	storageName := "ext-" + pool.Name
 	disk := compute.DataDisk{
-		Lun:          to.Int32Ptr(int32(index)),
+		Lun:          to.Int32Ptr(int32(60)),
 		Name:         to.StringPtr(storageName),
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
 		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),
@@ -1335,7 +1335,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location: &cloud.Region,
+		Location:                          &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
