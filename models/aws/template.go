@@ -83,7 +83,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 }
 
 func GetTemplate(templateId, companyId string, ctx utils.Context) (template Template, err error) {
-	session, err1 := db.GetMongoSession()
+	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err1
@@ -104,7 +104,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
 	}
-	session, err1 := db.GetMongoSession()
+	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
 		return nil, err1
@@ -121,7 +121,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	return templates, nil
 }
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
-	session, err1 := db.GetMongoSession()
+	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
 		return nil, err1
@@ -167,7 +167,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 }
 
 func DeleteTemplate(templateId string, ctx utils.Context) error {
-	session, err := db.GetMongoSession()
+	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs("Template model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
