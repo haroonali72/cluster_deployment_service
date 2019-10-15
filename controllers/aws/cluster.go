@@ -29,7 +29,12 @@ type AWSClusterController struct {
 // @router /:projectId/ [get]
 func (c *AWSClusterController) Get() {
 	projectId := c.GetString(":projectId")
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -65,12 +70,7 @@ func (c *AWSClusterController) Get() {
 
 	ctx.SendLogs("AWSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	cluster, err := aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
@@ -323,7 +323,12 @@ func (c *AWSClusterController) Patch() {
 // @router /:projectId [delete]
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
-
+	if id == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -397,7 +402,12 @@ func (c *AWSClusterController) Delete() {
 func (c *AWSClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -434,13 +444,6 @@ func (c *AWSClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
 	var cluster aws.Cluster_Def
-
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -497,6 +500,13 @@ func (c *AWSClusterController) StartCluster() {
 func (c *AWSClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -532,12 +542,7 @@ func (c *AWSClusterController) GetStatus() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	ctx.SendLogs("AWSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	region, err := aws.GetRegion(token, projectId, *ctx)
@@ -583,6 +588,12 @@ func (c *AWSClusterController) GetStatus() {
 func (c *AWSClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
 
@@ -635,12 +646,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	var cluster aws.Cluster_Def
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster, err = aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
@@ -774,12 +780,18 @@ func (c *AWSClusterController) GetAMI() {
 // @Success 200 {"msg": "cluster autoscaled successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /enablescaling/:projectId/ [post]
 func (c *AWSClusterController) EnableAutoScaling() {
 
 	projectId := c.GetString(":projectId")
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -869,7 +881,12 @@ func (c *AWSClusterController) PostSSHKey() {
 	beego.Info("AWSClusterController: CreateSSHKey.")
 
 	projectId := c.GetString(":projectId")
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	//==========================RBAC Authentication==============================//
 
 	ctx := new(utils.Context)

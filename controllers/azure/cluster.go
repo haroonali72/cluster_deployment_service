@@ -29,7 +29,12 @@ type AzureClusterController struct {
 // @router /:projectId/ [get]
 func (c *AzureClusterController) Get() {
 	projectId := c.GetString(":projectId")
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -60,12 +65,7 @@ func (c *AzureClusterController) Get() {
 	}
 	ctx.SendLogs("AZUREClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	cluster, err := azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -305,6 +305,12 @@ func (c *AzureClusterController) Patch() {
 // @router /:projectId [delete]
 func (c *AzureClusterController) Delete() {
 	id := c.GetString(":projectId")
+	if id == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
 
@@ -376,7 +382,12 @@ func (c *AzureClusterController) Delete() {
 func (c *AzureClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -411,13 +422,6 @@ func (c *AzureClusterController) StartCluster() {
 	region, err := azure.GetRegion(token, projectId, *ctx)
 
 	var cluster azure.Cluster_Def
-
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -469,7 +473,12 @@ func (c *AzureClusterController) StartCluster() {
 func (c *AzureClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 
 	userInfo, err := rbac_athentication.GetInfo(token)
@@ -510,12 +519,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
@@ -545,6 +549,12 @@ func (c *AzureClusterController) GetStatus() {
 func (c *AzureClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
 
@@ -588,13 +598,6 @@ func (c *AzureClusterController) TerminateCluster() {
 	}
 
 	var cluster azure.Cluster_Def
-
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -660,7 +663,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Param	token		header	string	token 	""
 // @Param	teams		header	string	teams 	""
 // @Success 200 		{object} key_utils.AZUREKey
-// @Failure 404 		{"error": exception_message}
+// @Failure 404 		{"error": "error message"}
 // @Failure 500 		{"error": "error msg"}
 // @router /sshkey/:keyname/:projectId [post]
 func (c *AzureClusterController) PostSSHKey() {
@@ -671,6 +674,13 @@ func (c *AzureClusterController) PostSSHKey() {
 
 	ctx := new(utils.Context)
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
