@@ -100,7 +100,9 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, err
 
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 403 || response.StatusCode == 404 {
+	if response.StatusCode == 403 {
+		return []byte{}, errors.New("User is not authorized to use this key - " + keyName)
+	}else if response.StatusCode == 404 {
 		return []byte{}, errors.New("not found")
 	}
 	if response.StatusCode != 200 {
