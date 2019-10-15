@@ -477,7 +477,6 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "Start", token, utils.Context{})
@@ -617,7 +616,7 @@ func (c *GcpClusterController) GetStatus() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -719,7 +718,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
