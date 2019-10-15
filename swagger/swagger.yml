@@ -326,6 +326,10 @@ paths:
         name: token
         description: token
         type: string
+      - in: header
+        name: X-Region
+        description: X-Region
+        type: string
       responses:
         "200":
           description: ""
@@ -334,6 +338,8 @@ paths:
             items:
               type: string
         "400":
+          description: '{"error": "error msg"}'
+        "404":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -1560,7 +1566,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc000666270.false:
+  50183.0xc0007dcf00.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1600,7 +1606,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc000666270.false'
+        $ref: '#/definitions/50183.0xc0007dcf00.false'
       name:
         type: string
       network_name:

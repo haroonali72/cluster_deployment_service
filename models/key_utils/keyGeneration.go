@@ -101,13 +101,13 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (KeyPairRespon
 func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx utils.Context) (string, error) {
 
 	var keyInfo AZUREKey
-	_, err := vault.GetSSHKey(string(cloud), keyName, token, ctx)
+	_, err := vault.GetSSHKey(string(cloud), keyName, token, ctx, "")
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
 		return "", err
 	}
-	if err == nil{
+	if err == nil {
 		return "", errors.New("Key already exist")
 	}
 	if userName == "" {
@@ -129,7 +129,7 @@ func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx
 	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("SSHKey Created. ", keyInfo.PrivateKey)
 
-	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams)
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", err
