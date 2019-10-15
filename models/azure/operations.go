@@ -23,7 +23,6 @@ import (
 	"github.com/astaxie/beego"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -501,7 +500,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 
 	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
-	for poolIndex, pool := range cluster.NodePools {
+	for _, pool := range cluster.NodePools {
 
 		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 		if pool.PoolRole == "master" {
