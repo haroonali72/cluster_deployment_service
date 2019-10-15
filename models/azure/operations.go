@@ -526,6 +526,9 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 				terminate = false
 			}
 
+			sName := strings.Replace(pool.Name, "-", "", -1)
+			sName = strings.ToLower(sName)
+			cloud.Resources["SA-"+pool.Name] = sName
 			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cloud.Resources["SA-"+pool.Name].(string), ctx)
 			if err != nil {
 				terminate = false
@@ -557,6 +560,9 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 				break
 			}
 
+			sName := strings.Replace(pool.Name, "-", "", -1)
+			sName = strings.ToLower(sName)
+			cloud.Resources["SA-"+pool.Name] = sName
 			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cloud.Resources["SA-"+pool.Name].(string), ctx)
 			if err != nil {
 				terminate = false
