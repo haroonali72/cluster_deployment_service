@@ -442,7 +442,12 @@ func (c *AWSClusterController) StartCluster() {
 	ctx.SendLogs("AWSNetworkController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
 	var cluster aws.Cluster_Def
 
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -541,7 +546,12 @@ func (c *AWSClusterController) GetStatus() {
 	ctx.SendLogs("AWSNetworkController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	ctx.SendLogs("AWSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -627,6 +637,13 @@ func (c *AWSClusterController) TerminateCluster() {
 	//=============================================================================//
 	ctx.SendLogs("AWSNetworkController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -744,6 +761,13 @@ func (c *AWSClusterController) GetAMI() {
 	ctx.SendLogs("AWSClusterController: FetchAMIs.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	region := c.Ctx.Input.Header("X-Region")
 
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
@@ -823,6 +847,13 @@ func (c *AWSClusterController) EnableAutoScaling() {
 
 	//=============================================================================//
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
