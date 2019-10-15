@@ -23,7 +23,6 @@ import (
 	"github.com/astaxie/beego"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -501,7 +500,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 
 	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
-	for poolIndex, pool := range cluster.NodePools {
+	for _, pool := range cluster.NodePools {
 
 		utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 		if pool.PoolRole == "master" {
@@ -527,7 +526,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 				terminate = false
 			}
 
-			err = cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name, ctx)
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cloud.Resources["SA-"+pool.Name].(string), ctx)
 			if err != nil {
 				terminate = false
 			}
@@ -558,7 +557,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 				break
 			}
 
-			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex), ctx)
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cloud.Resources["SA-"+pool.Name].(string), ctx)
 			if err != nil {
 				terminate = false
 			}
@@ -953,7 +952,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 	storageName := "ext-" + pool.Name
 	disk := compute.DataDisk{
-		Lun:          to.Int32Ptr(int32(index)),
+		Lun:          to.Int32Ptr(int32(60)),
 		Name:         to.StringPtr(storageName),
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
 		DiskSizeGB:   to.Int32Ptr(pool.Volume.Size),
@@ -1069,7 +1068,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 					Enabled: to.BoolPtr(true), StorageURI: &storageId,
 				},
 			}
-			cloud.Resources["SA-"+pool.Name] = pool.Name
+			cloud.Resources["SA-"+pool.Name] = sName
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
@@ -1887,7 +1886,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 					Enabled: to.BoolPtr(true), StorageURI: &storageId,
 				},
 			}
-			cloud.Resources["SA-"+pool.Name] = pool.Name
+			cloud.Resources["SA-"+pool.Name] = sName
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"

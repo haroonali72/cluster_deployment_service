@@ -491,42 +491,46 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 			if err != nil {
-				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") {
+				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					flag = true
 				} else {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
+			} else {
+				ctx.SendLogs(pool.Name+" autoscaler group deleted successfully", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 			}
 
 			err = cloud.Scaler.DeleteConfiguration(pool.Name)
 			if err != nil {
-				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") {
+				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					flag = true
 				} else {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				}
+			} else {
+				ctx.SendLogs(pool.Name+" autoscaler group configurations deleted successfully", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 			}
+
 		}
 
 		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
 		if err != nil {
-			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") {
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				flag = true
 			} else {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
+		} else {
+			ctx.SendLogs(pool.Name+" pool terminated successfully", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		}
 
 		err = cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err != nil {
-			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 				flag = true
-			} else {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 		}
 	}
@@ -956,7 +960,6 @@ func (cloud *AWS) TerminatePool(pool *NodePool, projectId string, ctx utils.Cont
 
 	err := cloud.TerminateIns(instance_ids)
 	if err != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to terminate node pool "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	utils.SendLog(companyId, "Cluster pool terminated successfully: "+pool.Name, models.LOGGING_LEVEL_INFO, projectId)

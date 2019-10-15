@@ -397,7 +397,6 @@ func (c *GcpClusterController) StartCluster() {
 	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if profileId == "" {
 		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -543,7 +542,7 @@ func (c *GcpClusterController) GetStatus() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -632,7 +631,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}

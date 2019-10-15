@@ -227,7 +227,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		}
 	}
 
-	session, err := db.GetMongoSession()
+	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: error while connecting to database "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -266,7 +266,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 }
 
 func GetCluster(projectId string, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
-	session, err1 := db.GetMongoSession()
+	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("GcpGetClusterModel: error while connecting to database "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("Cluster model: Get - Got error while connecting to the database: ", err1)
@@ -291,7 +291,7 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
 	}
-	session, err1 := db.GetMongoSession()
+	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("GcpClusterModel: error while connecting to database "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("Cluster model: GetAll - Got error while connecting to the database: ", err1)
@@ -355,7 +355,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 }
 
 func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
-	session, err := db.GetMongoSession()
+	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: error while connecting to database "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("Cluster model: Delete - Got error while connecting to the database: ", err)
@@ -642,9 +642,10 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		for _, mach := range machine {
 			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
-					coreCount = coreCount + ((nodepool.NodeCount + nodepool.Scaling.MaxScalingGroupSize) * int64(mach.Cores))
+					coreCount = coreCount + ( nodepool.Scaling.MaxScalingGroupSize * int64(mach.Cores))
+				}else {
+					coreCount = coreCount + (nodepool.NodeCount * int64(mach.Cores))
 				}
-				coreCount = coreCount + (nodepool.NodeCount * int64(mach.Cores))
 				found = true
 			}
 		}
