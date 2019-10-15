@@ -78,9 +78,15 @@ func (c *AWSClusterController) Get() {
 
 	ctx.SendLogs("AWSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	cluster, err := aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
+
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
@@ -136,7 +142,7 @@ func (c *AWSClusterController) GetAll() {
 	clusters, err := aws.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -180,7 +186,6 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -189,7 +194,6 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -208,6 +212,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	//=============================================================================//
 
 	ctx.SendLogs("AWSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -220,7 +225,6 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
 	err = aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -228,9 +232,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
 	cluster.CompanyId = userInfo.CompanyId
-
 	err = aws.CreateCluster(subscriptionId, cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -249,7 +251,6 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -286,7 +287,6 @@ func (c *AWSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -295,7 +295,6 @@ func (c *AWSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -334,7 +333,7 @@ func (c *AWSClusterController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -354,7 +353,6 @@ func (c *AWSClusterController) Patch() {
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId [delete]
 func (c *AWSClusterController) Delete() {
-
 	id := c.GetString(":projectId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -379,7 +377,6 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
@@ -403,6 +400,13 @@ func (c *AWSClusterController) Delete() {
 
 	ctx.SendLogs("AWSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
+	if id == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	cluster, err := aws.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
@@ -413,7 +417,7 @@ func (c *AWSClusterController) Delete() {
 	err = aws.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -459,12 +463,10 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-
 	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -497,6 +499,7 @@ func (c *AWSClusterController) StartCluster() {
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
+
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -518,8 +521,8 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
@@ -528,7 +531,6 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx.SendLogs("AWSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
@@ -574,7 +576,6 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -587,7 +588,6 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
 	if !allowed {
 
 		c.Ctx.Output.SetStatus(401)
@@ -612,7 +612,7 @@ func (c *AWSClusterController) GetStatus() {
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -620,7 +620,7 @@ func (c *AWSClusterController) GetStatus() {
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -628,7 +628,7 @@ func (c *AWSClusterController) GetStatus() {
 	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -707,7 +707,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -744,8 +744,10 @@ func (c *AWSClusterController) TerminateCluster() {
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
 // @Param	token	header	string	token ""
+// @Param	X-Region  header	string	X-Region	""
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /sshkeys [get]
 func (c *AWSClusterController) GetSSHKeys() {
@@ -767,6 +769,14 @@ func (c *AWSClusterController) GetSSHKeys() {
 		return
 	}
 
+	region := c.Ctx.Input.Header("X-Region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
@@ -775,11 +785,11 @@ func (c *AWSClusterController) GetSSHKeys() {
 	//=============================================================================//
 
 	ctx.SendLogs("AWSNetworkController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	keys, err := aws.GetAllSSHKeyPair(*ctx, token, region)
 
-	keys, err := aws.GetAllSSHKeyPair(*ctx, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -968,7 +978,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	cluster, err := aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -1079,7 +1089,7 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 	//==========================RBAC Authentication==============================//
-	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + keyName
+	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + region + "/" + keyName
 	subType := "ssh/" + string(models.AWS)
 
 	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Create", token, *ctx)
@@ -1096,8 +1106,7 @@ func (c *AWSClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
-	keyMaterial, err := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, *ctx)
+	keyMaterial, err := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, region, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWS ClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -1203,9 +1212,8 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + keyName
-	subType := "ssh/" + string(models.AWS)
-
+	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + region + "/" + keyName
+	subType := "ssh/" + string(models.AWS) + "/" + region
 	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())

@@ -102,7 +102,7 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 			return err
 		}
 	}
-	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
+	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("vm creation failed with error: " + err.Error())
@@ -232,7 +232,7 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 		}
 	}
 
-	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
+	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("vm creation failed with error: " + err.Error())
@@ -327,7 +327,7 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 			return "", err
 		}
 	}
-	_, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx)
+	_, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("Key Not Found:  " + err.Error())

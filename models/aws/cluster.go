@@ -504,9 +504,9 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.C
 	cluster.Status = "Cluster Created"
 	return cluster
 }
-func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
+func GetAllSSHKeyPair(ctx utils.Context, token, region string) (keys interface{}, err error) {
 
-	keys, err = vault.GetAllSSHKey("aws", ctx, token)
+	keys, err = vault.GetAllSSHKey("aws", ctx, token, region)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return keys, err
@@ -622,9 +622,9 @@ func UpdateScalingStatus(cluster *Cluster_Def) {
 		pool.Scaling.State = models.Created
 	}
 }
-func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (keyMaterial string, err error) {
+func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err error) {
 
-	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, ctx)
+	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, region, ctx)
 	if err != nil {
 		return "", err
 	}

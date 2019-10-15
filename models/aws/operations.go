@@ -423,7 +423,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			}
 		}
 
-		keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx)
+		keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx, cloud.Region)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return Cluster_Def{}, err
@@ -1105,7 +1105,7 @@ func (cloud *AWS) checkInstanceState(id string, projectId string, ctx utils.Cont
 func (cloud *AWS) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string, token string) (keyMaterial string, err error) {
 
 	//if pool.KeyInfo.KeyType == models.NEWKey {
-	keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx)
+	keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx, cloud.Region)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in getting key: "+pool.KeyInfo.KeyName, models.LOGGING_LEVEL_INFO, projectId)
@@ -1407,7 +1407,7 @@ func deleteFile(keyName string) error {
 	}
 	return nil
 }
-func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, teams string, ctx utils.Context) (string, error) {
+func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, teams, region string, ctx utils.Context) (string, error) {
 	aws := AWS{
 		AccessKey: credentials.AccessKey,
 		SecretKey: credentials.SecretKey,
@@ -1418,7 +1418,7 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 		return "", confError
 	}
 
-	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx)
+	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx, region)
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
@@ -1442,7 +1442,7 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 
 	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams)
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, region)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
 		return "", err
@@ -1453,7 +1453,7 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 
 func DeleteAWSKey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) error {
 
-	err := vault.DeleteSSHkey(string(models.AWS), keyName, token, ctx)
+	err := vault.DeleteSSHkey(string(models.AWS), keyName, token, ctx, credentials.Region)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(err.Error())
