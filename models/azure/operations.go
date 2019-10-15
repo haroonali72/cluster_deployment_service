@@ -527,7 +527,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 				terminate = false
 			}
 
-			err = cloud.deleteStorageAccount(cluster.ResourceGroup, pool.Name, ctx)
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cloud.Resources["SA-"+pool.Name].(string), ctx)
 			if err != nil {
 				terminate = false
 			}
@@ -558,7 +558,7 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 				break
 			}
 
-			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cluster.ProjectId+strconv.Itoa(poolIndex), ctx)
+			err = cloud.deleteStorageAccount(cluster.ResourceGroup, cloud.Resources["SA-"+pool.Name].(string), ctx)
 			if err != nil {
 				terminate = false
 			}
@@ -1068,7 +1068,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 					Enabled: to.BoolPtr(true), StorageURI: &storageId,
 				},
 			}
-			cloud.Resources["SA-"+pool.Name] = pool.Name
+			cloud.Resources["SA-"+pool.Name] = sName
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
@@ -1886,7 +1886,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 					Enabled: to.BoolPtr(true), StorageURI: &storageId,
 				},
 			}
-			cloud.Resources["SA-"+pool.Name] = pool.Name
+			cloud.Resources["SA-"+pool.Name] = sName
 		} else {
 
 			storageId := "https://" + pool.BootDiagnostics.StorageAccountId + ".blob.core.windows.net/"
