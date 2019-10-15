@@ -558,7 +558,7 @@ func InsertSSHKeyPair(key key_utils.AZUREKey) (err error) {
 }
 func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
 
-	keys, err = vault.GetAllSSHKey("azure", ctx, token)
+	keys, err = vault.GetAllSSHKey("azure", ctx, token, "")
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
@@ -633,7 +633,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 
-	err := vault.DeleteSSHkey(string(models.Azure), keyName, token, ctx)
+	err := vault.DeleteSSHkey(string(models.Azure), keyName, token, ctx, "")
 	if err != nil {
 		return err
 	}

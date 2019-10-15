@@ -15,6 +15,7 @@ type Key struct {
 	KeyInfo interface{}  `json:"key_info"`
 	KeyName string       `json:"key_name"`
 	Cloud   models.Cloud `json:"cloud_type"`
+	Region  string       `json:"region"`
 }
 
 type AzureProfile struct {
@@ -39,12 +40,13 @@ type AwsCredentials struct {
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url") + models.VaultEndpoint
 }
-func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx utils.Context, token, teams string) (int, error) {
+func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx utils.Context, token, teams, region string) (int, error) {
 	var keyObj Key
 
 	keyObj.KeyInfo = keyRaw
 	keyObj.Cloud = cloudType
 	keyObj.KeyName = keyName
+	keyObj.Region = region
 
 	client := utils.InitReq()
 
@@ -73,12 +75,18 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 	return response.StatusCode, err
 
 }
-func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, error) {
+func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region string) ([]byte, error) {
 
 	host := getVaultHost() + models.VaultGetKeyURI
 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if region != "" {
+		if strings.Contains(host, "{region}") {
+			host = strings.Replace(host, "{region}", region, -1)
+		}
 	}
 
 	if strings.Contains(host, "{keyName}") {
@@ -100,8 +108,10 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, err
 
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 403 || response.StatusCode == 404 {
-		return []byte{}, errors.New("not found")
+	if response.StatusCode == 403 {
+		return []byte{}, errors.New("User is not authorized to use this key - " + keyName)
+	}else if response.StatusCode == 404 {
+		return []byte{}, errors.New("key not found")
 	}
 	if response.StatusCode != 200 {
 		return []byte{}, errors.New("Status Code: " + strconv.Itoa(response.StatusCode))
@@ -114,12 +124,18 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context) ([]byte, err
 	return contents, nil
 
 }
-func GetAllSSHKey(cloudType string, ctx utils.Context, token string) (interface{}, error) {
+func GetAllSSHKey(cloudType string, ctx utils.Context, token, region string) (interface{}, error) {
 	var keys interface{}
 	host := getVaultHost() + models.VaultGetAllKeysURI
 
 	if strings.Contains(host, "{cloud}") {
 		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if region != "" {
+		if strings.Contains(host, "{region}") {
+			host = strings.Replace(host, "{region}", region, -1)
+		}
 	}
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
@@ -188,10 +204,14 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 	beego.Info(response.Status)
 	if response.StatusCode == 403 {
 		return []byte{}, errors.New("User is not authorized for credential profile - " + profileId)
+	}else if response.StatusCode == 404 {
+		return []byte{}, errors.New("profile not found")
 	}
+
 	if response.StatusCode != 200 {
-		return []byte{}, errors.New("not found")
+		return []byte{}, errors.New("profile not found")
 	}
+
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -201,10 +221,16 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 
 }
 
-func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context) error {
+func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region string) error {
 	host := getVaultHost() + models.VaultDeleteKeyURI
 	if strings.Contains(host, "{cloudType}") {
 		host = strings.Replace(host, "{cloudType}", cloudType, -1)
+	}
+
+	if region != "" {
+		if strings.Contains(host, "{region}") {
+			host = strings.Replace(host, "{region}", region, -1)
+		}
 	}
 
 	if strings.Contains(host, "{name}") {
@@ -227,8 +253,10 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context) error {
 
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
-	if response.StatusCode == 403 || response.StatusCode == 404 {
-		return errors.New("not found")
+	if response.StatusCode == 403 {
+		return  errors.New("User is not authorized to delete this key - " + keyName)
+	}else if response.StatusCode == 404{
+		return errors.New("key not found")
 	}
 	if response.StatusCode != 200 {
 		return errors.New("Status Code: " + strconv.Itoa(response.StatusCode))
