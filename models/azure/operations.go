@@ -1548,34 +1548,58 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
-
-		if vm.PublicIP == nil {
-			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
-			time.Sleep(time.Second * 50)
-			ctx.SendLogs("waiting for public ip", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
-			//IPname := fmt.Sprintf("pip-%s", *vm.Name)
-			//beego.Info(IPname)
-			if poleRole == "master" {
-				IPname := "pip-" + poolName
-				publicIp, err := cloud.GetVMPIP(resourceGroup, IPname, ctx)
-				if err != nil {
-					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					return err
-				}
-				vm.PublicIP = publicIp.IPAddress
-			} else {
-				publicIp, err := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
-				if err != nil {
-					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					return err
-				}
-				vm.PublicIP = publicIp.IPAddress
-			}
-		}
-
 		start := time.Now()
 		timeToWait := 90 //seconds
 		retry := true
+		var errPublicIP error
+
+		if vm.PublicIP == nil {
+			for retry && int64(time.Since(start).Seconds()) < int64(timeToWait) {
+
+				if poleRole == "master" {
+					IPname := "pip-" + poolName
+					publicIp, errPublicIP := cloud.GetVMPIP(resourceGroup, IPname, ctx)
+					if errPublicIP != nil {
+						ctx.SendLogs(errPublicIP.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						return errPublicIP
+					} else if publicIp.IPAddress == nil {
+						ctx.SendLogs("waiting 15 seconds before retry", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
+						time.Sleep(15 * time.Second)
+
+					} else {
+						vm.PublicIP = publicIp.IPAddress
+						retry = false
+
+					}
+				} else {
+					publicIp, errPublicIP := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
+					if errPublicIP != nil {
+						ctx.SendLogs(errPublicIP.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						return errPublicIP
+					} else if publicIp.IPAddress == nil {
+						ctx.SendLogs("waiting 15 seconds before retry", models.LOGGING_LEVEL_WARNING, models.Backend_Logging)
+						time.Sleep(15 * time.Second)
+
+					} else {
+						vm.PublicIP = publicIp.IPAddress
+						retry = false
+
+					}
+				}
+			}
+		}
+		if errPublicIP != nil {
+			return errPublicIP
+		}
+		if vm.PublicIP == nil {
+			str := "Public IP is not available. Cannot mount volume"
+			ctx.SendLogs(str, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(str)
+
+		}
+		start = time.Now()
+		timeToWait = 90 //seconds
+		retry = true
 		var errCopy error
 		fileName := ""
 
