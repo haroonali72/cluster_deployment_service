@@ -132,6 +132,9 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 			existingCluster.NodePools[index].Scaling.State = updatedCluster.NodePools[index].Scaling.State
 		}
 	}
+	if update {
+		existingCluster.TokenName = updatedCluster.TokenName
+	}
 	return update
 }
 func GetNetwork(token, projectId string, ctx utils.Context) error {
@@ -642,8 +645,8 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		for _, mach := range machine {
 			if nodepool.MachineType == mach.InstanceType {
 				if nodepool.EnableScaling {
-					coreCount = coreCount + ( nodepool.Scaling.MaxScalingGroupSize * int64(mach.Cores))
-				}else {
+					coreCount = coreCount + (nodepool.Scaling.MaxScalingGroupSize * int64(mach.Cores))
+				} else {
 					coreCount = coreCount + (nodepool.NodeCount * int64(mach.Cores))
 				}
 				found = true
