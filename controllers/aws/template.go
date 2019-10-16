@@ -30,7 +30,7 @@ func (c *AWSTemplateController) Get() {
 	templateId := c.GetString(":templateId")
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -38,7 +38,7 @@ func (c *AWSTemplateController) Get() {
 	token := c.Ctx.Input.Header("token")
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
 		c.ServeJSON()
 		return
 	}
