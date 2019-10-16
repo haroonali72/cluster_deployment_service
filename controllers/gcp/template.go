@@ -225,12 +225,7 @@ func (c *GcpTemplateController) Post() {
 	//==========================RBAC Policy Creation==============================//
 
 	team := c.Ctx.Input.Header("teams")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "team is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	var teams []string
 	if team != "" {
@@ -332,12 +327,7 @@ func (c *GcpTemplateController) Patch() {
 	}
 
 	team := c.Ctx.Input.Header("teams")
-	if team == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "team is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	var teams []string
 	if team != "" {
