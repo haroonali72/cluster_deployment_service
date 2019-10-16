@@ -193,7 +193,7 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 			bytes[0:4], bytes[4:6], bytes[6:8], bytes[8:10], bytes[10:])
 
 		result, err := cloud.RoleAssignment.Create(context.Background(), scope, uuid, RoleAssignmentParam)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "RoleAssignmentExists") {
 			utils.SendLog(companyId, err.Error(), "error", projectId)
 			return err
 		} else {
