@@ -804,12 +804,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-	if teams == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "Teams is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {

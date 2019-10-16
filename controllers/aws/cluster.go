@@ -1035,12 +1035,7 @@ func (c *AWSClusterController) PostSSHKey() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-	if teams == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "teams is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	region := c.Ctx.Input.Header("X-Region")
 	if region == "" {
