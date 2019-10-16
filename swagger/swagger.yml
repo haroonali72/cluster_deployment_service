@@ -222,6 +222,8 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/machine/info:
@@ -649,7 +651,7 @@ paths:
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
         "404":
-          description: '{"error": exception_message}'
+          description: '{"error": "error message"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/azure/sshkeys:
@@ -1069,6 +1071,8 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/gcp/status/{projectId}/:
@@ -1103,6 +1107,8 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "authorization params missing or invalid"}'
+        "404":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/gcp/terminate/{projectId}/:
@@ -1134,6 +1140,8 @@ paths:
         "401":
           description: '{"error": "Authorization format should be ''base64 encoded
             service_account_json''"}'
+        "404":
+          description: '{"error": "error_msg"}'
         "500":
           description: '{"error": "error msg"}'
   /health/:
