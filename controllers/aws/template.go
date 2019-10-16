@@ -26,8 +26,22 @@ type AWSTemplateController struct {
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId/ [get]
 func (c *AWSTemplateController) Get() {
+
 	templateId := c.GetString(":templateId")
+	if templateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	token := c.Ctx.Input.Header("token")
+	if templateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -37,6 +51,7 @@ func (c *AWSTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
@@ -59,13 +74,6 @@ func (c *AWSTemplateController) Get() {
 	//=============================================================================//
 	ctx.SendLogs("AWSTemplateController: Get template  id : "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if templateId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "template id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	template, err := aws.GetTemplate(templateId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -86,7 +94,14 @@ func (c *AWSTemplateController) Get() {
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AWSTemplateController) GetAll() {
+
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -96,10 +111,12 @@ func (c *AWSTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
+
 	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AWS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -138,8 +155,15 @@ func (c *AWSTemplateController) GetAll() {
 func (c *AWSTemplateController) Post() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+
 	token := c.Ctx.Input.Header("token")
-	beego.Info("token" + token)
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -148,10 +172,12 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
+
 	allowed, err := rbac_athentication.Evaluate("Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -166,8 +192,11 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("AWSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 	template.CompanyId = userInfo.CompanyId
+
 	err, id := aws.CreateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -182,12 +211,20 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	//==========================RBAC Policy Creation==============================//
-	beego.Info("template id " + id)
+
 	team := c.Ctx.Input.Header("teams")
+	if team == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "team is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	var teams []string
 	if team != "" {
 		teams = strings.Split(team, ";")
 	}
+
 	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.AWS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
@@ -203,6 +240,7 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
@@ -221,7 +259,14 @@ func (c *AWSTemplateController) Post() {
 func (c *AWSTemplateController) Patch() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -231,6 +276,7 @@ func (c *AWSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
@@ -266,11 +312,20 @@ func (c *AWSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	team := c.Ctx.Input.Header("teams")
+	if team == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "team is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	var teams []string
 	if team != "" {
 		teams = strings.Split(team, ";")
 	}
+
 	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AWS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
@@ -286,6 +341,7 @@ func (c *AWSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
@@ -301,8 +357,22 @@ func (c *AWSTemplateController) Patch() {
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId [delete]
 func (c *AWSTemplateController) Delete() {
+
 	templateId := c.GetString(":templateId")
+	if templateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "template id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -312,6 +382,7 @@ func (c *AWSTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
@@ -333,13 +404,6 @@ func (c *AWSTemplateController) Delete() {
 
 	//=============================================================================//
 	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)
-
-	if templateId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "template id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	err = aws.DeleteTemplate(templateId, *ctx)
 	if err != nil {

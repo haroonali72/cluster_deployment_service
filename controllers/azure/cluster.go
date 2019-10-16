@@ -28,9 +28,22 @@ type AzureClusterController struct {
 // @Failure 404 {"error": "error msg"}
 // @router /:projectId/ [get]
 func (c *AzureClusterController) Get() {
+
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -40,10 +53,12 @@ func (c *AzureClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
+
 	allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -58,14 +73,8 @@ func (c *AzureClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AZUREClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
+	ctx.SendLogs("AZUREClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -90,6 +99,12 @@ func (c *AzureClusterController) GetAll() {
 	beego.Info("AzureClusterController: GetAll clusters.")
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -99,10 +114,12 @@ func (c *AzureClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
+
 	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.Azure, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -111,6 +128,7 @@ func (c *AzureClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
+
 	clusters, err := azure.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -141,6 +159,13 @@ func (c *AzureClusterController) Post() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	subscriptionId := c.Ctx.Input.Header("subscription_id")
 	if subscriptionId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -148,6 +173,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -156,6 +182,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -174,10 +201,11 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("AzureClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster.CreationDate = time.Now()
-	beego.Info(cluster.ResourceGroup)
+
 	err = azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -185,6 +213,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	res, err := govalidator.ValidateStruct(cluster)
 	if !res || err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -192,7 +221,9 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	cluster.CompanyId = userInfo.CompanyId
+
 	err = azure.CreateCluster(subscriptionId, cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -234,6 +265,13 @@ func (c *AzureClusterController) Patch() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	subscriptionId := c.Ctx.Input.Header("subscription_id")
 	if subscriptionId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -241,6 +279,7 @@ func (c *AzureClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -249,6 +288,7 @@ func (c *AzureClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -267,6 +307,7 @@ func (c *AzureClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = azure.UpdateCluster(subscriptionId, cluster, true, *ctx)
@@ -304,9 +345,22 @@ func (c *AzureClusterController) Patch() {
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId [delete]
 func (c *AzureClusterController) Delete() {
+
 	id := c.GetString(":projectId")
+	if id == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -316,6 +370,7 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
@@ -337,12 +392,6 @@ func (c *AzureClusterController) Delete() {
 
 	ctx.SendLogs("AzureClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-	if id == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "name is empty"}
-		c.ServeJSON()
-		return
-	}
 	cluster, err := azure.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
@@ -350,6 +399,7 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
 	err = azure.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -376,8 +426,20 @@ func (c *AzureClusterController) Delete() {
 func (c *AzureClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -387,6 +449,7 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -405,24 +468,31 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	beego.Info("AzureClusterController: StartCluster.")
+
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	region, err := azure.GetRegion(token, projectId, *ctx)
-
-	var cluster azure.Cluster_Def
-
-	if projectId == "" {
+	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
 	}
 
+	region, err := azure.GetRegion(token, projectId, *ctx)
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	var cluster azure.Cluster_Def
+
 	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -436,8 +506,8 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
@@ -469,8 +539,20 @@ func (c *AzureClusterController) StartCluster() {
 func (c *AzureClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -480,6 +562,7 @@ func (c *AzureClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -498,11 +581,24 @@ func (c *AzureClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	region, err := azure.GetRegion(token, projectId, *ctx)
+	if err !=nil{
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -510,16 +606,9 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error":  err.Error()}
@@ -545,8 +634,20 @@ func (c *AzureClusterController) GetStatus() {
 func (c *AzureClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -556,10 +657,12 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
+
 	allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -574,12 +677,26 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("AzureClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	region, err := azure.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -589,17 +706,9 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	var cluster azure.Cluster_Def
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	ctx.SendLogs("AzureClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error":  err.Error()}
@@ -624,6 +733,12 @@ func (c *AzureClusterController) TerminateCluster() {
 func (c *AzureClusterController) GetSSHKeys() {
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -633,6 +748,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
@@ -642,13 +758,13 @@ func (c *AzureClusterController) GetSSHKeys() {
 	ctx.SendLogs("AZUREClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	keys, err := azure.GetAllSSHKeyPair(*ctx, token)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+
 	c.Data["json"] = keys
 	c.ServeJSON()
 }
@@ -660,7 +776,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Param	token		header	string	token 	""
 // @Param	teams		header	string	teams 	""
 // @Success 200 		{object} key_utils.AZUREKey
-// @Failure 404 		{"error": exception_message}
+// @Failure 404 		{"error": "error message"}
 // @Failure 500 		{"error": "error msg"}
 // @router /sshkey/:keyname/:projectId [post]
 func (c *AzureClusterController) PostSSHKey() {
@@ -670,7 +786,15 @@ func (c *AzureClusterController) PostSSHKey() {
 	//==========================RBAC Authentication==============================//
 
 	ctx := new(utils.Context)
+
 	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -678,7 +802,14 @@ func (c *AzureClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
+
 	teams := c.Ctx.Input.Header("teams")
+	if teams == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "Teams is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -721,6 +852,7 @@ func (c *AzureClusterController) PostSSHKey() {
 // @Failure 500 			{"error": "error msg"}
 // @router /machine/info [get]
 func (c *AzureClusterController) GetCores() {
+
 	var machine []models.Machine
 	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
