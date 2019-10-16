@@ -804,7 +804,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-	
+
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
