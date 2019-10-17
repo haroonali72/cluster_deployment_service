@@ -44,7 +44,7 @@ func InitFlags() error {
 			EnvVar:      "kill_bill_secret_key",
 		},
 		cli.StringFlag{
-			Name:        "kill_bill_passwordt",
+			Name:        "kill_bill_password",
 			Usage:       "kill_bill_password",
 			Destination: &kill_bill_password,
 			EnvVar:      "kill_bill_password",
