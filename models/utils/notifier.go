@@ -46,7 +46,8 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 		start := time.Now()
 		for int(time.Since(start).Minutes()) < 1 {
 
-			cmd := notifier.Client.Publish(ctx.data.Company+"_"+channel, string(b))
+			time.Sleep(5 * time.Second)
+			cmd = notifier.Client.Publish(ctx.data.Company+"_"+channel, string(b))
 
 			if cmd != nil && cmd.Err() != nil {
 				beego.Error(cmd.Err().Error())
@@ -55,7 +56,6 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 			} else if cmd != nil && cmd.Val() > 0 {
 				break
 			}
-			time.Sleep(5 * time.Second)
 		}
 
 		ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
