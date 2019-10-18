@@ -28,7 +28,7 @@ func GetCoresLimit(subscriptionId string) (int64, error) {
 	}}
 	subId, err := subscriptionClient.GetSubscriptionId(subscriptionId)
 	if err !=nil{
-		println(err.Error())
+		beego.Error(err.Error())
 		return 0,err
 	}
 
