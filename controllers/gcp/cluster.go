@@ -505,7 +505,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
-		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("gcpClusterController : unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
@@ -595,7 +595,6 @@ func (c *GcpClusterController) GetStatus() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpNetworkController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(models.GCP, "cluster", projectId, "View", token, utils.Context{})
@@ -904,7 +903,6 @@ func (c *GcpClusterController) PostSSHKey() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
