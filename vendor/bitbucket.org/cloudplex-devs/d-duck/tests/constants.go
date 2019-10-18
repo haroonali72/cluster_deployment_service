@@ -1,5 +1,14 @@
 package tests
 
+import d_duck "d-duck"
+
+var TestAccountBundle d_duck.AccountBudles = d_duck.AccountBudles{
+	Subscriptions: []d_duck.Subscription{
+		d_duck.Subscription{
+			SubscriptionId: "testSubscriptionID",
+			State:          "active",
+		}}}
+
 const (
 	TestProductName string = `{"name":"GOLD"}`
 	TestCatalog     string = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
