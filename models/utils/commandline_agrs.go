@@ -32,11 +32,27 @@ var (
 	subscription_host               = ""
 	kill_bill_password              = ""
 	kill_bill_secret_key            = ""
+	kill_bill_user                  = ""
+	kill_bill_api_key               = ""
 )
 
 func InitFlags() error {
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "kill_bill_user",
+			Usage:       "kill_bill_user",
+			Destination: &kill_bill_user,
+			EnvVar:      "kill_bill_user",
+		},
+		cli.StringFlag{
+			Name:        "kill_bill_api_key",
+			Usage:       "kill_bill_api_key",
+			Destination: &kill_bill_api_key,
+			EnvVar:      "kill_bill_api_key",
+		},
+
+
 		cli.StringFlag{
 			Name:        "kill_bill_secret_key",
 			Usage:       "kill_bill_secret_key",
@@ -191,6 +207,8 @@ func InitFlags() error {
 		log.Println(err)
 		return err
 	}
+	beego.AppConfig.Set("kill_bill_api_key", kill_bill_api_key)
+	beego.AppConfig.Set("kill_bill_user", kill_bill_user)
 	beego.AppConfig.Set("kill_bill_secret_key", kill_bill_secret_key)
 	beego.AppConfig.Set("kill_bill_password", kill_bill_password)
 	beego.AppConfig.Set("ca_certificate", ca_cert)

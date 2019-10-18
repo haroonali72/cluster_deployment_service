@@ -3,6 +3,7 @@ package d_duck
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"strings"
 )
 
@@ -68,4 +69,29 @@ func (e *Init) GetLimitsWithSubscriptionId(subscriptionId string) (map[string]in
 	}
 
 	return e.GetLimitsWithProductName(product.Name)
+}
+
+func (e *Init) GetSubscriptionId(accountId string) (string, error) {
+
+	rawData, err := e.Client.GetSubscriptionData(accountId)
+	if err != nil {
+		return "", err
+	}
+	var accountData []AccountBudles
+	err = json.Unmarshal(rawData, &accountData)
+	if err != nil {
+		return "", err
+	}
+	if len(accountData) <= 0 {
+		return "", errors.New("can not find data against this account")
+	}
+	if len(accountData[0].Subscriptions) > 0 {
+		if accountData[0].Subscriptions[0].SubscriptionId == "" {
+			return "", errors.New("can not fid SubscriptionId this account")
+		}
+
+		return accountData[0].Subscriptions[0].SubscriptionId, nil
+	}
+	return "", errors.New("can not find Subscription against this account")
+
 }

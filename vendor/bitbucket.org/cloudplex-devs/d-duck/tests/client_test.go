@@ -11,7 +11,7 @@ import (
 
 func TestGetRawCatalog(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return []byte(TestCatalog), nil
 	}
 
@@ -26,7 +26,7 @@ func TestGetRawCatalog(t *testing.T) {
 
 func TestFailingGetRawCatalog(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return nil, errors.New("failing raw catalog")
 	}
 
@@ -38,7 +38,7 @@ func TestFailingGetRawCatalog(t *testing.T) {
 
 func TestGetRawProduct(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return []byte(TestProductName), nil
 	}
 
@@ -53,7 +53,7 @@ func TestGetRawProduct(t *testing.T) {
 
 func TestFailingGetRawProduct(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return nil, errors.New("failing raw catalog")
 	}
 
