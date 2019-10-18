@@ -36,7 +36,7 @@ func GetMongoSession(ctx utils.Context) (session *mgo.Session, err error) {
 			conf := tlsconfig
 			dial,err := tls.Dial("tcp", addr.String(), conf)
 			if err != nil {
-				ctx.SendLogs(" Db connection: ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs(" Db connection: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			return dial,err
 		},
