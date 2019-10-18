@@ -26,13 +26,9 @@ func GetCoresLimit(subscriptionId string) (int64, error) {
 		ApiSecret: apiSecret,
 
 	}}
-	subId, err := subscriptionClient.GetSubscriptionId(subscriptionId)
-	if err !=nil{
-		println(err.Error())
-		return 0,err
-	}
 
-	limits, err := subscriptionClient.GetLimitsWithSubscriptionId(subId)
+
+	limits, err := subscriptionClient.GetLimitsWithSubscriptionId(subscriptionId)
 	if err != nil {
 		beego.Error("subscription host not connected" + err.Error())
 		return 0, err
