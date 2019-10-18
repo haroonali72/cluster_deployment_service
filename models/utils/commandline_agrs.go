@@ -207,6 +207,8 @@ func InitFlags() error {
 		log.Println(err)
 		return err
 	}
+	beego.AppConfig.Set("kill_bill_api_key", kill_bill_api_key)
+	beego.AppConfig.Set("kill_bill_user", kill_bill_user)
 	beego.AppConfig.Set("kill_bill_secret_key", kill_bill_secret_key)
 	beego.AppConfig.Set("kill_bill_password", kill_bill_password)
 	beego.AppConfig.Set("ca_certificate", ca_cert)
