@@ -1031,3 +1031,23 @@ func deleteFile(fileName string) error {
 
 	return nil
 }
+
+func (cloud *GCP) GetAllMachines(ctx utils.Context) (*compute.MachineTypeList, error) {
+	if cloud.Client == nil {
+		err := cloud.init()
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return &compute.MachineTypeList{}, err
+		}
+	}
+
+	reqCtx := context.Background()
+
+	machines, err := cloud.Client.MachineTypes.List(cloud.ProjectId, cloud.Region+"-"+cloud.Zone).Context(reqCtx).Do()
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &compute.MachineTypeList{}, err
+	}
+
+	return machines, nil
+}

@@ -1308,6 +1308,64 @@
                 }
             }
         },
+        "/cluster/gcp/getallmachines/{region}/{zone}": {
+            "get": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "return machines against a region and zone",
+                "operationId": "GcpClusterController.GetAllMachines",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "profileId",
+                        "description": "profile of GCP",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of GCP",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "zone",
+                        "description": "zone of GCP",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/gcp.Machines"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/machine/info": {
             "get": {
                 "tags": [
@@ -2391,7 +2449,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "50183.0xc0007dcf00.false": {
+        "50633.0xc000826d20.false": {
             "title": "false",
             "type": "object"
         },
@@ -2447,7 +2505,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/50183.0xc0007dcf00.false"
+                    "$ref": "#/definitions/50633.0xc000826d20.false"
                 },
                 "name": {
                     "type": "string"
@@ -3018,6 +3076,18 @@
                 },
                 "project": {
                     "type": "string"
+                }
+            }
+        },
+        "gcp.Machines": {
+            "title": "Machines",
+            "type": "object",
+            "properties": {
+                "machine_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
