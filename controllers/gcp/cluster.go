@@ -1077,9 +1077,9 @@ func (c *GcpClusterController) GetAllMachines() {
 	}
 
 	zone := c.GetString(":zone")
-	if zone != "" && zone != "a" && zone != "b" && zone != "c" {
+	if zone == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "zone is not valid"}
+		c.Data["json"] = map[string]string{"error": "zone is empty"}
 		c.ServeJSON()
 		return
 	}
