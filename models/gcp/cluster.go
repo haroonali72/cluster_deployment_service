@@ -110,6 +110,10 @@ type Data struct {
 	Zone   string `json:"zone"`
 }
 
+type Machines struct {
+	MachineName []string `json:"machine_name" bson:"machine_name"`
+}
+
 func checkMasterPools(cluster Cluster_Def) error {
 	noOfMasters := 0
 	for _, pools := range cluster.NodePools {
@@ -675,4 +679,29 @@ func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 	}
 
 	return err
+}
+
+func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, error) {
+	gcp, err := GetGCP(credentials)
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Machines{}, err
+	}
+	err = gcp.init()
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Machines{}, err
+	}
+
+	machines, err := gcp.GetAllMachines(ctx)
+	if err != nil {
+		return Machines{}, err
+	}
+
+	var mach Machines
+	for _, machine := range machines.Items {
+		mach.MachineName = append(mach.MachineName, machine.Name)
+	}
+
+	return mach, nil
 }
