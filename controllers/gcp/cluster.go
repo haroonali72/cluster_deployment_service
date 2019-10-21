@@ -1035,20 +1035,26 @@ func (c *GcpClusterController) DeleteSSHKey() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
-// @Failure 500 {"error": "error msg"}
 // @router /getallmachines/:region/:zone [get]
 func (c *GcpClusterController) GetAllMachines() {
 	beego.Info("GcpClusterController: GellAllMachines.")
 
 	profileId := c.Ctx.Input.Header("profileId")
 	if profileId == "" {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "project is empty"}
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profileId is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())

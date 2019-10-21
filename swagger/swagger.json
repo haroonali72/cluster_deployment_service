@@ -1359,9 +1359,6 @@
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -2449,7 +2446,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "50633.0xc000826d20.false": {
+        "50633.0xc00084cf60.false": {
             "title": "false",
             "type": "object"
         },
@@ -2505,7 +2502,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/50633.0xc000826d20.false"
+                    "$ref": "#/definitions/50633.0xc00084cf60.false"
                 },
                 "name": {
                     "type": "string"
