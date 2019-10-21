@@ -12,10 +12,18 @@ func GetCoresLimit(subscriptionId string) (int64, error) {
 
 	s := strings.Split(beego.AppConfig.String("subscription_host"), ":")
 	ip, port := string(s[0]), string(s[1])
+	user := beego.AppConfig.String("kill_bill_user")
+	password := beego.AppConfig.String("kill_bill_password")
+	apiKey := beego.AppConfig.String("kill_bill_api_key")
+	apiSecret := beego.AppConfig.String("kill_bill_secret_key")
 
 	subscriptionClient := d_duck.Init{Client: d_duck.Client{
-		Host: ip,
-		Port: port,
+		Host:      ip,
+		Port:      port,
+		Username:  user,
+		Password:  password,
+		ApiKey:    apiKey,
+		ApiSecret: apiSecret,
 	}}
 
 	limits, err := subscriptionClient.GetLimitsWithSubscriptionId(subscriptionId)

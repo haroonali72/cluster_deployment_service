@@ -1,7 +1,9 @@
 package tests
 
 import (
+	"bytes"
 	"d-duck"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -9,7 +11,7 @@ import (
 
 func TestGetCatalog(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return []byte(TestCatalog), nil
 	}
 
@@ -23,7 +25,7 @@ func TestGetCatalog(t *testing.T) {
 
 func TestFailingGetCatalog(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return nil, errors.New("failing raw catalog")
 	}
 
@@ -37,7 +39,7 @@ func TestFailingGetCatalog(t *testing.T) {
 
 func TestGetProduct(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return []byte(TestProductName), nil
 	}
 
@@ -51,7 +53,7 @@ func TestGetProduct(t *testing.T) {
 
 func TestFailingGetProduct(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return nil, errors.New("failing raw catalog")
 	}
 
@@ -65,7 +67,7 @@ func TestFailingGetProduct(t *testing.T) {
 
 func TestGetLimitsWithProductName(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return []byte(TestCatalog), nil
 	}
 
@@ -91,7 +93,7 @@ func TestGetLimitsWithProductName(t *testing.T) {
 
 func TestGetLimitsWithUnknownProductName(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return []byte(TestCatalog), nil
 	}
 
@@ -108,7 +110,7 @@ func TestGetLimitsWithUnknownProductName(t *testing.T) {
 
 func TestFailingGetLimitsWithProductName(t *testing.T) {
 	testClient := d_duck.Client{}
-	d_duck.Get = func(url string, accept string) ([]byte, error) {
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
 		return nil, errors.New("failing raw catalog")
 	}
 
@@ -117,5 +119,37 @@ func TestFailingGetLimitsWithProductName(t *testing.T) {
 
 	if err == nil {
 		t.Error("failing limit fetching failed")
+	}
+}
+
+func TestGetSubscriptionId(t *testing.T) {
+	testClient := d_duck.Client{}
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
+		var tempResp []d_duck.AccountBudles
+		tempResp = append(tempResp, TestAccountBundle)
+		reqBodyBytes := new(bytes.Buffer)
+		_ = json.NewEncoder(reqBodyBytes).Encode(tempResp)
+
+		return reqBodyBytes.Bytes(), nil
+	}
+
+	testSubscription := d_duck.Init{Client: testClient}
+	_, err := testSubscription.GetSubscriptionId("TestAccountID")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestFailGetSubscriptionId(t *testing.T) {
+	testClient := d_duck.Client{}
+	d_duck.Get = func(c *d_duck.Client, url string, accept string) ([]byte, error) {
+
+		return nil, errors.New("error")
+	}
+
+	testSubscription := d_duck.Init{Client: testClient}
+	_, err := testSubscription.GetSubscriptionId("TestAccountID")
+	if err == nil {
+		t.Error("failing in fetching SubscriptionId")
 	}
 }

@@ -505,7 +505,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
-		ctx.SendLogs("gcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("gcpClusterController : unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
