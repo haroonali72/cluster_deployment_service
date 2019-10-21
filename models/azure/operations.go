@@ -173,7 +173,7 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 }
 
 func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup string, projectId string, vmId *string, vmPrincipalId *string) error {
-	RolesID := []string{models.VM_CONTRIBUTOR_GUID, models.NETWORK_CONTRIBUTOR_GUID, models.STORAGE_CONTRIBUTOR_GUID}
+	RolesID := []string{models.VM_CONTRIBUTOR_GUID, models.NETWORK_CONTRIBUTOR_GUID, models.STORAGE_CONTRIBUTOR_GUID, models.AVERE_CONTRIBUTER_GUID}
 	BasePath := "/subscriptions/" + cloud.Subscription + "/providers/Microsoft.Authorization/roleDefinitions/"
 	scope := "/subscriptions/" + cloud.Subscription + "/resourceGroups/" + resourceGroup
 	RoleAssignmentParam := authorization.RoleAssignmentCreateParameters{}
@@ -686,8 +686,8 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress: &publicIPaddress,
+						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress:           &publicIPaddress,
 					},
 				},
 			},
@@ -1341,7 +1341,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location: &cloud.Region,
+		Location:                          &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
