@@ -1027,7 +1027,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 
 // @Title GetAllMachines
 // @Description return machines against a region and zone
-// @Param	profileId	header	string	true	"profile of GCP"
+// @Param	profileid	header	string	true	"profile of GCP"
 // @Param	token	header	string	token  true""
 // @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
@@ -1039,10 +1039,10 @@ func (c *GcpClusterController) DeleteSSHKey() {
 func (c *GcpClusterController) GetAllMachines() {
 	beego.Info("GcpClusterController: GellAllMachines.")
 
-	profileId := c.Ctx.Input.Header("profileId")
+	profileId := c.Ctx.Input.Header("profileid")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profileId is empty"}
+		c.Data["json"] = map[string]string{"error": "profileid is empty"}
 		c.ServeJSON()
 		return
 	}
