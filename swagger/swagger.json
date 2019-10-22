@@ -1318,7 +1318,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "profileId",
+                        "name": "profileid",
                         "description": "profile of GCP",
                         "required": true,
                         "type": "string"
@@ -2446,7 +2446,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "50633.0xc00084cf60.false": {
+        "50633.0xc000809650.false": {
             "title": "false",
             "type": "object"
         },
@@ -2502,7 +2502,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/50633.0xc00084cf60.false"
+                    "$ref": "#/definitions/50633.0xc000809650.false"
                 },
                 "name": {
                     "type": "string"
