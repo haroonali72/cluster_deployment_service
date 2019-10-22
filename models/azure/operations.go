@@ -12,9 +12,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
@@ -177,12 +177,12 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 	BasePath := "/subscriptions/" + cloud.Subscription + "/providers/Microsoft.Authorization/roleDefinitions/"
 	scope := "/subscriptions/" + cloud.Subscription + "/resourceGroups/" + resourceGroup
 	RoleAssignmentParam := authorization.RoleAssignmentCreateParameters{}
-	RoleAssignmentParam.Properties = &authorization.RoleAssignmentProperties{
+	RoleAssignmentParam.RoleAssignmentProperties = &authorization.RoleAssignmentProperties{
 		PrincipalID: vmPrincipalId,
 	}
 	utils.SendLog(companyId, "Attaching access roles to "+*vmId, "info", projectId)
 	for _, id := range RolesID {
-		RoleAssignmentParam.Properties.RoleDefinitionID = to.StringPtr(BasePath + id)
+		RoleAssignmentParam.RoleAssignmentProperties.RoleDefinitionID = to.StringPtr(BasePath + id)
 		bytes := make([]byte, 16)
 		_, err := rand.Read(bytes)
 		if err != nil {
