@@ -431,6 +431,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		}
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 
