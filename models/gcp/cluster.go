@@ -424,6 +424,12 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
+		confError = gcp.deleteCluster(cluster, ctx)
+		if confError != nil {
+			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+		}
+
 		cluster.Status = "Cluster creation failed"
 		confError = UpdateCluster("", cluster, false, ctx)
 		if confError != nil {
