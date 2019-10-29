@@ -308,6 +308,13 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = azure.UpdateCluster(subscriptionId, cluster, true, *ctx)
@@ -396,6 +403,13 @@ func (c *AzureClusterController) Delete() {
 	if err == nil && cluster.Status == "Cluster Created" {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
 	}
@@ -507,11 +521,26 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
 		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = azure.UpdateStatus(projectId, userInfo.CompanyId, "Deploying", *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -591,7 +620,7 @@ func (c *AzureClusterController) GetStatus() {
 	}
 
 	region, err := azure.GetRegion(token, projectId, *ctx)
-	if err !=nil{
+	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -611,7 +640,7 @@ func (c *AzureClusterController) GetStatus() {
 	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -711,7 +740,14 @@ func (c *AzureClusterController) TerminateCluster() {
 	cluster, err = azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
 	}
@@ -804,7 +840,6 @@ func (c *AzureClusterController) PostSSHKey() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {

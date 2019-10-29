@@ -316,6 +316,13 @@ func (c *AWSClusterController) Patch() {
 
 	//=============================================================================//
 
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = aws.UpdateCluster(subscriptionId, cluster, true, *ctx)
@@ -414,6 +421,14 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	err = aws.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -514,6 +529,13 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	region, err := aws.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -531,6 +553,15 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+
+	err = aws.UpdateStatus(projectId, userInfo.CompanyId, "Deploying", *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("AWSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
@@ -722,13 +753,19 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	var cluster aws.Cluster_Def
 
-
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
 	}
@@ -862,7 +899,7 @@ func (c *AWSClusterController) GetAMI() {
 
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		ctx.Log(err.Error(),models.LOGGING_LEVEL_ERROR,models.Backend_Logging)
+		ctx.Log(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1035,7 +1072,6 @@ func (c *AWSClusterController) PostSSHKey() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-
 
 	region := c.Ctx.Input.Header("X-Region")
 	if region == "" {

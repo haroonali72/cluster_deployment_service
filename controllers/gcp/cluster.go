@@ -316,6 +316,13 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
@@ -412,6 +419,14 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	err = gcp.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -529,6 +544,21 @@ func (c *GcpClusterController) StartCluster() {
 		ctx.SendLogs("gcpClusterController : cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
+	err = gcp.UpdateStatus(projectId, userInfo.CompanyId, "Deploying", *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -741,6 +771,13 @@ func (c *GcpClusterController) TerminateCluster() {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == "Deploying" {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
 	}

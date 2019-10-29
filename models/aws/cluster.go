@@ -211,6 +211,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err1
 	}
+
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
@@ -679,4 +680,23 @@ func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx u
 	}
 
 	return err
+}
+
+func UpdateStatus(projectId, companyId, status string, ctx utils.Context) error {
+
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
+	err = c.Update(bson.M{"project_id": projectId, "company_id": companyId}, bson.M{"$set": bson.M{"status": status}})
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
 }
