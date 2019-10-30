@@ -316,7 +316,7 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -420,7 +420,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -548,14 +548,14 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
 	}
 
-	err = gcp.UpdateStatus(projectId, userInfo.CompanyId, "Deploying", *ctx)
+	err = gcp.UpdateStatus(projectId, userInfo.CompanyId, string(models.Deploying), *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -775,7 +775,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()

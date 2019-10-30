@@ -316,7 +316,7 @@ func (c *AWSClusterController) Patch() {
 
 	//=============================================================================//
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -422,7 +422,7 @@ func (c *AWSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -529,7 +529,7 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -554,7 +554,7 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	err = aws.UpdateStatus(projectId, userInfo.CompanyId, "Deploying", *ctx)
+	err = aws.UpdateStatus(projectId, userInfo.CompanyId, string(models.Deploying), *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -763,7 +763,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()

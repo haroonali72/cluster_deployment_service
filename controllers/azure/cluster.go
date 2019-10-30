@@ -308,7 +308,7 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -407,7 +407,7 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -521,7 +521,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -538,7 +538,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	err = azure.UpdateStatus(projectId, userInfo.CompanyId, "Deploying", *ctx)
+	err = azure.UpdateStatus(projectId, userInfo.CompanyId, string(models.Deploying), *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -745,7 +745,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == "Deploying" {
+	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()

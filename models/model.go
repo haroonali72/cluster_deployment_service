@@ -3,9 +3,10 @@ package models
 type Type string
 
 const (
-	Existing Type = "existing"
-	New      Type = "new"
-	Created  Type = "created"
+	Existing  Type = "existing"
+	New       Type = "new"
+	Created   Type = "created"
+	Deploying Type = "deploying"
 )
 
 type RequestType string
