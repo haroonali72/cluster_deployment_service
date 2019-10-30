@@ -211,6 +211,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err1
 	}
+
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)

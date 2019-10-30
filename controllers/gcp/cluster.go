@@ -316,6 +316,13 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
+	if cluster.Status == string(models.Deploying) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
@@ -412,6 +419,14 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
+	if cluster.Status == string(models.Deploying) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	err = gcp.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -533,9 +548,25 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
+	if cluster.Status == string(models.Deploying) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
 	beego.Info("GcpClusterController: Creating Cluster. ", cluster.Name)
 
 	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
+
+	cluster.Status = string(models.Deploying)
+	err = gcp.UpdateCluster("", cluster, false, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -741,6 +772,13 @@ func (c *GcpClusterController) TerminateCluster() {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == string(models.Deploying) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
 	}
