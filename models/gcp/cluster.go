@@ -700,3 +700,29 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 
 	return mach, nil
 }
+
+func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
+	gcp, err := GetGCP(credentials)
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+	err = gcp.init()
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+
+	regionInfo, err := gcp.GetZones(ctx)
+	if err != nil {
+		return []string{}, err
+	}
+
+	var zones []string
+	for _, zone := range regionInfo.Zones {
+		zone := zone[len(zone)-1:]
+		zones = append(zones, zone)
+	}
+
+	return zones, nil
+}

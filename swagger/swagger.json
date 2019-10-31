@@ -1363,6 +1363,57 @@
                 }
             }
         },
+        "/cluster/gcp/getzones/{region}": {
+            "get": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "return zones against a region",
+                "operationId": "GcpClusterController.GetZonesAgainstRegion",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "profileid",
+                        "description": "profile of GCP",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of GCP",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/machine/info": {
             "get": {
                 "tags": [
@@ -2446,7 +2497,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "50633.0xc0007f6ab0.false": {
+        "50633.0xc000817020.false": {
             "title": "false",
             "type": "object"
         },
@@ -2502,7 +2553,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/50633.0xc0007f6ab0.false"
+                    "$ref": "#/definitions/50633.0xc000817020.false"
                 },
                 "name": {
                     "type": "string"
@@ -3406,7 +3457,8 @@
             "enum": [
                 "Existing = \"existing\"",
                 "New = \"new\"",
-                "Created = \"created\""
+                "Created = \"created\"",
+                "Deploying = \"deploying\""
             ],
             "example": "existing"
         },
