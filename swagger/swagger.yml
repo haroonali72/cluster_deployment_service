@@ -1611,7 +1611,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  50633.0xc0007f6ab0.false:
+  577.0xc0006d53e0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1651,7 +1651,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/50633.0xc0007f6ab0.false'
+        $ref: '#/definitions/577.0xc0006d53e0.false'
       name:
         type: string
       network_name:
@@ -1739,8 +1739,6 @@ definitions:
         $ref: '#/definitions/aws.Volume'
       is_external:
         type: boolean
-      key_info:
-        $ref: '#/definitions/key_utils.AWSKey'
       machine_type:
         type: string
       name:
@@ -1909,8 +1907,6 @@ definitions:
         $ref: '#/definitions/azure.ImageReference'
       is_external:
         type: boolean
-      key_info:
-        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:
@@ -2115,8 +2111,6 @@ definitions:
         $ref: '#/definitions/gcp.Image'
       is_external:
         type: boolean
-      key_info:
-        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:
@@ -2268,6 +2262,7 @@ definitions:
     - Existing = "existing"
     - New = "new"
     - Created = "created"
+    - Deploying = "deploying"
     example: existing
   subscriptionId:
     title: subscriptionId
