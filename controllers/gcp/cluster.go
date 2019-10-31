@@ -323,6 +323,13 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}
+
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
@@ -423,6 +430,13 @@ func (c *GcpClusterController) Delete() {
 	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
@@ -551,6 +565,13 @@ func (c *GcpClusterController) StartCluster() {
 	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
@@ -783,9 +804,25 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}
+
 	beego.Info("GcpClusterController: Terminating Cluster. ", cluster.Name)
 
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
+
+	cluster.Status = string(models.Terminating)
+	err = gcp.UpdateCluster("", cluster, false, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
