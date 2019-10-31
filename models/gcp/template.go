@@ -3,7 +3,6 @@ package gcp
 import (
 	"antelope/models"
 	"antelope/models/db"
-	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"errors"
@@ -42,7 +41,6 @@ type NodePoolT struct {
 	PoolRole            string             `json:"pool_role" bson:"pool_role"`
 	ServiceAccountEmail string             `json:"service_account_email" bson:"service_account_email"`
 	Nodes               []*Node            `json:"nodes" bson:"nodes"`
-	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
 	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 }
