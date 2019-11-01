@@ -710,6 +710,7 @@ func CheckKeyUsage(keyName,companyId string,ctx utils.Context) bool {
 	for _, cluster := range clusters {
 		for _,pool := range cluster.NodePools{
 			if keyName == pool.KeyInfo.KeyName{
+				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return true
 			}
 		}
