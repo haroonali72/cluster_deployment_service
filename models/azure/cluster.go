@@ -401,6 +401,14 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		return nil
 
 	}
+
+	for _, pool := range cluster.NodePools {
+		for _, node := range pool.Nodes {
+			node.PrivateIP = nil
+			node.PublicIP = nil
+			node.NodeState = nil
+		}
+	}
 	cluster.Status = "Cluster Created"
 
 	confError = UpdateCluster("", cluster, false, ctx)
@@ -435,12 +443,12 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		return Cluster_Def{}, err
 	}
 
-	c, e := azure.fetchStatus(cluster, token, ctx)
+	_, e := azure.fetchStatus(&cluster, token, ctx)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		return Cluster_Def{}, e
+		return cluster, e
 	}
 	/*err = UpdateCluster(c)
 	if err != nil {
@@ -450,7 +458,7 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 
 	ctx.SendLogs(" AZURE Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	return c, nil
+	return cluster, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {
 

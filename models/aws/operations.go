@@ -363,7 +363,7 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
@@ -435,7 +435,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 		}
 		cluster.NodePools[in].KeyInfo = k
 	}
-	return cluster, nil
+	return *cluster, nil
 }
 
 func (cloud *AWS) getSSHKey() ([]*ec2.KeyPairInfo, error) {
@@ -1418,16 +1418,16 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 		return "", confError
 	}
 
-/*	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx, region)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "not authorized")  {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
-		return "", err
-	}
-	if err == nil {
-		return "", errors.New("Key already exist")
-	}
-*/
+	/*	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx, region)
+		if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "not authorized")  {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			beego.Error(err.Error())
+			return "", err
+		}
+		if err == nil {
+			return "", errors.New("Key already exist")
+		}
+	*/
 	keyMaterial, _, err := aws.KeyPairGenerator(keyName)
 
 	if err != nil {

@@ -335,7 +335,7 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	return ""
 }
 
-func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Context) (Cluster_Def, error) {
+func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Context) (Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
@@ -442,7 +442,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 		}
 	}
 	beego.Info("updated cluster")
-	return cluster, nil
+	return *cluster, nil
 }
 
 func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx utils.Context) (compute.VirtualMachine, error) {
