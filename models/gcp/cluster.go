@@ -226,13 +226,13 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		beego.Error(text, err)
 		return errors.New(text)
 	}
-	if subscriptionId != "" {
-		err = checkCoresLimit(cluster, subscriptionId, ctx)
-		if err != nil { //core size limit exceed
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
-	}
+	//if subscriptionId != "" {
+	//	err = checkCoresLimit(cluster, subscriptionId, ctx)
+	//	if err != nil { //core size limit exceed
+	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//		return err
+	//	}
+	//}
 
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
@@ -699,4 +699,30 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 	}
 
 	return mach, nil
+}
+
+func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
+	gcp, err := GetGCP(credentials)
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+	err = gcp.init()
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+
+	regionInfo, err := gcp.GetZones(ctx)
+	if err != nil {
+		return []string{}, err
+	}
+
+	var zones []string
+	for _, zone := range regionInfo.Zones {
+		zone := zone[len(zone)-1:]
+		zones = append(zones, zone)
+	}
+
+	return zones, nil
 }

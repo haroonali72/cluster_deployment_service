@@ -323,6 +323,13 @@ func (c *AWSClusterController) Patch() {
 		return
 	}
 
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = aws.UpdateCluster(subscriptionId, cluster, true, *ctx)
@@ -425,6 +432,13 @@ func (c *AWSClusterController) Delete() {
 	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
@@ -532,6 +546,13 @@ func (c *AWSClusterController) StartCluster() {
 	if cluster.Status == string(models.Deploying) {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
@@ -771,9 +792,25 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
+	if cluster.Status == string(models.Terminating) {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId)
+
+	cluster.Status = string(models.Terminating)
+	err = aws.UpdateCluster("", cluster, false, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
