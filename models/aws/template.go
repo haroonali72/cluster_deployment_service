@@ -27,16 +27,16 @@ type Template struct {
 }
 
 type NodePoolT struct {
-	ID              bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
-	Name            string           `json:"name" bson:"name"`
-	Ami             Ami              `json:"ami" bson:"ami"`
-	NodeCount       int32            `json:"node_count" bson:"node_count"`
-	MachineType     string           `json:"machine_type" bson:"machine_type"`
-	SubnetId        string           `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []string         `json:"security_group_id" bson:"security_group_id"`
-	PoolRole        string           `json:"pool_role" bson:"pool_role"`
-	IsExternal      bool             `json:"is_external" bson:"is_external"`
-	ExternalVolume  Volume           `json:"external_volume" bson:"external_volume"`
+	ID              bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name            string        `json:"name" bson:"name"`
+	Ami             Ami           `json:"ami" bson:"ami"`
+	NodeCount       int32         `json:"node_count" bson:"node_count"`
+	MachineType     string        `json:"machine_type" bson:"machine_type"`
+	SubnetId        string        `json:"subnet_id" bson:"subnet_id"`
+	SecurityGroupId []string      `json:"security_group_id" bson:"security_group_id"`
+	PoolRole        string        `json:"pool_role" bson:"pool_role"`
+	IsExternal      bool          `json:"is_external" bson:"is_external"`
+	ExternalVolume  Volume        `json:"external_volume" bson:"external_volume"`
 }
 
 func checkTemplateSize(template Template, ctx utils.Context) error {
