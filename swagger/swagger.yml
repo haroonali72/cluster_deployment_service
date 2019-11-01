@@ -1773,8 +1773,6 @@ definitions:
         $ref: '#/definitions/aws.Volume'
       is_external:
         type: boolean
-      key_info:
-        $ref: '#/definitions/key_utils.AWSKey'
       machine_type:
         type: string
       name:
@@ -1943,8 +1941,6 @@ definitions:
         $ref: '#/definitions/azure.ImageReference'
       is_external:
         type: boolean
-      key_info:
-        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:
@@ -2149,8 +2145,6 @@ definitions:
         $ref: '#/definitions/gcp.Image'
       is_external:
         type: boolean
-      key_info:
-        $ref: '#/definitions/key_utils.AZUREKey'
       machine_type:
         type: string
       name:

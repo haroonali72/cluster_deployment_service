@@ -2685,9 +2685,6 @@
                 "is_external": {
                     "type": "boolean"
                 },
-                "key_info": {
-                    "$ref": "#/definitions/key_utils.AWSKey"
-                },
                 "machine_type": {
                     "type": "string"
                 },
@@ -2936,9 +2933,6 @@
                 },
                 "is_external": {
                     "type": "boolean"
-                },
-                "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
@@ -3242,9 +3236,6 @@
                 },
                 "is_external": {
                     "type": "boolean"
-                },
-                "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
                     "type": "string"
