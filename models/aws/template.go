@@ -3,7 +3,6 @@ package aws
 import (
 	"antelope/models"
 	"antelope/models/db"
-	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"errors"
@@ -35,7 +34,6 @@ type NodePoolT struct {
 	MachineType     string           `json:"machine_type" bson:"machine_type"`
 	SubnetId        string           `json:"subnet_id" bson:"subnet_id"`
 	SecurityGroupId []string         `json:"security_group_id" bson:"security_group_id"`
-	KeyInfo         key_utils.AWSKey `json:"key_info" bson:"key_info"`
 	PoolRole        string           `json:"pool_role" bson:"pool_role"`
 	IsExternal      bool             `json:"is_external" bson:"is_external"`
 	ExternalVolume  Volume           `json:"external_volume" bson:"external_volume"`
