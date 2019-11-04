@@ -39,14 +39,15 @@ type NodePoolT struct {
 	ExternalVolume  Volume        `json:"external_volume" bson:"external_volume"`
 }
 
-func checkTemplateSize(template Template, ctx utils.Context) error {
-	for _, pools := range template.NodePools {
-		if pools.NodeCount > 3 {
-			return errors.New("Nodepool can't have more than 3 nodes")
-		}
-	}
-	return nil
-}
+//func checkTemplateSize(template Template, ctx utils.Context) error {
+//	for _, pools := range template.NodePools {
+//		if pools.NodeCount > 3 {
+//			return errors.New("Nodepool can't have more than 3 nodes")
+//		}
+//	}
+//	return nil
+//}
+
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
@@ -64,11 +65,11 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 
 	beego.Info(template.TemplateId)
 
-	err = checkTemplateSize(template, ctx)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err, ""
-	}
+	//err = checkTemplateSize(template, ctx)
+	//if err != nil { //cluster found
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	return err, ""
+	//}
 
 	s := db.GetMongoConf()
 	err = db.InsertInMongo(s.MongoAwsTemplateCollection, template)
@@ -79,7 +80,46 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 
 	return nil, template.TemplateId
 }
+func CreateDefaultTemplate(templates []Template, companyId string, ctx utils.Context) error {
 
+	for _, template := range templates {
+		template.CompanyId = companyId
+		template.CreationDate = time.Now()
+		if template.TemplateId == "" {
+			i := rand.Int()
+			template.TemplateId = template.Name + strconv.Itoa(i)
+		}
+	}
+	var inter []interface{}
+	for _, template := range templates {
+		inter = append(inter, template)
+	}
+	s := db.GetMongoConf()
+	err := db.InsertManyInMongo(s.MongoAwsTemplateCollection, inter)
+	if err != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
+func GetDefaultTemplate(ctx utils.Context) (template []Template, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []Template{}, err1
+	}
+	defer session.Close()
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoAwsCustomerTemplateCollection)
+	err = c.Find(bson.M{}).All(&template)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []Template{}, err
+	}
+
+	return template, nil
+}
 func GetTemplate(templateId, companyId string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {

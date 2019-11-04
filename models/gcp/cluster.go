@@ -243,12 +243,12 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 	}
 	defer session.Close()
 
-	err = checkClusterSize(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs("GcpClusterModel: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
-		return err
-	}
+	//err = checkClusterSize(cluster)
+	//if err != nil { //cluster found
+	//	ctx.SendLogs("GcpClusterModel: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	beego.Error(err.Error())
+	//	return err
+	//}
 
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()

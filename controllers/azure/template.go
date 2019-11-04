@@ -201,7 +201,7 @@ func (c *AzureTemplateController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -392,7 +392,7 @@ func (c *AzureTemplateController) Delete() {
 	err = azure.DeleteTemplate(id, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -415,5 +415,47 @@ func (c *AzureTemplateController) Delete() {
 
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
+	c.ServeJSON()
+}
+
+// @Title Create
+// @Description create a default templates
+// @Param	companyId	path	string	true	"Company Id"
+// @Success 200 {"msg": "template created successfully"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router / [post]
+func (c *AzureTemplateController) CreateDefaultTemplates() {
+
+	companyId := c.GetString(":companyId")
+	if companyId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "company id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", companyId, "")
+
+	templates, err := azure.GetDefaultTemplate(*ctx)
+	if err != nil {
+
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = azure.CreateDefaultTemplate(templates, companyId, *ctx)
+	if err != nil {
+
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]string{"msg": "templates generated successfully with id "}
 	c.ServeJSON()
 }

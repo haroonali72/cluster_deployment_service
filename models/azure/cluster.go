@@ -230,11 +230,11 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 	}
 	defer session.Close()
 
-	err = checkClusterSize(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
+	//err = checkClusterSize(cluster)
+	//if err != nil { //cluster found
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	return err
+	//}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureClusterCollection, cluster)
 	if err != nil {

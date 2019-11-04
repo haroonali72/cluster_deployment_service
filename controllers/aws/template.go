@@ -214,7 +214,6 @@ func (c *AWSTemplateController) Post() {
 
 	team := c.Ctx.Input.Header("teams")
 
-
 	var teams []string
 	if team != "" {
 		teams = strings.Split(team, ";")
@@ -303,13 +302,12 @@ func (c *AWSTemplateController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	team := c.Ctx.Input.Header("teams")
-
 
 	var teams []string
 	if team != "" {
@@ -421,5 +419,47 @@ func (c *AWSTemplateController) Delete() {
 
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
+	c.ServeJSON()
+}
+
+// @Title Create
+// @Description create a default templates
+// @Param	companyId	path	string	true	"Company Id"
+// @Success 200 {"msg": "template created successfully"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router / [post]
+func (c *AWSTemplateController) CreateDefaultTemplates() {
+
+	companyId := c.GetString(":companyId")
+	if companyId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "company id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", companyId, "")
+
+	templates, err := aws.GetDefaultTemplate(*ctx)
+	if err != nil {
+
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = aws.CreateDefaultTemplate(templates, companyId, *ctx)
+	if err != nil {
+
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]string{"msg": "templates generated successfully with id "}
 	c.ServeJSON()
 }
