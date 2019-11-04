@@ -491,7 +491,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 			if err != nil {
-				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					flag = true
 				} else {
@@ -503,7 +503,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 
 			err = cloud.Scaler.DeleteConfiguration(pool.Name)
 			if err != nil {
-				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					flag = true
 				} else {
@@ -517,7 +517,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 
 		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
 		if err != nil {
-			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				flag = true
 			} else {
@@ -529,7 +529,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 
 		err = cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err != nil {
-			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 				flag = true
 			}
 		}
