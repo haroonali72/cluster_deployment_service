@@ -1365,6 +1365,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/aws/register/customerTemplates/{companyId}: {}
   /template/azure/:
     put:
       tags:
@@ -1505,6 +1506,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/azure/register/customerTemplates/{companyId}: {}
   /template/gcp/:
     put:
       tags:
@@ -1641,11 +1643,30 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/gcp/register/customerTemplates/{companyId}:
+    post:
+      tags:
+      - template/gcp
+      description: register customer templates
+      operationId: GcpTemplateController.Register
+      parameters:
+      - in: path
+        name: companyId
+        description: Company Id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  50633.0xc000817020.false:
+  577.0xc042655c50.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1685,7 +1706,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/50633.0xc000817020.false'
+        $ref: '#/definitions/577.0xc042655c50.false'
       name:
         type: string
       network_name:
@@ -2026,7 +2047,7 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
-    type: object
+    type: string
   gcp.AutoScaling:
     title: AutoScaling
     type: object
@@ -2297,6 +2318,7 @@ definitions:
     - New = "new"
     - Created = "created"
     - Deploying = "deploying"
+    - Terminating = "terminating"
     example: existing
   subscriptionId:
     title: subscriptionId

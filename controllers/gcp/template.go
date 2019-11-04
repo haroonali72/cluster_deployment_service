@@ -443,13 +443,13 @@ func (c *GcpTemplateController) Delete() {
 	c.ServeJSON()
 }
 
-// @Title Create
-// @Description create a default templates
+// @Title Register
+// @Description register customer templates
 // @Param	companyId	path	string	true	"Company Id"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router / [post]
+// @router /register/customerTemplates/:companyId [post]
 func (c *GcpTemplateController) CreateDefaultTemplates() {
 
 	companyId := c.GetString(":companyId")
@@ -463,7 +463,7 @@ func (c *GcpTemplateController) CreateDefaultTemplates() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", companyId, "")
 
-	templates, err := gcp.GetDefaultTemplate(*ctx)
+	templates, err := gcp.GetCustomerTemplate(*ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)
@@ -472,7 +472,7 @@ func (c *GcpTemplateController) CreateDefaultTemplates() {
 		return
 	}
 
-	err = gcp.CreateDefaultTemplate(templates, companyId, *ctx)
+	err = gcp.RegisterCustomerTemplate(templates, companyId, *ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)

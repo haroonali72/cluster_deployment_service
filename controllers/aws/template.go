@@ -422,13 +422,13 @@ func (c *AWSTemplateController) Delete() {
 	c.ServeJSON()
 }
 
-// @Title Create
-// @Description create a default templates
+// @Title Register
+// @Description register customer templates
 // @Param	companyId	path	string	true	"Company Id"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router / [post]
+// @router /register/customerTemplates/:companyId  [post]
 func (c *AWSTemplateController) CreateDefaultTemplates() {
 
 	companyId := c.GetString(":companyId")
@@ -442,7 +442,7 @@ func (c *AWSTemplateController) CreateDefaultTemplates() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", companyId, "")
 
-	templates, err := aws.GetDefaultTemplate(*ctx)
+	templates, err := aws.GetCustomerTemplate(*ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)
@@ -451,7 +451,7 @@ func (c *AWSTemplateController) CreateDefaultTemplates() {
 		return
 	}
 
-	err = aws.CreateDefaultTemplate(templates, companyId, *ctx)
+	err = aws.RegisterCustomerTemplate(templates, companyId, *ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)

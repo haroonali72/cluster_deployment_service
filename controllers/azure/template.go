@@ -418,13 +418,13 @@ func (c *AzureTemplateController) Delete() {
 	c.ServeJSON()
 }
 
-// @Title Create
-// @Description create a default templates
+// @Title Register
+// @Description register customer templates
 // @Param	companyId	path	string	true	"Company Id"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router / [post]
+// @router /register/customerTemplates/:companyId  [post]
 func (c *AzureTemplateController) CreateDefaultTemplates() {
 
 	companyId := c.GetString(":companyId")
@@ -438,7 +438,7 @@ func (c *AzureTemplateController) CreateDefaultTemplates() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", companyId, "")
 
-	templates, err := azure.GetDefaultTemplate(*ctx)
+	templates, err := azure.GetCustomerTemplate(*ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)
@@ -447,7 +447,7 @@ func (c *AzureTemplateController) CreateDefaultTemplates() {
 		return
 	}
 
-	err = azure.CreateDefaultTemplate(templates, companyId, *ctx)
+	err = azure.RegisterCustomerTemplate(templates, companyId, *ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)
