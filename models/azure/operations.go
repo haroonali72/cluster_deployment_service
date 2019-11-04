@@ -246,9 +246,9 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		var vmObj VM
 		vmObj.Name = vm.Name
 		vmObj.CloudId = vm.ID
-		vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-		vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
-		vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
+		//vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+		//vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
+		//vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
 		vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
 		vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
 		vmObj.ComputerName = vm.OsProfile.ComputerName
@@ -282,17 +282,17 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			if err != nil {
 				return nil, "", err
 			}
-			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+			//vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
 			pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
 			arr = strings.Split(pipId, "/")
 			pipConf := arr[14]
 			pipAddress := arr[16]
-			pip, err := cloud.GetPIP(resourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
+			_, err = cloud.GetPIP(resourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 			if err != nil {
 				return nil, "", err
 			}
-			vmObj.PublicIP = pip.IPAddress
-			vmObj.NodeState = vm.ProvisioningState
+			//vmObj.PublicIP = pip.IPAddress
+			//vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
 			vmObj.ComputerName = vm.OsProfile.ComputerName

@@ -401,14 +401,6 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		return nil
 
 	}
-
-	for _, pool := range cluster.NodePools {
-		for _, node := range pool.Nodes {
-			node.PrivateIP = nil
-			node.PublicIP = nil
-			node.NodeState = nil
-		}
-	}
 	cluster.Status = "Cluster Created"
 
 	confError = UpdateCluster("", cluster, false, ctx)
@@ -651,7 +643,7 @@ func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 
 	return err
 }
-func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Cluster_Def, err error) {
+func getCompanyAllCluster(companyId string, ctx utils.Context) (clusters []Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -670,15 +662,15 @@ func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Clust
 	return clusters, nil
 }
 
-func CheckKeyUsage(keyName,companyId string,ctx utils.Context) bool {
+func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	clusters, err := getCompanyAllCluster(companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return true
 	}
 	for _, cluster := range clusters {
-		for _,pool := range cluster.NodePools{
-			if keyName == pool.KeyInfo.KeyName{
+		for _, pool := range cluster.NodePools {
+			if keyName == pool.KeyInfo.KeyName {
 				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return true
 			}
