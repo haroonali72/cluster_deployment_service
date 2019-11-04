@@ -978,7 +978,13 @@ func (c *AzureClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	alreadyUsed :=azure.CheckKeyUsage(keyName,userInfo.CompanyId ,*ctx)
+	if (alreadyUsed){
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
+		c.ServeJSON()
+		return
+	}
 	err = azure.DeleteSSHkey(keyName, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)

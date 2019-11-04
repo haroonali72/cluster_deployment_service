@@ -690,3 +690,39 @@ func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx u
 
 	return err
 }
+
+func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Cluster_Def, err error) {
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err1
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
+	err = c.Find(bson.M{"company_id": companyId}).All(&clusters)
+	if err != nil {
+		return nil, err
+	}
+	ctx.SendLogs(" Get all Company AWS Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	return clusters, nil
+}
+
+func CheckKeyUsage(keyName,companyId string,ctx utils.Context) bool {
+	clusters, err := getCompanyAllCluster(companyId, ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return true
+	}
+	for _, cluster := range clusters {
+		for _,pool := range cluster.NodePools{
+			if keyName == pool.KeyInfo.KeyName{
+				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return true
+			}
+		}
+	}
+	return false
+}

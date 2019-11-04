@@ -1263,6 +1263,13 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
+	alreadyUsed :=aws.CheckKeyUsage(keyName,userInfo.CompanyId ,*ctx)
+	if (alreadyUsed){
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
+		c.ServeJSON()
+		return
+	}
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
