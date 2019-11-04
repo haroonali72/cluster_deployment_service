@@ -335,12 +335,12 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	return ""
 }
 
-func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Context) (Cluster_Def, error) {
+func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Context) (*Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
 			ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 	}
 	for in, pool := range cluster.NodePools {
@@ -351,12 +351,12 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				beego.Error("vm creation failed with error: " + err.Error())
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 
 		}
@@ -367,21 +367,21 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 			vm, err := cloud.GetInstance(pool.Name, cluster.ResourceGroup, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			beego.Info("getting nic")
 			nicName := "NIC-" + pool.Name
 			nicParameters, err := cloud.GetVMNIC(cluster.ResourceGroup, nicName, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			beego.Info("getting pip")
 			IPname := "pip-" + pool.Name
 			publicIPaddress, err := cloud.GetVMPIP(cluster.ResourceGroup, IPname, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 
 			var vmObj VM
@@ -402,7 +402,7 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, pool.Name, "", "", "")
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			for _, vm := range vms.Values() {
 				var vmObj VM
@@ -417,7 +417,7 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 				nicName := arr[12]
 				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, pool.Name, arr[10], nicName, ctx)
 				if err != nil {
-					return Cluster_Def{}, err
+					return &Cluster_Def{}, err
 				}
 				vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
 				pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
@@ -426,7 +426,7 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 				pipAddress := arr[16]
 				pip, err := cloud.GetPIP(cluster.ResourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 				if err != nil {
-					return Cluster_Def{}, err
+					return &Cluster_Def{}, err
 				}
 				vmObj.PublicIP = pip.IPAddress
 				vmObj.NodeState = vm.ProvisioningState
@@ -442,7 +442,7 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 		}
 	}
 	beego.Info("updated cluster")
-	return *cluster, nil
+	return cluster, nil
 }
 
 func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx utils.Context) (compute.VirtualMachine, error) {

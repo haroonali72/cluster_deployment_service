@@ -660,7 +660,7 @@ func (c *AzureClusterController) GetStatus() {
 	ctx.SendLogs("AzureClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil {
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "was not found.") {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -978,8 +978,8 @@ func (c *AzureClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	alreadyUsed :=azure.CheckKeyUsage(keyName,userInfo.CompanyId ,*ctx)
-	if (alreadyUsed){
+	alreadyUsed := azure.CheckKeyUsage(keyName, userInfo.CompanyId, *ctx)
+	if alreadyUsed {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
 		c.ServeJSON()
