@@ -363,12 +363,12 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string, token string) (*Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
 			ctx.SendLogs("Failed to get latest status"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 	}
 	for in, pool := range cluster.NodePools {
@@ -379,7 +379,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			beego.Info("getting scaler nodes")
 			err, instances := cloud.Scaler.GetAutoScaler(cluster.ProjectId, pool.Name, ctx)
 			if err != nil {
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			if instances != nil {
 				for _, inst := range instances {
@@ -395,7 +395,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			nodeId = append(nodeId, &node.CloudId)
 			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false, ctx, companyId)
 			if err != nil {
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			if out != nil {
 				cluster.NodePools[in].Nodes[index].NodeState = *out[0].State.Name
@@ -426,12 +426,12 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 		keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx, cloud.Region)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 		k, err := key_utils.AWSKeyCoverstion(keyInfo, ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 		cluster.NodePools[in].KeyInfo = k
 	}

@@ -436,6 +436,14 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		return nil
 
 	}
+
+	for _, pool := range cluster.NodePools {
+		for _, node := range pool.Nodes {
+			node.NodeState = ""
+			node.PublicIp = ""
+			node.PrivateIp = ""
+		}
+	}
 	cluster.Status = "Cluster Created"
 
 	confError = UpdateCluster("", cluster, false, ctx)

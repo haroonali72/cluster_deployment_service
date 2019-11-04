@@ -435,12 +435,12 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		return Cluster_Def{}, err
 	}
 
-	c, e := azure.fetchStatus(cluster, token, ctx)
+	_, e := azure.fetchStatus(&cluster, token, ctx)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		return Cluster_Def{}, e
+		return cluster, e
 	}
 	/*err = UpdateCluster(c)
 	if err != nil {
@@ -450,7 +450,7 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 
 	ctx.SendLogs(" AZURE Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	return c, nil
+	return cluster, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {
 
@@ -643,7 +643,7 @@ func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 
 	return err
 }
-func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Cluster_Def, err error) {
+func getCompanyAllCluster(companyId string, ctx utils.Context) (clusters []Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -662,15 +662,15 @@ func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Clust
 	return clusters, nil
 }
 
-func CheckKeyUsage(keyName,companyId string,ctx utils.Context) bool {
+func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	clusters, err := getCompanyAllCluster(companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return true
 	}
 	for _, cluster := range clusters {
-		for _,pool := range cluster.NodePools{
-			if keyName == pool.KeyInfo.KeyName{
+		for _, pool := range cluster.NodePools {
+			if keyName == pool.KeyInfo.KeyName {
 				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return true
 			}

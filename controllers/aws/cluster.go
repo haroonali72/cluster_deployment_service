@@ -679,7 +679,7 @@ func (c *AWSClusterController) GetStatus() {
 	}
 
 	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
-	if err != nil {
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "nodes not found") {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1263,8 +1263,8 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	alreadyUsed :=aws.CheckKeyUsage(keyName,userInfo.CompanyId ,*ctx)
-	if (alreadyUsed){
+	alreadyUsed := aws.CheckKeyUsage(keyName, userInfo.CompanyId, *ctx)
+	if alreadyUsed {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
 		c.ServeJSON()

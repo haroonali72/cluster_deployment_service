@@ -246,9 +246,9 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		var vmObj VM
 		vmObj.Name = vm.Name
 		vmObj.CloudId = vm.ID
-		vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-		vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
-		vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
+		//vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+		//vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
+		//vmObj.NodeState = vm.VirtualMachineProperties.ProvisioningState
 		vmObj.UserName = vm.VirtualMachineProperties.OsProfile.AdminUsername
 		vmObj.PAssword = vm.VirtualMachineProperties.OsProfile.AdminPassword
 		vmObj.ComputerName = vm.OsProfile.ComputerName
@@ -282,17 +282,17 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			if err != nil {
 				return nil, "", err
 			}
-			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+			//vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
 			pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
 			arr = strings.Split(pipId, "/")
 			pipConf := arr[14]
 			pipAddress := arr[16]
-			pip, err := cloud.GetPIP(resourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
+			_, err = cloud.GetPIP(resourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 			if err != nil {
 				return nil, "", err
 			}
-			vmObj.PublicIP = pip.IPAddress
-			vmObj.NodeState = vm.ProvisioningState
+			//vmObj.PublicIP = pip.IPAddress
+			//vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
 			vmObj.ComputerName = vm.OsProfile.ComputerName
@@ -335,12 +335,12 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	return ""
 }
 
-func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Context) (Cluster_Def, error) {
+func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Context) (*Cluster_Def, error) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != nil {
 			ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 	}
 	for in, pool := range cluster.NodePools {
@@ -351,12 +351,12 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				beego.Error("vm creation failed with error: " + err.Error())
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 
 		}
@@ -367,21 +367,21 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			vm, err := cloud.GetInstance(pool.Name, cluster.ResourceGroup, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			beego.Info("getting nic")
 			nicName := "NIC-" + pool.Name
 			nicParameters, err := cloud.GetVMNIC(cluster.ResourceGroup, nicName, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			beego.Info("getting pip")
 			IPname := "pip-" + pool.Name
 			publicIPaddress, err := cloud.GetVMPIP(cluster.ResourceGroup, IPname, ctx)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 
 			var vmObj VM
@@ -402,7 +402,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 			vms, err := cloud.VMSSVMClient.List(cloud.context, cluster.ResourceGroup, pool.Name, "", "", "")
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			for _, vm := range vms.Values() {
 				var vmObj VM
@@ -417,7 +417,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 				nicName := arr[12]
 				nicParameters, err := cloud.GetNIC(cluster.ResourceGroup, pool.Name, arr[10], nicName, ctx)
 				if err != nil {
-					return Cluster_Def{}, err
+					return &Cluster_Def{}, err
 				}
 				vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
 				pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
@@ -426,7 +426,7 @@ func (cloud *AZURE) fetchStatus(cluster Cluster_Def, token string, ctx utils.Con
 				pipAddress := arr[16]
 				pip, err := cloud.GetPIP(cluster.ResourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 				if err != nil {
-					return Cluster_Def{}, err
+					return &Cluster_Def{}, err
 				}
 				vmObj.PublicIP = pip.IPAddress
 				vmObj.NodeState = vm.ProvisioningState

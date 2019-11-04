@@ -350,6 +350,15 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	}
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
+
+	for _, pool := range cluster.NodePools {
+		for _, node := range pool.Nodes {
+			node.NodeState = ""
+			node.PublicIP = ""
+			node.PrivateIP = ""
+		}
+	}
+
 	UpdateScalingStatus(&cluster)
 	confError = UpdateCluster("", cluster, false, ctx)
 	if confError != nil {
@@ -381,11 +390,11 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		return Cluster_Def{}, err
 	}
 
-	c, e := aws.fetchStatus(cluster, ctx, companyId, token)
+	_, e := aws.fetchStatus(&cluster, ctx, companyId, token)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, e
+		return cluster, e
 	}
 	ctx.SendLogs(" AWS Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	/*	err = UpdateCluster(c)
@@ -393,7 +402,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 			return Cluster_Def{}, err
 		}*/
-	return c, nil
+	return cluster, nil
 }
 func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId string) error {
 
