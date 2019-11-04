@@ -45,6 +45,42 @@ type NodePoolT struct {
 	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 
+func GetCustomerTemplate(name string, ctx utils.Context) (template Template, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Template{}, err1
+	}
+	defer session.Close()
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoGcpCustomerTemplateCollection)
+	err = c.Find(bson.M{"name": name}).One(&template)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Template{}, err
+	}
+
+	return template, nil
+}
+func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string) {
+	_, err := GetCustomerTemplate(template.Name, ctx)
+	if err == nil { //template found
+		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
+		beego.Error(text)
+		return errors.New(text), ""
+	}
+
+	template.CreationDate = time.Now()
+
+	s := db.GetMongoConf()
+	err = db.InsertInMongo(s.MongoGcpCustomerTemplateCollection, template)
+	if err != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err, ""
+	}
+
+	return nil, template.TemplateId
+}
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
@@ -67,46 +103,6 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	}
 
 	return nil, template.TemplateId
-}
-func RegisterCustomerTemplate(templates []Template, companyId string, ctx utils.Context) error {
-
-	for _, template := range templates {
-		template.CompanyId = companyId
-		template.CreationDate = time.Now()
-		if template.TemplateId == "" {
-			i := rand.Int()
-			template.TemplateId = template.Name + strconv.Itoa(i)
-		}
-	}
-	var inter []interface{}
-	for _, template := range templates {
-		inter = append(inter, template)
-	}
-	s := db.GetMongoConf()
-	err := db.InsertManyInMongo(s.MongoAwsTemplateCollection, inter)
-	if err != nil {
-		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	return nil
-}
-func GetCustomerTemplate(ctx utils.Context) (template []Template, err error) {
-	session, err1 := db.GetMongoSession(ctx)
-	if err1 != nil {
-		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []Template{}, err1
-	}
-	defer session.Close()
-	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoGcpCustomerTemplateCollection)
-	err = c.Find(bson.M{}).All(&template)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []Template{}, err
-	}
-
-	return template, nil
 }
 func GetTemplate(templateId, companyId string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession(ctx)

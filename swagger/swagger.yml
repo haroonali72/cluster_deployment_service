@@ -1215,6 +1215,7 @@ paths:
           description: '{"error": "error_msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /customerTemplate/register/customerTemplates/{companyId}: {}
   /health/:
     get:
       tags:
@@ -1365,7 +1366,26 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /template/aws/register/customerTemplates/{companyId}: {}
+  /template/aws/create/customerTemplate:
+    post:
+      tags:
+      - template/aws
+      description: create a new customer template
+      operationId: AWSTemplateController.Create Customer Template
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/aws.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/azure/:
     put:
       tags:
@@ -1506,7 +1526,26 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /template/azure/register/customerTemplates/{companyId}: {}
+  /template/azure/create/customerTemplate:
+    post:
+      tags:
+      - template/azure
+      description: create a new customer template
+      operationId: AzureTemplateController.Create Customer Template
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/azure.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/gcp/:
     put:
       tags:
@@ -1643,30 +1682,31 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /template/gcp/register/customerTemplates/{companyId}:
+  /template/gcp/create/customerTemplate:
     post:
       tags:
       - template/gcp
-      description: register customer templates
-      operationId: GcpTemplateController.Register
+      description: create a new customer template
+      operationId: GcpTemplateController.Create Customer Template
       parameters:
-      - in: path
-        name: companyId
-        description: Company Id
+      - in: body
+        name: body
+        description: body for template content
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/gcp.Template'
       responses:
         "200":
           description: '{"msg": "template created successfully"}'
-        "404":
-          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
         "500":
           description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc042655c50.false:
+  577.0xc042662330.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1706,7 +1746,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc042655c50.false'
+        $ref: '#/definitions/577.0xc042662330.false'
       name:
         type: string
       network_name:
@@ -2345,3 +2385,6 @@ tags:
 - name: template/gcp
   description: |
     Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: customerTemplate
+  description: |
+    Operations about Azure template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]

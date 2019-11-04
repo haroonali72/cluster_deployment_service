@@ -422,44 +422,36 @@ func (c *AWSTemplateController) Delete() {
 	c.ServeJSON()
 }
 
-// @Title Register
-// @Description register customer templates
-// @Param	companyId	path	string	true	"Company Id"
+// @Title Create Customer Template
+// @Description create a new customer template
+// @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
-// @router /register/customerTemplates/:companyId  [post]
-func (c *AWSTemplateController) CreateDefaultTemplates() {
+// @router /create/customerTemplate [post]
+func (c *AWSTemplateController) PostCustomerTemplate() {
 
-	companyId := c.GetString(":companyId")
-	if companyId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "company id is empty"}
-		c.ServeJSON()
-		return
-	}
+	var template aws.Template
+	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", companyId, "")
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
 
-	templates, err := aws.GetCustomerTemplate(*ctx)
+	ctx.SendLogs("AWSTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+	err, id := aws.CreateCustomerTemplate(template, *ctx)
 	if err != nil {
-
+		if strings.Contains(err.Error(), "already exists") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
-	err = aws.RegisterCustomerTemplate(templates, companyId, *ctx)
-	if err != nil {
-
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	c.Data["json"] = map[string]string{"msg": "templates generated successfully with id "}
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }

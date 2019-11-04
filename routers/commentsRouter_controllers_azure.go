@@ -162,8 +162,8 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"],
 		beego.ControllerComments{
-			Method:           "CreateDefaultTemplates",
-			Router:           `/register/customerTemplates/:companyId`,
+			Method:           "PostCustomerTemplate",
+			Router:           `/create/customerTemplate`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

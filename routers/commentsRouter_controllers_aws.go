@@ -180,8 +180,8 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSTemplateController"],
 		beego.ControllerComments{
-			Method:           "CreateDefaultTemplates",
-			Router:           `/register/customerTemplates/:companyId`,
+			Method:           "PostCustomerTemplate",
+			Router:           `/create/customerTemplate`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

@@ -189,8 +189,8 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
 		beego.ControllerComments{
-			Method:           "CreateDefaultTemplates",
-			Router:           `/register/customerTemplates/:companyId`,
+			Method:           "PostCustomerTemplate",
+			Router:           `/create/customerTemplate`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
