@@ -264,8 +264,6 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 
@@ -447,9 +445,6 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}*/
-
-	ctx.SendLogs(" AZURE cluster "+cluster.Name+" of project Id: "+projectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {

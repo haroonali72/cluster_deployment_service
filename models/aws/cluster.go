@@ -220,7 +220,6 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return cluster, nil
 }
 
@@ -396,7 +395,6 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, e
 	}
-	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+projectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	/*	err = UpdateCluster(c)
 		if err != nil {
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())

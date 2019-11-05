@@ -288,8 +288,6 @@ func GetCluster(projectId string, companyId string, ctx utils.Context) (cluster 
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 
@@ -503,9 +501,6 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		}
 		pool.KeyInfo = keyInfo
 	}
-
-	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+projectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 

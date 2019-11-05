@@ -85,7 +85,7 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 		beego.Error(err.Error())
 		return Template{}, err
 	}
-	ctx.SendLogs("Template fetched of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return template, nil
 }
 func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []Template, err error) {
@@ -107,7 +107,8 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 
 		return nil, err
 	}
-	ctx.SendLogs("Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return templates, nil
 }
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
@@ -127,6 +128,7 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 		return nil, err
 	}
 	ctx.SendLogs("All templates fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return templates, nil
 }
 
@@ -156,6 +158,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		return err
 	}
 	ctx.SendLogs("Template updated of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return nil
 }
 
@@ -175,6 +178,7 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 		beego.Error(err.Error())
 		return err
 	}
-	ctx.SendLogs("Templatedeleted of template id "+templateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Template deleted of template id "+templateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return nil
 }

@@ -99,7 +99,6 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err
 	}
-	ctx.SendLogs("Template fetched of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return template, nil
 }
 func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []Template, err error) {
