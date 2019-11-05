@@ -1159,23 +1159,7 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 	//==========================RBAC Authentication==============================//
-	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + region + "/" + keyName
-	subType := "ssh/" + string(models.AWS)
 
-	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Create", token, *ctx)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
 	keyMaterial, err := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, region, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWS ClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1288,25 +1272,6 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		return
 	}
 
-	//==========================RBAC Authentication==============================//
-	resourceId := "ssh/credentials/" + string(models.AWS) + "/" + region + "/" + keyName
-	subType := "ssh/" + string(models.AWS) + "/" + region
-	allowed, err := rbac_athentication.Authenticate(subType, "vault", resourceId, "Delete", token, *ctx)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-	//==========================RBAC Authentication==============================//
-
 	err = aws.DeleteSSHkey(keyName, token, awsProfile.Profile, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -1314,7 +1279,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" AWS cluster key "+keyName+"of region" +region+" deleted" , models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AWS cluster key "+keyName+"of region"+region+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
 	c.ServeJSON()
 }
