@@ -1706,7 +1706,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc04267e180.false:
+  577.0xc042660510.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1746,7 +1746,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc04267e180.false'
+        $ref: '#/definitions/577.0xc042660510.false'
       name:
         type: string
       network_name:
