@@ -424,6 +424,7 @@ func (c *AWSTemplateController) Delete() {
 
 // @Title Create Customer Template
 // @Description create a new customer template
+// @Param	token	header	string	token ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
@@ -434,6 +435,28 @@ func (c *AWSTemplateController) PostCustomerTemplate() {
 	var template aws.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	roleInfo, err := rbac_athentication.GetRole(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !aws.CheckRole(roleInfo) {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
 

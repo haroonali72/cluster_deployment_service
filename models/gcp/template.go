@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/db"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"errors"
 	"fmt"
@@ -45,6 +46,14 @@ type NodePoolT struct {
 	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 
+func CheckRole(roles types.UserRole) bool {
+	for _, role := range roles.Roles {
+		if role.Name == models.SuperUser || role.Name == models.Admin {
+			return true
+		}
+	}
+	return false
+}
 func GetCustomerTemplate(name string, ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
