@@ -1215,7 +1215,7 @@ paths:
           description: '{"error": "error_msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /customerTemplate/register/customerTemplates/{companyId}: {}
+  /customerTemplate/register/{companyId}: {}
   /health/:
     get:
       tags:
@@ -1706,7 +1706,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc042660510.false:
+  577.0xc04263ebd0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1746,7 +1746,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc042660510.false'
+        $ref: '#/definitions/577.0xc04263ebd0.false'
       name:
         type: string
       network_name:

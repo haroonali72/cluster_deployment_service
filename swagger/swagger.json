@@ -1842,7 +1842,7 @@
                 }
             }
         },
-        "/customerTemplate/register/customerTemplates/{companyId}": {},
+        "/customerTemplate/register/{companyId}": {},
         "/health/": {
             "get": {
                 "tags": [
@@ -2591,7 +2591,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc042660510.false": {
+        "577.0xc04263ebd0.false": {
             "title": "false",
             "type": "object"
         },
@@ -2647,7 +2647,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc042660510.false"
+                    "$ref": "#/definitions/577.0xc04263ebd0.false"
                 },
                 "name": {
                     "type": "string"

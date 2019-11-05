@@ -16,7 +16,7 @@ type CustomerTemplateController struct {
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /register/customerTemplates/:companyId  [post]
+// @router /register/:companyId  [post]
 func (c *CustomerTemplateController) RegisterCustomerTemplate() {
 
 	companyId := c.GetString(":companyId")
