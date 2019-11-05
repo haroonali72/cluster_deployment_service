@@ -24,6 +24,13 @@ const (
 	Slave  PoolRole = "slave"
 )
 
+type Role string
+
+const (
+	SuperUser Role = "Super-User"
+	Admin     Role = "Admin"
+)
+
 type Cloud string
 
 const (
@@ -86,6 +93,7 @@ const (
 	RbacEvaluateURI = "evaluate"
 	RbacInfoURI     = "token/info"
 	RbacPolicyURI   = "policy"
+	RbacExtractURI  = "token/extract"
 )
 
 type Logger string

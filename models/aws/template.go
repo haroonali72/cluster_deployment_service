@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/db"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"errors"
 	"fmt"
@@ -83,7 +84,14 @@ func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string
 
 	return nil, template.TemplateId
 }
-
+func CheckRole(roles types.UserRole) bool {
+	for _, role := range roles.Roles {
+		if role.Name == models.SuperUser || role.Name == models.Admin {
+			return true
+		}
+	}
+	return false
+}
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
