@@ -2591,7 +2591,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc042662330.false": {
+        "577.0xc04267e180.false": {
             "title": "false",
             "type": "object"
         },
@@ -2647,7 +2647,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc042662330.false"
+                    "$ref": "#/definitions/577.0xc04267e180.false"
                 },
                 "name": {
                     "type": "string"
@@ -3581,10 +3581,6 @@
         {
             "name": "template/gcp",
             "description": "Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
-        },
-        {
-            "name": "customerTemplate",
-            "description": "Operations about Azure template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
         }
     ]
 }

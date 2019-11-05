@@ -6,7 +6,6 @@ import (
 	"github.com/astaxie/beego"
 )
 
-// Operations about Azure template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
 type CustomerTemplateController struct {
 	beego.Controller
 }

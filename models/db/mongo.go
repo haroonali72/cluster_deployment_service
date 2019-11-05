@@ -114,9 +114,9 @@ func GetMongoConf() mongConf {
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
 	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
-	conf.MongoAwsCustomerTemplateCollection = "mongo_aws_blueprints_collection"
-	conf.MongoAzureCustomerTemplateCollection = "mongo_azure_blueprints_collection"
-	conf.MongoGcpCustomerTemplateCollection = "mongo_gcp_blueprints_collection"
+	conf.MongoAwsCustomerTemplateCollection = "mongo_aws_customer_template_collection"
+	conf.MongoAzureCustomerTemplateCollection = "mongo_azure_customer_template_collection"
+	conf.MongoGcpCustomerTemplateCollection = "mongo_gcp_customer_template_collection"
 	return conf
 
 }
