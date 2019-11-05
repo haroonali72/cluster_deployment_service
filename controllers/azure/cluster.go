@@ -83,7 +83,7 @@ func (c *AzureClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -136,7 +136,7 @@ func (c *AzureClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" All Azure clusters fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -242,7 +242,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -343,7 +343,7 @@ func (c *AzureClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -435,7 +435,7 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -571,7 +571,7 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -666,7 +666,6 @@ func (c *AzureClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -792,7 +791,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }
@@ -909,7 +908,7 @@ func (c *AzureClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster key "+keyName+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = privateKey
 	c.ServeJSON()
 }
@@ -992,7 +991,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" Azure cluster key "+keyName+" deleted " , models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
 	c.ServeJSON()
 }

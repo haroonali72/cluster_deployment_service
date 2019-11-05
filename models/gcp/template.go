@@ -65,7 +65,6 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
 		return err, ""
 	}
-	ctx.SendLogs("Template created of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil, template.TemplateId
 }
 
@@ -85,7 +84,7 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 		beego.Error(err.Error())
 		return Template{}, err
 	}
-	ctx.SendLogs("Template fetched of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return template, nil
 }
 func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []Template, err error) {
@@ -107,8 +106,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 
 		return nil, err
 	}
-	ctx.SendLogs("Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	return templates, nil
+return templates, nil
 }
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession(ctx)
@@ -126,7 +124,6 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 		beego.Error(err.Error())
 		return nil, err
 	}
-	ctx.SendLogs("All templates fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return templates, nil
 }
 
@@ -155,7 +152,6 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		beego.Error("Template model: Update - Got error creating template: ", err)
 		return err
 	}
-	ctx.SendLogs("Template updated of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil
 }
 
@@ -175,6 +171,5 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 		beego.Error(err.Error())
 		return err
 	}
-	ctx.SendLogs("Templatedeleted of template id "+templateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil
 }

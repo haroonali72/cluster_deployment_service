@@ -84,7 +84,7 @@ func (c *GcpTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("Azure template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
@@ -142,7 +142,7 @@ func (c *GcpTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("Azure templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
@@ -247,7 +247,7 @@ func (c *GcpTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("Azure template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
@@ -349,6 +349,7 @@ func (c *GcpTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs("Azure template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
@@ -439,7 +440,7 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("Azure template of template id "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
 	c.ServeJSON()

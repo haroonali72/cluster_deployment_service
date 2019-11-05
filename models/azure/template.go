@@ -81,7 +81,6 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 		ctx.SendLogs("Template model: Create - Got error inserting template to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err, ""
 	}
-	ctx.SendLogs("Template created of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil, template.TemplateId
 }
 
@@ -99,7 +98,6 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Template{}, err
 	}
-	ctx.SendLogs("Template fetched of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return template, nil
 }
 func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []Template, err error) {
@@ -120,7 +118,6 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-	ctx.SendLogs("Templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return templates, nil
 }
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
@@ -137,7 +134,6 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 		ctx.SendLogs("Template model: GetAll - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-	ctx.SendLogs("All templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return templates, nil
 }
 
@@ -163,7 +159,6 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	ctx.SendLogs("Template updated of template id "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil
 }
 
@@ -181,6 +176,5 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	ctx.SendLogs("Template deleted of template id "+templateId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil
 }
