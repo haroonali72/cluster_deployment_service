@@ -200,7 +200,7 @@ func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	ctx.SendLogs(" AWS cluster: "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return nil
 }
 
@@ -239,7 +239,6 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-	ctx.SendLogs(" All AWS Clusters fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return clusters, nil
 }
@@ -273,7 +272,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		return err
 	}
 
-	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return nil
 }
 
@@ -293,7 +292,6 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 		return err
 	}
 
-	ctx.SendLogs(" Aws cluster of project Id: "+projectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
@@ -367,7 +365,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	return nil
 }
 func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
@@ -471,7 +469,6 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs("Cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	return nil
 }
 func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.Context) Cluster_Def {
@@ -700,8 +697,6 @@ func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Clust
 	if err != nil {
 		return nil, err
 	}
-	ctx.SendLogs(" All company AWS clusters fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return clusters, nil
 }
 

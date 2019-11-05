@@ -81,7 +81,7 @@ func (c *AWSTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+template.TemplateId+"created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
@@ -136,7 +136,7 @@ func (c *AWSTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("All AWS Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
@@ -235,7 +235,7 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
@@ -331,7 +331,7 @@ func (c *AWSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
@@ -418,7 +418,7 @@ func (c *AWSTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+templateId+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
 	c.ServeJSON()

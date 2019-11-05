@@ -1439,9 +1439,6 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 	keyInfo.KeyMaterial = keyMaterial
 	keyInfo.KeyType = models.NEWKey
 	keyInfo.Cloud = models.AWS
-
-	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, region)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())

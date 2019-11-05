@@ -93,7 +93,7 @@ func (c *AWSClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -146,7 +146,7 @@ func (c *AWSClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" All AWS clusters fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -251,6 +251,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -351,7 +352,7 @@ func (c *AWSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -450,7 +451,7 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -587,7 +588,7 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -811,7 +812,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }
@@ -1183,7 +1184,7 @@ func (c *AWSClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" AWS cluster key "+keyName+" created in region "+region, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = keyMaterial
 	c.ServeJSON()
 }
@@ -1313,7 +1314,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" AWS cluster key "+keyName+"of region" +region+" deleted" , models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
 	c.ServeJSON()
 }

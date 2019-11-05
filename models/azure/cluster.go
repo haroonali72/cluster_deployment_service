@@ -242,9 +242,6 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
-	ctx.SendLogs(" Azure cluster: "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -286,9 +283,6 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-
-	ctx.SendLogs(" All azure clusters fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return clusters, nil
 }
 
@@ -321,8 +315,6 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	ctx.SendLogs(" Azure cluster: "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -340,8 +332,6 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	ctx.SendLogs(" Azure cluster of project Id: "+projectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
@@ -409,7 +399,6 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
 }
@@ -512,8 +501,6 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 			return err
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-
-		ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+"terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		return nil
 	}
@@ -652,7 +639,6 @@ func getCompanyAllCluster(companyId string, ctx utils.Context) (clusters []Clust
 	if err != nil {
 		return nil, err
 	}
-	ctx.SendLogs(" All company AWS clusters fetched  ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return clusters, nil
 }
