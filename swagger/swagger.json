@@ -1842,6 +1842,7 @@
                 }
             }
         },
+        "/customerTemplate/register/customerTemplates/{companyId}": {},
         "/health/": {
             "get": {
                 "tags": [
@@ -1979,6 +1980,37 @@
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aws/create/customerTemplate": {
+            "post": {
+                "tags": [
+                    "template/aws"
+                ],
+                "description": "create a new customer template",
+                "operationId": "AWSTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aws.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -2201,6 +2233,37 @@
                 }
             }
         },
+        "/template/azure/create/customerTemplate": {
+            "post": {
+                "tags": [
+                    "template/azure"
+                ],
+                "description": "create a new customer template",
+                "operationId": "AzureTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/azure.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/azure/{templateId}": {
             "get": {
                 "tags": [
@@ -2414,6 +2477,37 @@
                 }
             }
         },
+        "/template/gcp/create/customerTemplate": {
+            "post": {
+                "tags": [
+                    "template/gcp"
+                ],
+                "description": "create a new customer template",
+                "operationId": "GcpTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gcp.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/{templateId}": {
             "get": {
                 "tags": [
@@ -2497,7 +2591,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "50633.0xc000817020.false": {
+        "577.0xc042660510.false": {
             "title": "false",
             "type": "object"
         },
@@ -2553,7 +2647,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/50633.0xc000817020.false"
+                    "$ref": "#/definitions/577.0xc042660510.false"
                 },
                 "name": {
                     "type": "string"
@@ -3061,7 +3155,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "object"
+            "type": "string"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
@@ -3449,7 +3543,8 @@
                 "Existing = \"existing\"",
                 "New = \"new\"",
                 "Created = \"created\"",
-                "Deploying = \"deploying\""
+                "Deploying = \"deploying\"",
+                "Terminating = \"terminating\""
             ],
             "example": "existing"
         },
