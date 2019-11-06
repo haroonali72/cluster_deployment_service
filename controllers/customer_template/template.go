@@ -1,4 +1,4 @@
-package register_customer_templates
+package customer_template
 
 import (
 	"antelope/models/register_customer_template"
@@ -6,18 +6,19 @@ import (
 	"github.com/astaxie/beego"
 )
 
-type CustomerTemplateController struct {
+// customer template endpoint
+type CustomerTempalteController struct {
 	beego.Controller
 }
 
-// @Title Register
+// @Title Post
 // @Description register customer templates
 // @Param	companyId	path	string	true	"Company Id"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /register/:companyId  [post]
-func (c *CustomerTemplateController) RegisterCustomerTemplate() {
+// @router /register/:companyId [post]
+func (c *CustomerTempalteController) Post() {
 
 	companyId := c.GetString(":companyId")
 	if companyId == "" {
@@ -28,7 +29,7 @@ func (c *CustomerTemplateController) RegisterCustomerTemplate() {
 	}
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", companyId, "")
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", companyId, "")
 
 	awstemplates, azuretemplates, gcptemplates, err := register_customer_template.GetCustomerTemplate(*ctx)
 	if err != nil {

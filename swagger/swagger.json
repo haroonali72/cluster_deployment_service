@@ -1842,7 +1842,35 @@
                 }
             }
         },
-        "/customerTemplate/register/{companyId}": {},
+        "/customerTemplate/register/{companyId}": {
+            "post": {
+                "tags": [
+                    "customerTemplate"
+                ],
+                "description": "register customer templates",
+                "operationId": "CustomerTempalteController.Post",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "companyId",
+                        "description": "Company Id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/health/": {
             "get": {
                 "tags": [
@@ -1995,6 +2023,12 @@
                 "description": "create a new customer template",
                 "operationId": "AWSTemplateController.Create Customer Template",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -2242,6 +2276,12 @@
                 "operationId": "AzureTemplateController.Create Customer Template",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -2486,6 +2526,12 @@
                 "operationId": "GcpTemplateController.Create Customer Template",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for template content",
@@ -2591,7 +2637,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc04263ebd0.false": {
+        "577.0xc0426197d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -2647,7 +2693,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc04263ebd0.false"
+                    "$ref": "#/definitions/577.0xc0426197d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -3557,6 +3603,10 @@
         {
             "name": "health",
             "description": "health endpoint\n"
+        },
+        {
+            "name": "customerTemplate",
+            "description": "customer template endpoint\n"
         },
         {
             "name": "template/aws",

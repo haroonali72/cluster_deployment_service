@@ -1215,7 +1215,25 @@ paths:
           description: '{"error": "error_msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /customerTemplate/register/{companyId}: {}
+  /customerTemplate/register/{companyId}:
+    post:
+      tags:
+      - customerTemplate
+      description: register customer templates
+      operationId: CustomerTempalteController.Post
+      parameters:
+      - in: path
+        name: companyId
+        description: Company Id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /health/:
     get:
       tags:
@@ -1373,6 +1391,10 @@ paths:
       description: create a new customer template
       operationId: AWSTemplateController.Create Customer Template
       parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1533,6 +1555,10 @@ paths:
       description: create a new customer template
       operationId: AzureTemplateController.Create Customer Template
       parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1689,6 +1715,10 @@ paths:
       description: create a new customer template
       operationId: GcpTemplateController.Create Customer Template
       parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       - in: body
         name: body
         description: body for template content
@@ -1706,7 +1736,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc04263ebd0.false:
+  577.0xc0426197d0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1746,7 +1776,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc04263ebd0.false'
+        $ref: '#/definitions/577.0xc0426197d0.false'
       name:
         type: string
       network_name:
@@ -2367,6 +2397,9 @@ tags:
 - name: health
   description: |
     health endpoint
+- name: customerTemplate
+  description: |
+    customer template endpoint
 - name: template/aws
   description: |
     Operations about AWS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
