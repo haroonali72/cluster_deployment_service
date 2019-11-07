@@ -134,7 +134,7 @@ func (c *GcpTemplateController) GetAll() {
 
 	//==================================================================================
 
-	templates, err := gcp.GetTemplates(*ctx, data)
+	templates, err := gcp.GetTemplates(*ctx, data,userInfo.CompanyId)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController: internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
