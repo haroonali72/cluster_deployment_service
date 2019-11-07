@@ -97,7 +97,7 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 
 	return template, nil
 }
-func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []Template, err error) {
+func GetTemplates(ctx utils.Context, data rbac_athentication.List,companyId string) (templates []Template, err error) {
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
@@ -110,7 +110,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	defer session.Close()
 	s := db.GetMongoConf()
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
-	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}}).All(&templates)
+	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}, "company_id": companyId}).All(&templates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err

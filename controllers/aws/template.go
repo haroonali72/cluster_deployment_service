@@ -128,8 +128,7 @@ func (c *AWSTemplateController) GetAll() {
 
 	//=============================================================================//
 	ctx.SendLogs("AWSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	templates, err := aws.GetTemplates(*ctx, data)
+	templates, err := aws.GetTemplates(*ctx, data,userInfo.CompanyId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}

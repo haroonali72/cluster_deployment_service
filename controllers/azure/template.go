@@ -124,7 +124,7 @@ func (c *AzureTemplateController) GetAll() {
 		return
 	}
 
-	templates, err := azure.GetTemplates(*ctx, data)
+	templates, err := azure.GetTemplates(*ctx, data,userInfo.CompanyId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
