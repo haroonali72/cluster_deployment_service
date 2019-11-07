@@ -146,7 +146,7 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 	}
 	return template, nil
 }
-func GetTemplates(ctx utils.Context, data rbac_athentication.List,compayId string ) (templates []Template, err error) {
+func GetTemplates(ctx utils.Context, data rbac_athentication.List,companyId string ) (templates []Template, err error) {
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
