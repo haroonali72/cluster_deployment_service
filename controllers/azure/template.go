@@ -80,7 +80,7 @@ func (c *AzureTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("Azure template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
@@ -131,7 +131,7 @@ func (c *AzureTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("All Azure templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
@@ -201,7 +201,7 @@ func (c *AzureTemplateController) Post() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -229,6 +229,7 @@ func (c *AzureTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs(" Azure template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
@@ -325,7 +326,7 @@ func (c *AzureTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("Azure template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
@@ -392,7 +393,7 @@ func (c *AzureTemplateController) Delete() {
 	err = azure.DeleteTemplate(id, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -412,8 +413,65 @@ func (c *AzureTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("Azure template of template id "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
+	c.ServeJSON()
+}
+
+// @Title Create Customer Template
+// @Description create a new customer template
+// @Param	token	header	string	token ""
+// @Param	body	body	azure.Template	true	"body for template content"
+// @Success 200 {"msg": "template created successfully"}
+// @Failure 409 {"error": "template with same name already exists"}
+// @Failure 500 {"error": "error msg"}
+// @router /create/customerTemplate [post]
+func (c *AzureTemplateController) PostCustomerTemplate() {
+
+	var template azure.Template
+	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	roleInfo, err := rbac_athentication.GetRole(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !azure.CheckRole(roleInfo) {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
+
+	ctx.SendLogs("AWSTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+	err, id := azure.CreateCustomerTemplate(template, *ctx)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }

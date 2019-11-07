@@ -81,7 +81,7 @@ func (c *AWSTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+template.TemplateId+"created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
@@ -135,7 +135,7 @@ func (c *AWSTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("All AWS Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
@@ -213,7 +213,6 @@ func (c *AWSTemplateController) Post() {
 
 	team := c.Ctx.Input.Header("teams")
 
-
 	var teams []string
 	if team != "" {
 		teams = strings.Split(team, ";")
@@ -234,7 +233,7 @@ func (c *AWSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
@@ -302,13 +301,12 @@ func (c *AWSTemplateController) Patch() {
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":  err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	team := c.Ctx.Input.Header("teams")
-
 
 	var teams []string
 	if team != "" {
@@ -330,7 +328,7 @@ func (c *AWSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
@@ -417,8 +415,65 @@ func (c *AWSTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("AWS template of template id "+templateId+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
+	c.ServeJSON()
+}
+
+// @Title Create Customer Template
+// @Description create a new customer template
+// @Param	token	header	string	token ""
+// @Param	body	body	aws.Template	true	"body for template content"
+// @Success 200 {"msg": "template created successfully"}
+// @Failure 409 {"error": "template with same name already exists"}
+// @Failure 500 {"error": "error msg"}
+// @router /create/customerTemplate [post]
+func (c *AWSTemplateController) PostCustomerTemplate() {
+
+	var template aws.Template
+	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	roleInfo, err := rbac_athentication.GetRole(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !aws.CheckRole(roleInfo) {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
+
+	ctx.SendLogs("AWSTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+	err, id := aws.CreateCustomerTemplate(template, *ctx)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }

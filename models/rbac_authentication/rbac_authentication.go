@@ -167,6 +167,38 @@ func GetInfo(token string) (types.Response, error) {
 	}
 	return res, nil
 }
+func GetRole(token string) (types.UserRole, error) {
+
+	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacExtractURI)
+	if err != nil {
+		return types.UserRole{}, err
+	}
+	q := req.URL.Query()
+	req.Header.Set("token", token)
+	req.URL.RawQuery = q.Encode()
+
+	client := utils.InitReq()
+	response, err := client.SendRequest(req)
+	if err != nil {
+		return types.UserRole{}, err
+	}
+	defer response.Body.Close()
+	beego.Info(response.StatusCode)
+	if response.StatusCode != 200 {
+		return types.UserRole{}, errors.New("RBAC: Unauthorized , " + strconv.Itoa(response.StatusCode))
+	}
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+
+		return types.UserRole{}, err
+	}
+	var res types.UserRole
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return types.UserRole{}, err
+	}
+	return res, nil
+}
 func CreatePolicy(resourceId, token, userName, companyId string, requestType models.RequestType, teams []string, cloudType models.Cloud, ctx utils.Context) (int, error) {
 
 	var input Input

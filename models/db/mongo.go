@@ -34,11 +34,11 @@ func GetMongoSession(ctx utils.Context) (session *mgo.Session, err error) {
 		Password: conf.mongoPass,
 		DialServer: func(addr *mgo.ServerAddr) (net.Conn, error) {
 			conf := tlsconfig
-			dial,err := tls.Dial("tcp", addr.String(), conf)
+			dial, err := tls.Dial("tcp", addr.String(), conf)
 			if err != nil {
 				ctx.SendLogs(" Db connection: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			return dial,err
+			return dial, err
 		},
 	})
 
@@ -59,7 +59,26 @@ func IsMongoAlive() bool {
 	beego.Info("successfully connected to mongo host: " + conf.mongoHost + "")
 	return true
 }
+func InsertManyInMongo(collection string, data []interface{}) error {
+	conf := GetMongoConf()
+	ctx := new(utils.Context)
+	session, err := GetMongoSession(*ctx)
+	if err != nil {
+		errorText := "unable to establish connection to " + conf.mongoHost + " db"
+		beego.Error(errorText)
+		return errors.New(errorText)
+	}
+	defer session.Close()
 
+	c := session.DB(conf.MongoDb).C(collection)
+	err = c.Insert(data...)
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
 func InsertInMongo(collection string, data interface{}) error {
 	conf := GetMongoConf()
 	ctx := new(utils.Context)
@@ -95,22 +114,29 @@ func GetMongoConf() mongConf {
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
 	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
+	conf.MongoAwsCustomerTemplateCollection = "mongo_aws_customer_template_collection"
+	conf.MongoAzureCustomerTemplateCollection = "mongo_azure_customer_template_collection"
+	conf.MongoGcpCustomerTemplateCollection = "mongo_gcp_customer_template_collection"
 	return conf
+
 }
 
 type mongConf struct {
-	mongoHost                    string
-	mongoUser                    string
-	mongoPass                    string
-	mongoAuth                    bool
-	MongoDb                      string
-	MongoAwsTemplateCollection   string
-	MongoAwsClusterCollection    string
-	MongoAzureTemplateCollection string
-	MongoAzureClusterCollection  string
-	MongoGcpTemplateCollection   string
-	MongoGcpClusterCollection    string
-	MongoSshKeyCollection        string
+	mongoHost                            string
+	mongoUser                            string
+	mongoPass                            string
+	mongoAuth                            bool
+	MongoDb                              string
+	MongoAwsTemplateCollection           string
+	MongoAwsCustomerTemplateCollection   string
+	MongoAwsClusterCollection            string
+	MongoAzureTemplateCollection         string
+	MongoAzureCustomerTemplateCollection string
+	MongoAzureClusterCollection          string
+	MongoGcpTemplateCollection           string
+	MongoGcpCustomerTemplateCollection   string
+	MongoGcpClusterCollection            string
+	MongoSshKeyCollection                string
 }
 type tlsConfig struct {
 	ClientCert string

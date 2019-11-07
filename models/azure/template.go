@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/db"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"errors"
 	"fmt"
@@ -53,6 +54,51 @@ func checkTemplateSize(cluster Template) error {
 	}
 	return nil
 }
+func CheckRole(roles types.UserRole) bool {
+	for _, role := range roles.Roles {
+		if role.Name == models.SuperUser || role.Name == models.Admin {
+			return true
+		}
+	}
+	return false
+}
+func GetCustomerTemplate(name string, ctx utils.Context) (template Template, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Template{}, err1
+	}
+	defer session.Close()
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoAzureCustomerTemplateCollection)
+	err = c.Find(bson.M{"name": name}).One(&template)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Template{}, err
+	}
+
+	return template, nil
+}
+func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string) {
+	_, err := GetCustomerTemplate(template.Name, ctx)
+	if err == nil { //template found
+		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
+		beego.Error(text)
+		return errors.New(text), ""
+	}
+
+	template.CreationDate = time.Now()
+
+	s := db.GetMongoConf()
+	err = db.InsertInMongo(s.MongoAzureCustomerTemplateCollection, template)
+	if err != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err, ""
+	}
+
+	return nil, template.TemplateId
+}
+
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
@@ -68,12 +114,12 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 
 	template.CreationDate = time.Now()
 
-	err = checkTemplateSize(template)
-	if err != nil { //cluster found
-
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err, ""
-	}
+	//err = checkTemplateSize(template)
+	//if err != nil { //cluster found
+	//
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	return err, ""
+	//}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureTemplateCollection, template)
 	if err != nil {
@@ -81,7 +127,6 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 		ctx.SendLogs("Template model: Create - Got error inserting template to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err, ""
 	}
-
 	return nil, template.TemplateId
 }
 
@@ -119,7 +164,6 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List,compayId strin
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-
 	return templates, nil
 }
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
@@ -136,7 +180,6 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 		ctx.SendLogs("Template model: GetAll - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-
 	return templates, nil
 }
 
@@ -162,7 +205,6 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
 	return nil
 }
 
@@ -180,6 +222,5 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
 	return nil
 }

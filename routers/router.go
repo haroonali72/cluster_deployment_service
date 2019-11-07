@@ -11,6 +11,7 @@ import (
 	"antelope/controllers"
 	"antelope/controllers/aws"
 	"antelope/controllers/azure"
+	"antelope/controllers/customer_template"
 	"antelope/controllers/gcp"
 	"github.com/astaxie/beego"
 )
@@ -20,6 +21,11 @@ func init() {
 		beego.NSNamespace("/health",
 			beego.NSInclude(
 				&controllers.HealthController{},
+			),
+		),
+		beego.NSNamespace("/customerTemplate",
+			beego.NSInclude(
+				&customer_template.CustomerTempalteController{},
 			),
 		),
 		beego.NSNamespace("/template/aws",

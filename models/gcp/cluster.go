@@ -243,12 +243,12 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 	}
 	defer session.Close()
 
-	err = checkClusterSize(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs("GcpClusterModel: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
-		return err
-	}
+	//err = checkClusterSize(cluster)
+	//if err != nil { //cluster found
+	//	ctx.SendLogs("GcpClusterModel: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	beego.Error(err.Error())
+	//	return err
+	//}
 
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
@@ -266,8 +266,6 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		beego.Error("Cluster model: Create - Got error inserting cluster to the database: ", err)
 		return err
 	}
-
-	ctx.SendLogs(" GCP Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
 }
@@ -288,8 +286,6 @@ func GetCluster(projectId string, companyId string, ctx utils.Context) (cluster 
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" Get gcp Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 
@@ -312,8 +308,6 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 		beego.Error(err.Error())
 		return nil, err
 	}
-
-	ctx.SendLogs(" Get all GCP Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return clusters, nil
 }
@@ -356,8 +350,6 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		beego.Error("Cluster model: Update - Got error creating cluster: ", err)
 		return err
 	}
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" updated in database ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -376,8 +368,6 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 		beego.Error(err.Error())
 		return err
 	}
-	ctx.SendLogs(" GCP Cluster of Project Id: "+projectId+"deleted from database ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -456,8 +446,6 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs("GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"deployed to GCP ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -503,9 +491,6 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		}
 		pool.KeyInfo = keyInfo
 	}
-
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 
@@ -625,8 +610,6 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -748,8 +731,6 @@ func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Clust
 	if err != nil {
 		return nil, err
 	}
-	ctx.SendLogs(" Get all Company AWS Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return clusters, nil
 }
 
