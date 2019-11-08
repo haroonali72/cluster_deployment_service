@@ -191,7 +191,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	err = DeleteTemplate(template.TemplateId, ctx)
+	err = DeleteTemplate(template.TemplateId,template.CompanyId, ctx)
 	if err != nil {
 		beego.Error("Template model: Update - Got error deleting template: ", err)
 		return err
@@ -208,7 +208,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteTemplate(templateId string, ctx utils.Context) error {
+func DeleteTemplate(templateId ,companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -217,7 +217,7 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
-	err = c.Remove(bson.M{"template_id": templateId})
+	err = c.Remove(bson.M{"template_id": templateId,"company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err

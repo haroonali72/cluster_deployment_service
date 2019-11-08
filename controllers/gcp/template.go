@@ -413,7 +413,7 @@ func (c *GcpTemplateController) Delete() {
 
 	//==================================================================================
 
-	err = gcp.DeleteTemplate(id, *ctx)
+	err = gcp.DeleteTemplate(id,userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)

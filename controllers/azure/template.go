@@ -390,7 +390,7 @@ func (c *AzureTemplateController) Delete() {
 
 	ctx.SendLogs("AzureTemplateController: Delete template with id: ", id, models.Backend_Logging)
 
-	err = azure.DeleteTemplate(id, *ctx)
+	err = azure.DeleteTemplate(id, userInfo.CompanyId,*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}

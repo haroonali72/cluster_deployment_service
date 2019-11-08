@@ -392,7 +392,7 @@ func (c *AWSTemplateController) Delete() {
 	//=============================================================================//
 	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)
 
-	err = aws.DeleteTemplate(templateId, *ctx)
+	err = aws.DeleteTemplate(templateId,userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
