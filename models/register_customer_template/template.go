@@ -129,14 +129,14 @@ func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, 
 	}
 
 	for _, template := range azureTemplates {
-		statusCode, err := rbac.CreatePolicy(template.Name, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.AWS, ctx)
+		statusCode, err := rbac.CreatePolicy(template.Name, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.Azure, ctx)
 		if err != nil || statusCode != 200 {
 			return errors.New("error occured in creation policy")
 		}
 	}
 
 	for _, template := range gcpTemplates {
-		statusCode, err := rbac.CreatePolicy(template.Name, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.AWS, ctx)
+		statusCode, err := rbac.CreatePolicy(template.Name, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.GCP, ctx)
 		if err != nil || statusCode != 200 {
 			return errors.New("error occured in creation policy")
 		}
