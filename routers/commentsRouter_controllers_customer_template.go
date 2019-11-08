@@ -10,7 +10,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/customer_template:CustomerTempalteController"] = append(beego.GlobalControllerRouter["antelope/controllers/customer_template:CustomerTempalteController"],
 		beego.ControllerComments{
 			Method:           "Post",
-			Router:           `/register/:token`,
+			Router:           `/register`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

@@ -14,14 +14,14 @@ type CustomerTempalteController struct {
 
 // @Title Post
 // @Description register customer templates
-// @Param	token	path	string	true	"Company Id"
+// @Param	token	header	string	token ""
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /register/:token [post]
+// @router /register [post]
 func (c *CustomerTempalteController) Post() {
 
-	token := c.GetString(":token")
+	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
