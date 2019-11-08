@@ -185,7 +185,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	err = DeleteTemplate(template.TemplateId, ctx)
+	err = DeleteTemplate(template.TemplateId,template.CompanyId, ctx)
 	if err != nil {
 
 		ctx.SendLogs("Template model: Update - Got error deleting template: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -204,7 +204,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteTemplate(templateId string, ctx utils.Context) error {
+func DeleteTemplate(templateId ,companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs("Template model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -213,7 +213,7 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 	defer session.Close()
 	s := db.GetMongoConf()
 	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
-	err = c.Remove(bson.M{"template_id": templateId})
+	err = c.Remove(bson.M{"template_id": templateId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
