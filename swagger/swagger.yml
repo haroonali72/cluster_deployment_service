@@ -1215,7 +1215,7 @@ paths:
           description: '{"error": "error_msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /customerTemplate/register/{companyId}:
+  /customerTemplate/register/{token}:
     post:
       tags:
       - customerTemplate
@@ -1223,7 +1223,7 @@ paths:
       operationId: CustomerTempalteController.Post
       parameters:
       - in: path
-        name: companyId
+        name: token
         description: Company Id
         required: true
         type: string
@@ -1736,7 +1736,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc0426197d0.false:
+  600.0xc0426c0240.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -1776,7 +1776,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc0426197d0.false'
+        $ref: '#/definitions/600.0xc0426c0240.false'
       name:
         type: string
       network_name:

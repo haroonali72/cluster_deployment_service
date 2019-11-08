@@ -32,23 +32,23 @@ type HTTPRequest struct {
 }
 type Context struct {
 	context beego.Controller
-	data    SDData
+	Data    SDData
 }
 
 func (c *Context) SendLogs(message, severity string, logType models.Logger) {
 	switch logType {
 	case models.Backend_Logging:
 
-		c.data.LogName = string(models.Backend_Logging)
+		c.Data.LogName = string(models.Backend_Logging)
 
 		_, file, line, _ := runtime.Caller(1)
-		c.data.Message = file + ":" + strconv.Itoa(line) + " " + message
+		c.Data.Message = file + ":" + strconv.Itoa(line) + " " + message
 
 		go c.Log(message, severity, logType)
 
 	case models.Audit_Trails:
-		c.data.LogName = string(models.Audit_Trails)
-		c.data.Message = message + " by User: " + c.data.UserId
+		c.Data.LogName = string(models.Audit_Trails)
+		c.Data.Message = message + " by User: " + c.Data.UserId
 		go c.Log(message, severity, logType)
 
 	}
@@ -57,22 +57,22 @@ func (c *Context) SendLogs(message, severity string, logType models.Logger) {
 
 func (c *Context) Log(msg, message_type string, logType models.Logger) (int, error) {
 
-	c.data.Severity = message_type
+	c.Data.Severity = message_type
 
 	if message_type == models.LOGGING_LEVEL_ERROR {
 
-		c.data.MessageType = "stderr"
-		beego.Error(c.data.Message)
+		c.Data.MessageType = "stderr"
+		beego.Error(c.Data.Message)
 
 	} else if message_type == models.LOGGING_LEVEL_INFO {
 
-		c.data.MessageType = "stdout"
-		beego.Info(c.data.Message)
+		c.Data.MessageType = "stdout"
+		beego.Info(c.Data.Message)
 	}
 
 	logger := InitReq()
 
-	request_data, err := TransformData(c.data)
+	request_data, err := TransformData(c.Data)
 	if err != nil {
 		beego.Error("%s", err)
 		return 400, err
@@ -95,20 +95,20 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 
 func (c *Context) InitializeLogger(requestURL, method, path string, projectId string, companyId string, userId string) {
 
-	c.data.ResourceName = "Cluster"
-	c.data.ServiceName = "antelope"
-	c.data.Request.Url = requestURL
-	c.data.Request.Method = method
-	c.data.Request.Path = path
-	c.data.Request.RequestId = uuid.New().String()
-	c.data.ProjectId = projectId
-	c.data.Company = companyId
-	c.data.UserId = userId
+	c.Data.ResourceName = "Cluster"
+	c.Data.ServiceName = "antelope"
+	c.Data.Request.Url = requestURL
+	c.Data.Request.Method = method
+	c.Data.Request.Path = path
+	c.Data.Request.RequestId = uuid.New().String()
+	c.Data.ProjectId = projectId
+	c.Data.Company = companyId
+	c.Data.UserId = userId
 
 }
 
 func (c *Context) getHost() string {
-	switch c.data.LogName {
+	switch c.Data.LogName {
 	case string(models.Backend_Logging):
 		s := getBackendLogHost()
 		return s
