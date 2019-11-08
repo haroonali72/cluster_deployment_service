@@ -72,7 +72,7 @@ func RegisterAWSCustomerTemplate(awsTemplates []aws.Template, azureTemplates []a
 	}
 
 	var gcpInterface []interface{}
-	for _, template := range gcpInterface {
+	for _, template := range gcpTemplates {
 		gcpInterface = append(gcpInterface, template)
 	}
 
