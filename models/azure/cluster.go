@@ -293,6 +293,16 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
+
+	if oldCluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("cluster is in deploying state")
+	}
+	if oldCluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("cluster is in terminating state")
+	}
+
 	if oldCluster.Status == "Cluster Created" && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
