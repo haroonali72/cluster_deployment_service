@@ -316,20 +316,6 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
-		c.ServeJSON()
-		return
-	}
-
-	if cluster.Status == string(models.Terminating) {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
-
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
@@ -345,6 +331,18 @@ func (c *GcpClusterController) Patch() {
 		if strings.Contains(err.Error(), "Cluster is in runnning state") {
 			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "cluster is in deploying state") {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "cluster is in terminating state") {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
@@ -428,6 +426,7 @@ func (c *GcpClusterController) Delete() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -435,6 +434,7 @@ func (c *GcpClusterController) Delete() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
@@ -563,6 +563,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -570,6 +571,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
@@ -798,6 +800,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -805,6 +808,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
@@ -1018,7 +1022,7 @@ func (c *GcpClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" GCP cluster key "+keyName+ " created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster key "+keyName+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = privateKey
 	c.ServeJSON()
 }
@@ -1087,8 +1091,8 @@ func (c *GcpClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	alreadyUsed :=gcp.CheckKeyUsage(keyName,userInfo.CompanyId ,*ctx)
-	if (alreadyUsed){
+	alreadyUsed := gcp.CheckKeyUsage(keyName, userInfo.CompanyId, *ctx)
+	if alreadyUsed {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
 		c.ServeJSON()
@@ -1101,7 +1105,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" GCP cluster key "+keyName+" deleted " , models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" GCP cluster key "+keyName+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
 	c.ServeJSON()
 }

@@ -317,20 +317,6 @@ func (c *AWSClusterController) Patch() {
 
 	//=============================================================================//
 
-	if cluster.Status == string(models.Deploying) {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
-		c.ServeJSON()
-		return
-	}
-
-	if cluster.Status == string(models.Terminating) {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
-
 	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = aws.UpdateCluster(subscriptionId, cluster, true, *ctx)
@@ -344,6 +330,18 @@ func (c *AWSClusterController) Patch() {
 		if strings.Contains(err.Error(), "Cluster is in runnning state") {
 			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "cluster is in deploying state") {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "cluster is in terminating state") {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
@@ -431,6 +429,7 @@ func (c *AWSClusterController) Delete() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -438,6 +437,7 @@ func (c *AWSClusterController) Delete() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
@@ -545,6 +545,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -552,6 +553,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
@@ -787,6 +789,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -794,6 +797,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()

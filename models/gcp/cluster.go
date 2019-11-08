@@ -320,6 +320,16 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		beego.Error(text, err)
 		return errors.New(text)
 	}
+
+	if oldCluster.Status == string(models.Deploying) {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("cluster is in deploying state")
+	}
+	if oldCluster.Status == string(models.Terminating) {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("cluster is in terminating state")
+	}
+
 	err = checkMasterPools(cluster)
 	if err != nil { //cluster found
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -717,7 +727,7 @@ func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
 
 	return zones, nil
 }
-func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Cluster_Def, err error) {
+func getCompanyAllCluster(companyId string, ctx utils.Context) (clusters []Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -734,15 +744,15 @@ func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Clust
 	return clusters, nil
 }
 
-func CheckKeyUsage(keyName,companyId string,ctx utils.Context) bool {
+func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	clusters, err := getCompanyAllCluster(companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return true
 	}
 	for _, cluster := range clusters {
-		for _,pool := range cluster.NodePools{
-			if keyName == pool.KeyInfo.KeyName{
+		for _, pool := range cluster.NodePools {
+			if keyName == pool.KeyInfo.KeyName {
 				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return true
 			}
