@@ -363,12 +363,12 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string, token string) (*Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != nil {
 			ctx.SendLogs("Failed to get latest status"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 	}
 	for in, pool := range cluster.NodePools {
@@ -379,7 +379,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			beego.Info("getting scaler nodes")
 			err, instances := cloud.Scaler.GetAutoScaler(cluster.ProjectId, pool.Name, ctx)
 			if err != nil {
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			if instances != nil {
 				for _, inst := range instances {
@@ -395,7 +395,7 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 			nodeId = append(nodeId, &node.CloudId)
 			out, err := cloud.GetInstances(nodeId, cluster.ProjectId, false, ctx, companyId)
 			if err != nil {
-				return Cluster_Def{}, err
+				return &Cluster_Def{}, err
 			}
 			if out != nil {
 				cluster.NodePools[in].Nodes[index].NodeState = *out[0].State.Name
@@ -426,12 +426,12 @@ func (cloud *AWS) fetchStatus(cluster Cluster_Def, ctx utils.Context, companyId 
 		keyInfo, err := vault.GetSSHKey(string(models.AWS), pool.KeyInfo.KeyName, token, ctx, cloud.Region)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 		k, err := key_utils.AWSKeyCoverstion(keyInfo, ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return &Cluster_Def{}, err
 		}
 		cluster.NodePools[in].KeyInfo = k
 	}
@@ -491,7 +491,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		if pool.EnableScaling {
 			err := cloud.Scaler.DeleteAutoScaler(pool.Name)
 			if err != nil {
-				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					flag = true
 				} else {
@@ -503,7 +503,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 
 			err = cloud.Scaler.DeleteConfiguration(pool.Name)
 			if err != nil {
-				if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 					flag = true
 				} else {
@@ -517,7 +517,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 
 		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
 		if err != nil {
-			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				flag = true
 			} else {
@@ -529,7 +529,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 
 		err = cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err != nil {
-			if !strings.Contains(strings.ToLower(err.Error()), "not found") || !strings.Contains(strings.ToLower(err.Error()), "cannot be found") || !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+			if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 				flag = true
 			}
 		}
@@ -1418,16 +1418,16 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 		return "", confError
 	}
 
-/*	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx, region)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "not authorized")  {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
-		return "", err
-	}
-	if err == nil {
-		return "", errors.New("Key already exist")
-	}
-*/
+	/*	_, err := vault.GetSSHKey(string(models.AWS), keyName, token, ctx, region)
+		if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "not authorized")  {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			beego.Error(err.Error())
+			return "", err
+		}
+		if err == nil {
+			return "", errors.New("Key already exist")
+		}
+	*/
 	keyMaterial, _, err := aws.KeyPairGenerator(keyName)
 
 	if err != nil {
@@ -1439,9 +1439,6 @@ func GenerateAWSKey(keyName string, credentials vault.AwsCredentials, token, tea
 	keyInfo.KeyMaterial = keyMaterial
 	keyInfo.KeyType = models.NEWKey
 	keyInfo.Cloud = models.AWS
-
-	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, region)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())

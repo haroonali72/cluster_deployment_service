@@ -110,7 +110,6 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
 		return err, ""
 	}
-
 	return nil, template.TemplateId
 }
 func GetTemplate(templateId, companyId string, ctx utils.Context) (template Template, err error) {
@@ -132,7 +131,7 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 
 	return template, nil
 }
-func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []Template, err error) {
+func GetTemplates(ctx utils.Context, data rbac_athentication.List,companyId string ) (templates []Template, err error) {
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
@@ -145,14 +144,13 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List) (templates []
 	defer session.Close()
 	s := db.GetMongoConf()
 	c := session.DB(s.MongoDb).C(s.MongoGcpTemplateCollection)
-	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}}).All(&templates)
+	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}, "company_id": companyId}).All(&templates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return nil, err
 	}
-
-	return templates, nil
+return templates, nil
 }
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession(ctx)
@@ -170,7 +168,6 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 		beego.Error(err.Error())
 		return nil, err
 	}
-
 	return templates, nil
 }
 
@@ -199,7 +196,6 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		beego.Error("Template model: Update - Got error creating template: ", err)
 		return err
 	}
-
 	return nil
 }
 
@@ -219,6 +215,5 @@ func DeleteTemplate(templateId string, ctx utils.Context) error {
 		beego.Error(err.Error())
 		return err
 	}
-
 	return nil
 }

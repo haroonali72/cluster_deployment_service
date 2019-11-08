@@ -226,13 +226,13 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		beego.Error(text, err)
 		return errors.New(text)
 	}
-	if subscriptionId != "" {
-		err = checkCoresLimit(cluster, subscriptionId, ctx)
-		if err != nil { //core size limit exceed
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
-	}
+	//if subscriptionId != "" {
+	//	err = checkCoresLimit(cluster, subscriptionId, ctx)
+	//	if err != nil { //core size limit exceed
+	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//		return err
+	//	}
+	//}
 
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
@@ -267,8 +267,6 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		return err
 	}
 
-	ctx.SendLogs(" GCP Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -288,8 +286,6 @@ func GetCluster(projectId string, companyId string, ctx utils.Context) (cluster 
 		beego.Error(err.Error())
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" Get gcp Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 
@@ -312,8 +308,6 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 		beego.Error(err.Error())
 		return nil, err
 	}
-
-	ctx.SendLogs(" Get all GCP Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return clusters, nil
 }
@@ -356,8 +350,6 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		beego.Error("Cluster model: Update - Got error creating cluster: ", err)
 		return err
 	}
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" updated in database ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -376,8 +368,6 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 		beego.Error(err.Error())
 		return err
 	}
-	ctx.SendLogs(" GCP Cluster of Project Id: "+projectId+"deleted from database ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -436,6 +426,14 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		return nil
 
 	}
+
+	for _, pool := range cluster.NodePools {
+		for _, node := range pool.Nodes {
+			node.NodeState = ""
+			node.PublicIp = ""
+			node.PrivateIp = ""
+		}
+	}
 	cluster.Status = "Cluster Created"
 
 	confError = UpdateCluster("", cluster, false, ctx)
@@ -448,8 +446,6 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs("GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"deployed to GCP ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -495,9 +491,6 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		}
 		pool.KeyInfo = keyInfo
 	}
-
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 
@@ -617,8 +610,6 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs(" GCP Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated by ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -725,4 +716,37 @@ func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
 	}
 
 	return zones, nil
+}
+func getCompanyAllCluster(companyId string,ctx utils.Context ) (clusters []Cluster_Def, err error) {
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err1
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
+	err = c.Find(bson.M{"company_id": companyId}).All(&clusters)
+	if err != nil {
+		return nil, err
+	}
+	return clusters, nil
+}
+
+func CheckKeyUsage(keyName,companyId string,ctx utils.Context) bool {
+	clusters, err := getCompanyAllCluster(companyId, ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return true
+	}
+	for _, cluster := range clusters {
+		for _,pool := range cluster.NodePools{
+			if keyName == pool.KeyInfo.KeyName{
+				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return true
+			}
+		}
+	}
+	return false
 }

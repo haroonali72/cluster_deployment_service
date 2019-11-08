@@ -86,7 +86,7 @@ func (c *GcpClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -143,7 +143,7 @@ func (c *GcpClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs("All GCP cluster fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -246,7 +246,7 @@ func (c *GcpClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -353,7 +353,7 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -449,7 +449,7 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -588,7 +588,7 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -823,7 +823,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }
@@ -1018,7 +1018,7 @@ func (c *GcpClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster key "+keyName+ " created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = privateKey
 	c.ServeJSON()
 }
@@ -1087,7 +1087,13 @@ func (c *GcpClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	alreadyUsed :=gcp.CheckKeyUsage(keyName,userInfo.CompanyId ,*ctx)
+	if (alreadyUsed){
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
+		c.ServeJSON()
+		return
+	}
 	err = gcp.DeleteSSHkey(keyName, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -1095,7 +1101,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.SendLogs(" GCP cluster key "+keyName+" deleted " , models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
 	c.ServeJSON()
 }
@@ -1249,7 +1255,6 @@ func (c *GcpClusterController) GetZones() {
 		c.ServeJSON()
 		return
 	}
-
 	c.Data["json"] = zones
 	c.ServeJSON()
 }
