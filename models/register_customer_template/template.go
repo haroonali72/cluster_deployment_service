@@ -74,7 +74,7 @@ func RegisterAWSCustomerTemplate(awsTemplates []aws.Template, azureTemplates []a
 		gcpInterface = append(gcpInterface, template)
 	}
 
-	err = db.InsertManyInMongo(s.MongoGcpTemplateCollection, azureInterface)
+	err = db.InsertManyInMongo(s.MongoGcpTemplateCollection, gcpInterface)
 	if err != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
