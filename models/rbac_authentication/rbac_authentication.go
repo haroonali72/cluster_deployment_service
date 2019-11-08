@@ -237,6 +237,8 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 400, err
 	}
+	contents, err := ioutil.ReadAll(response.Body)
+	beego.Info(string(contents))
 	beego.Info(response.StatusCode)
 
 	return response.StatusCode, err
