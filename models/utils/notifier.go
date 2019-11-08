@@ -26,7 +26,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 
 	msg := Response{
 		Status:    status,
-		ID:        ctx.data.Company + "_" + channel,
+		ID:        ctx.Data.Company + "_" + channel,
 		Component: "Cluster",
 	}
 
@@ -37,7 +37,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 		return
 	}
 
-	cmd := notifier.Client.Publish(ctx.data.Company+"_"+channel, string(b))
+	cmd := notifier.Client.Publish(ctx.Data.Company+"_"+channel, string(b))
 
 	beego.Info(*cmd)
 
@@ -47,7 +47,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 		for int(time.Since(start).Minutes()) < 1 {
 
 			time.Sleep(5 * time.Second)
-			cmd = notifier.Client.Publish(ctx.data.Company+"_"+channel, string(b))
+			cmd = notifier.Client.Publish(ctx.Data.Company+"_"+channel, string(b))
 
 			if cmd != nil && cmd.Err() != nil {
 				beego.Error(cmd.Err().Error())

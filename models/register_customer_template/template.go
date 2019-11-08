@@ -6,7 +6,9 @@ import (
 	"antelope/models/azure"
 	"antelope/models/db"
 	"antelope/models/gcp"
+	rbac "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"errors"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
 	"strconv"
@@ -116,4 +118,28 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 	}
 
 	return awsTemplates, azureTemplates, gcpTemplates, nil
+}
+func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, token string, ctx utils.Context) error {
+
+	for _, template := range awsTemplates {
+		statusCode, err := rbac.CreatePolicy(template.Name, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.AWS, ctx)
+		if err != nil || statusCode != 200 {
+			return errors.New("error occured in creation policy")
+		}
+	}
+
+	for _, template := range azureTemplates {
+		statusCode, err := rbac.CreatePolicy(template.Name, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.AWS, ctx)
+		if err != nil || statusCode != 200 {
+			return errors.New("error occured in creation policy")
+		}
+	}
+
+	for _, template := range gcpTemplates {
+		statusCode, err := rbac.CreatePolicy(template.Name, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.AWS, ctx)
+		if err != nil || statusCode != 200 {
+			return errors.New("error occured in creation policy")
+		}
+	}
+	return nil
 }
