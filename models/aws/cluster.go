@@ -482,6 +482,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		if !flagcheck {
 			break
 		}
+		time.Sleep(time.Second * 5)
 	}
 
 	for _, pools := range cluster.NodePools {
