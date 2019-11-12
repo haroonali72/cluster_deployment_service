@@ -464,22 +464,24 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		return nil
 	}
 
-status:
-	flagcheck := false
-	_, err = aws.fetchStatus(&cluster, ctx, companyId, token)
-	if err != nil {
-		beego.Error(err)
-	}
-	for _, nodePools := range cluster.NodePools {
-		for _, node := range nodePools.Nodes {
-			if node.NodeState != "terminated" {
-				flagcheck = true
-				break
+	var flagcheck bool
+	for {
+		flagcheck = false
+		_, err = aws.fetchStatus(&cluster, ctx, companyId, token)
+		if err != nil {
+			beego.Error(err)
+		}
+		for _, nodePools := range cluster.NodePools {
+			for _, node := range nodePools.Nodes {
+				if node.NodeState != "terminated" {
+					flagcheck = true
+					break
+				}
 			}
 		}
-	}
-	if flagcheck {
-		goto status
+		if !flagcheck {
+			break
+		}
 	}
 
 	for _, pools := range cluster.NodePools {
