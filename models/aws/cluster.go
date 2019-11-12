@@ -410,7 +410,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		}*/
 	return cluster, nil
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId string) error {
+func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId, token string) error {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
@@ -462,6 +462,24 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
+	}
+
+status:
+	flagcheck := false
+	_, err = aws.fetchStatus(&cluster, ctx, companyId, token)
+	if err != nil {
+		beego.Error(err)
+	}
+	for _, nodePools := range cluster.NodePools {
+		for _, node := range nodePools.Nodes {
+			if node.NodeState != "terminated" {
+				flagcheck = true
+				break
+			}
+		}
+	}
+	if flagcheck {
+		goto status
 	}
 
 	for _, pools := range cluster.NodePools {

@@ -806,7 +806,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId)
+	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
 
 	cluster.Status = string(models.Terminating)
 	err = aws.UpdateCluster("", cluster, false, *ctx)
