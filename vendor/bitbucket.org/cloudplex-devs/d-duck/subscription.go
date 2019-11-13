@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"sort"
 	"strings"
 )
 
@@ -48,7 +49,8 @@ func (e *Init) GetLimitsWithProductName(productName string) (map[string]int, err
 	}
 
 	if len(catalogs.Versions.Versions) > 0 {
-		for _, product := range catalogs.Versions.Versions[0].Products.Products {
+		sortedVersions := sortVersions(catalogs.Versions.Versions)
+		for _, product := range sortedVersions[0].Products.Products {
 			if strings.ToLower(product.Name) == strings.ToLower(productName) {
 				limits := map[string]int{}
 				for _, limit := range product.Limits.Limits {
@@ -94,4 +96,12 @@ func (e *Init) GetSubscriptionId(accountId string) (string, error) {
 	}
 	return "", errors.New("can not find Subscription against this account")
 
+}
+
+func sortVersions(versions []Version) []Version {
+	sort.Slice(versions, func(i, j int) bool {
+		return versions[i].EffectiveDate.After(versions[j].EffectiveDate)
+	})
+
+	return versions
 }

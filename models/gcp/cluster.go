@@ -641,7 +641,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	}
 	coreLimit, err := cores.GetCoresLimit(subscriptionId)
 	if err != nil {
-		beego.Error("Supscription library error")
+		beego.Error("Subscription library error")
 		return err
 	}
 	if(coreLimit ==0) {
