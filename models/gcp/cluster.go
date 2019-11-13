@@ -639,7 +639,14 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
-
+	coreLimit, err := cores.GetCoresLimit(subscriptionId)
+	if err != nil {
+		beego.Error("Supscription library error")
+		return err
+	}
+	if(coreLimit ==0) {
+		return nil
+	}
 	found := false
 	for _, nodepool := range cluster.NodePools {
 		for _, mach := range machine {
@@ -655,10 +662,6 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	}
 	if !found {
 		return errors.New("Machine not found")
-	}
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		return err
 	}
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
