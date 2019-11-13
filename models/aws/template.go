@@ -76,6 +76,7 @@ func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string
 	template.CreationDate = time.Now()
 
 	s := db.GetMongoConf()
+
 	err = db.InsertInMongo(s.MongoAwsCustomerTemplateCollection, template)
 	if err != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

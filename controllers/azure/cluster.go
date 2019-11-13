@@ -74,7 +74,7 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("AZUREClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := azure.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -413,7 +413,7 @@ func (c *AzureClusterController) Delete() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AzureClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -497,7 +497,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("AzureClusterController: StartCluster.")
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
@@ -918,7 +918,7 @@ func (c *AzureClusterController) PostSSHKey() {
 }
 
 // @Title GetCores
-// @Description Get AWS Machine instance cores
+// @Description Get Azure Machine instance cores
 // @Success 200 			{object} models.Machine
 // @Failure 500 			{"error": "error msg"}
 // @router /machine/info [get]

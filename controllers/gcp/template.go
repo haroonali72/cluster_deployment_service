@@ -84,7 +84,7 @@ func (c *GcpTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Azure template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Gcp template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
@@ -136,13 +136,13 @@ func (c *GcpTemplateController) GetAll() {
 
 	templates, err := gcp.GetTemplates(*ctx, data,userInfo.CompanyId)
 	if err != nil {
-		ctx.SendLogs("GcpTemplateController: internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Azure templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Gcp templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
@@ -246,7 +246,7 @@ func (c *GcpTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Azure template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Gcp template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
@@ -332,7 +332,7 @@ func (c *GcpTemplateController) Patch() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AWS, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.GCP, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -347,7 +347,7 @@ func (c *GcpTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Azure template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Gcp template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
@@ -421,7 +421,7 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("GcpTemplateController: deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpTemplateController: Deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	//==========================RBAC Authentication==============================//
 
 	status_code, err := rbac_athentication.DeletePolicy(models.GCP, id, token, utils.Context{})
@@ -438,7 +438,7 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Azure template of template id "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Gcp template of template id "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
 	c.ServeJSON()
@@ -482,7 +482,7 @@ func (c *GcpTemplateController) PostCustomerTemplate() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
 
-	ctx.SendLogs("AWSTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	ctx.SendLogs("GcpTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err, id := gcp.CreateCustomerTemplate(template, *ctx)
 	if err != nil {

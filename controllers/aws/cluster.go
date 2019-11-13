@@ -653,7 +653,7 @@ func (c *AWSClusterController) GetStatus() {
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("AWSNetworkController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -750,7 +750,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("AWSNetworkController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -789,7 +789,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AWSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -797,7 +797,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
@@ -864,7 +864,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("AWSNetworkController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	keys, err := aws.GetAllSSHKeyPair(*ctx, token, region)
 
 	if err != nil {
@@ -942,7 +942,7 @@ func (c *AWSClusterController) GetAMI() {
 
 	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1135,7 +1135,7 @@ func (c *AWSClusterController) PostSSHKey() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
-	ctx.SendLogs("AWSNetworkController: PostSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSClusterController: PostSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
@@ -1166,7 +1166,7 @@ func (c *AWSClusterController) PostSSHKey() {
 
 	keyMaterial, err := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, region, *ctx)
 	if err != nil {
-		ctx.SendLogs("AWS ClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AWSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1241,7 +1241,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	ctx.SendLogs("AWSNetworkController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSClusterController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
