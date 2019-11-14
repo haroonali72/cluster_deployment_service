@@ -182,19 +182,19 @@ func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context
 		return err
 	}
 
-	//err = checkClusterSize(cluster, ctx)
-	//if err != nil { //cluster size limit exceed
-	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	return err
-	//}
+//	err = checkClusterSize(cluster, ctx)
+//	if err != nil { //cluster size limit exceed
+//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+//		return err
+//	}
 
-	//if subscriptionID != "" {
-	//	err = checkCoresLimit(cluster, subscriptionID, ctx)
-	//	if err != nil { //core size limit exceed
-	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//		return err
-	//	}
-	//}
+	if subscriptionID != "" {
+		err = checkCoresLimit(cluster, subscriptionID, ctx)
+		if err != nil { //core size limit exceed
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+		}
+	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
 	if err != nil {
