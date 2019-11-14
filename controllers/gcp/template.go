@@ -204,7 +204,7 @@ func (c *GcpTemplateController) Post() {
 		return
 	}
 
-	 template.CompanyId =userInfo.CompanyId 
+	 userInfo.CompanyId= template.CompanyId 
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
