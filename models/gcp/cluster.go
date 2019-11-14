@@ -321,11 +321,11 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		return errors.New(text)
 	}
 
-	if oldCluster.Status == string(models.Deploying) {
+	if oldCluster.Status == string(models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == string(models.Terminating) {
+	if oldCluster.Status == string(models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
