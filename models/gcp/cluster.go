@@ -230,7 +230,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
+		return err
 		}
 	}
 
