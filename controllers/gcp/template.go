@@ -84,7 +84,7 @@ func (c *GcpTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Azure template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Gcp template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
@@ -204,7 +204,7 @@ func (c *GcpTemplateController) Post() {
 		return
 	}
 
-	 userInfo.CompanyId= template.CompanyId 
+	userInfo.CompanyId = template.CompanyId
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
