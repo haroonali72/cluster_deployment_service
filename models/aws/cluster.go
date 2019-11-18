@@ -672,14 +672,6 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	var coreCount int64 = 0
 	var machine []models.Machine
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		beego.Error("Subscription library error")
-		return err
-	}
-	if(coreLimit ==0) {
-		return nil
-	}
 	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
@@ -701,9 +693,14 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if !found {
 		return errors.New("Machine not found")
 	}
+	coreLimit, err := cores.GetCoresLimit(subscriptionId)
+	if err != nil {
+		return err
+	}
 	if coreCount > coreLimit {
-			return errors.New("Exceeds the cores limit")
-		}
+		return errors.New("Exceeds the cores limit")
+	}
+
 	return nil
 }
 
