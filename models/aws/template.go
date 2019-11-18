@@ -271,3 +271,22 @@ func DeleteTemplate(templateId ,companyId string, ctx utils.Context) error {
 	}
 	return nil
 }
+
+
+func GetAllCustomerTemplates(ctx utils.Context) (templates []Template, err error) {
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
+		return nil, err1
+	}
+	defer session.Close()
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoAwsCustomerTemplateCollection)
+	err = c.Find(bson.M{}).All(&templates)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err
+	}
+	return templates, nil
+}

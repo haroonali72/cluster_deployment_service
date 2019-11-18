@@ -426,6 +426,9 @@ func (c *AWSTemplateController) Delete() {
 // @Param	token	header	string	token ""
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "customer template created successfully"}
+// @Failure 400 {"error": "error message"}
+// @Failure 401 {"error": "error message"}
+// @Failure 404 {"error": "error message"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router /customerTemplate [post]
@@ -491,7 +494,6 @@ func (c *AWSTemplateController) PostCustomerTemplate() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
 // @router /customerTemplate/:templateId [get]
 func (c *AWSTemplateController) GetCustomerTemplate() {
 
@@ -528,8 +530,8 @@ func (c *AWSTemplateController) GetCustomerTemplate() {
 
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
-	if(!check){
-		c.Ctx.Output.SetStatus(400)
+	if !check{
+		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this template"}
 		c.ServeJSON()
 		return
@@ -702,5 +704,61 @@ func (c *AWSTemplateController) DeleteCustomerTemplate() {
 	}
 
 	c.Data["json"] = map[string]string{"msg": "customer template deleted successfully"}
+	c.ServeJSON()
+}
+
+// @Title Get All Customer Template
+// @Description get all the customer templates
+// @Param	token	header	string	token ""
+// @Success 200 {object} []aws.Template
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /allCustomerTemplates [get]
+func (c *AWSTemplateController) AllCustomerTemplates() {
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC User Authentication==============================//
+
+	check := strings.Contains(userInfo.UserId, "cloudplex.io")
+
+	if !check{
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Unauthorized to access this templates"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
+
+	ctx.SendLogs("AWSTemplateController: GetAllCustomerTemplate.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	templates, err := aws.GetAllCustomerTemplates(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("All AWS Customer Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = templates
 	c.ServeJSON()
 }
