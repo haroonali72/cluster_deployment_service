@@ -1937,37 +1937,11 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /template/gcp/allCustomerTemplates:
-    get:
-      tags:
-      - template/gcp
-      description: get all the customer templates
-      operationId: GcpTemplateController.Get All Customer Template
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      responses:
-        "200":
-          description: ""
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/azure.Template'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "error msg"}'
-        "500":
-          description: '{"error": "error msg"}'
   /template/gcp/create/customerTemplate:
     post:
       tags:
       - template/gcp
-      description: create a new customer customer template
+      description: create a new customer template
       operationId: GcpTemplateController.Create Customer Template
       parameters:
       - in: header
@@ -1983,106 +1957,15 @@ paths:
       responses:
         "200":
           description: '{"msg": "template created successfully"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "error msg"}'
         "409":
           description: '{"error": "template with same name already exists"}'
-        "500":
-          description: '{"error": "error msg"}'
-  /template/gcp/customerTemplate:
-    put:
-      tags:
-      - template/gcp
-      description: update an existing customer template
-      operationId: GcpTemplateController.Update customer templates
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: header
-        name: teams
-        description: token
-        type: string
-      - in: body
-        name: body
-        description: body for template content
-        required: true
-        schema:
-          $ref: '#/definitions/gcp.Template'
-      responses:
-        "200":
-          description: '{"msg": "customer template updated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "no template exists with this name"}'
-        "500":
-          description: '{"error": "error msg"}'
-  /template/gcp/customerTemplate/{templateId}:
-    get:
-      tags:
-      - template/gcp
-      description: get customer template
-      operationId: GcpTemplateController.Get customer template
-      parameters:
-      - in: path
-        name: templateId
-        description: Template Id of the template
-        required: true
-        type: string
-      - in: header
-        name: token
-        description: token
-        type: string
-      responses:
-        "200":
-          description: ""
-          schema:
-            $ref: '#/definitions/azure.Template'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "error msg"}'
-        "500":
-          description: '{"error": "error msg"}'
-    delete:
-      tags:
-      - template/gcp
-      description: delete a customer template
-      operationId: GcpTemplateController.Delete customer template
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: templateId
-        description: template id of the template
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "customer template deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc0007bbe90.false:
+  577.0xc0007e7cb0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2122,7 +2005,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc0007bbe90.false'
+        $ref: '#/definitions/577.0xc0007e7cb0.false'
       name:
         type: string
       network_name:
