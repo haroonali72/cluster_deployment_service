@@ -583,6 +583,7 @@ func (c *AWSClusterController) StartCluster() {
 	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
 
 	cluster.Status = string(models.Deploying)
+
 	err = aws.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
