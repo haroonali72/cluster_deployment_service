@@ -578,10 +578,6 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	beego.Info("GcpClusterController: Creating Cluster. ", cluster.Name)
-
-	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
-
 	cluster.Status = string(models.Deploying)
 	err = gcp.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
@@ -590,6 +586,10 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+	beego.Info("GcpClusterController: Creating Cluster. ", cluster.Name)
+
+	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
+
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
