@@ -788,7 +788,6 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
-	cluster.Status = string(models.Terminating)
 	err = azure.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
