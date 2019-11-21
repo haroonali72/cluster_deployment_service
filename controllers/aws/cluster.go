@@ -809,7 +809,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
 
-	cluster.Status = string(models.Terminating)
+
 	err = aws.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

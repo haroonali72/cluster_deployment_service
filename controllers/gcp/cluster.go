@@ -815,11 +815,9 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	beego.Info("GcpClusterController: Terminating Cluster. ", cluster.Name)
-
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
 
-	cluster.Status = string(models.Terminating)
+
 	err = gcp.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
