@@ -209,6 +209,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 
 	subnetId := cloud.GetSubnets(pool, networkData)
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
+	vpcName := networkData.Definition[0].Vnet.Name
 	//subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/virtualNetworks/testsadaf-vnet/subnets/default"
 	//var sgIds []*string
 	//sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
@@ -235,7 +236,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		cloud.Resources["Nic-"+projectId] = nicName
 
 		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", projectId)
-		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token)
+		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, vpcName)
 		if err != nil {
 			return nil, "", err
 		}
@@ -261,7 +262,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		return cpVms, private_key, nil
 
 	} else {
-		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token)
+		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token, vpcName)
 		if err != nil {
 			return nil, "", err
 		}
@@ -930,7 +931,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	return vm, privateKey, publicKey, nil
 }
 */
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token string) (compute.VirtualMachine, string, string, error) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, vpcName string) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -986,6 +987,9 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		Location: to.StringPtr(cloud.Region),
 		Identity: &compute.VirtualMachineIdentity{
 			Type: compute.ResourceIdentityTypeSystemAssigned,
+		},
+		Tags: map[string]*string{
+			"network": to.StringPtr(vpcName),
 		},
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			HardwareProfile: &compute.HardwareProfile{
@@ -1762,7 +1766,7 @@ func deleteFile(keyName string, ctx utils.Context) error {
 	}
 	return nil
 }
-func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token string) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
+func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token, vpcName string) (compute.VirtualMachineScaleSetVMListResultPage, error, string) {
 
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -1805,6 +1809,9 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		Location: to.StringPtr(cloud.Region),
 		Identity: &compute.VirtualMachineScaleSetIdentity{
 			Type: compute.ResourceIdentityTypeSystemAssigned,
+		},
+		Tags: map[string]*string{
+			"network": to.StringPtr(vpcName),
 		},
 		Sku: &compute.Sku{
 			Capacity: to.Int64Ptr(pool.NodeCount),
@@ -1947,4 +1954,25 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	}
 	return vms, nil, private
+}
+
+func (cloud *AZURE) getAllInstances() error {
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			beego.Error(err.Error())
+			return err
+		}
+	}
+
+	result, err := cloud.VMClient.ListAll(context.Background())
+	if err != nil {
+		beego.Error(err.Error())
+		return err
+	}
+
+	result.Values()
+	result.Next()
+	//res := result.Response()
+	return nil
 }
