@@ -30,7 +30,6 @@ type Template struct {
 
 type NodePoolT struct {
 	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name"`
 	NodeCount          int64              `json:"node_count" bson:"node_count"`
 	MachineType        string             `json:"machine_type" bson:"machine_type"`
 	Image              ImageReference     `json:"image" bson:"image"`
