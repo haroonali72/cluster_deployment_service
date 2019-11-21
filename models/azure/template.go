@@ -19,7 +19,6 @@ type Template struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	TemplateId       string        `json:"template_id" bson:"template_id"`
 	Name             string        `json:"name" bson:"name"`
-	Status           string        `json:"status" bson:"status"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
