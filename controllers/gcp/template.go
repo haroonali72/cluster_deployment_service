@@ -18,7 +18,7 @@ type GcpTemplateController struct {
 // @Title Get
 // @Description get template
 // @Param	token	header	string	token ""
-// @Param	templateId	path	string	true	"Name of the template"
+// @Param	templateId	path	string	true	"Id of the template"
 // @Success 200 {object} gcp.Template
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -204,7 +204,7 @@ func (c *GcpTemplateController) Post() {
 		return
 	}
 
-	userInfo.CompanyId = template.CompanyId
+	template.CompanyId =userInfo.CompanyId
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
