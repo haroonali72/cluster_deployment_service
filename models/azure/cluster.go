@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	instance "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
@@ -598,7 +599,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 		return err
 
 	}
-	if(coreLimit ==0) {
+	if coreLimit == 0 {
 		return nil
 	}
 	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
@@ -672,4 +673,26 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 		}
 	}
 	return false
+}
+
+func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]instance.VirtualMachine, error) {
+
+	azure := AZURE{
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
+	}
+	err := azure.init()
+	if err != nil {
+		return []instance.VirtualMachine{}, err
+	}
+
+	instances, err := azure.getAllInstances()
+	if err != nil {
+		beego.Error(err.Error())
+		return []instance.VirtualMachine{}, err
+	}
+	return instances, nil
 }

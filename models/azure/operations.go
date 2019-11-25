@@ -1956,23 +1956,19 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	return vms, nil, private
 }
 
-func (cloud *AZURE) getAllInstances() error {
+func (cloud *AZURE) getAllInstances() ([]compute.VirtualMachine, error) {
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return err
+			return []compute.VirtualMachine{}, err
 		}
 	}
 
 	result, err := cloud.VMClient.ListAll(context.Background())
 	if err != nil {
 		beego.Error(err.Error())
-		return err
+		return []compute.VirtualMachine{}, err
 	}
-
-	result.Values()
-	result.Next()
-	//res := result.Response()
-	return nil
+	return result.Values(), nil
 }
