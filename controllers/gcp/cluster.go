@@ -76,7 +76,7 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	beego.Info("GcpClusterController: Get cluster with project id: ", projectId)
+	ctx.SendLogs("GcpClusterController: Get cluster with project id: "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -99,7 +99,9 @@ func (c *GcpClusterController) Get() {
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *GcpClusterController) GetAll() {
-	beego.Info("GcpClusterController: GetAll clusters.")
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -118,7 +120,7 @@ func (c *GcpClusterController) GetAll() {
 		return
 	}
 
-	ctx := new(utils.Context)
+
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
@@ -214,7 +216,7 @@ func (c *GcpClusterController) Post() {
 		return
 	}
 
-	beego.Info("GcpClusterController: Post new cluster with name: ", cluster.Name)
+	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+ cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
 	err = gcp.GetNetwork(token, cluster.ProjectId, *ctx)
@@ -315,8 +317,7 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
-	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
+	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+ cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
 	err = gcp.UpdateCluster(subscriptionId, cluster, true, *ctx)
@@ -414,7 +415,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	beego.Info("GcpClusterController: Delete cluster with project id: ", id)
+	ctx.SendLogs("GcpClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err == nil && cluster.Status == "Cluster Created" {
@@ -467,8 +468,8 @@ func (c *GcpClusterController) Delete() {
 // @router /start/:projectId [post]
 func (c *GcpClusterController) StartCluster() {
 
-	beego.Info("GcpClusterController: StartCluster.")
 	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -543,7 +544,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -586,7 +587,7 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	beego.Info("GcpClusterController: Creating Cluster. ", cluster.Name)
+	ctx.SendLogs("GcpClusterController: Creating Cluster. "+ cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
 
@@ -608,9 +609,9 @@ func (c *GcpClusterController) StartCluster() {
 // @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
 func (c *GcpClusterController) GetStatus() {
-	beego.Info("GcpClusterController: FetchStatus.")
 
 	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -683,7 +684,7 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	beego.Info("GcpClusterController: Fetch Cluster Status of project. ", projectId)
+	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of project. "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -708,9 +709,8 @@ func (c *GcpClusterController) GetStatus() {
 // @router /terminate/:projectId/ [post]
 func (c *GcpClusterController) TerminateCluster() {
 
-	beego.Info("GcpClusterController: TerminateCluster.")
-
 	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -788,7 +788,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	beego.Info("GcpClusterController: Getting Cluster of project. ", projectId)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -838,7 +838,10 @@ func (c *GcpClusterController) TerminateCluster() {
 // @Failure 500 {"error": "error msg"}
 // @router /sshkeys [get]
 func (c *GcpClusterController) GetSSHKeys() {
-	beego.Info("GcpClusterController: FetchExistingSSHKeys.")
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	//==========================RBAC Authentication==============================//
 
 	token := c.Ctx.Input.Header("token")
@@ -858,7 +861,6 @@ func (c *GcpClusterController) GetSSHKeys() {
 		return
 	}
 
-	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -887,7 +889,9 @@ func (c *GcpClusterController) GetSSHKeys() {
 // @Failure 500 {"error":  "error msg"}
 // @router /serviceaccounts [get]
 func (c *GcpClusterController) GetServiceAccounts() {
-	beego.Info("GcpClusterController: FetchExistingServiceAccounts.")
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: FetchExistingServiceAccounts.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -906,7 +910,6 @@ func (c *GcpClusterController) GetServiceAccounts() {
 		return
 	}
 
-	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: Getting service accounts ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -957,10 +960,9 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @router /sshkey/:keyname/:username/:projectId [post]
 func (c *GcpClusterController) PostSSHKey() {
 
-	beego.Info("GcpClusterController: CreateSSHKey.")
-	//==========================RBAC Authentication==============================//
 
 	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -980,6 +982,8 @@ func (c *GcpClusterController) PostSSHKey() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
+
+	//==========================RBAC Authentication==============================//
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -1054,11 +1058,8 @@ func (c *GcpClusterController) GetCores() {
 // @router /sshkey/:keyname [delete]
 func (c *GcpClusterController) DeleteSSHKey() {
 
-	beego.Info("GcpClusterController: CreateSSHKey.")
-
-	//==========================RBAC Authentication==============================//
-
 	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -1067,6 +1068,8 @@ func (c *GcpClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
+	//==========================RBAC Authentication==============================//
+	//===================================================================//
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -1080,7 +1083,6 @@ func (c *GcpClusterController) DeleteSSHKey() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GCPClusterController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	//==========================RBAC Authentication==============================//
 
 	keyName := c.GetString(":keyname")
 	if keyName == "" {
@@ -1120,7 +1122,9 @@ func (c *GcpClusterController) DeleteSSHKey() {
 // @Failure 401 {"error": "authorization params missing or invalid"}
 // @router /getallmachines/:region/:zone [get]
 func (c *GcpClusterController) GetAllMachines() {
-	beego.Info("GcpClusterController: GellAllMachines.")
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: GellAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("profileid")
 	if profileId == "" {
@@ -1175,7 +1179,9 @@ func (c *GcpClusterController) GetAllMachines() {
 		return
 	}
 
-	beego.Info("GcpClusterController: Get All Machines. ")
+	ctx.SendLogs("GcpClusterController: Get All Machines. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+
 
 	machines, err := gcp.GetAllMachines(credentials, *ctx)
 	if err != nil {
@@ -1200,7 +1206,9 @@ func (c *GcpClusterController) GetAllMachines() {
 // @Failure 401 {"error": "authorization params missing or invalid"}
 // @router /getzones/:region [get]
 func (c *GcpClusterController) GetZones() {
-	beego.Info("GcpClusterController: GellZones.")
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: GellZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("profileid")
 	if profileId == "" {
@@ -1227,7 +1235,7 @@ func (c *GcpClusterController) GetZones() {
 		return
 	}
 
-	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1247,8 +1255,7 @@ func (c *GcpClusterController) GetZones() {
 		c.ServeJSON()
 		return
 	}
-
-	beego.Info("GcpClusterController: Get Zones. ")
+	ctx.SendLogs("GcpClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	zones, err := gcp.GetZones(credentials, *ctx)
 	if err != nil {

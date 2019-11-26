@@ -685,7 +685,7 @@ func (c *AzureTemplateController) DeleteCustomerTemplate() {
 
 	//=============================================================================//
 
-	beego.Info("AzureCustomerTemplateController: Delete customer template with template Id ", templateId)
+	ctx.SendLogs("AzureCustomerTemplateController: Delete customer template with template Id "+ templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = azure.DeleteCustomerTemplate(templateId, *ctx)
 	if err != nil {

@@ -1094,7 +1094,8 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @router /sshkey/:projectId/:keyname [post]
 func (c *AWSClusterController) PostSSHKey() {
 
-	beego.Info("AWSClusterController: CreateSSHKey.")
+	ctx := new(utils.Context)
+	ctx.SendLogs("AWSClusterController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -1103,9 +1104,8 @@ func (c *AWSClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-	//==========================RBAC Authentication==============================//
 
-	ctx := new(utils.Context)
+	//==========================RBAC Authentication==============================//
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -1209,11 +1209,8 @@ func (c *AWSClusterController) GetCores() {
 // @router /sshkey/:keyname [delete]
 func (c *AWSClusterController) DeleteSSHKey() {
 
-	beego.Info("AWSClusterController: DeleteSSHKey.")
-
-	//==========================RBAC Authentication==============================//
-
 	ctx := new(utils.Context)
+	ctx.SendLogs("AWSClusterController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -1230,6 +1227,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
+	//==========================RBAC Authentication==============================//
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {

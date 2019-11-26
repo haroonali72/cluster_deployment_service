@@ -96,7 +96,8 @@ func (c *AzureClusterController) Get() {
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AzureClusterController) GetAll() {
-	beego.Info("AzureClusterController: GetAll clusters.")
+	ctx := new(utils.Context)
+	ctx.SendLogs("AzureClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -115,7 +116,7 @@ func (c *AzureClusterController) GetAll() {
 		return
 	}
 
-	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
@@ -497,8 +498,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: POST cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	beego.Info("AzureClusterController: StartCluster.")
+	ctx.SendLogs("AzureClusterController: Start cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -858,11 +858,8 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @router /sshkey/:keyname/:projectId [post]
 func (c *AzureClusterController) PostSSHKey() {
 
-	beego.Info("AzureClusterController: CreateSSHKey.")
-
-	//==========================RBAC Authentication==============================//
-
 	ctx := new(utils.Context)
+	ctx.SendLogs("AzureClusterController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -882,6 +879,7 @@ func (c *AzureClusterController) PostSSHKey() {
 
 	teams := c.Ctx.Input.Header("teams")
 
+	//==========================RBAC Authentication==============================//
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -890,11 +888,10 @@ func (c *AzureClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
+	//==========================RBAC Authentication==============================//
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AZURENetworkController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	//==========================RBAC Authentication==============================//
 
 	keyName := c.GetString(":keyname")
 	if keyName == "" {
@@ -946,11 +943,8 @@ func (c *AzureClusterController) GetCores() {
 // @router /sshkey/:keyname [delete]
 func (c *AzureClusterController) DeleteSSHKey() {
 
-	beego.Info("AzureClusterController: DeleteSSHKey.")
-
-	//==========================RBAC Authentication==============================//
-
 	ctx := new(utils.Context)
+	ctx.SendLogs("AzureCustomerTemplateController: Delete SSHkey ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -959,11 +953,11 @@ func (c *AzureClusterController) DeleteSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	//==========================RBAC Authentication==============================//
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
