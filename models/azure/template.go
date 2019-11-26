@@ -84,6 +84,10 @@ func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string
 		beego.Error(text)
 		return errors.New(text), ""
 	}
+	if template.TemplateId == "" {
+		i := rand.Int()
+		template.TemplateId = template.Name + strconv.Itoa(i)
+	}
 
 	template.CreationDate = time.Now()
 
