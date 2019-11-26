@@ -188,13 +188,13 @@ func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context
 	//	return err
 	//}
 
-	//if subscriptionID != "" {
-	//	err = checkCoresLimit(cluster, subscriptionID, ctx)
-	//	if err != nil { //core size limit exceed
-	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//		return err
-	//	}
-	//}
+	if subscriptionID != "" {
+		err = checkCoresLimit(cluster, subscriptionID, ctx)
+		if err != nil { //core size limit exceed
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+		}
+	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
 	if err != nil {
@@ -413,17 +413,36 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId, token string) error {
 
 	publisher := utils.Notifier{}
+
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return pub_err
 	}
+
+	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	if cluster.Status == "" || cluster.Status == "new" {
+		text := "Cannot terminate a new cluster"
+		ctx.SendLogs("AwsClusterModel : " +text +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return errors.New(text)
+	}
+
 	aws := AWS{
 		AccessKey: profile.Profile.AccessKey,
 		SecretKey: profile.Profile.SecretKey,
 		Region:    profile.Profile.Region,
 	}
-	err := aws.init()
+
+	cluster.Status = string(models.Terminating)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+
+	err = aws.init()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
@@ -437,17 +456,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		return err
 	}
 
-	if cluster.Status != "Cluster Created" && cluster.Status == "Cluster Termination Failed" {
-		ctx.SendLogs("Cluster model: Cluster is not in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
-	}
-
-	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
-
 	flag := aws.terminateCluster(cluster, ctx, companyId)
-
 	if flag {
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
@@ -672,6 +681,13 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	var coreCount int64 = 0
 	var machine []models.Machine
+	coreLimit, err := cores.GetCoresLimit(subscriptionId)
+	if err != nil {
+		return err
+	}
+	if(coreLimit==0){
+		return nil
+	}
 	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
@@ -693,10 +709,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if !found {
 		return errors.New("Machine not found")
 	}
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		return err
-	}
+
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}

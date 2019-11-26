@@ -578,10 +578,6 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("AWSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
-
 	cluster.Status = string(models.Deploying)
 	err = aws.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
@@ -590,6 +586,11 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("AWSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
+
 	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -808,7 +809,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
 
-	cluster.Status = string(models.Terminating)
+
 	err = aws.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

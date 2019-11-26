@@ -219,13 +219,13 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs("GcpClusterModel: "+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
-	//if subscriptionId != "" {
-	//	err = checkCoresLimit(cluster, subscriptionId, ctx)
-	//	if err != nil { //core size limit exceed
-	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//		return err
-	//	}
-	//}
+	if subscriptionId != "" {
+		err = checkCoresLimit(cluster, subscriptionId, ctx)
+		if err != nil { //core size limit exceed
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+		}
+	}
 
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
@@ -516,6 +516,7 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 }
 
 func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) error {
+
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
@@ -531,14 +532,19 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	if cluster.Status == "" || cluster.Status == "new" {
 		ctx.SendLogs("GcpClusterModel :Cannot terminate a new cluster"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return errors.New(text)
 	}
+
 
 	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+
+	cluster.Status = string(models.Terminating)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+
 	err = gcp.init()
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -556,7 +562,6 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	}
 
 	err = gcp.deleteCluster(cluster, ctx)
-
 	if err != nil {
 
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
@@ -609,6 +614,13 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
+	coreLimit, err := cores.GetCoresLimit(subscriptionId)
+	if err != nil {
+		return err
+	}
+	if(coreLimit==0){
+		return nil
+	}
 
 	found := false
 	for _, nodepool := range cluster.NodePools {
@@ -626,10 +638,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if !found {
 		return errors.New("Machine not found")
 	}
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		return err
-	}
+
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}

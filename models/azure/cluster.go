@@ -215,13 +215,13 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	//if subscriptionId != "" {
-	//	err = checkCoresLimit(cluster, subscriptionId, ctx)
-	//	if err != nil { //core size limit exceed
-	//		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//		return err
-	//	}
-	//}
+	if subscriptionId != "" {
+		err = checkCoresLimit(cluster, subscriptionId, ctx)
+		if err != nil { //core size limit exceed
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+	}
 
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
@@ -460,11 +460,14 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	if cluster.Status != "Cluster Created" {
-		ctx.SendLogs("Cluster model: Cluster is not in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
-	}
+
+		if cluster.Status == "" || cluster.Status == "new" {
+			text := "Cannot terminate a new cluster"
+			ctx.SendLogs("AzureClusterModel : " +text +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			return errors.New(text)
+		}
+
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -473,9 +476,12 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		Subscription: credentials.Profile.SubscriptionId,
 		Region:       credentials.Profile.Location,
 	}
+
+	cluster.Status = string(models.Terminating)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+
 	err = azure.init()
 	if err != nil {
-
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster("", cluster, false, ctx)
@@ -490,6 +496,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
+
 
 	err = azure.terminateCluster(cluster, ctx, companyId)
 
@@ -592,6 +599,15 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 
 	var coreCount int64 = 0
 	var machine []models.Machine
+	coreLimit, err := cores.GetCoresLimit(subscriptionId)
+	if err != nil {
+		beego.Error("Subscription library error")
+		return err
+
+	}
+	if(coreLimit ==0) {
+		return nil
+	}
 	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
 		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
@@ -613,12 +629,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if !found {
 		return errors.New("Machine not found")
 	}
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		beego.Error("Supscription library error")
-		return err
 
-	}
 	if coreCount > coreLimit {
 		return errors.New("Exceeds the cores limit")
 	}
