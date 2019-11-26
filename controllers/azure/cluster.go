@@ -1005,6 +1005,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 // @Description Getting All Instances
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	false	""
+// @Param	region	header	string	false	""
 // @Success 200 []compute.VirtualMachines
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -1017,6 +1018,14 @@ func (c *AzureClusterController) GetInstances() {
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region := c.Ctx.Input.Header("region")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1043,7 +1052,7 @@ func (c *AzureClusterController) GetInstances() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, "", token, *ctx)
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(500)

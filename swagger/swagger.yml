@@ -600,6 +600,10 @@ paths:
         name: X-Profile-Id
         description: "false"
         type: string
+      - in: header
+        name: region
+        description: "false"
+        type: string
       responses:
         "200":
           description: '[]compute.VirtualMachines'
@@ -2100,7 +2104,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  10721.0xc0008a11d0.false:
+  10721.0xc000893170.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2140,7 +2144,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/10721.0xc0008a11d0.false'
+        $ref: '#/definitions/10721.0xc000893170.false'
       name:
         type: string
       network_name:
