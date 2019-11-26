@@ -2886,14 +2886,11 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/azure.Template"
+                                "$ref": "#/definitions/gcp.Template"
                             }
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -2910,7 +2907,7 @@
                 "tags": [
                     "template/gcp"
                 ],
-                "description": "create a new customer customer template",
+                "description": "create a new customer template",
                 "operationId": "GcpTemplateController.Create Customer Template",
                 "parameters": [
                     {
@@ -2932,12 +2929,6 @@
                 "responses": {
                     "200": {
                         "description": "{\"msg\": \"template created successfully\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "409": {
                         "description": "{\"error\": \"template with same name already exists\"}"
@@ -3023,7 +3014,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/azure.Template"
+                            "$ref": "#/definitions/gcp.Template"
                         }
                     },
                     "400": {
@@ -3033,9 +3024,6 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
                 }
@@ -3163,7 +3151,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc0007bbe90.false": {
+        "577.0xc000836d50.false": {
             "title": "false",
             "type": "object"
         },
@@ -3219,7 +3207,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc0007bbe90.false"
+                    "$ref": "#/definitions/577.0xc000836d50.false"
                 },
                 "name": {
                     "type": "string"

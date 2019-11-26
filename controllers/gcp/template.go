@@ -18,7 +18,7 @@ type GcpTemplateController struct {
 // @Title Get
 // @Description get template
 // @Param	token	header	string	token ""
-// @Param	templateId	path	string	true	"Name of the template"
+// @Param	templateId	path	string	true	"Id of the template"
 // @Success 200 {object} gcp.Template
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -142,75 +142,8 @@ func (c *GcpTemplateController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Gcp templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Azure templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
-	c.ServeJSON()
-}
-// @Title Get customer template
-// @Description get customer template
-// @Param	templateId	path	string	true	"Template Id of the template"
-// @Param	token	header	string	token ""
-// @Success 200 {object} azure.Template
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
-// @router /customerTemplate/:templateId [get]
-func (c *GcpTemplateController) GetCustomerTemplate() {
-
-	tempId := c.GetString(":templateId")
-	if tempId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "templateId is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "templateId is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, tempId, userInfo.CompanyId, userInfo.UserId)
-
-
-	//==========================RBAC User Authentication==============================//
-
-	check := strings.Contains(userInfo.UserId, "cloudplex.io")
-
-	if(!check){
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Unauthorized to access this template"}
-		c.ServeJSON()
-		return
-	}
-
-	//=============================================================================//
-
-	ctx.SendLogs("GcpCustomerTemplateController: Get customer template  id : "+tempId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	template, err := gcp.GetCustomerTemplate(tempId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no customer template exists for this id"}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("Azure customer template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = template
 	c.ServeJSON()
 }
 
@@ -271,7 +204,7 @@ func (c *GcpTemplateController) Post() {
 		return
 	}
 
-	template.CompanyId=userInfo.CompanyId
+	template.CompanyId =userInfo.CompanyId
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
@@ -313,7 +246,7 @@ func (c *GcpTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Gcp template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Azure template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
@@ -414,7 +347,7 @@ func (c *GcpTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Gcp template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Azure template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
 	c.ServeJSON()
 }
@@ -505,19 +438,17 @@ func (c *GcpTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("Gcp template of template id "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("Azure template of template id "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	//==================================================================================
 	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
 	c.ServeJSON()
 }
 
 // @Title Create Customer Template
-// @Description create a new customer customer template
+// @Description create a new customer template
 // @Param	token	header	string	token ""
 // @Param	body	body	gcp.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router /create/customerTemplate [post]
@@ -569,6 +500,78 @@ func (c *GcpTemplateController) PostCustomerTemplate() {
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
+
+
+
+
+// @Title Get customer template
+// @Description get customer template
+// @Param	templateId	path	string	true	"Template Id of the template"
+// @Param	token	header	string	token ""
+// @Success 200 {object} gcp.Template
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @router /customerTemplate/:templateId [get]
+func (c *GcpTemplateController) GetCustomerTemplate() {
+
+	tempId := c.GetString(":templateId")
+	if tempId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, tempId, userInfo.CompanyId, userInfo.UserId)
+
+
+	//==========================RBAC User Authentication==============================//
+
+	check := strings.Contains(userInfo.UserId, "cloudplex.io")
+
+	if !check{
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "Unauthorized to access this template"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
+
+	ctx.SendLogs("GcpCustomerTemplateController: Get customer template  id : "+tempId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	template, err := gcp.GetCustomerTemplate(tempId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "no customer template exists for this id"}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Gcp customer template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = template
+	c.ServeJSON()
+}
+
+
 
 
 // @Title Update customer templates
@@ -722,13 +725,11 @@ func (c *GcpTemplateController) DeleteCustomerTemplate() {
 	c.ServeJSON()
 }
 
-
 // @Title Get All Customer Template
 // @Description get all the customer templates
 // @Param	token	header	string	token ""
-// @Success 200 {object} []azure.Template
+// @Success 200 {object} []gcp.Template
 // @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplates [get]
@@ -759,7 +760,7 @@ func (c *GcpTemplateController) AllCustomerTemplates() {
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
 	if !check{
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this templates"}
 		c.ServeJSON()
 		return

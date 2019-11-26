@@ -561,10 +561,6 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("AzureClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
-
 	cluster.Status = string(models.Deploying)
 	err = azure.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
@@ -573,6 +569,11 @@ func (c *AzureClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("AzureClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	go azure.DeployCluster(cluster, azureProfile, *ctx, userInfo.CompanyId, token)
+
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
@@ -787,7 +788,6 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
-	cluster.Status = string(models.Terminating)
 	err = azure.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
