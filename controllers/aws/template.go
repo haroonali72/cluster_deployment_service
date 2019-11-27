@@ -390,7 +390,7 @@ func (c *AWSTemplateController) Delete() {
 	}
 
 	//=============================================================================//
-	beego.Info("AWSTemplateController: Delete template with template Id ", templateId)
+	ctx.SendLogs("AWSTemplateController: Delete template with template Id "+ templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = aws.DeleteTemplate(templateId,userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -693,7 +693,7 @@ func (c *AWSTemplateController) DeleteCustomerTemplate() {
 
 	//=============================================================================//
 
-	beego.Info("AWSCustomerTemplateController: Delete customer template with template Id ", templateId)
+	ctx.SendLogs("AWSCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = aws.DeleteCustomerTemplate(templateId, *ctx)
 	if err != nil {

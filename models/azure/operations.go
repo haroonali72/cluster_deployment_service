@@ -349,8 +349,7 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 		if pool.KeyInfo.CredentialType == models.SSHKey {
 			bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx, "")
 			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				beego.Error("vm creation failed with error: " + err.Error())
+				ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return &Cluster_Def{}, err
 			}
 			keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
@@ -590,8 +589,7 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 	} else {
 		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
-			beego.Error("vm deletion failed")
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("vm deletion failed"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -1033,8 +1031,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 		bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			beego.Error("vm creation failed with error: " + err.Error())
+			ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
 		}
 		existingKey, err := key_utils.AzureKeyConversion(bytes, ctx)
@@ -1375,8 +1372,7 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 	_, err := cloud.DiskClient.Delete(context.Background(), resouceGroup, diskName)
 
 	if err != nil && !strings.Contains(err.Error(), "not found") {
-		beego.Error("Disk deletion failed" + err.Error())
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Disk deletion failed" +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -1388,8 +1384,7 @@ func (cloud *AZURE) deleteStorageAccount(resouceGroup string, acccountName strin
 	acccountName = strings.ToLower(acccountName)
 	_, err := cloud.AccountClient.Delete(context.Background(), resouceGroup, acccountName)
 	if err != nil && !strings.Contains(err.Error(), "not found") {
-		beego.Error("Storage account deletion failed")
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Storage account deletion failed"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -1880,8 +1875,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 		bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			beego.Error("vm creation failed with error: " + err.Error())
+			ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 		existingKey, err := key_utils.AzureKeyConversion(bytes, ctx)

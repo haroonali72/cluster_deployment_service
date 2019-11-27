@@ -1453,7 +1453,6 @@ func DeleteAWSKey(keyName, token string, credentials vault.AwsCredentials, ctx u
 	err := vault.DeleteSSHkey(string(models.AWS), keyName, token, ctx, credentials.Region)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
 		return err
 	}
 
@@ -1485,7 +1484,6 @@ func (cloud *AWS) DeleteKeyPair(keyName string, ctx utils.Context) error {
 	_, err := cloud.Client.DeleteKeyPair(params)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
 		return err
 	}
 

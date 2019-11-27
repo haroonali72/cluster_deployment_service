@@ -204,7 +204,7 @@ func (cloud *AWSIAMRoles) CheckInstanceProfile(iamProfileName string) bool {
 			IamInstanceProfile: &iamProfile,
 		})
 
-		beego.Error(err)
+		beego.Info(err)
 
 		if err != nil && strings.Contains(err.Error(), "DryRunOperation: Request would have succeeded") {
 			retry = false

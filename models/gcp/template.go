@@ -139,7 +139,6 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		ctx.SendLogs("gcpTemplateModel :"+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(text)
 		return errors.New(text), ""
 	}
 
@@ -170,7 +169,6 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 	err = c.Find(bson.M{"template_id": templateId, "company_id": companyId}).One(&template)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
 		return Template{}, err
 	}
 
@@ -200,8 +198,7 @@ return templates, nil
 func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
-		ctx.SendLogs("GcpTemplateModel : error connecting to database "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("Template model: GetAll - Got error while connecting to the database: ", err1)
+		ctx.SendLogs("GcpTemplateModel : GetAll - Got error while connecting to the database:  "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err1
 	}
 
@@ -221,14 +218,12 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	if err != nil {
 		text := fmt.Sprintf("Template model: Update - Template '%s' does not exist in the database: ", template.Name)
 		ctx.SendLogs("GcpTemplateModel "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(text, err)
 		return errors.New(text)
 	}
 
 	err = DeleteTemplate(template.TemplateId,template.CompanyId, ctx)
 	if err != nil {
-		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("Template model: Update - Got error deleting template: ", err)
+		ctx.SendLogs("GcpTemplateModel : Update - Got error deleting template: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -237,8 +232,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 
 	err, _ = CreateTemplate(template, ctx)
 	if err != nil {
-		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("Template model: Update - Got error creating template: ", err)
+		ctx.SendLogs("GcpTemplateModel :Update - Got error creating template:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
@@ -247,8 +241,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 func DeleteTemplate(templateId ,companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
-		ctx.SendLogs("GcpTemplateModel : erro with connecting database "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("Template model: Delete - Got error while connecting to the database: ", err)
+		ctx.SendLogs("GcpTemplateModel : Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
