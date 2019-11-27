@@ -2902,43 +2902,6 @@
                 }
             }
         },
-        "/template/gcp/create/customerTemplate": {
-            "post": {
-                "tags": [
-                    "template/gcp"
-                ],
-                "description": "create a new customer template",
-                "operationId": "GcpTemplateController.Create Customer Template",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "body for template content",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gcp.Template"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"template created successfully\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"template with same name already exists\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
         "/template/gcp/customerTemplate": {
             "put": {
                 "tags": [
@@ -2981,6 +2944,41 @@
                     },
                     "404": {
                         "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/gcp"
+                ],
+                "description": "create a new customer template",
+                "operationId": "GcpTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gcp.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -3085,7 +3083,7 @@
                     {
                         "in": "path",
                         "name": "templateId",
-                        "description": "Name of the template",
+                        "description": "Id of the template",
                         "required": true,
                         "type": "string"
                     }
@@ -3151,7 +3149,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc000836d50.false": {
+        "577.0xc000813d70.false": {
             "title": "false",
             "type": "object"
         },
@@ -3207,7 +3205,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc000836d50.false"
+                    "$ref": "#/definitions/577.0xc000813d70.false"
                 },
                 "name": {
                     "type": "string"
@@ -3340,9 +3338,6 @@
                     "type": "boolean"
                 },
                 "machine_type": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 },
                 "node_count": {
@@ -3591,9 +3586,6 @@
                 "machine_type": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
                 "node_count": {
                     "type": "integer",
                     "format": "int64"
@@ -3653,9 +3645,6 @@
                     }
                 },
                 "resource_group": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 },
                 "template_id": {
@@ -3894,9 +3883,6 @@
                 "machine_type": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
                 "node_count": {
                     "type": "integer",
                     "format": "int64"
@@ -3951,9 +3937,6 @@
                     "items": {
                         "$ref": "#/definitions/gcp.NodePoolT"
                     }
-                },
-                "status": {
-                    "type": "string"
                 },
                 "template_id": {
                     "type": "string"

@@ -617,12 +617,16 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		utils.SendLog(companyId, err.Error(), "error", projectId)
 		return nil
 	} else {
-		err = future.WaitForCompletion(cloud.context, vmClient.Client)
+		n :=0
+		for  n < 5 && err != nil {
+				err = future.WaitForCompletionRef(cloud.context, vmClient.Client)
+				n++
+		}
 		if err != nil {
 			utils.SendLog(companyId, err.Error(), "error", projectId)
 			return err
 		}
-		beego.Info("Deleted Node" + name)
+		ctx.SendLogs("Deleted Node" + name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 	ctx.SendLogs("Node terminated successfully: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return nil

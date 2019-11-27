@@ -338,10 +338,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	createdPools, confError := aws.createCluster(cluster, ctx, companyId, token)
-
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-
+		cluster.Status="Cluster creation failed"
 		confError = aws.CleanUp(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)

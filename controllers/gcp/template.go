@@ -451,7 +451,7 @@ func (c *GcpTemplateController) Delete() {
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
-// @router /create/customerTemplate [post]
+// @router /customerTemplate [post]
 func (c *GcpTemplateController) PostCustomerTemplate() {
 
 	var template gcp.Template
