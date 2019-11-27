@@ -1576,7 +1576,12 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 
 					}
 				} else {
-					publicIp, errPublicIP := cloud.GetPIP(resourceGroup, poolName, *vm.Name, projectId+"Nic", projectId+"IpConfig", "pub", ctx)
+					IPname := "pip-" + poolName
+					vmname :=string(*vm.Name)
+					vMname := vmname[len(vmname)-1:]
+					nic :="nic-" + poolName
+					ipConfig := poolName
+					publicIp, errPublicIP := cloud.GetPIP(resourceGroup, poolName, vMname, nic, ipConfig, IPname, ctx)
 					if errPublicIP != nil {
 						ctx.SendLogs(errPublicIP.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 						return errPublicIP
