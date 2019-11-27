@@ -33,6 +33,15 @@ type CreatedPool struct {
 	Key       string
 	PoolName  string
 }
+
+type azureVM struct {
+	ID       *string            `json:"id,omitempty"`
+	Name     *string            `json:"name,omitempty"`
+	Type     *string            `json:"type,omitempty"`
+	Location *string            `json:"location,omitempty"`
+	Tags     map[string]*string `json:"tags"`
+}
+
 type AZURE struct {
 	Authorizer       *autorest.BearerAuthorizer
 	AddressClient    network.PublicIPAddressesClient
@@ -137,8 +146,8 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 		beego.Error(err.Error())
 		return cluster, err
 	}
-	err = json.Unmarshal(network.([]byte), &azureNetwork)
 
+	err = json.Unmarshal(network.([]byte), &azureNetwork)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
@@ -1956,19 +1965,57 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	return vms, nil, private
 }
 
-func (cloud *AZURE) getAllInstances() ([]compute.VirtualMachine, error) {
+func (cloud *AZURE) getAllInstances() ([]azureVM, error) {
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return []compute.VirtualMachine{}, err
+			return []azureVM{}, err
 		}
 	}
 
-	result, err := cloud.VMClient.ListAll(context.Background())
+	var instanceList []azureVM
+	VmResult, err := cloud.VMClient.ListAll(context.Background())
 	if err != nil {
 		beego.Error(err.Error())
-		return []compute.VirtualMachine{}, err
+		return []azureVM{}, err
 	}
-	return result.Values(), nil
+	for _, instance := range VmResult.Values() {
+		bytes, err := json.Marshal(instance)
+		if err != nil {
+			beego.Error(err.Error())
+			return []azureVM{}, err
+		}
+
+		var vm azureVM
+		err = json.Unmarshal(bytes, &vm)
+		if err != nil {
+			beego.Error(err.Error())
+			return []azureVM{}, err
+		}
+		instanceList = append(instanceList, vm)
+	}
+
+	VMSSResult, err := cloud.VMSSCLient.ListAll(context.Background())
+	if err != nil {
+		beego.Error(err.Error())
+		return []azureVM{}, err
+	}
+
+	for _, instance := range VMSSResult.Values() {
+		bytes, err := json.Marshal(instance)
+		if err != nil {
+			beego.Error(err.Error())
+			return []azureVM{}, err
+		}
+
+		var vm azureVM
+		err = json.Unmarshal(bytes, &vm)
+		if err != nil {
+			beego.Error(err.Error())
+			return []azureVM{}, err
+		}
+		instanceList = append(instanceList, vm)
+	}
+	return instanceList, nil
 }

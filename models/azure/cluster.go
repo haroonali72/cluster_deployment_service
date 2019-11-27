@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	instance "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
@@ -675,7 +674,7 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	return false
 }
 
-func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]instance.VirtualMachine, error) {
+func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM, error) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -686,13 +685,13 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]instance
 	}
 	err := azure.init()
 	if err != nil {
-		return []instance.VirtualMachine{}, err
+		return []azureVM{}, err
 	}
 
 	instances, err := azure.getAllInstances()
 	if err != nil {
 		beego.Error(err.Error())
-		return []instance.VirtualMachine{}, err
+		return []azureVM{}, err
 	}
 	return instances, nil
 }
