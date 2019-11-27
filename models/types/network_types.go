@@ -61,7 +61,7 @@ type AzureNetwork struct {
 }
 
 type AzureDefinition struct {
-	Vnet           VNet             `json:"vnet" bson:"vnet"`
+	Vnet           VNet             `json:"vpc" bson:"vpc"`
 	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
 	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
 	ResourceGroup  string           `json:"resource_group" bson:"resource_group"`
@@ -69,7 +69,7 @@ type AzureDefinition struct {
 
 type VNet struct {
 	ID     bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	VnetId string        `json:"vnet_id" bson:"vnet_id"`
+	VnetId string        `json:"vpc_id" bson:"vpc_id"`
 	Name   string        `json:"name" bson:"name"`
 	CIDR   string        `json:"cidr" bson:"cidr"`
 }

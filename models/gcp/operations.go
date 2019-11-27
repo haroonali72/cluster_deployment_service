@@ -127,6 +127,9 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 		Tags: &compute.Tags{
 			Items: append(pool.Tags, projectId),
 		},
+		Labels: map[string]string{
+			"network": network.Definition[0].Vpc.Name,
+		},
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{
 				Subnetwork: getSubnet(pool.PoolSubnet, network.Definition[0].Subnets),
@@ -329,6 +332,9 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 		MachineType: pool.MachineType,
 		Tags: &compute.Tags{
 			Items: append(pool.Tags, projectId),
+		},
+		Labels: map[string]string{
+			"network": network.Definition[0].Vpc.Name,
 		},
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{

@@ -585,6 +585,36 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/azure/getAllInstances:
+    get:
+      tags:
+      - cluster/azure
+      description: Getting All Instances
+      operationId: AzureClusterController.Get Instances
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: "false"
+        type: string
+      - in: header
+        name: region
+        description: "false"
+        type: string
+      responses:
+        "200":
+          description: '[]compute.VirtualMachines'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/azure/machine/info:
     get:
       tags:
@@ -1408,37 +1438,6 @@ paths:
         "500":
           description: '{"error": "error msg"}'
   /template/aws/customerTemplate:
-    put:
-      tags:
-      - template/aws
-      description: update an existing customer template
-      operationId: AWSTemplateController.Update customer templates
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: header
-        name: teams
-        description: token
-        type: string
-      - in: body
-        name: body
-        description: body for template content
-        required: true
-        schema:
-          $ref: '#/definitions/aws.Template'
-      responses:
-        "200":
-          description: '{"msg": "customer template updated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "no template exists with this name"}'
-        "500":
-          description: '{"error": "error msg"}'
     post:
       tags:
       - template/aws
