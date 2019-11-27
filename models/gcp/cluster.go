@@ -537,6 +537,7 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 }
 
 func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) error {
+
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
@@ -552,17 +553,22 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		return err
 	}
 	if cluster.Status == "" || cluster.Status == "new" {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error("Cluster model: Cannot terminate a new cluster")
+		text := "Cannot terminate a new cluster"
+		ctx.SendLogs("GcpClusterModel : " +text +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return errors.New(text)
 	}
+
 
 	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+
+	cluster.Status = string(models.Terminating)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+	
 	err = gcp.init()
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -582,7 +588,6 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	}
 
 	err = gcp.deleteCluster(cluster, ctx)
-
 	if err != nil {
 
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)

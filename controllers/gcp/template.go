@@ -18,7 +18,7 @@ type GcpTemplateController struct {
 // @Title Get
 // @Description get template
 // @Param	token	header	string	token ""
-// @Param	templateId	path	string	true	"Name of the template"
+// @Param	templateId	path	string	true	"Id of the template"
 // @Success 200 {object} gcp.Template
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -204,7 +204,7 @@ func (c *GcpTemplateController) Post() {
 		return
 	}
 
-	userInfo.CompanyId = template.CompanyId
+	template.CompanyId =userInfo.CompanyId
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
@@ -451,7 +451,7 @@ func (c *GcpTemplateController) Delete() {
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
-// @router /create/customerTemplate [post]
+// @router /customerTemplate [post]
 func (c *GcpTemplateController) PostCustomerTemplate() {
 
 	var template gcp.Template

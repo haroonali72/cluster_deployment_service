@@ -19,7 +19,6 @@ type Template struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	TemplateId       string        `json:"template_id" bson:"template_id"`
 	Name             string        `json:"name" bson:"name"`
-	Status           string        `json:"status" bson:"status"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -30,7 +29,6 @@ type Template struct {
 
 type NodePoolT struct {
 	ID                  bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name                string        `json:"name" bson:"name"`
 	PoolId              string        `json:"pool_id" bson:"pool_id"`
 	NodeCount           int64         `json:"node_count" bson:"node_count"`
 	MachineType         string        `json:"machine_type" bson:"machine_type"`
@@ -40,7 +38,6 @@ type NodePoolT struct {
 	EnableVolume        bool          `json:"is_external" bson:"is_external"`
 	PoolSubnet          string        `json:"subnet_id" bson:"subnet_id"`
 	PoolRole            string        `json:"pool_role" bson:"pool_role"`
-	ServiceAccountEmail string        `json:"service_account_email" bson:"service_account_email"`
 	Nodes               []*Node       `json:"nodes" bson:"nodes"`
 	EnableScaling       bool          `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`

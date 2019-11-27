@@ -338,10 +338,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	createdPools, confError := aws.createCluster(cluster, ctx, companyId, token)
-
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-
+		cluster.Status="Cluster creation failed"
 		confError = aws.CleanUp(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -413,17 +412,36 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId, token string) error {
 
 	publisher := utils.Notifier{}
+
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return pub_err
 	}
+
+	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	if cluster.Status == "" || cluster.Status == "new" {
+		text := "Cannot terminate a new cluster"
+		ctx.SendLogs("AwsClusterModel : " +text +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return errors.New(text)
+	}
+
 	aws := AWS{
 		AccessKey: profile.Profile.AccessKey,
 		SecretKey: profile.Profile.SecretKey,
 		Region:    profile.Profile.Region,
 	}
-	err := aws.init()
+
+	cluster.Status = string(models.Terminating)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+
+	err = aws.init()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
@@ -437,17 +455,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		return err
 	}
 
-	if cluster.Status != "Cluster Created" && cluster.Status == "Cluster Termination Failed" {
-		ctx.SendLogs("Cluster model: Cluster is not in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
-	}
-
-	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
-
 	flag := aws.terminateCluster(cluster, ctx, companyId)
-
 	if flag {
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 

@@ -1438,37 +1438,6 @@ paths:
         "500":
           description: '{"error": "error msg"}'
   /template/aws/customerTemplate:
-    put:
-      tags:
-      - template/aws
-      description: update an existing customer template
-      operationId: AWSTemplateController.Update customer templates
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: header
-        name: teams
-        description: token
-        type: string
-      - in: body
-        name: body
-        description: body for template content
-        required: true
-        schema:
-          $ref: '#/definitions/aws.Template'
-      responses:
-        "200":
-          description: '{"msg": "customer template updated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "no template exists with this name"}'
-        "500":
-          description: '{"error": "error msg"}'
     post:
       tags:
       - template/aws
@@ -1907,7 +1876,7 @@ paths:
         type: string
       - in: path
         name: templateId
-        description: Name of the template
+        description: Id of the template
         required: true
         type: string
       responses:
@@ -1991,30 +1960,6 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /template/gcp/create/customerTemplate:
-    post:
-      tags:
-      - template/gcp
-      description: create a new customer template
-      operationId: GcpTemplateController.Create Customer Template
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: body
-        name: body
-        description: body for template content
-        required: true
-        schema:
-          $ref: '#/definitions/gcp.Template'
-      responses:
-        "200":
-          description: '{"msg": "template created successfully"}'
-        "409":
-          description: '{"error": "template with same name already exists"}'
-        "500":
-          description: '{"error": "error msg"}'
   /template/gcp/customerTemplate:
     put:
       tags:
@@ -2045,6 +1990,29 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/gcp
+      description: create a new customer template
+      operationId: GcpTemplateController.Create Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/gcp.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
         "500":
           description: '{"error": "error msg"}'
   /template/gcp/customerTemplate/{templateId}:
@@ -2104,7 +2072,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  10721.0xc000893170.false:
+  577.0xc000813d70.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2144,7 +2112,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/10721.0xc000893170.false'
+        $ref: '#/definitions/577.0xc000813d70.false'
       name:
         type: string
       network_name:
@@ -2233,8 +2201,6 @@ definitions:
       is_external:
         type: boolean
       machine_type:
-        type: string
-      name:
         type: string
       node_count:
         type: integer
@@ -2402,8 +2368,6 @@ definitions:
         type: boolean
       machine_type:
         type: string
-      name:
-        type: string
       node_count:
         type: integer
         format: int64
@@ -2444,8 +2408,6 @@ definitions:
         items:
           $ref: '#/definitions/azure.NodePoolT'
       resource_group:
-        type: string
-      status:
         type: string
       template_id:
         type: string
@@ -2606,8 +2568,6 @@ definitions:
         type: boolean
       machine_type:
         type: string
-      name:
-        type: string
       node_count:
         type: integer
         format: int64
@@ -2645,8 +2605,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gcp.NodePoolT'
-      status:
-        type: string
       template_id:
         type: string
   gcp.Volume:
