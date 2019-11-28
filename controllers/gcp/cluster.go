@@ -1150,8 +1150,6 @@ func (c *GcpClusterController) GetAllMachines() {
 		c.ServeJSON()
 		return
 	}
-
-	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

@@ -109,8 +109,6 @@ func (c *GcpTemplateController) GetAll() {
 		return
 	}
 
-	ctx := new(utils.Context)
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
