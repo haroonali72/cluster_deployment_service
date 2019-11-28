@@ -530,7 +530,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		return err
 	}
 	if cluster.Status == "" || cluster.Status == "new" {
-		text :="GcpClusterModel :Cannot terminate a new cluster"+err.Error()
+		text :="GcpClusterModel :Cannot terminate a new cluster"
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return errors.New(text)
