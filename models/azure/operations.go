@@ -597,7 +597,7 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		return nil
 	} else {
-		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
+		err = future.WaitForCompletionRef(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			ctx.SendLogs("vm deletion failed"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -712,7 +712,7 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.Interface{}, err
 	} else {
-		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
+		err := future.WaitForCompletionRef(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return network.Interface{}, err
@@ -735,7 +735,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 		return nil
 	} else {
 
-		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
+		err := future.WaitForCompletionRef(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -1361,7 +1361,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		beego.Info(err)
 		return err
 	}
-	err = future.WaitForCompletion(context.Background(), cloud.AccountClient.Client)
+	err = future.WaitForCompletionRef(context.Background(), cloud.AccountClient.Client)
 	if err != nil {
 
 		beego.Error("Storage account creation failed")
