@@ -858,7 +858,7 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "Get AWS Machine instance cores",
+                "description": "Get Azure Machine instance cores",
                 "operationId": "AzureClusterController.GetCores",
                 "responses": {
                     "200": {
@@ -2097,44 +2097,54 @@
                 }
             }
         },
-        "/template/aws/allCustomerTemplates": {
-            "get": {
+        "/template/aws/customerTemplate": {
+            "put": {
                 "tags": [
                     "template/aws"
                 ],
-                "description": "get all the customer templates",
-                "operationId": "AWSTemplateController.Get All Customer Template",
+                "description": "update an existing customer template",
+                "operationId": "AWSTemplateController.Update customer templates",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "token",
                         "description": "token",
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aws.Template"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/aws.Template"
-                            }
-                        }
+                        "description": "{\"msg\": \"customer template updated successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "404": {
+                    "401": {
                         "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
                 }
-            }
-        },
-        "/template/aws/customerTemplate": {
+            },
             "post": {
                 "tags": [
                     "template/aws"
@@ -2173,86 +2183,6 @@
                     },
                     "409": {
                         "description": "{\"error\": \"template with same name already exists\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
-        "/template/aws/customerTemplate/{templateId}": {
-            "get": {
-                "tags": [
-                    "template/aws"
-                ],
-                "description": "get customer template",
-                "operationId": "AWSTemplateController.Get customer template",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "templateId",
-                        "description": "Template Id of the template",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/aws.Template"
-                        }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "template/aws"
-                ],
-                "description": "delete a customer template",
-                "operationId": "AWSTemplateController.Delete customer template",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "templateId",
-                        "description": "template id of the template",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"customer template deleted successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -3265,7 +3195,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10721.0xc000893170.false": {
+        "577.0xc0007e5770.false": {
             "title": "false",
             "type": "object"
         },
@@ -3321,7 +3251,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10721.0xc000893170.false"
+                    "$ref": "#/definitions/577.0xc0007e5770.false"
                 },
                 "name": {
                     "type": "string"
@@ -4017,9 +3947,6 @@
                 },
                 "root_volume": {
                     "$ref": "#/definitions/gcp.Volume"
-                },
-                "service_account_email": {
-                    "type": "string"
                 },
                 "subnet_id": {
                     "type": "string"

@@ -1104,7 +1104,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, "", "", err
 	} else {
-		err = vmFuture.WaitForCompletion(cloud.context, cloud.VMClient.Client)
+		err = vmFuture.WaitForCompletionRef(cloud.context, cloud.VMClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
