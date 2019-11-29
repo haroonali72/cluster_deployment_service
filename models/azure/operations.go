@@ -359,7 +359,7 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 		if pool.KeyInfo.CredentialType == models.SSHKey {
 			bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx, "")
 			if err != nil {
-				ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs("vm creation failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return &Cluster_Def{}, err
 			}
 			keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
@@ -625,16 +625,16 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		utils.SendLog(companyId, err.Error(), "error", projectId)
 		return nil
 	} else {
-		n :=0
-		for  n < 5 && err != nil {
-				err = future.WaitForCompletionRef(cloud.context, vmClient.Client)
-				n++
+		n := 0
+		for n < 5 && err != nil {
+			err = future.WaitForCompletionRef(cloud.context, vmClient.Client)
+			n++
 		}
 		if err != nil {
 			utils.SendLog(companyId, err.Error(), "error", projectId)
 			return err
 		}
-		ctx.SendLogs("Deleted Node" + name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("Deleted Node"+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 	ctx.SendLogs("Node terminated successfully: "+name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return nil
@@ -1044,7 +1044,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 
 		bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
-			ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("vm creation failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
 		}
 		existingKey, err := key_utils.AzureKeyConversion(bytes, ctx)
@@ -1385,7 +1385,7 @@ func (cloud *AZURE) deleteDisk(resouceGroup string, diskName string, ctx utils.C
 	_, err := cloud.DiskClient.Delete(context.Background(), resouceGroup, diskName)
 
 	if err != nil && !strings.Contains(err.Error(), "not found") {
-		ctx.SendLogs("Disk deletion failed" +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Disk deletion failed"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -1442,7 +1442,7 @@ func (cloud *AZURE) CleanUp(cluster Cluster_Def, ctx utils.Context, companyId st
 				}
 				err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 				if err != nil {
-					beego.Info(e.Error())
+					beego.Info(err.Error())
 					return err
 				}
 			}
@@ -1585,9 +1585,9 @@ func (cloud *AZURE) mountVolume(vms []*VM, privateKey string, KeyName string, pr
 					}
 				} else {
 					IPname := "pip-" + poolName
-					vmname :=string(*vm.Name)
+					vmname := string(*vm.Name)
 					vMname := vmname[len(vmname)-1:]
-					nic :="nic-" + poolName
+					nic := "nic-" + poolName
 					ipConfig := poolName
 					publicIp, errPublicIP := cloud.GetPIP(resourceGroup, poolName, vMname, nic, ipConfig, IPname, ctx)
 					if errPublicIP != nil {
@@ -1891,7 +1891,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 
 		bytes, err := vault.GetSSHKey(string(models.Azure), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
-			ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("vm creation failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 		}
 		existingKey, err := key_utils.AzureKeyConversion(bytes, ctx)
