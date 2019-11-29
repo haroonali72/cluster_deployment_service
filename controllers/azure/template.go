@@ -527,7 +527,7 @@ func (c *AzureTemplateController) PostCustomerTemplate() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
 
-	ctx.SendLogs("AzureTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	ctx.SendLogs("AzureTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err, id := azure.CreateCustomerTemplate(template, *ctx)
 	if err != nil {

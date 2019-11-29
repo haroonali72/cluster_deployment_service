@@ -71,6 +71,12 @@ func GetCustomerTemplate(templateId string, ctx utils.Context) (template Templat
 }
 
 func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string) {
+
+	if template.TemplateId == "" {
+		i := rand.Int()
+		template.TemplateId = template.Name + strconv.Itoa(i)
+	}
+
 	_, err := GetCustomerTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
@@ -78,10 +84,7 @@ func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string
 		return errors.New(text), ""
 	}
 
-	if template.TemplateId == "" {
-		i := rand.Int()
-		template.TemplateId = template.Name + strconv.Itoa(i)
-	}
+
 
 	template.CreationDate = time.Now()
 
@@ -140,6 +143,12 @@ func DeleteCustomerTemplate(templateId string, ctx utils.Context) error {
 
 
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
+
+	if template.TemplateId == "" {
+		i := rand.Int()
+		template.TemplateId = template.Name + strconv.Itoa(i)
+	}
+
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
@@ -147,10 +156,6 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 		return errors.New(text), ""
 	}
 
-	if template.TemplateId == "" {
-		i := rand.Int()
-		template.TemplateId = template.Name + strconv.Itoa(i)
-	}
 	template.CreationDate = time.Now()
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoGcpTemplateCollection, template)

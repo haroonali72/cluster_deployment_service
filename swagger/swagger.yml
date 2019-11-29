@@ -619,7 +619,7 @@ paths:
     get:
       tags:
       - cluster/azure
-      description: Get AWS Machine instance cores
+      description: Get Azure Machine instance cores
       operationId: AzureClusterController.GetCores
       responses:
         "200":
@@ -1438,6 +1438,37 @@ paths:
         "500":
           description: '{"error": "error msg"}'
   /template/aws/customerTemplate:
+    put:
+      tags:
+      - template/aws
+      description: update an existing customer template
+      operationId: AWSTemplateController.Update customer templates
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/aws.Template'
+      responses:
+        "200":
+          description: '{"msg": "customer template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
     post:
       tags:
       - template/aws
@@ -2072,7 +2103,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc000813d70.false:
+  577.0xc0007e5770.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2112,7 +2143,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc000813d70.false'
+        $ref: '#/definitions/577.0xc0007e5770.false'
       name:
         type: string
       network_name:
@@ -2581,8 +2612,6 @@ definitions:
         type: string
       root_volume:
         $ref: '#/definitions/gcp.Volume'
-      service_account_email:
-        type: string
       subnet_id:
         type: string
       volume:
