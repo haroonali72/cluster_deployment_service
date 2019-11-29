@@ -625,11 +625,7 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 		utils.SendLog(companyId, err.Error(), "error", projectId)
 		return nil
 	} else {
-		n := 0
-		for n < 5 && err != nil {
-			err = future.WaitForCompletionRef(cloud.context, vmClient.Client)
-			n++
-		}
+		err = future.WaitForCompletionRef(cloud.context, vmClient.Client)
 		if err != nil {
 			utils.SendLog(companyId, err.Error(), "error", projectId)
 			return err
