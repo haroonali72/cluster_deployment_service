@@ -161,15 +161,15 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
-		if pool.EnableVolume {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
+		if pool.PoolRole == "master" {
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
 			if err != nil {
 				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
 			}
 		}
-		if pool.PoolRole == "master" {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
+		if pool.EnableVolume {
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
 			if err != nil {
 				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
@@ -618,7 +618,6 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	vmClient.Authorizer = cloud.Authorizer
 	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
 	if err != nil && !strings.Contains(err.Error(), "not found") {
-		beego.Error(err)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
