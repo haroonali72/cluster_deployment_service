@@ -161,15 +161,15 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
-		if pool.EnableVolume {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
+		if pool.PoolRole == "master" {
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
 			if err != nil {
 				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
 			}
 		}
-		if pool.PoolRole == "master" {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
+		if pool.EnableVolume {
+			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
 			if err != nil {
 				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
 				return cluster, err
@@ -597,7 +597,7 @@ func (cloud *AZURE) TerminatePool(name string, resourceGroup string, projectId s
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		return nil
 	} else {
-		err = future.WaitForCompletion(cloud.context, cloud.VMSSCLient.Client)
+		err = future.WaitForCompletionRef(cloud.context, cloud.VMSSCLient.Client)
 		if err != nil {
 			ctx.SendLogs("vm deletion failed"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -618,7 +618,6 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	vmClient.Authorizer = cloud.Authorizer
 	future, err := vmClient.Delete(cloud.context, resourceGroup, name)
 	if err != nil && !strings.Contains(err.Error(), "not found") {
-		beego.Error(err)
 		return err
 	} else if err != nil && strings.Contains(err.Error(), "not found") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -712,7 +711,7 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return network.Interface{}, err
 	} else {
-		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
+		err := future.WaitForCompletionRef(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return network.Interface{}, err
@@ -735,7 +734,7 @@ func (cloud *AZURE) deleteNIC(nicName, resourceGroup string, proId string, ctx u
 		return nil
 	} else {
 
-		err := future.WaitForCompletion(cloud.context, cloud.InterfacesClient.Client)
+		err := future.WaitForCompletionRef(cloud.context, cloud.InterfacesClient.Client)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -1361,7 +1360,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		beego.Info(err)
 		return err
 	}
-	err = future.WaitForCompletion(context.Background(), cloud.AccountClient.Client)
+	err = future.WaitForCompletionRef(context.Background(), cloud.AccountClient.Client)
 	if err != nil {
 
 		beego.Error("Storage account creation failed")
