@@ -775,3 +775,62 @@ func (c *GcpTemplateController) AllCustomerTemplates() {
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
+
+
+// @Title  Get Templates Metadata
+// @Description get all the templates metadata
+// @Param	token	header	string	token ""
+// @Success 200 {object} []gcp.TemplateMetadata
+// @Failure 400 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getTemplatesMetaData [get]
+func (c *GcpTemplateController) GetTemplatesMetadata() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
+	beego.Info("entering")
+	templates, err := gcp. GetTemplatesMetadata(*ctx, data,userInfo.CompanyId)
+	if err != nil {
+		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Gcp templates meta data fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = templates
+	c.ServeJSON()
+}
+

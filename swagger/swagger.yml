@@ -2099,11 +2099,33 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/gcp/getTemplatesMetaData:
+    get:
+      tags:
+      - template/gcp
+      description: get all the templates metadata
+      operationId: GcpTemplateController.Get Templates Metadata
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc0007e5770.false:
+  577.0xc000846de0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2143,7 +2165,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc0007e5770.false'
+        $ref: '#/definitions/577.0xc000846de0.false'
       name:
         type: string
       network_name:
@@ -2636,6 +2658,15 @@ definitions:
           $ref: '#/definitions/gcp.NodePoolT'
       template_id:
         type: string
+  gcp.TemplateMetadata:
+    title: TemplateMetadata
+    type: object
+    properties:
+      name:
+        $ref: '#/definitions/bson.ObjectId'
+      pool_count:
+        type: integer
+        format: int64
   gcp.Volume:
     title: Volume
     type: object
