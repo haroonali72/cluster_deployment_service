@@ -1715,6 +1715,30 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/azure/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/azure
+      description: get all customer templates info
+      operationId: AzureTemplateController.Get All Customer Templates Info
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/azure.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/azure/allTemplatesInfo:
     get:
       tags:
@@ -2127,7 +2151,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  10669.0xc0008afc20.false:
+  10669.0xc0008de0c0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2167,7 +2191,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/10669.0xc0008afc20.false'
+        $ref: '#/definitions/10669.0xc0008de0c0.false'
       name:
         type: string
       network_name:

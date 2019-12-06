@@ -794,34 +794,57 @@ func (c *AzureTemplateController) GetAllTemplateInfo() {
 		return
 	}
 
-	var templateList []azure.Template
-	templates, err := azure.GetTemplates(*ctx, data, userInfo.CompanyId)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	for _, template := range templates {
-		templateList = append(templateList, template)
-	}
-
 	//=============================================================================//
 
-	templates, err = azure.GetAllCustomerTemplates(*ctx)
+	templateMetadata := azure.GetAllTemplateMetadata(*ctx, data, userInfo.CompanyId)
+	if len(templateMetadata) == 0 {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "template data not found"}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = templateMetadata
+	c.ServeJSON()
+}
+
+// @Title Get All Customer Templates Info
+// @Description get all customer templates info
+// @Param	token	header	string	token ""
+// @Success 200 {object} []azure.TemplateMetadata
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /allCustomerTemplatesInfo [get]
+func (c *AzureTemplateController) GetAllCustomerTemplateInfo() {
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	for _, template := range templates {
-		templateList = append(templateList, template)
-	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	templateMetadata := azure.GetTemplateMetadata(templateList)
+	templateMetadata := azure.GetAllCustomerTemplateMetadata(*ctx)
+	if len(templateMetadata) == 0 {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "template data not found"}
+		c.ServeJSON()
+		return
+	}
 
 	c.Data["json"] = templateMetadata
 	c.ServeJSON()
