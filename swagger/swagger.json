@@ -2985,6 +2985,40 @@
                 }
             }
         },
+        "/template/gcp/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/gcp"
+                ],
+                "description": "get all the templates metadata",
+                "operationId": "GcpTemplateController.Get Templates Metadata",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/gcp.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/customerTemplate": {
             "put": {
                 "tags": [
@@ -3232,7 +3266,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10669.0xc0008afc20.false": {
+        "577.0xc000841830.false": {
             "title": "false",
             "type": "object"
         },
@@ -3288,7 +3322,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10669.0xc0008afc20.false"
+                    "$ref": "#/definitions/577.0xc000841830.false"
                 },
                 "name": {
                     "type": "string"
@@ -4033,6 +4067,19 @@
                 },
                 "template_id": {
                     "type": "string"
+                }
+            }
+        },
+        "gcp.TemplateMetadata": {
+            "title": "TemplateMetadata",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
                 }
             }
         },
