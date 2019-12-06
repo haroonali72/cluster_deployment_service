@@ -2590,6 +2590,43 @@
                 }
             }
         },
+        "/template/azure/allCustomerTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/azure"
+                ],
+                "description": "get all customer templates info",
+                "operationId": "AzureTemplateController.Get All Customer Templates Info",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/azure.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/azure/allTemplatesInfo": {
             "get": {
                 "tags": [
@@ -3368,7 +3405,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc042733410.false": {
+        "10669.0xc0008de0c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -3424,7 +3461,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc042733410.false"
+                    "$ref": "#/definitions/10669.0xc0008de0c0.false"
                 },
                 "name": {
                     "type": "string"

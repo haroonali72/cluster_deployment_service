@@ -282,7 +282,41 @@ func GetAllCustomerTemplates(ctx utils.Context) (templates []Template, err error
 	return templates, nil
 }
 
-func GetTemplateMetadata(templateList []Template) []TemplateMetadata {
+func GetAllTemplateMetadata(ctx utils.Context, data rbac_athentication.List, companyId string) []TemplateMetadata {
+	var templateList []Template
+	templates, err := GetTemplates(ctx, data, companyId)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil
+	}
+
+	for _, template := range templates {
+		templateList = append(templateList, template)
+	}
+	templateMetadata := make([]TemplateMetadata, len(templateList))
+	for i, template := range templateList {
+		templateMetadata[i].TemplateId = template.TemplateId
+		poolCount := 0
+		for i := 0; i < len(template.NodePools); i++ {
+			poolCount++
+		}
+		templateMetadata[i].PoolCount = poolCount
+	}
+
+	return templateMetadata
+}
+
+func GetAllCustomerTemplateMetadata(ctx utils.Context) []TemplateMetadata {
+	var templateList []Template
+	templates, err := GetAllCustomerTemplates(ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		return nil
+	}
+
+	for _, template := range templates {
+		templateList = append(templateList, template)
+	}
 	templateMetadata := make([]TemplateMetadata, len(templateList))
 	for i, template := range templateList {
 		templateMetadata[i].TemplateId = template.TemplateId
