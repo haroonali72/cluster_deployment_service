@@ -1437,6 +1437,50 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/aws/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/aws
+      description: get all the customer templates info
+      operationId: AWSTemplateController.GetAllCustomerTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/aws/allTemplatesInfo:
+    get:
+      tags:
+      - template/aws
+      description: get all the templates info
+      operationId: AWSTemplateController.GetAllTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/aws/customerTemplate:
     put:
       tags:
@@ -2171,7 +2215,7 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc000843740.false:
+  577.0xc042733410.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2211,7 +2255,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc000843740.false'
+        $ref: '#/definitions/577.0xc042733410.false'
       name:
         type: string
       network_name:
@@ -2322,6 +2366,8 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       company_id:
         type: string
+      is_cloudplex:
+        type: boolean
       name:
         type: string
       network_name:
@@ -2498,6 +2544,8 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       company_id:
         type: string
+      is_cloudplex:
+        type: boolean
       name:
         type: string
       network_name:
@@ -2555,7 +2603,7 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
-    type: object
+    type: string
   gcp.AutoScaling:
     title: AutoScaling
     type: object
@@ -2703,6 +2751,8 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       company_id:
         type: string
+      is_cloudplex:
+        type: boolean
       name:
         type: string
       network_name:

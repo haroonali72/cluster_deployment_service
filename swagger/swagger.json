@@ -2097,6 +2097,74 @@
                 }
             }
         },
+        "/template/aws/allCustomerTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/aws"
+                ],
+                "description": "get all the customer templates info",
+                "operationId": "AWSTemplateController.GetAllCustomerTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/gcp.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aws/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/aws"
+                ],
+                "description": "get all the templates info",
+                "operationId": "AWSTemplateController.GetAllTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/gcp.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/aws/customerTemplate": {
             "put": {
                 "tags": [
@@ -3300,7 +3368,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc000843740.false": {
+        "577.0xc042733410.false": {
             "title": "false",
             "type": "object"
         },
@@ -3356,7 +3424,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc000843740.false"
+                    "$ref": "#/definitions/577.0xc042733410.false"
                 },
                 "name": {
                     "type": "string"
@@ -3521,6 +3589,9 @@
                 },
                 "company_id": {
                     "type": "string"
+                },
+                "is_cloudplex": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
@@ -3783,6 +3854,9 @@
                 "company_id": {
                     "type": "string"
                 },
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -3868,7 +3942,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "object"
+            "type": "string"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
@@ -4086,6 +4160,9 @@
                 },
                 "company_id": {
                     "type": "string"
+                },
+                "is_cloudplex": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
