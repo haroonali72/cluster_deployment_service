@@ -2985,13 +2985,47 @@
                 }
             }
         },
+        "/template/gcp/allCustomerTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/gcp"
+                ],
+                "description": "get all the customer templates info",
+                "operationId": "GcpTemplateController.GetAllCustomerTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/gcp.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/allTemplatesInfo": {
             "get": {
                 "tags": [
                     "template/gcp"
                 ],
-                "description": "get all the templates metadata",
-                "operationId": "GcpTemplateController.Get Templates Metadata",
+                "description": "get all the templates info",
+                "operationId": "GcpTemplateController.GetAllTemplateInfo",
                 "parameters": [
                     {
                         "in": "header",
@@ -3266,7 +3300,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc000841830.false": {
+        "577.0xc000843740.false": {
             "title": "false",
             "type": "object"
         },
@@ -3322,7 +3356,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc000841830.false"
+                    "$ref": "#/definitions/577.0xc000843740.false"
                 },
                 "name": {
                     "type": "string"

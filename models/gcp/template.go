@@ -281,7 +281,7 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, compa
 	}
 	defer session.Close()
 
-	var templates, customerTemplate []Template
+	var templates []Template
 
 	s := db.GetMongoConf()
 	c := session.DB(s.MongoDb).C(s.MongoGcpTemplateCollection)
@@ -292,15 +292,7 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, compa
 		return nil, err
 	}
 
-	c1 := session.DB(s.MongoDb).C(s.MongoGcpCustomerTemplateCollection)
-	err = c1.Find(bson.M{}).All(&customerTemplate)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, err
-	}
-
-	templatemetadata := make([]TemplateMetadata, len(templates)+len(customerTemplate))
-	index := 0
+	templatemetadata := make([]TemplateMetadata, len(templates))
 
 	for i, template := range templates {
 		templatemetadata[i].TemplateId = templates[i].TemplateId
@@ -308,14 +300,42 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, compa
 
 			templatemetadata[i].PoolCount++
 		}
-		index++
-
 	}
 
-	for j, template := range customerTemplate {
-		templatemetadata[index+j].TemplateId = template.TemplateId
+	return templatemetadata, nil
+}
+
+func GetCustomerTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, companyId string) (metadatat []TemplateMetadata, err error) {
+
+	var copyData []string
+	for _, d := range data.Data {
+		copyData = append(copyData, d)
+	}
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		beego.Error("Template model: Get meta data - Got error while connecting to the database: ", err1)
+		return nil, err1
+	}
+	defer session.Close()
+
+	var customerTemplates []Template
+
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoGcpCustomerTemplateCollection)
+	err = c.Find(bson.M{}).All(&customerTemplates)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err
+	}
+
+	templatemetadata := make([]TemplateMetadata, len(customerTemplates))
+
+	for i, template := range customerTemplates {
+		templatemetadata[i].TemplateId = customerTemplates[i].TemplateId
 		for range template.NodePools {
-			templatemetadata[j].PoolCount++
+
+			templatemetadata[i].PoolCount++
 		}
 	}
 
