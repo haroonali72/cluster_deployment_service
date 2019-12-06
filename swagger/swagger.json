@@ -2522,6 +2522,43 @@
                 }
             }
         },
+        "/template/azure/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/azure"
+                ],
+                "description": "get all templates info",
+                "operationId": "AzureTemplateController.Get All Templates Info",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/azure.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/azure/customerTemplate": {
             "put": {
                 "tags": [
@@ -2948,6 +2985,40 @@
                 }
             }
         },
+        "/template/gcp/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/gcp"
+                ],
+                "description": "get all the templates metadata",
+                "operationId": "GcpTemplateController.Get Templates Metadata",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/gcp.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/customerTemplate": {
             "put": {
                 "tags": [
@@ -3195,7 +3266,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc0007e5770.false": {
+        "577.0xc000841830.false": {
             "title": "false",
             "type": "object"
         },
@@ -3251,7 +3322,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc0007e5770.false"
+                    "$ref": "#/definitions/577.0xc000841830.false"
                 },
                 "name": {
                     "type": "string"
@@ -3698,6 +3769,19 @@
                 }
             }
         },
+        "azure.TemplateMetadata": {
+            "title": "TemplateMetadata",
+            "type": "object",
+            "properties": {
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
         "azure.VM": {
             "title": "VM",
             "type": "object",
@@ -3983,6 +4067,19 @@
                 },
                 "template_id": {
                     "type": "string"
+                }
+            }
+        },
+        "gcp.TemplateMetadata": {
+            "title": "TemplateMetadata",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
                 }
             }
         },

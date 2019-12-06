@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
-	"math/rand"
-	"strconv"
 	"time"
 )
 
@@ -42,6 +40,11 @@ type NodePoolT struct {
 	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
+}
+
+type TemplateMetadata struct {
+	TemplateId string `json:"template_id" bson:"template_id"`
+	PoolCount  int    `json:"pool_count" bson:"pool_count"`
 }
 
 func checkTemplateSize(cluster Template) error {
@@ -79,18 +82,12 @@ func GetCustomerTemplate(templateId string, ctx utils.Context) (template Templat
 }
 func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string) {
 
-	if template.TemplateId == "" {
-		i := rand.Int()
-		template.TemplateId = template.Name + strconv.Itoa(i)
-	}
-
 	_, err := GetCustomerTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		beego.Error(text)
 		return errors.New(text), ""
 	}
-
 
 	template.CreationDate = time.Now()
 
@@ -144,21 +141,14 @@ func DeleteCustomerTemplate(templateId string, ctx utils.Context) error {
 	}
 	return nil
 }
-func CreateTemplate(template Template, ctx utils.Context) (error, string) {
-
-	if template.TemplateId == "" {
-		i := rand.Int()
-		template.TemplateId = template.Name + strconv.Itoa(i)
-	}
+func CreateTemplate(template Template, ctx utils.Context) error {
 
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
 		text := fmt.Sprintf("Template model: Create - Template '%s' already exists in the database: ", template.Name)
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New(text), ""
+		return errors.New(text)
 	}
-
-
 
 	template.CreationDate = time.Now()
 
@@ -173,9 +163,9 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 	if err != nil {
 
 		ctx.SendLogs("Template model: Create - Got error inserting template to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err, ""
+		return err
 	}
-	return nil, template.TemplateId
+	return nil
 }
 
 func GetTemplate(templateId, companyId string, ctx utils.Context) (template Template, err error) {
@@ -194,7 +184,7 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 	}
 	return template, nil
 }
-func GetTemplates(ctx utils.Context, data rbac_athentication.List,companyId string ) (templates []Template, err error) {
+func GetTemplates(ctx utils.Context, data rbac_athentication.List, companyId string) (templates []Template, err error) {
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
@@ -239,7 +229,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	err = DeleteTemplate(template.TemplateId,template.CompanyId, ctx)
+	err = DeleteTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err != nil {
 		beego.Error("Template model: Update - Got error deleting template: ", err)
 		return err
@@ -248,7 +238,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	template.CreationDate = oldTemplate.CreationDate
 	template.ModificationDate = time.Now()
 
-	err, _ = CreateTemplate(template, ctx)
+	err = CreateTemplate(template, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -256,7 +246,7 @@ func UpdateTemplate(template Template, ctx utils.Context) error {
 	return nil
 }
 
-func DeleteTemplate(templateId ,companyId string, ctx utils.Context) error {
+func DeleteTemplate(templateId, companyId string, ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -265,7 +255,7 @@ func DeleteTemplate(templateId ,companyId string, ctx utils.Context) error {
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureTemplateCollection)
-	err = c.Remove(bson.M{"template_id": templateId,"company_id": companyId})
+	err = c.Remove(bson.M{"template_id": templateId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -289,4 +279,18 @@ func GetAllCustomerTemplates(ctx utils.Context) (templates []Template, err error
 		return nil, err
 	}
 	return templates, nil
+}
+
+func GetTemplateMetadata(templateList []Template) []TemplateMetadata {
+	templateMetadata := make([]TemplateMetadata, len(templateList))
+	for i, template := range templateList {
+		templateMetadata[i].TemplateId = template.TemplateId
+		poolCount := 0
+		for i := 0; i < len(template.NodePools); i++ {
+			poolCount++
+		}
+		templateMetadata[i].PoolCount = poolCount
+	}
+
+	return templateMetadata
 }

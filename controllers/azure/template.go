@@ -124,7 +124,7 @@ func (c *AzureTemplateController) GetAll() {
 		return
 	}
 
-	templates, err := azure.GetTemplates(*ctx, data,userInfo.CompanyId)
+	templates, err := azure.GetTemplates(*ctx, data, userInfo.CompanyId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -135,6 +135,7 @@ func (c *AzureTemplateController) GetAll() {
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
+
 // @Title Get customer template
 // @Description get customer template
 // @Param	templateId	path	string	true	"Template Id of the template"
@@ -175,12 +176,11 @@ func (c *AzureTemplateController) GetCustomerTemplate() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, tempId, userInfo.CompanyId, userInfo.UserId)
 
-
 	//==========================RBAC User Authentication==============================//
 
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
-	if(!check){
+	if !check {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this template"}
 		c.ServeJSON()
@@ -259,7 +259,7 @@ func (c *AzureTemplateController) Post() {
 
 	template.CompanyId = userInfo.CompanyId
 
-	err, id := azure.CreateTemplate(template, *ctx)
+	err = azure.CreateTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -281,7 +281,7 @@ func (c *AzureTemplateController) Post() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.Azure, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.Azure, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -297,7 +297,7 @@ func (c *AzureTemplateController) Post() {
 		return
 	}
 	ctx.SendLogs(" Azure template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + template.TemplateId}
 	c.ServeJSON()
 }
 
@@ -457,7 +457,7 @@ func (c *AzureTemplateController) Delete() {
 
 	ctx.SendLogs("AzureTemplateController: Delete template with id: ", id, models.Backend_Logging)
 
-	err = azure.DeleteTemplate(id, userInfo.CompanyId,*ctx)
+	err = azure.DeleteTemplate(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -545,8 +545,6 @@ func (c *AzureTemplateController) PostCustomerTemplate() {
 	c.Data["json"] = map[string]string{"msg": "customer template generated successfully with id " + id}
 	c.ServeJSON()
 }
-
-
 
 // @Title Update customer templates
 // @Description update an existing customer template
@@ -685,7 +683,7 @@ func (c *AzureTemplateController) DeleteCustomerTemplate() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("AzureCustomerTemplateController: Delete customer template with template Id "+ templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = azure.DeleteCustomerTemplate(templateId, *ctx)
 	if err != nil {
@@ -698,7 +696,6 @@ func (c *AzureTemplateController) DeleteCustomerTemplate() {
 	c.Data["json"] = map[string]string{"msg": "customer template deleted successfully"}
 	c.ServeJSON()
 }
-
 
 // @Title Get All Customer Template
 // @Description get all the customer templates
@@ -734,7 +731,7 @@ func (c *AzureTemplateController) AllCustomerTemplates() {
 
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
-	if !check{
+	if !check {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this templates"}
 		c.ServeJSON()
@@ -753,5 +750,79 @@ func (c *AzureTemplateController) AllCustomerTemplates() {
 	}
 	ctx.SendLogs("All Azure Customer Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
+	c.ServeJSON()
+}
+
+// @Title Get All Templates Info
+// @Description get all templates info
+// @Param	token	header	string	token ""
+// @Success 200 {object} []azure.TemplateMetadata
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /allTemplatesInfo [get]
+func (c *AzureTemplateController) GetAllTemplateInfo() {
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC User Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.Azure, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	var templateList []azure.Template
+	templates, err := azure.GetTemplates(*ctx, data, userInfo.CompanyId)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	for _, template := range templates {
+		templateList = append(templateList, template)
+	}
+
+	//=============================================================================//
+
+	templates, err = azure.GetAllCustomerTemplates(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	for _, template := range templates {
+		templateList = append(templateList, template)
+	}
+
+	templateMetadata := azure.GetTemplateMetadata(templateList)
+
+	c.Data["json"] = templateMetadata
 	c.ServeJSON()
 }
