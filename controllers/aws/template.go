@@ -36,9 +36,9 @@ func (c *AWSTemplateController) Get() {
 	}
 
 	token := c.Ctx.Input.Header("token")
-	if templateId == "" {
+	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.Data["json"] = map[string]string{"error": "token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -65,14 +65,14 @@ func (c *AWSTemplateController) Get() {
 		return
 	}
 	if !allowed {
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("AWSTemplateController: Get template  id : "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSTemplateController: Get template with id : "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	template, err := aws.GetTemplate(templateId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -128,7 +128,7 @@ func (c *AWSTemplateController) GetAll() {
 
 	//=============================================================================//
 	ctx.SendLogs("AWSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	templates, err := aws.GetTemplates(*ctx, data,userInfo.CompanyId)
+	templates, err := aws.GetTemplates(*ctx, data, userInfo.CompanyId)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -186,7 +186,7 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 	if !allowed {
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
@@ -200,7 +200,7 @@ func (c *AWSTemplateController) Post() {
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
+			c.Data["json"] = map[string]string{"error": "template with same id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -283,7 +283,7 @@ func (c *AWSTemplateController) Patch() {
 		return
 	}
 	if !allowed {
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
@@ -383,16 +383,16 @@ func (c *AWSTemplateController) Delete() {
 		return
 	}
 	if !allowed {
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("AWSTemplateController: Delete template with template Id "+ templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSTemplateController: Delete template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = aws.DeleteTemplate(templateId,userInfo.CompanyId, *ctx)
+	err = aws.DeleteTemplate(templateId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -444,9 +444,9 @@ func (c *AWSTemplateController) PostCustomerTemplate() {
 		c.ServeJSON()
 		return
 	}
-    //==============================RBAC Role Authentication====================================//
+	//==============================RBAC Role Authentication====================================//
 
-    roleInfo, err := rbac_athentication.GetRole(token)
+	roleInfo, err := rbac_athentication.GetRole(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -455,24 +455,24 @@ func (c *AWSTemplateController) PostCustomerTemplate() {
 		return
 	}
 	if !aws.CheckRole(roleInfo) {
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
 
-    //===========================================================================================//
+	//===========================================================================================//
 
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
 
-	ctx.SendLogs("AWSTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AWSTemplateController: Post new customer template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err, id := aws.CreateCustomerTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
+			c.Data["json"] = map[string]string{"error": "template with same id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -484,7 +484,6 @@ func (c *AWSTemplateController) PostCustomerTemplate() {
 	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
-
 
 // @Title Get customer template
 // @Description get customer template
@@ -525,12 +524,11 @@ func (c *AWSTemplateController) GetCustomerTemplate() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, tempId, userInfo.CompanyId, userInfo.UserId)
 
-
 	//==========================RBAC User Authentication==============================//
 
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
-	if !check{
+	if !check {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this template"}
 		c.ServeJSON()
@@ -552,9 +550,6 @@ func (c *AWSTemplateController) GetCustomerTemplate() {
 	c.Data["json"] = template
 	c.ServeJSON()
 }
-
-
-
 
 // @Title Update customer templates
 // @Description update an existing customer template
@@ -741,7 +736,7 @@ func (c *AWSTemplateController) AllCustomerTemplates() {
 
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
-	if !check{
+	if !check {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this templates"}
 		c.ServeJSON()
