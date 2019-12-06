@@ -798,10 +798,7 @@ func (c *AzureTemplateController) GetAllTemplateInfo() {
 
 	templateMetadata := azure.GetAllTemplateMetadata(*ctx, data, userInfo.CompanyId)
 	if len(templateMetadata) == 0 {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "template data not found"}
-		c.ServeJSON()
-		return
+		templateMetadata = []azure.TemplateMetadata{}
 	}
 
 	c.Data["json"] = templateMetadata
@@ -840,10 +837,7 @@ func (c *AzureTemplateController) GetAllCustomerTemplateInfo() {
 
 	templateMetadata := azure.GetAllCustomerTemplateMetadata(*ctx)
 	if len(templateMetadata) == 0 {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "template data not found"}
-		c.ServeJSON()
-		return
+		templateMetadata = []azure.TemplateMetadata{}
 	}
 
 	c.Data["json"] = templateMetadata
