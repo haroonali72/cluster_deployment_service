@@ -757,3 +757,115 @@ func (c *AWSTemplateController) AllCustomerTemplates() {
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
+
+// @Title   GetAllTemplateInfo
+// @Description get all the templates info
+// @Param	token	header	string	token ""
+// @Success 200 {object} []gcp.TemplateMetadata
+// @Failure 400 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /allTemplatesInfo [get]
+func (c *AWSTemplateController) GetAllTemplateInfo() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
+	templates, err := aws.GetTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	if err != nil {
+		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Gcp templates meta data fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = templates
+	c.ServeJSON()
+}
+
+// @Title   GetAllCustomerTemplateInfo
+// @Description get all the customer templates info
+// @Param	token	header	string	token ""
+// @Success 200 {object} []gcp.TemplateMetadata
+// @Failure 400 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /allCustomerTemplatesInfo [get]
+func (c *AWSTemplateController) GetAllCustomerTemplateInfo() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpTemplateController:  Get all customer Templates Info.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
+	templates, err := aws.GetCustomerTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	if err != nil {
+		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Gcp customer templates info fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = templates
+	c.ServeJSON()
+}
