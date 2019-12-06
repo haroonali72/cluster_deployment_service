@@ -783,8 +783,8 @@ func (c *GcpTemplateController) AllCustomerTemplates() {
 // @Success 200 {object} []gcp.TemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getTemplatesMetaData [get]
-func (c *GcpTemplateController) GetTemplatesMetadata() {
+// @router /allTemplatesInfo [get]
+func (c *GcpTemplateController) GetAllTemplateInfo(){
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)

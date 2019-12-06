@@ -198,6 +198,15 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
         beego.ControllerComments{
+            Method: "GetAllTemplateInfo",
+            Router: `/allTemplatesInfo`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
+        beego.ControllerComments{
             Method: "PostCustomerTemplate",
             Router: `/customerTemplate`,
             AllowHTTPMethods: []string{"post"},
@@ -228,15 +237,6 @@ func init() {
             Method: "DeleteCustomerTemplate",
             Router: `/customerTemplate/:templateId`,
             AllowHTTPMethods: []string{"delete"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
-        beego.ControllerComments{
-            Method: "GetTemplatesMetadata",
-            Router: `/getTemplatesMetaData`,
-            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

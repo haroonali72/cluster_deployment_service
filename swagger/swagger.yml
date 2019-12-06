@@ -2015,6 +2015,28 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/gcp/allTemplatesInfo:
+    get:
+      tags:
+      - template/gcp
+      description: get all the templates metadata
+      operationId: GcpTemplateController.Get Templates Metadata
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/gcp/customerTemplate:
     put:
       tags:
@@ -2123,33 +2145,11 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /template/gcp/getTemplatesMetaData:
-    get:
-      tags:
-      - template/gcp
-      description: get all the templates metadata
-      operationId: GcpTemplateController.Get Templates Metadata
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      responses:
-        "200":
-          description: ""
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/gcp.TemplateMetadata'
-        "400":
-          description: '{"error": "error msg"}'
-        "500":
-          description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc0008631a0.false:
+  577.0xc000841830.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2189,7 +2189,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc0008631a0.false'
+        $ref: '#/definitions/577.0xc000841830.false'
       name:
         type: string
       network_name:
