@@ -198,6 +198,15 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
         beego.ControllerComments{
+            Method: "GetAllCustomerTemplateInfo",
+            Router: `/allCustomerTemplatesInfo`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
+        beego.ControllerComments{
             Method: "GetAllTemplateInfo",
             Router: `/allTemplatesInfo`,
             AllowHTTPMethods: []string{"get"},
@@ -207,18 +216,18 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
         beego.ControllerComments{
-            Method: "PostCustomerTemplate",
+            Method: "PatchCustomerTemplate",
             Router: `/customerTemplate`,
-            AllowHTTPMethods: []string{"post"},
+            AllowHTTPMethods: []string{"put"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
 
     beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpTemplateController"],
         beego.ControllerComments{
-            Method: "PatchCustomerTemplate",
+            Method: "PostCustomerTemplate",
             Router: `/customerTemplate`,
-            AllowHTTPMethods: []string{"put"},
+            AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
