@@ -1437,6 +1437,50 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/aws/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/aws
+      description: get all the customer templates info
+      operationId: AWSTemplateController.GetAllCustomerTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/aws/allTemplatesInfo:
+    get:
+      tags:
+      - template/aws
+      description: get all the templates info
+      operationId: AWSTemplateController.GetAllTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/aws/customerTemplate:
     put:
       tags:
@@ -2039,6 +2083,50 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/gcp/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/gcp
+      description: get all the customer templates info
+      operationId: GcpTemplateController.GetAllCustomerTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/gcp/allTemplatesInfo:
+    get:
+      tags:
+      - template/gcp
+      description: get all the templates info
+      operationId: GcpTemplateController.GetAllTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gcp.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/gcp/customerTemplate:
     put:
       tags:
@@ -2302,6 +2390,8 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       company_id:
         type: string
+      is_cloudplex:
+        type: boolean
       name:
         type: string
       network_name:
@@ -2478,6 +2568,8 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       company_id:
         type: string
+      is_cloudplex:
+        type: boolean
       name:
         type: string
       network_name:
@@ -2535,7 +2627,7 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
-    type: object
+    type: string
   gcp.AutoScaling:
     title: AutoScaling
     type: object
@@ -2683,6 +2775,8 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       company_id:
         type: string
+      is_cloudplex:
+        type: boolean
       name:
         type: string
       network_name:
@@ -2693,6 +2787,15 @@ definitions:
           $ref: '#/definitions/gcp.NodePoolT'
       template_id:
         type: string
+  gcp.TemplateMetadata:
+    title: TemplateMetadata
+    type: object
+    properties:
+      name:
+        type: string
+      pool_count:
+        type: integer
+        format: int64
   gcp.Volume:
     title: Volume
     type: object

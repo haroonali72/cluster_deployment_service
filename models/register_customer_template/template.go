@@ -25,6 +25,7 @@ func RegisterAWSCustomerTemplate(awsTemplates []aws.Template, azureTemplates []a
 			awsTemplates[index].TemplateId = template.Name + strconv.Itoa(i)
 		}
 		awsTemplates[index].ID = bson.NewObjectId()
+		awsTemplates[index].IsCloudplex = true
 	}
 
 	for index, template := range azureTemplates {
@@ -35,6 +36,7 @@ func RegisterAWSCustomerTemplate(awsTemplates []aws.Template, azureTemplates []a
 			azureTemplates[index].TemplateId = template.Name + strconv.Itoa(i)
 		}
 		azureTemplates[index].ID = bson.NewObjectId()
+		azureTemplates[index].IsCloudplex = true
 	}
 
 	for index, template := range gcpTemplates {
@@ -45,6 +47,7 @@ func RegisterAWSCustomerTemplate(awsTemplates []aws.Template, azureTemplates []a
 			gcpTemplates[index].TemplateId = template.Name + strconv.Itoa(i)
 		}
 		gcpTemplates[index].ID = bson.NewObjectId()
+		gcpTemplates[index].IsCloudplex = true
 	}
 
 	s := db.GetMongoConf()

@@ -25,7 +25,7 @@ type GcpTemplateController struct {
 // @router /:templateId [get]
 func (c *GcpTemplateController) Get() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("GcpTemplateController: Get template" , models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpTemplateController: Get template", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	id := c.GetString(":templateId")
 	if id == "" {
@@ -35,7 +35,7 @@ func (c *GcpTemplateController) Get() {
 		return
 	}
 
-	ctx.SendLogs("GcpTemplateController: Get template with id: "+ id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpTemplateController: Get template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -134,7 +134,7 @@ func (c *GcpTemplateController) GetAll() {
 
 	//==================================================================================
 
-	templates, err := gcp.GetTemplates(*ctx, data,userInfo.CompanyId)
+	templates, err := gcp.GetTemplates(*ctx, data, userInfo.CompanyId)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -164,7 +164,7 @@ func (c *GcpTemplateController) Post() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("GcpTemplateController: Post new template with name: "+ template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -202,7 +202,7 @@ func (c *GcpTemplateController) Post() {
 		return
 	}
 
-	template.CompanyId =userInfo.CompanyId
+	template.CompanyId = userInfo.CompanyId
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
@@ -305,7 +305,7 @@ func (c *GcpTemplateController) Patch() {
 	}
 
 	//==================================================================================
-	ctx.SendLogs("GcpTemplateController: Patch template with id: "+ template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpTemplateController: Patch template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpTemplateController: JSON Payload: ", template)
 
 	err = gcp.UpdateTemplate(template, *ctx)
@@ -370,7 +370,7 @@ func (c *GcpTemplateController) Delete() {
 		return
 	}
 	ctx := new(utils.Context)
-	ctx.SendLogs("GcpTemplateController: Delete template with id: "+ id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpTemplateController: Delete template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -409,7 +409,7 @@ func (c *GcpTemplateController) Delete() {
 
 	//==================================================================================
 
-	err = gcp.DeleteTemplate(id,userInfo.CompanyId, *ctx)
+	err = gcp.DeleteTemplate(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -497,9 +497,6 @@ func (c *GcpTemplateController) PostCustomerTemplate() {
 	c.ServeJSON()
 }
 
-
-
-
 // @Title Get customer template
 // @Description get customer template
 // @Param	templateId	path	string	true	"Template Id of the template"
@@ -539,12 +536,11 @@ func (c *GcpTemplateController) GetCustomerTemplate() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, tempId, userInfo.CompanyId, userInfo.UserId)
 
-
 	//==========================RBAC User Authentication==============================//
 
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
-	if !check{
+	if !check {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this template"}
 		c.ServeJSON()
@@ -566,9 +562,6 @@ func (c *GcpTemplateController) GetCustomerTemplate() {
 	c.Data["json"] = template
 	c.ServeJSON()
 }
-
-
-
 
 // @Title Update customer templates
 // @Description update an existing customer template
@@ -706,7 +699,7 @@ func (c *GcpTemplateController) DeleteCustomerTemplate() {
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("GcpCustomerTemplateController: Delete customer template with template Id "+ templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = gcp.DeleteCustomerTemplate(templateId, *ctx)
 	if err != nil {
@@ -754,7 +747,7 @@ func (c *GcpTemplateController) AllCustomerTemplates() {
 
 	check := strings.Contains(userInfo.UserId, "cloudplex.io")
 
-	if !check{
+	if !check {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Unauthorized to access this templates"}
 		c.ServeJSON()
@@ -772,6 +765,118 @@ func (c *GcpTemplateController) AllCustomerTemplates() {
 		return
 	}
 	ctx.SendLogs("All Gcp Customer Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = templates
+	c.ServeJSON()
+}
+
+// @Title   GetAllTemplateInfo
+// @Description get all the templates info
+// @Param	token	header	string	token ""
+// @Success 200 {object} []gcp.TemplateMetadata
+// @Failure 400 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /allTemplatesInfo [get]
+func (c *GcpTemplateController) GetAllTemplateInfo() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
+	templates, err := gcp.GetTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	if err != nil {
+		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Gcp templates meta data fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = templates
+	c.ServeJSON()
+}
+
+// @Title   GetAllCustomerTemplateInfo
+// @Description get all the customer templates info
+// @Param	token	header	string	token ""
+// @Success 200 {object} []gcp.TemplateMetadata
+// @Failure 400 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /allCustomerTemplatesInfo [get]
+func (c *GcpTemplateController) GetAllCustomerTemplateInfo() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpTemplateController:  Get all customer Templates Info.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//==================================================================================
+	templates, err := gcp.GetCustomerTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	if err != nil {
+		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Gcp customer templates info fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }

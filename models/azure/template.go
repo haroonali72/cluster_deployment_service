@@ -24,6 +24,7 @@ type Template struct {
 	NetworkName      string        `json:"network_name" bson:"network_name"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
+	IsCloudplex      bool          `json:"is_cloudplex" bson:"is_cloudplex"`
 }
 
 type NodePoolT struct {
