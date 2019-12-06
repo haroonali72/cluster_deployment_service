@@ -777,8 +777,8 @@ func (c *GcpTemplateController) AllCustomerTemplates() {
 }
 
 
-// @Title  Get Templates Metadata
-// @Description get all the templates metadata
+// @Title   GetAllTemplateInfo
+// @Description get all the templates info
 // @Param	token	header	string	token ""
 // @Success 200 {object} []gcp.TemplateMetadata
 // @Failure 400 {"error": "error msg"}
