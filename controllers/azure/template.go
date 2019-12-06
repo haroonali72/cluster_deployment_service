@@ -821,15 +821,7 @@ func (c *AzureTemplateController) GetAllTemplateInfo() {
 		templateList = append(templateList, template)
 	}
 
-	templateMetadata := make([]azure.TemplateMetadata, len(templateList))
-	for i, template := range templateList {
-		templateMetadata[i].TemplateId = template.TemplateId
-		poolCount := 0
-		for i := 0; i < len(template.NodePools); i++ {
-			poolCount++
-		}
-		templateMetadata[i].PoolCount = poolCount
-	}
+	templateMetadata := azure.GetTemplateMetadata(templateList)
 
 	c.Data["json"] = templateMetadata
 	c.ServeJSON()

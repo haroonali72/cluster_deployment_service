@@ -280,3 +280,17 @@ func GetAllCustomerTemplates(ctx utils.Context) (templates []Template, err error
 	}
 	return templates, nil
 }
+
+func GetTemplateMetadata(templateList []Template) []TemplateMetadata {
+	templateMetadata := make([]TemplateMetadata, len(templateList))
+	for i, template := range templateList {
+		templateMetadata[i].TemplateId = template.TemplateId
+		poolCount := 0
+		for i := 0; i < len(template.NodePools); i++ {
+			poolCount++
+		}
+		templateMetadata[i].PoolCount = poolCount
+	}
+
+	return templateMetadata
+}
