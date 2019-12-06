@@ -41,8 +41,8 @@ type NodePoolT struct {
 	Scaling             AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 type TemplateMetadata struct{
-	TemplateId					bson.ObjectId			`json:"name" bson:"name"`
-	PoolCount					int64 					`json:"pool_count" bson:"pool_count"`
+	TemplateId					string					`json:"name" bson:"name"`
+	PoolCount					int64					`json:"pool_count" bson:"pool_count"`
 }
 
 func CheckRole(roles types.UserRole) bool {
@@ -307,7 +307,7 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List,compan
 	index:=0
 
 	for i, template := range templates {
-		templatemetadata[i].TemplateId=templates[i].ID
+		templatemetadata[i].TemplateId=templates[i].TemplateId
 		for range template.NodePools{
 
 			templatemetadata[i].PoolCount++
@@ -317,7 +317,7 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List,compan
 	}
 
 	for j, template := range customerTemplate {
-		templatemetadata[index+j].TemplateId=template.ID
+		templatemetadata[index+j].TemplateId=template.TemplateId
 		for range template.NodePools{
 			templatemetadata[j].PoolCount++
 		}
