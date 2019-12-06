@@ -820,7 +820,6 @@ func (c *GcpTemplateController) GetTemplatesMetadata() {
 	}
 
 	//==================================================================================
-	beego.Info("entering")
 	templates, err := gcp. GetTemplatesMetadata(*ctx, data,userInfo.CompanyId)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

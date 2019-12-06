@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
-	"math/rand"
-	"strconv"
 	"time"
 )
 
@@ -75,10 +73,6 @@ func GetCustomerTemplate(templateId string, ctx utils.Context) (template Templat
 }
 func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string) {
 
-	if template.TemplateId == "" {
-		i := rand.Int()
-		template.TemplateId = template.Name + strconv.Itoa(i)
-	}
 
 	_, err := GetCustomerTemplate(template.TemplateId, ctx)
 	if err == nil { //template found
@@ -161,11 +155,6 @@ func GetAllCustomerTemplates(ctx utils.Context) (templates []Template, err error
 
 
 func CreateTemplate(template Template, ctx utils.Context) (error, string) {
-
-	if template.TemplateId == "" {
-		i := rand.Int()
-		template.TemplateId = template.Name + strconv.Itoa(i)
-	}
 
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found
