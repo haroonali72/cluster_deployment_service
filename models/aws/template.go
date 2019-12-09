@@ -38,6 +38,11 @@ type NodePoolT struct {
 	ExternalVolume  Volume        `json:"external_volume" bson:"external_volume"`
 }
 
+type TemplateMetadata struct {
+	TemplateId string `json:"template_id" bson:"template_id"`
+	PoolCount  int64  `json:"pool_count" bson:"pool_count"`
+}
+
 //func checkTemplateSize(template Template, ctx utils.Context) error {
 //	for _, pools := range template.NodePools {
 //		if pools.NodeCount > 3 {
@@ -288,4 +293,79 @@ func GetAllCustomerTemplates(ctx utils.Context) (templates []Template, err error
 		return nil, err
 	}
 	return templates, nil
+}
+
+func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, companyId string) (metadatat []TemplateMetadata, err error) {
+
+	var copyData []string
+	for _, d := range data.Data {
+		copyData = append(copyData, d)
+	}
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		beego.Error("Template model: Get meta data - Got error while connecting to the database: ", err1)
+		return nil, err1
+	}
+	defer session.Close()
+
+	var templates []Template
+
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoGcpTemplateCollection)
+	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}, "company_id": companyId}).All(&templates)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		return nil, err
+	}
+
+	templatemetadata := make([]TemplateMetadata, len(templates))
+
+	for i, template := range templates {
+		templatemetadata[i].TemplateId = templates[i].TemplateId
+		for range template.NodePools {
+
+			templatemetadata[i].PoolCount++
+		}
+	}
+
+	return templatemetadata, nil
+}
+
+func GetCustomerTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, companyId string) (metadatat []TemplateMetadata, err error) {
+
+	var copyData []string
+	for _, d := range data.Data {
+		copyData = append(copyData, d)
+	}
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		beego.Error("Template model: Get meta data - Got error while connecting to the database: ", err1)
+		return nil, err1
+	}
+	defer session.Close()
+
+	var customerTemplates []Template
+
+	s := db.GetMongoConf()
+	c := session.DB(s.MongoDb).C(s.MongoGcpCustomerTemplateCollection)
+	err = c.Find(bson.M{}).All(&customerTemplates)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err
+	}
+
+	templatemetadata := make([]TemplateMetadata, len(customerTemplates))
+
+	for i, template := range customerTemplates {
+		templatemetadata[i].TemplateId = customerTemplates[i].TemplateId
+		for range template.NodePools {
+
+			templatemetadata[i].PoolCount++
+		}
+	}
+
+	return templatemetadata, nil
 }
