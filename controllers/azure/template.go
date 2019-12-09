@@ -227,6 +227,13 @@ func (c *AzureTemplateController) Post() {
 		return
 	}
 
+	if template.TemplateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -321,6 +328,13 @@ func (c *AzureTemplateController) Patch() {
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	if template.TemplateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -510,6 +524,13 @@ func (c *AzureTemplateController) PostCustomerTemplate() {
 		return
 	}
 
+	if template.TemplateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	roleInfo, err := rbac_athentication.GetRole(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -566,6 +587,13 @@ func (c *AzureTemplateController) PatchCustomerTemplate() {
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	if template.TemplateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
 		c.ServeJSON()
 		return
 	}
