@@ -42,7 +42,7 @@ type NodePoolT struct {
 	Scaling       AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
 }
 type TemplateMetadata struct {
-	TemplateId string `json:"name" bson:"name"`
+	TemplateId string `json:"template_id" bson:"template_id"`
 	PoolCount  int64  `json:"pool_count" bson:"pool_count"`
 }
 
