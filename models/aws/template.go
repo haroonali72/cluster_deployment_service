@@ -312,7 +312,7 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, compa
 	var templates []Template
 
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoGcpTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoAwsTemplateCollection)
 	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}, "company_id": companyId}).All(&templates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
