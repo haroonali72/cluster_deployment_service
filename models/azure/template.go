@@ -44,8 +44,9 @@ type NodePoolT struct {
 }
 
 type TemplateMetadata struct {
-	TemplateId string `json:"template_id" bson:"template_id"`
-	PoolCount  int    `json:"pool_count" bson:"pool_count"`
+	TemplateId  string `json:"template_id" bson:"template_id"`
+	IsCloudplex bool   `json:"is_cloudplex" bson:"is_cloudplex"`
+	PoolCount   int    `json:"pool_count" bson:"pool_count"`
 }
 
 func checkTemplateSize(cluster Template) error {
@@ -297,6 +298,13 @@ func GetAllTemplateMetadata(ctx utils.Context, data rbac_athentication.List, com
 	for i, template := range templateList {
 		templateMetadata[i].TemplateId = template.TemplateId
 		poolCount := 0
+
+		if template.IsCloudplex {
+			templateMetadata[i].IsCloudplex = true
+		} else {
+			templateMetadata[i].IsCloudplex = false
+		}
+
 		for i := 0; i < len(template.NodePools); i++ {
 			poolCount++
 		}
@@ -321,6 +329,13 @@ func GetAllCustomerTemplateMetadata(ctx utils.Context) []TemplateMetadata {
 	for i, template := range templateList {
 		templateMetadata[i].TemplateId = template.TemplateId
 		poolCount := 0
+
+		if template.IsCloudplex {
+			templateMetadata[i].IsCloudplex = true
+		} else {
+			templateMetadata[i].IsCloudplex = false
+		}
+
 		for i := 0; i < len(template.NodePools); i++ {
 			poolCount++
 		}
