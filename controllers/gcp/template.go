@@ -210,6 +210,9 @@ func (c *GcpTemplateController) Post() {
 	}
 
 	template.CompanyId = userInfo.CompanyId
+	if strings.Contains(userInfo.UserId, "cloudplex.io") {
+		template.IsCloudplex = true
+	}
 
 	err, id := gcp.CreateTemplate(template, *ctx)
 	if err != nil {
