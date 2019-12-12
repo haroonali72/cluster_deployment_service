@@ -202,9 +202,6 @@ func (c *AWSTemplateController) Post() {
 	ctx.SendLogs("AWSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	template.CompanyId = userInfo.CompanyId
-	if strings.Contains(userInfo.UserId, "cloudplex.io") {
-		template.IsCloudplex = true
-	}
 
 	err, id := aws.CreateTemplate(template, *ctx)
 	if err != nil {
