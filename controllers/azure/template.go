@@ -265,6 +265,7 @@ func (c *AzureTemplateController) Post() {
 	ctx.SendLogs("AzureTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	template.CompanyId = userInfo.CompanyId
+	template.IsCloudplex = false
 
 	err = azure.CreateTemplate(template, *ctx)
 	if err != nil {
