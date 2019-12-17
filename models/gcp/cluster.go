@@ -49,6 +49,7 @@ type NodePool struct {
 	Nodes               []*Node            `json:"nodes" bson:"nodes"`
 	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
 	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling"`
+	EnablePublicIP      bool               `json:"enable_public_ip" bson:"enable_public_ip"`
 	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
 	Tags                []string           `json:"tags" bson:"tags"`
 }
@@ -223,7 +224,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+			return err
 		}
 	}
 
@@ -303,7 +304,7 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
-		text :="Cluster model: Update - Cluster '%s' does not exist in the database: "+ cluster.Name+err.Error()
+		text := "Cluster model: Update - Cluster '%s' does not exist in the database: " + cluster.Name + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -471,7 +472,7 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		var keyInfo key_utils.AZUREKey
 		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
-			ctx.SendLogs("vm fetched failed with error: " +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("vm fetched failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return Cluster_Def{}, err
 		}
 		keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
@@ -508,7 +509,7 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 
 	serviceAccounts, err = gcp.listServiceAccounts(ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterModel ServiceAccounts - Failed to list service accounts "+  err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GcpClusterModel ServiceAccounts - Failed to list service accounts "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
@@ -530,12 +531,11 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		return err
 	}
 	if cluster.Status == "" || cluster.Status == "new" {
-		text :="GcpClusterModel :Cannot terminate a new cluster"
+		text := "GcpClusterModel :Cannot terminate a new cluster"
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return errors.New(text)
 	}
-
 
 	gcp, err := GetGCP(credentials)
 	if err != nil {
@@ -619,7 +619,7 @@ func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Conte
 	if err != nil {
 		return err
 	}
-	if(coreLimit==0){
+	if coreLimit == 0 {
 		return nil
 	}
 
@@ -740,4 +740,3 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	}
 	return false
 }
-

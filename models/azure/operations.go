@@ -225,14 +225,19 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 	//sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
 	//sgIds = append(sgIds, &sid)
 	if pool.PoolRole == "master" {
-		IPname := "pip-" + pool.Name
-		utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
-		publicIPaddress, err := cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
-		if err != nil {
-			return nil, "", err
+		var publicIPaddress network.PublicIPAddress
+		var err error
+		if pool.EnablePublicIP {
+
+			IPname := "pip-" + pool.Name
+			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
+			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
+			if err != nil {
+				return nil, "", err
+			}
+			utils.SendLog(companyId, "Public IP created successfully : "+IPname, "info", projectId)
+			cloud.Resources["Pip-"+projectId] = IPname
 		}
-		utils.SendLog(companyId, "Public IP created successfully : "+IPname, "info", projectId)
-		cloud.Resources["Pip-"+projectId] = IPname
 		/*
 			making network interface
 		*/
@@ -694,12 +699,15 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
-						PublicIPAddress:           &publicIPaddress,
+						Subnet:          &network.Subnet{ID: to.StringPtr(subnetId)},
+						PublicIPAddress: &publicIPaddress,
 					},
 				},
 			},
 		},
+	}
+	if pool.EnablePublicIP {
+		(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].InterfaceIPConfigurationPropertiesFormat.PublicIPAddress = &publicIPaddress
 	}
 	if sgIds != nil {
 		nicParameters.InterfacePropertiesFormat.NetworkSecurityGroup = &network.SecurityGroup{
@@ -1351,7 +1359,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location:                          &cloud.Region,
+		Location: &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
@@ -1854,14 +1862,6 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 										Name: to.StringPtr(pool.Name),
 										VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
 											Subnet: &compute.APIEntityReference{ID: to.StringPtr(subnetId)},
-											PublicIPAddressConfiguration: &compute.VirtualMachineScaleSetPublicIPAddressConfiguration{
-												Name: to.StringPtr("pip-" + pool.Name),
-												VirtualMachineScaleSetPublicIPAddressConfigurationProperties: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationProperties{
-													DNSSettings: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationDNSSettings{
-														DomainNameLabel: to.StringPtr(strings.ToLower(pool.Name)),
-													},
-												},
-											},
 										},
 									},
 								},
@@ -1875,7 +1875,17 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			},
 		},
 	}
-
+	if pool.EnablePublicIP {
+		p := (*params.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations)[0].VirtualMachineScaleSetNetworkConfigurationProperties.IPConfigurations
+		(*p)[0].VirtualMachineScaleSetIPConfigurationProperties.PublicIPAddressConfiguration = &compute.VirtualMachineScaleSetPublicIPAddressConfiguration{
+			Name: to.StringPtr("pip-" + pool.Name),
+			VirtualMachineScaleSetPublicIPAddressConfigurationProperties: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationProperties{
+				DNSSettings: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationDNSSettings{
+					DomainNameLabel: to.StringPtr(strings.ToLower(pool.Name)),
+				},
+			},
+		}
+	}
 	if pool.EnableVolume {
 		params.VirtualMachineProfile.StorageProfile.DataDisks = &storage
 	}
