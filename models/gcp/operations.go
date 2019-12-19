@@ -230,7 +230,7 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 
 	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 	if err != nil {
-		ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("vm creation failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	fetchedKey, err := key_utils.AzureKeyConversion(bytes, ctx)
@@ -321,13 +321,13 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 	}
 	_, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 	if err != nil {
-		ctx.SendLogs("Key Not Found:  " +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Key Not Found:  "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
 
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
-
+	err, userData := utils.GetUserData("")
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		Tags: &compute.Tags{
@@ -367,6 +367,10 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 				{
 					Key:   "ssh-keys",
 					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
+				},
+				{
+					Key:   "startup-script",
+					Value: to.StringPtr(userData),
 				},
 			},
 		},

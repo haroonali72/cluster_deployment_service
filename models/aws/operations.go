@@ -792,6 +792,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_iamProfile"] = pool.Name
+	err, userData := utils.GetUserData("")
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
 		SubnetId:         aws.String(subnetId),
@@ -800,6 +801,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		KeyName:          aws.String(pool.KeyInfo.KeyName),
 		MinCount:         aws.Int64(1),
 		InstanceType:     aws.String(pool.MachineType),
+		UserData:         aws.String(userData),
 	}
 	/*
 		setting 50 gb volume - temp work
