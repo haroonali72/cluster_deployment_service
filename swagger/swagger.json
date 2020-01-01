@@ -2923,6 +2923,459 @@
                 }
             }
         },
+        "/template/do/": {
+            "put": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "update an existing template",
+                "operationId": "DOTemplateController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "create a new template",
+                "operationId": "DOTemplateController.Create",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/all": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get all the templates",
+                "operationId": "DOTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.Template"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/allCustomerTemplates": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get all the customer templates",
+                "operationId": "DOTemplateController.Get All Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.Template"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get all the templates info",
+                "operationId": "DOTemplateController.GetAllTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/customerTemplate": {
+            "put": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "update an existing customer template",
+                "operationId": "DOTemplateController.Update customer templates",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "create a new customer template",
+                "operationId": "DOTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/customerTemplate/{templateId}": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get customer template",
+                "operationId": "DOTemplateController.Get customer template",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "delete a customer template",
+                "operationId": "DOTemplateController.Delete customer template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/{templateId}": {
+            "delete": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "delete a template",
+                "operationId": "DOTemplateController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/{templateId}/": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get template",
+                "operationId": "DOTemplateController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/": {
             "put": {
                 "tags": [
@@ -3405,7 +3858,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10669.0xc0008de0c0.false": {
+        "13276.0xc00026eae0.false": {
             "title": "false",
             "type": "object"
         },
@@ -3461,7 +3914,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10669.0xc0008de0c0.false"
+                    "$ref": "#/definitions/13276.0xc00026eae0.false"
                 },
                 "name": {
                     "type": "string"
@@ -3918,6 +4371,9 @@
             "title": "TemplateMetadata",
             "type": "object",
             "properties": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
                 "pool_count": {
                     "type": "integer",
                     "format": "int64"
@@ -3979,7 +4435,81 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
+        },
+        "do.NodePoolT": {
+            "title": "NodePoolT",
+            "type": "object",
+            "properties": {
+                "is_external": {
+                    "type": "boolean"
+                },
+                "machine_type": {
+                    "type": "string"
+                },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "pool_role": {
+                    "type": "string"
+                },
+                "security_group_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "subnet_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.Template": {
+            "title": "Template",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network_name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.NodePoolT"
+                    }
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.TemplateMetadata": {
+            "title": "TemplateMetadata",
+            "type": "object",
+            "properties": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
@@ -4222,12 +4752,15 @@
             "title": "TemplateMetadata",
             "type": "object",
             "properties": {
-                "name": {
-                    "type": "string"
+                "is_cloudplex": {
+                    "type": "boolean"
                 },
                 "pool_count": {
                     "type": "integer",
                     "format": "int64"
+                },
+                "template_id": {
+                    "type": "string"
                 }
             }
         },
@@ -4301,7 +4834,8 @@
             "enum": [
                 "AWS = \"aws\"",
                 "Azure = \"azure\"",
-                "GCP = \"gcp\""
+                "GCP = \"gcp\"",
+                "DO = \"do\""
             ],
             "example": "aws"
         },
@@ -4416,6 +4950,10 @@
         {
             "name": "template/gcp",
             "description": "Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "template/do",
+            "description": "Operations about DO template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
         }
     ]
 }
