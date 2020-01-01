@@ -27,13 +27,32 @@ type Template struct {
 }
 
 type NodePoolT struct {
-	ID              bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	NodeCount       int32         `json:"node_count" bson:"node_count"`
-	MachineType     string        `json:"machine_type" bson:"machine_type"`
-	SubnetId        string        `json:"subnet_id" bson:"subnet_id"`
-	SecurityGroupId []string      `json:"security_group_id" bson:"security_group_id"`
-	PoolRole        string        `json:"pool_role" bson:"pool_role"`
-	IsExternal      bool          `json:"is_external" bson:"is_external"`
+	ID                bson.ObjectId  `json:"-" bson:"_id,omitempty"`
+	NodeCount         int32          `json:"node_count" bson:"node_count"`
+	MachineType       string         `json:"machine_type" bson:"machine_type"`
+	Image             ImageReference `json:"image" bson:"image"`
+	SecurityGroupId   []string       `json:"security_group_id" bson:"security_group_id"`
+	Nodes             []*Node        `json:"nodes" bson:"nodes"`
+	EnableVolume      bool           `json:"is_external" bson:"is_external"`
+	PoolRole          string         `json:"pool_role" bson:"pool_role"`
+	PrivateNetworking bool           `json:"private_networking" bson:"private_networking"`
+}
+
+type Node struct {
+	CloudId    int    `json:"cloud_id" bson:"cloud_id",omitempty"`
+	NodeState  string `json:"node_state" bson:"node_state",omitempty"`
+	Name       string `json:"name" bson:"name",omitempty"`
+	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty"`
+	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty"`
+	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty"`
+	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
+	UserName   string `json:"user_name" bson:"user_name",omitempty"`
+}
+
+type ImageReference struct {
+	ID      bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Slug    string        `json:"slug" bson:"slug,omitempty" valid:"required"`
+	ImageId int           `json:"image_id" bson:"image_id,omitempty"`
 }
 
 type TemplateMetadata struct {
