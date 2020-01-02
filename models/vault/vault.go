@@ -36,6 +36,13 @@ type AwsCredentials struct {
 	SecretKey string `json:"access_secret"`
 	Region    string `json:"region"`
 }
+type DOProfile struct {
+	Profile DOCredentials `json:"credentials"`
+}
+type DOCredentials struct {
+	AccessKey string `json:"access_key"`
+	Region    string `json:"region"`
+}
 
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url") + models.VaultEndpoint
@@ -110,7 +117,7 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 	beego.Info(response.Status)
 	if response.StatusCode == 403 {
 		return []byte{}, errors.New("User is not authorized to use this key - " + keyName)
-	}else if response.StatusCode == 404 {
+	} else if response.StatusCode == 404 {
 		return []byte{}, errors.New("key not found")
 	}
 	if response.StatusCode != 200 {
@@ -204,7 +211,7 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 	beego.Info(response.Status)
 	if response.StatusCode == 403 {
 		return []byte{}, errors.New("User is not authorized for credential profile - " + profileId)
-	}else if response.StatusCode == 404 {
+	} else if response.StatusCode == 404 {
 		return []byte{}, errors.New("profile not found")
 	}
 
@@ -254,8 +261,8 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region st
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
 	if response.StatusCode == 403 {
-		return  errors.New("User is not authorized to delete this key - " + keyName)
-	}else if response.StatusCode == 404{
+		return errors.New("User is not authorized to delete this key - " + keyName)
+	} else if response.StatusCode == 404 {
 		return errors.New("key not found")
 	}
 	if response.StatusCode != 200 {
