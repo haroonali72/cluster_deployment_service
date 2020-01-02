@@ -102,7 +102,7 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		doInterface = append(doInterface, template)
 	}
 
-	err = db.InsertManyInMongo(s.MongoDoTemplateCollection, doInterface)
+	err = db.InsertManyInMongo(s.MongoDOTemplateCollection, doInterface)
 	if err != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -144,7 +144,7 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 	}
 
 	var doTemplates []do.Template
-	c = session.DB(s.MongoDb).C(s.MongoDoCustomerTemplateCollection)
+	c = session.DB(s.MongoDb).C(s.MongoDOCustomerTemplateCollection)
 	err = c.Find(bson.M{}).All(&doTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
