@@ -12,6 +12,7 @@ import (
 	"antelope/controllers/aws"
 	"antelope/controllers/azure"
 	"antelope/controllers/customer_template"
+	"antelope/controllers/do"
 	"antelope/controllers/gcp"
 	"github.com/astaxie/beego"
 )
@@ -56,6 +57,11 @@ func init() {
 		beego.NSNamespace("/template/gcp",
 			beego.NSInclude(
 				&gcp.GcpTemplateController{},
+			),
+		),
+		beego.NSNamespace("/template/do",
+			beego.NSInclude(
+				&do.DOTemplateController{},
 			),
 		),
 	)
