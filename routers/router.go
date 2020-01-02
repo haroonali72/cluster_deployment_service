@@ -64,6 +64,11 @@ func init() {
 				&do.DOTemplateController{},
 			),
 		),
+		beego.NSNamespace("/cluster/do",
+			beego.NSInclude(
+				&do.DOClusterController{},
+			),
+		),
 	)
 	beego.AddNamespace(ns)
 }

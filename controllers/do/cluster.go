@@ -2,8 +2,8 @@ package do
 
 import (
 	"antelope/models"
-	"antelope/models/DO"
 	"antelope/models/aws"
+	"antelope/models/do"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
