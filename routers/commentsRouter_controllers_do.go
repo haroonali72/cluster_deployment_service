@@ -7,6 +7,114 @@ import (
 
 func init() {
 
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "Post",
+			Router:           `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "Patch",
+			Router:           `/`,
+			AllowHTTPMethods: []string{"put"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "Delete",
+			Router:           `/:projectId`,
+			AllowHTTPMethods: []string{"delete"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "Get",
+			Router:           `/:projectId/`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "GetAll",
+			Router:           `/all`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "GetRegions",
+			Router:           `/getzones/:region`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "DeleteSSHKey",
+			Router:           `/sshkey/:keyname`,
+			AllowHTTPMethods: []string{"delete"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "PostSSHKey",
+			Router:           `/sshkey/:projectId/:keyname`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "GetSSHKeys",
+			Router:           `/sshkeys`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "StartCluster",
+			Router:           `/start/:projectId`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "GetStatus",
+			Router:           `/status/:projectId/`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
+		beego.ControllerComments{
+			Method:           "TerminateCluster",
+			Router:           `/terminate/:projectId/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
 	beego.GlobalControllerRouter["antelope/controllers/do:DOTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOTemplateController"],
 		beego.ControllerComments{
 			Method:           "Post",

@@ -801,6 +801,303 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/do/:
+    put:
+      tags:
+      - cluster/do
+      description: update an existing template
+      operationId: DOTemplateController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/do.Template'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - cluster/do
+      description: create a new template
+      operationId: DOTemplateController.Create
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/do.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/do/{templateId}:
+    delete:
+      tags:
+      - cluster/do
+      description: delete a template
+      operationId: DOTemplateController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/do/{templateId}/:
+    get:
+      tags:
+      - cluster/do
+      description: get template
+      operationId: DOTemplateController.Get
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/do.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/do/all:
+    get:
+      tags:
+      - cluster/do
+      description: get all the templates
+      operationId: DOTemplateController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/do.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/do/allCustomerTemplates:
+    get:
+      tags:
+      - cluster/do
+      description: get all the customer templates
+      operationId: DOTemplateController.Get All Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/do.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/do/allTemplatesInfo:
+    get:
+      tags:
+      - cluster/do
+      description: get all the templates info
+      operationId: DOTemplateController.GetAllTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/do.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/do/customerTemplate:
+    put:
+      tags:
+      - cluster/do
+      description: update an existing customer template
+      operationId: DOTemplateController.Update customer templates
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/do.Template'
+      responses:
+        "200":
+          description: '{"msg": "customer template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - cluster/do
+      description: create a new customer template
+      operationId: DOTemplateController.Create Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/do.Template'
+      responses:
+        "200":
+          description: '{"msg": "customer template created successfully"}'
+        "400":
+          description: '{"error": "error message"}'
+        "401":
+          description: '{"error": "error message"}'
+        "404":
+          description: '{"error": "error message"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/do/customerTemplate/{templateId}:
+    get:
+      tags:
+      - cluster/do
+      description: get customer template
+      operationId: DOTemplateController.Get customer template
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/do.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+    delete:
+      tags:
+      - cluster/do
+      description: delete a customer template
+      operationId: DOTemplateController.Delete customer template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "customer template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/gcp/:
     put:
       tags:
@@ -1926,7 +2223,7 @@ paths:
   /template/do/:
     put:
       tags:
-      - template/do
+      - cluster/do
       description: update an existing template
       operationId: DOTemplateController.Update
       parameters:
@@ -1957,7 +2254,7 @@ paths:
           description: '{"error": "error msg"}'
     post:
       tags:
-      - template/do
+      - cluster/do
       description: create a new template
       operationId: DOTemplateController.Create
       parameters:
@@ -1989,7 +2286,7 @@ paths:
   /template/do/{templateId}:
     delete:
       tags:
-      - template/do
+      - cluster/do
       description: delete a template
       operationId: DOTemplateController.Delete
       parameters:
@@ -2016,7 +2313,7 @@ paths:
   /template/do/{templateId}/:
     get:
       tags:
-      - template/do
+      - cluster/do
       description: get template
       operationId: DOTemplateController.Get
       parameters:
@@ -2045,7 +2342,7 @@ paths:
   /template/do/all:
     get:
       tags:
-      - template/do
+      - cluster/do
       description: get all the templates
       operationId: DOTemplateController.Get All
       parameters:
@@ -2067,7 +2364,7 @@ paths:
   /template/do/allCustomerTemplates:
     get:
       tags:
-      - template/do
+      - cluster/do
       description: get all the customer templates
       operationId: DOTemplateController.Get All Customer Template
       parameters:
@@ -2091,7 +2388,7 @@ paths:
   /template/do/allTemplatesInfo:
     get:
       tags:
-      - template/do
+      - cluster/do
       description: get all the templates info
       operationId: DOTemplateController.GetAllTemplateInfo
       parameters:
@@ -2113,7 +2410,7 @@ paths:
   /template/do/customerTemplate:
     put:
       tags:
-      - template/do
+      - cluster/do
       description: update an existing customer template
       operationId: DOTemplateController.Update customer templates
       parameters:
@@ -2140,7 +2437,7 @@ paths:
           description: '{"error": "error msg"}'
     post:
       tags:
-      - template/do
+      - cluster/do
       description: create a new customer template
       operationId: DOTemplateController.Create Customer Template
       parameters:
@@ -2170,7 +2467,7 @@ paths:
   /template/do/customerTemplate/{templateId}:
     get:
       tags:
-      - template/do
+      - cluster/do
       description: get customer template
       operationId: DOTemplateController.Get customer template
       parameters:
@@ -2196,7 +2493,7 @@ paths:
           description: '{"error": "error msg"}'
     delete:
       tags:
-      - template/do
+      - cluster/do
       description: delete a customer template
       operationId: DOTemplateController.Delete customer template
       parameters:
@@ -2536,7 +2833,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  13276.0xc00026eae0.false:
+  600.0xc042835560.false:
+    title: "false"
+    type: object
+  609.0xc042b44000.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2576,7 +2876,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13276.0xc00026eae0.false'
+        $ref: '#/definitions/600.0xc042835560.false'
       name:
         type: string
       network_name:
@@ -2926,11 +3226,104 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
+    type: string
+  do.Cluster_Def:
+    title: Cluster_Def
     type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      kube_credentials:
+        $ref: '#/definitions/609.0xc042b44000.false'
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/do.NodePool'
+      project_id:
+        type: string
+      status:
+        type: string
+      token_name:
+        type: string
+  do.ImageReference:
+    title: ImageReference
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      image_id:
+        type: integer
+        format: int64
+      slug:
+        type: string
+  do.Node:
+    title: Node
+    type: object
+    properties:
+      cloud_id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      node_state:
+        type: string
+      private_dns:
+        type: string
+      private_ip:
+        type: string
+      public_dns:
+        type: string
+      public_ip:
+        type: string
+      user_name:
+        type: string
+  do.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      external_volume:
+        $ref: '#/definitions/do.Volume'
+      image:
+        $ref: '#/definitions/do.ImageReference'
+      is_external:
+        type: boolean
+      key_info:
+        $ref: '#/definitions/key_utils.AZUREKey'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/do.Node'
+      pool_role:
+        $ref: '#/definitions/models.PoolRole'
+      private_networking:
+        type: boolean
+      security_group_id:
+        type: array
+        items:
+          $ref: '#/definitions/do.string'
   do.NodePoolT:
     title: NodePoolT
     type: object
     properties:
+      image:
+        $ref: '#/definitions/do.ImageReference'
       is_external:
         type: boolean
       machine_type:
@@ -2938,14 +3331,18 @@ definitions:
       node_count:
         type: integer
         format: int32
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/do.Node'
       pool_role:
         type: string
+      private_networking:
+        type: boolean
       security_group_id:
         type: array
         items:
           type: string
-      subnet_id:
-        type: string
   do.Template:
     title: Template
     type: object
@@ -2977,6 +3374,16 @@ definitions:
         format: int64
       template_id:
         type: string
+  do.Volume:
+    title: Volume
+    type: object
+    properties:
+      volume_size:
+        type: integer
+        format: int64
+  do.string:
+    title: string
+    type: object
   gcp.AutoScaling:
     title: AutoScaling
     type: object
@@ -3158,6 +3565,9 @@ definitions:
         $ref: '#/definitions/models.GCPDiskType'
       is_blank:
         type: boolean
+  godo.Region:
+    title: Region
+    type: object
   key_utils.AWSKey:
     title: AWSKey
     type: object
@@ -3180,6 +3590,11 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       credential_type:
         $ref: '#/definitions/models.CredentialsType'
+      finger_print:
+        type: string
+      id:
+        type: integer
+        format: int64
       key_name:
         type: string
       key_type:
@@ -3286,5 +3701,8 @@ tags:
   description: |
     Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
 - name: template/do
+  description: |
+    Operations about DO template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: cluster/do
   description: |
     Operations about DO template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
