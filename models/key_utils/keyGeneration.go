@@ -22,7 +22,6 @@ type AWSKey struct {
 
 type AZUREKey struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
-	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
 	KeyType        models.KeyType         `json:"key_type" bson:"key_type" valid:"required, in(new|cp|aws|user)"`
 	KeyName        string                 `json:"key_name" bson:"key_name"`
 	Username       string                 `json:"username" bson:"username,omitempty"`
