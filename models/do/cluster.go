@@ -527,7 +527,7 @@ func CreateSSHkey(keyName string, credentials vault.DOCredentials, token, teams,
 		return "", err
 	}
 
-	return keyMaterial, err
+	return keyInfo.PrivateKey, err
 }
 
 func DeleteSSHkey(keyName, token string, credentials vault.DOCredentials, ctx utils.Context) error {
