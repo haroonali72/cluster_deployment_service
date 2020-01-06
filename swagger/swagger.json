@@ -4415,11 +4415,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc04298c720.false": {
+        "13276.0xc0009a6930.false": {
             "title": "false",
             "type": "object"
         },
-        "609.0xc042c6d1a0.false": {
+        "13298.0xc000c7b620.false": {
             "title": "false",
             "type": "object"
         },
@@ -4475,7 +4475,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc04298c720.false"
+                    "$ref": "#/definitions/13276.0xc0009a6930.false"
                 },
                 "name": {
                     "type": "string"
@@ -4996,7 +4996,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
         },
         "do.Cluster_Def": {
             "title": "Cluster_Def",
@@ -5012,7 +5012,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/609.0xc042c6d1a0.false"
+                    "$ref": "#/definitions/13298.0xc000c7b620.false"
                 },
                 "name": {
                     "type": "string"
