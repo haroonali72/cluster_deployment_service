@@ -337,10 +337,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	cluster, confError = do.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		//confError = aws.CleanUp(cluster, ctx)
-		//if confError != nil {
-		//	PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		//}
+		confError = do.CleanUp(ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		}
 
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster("", cluster, false, ctx)
