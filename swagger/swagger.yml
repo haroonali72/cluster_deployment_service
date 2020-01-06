@@ -948,7 +948,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/getzones/{region}:
+  /cluster/do/getregions/:
     get:
       tags:
       - cluster/do
@@ -2902,10 +2902,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  600.0xc04288afc0.false:
+  600.0xc04298c720.false:
     title: "false"
     type: object
-  609.0xc042b8da40.false:
+  609.0xc042c6d1a0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2945,7 +2945,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/600.0xc04288afc0.false'
+        $ref: '#/definitions/600.0xc04298c720.false'
       name:
         type: string
       network_name:
@@ -3307,7 +3307,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/609.0xc042b8da40.false'
+        $ref: '#/definitions/609.0xc042c6d1a0.false'
       name:
         type: string
       network_name:
