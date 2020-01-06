@@ -55,7 +55,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
 		beego.ControllerComments{
 			Method:           "GetRegions",
-			Router:           `/getzones/:region`,
+			Router:           `/getregions/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
