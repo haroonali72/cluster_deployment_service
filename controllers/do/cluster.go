@@ -976,7 +976,7 @@ func (c *DOClusterController) PostSSHKey() {
 // @Success 200 {object} []godo.Region
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @router /getzones/:region [get]
+// @router /getregions/ [get]
 func (c *DOClusterController) GetRegions() {
 
 	ctx := new(utils.Context)
