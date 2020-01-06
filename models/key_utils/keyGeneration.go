@@ -3,9 +3,7 @@ package key_utils
 import (
 	"antelope/models"
 	"antelope/models/utils"
-	"antelope/models/vault"
 	"encoding/json"
-	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"os/exec"
@@ -103,15 +101,15 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (KeyPairRespon
 func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx utils.Context) (AZUREKey, error) {
 
 	var keyInfo AZUREKey
-	_, err := vault.GetSSHKey(string(cloud), keyName, token, ctx, "")
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
-		return keyInfo, err
-	}
-	if err == nil {
-		return keyInfo, errors.New("Key already exist")
-	}
+	//_, err := vault.GetSSHKey(string(cloud), keyName, token, ctx, "")
+	//if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	beego.Error(err.Error())
+	//	return keyInfo, err
+	//}
+	//if err == nil {
+	//	return keyInfo, errors.New("Key already exist")
+	//}
 	if userName == "" {
 		userName = "cloudplex"
 	}
