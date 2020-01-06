@@ -2902,10 +2902,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  600.0xc04298c720.false:
+  13276.0xc0009a6930.false:
     title: "false"
     type: object
-  609.0xc042c6d1a0.false:
+  13298.0xc000c7b620.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2945,7 +2945,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/600.0xc04298c720.false'
+        $ref: '#/definitions/13276.0xc0009a6930.false'
       name:
         type: string
       network_name:
@@ -3295,7 +3295,7 @@ definitions:
     type: object
   bson.ObjectId:
     title: ObjectId
-    type: string
+    type: object
   do.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -3307,7 +3307,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/609.0xc042c6d1a0.false'
+        $ref: '#/definitions/13298.0xc000c7b620.false'
       name:
         type: string
       network_name:

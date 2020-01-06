@@ -596,7 +596,7 @@ func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey s
 		return "", err
 	}
 
-	return privateKey, err
+	return keyInfo.PrivateKey, err
 }
 
 func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
