@@ -37,6 +37,7 @@ type DO struct {
 	Region      string
 	Client      *godo.Client
 	DOProjectId string
+	Resources   map[string][]string
 }
 type TokenSource struct {
 	AccessToken string
@@ -60,7 +61,7 @@ func (cloud *DO) init(ctx utils.Context) error {
 
 	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
 	cloud.Client = godo.NewClient(oauthClient)
-
+	cloud.Resources = make(map[string][]string)
 	return nil
 }
 
@@ -93,7 +94,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 	if err != nil {
 		return cluster, err
 	}
-
+	cloud.Resources["project"] = append(cloud.Resources["project"], cloud.DOProjectId)
 	for index, pool := range cluster.NodePools {
 		key, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId, token)
 		if err != nil {
@@ -112,6 +113,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 			for in, droplet := range droplets {
 
 				dropletsIds = append(dropletsIds, droplet.ID)
+				cloud.Resources["droplets"] = append(cloud.Resources["droplets"], strconv.Itoa(droplet.ID))
 
 				publicIp, _ := droplet.PublicIPv4()
 				privateIp, _ := droplet.PrivateIPv4()
@@ -122,12 +124,12 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 					if err != nil {
 						return cluster, err
 					}
+					cloud.Resources["volumes"] = append(cloud.Resources["volumes"], volume.Name)
 					err = cloud.attachVolume(volume.ID, droplets[in].ID, ctx)
 					if err != nil {
 						return cluster, err
 					}
 				}
-
 			}
 
 			err := cloud.assignResources(dropletsIds, ctx)
@@ -226,6 +228,17 @@ func (cloud *DO) createProject(projectId string, ctx utils.Context) (error, stri
 		return err, ""
 	}
 	return nil, project.ID
+}
+
+func (cloud *DO) deleteProject(projectId string, ctx utils.Context) error {
+
+	_, err := cloud.Client.Projects.Delete(context.Background(), projectId)
+	if err != nil {
+		ctx.SendLogs("Error in creating project on DO : "+projectId+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		return err
+	}
+	return nil
 }
 func (cloud *DO) assignResources(droptlets []int, ctx utils.Context) error {
 	var resources []string
@@ -369,6 +382,39 @@ func (cloud *DO) deleteDroplet(dropletId int, ctx utils.Context) error {
 	if err != nil {
 		ctx.SendLogs("Error in getting droplets"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	}
+	return nil
+}
+func (cloud *DO) CleanUp(ctx utils.Context) error {
+
+	if cloud.Resources["volumes"] != nil {
+
+		volumes := cloud.Resources["volumes"]
+		for _, volume := range volumes {
+			err := cloud.deleteVolume(volume, ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+	if cloud.Resources["droplets"] != nil {
+		for _, dropletId := range cloud.Resources["droplets"] {
+			id, err := strconv.Atoi(dropletId)
+			if err != nil {
+				return err
+			}
+			err = cloud.deleteDroplet(id, ctx)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if cloud.Resources["project"] != nil {
+		err := cloud.deleteProject(cloud.Resources["project"][0], ctx)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
