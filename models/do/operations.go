@@ -144,24 +144,24 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 }
 func (cloud *DO) getKey(pool NodePool, projectId string, ctx utils.Context, companyId string, token string) (existingKey key_utils.AZUREKey, err error) {
 
-	if pool.KeyInfo.CredentialType == models.SSHKey {
+	//if pool.KeyInfo.CredentialType == models.SSHKey {
 
-		bytes, err := vault.GetSSHKey(string(models.DO), pool.KeyInfo.KeyName, token, ctx, "")
-		if err != nil {
-			ctx.SendLogs("vm creation failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return key_utils.AZUREKey{}, err
-		}
-		existingKey, err := key_utils.AzureKeyConversion(bytes, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return key_utils.AZUREKey{}, err
-		}
-
-		if existingKey.ID != 0 && existingKey.FingerPrint != "" {
-
-			return existingKey, nil
-		}
+	bytes, err := vault.GetSSHKey(string(models.DO), pool.KeyInfo.KeyName, token, ctx, "")
+	if err != nil {
+		ctx.SendLogs("droplet creation failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return key_utils.AZUREKey{}, err
 	}
+	existingKey, err = key_utils.AzureKeyConversion(bytes, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return key_utils.AZUREKey{}, err
+	}
+
+	if existingKey.ID != 0 && existingKey.FingerPrint != "" {
+
+		return existingKey, nil
+	}
+	//}
 	return key_utils.AZUREKey{}, errors.New("key not found")
 }
 func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key_utils.AZUREKey, ctx utils.Context) ([]godo.Droplet, error) {
