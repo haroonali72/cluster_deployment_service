@@ -181,8 +181,8 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	}
 
 	sshKeyInput := godo.DropletCreateSSHKey{
-		ID:          pool.KeyInfo.ID,
-		Fingerprint: pool.KeyInfo.FingerPrint,
+		ID:          key.ID,
+		Fingerprint: key.FingerPrint,
 	}
 
 	var keys []godo.DropletCreateSSHKey
