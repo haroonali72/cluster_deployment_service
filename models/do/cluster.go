@@ -57,6 +57,7 @@ type Node struct {
 	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty"`
 	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
 	UserName   string `json:"user_name" bson:"user_name",omitempty"`
+	VolumeId   string `json:"volume_id" bson:"volume_id"`
 }
 
 type ImageReference struct {

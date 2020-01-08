@@ -120,11 +120,12 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 				nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root"})
 				if pool.IsExternal {
 
-					volume, err := cloud.createVolume(pool.Name+string(in), pool.ExternalVolume, ctx)
+					volume, err := cloud.createVolume(pool.Name+strconv.Itoa(in), pool.ExternalVolume, ctx)
 					if err != nil {
 						return cluster, err
 					}
-					cloud.Resources["volumes"] = append(cloud.Resources["volumes"], volume.Name)
+					cloud.Resources["volumes"] = append(cloud.Resources["volumes"], volume.ID)
+					cluster.NodePools[index].Nodes[in].VolumeId = volume.ID
 					err = cloud.attachVolume(volume.ID, droplets[in].ID, ctx)
 					if err != nil {
 						return cluster, err
@@ -357,7 +358,7 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 	}
 	for in, pool := range cluster.NodePools {
 
-		for index, node := range cluster.NodePools[in].Nodes {
+		for _, node := range cluster.NodePools[in].Nodes {
 
 			err := cloud.deleteDroplet(node.CloudId, ctx)
 
@@ -366,7 +367,7 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 			}
 
 			if pool.IsExternal {
-				err := cloud.deleteVolume(pool.Name+string(index), ctx)
+				err := cloud.deleteVolume(node.VolumeId, ctx)
 				if err != nil {
 					return err
 				}
