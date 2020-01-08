@@ -118,7 +118,8 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 
 				publicIp, _ := droplet.PublicIPv4()
 				privateIp, _ := droplet.PrivateIPv4()
-				nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root"})
+				//nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root"})
+				var volID string
 				if pool.IsExternal {
 
 					volume, err := cloud.createVolume(pool.Name+strconv.Itoa(in), pool.ExternalVolume, ctx)
@@ -126,12 +127,13 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 						return cluster, err
 					}
 					cloud.Resources["volumes"] = append(cloud.Resources["volumes"], volume.ID)
-					cluster.NodePools[index].Nodes[in].VolumeId = volume.ID
+					volID = volume.ID
 					err = cloud.attachVolume(volume.ID, droplets[in].ID, ctx)
 					if err != nil {
 						return cluster, err
 					}
 				}
+				nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root", VolumeId: volID})
 			}
 
 			err := cloud.assignResources(dropletsIds, ctx)
@@ -305,6 +307,7 @@ func (cloud *DO) createVolume(poolName string, vol Volume, ctx utils.Context) (g
 }
 func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context) error {
 
+	time.Sleep(time.Second * 45)
 	_, err := cloud.Client.Storage.DeleteVolume(context.Background(), volumeName)
 	if err != nil {
 		ctx.SendLogs("Error in  getting info from DO : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
