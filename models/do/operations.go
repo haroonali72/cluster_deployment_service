@@ -15,6 +15,7 @@ import (
 	"golang.org/x/oauth2"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -241,11 +242,13 @@ func (cloud *DO) deleteProject(projectId string, ctx utils.Context) error {
 	return nil
 }
 func (cloud *DO) assignResources(droptlets []int, ctx utils.Context) error {
-	var resources []string
+
+	var resources []interface{}
 	for _, id := range droptlets {
-		resources = append(resources, "do:droplet"+string(id))
+		resources = append(resources, "do:droplet:"+strconv.Itoa(id))
 	}
-	_, _, err := cloud.Client.Projects.AssignResources(context.Background(), cloud.DOProjectId, resources)
+
+	_, _, err := cloud.Client.Projects.AssignResources(context.Background(), cloud.DOProjectId, resources...)
 	if err != nil {
 		ctx.SendLogs("Error in resource assignement : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -310,6 +313,7 @@ func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context) error {
 }
 func (cloud *DO) attachVolume(volumeId string, dropletID int, ctx utils.Context) error {
 
+	time.Sleep(time.Second * 60)
 	_, _, err := cloud.Client.StorageActions.Attach(context.Background(), volumeId, dropletID)
 	if err != nil {
 		ctx.SendLogs("Error in  getting info from DO : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
