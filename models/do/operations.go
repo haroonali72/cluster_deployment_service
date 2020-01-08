@@ -187,7 +187,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 
 	var keys []godo.DropletCreateSSHKey
 	keys = append(keys, sshKeyInput)
-
+	pool.PrivateNetworking = true
 	input := &godo.DropletMultiCreateRequest{
 		Names:             nodeNames,
 		Region:            cloud.Region,
