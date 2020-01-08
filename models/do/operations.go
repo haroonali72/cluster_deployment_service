@@ -217,9 +217,9 @@ func (cloud *DO) getDroplets(dropletId int, ctx utils.Context) (godo.Droplet, er
 func (cloud *DO) createProject(projectId string, ctx utils.Context) (error, string) {
 	projectInput := &godo.CreateProjectRequest{
 		Name:        projectId,
-		Purpose:     "test",
-		Description: "test",
-		Environment: "test",
+		Purpose:     "Operational / Developer tooling",
+		Description: "deploying customer solution on DO",
+		Environment: "Development",
 	}
 	project, _, err := cloud.Client.Projects.Create(context.Background(), projectInput)
 	if err != nil {
