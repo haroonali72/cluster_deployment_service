@@ -452,26 +452,26 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		return nil
 	}
 
-	var flagcheck bool
-	for {
-		flagcheck = false
-		err = do.fetchStatus(&cluster, ctx, companyId, token)
-		if err != nil {
-			beego.Error(err)
-		}
-		for _, nodePools := range cluster.NodePools {
-			for _, node := range nodePools.Nodes {
-				if node.NodeState != "terminated" {
-					flagcheck = true
-					break
-				}
-			}
-		}
-		if !flagcheck {
-			break
-		}
-		time.Sleep(time.Second * 5)
-	}
+	//var flagcheck bool
+	//for {
+	//	flagcheck = false
+	//	err = do.fetchStatus(&cluster, ctx, companyId, token)
+	//	if err != nil {
+	//		beego.Error(err)
+	//	}
+	//	for _, nodePools := range cluster.NodePools {
+	//		for _, node := range nodePools.Nodes {
+	//			if node.NodeState != "terminated" {
+	//				flagcheck = true
+	//				break
+	//			}
+	//		}
+	//	}
+	//	if !flagcheck {
+	//		break
+	//	}
+	//	time.Sleep(time.Second * 5)
+	//}
 
 	for _, pools := range cluster.NodePools {
 		var nodes []*Node
