@@ -334,6 +334,7 @@ func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context, dropletId in
 
 		}
 	}
+	time.Sleep(time.Second * 25)
 	_, err := cloud.Client.Storage.DeleteVolume(context.Background(), volumeName)
 	if err != nil {
 		ctx.SendLogs("Error in  getting info from DO : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -404,13 +405,13 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 
 		for _, node := range cluster.NodePools[in].Nodes {
 
-			utils.SendLog(companyId, "Terminating Droplet With ID : "+strconv.Itoa(node.CloudId), "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Terminating Droplet : "+node.Name, "info", cluster.ProjectId)
 			err := cloud.deleteDroplet(node.CloudId, ctx)
 
 			if err != nil {
 				return err
 			}
-			utils.SendLog(companyId, "Droplet "+strconv.Itoa(node.CloudId)+"Terminated Successfully ", "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Droplet "+node.Name+" Terminated Successfully ", "info", cluster.ProjectId)
 
 			if pool.IsExternal {
 				utils.SendLog(companyId, "Terminating Volume With ID : "+node.VolumeId, "info", cluster.ProjectId)
