@@ -404,17 +404,21 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 
 		for _, node := range cluster.NodePools[in].Nodes {
 
+			utils.SendLog(companyId, "Terminating Droplet With ID : "+strconv.Itoa(node.CloudId), "info", cluster.ProjectId)
 			err := cloud.deleteDroplet(node.CloudId, ctx)
 
 			if err != nil {
 				return err
 			}
+			utils.SendLog(companyId, "Droplet "+strconv.Itoa(node.CloudId)+"Terminated Successfully ", "info", cluster.ProjectId)
 
 			if pool.IsExternal {
+				utils.SendLog(companyId, "Terminating Volume With ID : "+node.VolumeId, "info", cluster.ProjectId)
 				err := cloud.deleteVolume(node.VolumeId, ctx, node.CloudId)
 				if err != nil {
 					return err
 				}
+				utils.SendLog(companyId, "Volume "+node.VolumeId+"Terminated Successfully ", "info", cluster.ProjectId)
 			}
 
 		}
