@@ -312,9 +312,18 @@ func (cloud *DO) createVolume(poolName string, vol Volume, ctx utils.Context) (g
 	}
 	return *volume, nil
 }
-func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context) error {
+func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context, dropletId int) error {
 
-	time.Sleep(time.Second * 45)
+	if dropletId != -1 {
+		for true {
+			time.Sleep(time.Second * 5)
+			_, err := cloud.getDroplets(dropletId, ctx)
+			if err != nil && strings.Contains(err.Error(), strings.ToLower("not found")) {
+				return err
+			}
+
+		}
+	}
 	_, err := cloud.Client.Storage.DeleteVolume(context.Background(), volumeName)
 	if err != nil {
 		ctx.SendLogs("Error in  getting info from DO : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -390,7 +399,7 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 			}
 
 			if pool.IsExternal {
-				err := cloud.deleteVolume(node.VolumeId, ctx)
+				err := cloud.deleteVolume(node.VolumeId, ctx, node.CloudId)
 				if err != nil {
 					return err
 				}
@@ -419,7 +428,7 @@ func (cloud *DO) CleanUp(ctx utils.Context) error {
 
 		volumes := cloud.Resources["volumes"]
 		for _, volume := range volumes {
-			err := cloud.deleteVolume(volume, ctx)
+			err := cloud.deleteVolume(volume, ctx, -1)
 			if err != nil {
 				return err
 			}
