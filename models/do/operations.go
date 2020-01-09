@@ -113,11 +113,13 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 			for in, droplet := range droplets {
 
 				dropletsIds = append(dropletsIds, droplet.ID)
+
 				cloud.Resources["droplets"] = append(cloud.Resources["droplets"], strconv.Itoa(droplet.ID))
 
 				publicIp, _ := droplet.PublicIPv4()
+
 				privateIp, _ := droplet.PrivateIPv4()
-				//nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root"})
+
 				var volID string
 				if pool.IsExternal {
 
@@ -136,6 +138,12 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 			}
 
 			err := cloud.assignResources(dropletsIds, cluster.DOProjectId, ctx)
+			if err != nil {
+				return cluster, err
+			}
+
+			sgId, err := cloud.getSgId(doNetwork, *pool.PoolSecurityGroups[0])
+			err = cloud.assignSG(sgId, dropletsIds, ctx)
 			if err != nil {
 				return cluster, err
 			}
@@ -437,4 +445,31 @@ func (cloud *DO) CleanUp(ctx utils.Context) error {
 		}
 	}
 	return nil
+}
+func (cloud *DO) assignSG(firewallId string, dropletId []int, ctx utils.Context) error {
+
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := cloud.Client.Firewalls.AddDroplets(context.Background(), firewallId, dropletId...)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+func (cloud *DO) getSgId(doNetwork types.DONetwork, sgName string) (string, error) {
+	for _, network := range doNetwork.Definition {
+		for _, sg := range network.SecurityGroups {
+			if sg.Name == sgName {
+				return sg.SecurityGroupId, nil
+			}
+		}
+	}
+	return "", nil
 }
