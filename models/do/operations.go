@@ -34,11 +34,10 @@ func getNetworkHost(cloudType, projectId string) string {
 }
 
 type DO struct {
-	AccessKey   string
-	Region      string
-	Client      *godo.Client
-	DOProjectId string
-	Resources   map[string][]string
+	AccessKey string
+	Region    string
+	Client    *godo.Client
+	Resources map[string][]string
 }
 type TokenSource struct {
 	AccessToken string
@@ -91,11 +90,11 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		beego.Error(err.Error())
 		return cluster, err
 	}
-	err, cloud.DOProjectId = cloud.createProject(cluster.ProjectId, ctx)
+	err, cluster.DOProjectId = cloud.createProject(cluster.ProjectId, ctx)
 	if err != nil {
 		return cluster, err
 	}
-	cloud.Resources["project"] = append(cloud.Resources["project"], cloud.DOProjectId)
+	cloud.Resources["project"] = append(cloud.Resources["project"], cluster.DOProjectId)
 	for index, pool := range cluster.NodePools {
 		key, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId, token)
 		if err != nil {
@@ -136,7 +135,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 				nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root", VolumeId: volID})
 			}
 
-			err := cloud.assignResources(dropletsIds, ctx)
+			err := cloud.assignResources(dropletsIds, cluster.DOProjectId, ctx)
 			if err != nil {
 				return cluster, err
 			}
@@ -244,14 +243,14 @@ func (cloud *DO) deleteProject(projectId string, ctx utils.Context) error {
 	}
 	return nil
 }
-func (cloud *DO) assignResources(droptlets []int, ctx utils.Context) error {
+func (cloud *DO) assignResources(droptlets []int, doProjectId string, ctx utils.Context) error {
 
 	var resources []interface{}
 	for _, id := range droptlets {
 		resources = append(resources, "do:droplet:"+strconv.Itoa(id))
 	}
 
-	_, _, err := cloud.Client.Projects.AssignResources(context.Background(), cloud.DOProjectId, resources...)
+	_, _, err := cloud.Client.Projects.AssignResources(context.Background(), doProjectId, resources...)
 	if err != nil {
 		ctx.SendLogs("Error in resource assignement : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -382,7 +381,7 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 
 		}
 	}
-	err := cloud.deleteProject(cloud.DOProjectId, ctx)
+	err := cloud.deleteProject(cluster.DOProjectId, ctx)
 	if err != nil {
 		return err
 	}

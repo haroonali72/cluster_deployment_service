@@ -21,6 +21,7 @@ import (
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	DOProjectId      string        `json:"do_project_id" bson:"do_project_id" valid:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
