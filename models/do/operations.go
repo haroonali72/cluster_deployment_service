@@ -90,23 +90,30 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		beego.Error(err.Error())
 		return cluster, err
 	}
+
+	utils.SendLog(companyId, "Creating DO Project With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 	err, cluster.DOProjectId = cloud.createProject(cluster.ProjectId, ctx)
 	if err != nil {
 		return cluster, err
 	}
 	cloud.Resources["project"] = append(cloud.Resources["project"], cluster.DOProjectId)
+	utils.SendLog(companyId, "Project Created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+
 	for index, pool := range cluster.NodePools {
 		key, err := cloud.getKey(*pool, cluster.ProjectId, ctx, companyId, token)
 		if err != nil {
 			return cluster, err
 		}
-		beego.Info("AWSOperations creating nodes")
+		beego.Info("DOOperations creating nodes")
 
+		utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
 		droplets, err := cloud.createInstances(*pool, doNetwork, key, ctx)
 		if err != nil {
 			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
 		}
+		utils.SendLog(companyId, "Node Pools Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
+
 		var nodes []*Node
 		if droplets != nil && len(droplets) > 0 {
 			var dropletsIds []int
@@ -123,6 +130,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 				var volID string
 				if pool.IsExternal {
 
+					utils.SendLog(companyId, "Creating Volume : "+pool.Name+strconv.Itoa(in), "info", cluster.ProjectId)
 					volume, err := cloud.createVolume(pool.Name+strconv.Itoa(in), pool.ExternalVolume, ctx)
 					if err != nil {
 						return cluster, err
@@ -133,6 +141,8 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 					if err != nil {
 						return cluster, err
 					}
+					utils.SendLog(companyId, "Volume Created Successfully : "+pool.Name+strconv.Itoa(in), "info", cluster.ProjectId)
+
 				}
 				nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root", VolumeId: volID})
 			}
