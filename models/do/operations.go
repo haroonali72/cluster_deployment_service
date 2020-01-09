@@ -306,17 +306,19 @@ func (cloud *DO) createVolume(poolName string, vol Volume, ctx utils.Context) (g
 }
 func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context, dropletId int) error {
 
-	for true {
-		time.Sleep(time.Second * 5)
-		droplet, err := cloud.getDroplets(dropletId, ctx)
-		if err != nil {
-			return err
-		}
+	if dropletId != -1 {
+		for true {
+			time.Sleep(time.Second * 5)
+			droplet, err := cloud.getDroplets(dropletId, ctx)
+			if err != nil {
+				return err
+			}
 
-		if droplet.Status == "" {
-			break
-		}
+			if droplet.Status == "" {
+				break
+			}
 
+		}
 	}
 	_, err := cloud.Client.Storage.DeleteVolume(context.Background(), volumeName)
 	if err != nil {
@@ -422,7 +424,7 @@ func (cloud *DO) CleanUp(ctx utils.Context) error {
 
 		volumes := cloud.Resources["volumes"]
 		for _, volume := range volumes {
-			err := cloud.deleteVolume(volume, ctx, "")
+			err := cloud.deleteVolume(volume, ctx, -1)
 			if err != nil {
 				return err
 			}
