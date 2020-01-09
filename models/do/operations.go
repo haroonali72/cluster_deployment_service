@@ -309,13 +309,9 @@ func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context, dropletId in
 	if dropletId != -1 {
 		for true {
 			time.Sleep(time.Second * 5)
-			droplet, err := cloud.getDroplets(dropletId, ctx)
-			if err != nil {
+			_, err := cloud.getDroplets(dropletId, ctx)
+			if err != nil && strings.Contains(err.Error(), strings.ToLower("not found")) {
 				return err
-			}
-
-			if droplet.Status == "" {
-				break
 			}
 
 		}
