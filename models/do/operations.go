@@ -382,6 +382,10 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 
 		}
 	}
+	err := cloud.deleteProject(cloud.DOProjectId, ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (cloud *DO) deleteDroplet(dropletId int, ctx utils.Context) error {
