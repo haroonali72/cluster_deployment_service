@@ -398,6 +398,8 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 			return err
 		}
 	}
+
+	utils.SendLog(companyId, "Terminating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
 	for in, pool := range cluster.NodePools {
 
 		for _, node := range cluster.NodePools[in].Nodes {
@@ -417,10 +419,14 @@ func (cloud *DO) terminateCluster(cluster *Cluster_Def, ctx utils.Context, compa
 
 		}
 	}
+	utils.SendLog(companyId, "Node Pools Terminated Successfully : "+cluster.Name, "info", cluster.ProjectId)
+
+	utils.SendLog(companyId, "Deleting DO Project : "+cluster.Name, "info", cluster.ProjectId)
 	err := cloud.deleteProject(cluster.DOProjectId, ctx)
 	if err != nil {
 		return err
 	}
+	utils.SendLog(companyId, "DO Project Deleted Successfully : "+cluster.Name, "info", cluster.ProjectId)
 	return nil
 }
 func (cloud *DO) deleteDroplet(dropletId int, ctx utils.Context) error {
