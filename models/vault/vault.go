@@ -40,7 +40,7 @@ type DOProfile struct {
 	Profile DOCredentials `json:"credentials"`
 }
 type DOCredentials struct {
-	AccessKey string `json:"access_key"`
+	AccessKey string `json:"access_token"`
 	Region    string `json:"region"`
 }
 
