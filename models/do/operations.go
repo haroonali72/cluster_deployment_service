@@ -316,7 +316,16 @@ func (cloud *DO) deleteVolume(volumeName string, ctx utils.Context) error {
 }
 func (cloud *DO) attachVolume(volumeId string, dropletID int, ctx utils.Context) error {
 
-	time.Sleep(time.Second * 60)
+	for true {
+		time.Sleep(time.Second * 5)
+		droplet, err := cloud.getDroplets(dropletID, ctx)
+		if err != nil {
+			return err
+		}
+		if droplet.Status == "active" {
+			break
+		}
+	}
 	_, _, err := cloud.Client.StorageActions.Attach(context.Background(), volumeId, dropletID)
 	if err != nil {
 		ctx.SendLogs("Error in  getting info from DO : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
