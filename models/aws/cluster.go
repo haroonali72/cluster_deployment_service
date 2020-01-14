@@ -48,6 +48,7 @@ type NodePool struct {
 	Scaling            AutoScaling      `json:"auto_scaling" bson:"auto_scaling"`
 	IsExternal         bool             `json:"is_external" bson:"is_external"`
 	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume"`
+	EnablePublicIP     bool             `json:"enable_public_ip" bson:"enable_public_ip"`
 }
 type AutoScaling struct {
 	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`

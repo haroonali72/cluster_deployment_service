@@ -111,13 +111,6 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
 	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 
-	externalIp, err := cloud.reserveExternalIp(pool.Name, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Warn("cannot reserve any external ip for: " + pool.Name)
-		beego.Warn("creating instance '" + pool.Name + "' without external ip")
-	}
-
 	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
 	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
 
@@ -133,11 +126,6 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{
 				Subnetwork: getSubnet(pool.PoolSubnet, network.Definition[0].Subnets),
-				AccessConfigs: []*compute.AccessConfig{
-					{
-						NatIP: externalIp,
-					},
-				},
 			},
 		},
 		Disks: []*compute.AttachedDisk{
@@ -163,6 +151,22 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 				},
 			},
 		},
+	}
+
+	externalIp := ""
+	if pool.EnablePublicIP {
+		externalIp, err = cloud.reserveExternalIp(pool.Name, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			beego.Warn("cannot reserve any external ip for: " + pool.Name)
+			beego.Warn("creating instance '" + pool.Name + "' without external ip")
+		}
+
+		instance.NetworkInterfaces[0].AccessConfigs = []*compute.AccessConfig{
+			{
+				NatIP: externalIp,
+			},
+		}
 	}
 
 	if pool.ServiceAccountEmail != "" {
@@ -230,7 +234,7 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 
 	bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 	if err != nil {
-		ctx.SendLogs("vm creation failed with error: " + err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("vm creation failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	fetchedKey, err := key_utils.AzureKeyConversion(bytes, ctx)
@@ -321,7 +325,7 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 	}
 	_, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 	if err != nil {
-		ctx.SendLogs("Key Not Found:  " +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Key Not Found:  "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
 
@@ -339,12 +343,6 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 		NetworkInterfaces: []*compute.NetworkInterface{
 			{
 				Subnetwork: getSubnet(pool.PoolSubnet, network.Definition[0].Subnets),
-				AccessConfigs: []*compute.AccessConfig{
-					{
-						Name: "External NAT",
-						Type: "ONE_TO_ONE_NAT",
-					},
-				},
 			},
 		},
 		Disks: []*compute.AttachedDisk{
@@ -371,7 +369,14 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 			},
 		},
 	}
-
+	if pool.EnablePublicIP {
+		instanceProperties.NetworkInterfaces[0].AccessConfigs = []*compute.AccessConfig{
+			{
+				Name: "External NAT",
+				Type: "ONE_TO_ONE_NAT",
+			},
+		}
+	}
 	if pool.ServiceAccountEmail != "" {
 		instanceProperties.ServiceAccounts = []*compute.ServiceAccount{
 			{
