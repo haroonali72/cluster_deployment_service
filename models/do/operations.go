@@ -209,6 +209,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	var keys []godo.DropletCreateSSHKey
 	keys = append(keys, sshKeyInput)
 	pool.PrivateNetworking = true
+	err, userData := utils.GetUserData("")
 	input := &godo.DropletMultiCreateRequest{
 		Names:             nodeNames,
 		Region:            cloud.Region,
@@ -216,6 +217,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 		Image:             imageInput,
 		SSHKeys:           keys,
 		PrivateNetworking: pool.PrivateNetworking,
+		UserData:          userData,
 	}
 
 	droplets, _, err := cloud.Client.Droplets.CreateMultiple(context.Background(), input)
