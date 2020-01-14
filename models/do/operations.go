@@ -371,6 +371,23 @@ func (cloud *DO) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId 
 	}
 	for in, _ := range cluster.NodePools {
 
+		var keyInfo key_utils.AZUREKey
+
+		if cluster.NodePools[in].KeyInfo.CredentialType == models.SSHKey {
+			bytes, err := vault.GetSSHKey(string(models.DO), cluster.NodePools[in].KeyInfo.KeyName, token, ctx, "")
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+
+		}
+		cluster.NodePools[in].KeyInfo = keyInfo
+
 		for index, node := range cluster.NodePools[in].Nodes {
 
 			droplet, err := cloud.getDroplets(node.CloudId, ctx)
