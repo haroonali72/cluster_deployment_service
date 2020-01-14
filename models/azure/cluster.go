@@ -56,6 +56,7 @@ type NodePool struct {
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required, in(standard hdd|standard ssd|premium ssd)"`
 	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
+	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"`
 }
 type AutoScaling struct {
 	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
