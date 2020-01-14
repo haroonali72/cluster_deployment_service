@@ -56,6 +56,7 @@ type NodePool struct {
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required, in(standard hdd|standard ssd|premium ssd)"`
 	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
+	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"`
 }
 type AutoScaling struct {
 	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
@@ -384,7 +385,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	cluster, confError = azure.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		cluster.Status="Cluster creation failed"
+		cluster.Status = "Cluster creation failed"
 		beego.Info("going to cleanup")
 		confError = azure.CleanUp(cluster, ctx, companyId)
 		if confError != nil {
@@ -462,13 +463,12 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		return err
 	}
 
-		if cluster.Status == "" || cluster.Status == "new" {
-			text := "Cannot terminate a new cluster"
-			ctx.SendLogs("AzureClusterModel : " +text +err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return errors.New(text)
-		}
-
+	if cluster.Status == "" || cluster.Status == "new" {
+		text := "Cannot terminate a new cluster"
+		ctx.SendLogs("AzureClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return errors.New(text)
+	}
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -497,7 +497,6 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
-
 
 	err = azure.terminateCluster(cluster, ctx, companyId)
 
@@ -588,12 +587,17 @@ func GetSSHKeyPair(keyname string) (keys *key_utils.AZUREKey, err error) {
 
 func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
-	privateKey, err = key_utils.GenerateKey(models.Azure, keyName, "azure@example.com", token, teams, ctx)
+	keyInfo, err := key_utils.GenerateKey(models.Azure, keyName, "azure@example.com", token, teams, ctx)
 	if err != nil {
 		return "", err
 	}
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
+	if err != nil {
+		beego.Error(err.Error())
+		return "", err
+	}
 
-	return privateKey, err
+	return keyInfo.PrivateKey, err
 }
 
 func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {

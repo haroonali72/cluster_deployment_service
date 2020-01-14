@@ -461,3 +461,26 @@ var GCPCores = []byte(
 			{"instanceType":"f1-micro","cores":0.2},
 			{"instanceType":"g1-small","cores": 0.5 }
 ]`)
+var DOCores = []byte(
+	`[
+			{"instanceType":"512mb","cores": 1 },
+			{"instanceType":"s-1vcpu-1gb","cores": 1},
+			{"instanceType":"1gb","cores": 1},
+			{"instanceType":"s-1vcpu-2gb","cores":1},
+			{"instanceType":"s-1vcpu-3gb","cores": 1 },
+			{"instanceType":"s-2vcpu-2gb","cores": 2},
+			{"instanceType":"s-3vcpu-1gb","cores":3},
+			{"instanceType":"2gb","cores": 2 },
+			{"instanceType":"s-2vcpu-4gb","cores": 2 },
+			{"instanceType":"4gb","cores": 2},
+			{"instanceType":"c-2","cores":2},
+			{"instanceType":"m-1vcpu-8gb","cores": 1 },
+			{"instanceType":"s-4vcpu-8gb","cores": 4},
+			{"instanceType":"g-2vcpu-8gb","cores":2},
+			{"instanceType":"gd-2vcpu-8gb","cores": 2 },
+			{"instanceType":"m-16gb","cores": 2},
+			{"instanceType":"8gb","cores": 4},
+			{"instanceType":"c-4"","cores": 4 },
+			{"instanceType":"s-6vcpu-16gb","cores": 6},
+			{"instanceType":"m-2vcpu-16gb","cores":2},
+]`)

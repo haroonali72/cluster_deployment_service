@@ -18,7 +18,7 @@ RUN git clone git@bitbucket.org:cloudplex-devs/d-duck.git
 WORKDIR /go/src/antelope
 
 COPY Gopkg.toml Gopkg.lock ./
-RUN dep ensure -vendor-only
+#RUN dep ensure -vendor-only
 
 COPY . .
 

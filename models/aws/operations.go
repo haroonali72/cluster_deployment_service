@@ -803,6 +803,11 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		InstanceType:     aws.String(pool.MachineType),
 		UserData:         aws.String(userData),
 	}
+	if pool.EnablePublicIP {
+		input.NetworkInterfaces = append(input.NetworkInterfaces, &ec2.InstanceNetworkInterfaceSpecification{
+			AssociatePublicIpAddress: aws.Bool(true),
+		})
+	}
 	/*
 		setting 50 gb volume - temp work
 	*/

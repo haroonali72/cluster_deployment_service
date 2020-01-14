@@ -1218,6 +1218,563 @@
                 }
             }
         },
+        "/cluster/do/": {
+            "put": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "update an existing cluster",
+                "operationId": "DOClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "subscription_id",
+                        "description": "subscriptionId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Cluster_Def"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "405": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "create a new cluster",
+                "operationId": "DOClusterController.Create",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Cluster_Def"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "subscription_id",
+                        "description": "subscriptionId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"msg\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"cluster against this project already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/all": {
+            "get": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "get all the clusters",
+                "operationId": "DOClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.Cluster_Def"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/getregions/": {
+            "get": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "return regions and their supported machine sizes",
+                "operationId": "DOClusterController.GetRegions",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "profileid",
+                        "description": "profile of DO",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/godo.Region"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/sshkey/{keyname}": {
+            "delete": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "Delete SSH key",
+                "operationId": "DOClusterController.DeleteSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"key deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"User is unauthorized to perform this action\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/sshkey/{projectId}/{keyname}": {
+            "post": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "Generates new SSH key",
+                "operationId": "DOClusterController.CreateSSHKey",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "keyname",
+                        "description": "SSHKey",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Region",
+                        "description": "X-Region",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/key_utils.AZUREKey"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/sshkeys": {
+            "get": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "returns ssh key pairs",
+                "operationId": "DOClusterController.SSHKeyPair",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/start/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "starts a  cluster",
+                "operationId": "DOClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/status/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "returns status of nodes",
+                "operationId": "DOClusterController.Status",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/do.Cluster_Def"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/terminate/{projectId}/": {
+            "post": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "terminates a  cluster",
+                "operationId": "DOClusterController.Terminate",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "schema": {
+                            "$ref": "#/definitions/X-Profile-Id"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/{projectId}": {
+            "delete": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "delete a cluster",
+                "operationId": "DOClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/do/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "get cluster",
+                "operationId": "DOClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/do.Cluster_Def"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/": {
             "put": {
                 "tags": [
@@ -2923,6 +3480,459 @@
                 }
             }
         },
+        "/template/do/": {
+            "put": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "update an existing template",
+                "operationId": "DOTemplateController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "create a new template",
+                "operationId": "DOTemplateController.Create",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/all": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get all the templates",
+                "operationId": "DOTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.Template"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/allCustomerTemplates": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get all the customer templates",
+                "operationId": "DOTemplateController.Get All Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.Template"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get all the templates info",
+                "operationId": "DOTemplateController.GetAllTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/customerTemplate": {
+            "put": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "update an existing customer template",
+                "operationId": "DOTemplateController.Update customer templates",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "create a new customer template",
+                "operationId": "DOTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/customerTemplate/{templateId}": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get customer template",
+                "operationId": "DOTemplateController.Get customer template",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "delete a customer template",
+                "operationId": "DOTemplateController.Delete customer template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/{templateId}": {
+            "delete": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "delete a template",
+                "operationId": "DOTemplateController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/do/{templateId}/": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get template",
+                "operationId": "DOTemplateController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/do.Template"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/": {
             "put": {
                 "tags": [
@@ -3405,7 +4415,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10669.0xc0008de0c0.false": {
+        "13276.0xc0009a6930.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "13298.0xc000c7b620.false": {
             "title": "false",
             "type": "object"
         },
@@ -3461,7 +4475,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10669.0xc0008de0c0.false"
+                    "$ref": "#/definitions/13276.0xc0009a6930.false"
                 },
                 "name": {
                     "type": "string"
@@ -3918,6 +4932,9 @@
             "title": "TemplateMetadata",
             "type": "object",
             "properties": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
                 "pool_count": {
                     "type": "integer",
                     "format": "int64"
@@ -3979,7 +4996,239 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
+        },
+        "do.Cluster_Def": {
+            "title": "Cluster_Def",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "kube_credentials": {
+                    "$ref": "#/definitions/13298.0xc000c7b620.false"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network_name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.NodePool"
+                    }
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "token_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.ImageReference": {
+            "title": "ImageReference",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "image_id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.Node": {
+            "title": "Node",
+            "type": "object",
+            "properties": {
+                "cloud_id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_state": {
+                    "type": "string"
+                },
+                "private_dns": {
+                    "type": "string"
+                },
+                "private_ip": {
+                    "type": "string"
+                },
+                "public_dns": {
+                    "type": "string"
+                },
+                "public_ip": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.NodePool": {
+            "title": "NodePool",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "external_volume": {
+                    "$ref": "#/definitions/do.Volume"
+                },
+                "image": {
+                    "$ref": "#/definitions/do.ImageReference"
+                },
+                "is_external": {
+                    "type": "boolean"
+                },
+                "key_info": {
+                    "$ref": "#/definitions/key_utils.AZUREKey"
+                },
+                "machine_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.Node"
+                    }
+                },
+                "pool_role": {
+                    "$ref": "#/definitions/models.PoolRole"
+                },
+                "private_networking": {
+                    "type": "boolean"
+                },
+                "security_group_id": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.string"
+                    }
+                }
+            }
+        },
+        "do.NodePoolT": {
+            "title": "NodePoolT",
+            "type": "object",
+            "properties": {
+                "image": {
+                    "$ref": "#/definitions/do.ImageReference"
+                },
+                "is_external": {
+                    "type": "boolean"
+                },
+                "machine_type": {
+                    "type": "string"
+                },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.Node"
+                    }
+                },
+                "pool_role": {
+                    "type": "string"
+                },
+                "private_networking": {
+                    "type": "boolean"
+                },
+                "security_group_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "do.Template": {
+            "title": "Template",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network_name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.NodePoolT"
+                    }
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.TemplateMetadata": {
+            "title": "TemplateMetadata",
+            "type": "object",
+            "properties": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.Volume": {
+            "title": "Volume",
+            "type": "object",
+            "properties": {
+                "volume_size": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "do.string": {
+            "title": "string",
+            "type": "object"
         },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
@@ -4222,12 +5471,15 @@
             "title": "TemplateMetadata",
             "type": "object",
             "properties": {
-                "name": {
-                    "type": "string"
+                "is_cloudplex": {
+                    "type": "boolean"
                 },
                 "pool_count": {
                     "type": "integer",
                     "format": "int64"
+                },
+                "template_id": {
+                    "type": "string"
                 }
             }
         },
@@ -4246,6 +5498,10 @@
                     "type": "boolean"
                 }
             }
+        },
+        "godo.Region": {
+            "title": "Region",
+            "type": "object"
         },
         "key_utils.AWSKey": {
             "title": "AWSKey",
@@ -4278,6 +5534,13 @@
                 "credential_type": {
                     "$ref": "#/definitions/models.CredentialsType"
                 },
+                "finger_print": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "key_name": {
                     "type": "string"
                 },
@@ -4301,7 +5564,8 @@
             "enum": [
                 "AWS = \"aws\"",
                 "Azure = \"azure\"",
-                "GCP = \"gcp\""
+                "GCP = \"gcp\"",
+                "DO = \"do\""
             ],
             "example": "aws"
         },
@@ -4416,6 +5680,14 @@
         {
             "name": "template/gcp",
             "description": "Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "template/do",
+            "description": "Operations about DO template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "cluster/do",
+            "description": "Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }
