@@ -497,6 +497,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	for _, pools := range cluster.NodePools {
 		var nodes []*Node
 		pools.Nodes = nodes
+		pools.KeyInfo.KeyType = models.CPKey
 	}
 	cluster.Status = "Cluster Terminated"
 	err = UpdateCluster("", cluster, false, ctx)

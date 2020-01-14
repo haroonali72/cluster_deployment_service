@@ -601,11 +601,17 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 
 func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
-	privateKey, err = key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
+	keyInfo, err := key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
 	if err != nil {
 		return "", err
 	}
-	return privateKey, err
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
+	if err != nil {
+		beego.Error(err.Error())
+		return "", err
+	}
+
+	return keyInfo.PrivateKey, err
 }
 
 func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {

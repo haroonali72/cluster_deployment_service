@@ -39,8 +39,9 @@ type NodePoolT struct {
 }
 
 type TemplateMetadata struct {
-	TemplateId string `json:"template_id" bson:"template_id"`
-	PoolCount  int64  `json:"pool_count" bson:"pool_count"`
+	TemplateId  string `json:"template_id" bson:"template_id"`
+	IsCloudplex bool   `json:"is_cloudplex" bson:"is_cloudplex"`
+	PoolCount   int64  `json:"pool_count" bson:"pool_count"`
 }
 
 //func checkTemplateSize(template Template, ctx utils.Context) error {
@@ -324,6 +325,13 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, compa
 
 	for i, template := range templates {
 		templatemetadata[i].TemplateId = templates[i].TemplateId
+
+		if template.IsCloudplex {
+			templatemetadata[i].IsCloudplex = true
+		} else {
+			templatemetadata[i].IsCloudplex = false
+		}
+
 		for range template.NodePools {
 
 			templatemetadata[i].PoolCount++
@@ -350,7 +358,7 @@ func GetCustomerTemplatesMetadata(ctx utils.Context, data rbac_athentication.Lis
 	var customerTemplates []Template
 
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoGcpCustomerTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoAwsCustomerTemplateCollection)
 	err = c.Find(bson.M{}).All(&customerTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -361,6 +369,11 @@ func GetCustomerTemplatesMetadata(ctx utils.Context, data rbac_athentication.Lis
 
 	for i, template := range customerTemplates {
 		templatemetadata[i].TemplateId = customerTemplates[i].TemplateId
+		if template.IsCloudplex {
+			templatemetadata[i].IsCloudplex = true
+		} else {
+			templatemetadata[i].IsCloudplex = false
+		}
 		for range template.NodePools {
 
 			templatemetadata[i].PoolCount++
