@@ -335,6 +335,10 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return "", err
+	}
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		Tags: &compute.Tags{

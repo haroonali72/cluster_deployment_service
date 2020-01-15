@@ -1001,6 +1001,10 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
 	storage = append(storage, staticVolume)
 	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachine{}, "", "", err
+	}
 	vm := compute.VirtualMachine{
 		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),

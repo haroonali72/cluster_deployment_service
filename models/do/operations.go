@@ -214,6 +214,11 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	keys = append(keys, sshKeyInput)
 	pool.PrivateNetworking = true
 	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+	if err != nil {
+		ctx.SendLogs("Error in creating node pool : "+pool.Name+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		return nil, err
+	}
 	input := &godo.DropletMultiCreateRequest{
 		Names:             nodeNames,
 		Region:            cloud.Region,
