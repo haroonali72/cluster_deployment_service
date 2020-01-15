@@ -75,7 +75,9 @@ const (
 	ProjectGetEndpoint = "/raccoon/projects/{projectId}"
 	WeaselGetEndpoint  = "/weasel/network/{cloud}/{projectId}"
 )
-
+const (
+	WoodpeckerEnpoint = "/agent/api/v1/clientconfig"
+)
 const (
 	VaultEndpoint = "/robin/api/v1"
 

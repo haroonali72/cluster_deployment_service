@@ -28,6 +28,7 @@ var (
 	network_url                     = ""
 	raccoon_url                     = ""
 	rbac_url                        = ""
+	woodpecker_url                  = ""
 	ca_cert                         = ""
 	client_cert                     = ""
 	client_pem                      = ""
@@ -211,6 +212,12 @@ func InitFlags() error {
 			Destination: &rbac_url,
 			EnvVar:      "rbac_url",
 		},
+		cli.StringFlag{
+			Name:        "woodpecker_url",
+			Usage:       "woodpecker_url",
+			Destination: &woodpecker_url,
+			EnvVar:      "woodpecker_url",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -249,6 +256,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("raccoon_url", raccoon_url)
 	beego.AppConfig.Set("rbac_url", rbac_url)
 	beego.AppConfig.Set("subscription_host", subscription_host)
-
+	beego.AppConfig.Set("woodpecker_url", woodpecker_url)
 	return nil
 }

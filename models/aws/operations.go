@@ -7,6 +7,7 @@ import (
 	autoscaling2 "antelope/models/aws/autoscaling"
 	"antelope/models/key_utils"
 	"antelope/models/types"
+	userData2 "antelope/models/userData"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -198,6 +199,9 @@ type AWS struct {
 	Roles  IAMRoles.AWSIAMRoles
 }
 
+func getWoodpecker() string {
+	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
+}
 func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token string) ([]CreatedPool, error) {
 
 	if cloud.Client == nil {
@@ -226,7 +230,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 		}
 		beego.Info("AWSOperations creating nodes")
 
-		result, err, subnetId := cloud.CreateInstance(pool, awsNetwork, ctx)
+		result, err, subnetId := cloud.CreateInstance(pool, awsNetwork, ctx, token, cluster.ProjectId)
 		if err != nil {
 			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return nil, err
@@ -767,7 +771,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
-func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx utils.Context) (*ec2.Reservation, error, string) {
+func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx utils.Context, token, projectId string) (*ec2.Reservation, error, string) {
 
 	subnetId := cloud.GetSubnets(pool, network)
 	sgIds := cloud.GetSecurityGroups(pool, network)
@@ -792,6 +796,11 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_iamProfile"] = pool.Name
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err, ""
+	}
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
 		SubnetId:         aws.String(subnetId),
@@ -800,6 +809,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		KeyName:          aws.String(pool.KeyInfo.KeyName),
 		MinCount:         aws.Int64(1),
 		InstanceType:     aws.String(pool.MachineType),
+		UserData:         aws.String(userData),
 	}
 	if pool.EnablePublicIP {
 		input.NetworkInterfaces = append(input.NetworkInterfaces, &ec2.InstanceNetworkInterfaceSpecification{

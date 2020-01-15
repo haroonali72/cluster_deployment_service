@@ -5,6 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/key_utils"
 	"antelope/models/types"
+	userData2 "antelope/models/userData"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
@@ -222,7 +223,9 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 
 	return nil
 }
-
+func getWoodpecker() string {
+	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
+}
 func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.GCPNetwork, token string, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -331,7 +334,11 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
-
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return "", err
+	}
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		Tags: &compute.Tags{
@@ -365,6 +372,10 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 				{
 					Key:   "ssh-keys",
 					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
+				},
+				{
+					Key:   "startup-script",
+					Value: to.StringPtr(userData),
 				},
 			},
 		},

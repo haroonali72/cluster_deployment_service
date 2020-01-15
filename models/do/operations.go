@@ -5,6 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/key_utils"
 	"antelope/models/types"
+	userData2 "antelope/models/userData"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
@@ -71,6 +72,9 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 	}
 	return token, nil
 }
+func getWoodpecker() string {
+	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
+}
 
 func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
@@ -107,7 +111,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		beego.Info("DOOperations creating nodes")
 
 		utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
-		droplets, err := cloud.createInstances(*pool, doNetwork, key, ctx)
+		droplets, err := cloud.createInstances(*pool, doNetwork, key, ctx, token, cluster.ProjectId)
 		if err != nil {
 			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
@@ -185,7 +189,7 @@ func (cloud *DO) getKey(pool NodePool, projectId string, ctx utils.Context, comp
 	//}
 	return key_utils.AZUREKey{}, errors.New("key not found")
 }
-func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key_utils.AZUREKey, ctx utils.Context) ([]godo.Droplet, error) {
+func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key_utils.AZUREKey, ctx utils.Context, token, projectId string) ([]godo.Droplet, error) {
 
 	var nodeNames []string
 	var i int64
@@ -209,6 +213,12 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	var keys []godo.DropletCreateSSHKey
 	keys = append(keys, sshKeyInput)
 	pool.PrivateNetworking = true
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+	if err != nil {
+		ctx.SendLogs("Error in creating node pool : "+pool.Name+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		return nil, err
+	}
 	input := &godo.DropletMultiCreateRequest{
 		Names:             nodeNames,
 		Region:            cloud.Region,
@@ -216,6 +226,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 		Image:             imageInput,
 		SSHKeys:           keys,
 		PrivateNetworking: pool.PrivateNetworking,
+		UserData:          userData,
 	}
 
 	droplets, _, err := cloud.Client.Droplets.CreateMultiple(context.Background(), input)
