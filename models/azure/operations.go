@@ -5,6 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/key_utils"
 	"antelope/models/types"
+	userData2 "antelope/models/userData"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
@@ -251,7 +252,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		cloud.Resources["Nic-"+projectId] = nicName
 
 		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", projectId)
-		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, vpcName)
+		vm, private_key, _, err := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, projectId, vpcName)
 		if err != nil {
 			return nil, "", err
 		}
@@ -946,7 +947,10 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	return vm, privateKey, publicKey, nil
 }
 */
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, vpcName string) (compute.VirtualMachine, string, string, error) {
+func getWoodpecker() string {
+	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
+}
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, projectId, vpcName string) (compute.VirtualMachine, string, string, error) {
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -996,7 +1000,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
 	storage = append(storage, staticVolume)
-	err, userData := utils.GetUserData("")
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
 	vm := compute.VirtualMachine{
 		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
