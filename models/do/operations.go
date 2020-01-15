@@ -76,7 +76,7 @@ func getWoodpecker() string {
 	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
 }
 
-func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token, projectId string) (Cluster_Def, error) {
+func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -111,7 +111,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		beego.Info("DOOperations creating nodes")
 
 		utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
-		droplets, err := cloud.createInstances(*pool, doNetwork, key, ctx, token, projectId)
+		droplets, err := cloud.createInstances(*pool, doNetwork, key, ctx, token, cluster.ProjectId)
 		if err != nil {
 			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err

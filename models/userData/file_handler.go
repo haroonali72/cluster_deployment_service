@@ -28,12 +28,13 @@ func GetUserData(token, url string, ctx utils.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	encodedData := b64.StdEncoding.EncodeToString([]byte(config))
+
+	encodedData := b64.StdEncoding.EncodeToString(config)
 
 	var writeFile types.WriteFile
 	writeFile.Contents = encodedData
 	writeFile.Encoding = "b64"
-	writeFile.Path = "/etc/"
+	writeFile.Path = "/usr/local/bin/"
 	writeFile.Owner = "root:root"
 	writeFile.Permission = "0644"
 
@@ -42,14 +43,11 @@ func GetUserData(token, url string, ctx utils.Context) (string, error) {
 
 	userData.WriteFile = arrayOfFiles
 
-	var cmd1 []string
-	cmd1 = append(cmd1, "wget")
-	cmd1 = append(cmd1, data.Agent)
-	cmd1 = append(cmd1, "-O")
-	cmd1 = append(cmd1, "/etc/")
-
 	var commands [][]string
-	commands = append(commands, cmd1)
+	commands = append(commands, []string{"cd", "/usr/local/bin"})
+	commands = append(commands, []string{"wget", data.Agent})
+	commands = append(commands, []string{"chmod", "+x", "agent"})
+	commands = append(commands, []string{"nohup", "./agent", "&"})
 
 	userData.RunCmd = commands
 
