@@ -474,17 +474,6 @@ func (cloud *DO) deleteDroplet(dropletId int, ctx utils.Context) error {
 }
 func (cloud *DO) CleanUp(ctx utils.Context) error {
 
-	if cloud.Resources["volumes"] != nil {
-
-		volumes := cloud.Resources["volumes"]
-		for _, volume := range volumes {
-			err := cloud.deleteVolume(volume, ctx, -1)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
 	if cloud.Resources["droplets"] != nil {
 		for _, dropletId := range cloud.Resources["droplets"] {
 			id, err := strconv.Atoi(dropletId)
@@ -496,6 +485,17 @@ func (cloud *DO) CleanUp(ctx utils.Context) error {
 				return err
 			}
 		}
+	}
+	if cloud.Resources["volumes"] != nil {
+
+		volumes := cloud.Resources["volumes"]
+		for _, volume := range volumes {
+			err := cloud.deleteVolume(volume, ctx, -1)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 	if cloud.Resources["project"] != nil {
 		err := cloud.deleteProject(cloud.Resources["project"][0], ctx)
