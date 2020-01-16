@@ -1000,11 +1000,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
 	storage = append(storage, staticVolume)
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return compute.VirtualMachine{}, "", "", err
-	}
+
 	vm := compute.VirtualMachine{
 		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
@@ -1031,7 +1027,6 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			OsProfile: &compute.OSProfile{
 				ComputerName:  to.StringPtr(pool.Name),
 				AdminUsername: to.StringPtr(pool.AdminUser),
-				CustomData:    to.StringPtr(userData),
 			},
 			NetworkProfile: &compute.NetworkProfile{
 
@@ -1049,6 +1044,14 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	if pool.EnableVolume {
 		storage = append(storage, disk)
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
+	}
+	if pool.PoolRole == "master" {
+		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return compute.VirtualMachine{}, "", "", err
+		}
+		vm.OsProfile.CustomData = to.StringPtr(userData)
 	}
 	vm.StorageProfile.DataDisks = &storage
 	private := ""

@@ -796,11 +796,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		return nil, err, ""
 	}
 	cloud.Resources[pool.Name+"_iamProfile"] = pool.Name
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, err, ""
-	}
+
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
 		SubnetId:         aws.String(subnetId),
@@ -809,7 +805,15 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		KeyName:          aws.String(pool.KeyInfo.KeyName),
 		MinCount:         aws.Int64(1),
 		InstanceType:     aws.String(pool.MachineType),
-		UserData:         aws.String(userData),
+	}
+
+	if pool.PoolRole == "master" {
+		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return nil, err, ""
+		}
+		input.UserData = aws.String(userData)
 	}
 	if pool.EnablePublicIP {
 		input.NetworkInterfaces = append(input.NetworkInterfaces, &ec2.InstanceNetworkInterfaceSpecification{

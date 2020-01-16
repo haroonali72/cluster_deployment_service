@@ -334,11 +334,7 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
-	}
+
 	instanceProperties := compute.InstanceProperties{
 		MachineType: pool.MachineType,
 		Tags: &compute.Tags{
@@ -363,23 +359,31 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 				},
 			},
 		},
-		Metadata: &compute.Metadata{
-			Items: []*compute.MetadataItems{
-				{
-					Key:   "block-project-ssh-keys",
-					Value: to.StringPtr("true"),
-				},
-				{
-					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
-				},
-				{
-					Key:   "startup-script",
-					Value: to.StringPtr(userData),
-				},
-			},
+	}
+	items := []*compute.MetadataItems{
+		{
+			Key:   "block-project-ssh-keys",
+			Value: to.StringPtr("true"),
+		},
+		{
+			Key:   "ssh-keys",
+			Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 		},
 	}
+
+	if pool.PoolRole == "master" {
+		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return "", err
+		}
+		items = append(items, &compute.MetadataItems{
+			Key:   "startup-script",
+			Value: to.StringPtr(userData),
+		})
+	}
+	instanceProperties.Metadata = &compute.Metadata{Items: items}
+
 	if pool.EnablePublicIP {
 		instanceProperties.NetworkInterfaces[0].AccessConfigs = []*compute.AccessConfig{
 			{
