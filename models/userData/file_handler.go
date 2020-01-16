@@ -48,7 +48,7 @@ func GetUserData(token, url string, ctx utils.Context) (string, error) {
 	commands = append(commands, []string{"cd", "/usr/local/bin"})
 	commands = append(commands, []string{"wget", data.Agent})
 	commands = append(commands, []string{"chmod", "+x", "agent"})
-	commands = append(commands, []string{"nohup", "./agent", ">", "nohup.out", "&"})
+	commands = append(commands, []string{"nohup", "./agent", "&"})
 
 	userData.RunCmd = commands
 
