@@ -35,7 +35,7 @@ func GetUserData(token, url string, ctx utils.Context) (string, error) {
 	var writeFile types.WriteFile
 	writeFile.Contents = encodedData
 	writeFile.Encoding = "b64"
-	writeFile.Path = "/usr/local/bin/userDataContents"
+	writeFile.Path = "/usr/local/bin/client-conf.json"
 	writeFile.Owner = "root:root"
 	writeFile.Permission = "0644"
 
