@@ -34,6 +34,7 @@ type NodePoolT struct {
 	SecurityGroupId   []string       `json:"security_group_id" bson:"security_group_id"`
 	Nodes             []*Node        `json:"nodes" bson:"nodes"`
 	EnableVolume      bool           `json:"is_external" bson:"is_external"`
+	ExternalVolume    Volume         `json:"external_volume" bson:"external_volume"`
 	PoolRole          string         `json:"pool_role" bson:"pool_role"`
 	PrivateNetworking bool           `json:"private_networking" bson:"private_networking"`
 }
