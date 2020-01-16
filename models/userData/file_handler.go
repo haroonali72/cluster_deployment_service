@@ -4,6 +4,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/types"
 	"antelope/models/utils"
+	"antelope/my_vendor/github.com/astaxie/beego"
 	b64 "encoding/base64"
 	"encoding/json"
 	"gopkg.in/yaml.v2"
@@ -34,7 +35,7 @@ func GetUserData(token, url string, ctx utils.Context) (string, error) {
 	var writeFile types.WriteFile
 	writeFile.Contents = encodedData
 	writeFile.Encoding = "b64"
-	writeFile.Path = "/usr/local/bin/"
+	writeFile.Path = "/usr/local/bin/userDataContents"
 	writeFile.Owner = "root:root"
 	writeFile.Permission = "0644"
 
@@ -56,7 +57,7 @@ func GetUserData(token, url string, ctx utils.Context) (string, error) {
 		return "", err
 	}
 	master_data := "#cloud-config\n" + string(out)
-
+	beego.Info(master_data)
 	return master_data, nil
 
 }

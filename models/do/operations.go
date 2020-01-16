@@ -222,7 +222,9 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 		SSHKeys:           keys,
 		PrivateNetworking: pool.PrivateNetworking,
 	}
+	beego.Info("pool role === " + pool.PoolRole)
 	if pool.PoolRole == "master" {
+		beego.Info(getWoodpecker() + "/" + projectId)
 		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
 		if err != nil {
 			ctx.SendLogs("Error in creating node pool : "+pool.Name+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
