@@ -846,7 +846,7 @@ func (c *AWSTemplateController) GetAllTemplateInfo() {
 // @Title   GetAllCustomerTemplateInfo
 // @Description get all the customer templates info
 // @Param	token	header	string	token ""
-// @Success 200 {object} []gcp.TemplateMetadata
+// @Success 200 {object} []aws.TemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplatesInfo [get]

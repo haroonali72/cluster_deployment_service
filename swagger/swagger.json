@@ -2675,7 +2675,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/gcp.TemplateMetadata"
+                                "$ref": "#/definitions/aws.TemplateMetadata"
                             }
                         }
                     },
@@ -3647,6 +3647,40 @@
                 }
             }
         },
+        "/template/do/allCustomerTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/do"
+                ],
+                "description": "get all the customer templates info",
+                "operationId": "DOTemplateController.GetAllCustomerTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/do.TemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/do/allTemplatesInfo": {
             "get": {
                 "tags": [
@@ -4415,11 +4449,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13276.0xc0009a6930.false": {
+        "600.0xc0429d6b70.false": {
             "title": "false",
             "type": "object"
         },
-        "13298.0xc000c7b620.false": {
+        "686.0xc042ca7f80.false": {
             "title": "false",
             "type": "object"
         },
@@ -4475,7 +4509,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13276.0xc0009a6930.false"
+                    "$ref": "#/definitions/600.0xc0429d6b70.false"
                 },
                 "name": {
                     "type": "string"
@@ -4548,6 +4582,9 @@
                 },
                 "auto_scaling": {
                     "$ref": "#/definitions/aws.AutoScaling"
+                },
+                "enable_public_ip": {
+                    "type": "boolean"
                 },
                 "enable_scaling": {
                     "type": "boolean"
@@ -4655,6 +4692,22 @@
                     "items": {
                         "$ref": "#/definitions/aws.NodePoolT"
                     }
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "aws.TemplateMetadata": {
+            "title": "TemplateMetadata",
+            "type": "object",
+            "properties": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
                 },
                 "template_id": {
                     "type": "string"
@@ -4788,6 +4841,9 @@
                 },
                 "boot_diagnostics": {
                     "$ref": "#/definitions/azure.DiagnosticsProfile"
+                },
+                "enable_public_ip": {
+                    "type": "boolean"
                 },
                 "enable_scaling": {
                     "type": "boolean"
@@ -4996,7 +5052,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "object"
+            "type": "string"
         },
         "do.Cluster_Def": {
             "title": "Cluster_Def",
@@ -5011,8 +5067,11 @@
                 "company_id": {
                     "type": "string"
                 },
+                "do_project_id": {
+                    "type": "string"
+                },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13298.0xc000c7b620.false"
+                    "$ref": "#/definitions/686.0xc042ca7f80.false"
                 },
                 "name": {
                     "type": "string"
@@ -5080,6 +5139,9 @@
                     "type": "string"
                 },
                 "user_name": {
+                    "type": "string"
+                },
+                "volume_id": {
                     "type": "string"
                 }
             }
@@ -5333,6 +5395,9 @@
             "properties": {
                 "auto_scaling": {
                     "$ref": "#/definitions/gcp.AutoScaling"
+                },
+                "enable_public_ip": {
+                    "type": "boolean"
                 },
                 "enable_scaling": {
                     "type": "boolean"
