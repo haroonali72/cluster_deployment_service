@@ -4,9 +4,9 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/types"
 	"antelope/models/utils"
-	"antelope/my_vendor/github.com/astaxie/beego"
 	b64 "encoding/base64"
 	"encoding/json"
+	"github.com/astaxie/beego"
 	"gopkg.in/yaml.v2"
 )
 
