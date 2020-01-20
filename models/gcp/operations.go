@@ -167,13 +167,16 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 			Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 		},
 	}
-
-	if pool.PoolRole == "master" {
-		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
+	var fileName []string
+	if pool.EnableVolume {
+		fileName = append(fileName, "gcp-volume-mount.sh")
+	}
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	if userData != "no user data found" {
 		items = append(items, &compute.MetadataItems{
 			Key:   "user-data",
 			Value: to.StringPtr(userData),
@@ -381,9 +384,22 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 			Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 		},
 	}
-
+	var fileName []string
+	if pool.EnableVolume {
+		fileName = append(fileName, "gcp-volume-mount.sh")
+	}
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return "", err
+	}
+	if userData != "no user data found" {
+		items = append(items, &compute.MetadataItems{
+			Key:   "user-data",
+			Value: to.StringPtr(userData),
+		})
+	}
 	instanceProperties.Metadata = &compute.Metadata{Items: items}
-
 	if pool.EnablePublicIP {
 		instanceProperties.NetworkInterfaces[0].AccessConfigs = []*compute.AccessConfig{
 			{
