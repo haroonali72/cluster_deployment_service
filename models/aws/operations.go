@@ -10,7 +10,6 @@ import (
 	userData2 "antelope/models/userData"
 	"antelope/models/utils"
 	"antelope/models/vault"
-	"antelope/my_vendor/github.com/Azure/go-autorest/autorest/to"
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
@@ -821,7 +820,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	if pool.EnablePublicIP {
 		input.NetworkInterfaces = append(input.NetworkInterfaces, &ec2.InstanceNetworkInterfaceSpecification{
 			AssociatePublicIpAddress: aws.Bool(true),
-			DeviceIndex:              to.Int64Ptr(0),
+			DeviceIndex:              aws.Int64(0),
 		})
 	}
 	/*
