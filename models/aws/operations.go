@@ -799,12 +799,12 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	cloud.Resources[pool.Name+"_iamProfile"] = pool.Name
 
 	input := &ec2.RunInstancesInput{
-		ImageId:          aws.String(pool.Ami.AmiId),
-		SecurityGroupIds: sgIds,
-		MaxCount:         aws.Int64(pool.NodeCount),
-		KeyName:          aws.String(pool.KeyInfo.KeyName),
-		MinCount:         aws.Int64(1),
-		InstanceType:     aws.String(pool.MachineType),
+		ImageId: aws.String(pool.Ami.AmiId),
+
+		MaxCount:     aws.Int64(pool.NodeCount),
+		KeyName:      aws.String(pool.KeyInfo.KeyName),
+		MinCount:     aws.Int64(1),
+		InstanceType: aws.String(pool.MachineType),
 	}
 
 	if pool.PoolRole == "master" {
@@ -821,9 +821,11 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 			AssociatePublicIpAddress: aws.Bool(true),
 			DeviceIndex:              aws.Int64(0),
 			SubnetId:                 aws.String(subnetId),
+			Groups:                   sgIds,
 		})
 	} else {
 		input.SubnetId = aws.String(subnetId)
+		input.SecurityGroupIds = sgIds
 	}
 	/*
 		setting 50 gb volume - temp work
