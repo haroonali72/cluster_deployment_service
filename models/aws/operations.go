@@ -10,6 +10,7 @@ import (
 	userData2 "antelope/models/userData"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
@@ -813,7 +814,8 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err, ""
 		}
-		input.UserData = aws.String(userData)
+		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
+		input.UserData = aws.String(encodedData)
 	}
 	if pool.EnablePublicIP {
 		input.NetworkInterfaces = append(input.NetworkInterfaces, &ec2.InstanceNetworkInterfaceSpecification{
