@@ -245,14 +245,15 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 					return nil, err
 				}
 			}
-			if pool.IsExternal {
-				pool.KeyInfo.KeyMaterial = keyMaterial
-				err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId, ctx, companyId)
-				if err != nil {
-					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
-					return nil, err
-				}
-			}
+			beego.Info(keyMaterial)
+			//if pool.IsExternal {
+			//	pool.KeyInfo.KeyMaterial = keyMaterial
+			//	err = cloud.mountVolume(result.Instances, pool.Ami, pool.KeyInfo, cluster.ProjectId, ctx, companyId)
+			//	if err != nil {
+			//		utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+			//		return nil, err
+			//	}
+			//}
 			if pool.EnableScaling {
 				maxSize := pool.Scaling.MaxScalingGroupSize - pool.NodeCount
 				err, m := cloud.Scaler.AutoScaler(pool.Name, *result.Instances[0].InstanceId, pool.Ami.AmiId, subnetId, maxSize, ctx, cluster.ProjectId)
@@ -806,13 +807,16 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		MinCount:     aws.Int64(1),
 		InstanceType: aws.String(pool.MachineType),
 	}
-
-	if pool.PoolRole == "master" {
-		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return nil, err, ""
-		}
+	var fileName []string
+	if pool.IsExternal {
+		fileName = append(fileName, "mount.sh")
+	}
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err, ""
+	}
+	if userData != "no user data found" {
 		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
 		input.UserData = aws.String(encodedData)
 	}

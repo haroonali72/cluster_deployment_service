@@ -163,21 +163,21 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
-
-		if pool.EnableVolume {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
-			if err != nil {
-				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
-				return cluster, err
+		beego.Info(private_key)
+		/*	if pool.EnableVolume {
+				err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
+				if err != nil {
+					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+					return cluster, err
+				}
 			}
-		}
-		if pool.PoolRole == "master" {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
-			if err != nil {
-				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
-				return cluster, err
-			}
-		}
+			if pool.PoolRole == "master" {
+				err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
+				if err != nil {
+					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+					return cluster, err
+				}
+			}*/
 		cluster.NodePools[i].Nodes = result
 	}
 
@@ -288,7 +288,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			var vmObj VM
 			vmObj.Name = vm.Name
 			vmObj.CloudId = vm.ID
-			nicId := ""
+			/*nicId := ""
 			for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
 				nicId = *nic.ID
 				break
@@ -299,16 +299,16 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			nicParameters, err := cloud.GetNIC(resourceGroup, pool.Name, arr[10], nicName, ctx)
 			if err != nil {
 				return nil, "", err
-			}
+			}*/
 			//vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-			pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
+			/*pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
 			arr = strings.Split(pipId, "/")
 			pipConf := arr[14]
 			pipAddress := arr[16]
 			_, err = cloud.GetPIP(resourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
 			if err != nil {
 				return nil, "", err
-			}
+			}*/
 			//vmObj.PublicIP = pip.IPAddress
 			//vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
@@ -379,7 +379,7 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 		}
 		pool.KeyInfo = keyInfo
 		if pool.PoolRole == "master" {
-
+			var vmObj VM
 			beego.Info("getting instance")
 			vm, err := cloud.GetInstance(pool.Name, cluster.ResourceGroup, ctx)
 			if err != nil {
@@ -395,17 +395,19 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 			}
 			beego.Info("getting pip")
 			IPname := "pip-" + pool.Name
-			publicIPaddress, err := cloud.GetVMPIP(cluster.ResourceGroup, IPname, ctx)
-			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return &Cluster_Def{}, err
+			if pool.EnablePublicIP {
+				publicIPaddress, err := cloud.GetVMPIP(cluster.ResourceGroup, IPname, ctx)
+				if err != nil {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					return &Cluster_Def{}, err
+				}
+				vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
 			}
 
-			var vmObj VM
 			vmObj.Name = vm.Name
 			vmObj.CloudId = vm.ID
 			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-			vmObj.PublicIP = publicIPaddress.PublicIPAddressPropertiesFormat.IPAddress
+
 			vmObj.NodeState = vm.ProvisioningState
 			vmObj.UserName = vm.OsProfile.AdminUsername
 			vmObj.PAssword = vm.OsProfile.AdminPassword
@@ -437,15 +439,17 @@ func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Co
 					return &Cluster_Def{}, err
 				}
 				vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-				pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
-				arr = strings.Split(pipId, "/")
-				pipConf := arr[14]
-				pipAddress := arr[16]
-				pip, err := cloud.GetPIP(cluster.ResourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
-				if err != nil {
-					return &Cluster_Def{}, err
+				if pool.EnablePublicIP {
+					pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
+					arr = strings.Split(pipId, "/")
+					pipConf := arr[14]
+					pipAddress := arr[16]
+					pip, err := cloud.GetPIP(cluster.ResourceGroup, pool.Name, arr[10], nicName, pipConf, pipAddress, ctx)
+					if err != nil {
+						return &Cluster_Def{}, err
+					}
+					vmObj.PublicIP = pip.IPAddress
 				}
-				vmObj.PublicIP = pip.IPAddress
 				vmObj.NodeState = vm.ProvisioningState
 				vmObj.UserName = vm.OsProfile.AdminUsername
 				vmObj.PAssword = vm.OsProfile.AdminPassword
@@ -1041,20 +1045,23 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			},
 		},
 	}
+	var fileName []string
 	if pool.EnableVolume {
 		storage = append(storage, disk)
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
+		fileName = append(fileName, "azure-volume-mount.sh")
 	}
-	if pool.PoolRole == "master" {
-		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return compute.VirtualMachine{}, "", "", err
-		}
-
+	fileName = append(fileName, "static_volume.sh")
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachine{}, "", "", err
+	}
+	if userData != "no user data found" {
 		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
 		vm.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
+
 	vm.StorageProfile.DataDisks = &storage
 	private := ""
 	public := ""
@@ -1900,8 +1907,20 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			},
 		}
 	}
+	var fileName []string
 	if pool.EnableVolume {
 		params.VirtualMachineProfile.StorageProfile.DataDisks = &storage
+		fileName = append(fileName, "azure-volume-mount.sh")
+	}
+
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
+	}
+	if userData != "no user data found" {
+		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
+		params.VirtualMachineScaleSetProperties.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
 
 	private := ""
