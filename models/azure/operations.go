@@ -163,21 +163,21 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
-
-		if pool.EnableVolume {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
-			if err != nil {
-				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
-				return cluster, err
+		beego.Info(private_key)
+		/*	if pool.EnableVolume {
+				err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
+				if err != nil {
+					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+					return cluster, err
+				}
 			}
-		}
-		if pool.PoolRole == "master" {
-			err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
-			if err != nil {
-				utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
-				return cluster, err
-			}
-		}
+			if pool.PoolRole == "master" {
+				err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
+				if err != nil {
+					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
+					return cluster, err
+				}
+			}*/
 		cluster.NodePools[i].Nodes = result
 	}
 
@@ -1041,20 +1041,23 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			},
 		},
 	}
+	var fileName []string
 	if pool.EnableVolume {
 		storage = append(storage, disk)
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
+		fileName = append(fileName, "azure-volume-mount.sh")
 	}
-	if pool.PoolRole == "master" {
-		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return compute.VirtualMachine{}, "", "", err
-		}
-
+	fileName = append(fileName, "static_volume.sh")
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachine{}, "", "", err
+	}
+	if userData != "no user data found" {
 		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
 		vm.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
+
 	vm.StorageProfile.DataDisks = &storage
 	private := ""
 	public := ""
@@ -1900,8 +1903,20 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 			},
 		}
 	}
+	var fileName []string
 	if pool.EnableVolume {
 		params.VirtualMachineProfile.StorageProfile.DataDisks = &storage
+		fileName = append(fileName, "azure-volume-mount.sh")
+	}
+
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
+	}
+	if userData != "no user data found" {
+		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
+		params.VirtualMachineScaleSetProperties.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
 
 	private := ""
