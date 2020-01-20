@@ -1052,7 +1052,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return compute.VirtualMachine{}, "", "", err
 		}
-		encodedData := b64.StdEncoding.EncodeToString(userData)
+
+		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
 		vm.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
 	vm.StorageProfile.DataDisks = &storage
