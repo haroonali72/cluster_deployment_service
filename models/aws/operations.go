@@ -800,7 +800,6 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 
 	input := &ec2.RunInstancesInput{
 		ImageId:          aws.String(pool.Ami.AmiId),
-		SubnetId:         aws.String(subnetId),
 		SecurityGroupIds: sgIds,
 		MaxCount:         aws.Int64(pool.NodeCount),
 		KeyName:          aws.String(pool.KeyInfo.KeyName),
@@ -821,7 +820,10 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		input.NetworkInterfaces = append(input.NetworkInterfaces, &ec2.InstanceNetworkInterfaceSpecification{
 			AssociatePublicIpAddress: aws.Bool(true),
 			DeviceIndex:              aws.Int64(0),
+			SubnetId:                 aws.String(subnetId),
 		})
+	} else {
+		input.SubnetId = aws.String(subnetId)
 	}
 	/*
 		setting 50 gb volume - temp work
