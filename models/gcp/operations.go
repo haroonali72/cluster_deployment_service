@@ -140,18 +140,6 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 				},
 			},
 		},
-		Metadata: &compute.Metadata{
-			Items: []*compute.MetadataItems{
-				{
-					Key:   "block-project-ssh-keys",
-					Value: to.StringPtr("true"),
-				},
-				{
-					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
-				},
-			},
-		},
 	}
 
 	externalIp := ""
@@ -169,7 +157,30 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 			},
 		}
 	}
+	items := []*compute.MetadataItems{
+		{
+			Key:   "block-project-ssh-keys",
+			Value: to.StringPtr("true"),
+		},
+		{
+			Key:   "ssh-keys",
+			Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
+		},
+	}
 
+	if pool.PoolRole == "master" {
+		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+		items = append(items, &compute.MetadataItems{
+			Key:   "user-data",
+			Value: to.StringPtr(userData),
+		})
+	}
+
+	instance.Metadata = &compute.Metadata{Items: items}
 	if pool.ServiceAccountEmail != "" {
 		instance.ServiceAccounts = []*compute.ServiceAccount{
 			{
@@ -371,17 +382,6 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 		},
 	}
 
-	if pool.PoolRole == "master" {
-		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return "", err
-		}
-		items = append(items, &compute.MetadataItems{
-			Key:   "user-data",
-			Value: to.StringPtr(userData),
-		})
-	}
 	instanceProperties.Metadata = &compute.Metadata{Items: items}
 
 	if pool.EnablePublicIP {
