@@ -227,13 +227,13 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 
 	pool.Nodes = []*Node{&newNode}
 
-	if pool.EnableVolume {
+	/*if pool.EnableVolume {
 		err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 		if err != nil {
 			beego.Error(err.Error())
 			return err
 		}
-	}
+	}*/
 
 	return nil
 }
@@ -320,13 +320,13 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 
 		pool.Nodes = append(pool.Nodes, &newNode)
 
-		if pool.EnableVolume {
+		/*	if pool.EnableVolume {
 			err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 			if err != nil {
 				beego.Error(err.Error())
 				return err
 			}
-		}
+		}*/
 	}
 
 	return nil
