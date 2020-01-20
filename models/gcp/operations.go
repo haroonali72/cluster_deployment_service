@@ -378,7 +378,7 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 			return "", err
 		}
 		items = append(items, &compute.MetadataItems{
-			Key:   "startup-script",
+			Key:   "user-data",
 			Value: to.StringPtr(userData),
 		})
 	}
