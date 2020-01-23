@@ -828,8 +828,12 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 			Groups:                   sgIds,
 		})
 	} else {
-		input.SubnetId = aws.String(subnetId)
-		input.SecurityGroupIds = sgIds
+		input.NetworkInterfaces = append(input.NetworkInterfaces, &ec2.InstanceNetworkInterfaceSpecification{
+			AssociatePublicIpAddress: aws.Bool(false),
+			DeviceIndex:              aws.Int64(0),
+			SubnetId:                 aws.String(subnetId),
+			Groups:                   sgIds,
+		})
 	}
 	/*
 		setting 50 gb volume - temp work
