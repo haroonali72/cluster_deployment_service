@@ -76,7 +76,7 @@ func GetUserData(token, url string, scriptNames []string, poolRole models.PoolRo
 		commands = append(commands, []string{"cd", "/usr/local/bin"})
 		commands = append(commands, []string{"wget", data.Agent})
 		commands = append(commands, []string{"chmod", "+x", "agent"})
-		commands = append(commands, []string{"nohup", "./agent", "&>", "agent.out", "&"})
+		commands = append(commands, []string{"nohup", "./agent", "&>", "/usr/local/bin/agent.out", "&"})
 	}
 	for _, names := range scriptNames {
 		commands = append(commands, []string{"chmod", "+x", names})
