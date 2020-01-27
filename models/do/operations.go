@@ -214,6 +214,8 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	keys = append(keys, sshKeyInput)
 	pool.PrivateNetworking = true
 
+	var tags []string
+	tags = append(tags, projectId)
 	input := &godo.DropletMultiCreateRequest{
 		Names:             nodeNames,
 		Region:            cloud.Region,
@@ -221,6 +223,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 		Image:             imageInput,
 		SSHKeys:           keys,
 		PrivateNetworking: pool.PrivateNetworking,
+		Tags:              tags,
 	}
 
 	var fileName []string
