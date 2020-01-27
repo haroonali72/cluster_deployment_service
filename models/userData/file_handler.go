@@ -38,7 +38,7 @@ func GetUserData(token, url string, scriptNames []string, poolRole models.PoolRo
 		var writeFile types.WriteFile
 		writeFile.Contents = encodedData
 		writeFile.Encoding = "b64"
-		writeFile.Path = "/usr/local/bin/client-conf.json"
+		writeFile.Path = "/usr/local/etc/client-conf.json"
 		writeFile.Owner = "root:root"
 		writeFile.Permission = "0644"
 		arrayOfFiles = append(arrayOfFiles, writeFile)
