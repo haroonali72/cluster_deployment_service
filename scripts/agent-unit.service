@@ -1,0 +1,10 @@
+[Unit]
+Description=Cloudplex Agent
+Documentation=http://cloudplex.io
+[Service]
+ExecStartPre=/bin/chmod +x /usr/local/bin/agent
+ExecStart=/usr/local/bin/agent
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=multi-user.target
