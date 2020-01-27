@@ -99,7 +99,7 @@ func GetUserData(token, url string, scriptNames []string, poolRole models.PoolRo
 	for _, names := range scriptNames {
 		commands = append(commands, []string{"cd", "/usr/local/bin"})
 		commands = append(commands, []string{"chmod", "+x", names})
-		commands = append(commands, []string{"nohup", "./" + names, "&>", "volume.out", "&"})
+		commands = append(commands, []string{"nohup", "./" + names, "&>", "/usr/local/bin/volume.out", "&"})
 	}
 	userData.RunCmd = commands
 

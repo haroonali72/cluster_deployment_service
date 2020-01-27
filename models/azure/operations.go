@@ -705,7 +705,7 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 					Name: to.StringPtr(fmt.Sprintf("IPconfig-" + pool.Name)),
 					InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 						PrivateIPAllocationMethod: network.Dynamic,
-						Subnet: &network.Subnet{ID: to.StringPtr(subnetId)},
+						Subnet:                    &network.Subnet{ID: to.StringPtr(subnetId)},
 					},
 				},
 			},
@@ -1046,12 +1046,12 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		},
 	}
 	var fileName []string
+	fileName = append(fileName, "static_volume.sh")
 	if pool.EnableVolume {
 		storage = append(storage, disk)
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 		fileName = append(fileName, "azure-volume-mount.sh")
 	}
-	fileName = append(fileName, "static_volume.sh")
 	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1380,7 +1380,7 @@ func (cloud *AZURE) createStorageAccount(resouceGroup string, acccountName strin
 		Sku: &storage.Sku{
 			Name: storage.StandardLRS,
 		},
-		Location: &cloud.Region,
+		Location:                          &cloud.Region,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	acccountName = strings.ToLower(acccountName)
