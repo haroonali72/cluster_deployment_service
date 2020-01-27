@@ -42,7 +42,23 @@ func GetUserData(token, url string, scriptNames []string, poolRole models.PoolRo
 		writeFile.Owner = "root:root"
 		writeFile.Permission = "0644"
 		arrayOfFiles = append(arrayOfFiles, writeFile)
+
+		fileContents, err := ioutil.ReadFile("/app/scripts/" + "agent-unit.service")
+		if err != nil {
+			return "", err
+		}
+
+		encodedUnitFile := b64.StdEncoding.EncodeToString(fileContents)
+
+		var writeUnitFile types.WriteFile
+		writeUnitFile.Contents = encodedUnitFile
+		writeUnitFile.Encoding = "b64"
+		writeUnitFile.Path = "/etc/systemd/system/agent.service"
+		writeUnitFile.Owner = "root:root"
+		writeUnitFile.Permission = "777"
+		arrayOfFiles = append(arrayOfFiles, writeUnitFile)
 		enableUserData = true
+
 	}
 	for _, name := range scriptNames {
 
@@ -53,14 +69,14 @@ func GetUserData(token, url string, scriptNames []string, poolRole models.PoolRo
 				return "", err
 			}
 
-			encodedScript := b64.StdEncoding.EncodeToString([]byte(fileContents))
+			encodedScript := b64.StdEncoding.EncodeToString(fileContents)
 
 			var writeScript types.WriteFile
 			writeScript.Contents = encodedScript
 			writeScript.Encoding = "b64"
 			writeScript.Path = "/usr/local/bin/" + name
 			writeScript.Owner = "root:root"
-			writeScript.Permission = "700"
+			writeScript.Permission = "777"
 			arrayOfFiles = append(arrayOfFiles, writeScript)
 			enableUserData = true
 		}
@@ -76,9 +92,11 @@ func GetUserData(token, url string, scriptNames []string, poolRole models.PoolRo
 		commands = append(commands, []string{"cd", "/usr/local/bin"})
 		commands = append(commands, []string{"wget", data.Agent})
 		commands = append(commands, []string{"chmod", "+x", "agent"})
-		commands = append(commands, []string{"nohup", "./agent", "&>", "/usr/local/bin/agent.out", "&"})
+		//commands = append(commands, []string{"nohup", "./agent", "&>", "/usr/local/bin/agent.out", "&"})
+		commands = append(commands, []string{"systemctl ", "enable", "agent.service"})
 	}
 	for _, names := range scriptNames {
+		commands = append(commands, []string{"cd", "/usr/local/bin"})
 		commands = append(commands, []string{"chmod", "+x", names})
 		commands = append(commands, []string{"nohup", "./" + names, "&>", "volume.out", "&"})
 	}
