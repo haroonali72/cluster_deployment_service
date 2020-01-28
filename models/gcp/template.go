@@ -22,6 +22,7 @@ type Template struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
 	NetworkName      string        `json:"network_name" bson:"network_name"`
+	VPCName          string        `json:"vpc_name" bson:"vpc_name"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	IsCloudplex      bool          `json:"is_cloudplex" bson:"is_cloudplex"`
 }

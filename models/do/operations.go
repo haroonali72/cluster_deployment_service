@@ -116,7 +116,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
 		}
-		utils.SendLog(companyId, "Node Pools Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
 
 		var nodes []*Node
 		if droplets != nil && len(droplets) > 0 {
@@ -214,6 +214,8 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 	keys = append(keys, sshKeyInput)
 	pool.PrivateNetworking = true
 
+	var tags []string
+	tags = append(tags, projectId)
 	input := &godo.DropletMultiCreateRequest{
 		Names:             nodeNames,
 		Region:            cloud.Region,
@@ -221,17 +223,21 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 		Image:             imageInput,
 		SSHKeys:           keys,
 		PrivateNetworking: pool.PrivateNetworking,
+		Tags:              tags,
 	}
-	beego.Info("pool role === " + pool.PoolRole)
-	if pool.PoolRole == "master" {
-		beego.Info(getWoodpecker() + "/" + projectId)
-		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-		if err != nil {
-			ctx.SendLogs("Error in creating node pool : "+pool.Name+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return nil, err
-		}
+
+	var fileName []string
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+
+	if err != nil {
+		ctx.SendLogs("Error in creating node pool : "+pool.Name+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err
+	}
+	if input.UserData != "no user data found" {
+
 		input.UserData = userData
 	}
+
 	droplets, _, err := cloud.Client.Droplets.CreateMultiple(context.Background(), input)
 	if err != nil {
 		ctx.SendLogs("Error in creating node pool : "+pool.Name+"\n"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

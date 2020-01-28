@@ -29,6 +29,7 @@ type Cluster_Def struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
 	NetworkName      string        `json:"network_name" bson:"network_name"`
+	VPCName          string        `json:"vpc_name" bson:"vpc_name"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 }
@@ -220,14 +221,15 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs("GcpClusterModel: "+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
-	if subscriptionId != "" {
+	/*if subscriptionId != "" {
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
-	}
 
+	}
+	*/
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

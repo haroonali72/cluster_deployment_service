@@ -140,18 +140,6 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 				},
 			},
 		},
-		Metadata: &compute.Metadata{
-			Items: []*compute.MetadataItems{
-				{
-					Key:   "block-project-ssh-keys",
-					Value: to.StringPtr("true"),
-				},
-				{
-					Key:   "ssh-keys",
-					Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
-				},
-			},
-		},
 	}
 
 	externalIp := ""
@@ -169,7 +157,33 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 			},
 		}
 	}
+	items := []*compute.MetadataItems{
+		{
+			Key:   "block-project-ssh-keys",
+			Value: to.StringPtr("true"),
+		},
+		{
+			Key:   "ssh-keys",
+			Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
+		},
+	}
+	var fileName []string
+	if pool.EnableVolume {
+		fileName = append(fileName, "gcp-volume-mount.sh")
+	}
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	if userData != "no user data found" {
+		items = append(items, &compute.MetadataItems{
+			Key:   "user-data",
+			Value: to.StringPtr(userData),
+		})
+	}
 
+	instance.Metadata = &compute.Metadata{Items: items}
 	if pool.ServiceAccountEmail != "" {
 		instance.ServiceAccounts = []*compute.ServiceAccount{
 			{
@@ -213,13 +227,13 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 
 	pool.Nodes = []*Node{&newNode}
 
-	if pool.EnableVolume {
+	/*if pool.EnableVolume {
 		err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 		if err != nil {
 			beego.Error(err.Error())
 			return err
 		}
-	}
+	}*/
 
 	return nil
 }
@@ -306,13 +320,13 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 
 		pool.Nodes = append(pool.Nodes, &newNode)
 
-		if pool.EnableVolume {
+		/*	if pool.EnableVolume {
 			err = mountVolume(pool.KeyInfo.PrivateKey, pool.KeyInfo.KeyName, pool.KeyInfo.Username, newNode.PublicIp)
 			if err != nil {
 				beego.Error(err.Error())
 				return err
 			}
-		}
+		}*/
 	}
 
 	return nil
@@ -370,20 +384,22 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 			Value: to.StringPtr(pool.KeyInfo.Username + ":" + pool.KeyInfo.PublicKey),
 		},
 	}
-
-	if pool.PoolRole == "master" {
-		userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return "", err
-		}
+	var fileName []string
+	if pool.EnableVolume {
+		fileName = append(fileName, "gcp-volume-mount.sh")
+	}
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return "", err
+	}
+	if userData != "no user data found" {
 		items = append(items, &compute.MetadataItems{
-			Key:   "startup-script",
+			Key:   "user-data",
 			Value: to.StringPtr(userData),
 		})
 	}
 	instanceProperties.Metadata = &compute.Metadata{Items: items}
-
 	if pool.EnablePublicIP {
 		instanceProperties.NetworkInterfaces[0].AccessConfigs = []*compute.AccessConfig{
 			{
