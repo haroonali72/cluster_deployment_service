@@ -36,6 +36,7 @@ type NodePoolT struct {
 	PoolRole        string        `json:"pool_role" bson:"pool_role"`
 	IsExternal      bool          `json:"is_external" bson:"is_external"`
 	ExternalVolume  Volume        `json:"external_volume" bson:"external_volume"`
+	EnablePublicIP  bool          `json:"enable_public_ip" bson:"enable_public_ip"`
 }
 
 type TemplateMetadata struct {
