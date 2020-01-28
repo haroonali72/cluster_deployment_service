@@ -41,6 +41,7 @@ type NodePoolT struct {
 	AdminUser          string             `json:"user_name" bson:"user_name",omitempty"`
 	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type"`
+	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"`
 }
 
 type TemplateMetadata struct {
