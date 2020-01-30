@@ -584,47 +584,6 @@
                 }
             }
         },
-        "/cluster/aws/{projectId}": {
-            "delete": {
-                "tags": [
-                    "cluster/aws"
-                ],
-                "description": "delete a cluster",
-                "operationId": "AWSClusterController.Delete",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "project id of the cluster",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
         "/cluster/aws/{projectId}/": {
             "get": {
                 "tags": [
@@ -661,6 +620,53 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "delete a cluster",
+                "operationId": "AWSClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
                 }
@@ -1136,47 +1142,6 @@
                 }
             }
         },
-        "/cluster/azure/{projectId}": {
-            "delete": {
-                "tags": [
-                    "cluster/azure"
-                ],
-                "description": "delete a cluster",
-                "operationId": "AzureClusterController.Delete",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "project id of the cluster",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
         "/cluster/azure/{projectId}/": {
             "get": {
                 "tags": [
@@ -1218,6 +1183,7 @@
                 }
             }
         },
+        "/cluster/azure/{projectId}/{forceDelete}": {},
         "/cluster/do/": {
             "put": {
                 "tags": [
@@ -1693,47 +1659,6 @@
                 }
             }
         },
-        "/cluster/do/{projectId}": {
-            "delete": {
-                "tags": [
-                    "cluster/do"
-                ],
-                "description": "delete a cluster",
-                "operationId": "DOClusterController.Delete",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "project id of the cluster",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
         "/cluster/do/{projectId}/": {
             "get": {
                 "tags": [
@@ -1775,6 +1700,7 @@
                 }
             }
         },
+        "/cluster/do/{projectId}/{forceDelete}": {},
         "/cluster/gcp/": {
             "put": {
                 "tags": [
@@ -2360,47 +2286,6 @@
                 }
             }
         },
-        "/cluster/gcp/{projectId}": {
-            "delete": {
-                "tags": [
-                    "cluster/gcp"
-                ],
-                "description": "delete a cluster",
-                "operationId": "GcpClusterController.Delete",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "project id of the cluster",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
         "/cluster/gcp/{projectId}/": {
             "get": {
                 "tags": [
@@ -2445,6 +2330,7 @@
                 }
             }
         },
+        "/cluster/gcp/{projectId}/{forceDelete}": {},
         "/customerTemplate/register": {
             "post": {
                 "tags": [
@@ -4449,11 +4335,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc0429d6b70.false": {
+        "600.0xc0429edd10.false": {
             "title": "false",
             "type": "object"
         },
-        "686.0xc042ca7f80.false": {
+        "686.0xc042ce6c90.false": {
             "title": "false",
             "type": "object"
         },
@@ -4509,7 +4395,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc0429d6b70.false"
+                    "$ref": "#/definitions/600.0xc0429edd10.false"
                 },
                 "name": {
                     "type": "string"
@@ -5071,7 +4957,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/686.0xc042ca7f80.false"
+                    "$ref": "#/definitions/686.0xc042ce6c90.false"
                 },
                 "name": {
                     "type": "string"
@@ -5199,6 +5085,9 @@
             "title": "NodePoolT",
             "type": "object",
             "properties": {
+                "external_volume": {
+                    "$ref": "#/definitions/do.Volume"
+                },
                 "image": {
                     "$ref": "#/definitions/do.ImageReference"
                 },
@@ -5334,6 +5223,9 @@
                     "type": "string"
                 },
                 "token_name": {
+                    "type": "string"
+                },
+                "vpc_name": {
                     "type": "string"
                 }
             }
@@ -5528,6 +5420,9 @@
                     }
                 },
                 "template_id": {
+                    "type": "string"
+                },
+                "vpc_name": {
                     "type": "string"
                 }
             }

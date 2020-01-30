@@ -82,33 +82,6 @@ paths:
           description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/{projectId}:
-    delete:
-      tags:
-      - cluster/aws
-      description: delete a cluster
-      operationId: AWSClusterController.Delete
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/aws/{projectId}/:
     get:
       tags:
@@ -135,6 +108,37 @@ paths:
         "401":
           description: '{"error": "error msg"}'
         "404":
+          description: '{"error": "error msg"}'
+  /cluster/aws/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/aws
+      description: delete a cluster
+      operationId: AWSClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
           description: '{"error": "error msg"}'
   /cluster/aws/all:
     get:
@@ -509,33 +513,6 @@ paths:
           description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/azure/{projectId}:
-    delete:
-      tags:
-      - cluster/azure
-      description: delete a cluster
-      operationId: AzureClusterController.Delete
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/azure/{projectId}/:
     get:
       tags:
@@ -563,6 +540,7 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
+  /cluster/azure/{projectId}/{forceDelete}: {}
   /cluster/azure/all:
     get:
       tags:
@@ -872,33 +850,6 @@ paths:
           description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/{projectId}:
-    delete:
-      tags:
-      - cluster/do
-      description: delete a cluster
-      operationId: DOClusterController.Delete
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/do/{projectId}/:
     get:
       tags:
@@ -926,6 +877,7 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
+  /cluster/do/{projectId}/{forceDelete}: {}
   /cluster/do/all:
     get:
       tags:
@@ -1234,33 +1186,6 @@ paths:
           description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/gcp/{projectId}:
-    delete:
-      tags:
-      - cluster/gcp
-      description: delete a cluster
-      operationId: GcpClusterController.Delete
-      parameters:
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      - in: header
-        name: token
-        description: token
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/gcp/{projectId}/:
     get:
       tags:
@@ -1290,6 +1215,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/gcp/{projectId}/{forceDelete}: {}
   /cluster/gcp/all:
     get:
       tags:
@@ -2924,10 +2850,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  600.0xc0429d6b70.false:
+  600.0xc0429edd10.false:
     title: "false"
     type: object
-  686.0xc042ca7f80.false:
+  686.0xc042ce6c90.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2967,7 +2893,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/600.0xc0429d6b70.false'
+        $ref: '#/definitions/600.0xc0429edd10.false'
       name:
         type: string
       network_name:
@@ -3346,7 +3272,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/686.0xc042ca7f80.false'
+        $ref: '#/definitions/686.0xc042ce6c90.false'
       name:
         type: string
       network_name:
@@ -3432,6 +3358,8 @@ definitions:
     title: NodePoolT
     type: object
     properties:
+      external_volume:
+        $ref: '#/definitions/do.Volume'
       image:
         $ref: '#/definitions/do.ImageReference'
       is_external:
@@ -3524,6 +3452,8 @@ definitions:
       status:
         type: string
       token_name:
+        type: string
+      vpc_name:
         type: string
   gcp.Image:
     title: Image
@@ -3654,6 +3584,8 @@ definitions:
         items:
           $ref: '#/definitions/gcp.NodePoolT'
       template_id:
+        type: string
+      vpc_name:
         type: string
   gcp.TemplateMetadata:
     title: TemplateMetadata
