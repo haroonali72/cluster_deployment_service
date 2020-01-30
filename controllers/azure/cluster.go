@@ -116,7 +116,6 @@ func (c *AzureClusterController) GetAll() {
 		return
 	}
 
-
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
@@ -351,12 +350,13 @@ func (c *AzureClusterController) Patch() {
 // @Description delete a cluster
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	forceDelete path    boolean	true     ""
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId [delete]
+// @router /:projectId/:forceDelete  [delete]
 func (c *AzureClusterController) Delete() {
 
 	id := c.GetString(":projectId")
@@ -375,6 +375,13 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
+	forceDelete, err := c.GetBool(":forceDelete")
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -406,14 +413,20 @@ func (c *AzureClusterController) Delete() {
 	ctx.SendLogs("AzureClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	cluster, err := azure.GetCluster(id, userInfo.CompanyId, *ctx)
-	if err == nil && cluster.Status == "Cluster Created" {
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if cluster.Status == "Cluster Created" && !forceDelete {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
+	if cluster.Status == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("AzureClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -421,7 +434,7 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) {
+	if cluster.Status == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}

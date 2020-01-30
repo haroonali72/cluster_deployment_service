@@ -27,18 +27,18 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
-			Method:           "Delete",
-			Router:           `/:projectId`,
-			AllowHTTPMethods: []string{"delete"},
+			Method:           "Get",
+			Router:           `/:projectId/`,
+			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})
 
 	beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
 		beego.ControllerComments{
-			Method:           "Get",
-			Router:           `/:projectId/`,
-			AllowHTTPMethods: []string{"get"},
+			Method:           "Delete",
+			Router:           `/:projectId/:forceDelete`,
+			AllowHTTPMethods: []string{"delete"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})

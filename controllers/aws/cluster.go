@@ -358,13 +358,14 @@ func (c *AWSClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	token	header	string	token ""
-// @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	projectId	path 	string	true	"project id of the cluster"
+// @Param	forceDelete path    boolean	true    ""
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId [delete]
+// @router /:projectId/:forceDelete [delete]
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
@@ -381,7 +382,13 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	forceDelete, err := c.GetBool(":forceDelete")
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -421,14 +428,20 @@ func (c *AWSClusterController) Delete() {
 	}
 
 	cluster, err := aws.GetCluster(id, userInfo.CompanyId, *ctx)
-	if err == nil && cluster.Status == "Cluster Created" {
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if cluster.Status == "Cluster Created" && !forceDelete {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
+	if cluster.Status == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -436,7 +449,7 @@ func (c *AWSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) {
+	if cluster.Status == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
@@ -808,7 +821,6 @@ func (c *AWSClusterController) TerminateCluster() {
 	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
-
 
 	err = aws.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {

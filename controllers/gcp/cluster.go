@@ -76,7 +76,7 @@ func (c *GcpClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Get cluster with project id: "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -119,8 +119,6 @@ func (c *GcpClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
-
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
@@ -216,7 +214,7 @@ func (c *GcpClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+ cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
 	err = gcp.GetNetwork(token, cluster.ProjectId, *ctx)
@@ -317,7 +315,7 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+ cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
 	err = gcp.UpdateCluster(subscriptionId, cluster, true, *ctx)
@@ -360,13 +358,14 @@ func (c *GcpClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	forceDelete path  boolean	true ""
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId [delete]
+// @router /:projectId/:forceDelete  [delete]
 func (c *GcpClusterController) Delete() {
 	ctx := new(utils.Context)
 
@@ -386,7 +385,13 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	forceDelete, err := c.GetBool(":forceDelete")
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -418,7 +423,13 @@ func (c *GcpClusterController) Delete() {
 	ctx.SendLogs("GcpClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.GetCluster(id, userInfo.CompanyId, *ctx)
-	if err == nil && cluster.Status == "Cluster Created" {
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if cluster.Status == "Cluster Created" && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error() + "Cluster is in running state"}
@@ -426,7 +437,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
+	if cluster.Status == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -434,7 +445,7 @@ func (c *GcpClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) {
+	if cluster.Status == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
@@ -544,7 +555,7 @@ func (c *GcpClusterController) StartCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -587,7 +598,7 @@ func (c *GcpClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("GcpClusterController: Creating Cluster. "+ cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
 
@@ -684,7 +695,7 @@ func (c *GcpClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of project. "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -788,7 +799,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	var cluster gcp.Cluster_Def
 
-	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+ projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -816,7 +827,6 @@ func (c *GcpClusterController) TerminateCluster() {
 	}
 
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
-
 
 	err = gcp.UpdateCluster("", cluster, false, *ctx)
 	if err != nil {
@@ -960,7 +970,6 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @router /sshkey/:keyname/:username/:projectId [post]
 func (c *GcpClusterController) PostSSHKey() {
 
-
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: CreateSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1083,7 +1092,6 @@ func (c *GcpClusterController) DeleteSSHKey() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GCPClusterController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	keyName := c.GetString(":keyname")
 	if keyName == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -1179,8 +1187,6 @@ func (c *GcpClusterController) GetAllMachines() {
 
 	ctx.SendLogs("GcpClusterController: Get All Machines. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
-
 	machines, err := gcp.GetAllMachines(credentials, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -1232,7 +1238,6 @@ func (c *GcpClusterController) GetZones() {
 		c.ServeJSON()
 		return
 	}
-
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
