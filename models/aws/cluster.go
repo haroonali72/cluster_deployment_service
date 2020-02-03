@@ -762,3 +762,14 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	}
 	return false
 }
+func GetNetworkInfo(projectId,companyId string,ctx utils.Context ) (info map[string]bool,err error) {
+	info = make(map[string]bool)
+	cluster,err := GetCluster(projectId, companyId, ctx)
+	if err !=nil{
+		return info,err
+	}
+	for _, node := range cluster.NodePools {
+			info[node.PoolSubnet]= node.EnablePublicIP
+		}
+		return info,nil
+}

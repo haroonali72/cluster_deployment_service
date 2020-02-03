@@ -260,6 +260,47 @@
                 }
             }
         },
+        "/cluster/aws/getNetworkInfo/{projectId}": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "get public ip info of node pool",
+                "operationId": "AWSClusterController.GetNetworkInfo",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/map[string]bool"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/machine/info": {
             "get": {
                 "tags": [
@@ -4335,11 +4376,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc0429edd10.false": {
+        "577.0xc00095bad0.false": {
             "title": "false",
             "type": "object"
         },
-        "686.0xc042ce6c90.false": {
+        "662.0xc000c74f90.false": {
             "title": "false",
             "type": "object"
         },
@@ -4395,7 +4436,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc0429edd10.false"
+                    "$ref": "#/definitions/577.0xc00095bad0.false"
                 },
                 "name": {
                     "type": "string"
@@ -4523,6 +4564,9 @@
                 },
                 "ami": {
                     "$ref": "#/definitions/aws.Ami"
+                },
+                "enable_public_ip": {
+                    "type": "boolean"
                 },
                 "external_volume": {
                     "$ref": "#/definitions/aws.Volume"
@@ -4792,6 +4836,9 @@
                 "boot_diagnostics": {
                     "$ref": "#/definitions/azure.DiagnosticsProfile"
                 },
+                "enable_public_ip": {
+                    "type": "boolean"
+                },
                 "image": {
                     "$ref": "#/definitions/azure.ImageReference"
                 },
@@ -4938,7 +4985,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
         },
         "do.Cluster_Def": {
             "title": "Cluster_Def",
@@ -4957,7 +5004,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/686.0xc042ce6c90.false"
+                    "$ref": "#/definitions/662.0xc000c74f90.false"
                 },
                 "name": {
                     "type": "string"
@@ -5352,6 +5399,9 @@
                 "auto_scaling": {
                     "$ref": "#/definitions/gcp.AutoScaling"
                 },
+                "enable_public_ip": {
+                    "type": "boolean"
+                },
                 "enable_scaling": {
                     "type": "boolean"
                 },
@@ -5517,6 +5567,10 @@
                     "type": "string"
                 }
             }
+        },
+        "map[string]bool": {
+            "title": "map[string]bool",
+            "type": "object"
         },
         "models.Cloud": {
             "title": "Cloud",
