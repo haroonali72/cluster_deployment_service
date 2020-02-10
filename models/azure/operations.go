@@ -1912,7 +1912,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	var fileName []string
 	if pool.EnableVolume {
 		params.VirtualMachineProfile.StorageProfile.DataDisks = &storage
-		fileName = append(fileName, "azure-volume-mount.sh")
+		fileName = append(fileName, "azure-volume-slave-mount.sh")
 	}
 
 	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
@@ -2006,6 +2006,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	}
+
 	return vms, nil, private
 }
 
