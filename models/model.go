@@ -38,6 +38,7 @@ const (
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
 	DO    Cloud = "do"
+	OP    Cloud = "op"
 )
 
 type KeyType string
