@@ -225,12 +225,15 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	err = aws.GetNetwork(token, cluster.ProjectId, *ctx)
+	isPrivate,err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
+	}
+	for _,node := range cluster.NodePools{
+		node.EnablePublicIP=isPrivate.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
 	err = aws.CreateCluster(subscriptionId, cluster, *ctx)
