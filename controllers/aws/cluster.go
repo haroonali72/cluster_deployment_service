@@ -233,7 +233,7 @@ func (c *AWSClusterController) Post() {
 		return
 	}
 	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=isPrivate.IsPrivate
+		node.EnablePublicIP=!isPrivate.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
 	err = aws.CreateCluster(subscriptionId, cluster, *ctx)

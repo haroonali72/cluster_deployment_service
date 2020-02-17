@@ -225,7 +225,7 @@ func (c *GcpClusterController) Post() {
 		return
 	}
 	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=isPrivate.IsPrivate
+		node.EnablePublicIP=!isPrivate.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
 
