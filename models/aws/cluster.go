@@ -87,9 +87,6 @@ type Project struct {
 type Data struct {
 	Region string `json:"region"`
 }
-type NetworkType struct{
-	IsPrivate        bool          `json:"is_private" bson:"is_private"`
-}
 
 func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	update := false
