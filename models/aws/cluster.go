@@ -12,7 +12,6 @@ import (
 	"antelope/models/vault"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"gopkg.in/mgo.v2/bson"
@@ -179,7 +178,7 @@ func GetNetwork(token, projectId string, ctx utils.Context) (types.AWSNetwork,er
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return  types.AWSNetwork{},err
 	}
-	
+
 	return net,nil
 }
 func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context) error {
