@@ -178,7 +178,7 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	} else {
 		return types.AzureNetwork{},errors.New("Network not found")
 	}
-	return types.AzureNetwork{},nil
+	return  network,nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
 	data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
