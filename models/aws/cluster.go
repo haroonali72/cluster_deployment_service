@@ -179,7 +179,7 @@ func GetNetwork(token, projectId string, ctx utils.Context) (types.AWSNetwork,er
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return  types.AWSNetwork{},err
 	}
-	fmt.Println(net)
+	
 	return net,nil
 }
 func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context) error {
