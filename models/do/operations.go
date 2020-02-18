@@ -87,7 +87,9 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 	var doNetwork types.DONetwork
 	url := getNetworkHost("do", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
-
+	if err != nil || network == nil {
+		return cluster, errors.New("error in fetching network")
+	}
 	err = json.Unmarshal(network.([]byte), &doNetwork)
 
 	if err != nil {

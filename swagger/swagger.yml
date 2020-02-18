@@ -230,33 +230,6 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/getNetworkInfo/{projectId}:
-    get:
-      tags:
-      - cluster/aws
-      description: get public ip info of node pool
-      operationId: AWSClusterController.GetNetworkInfo
-      parameters:
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      - in: header
-        name: token
-        description: token
-        type: string
-      responses:
-        "200":
-          description: ""
-          schema:
-            $ref: '#/definitions/map[string]bool'
-        "400":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "error msg"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/aws/machine/info:
     get:
       tags:
@@ -2877,10 +2850,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc00095bad0.false:
+  584.0xc0009527b0.false:
     title: "false"
     type: object
-  662.0xc000c74f90.false:
+  662.0xc000c2bce0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -2920,7 +2893,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc00095bad0.false'
+        $ref: '#/definitions/584.0xc0009527b0.false'
       name:
         type: string
       network_name:
@@ -3303,7 +3276,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/662.0xc000c74f90.false'
+        $ref: '#/definitions/662.0xc000c2bce0.false'
       name:
         type: string
       network_name:
@@ -3682,9 +3655,6 @@ definitions:
         type: string
       username:
         type: string
-  map[string]bool:
-    title: map[string]bool
-    type: object
   models.Cloud:
     title: Cloud
     type: string

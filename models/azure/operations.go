@@ -527,16 +527,18 @@ func (cloud *AZURE) terminateCluster(cluster Cluster_Def, ctx utils.Context, com
 		if pool.PoolRole == "master" {
 
 			utils.SendLog(companyId, "Terminating node pool: "+pool.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
-
-			err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx, companyId)
-			if err != nil {
-				terminate = false
+			if pool != nil && pool.Nodes != nil && pool.Nodes[0].Name != nil {
+				err := cloud.TerminateMasterNode(*pool.Nodes[0].Name, cluster.ProjectId, cluster.ResourceGroup, ctx, companyId)
+				if err != nil {
+					terminate = false
+					break
+				}
+			} else {
 				break
 			}
-
 			nicName := "NIC-" + pool.Name
 
-			err = cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
+			err := cloud.deleteNIC(nicName, cluster.ResourceGroup, cluster.ProjectId, ctx, companyId)
 			if err != nil {
 				terminate = false
 			}
@@ -1910,7 +1912,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	var fileName []string
 	if pool.EnableVolume {
 		params.VirtualMachineProfile.StorageProfile.DataDisks = &storage
-		fileName = append(fileName, "azure-volume-mount.sh")
+		fileName = append(fileName, "azure-volume-slave-mount.sh")
 	}
 
 	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
@@ -2004,6 +2006,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachineScaleSetVMListResultPage{}, err, ""
 	}
+
 	return vms, nil, private
 }
 

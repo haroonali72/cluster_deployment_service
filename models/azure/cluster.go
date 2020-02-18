@@ -153,31 +153,32 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token string) error {
+func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token string) (types.AzureNetwork,error) {
 
 	url := getNetworkHost("azure", projectId)
 
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.AzureNetwork{},err
 	}
 
 	var network types.AzureNetwork
 	err = json.Unmarshal(data.([]byte), &network)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.AzureNetwork{},err
 	}
+
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
 			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Resource Group is in correct")
+			return types.AzureNetwork{},errors.New("Resource Group is in correct")
 		}
 	} else {
-		return errors.New("Network not found")
+		return types.AzureNetwork{},errors.New("Network not found")
 	}
-	return nil
+	return types.AzureNetwork{},nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
 	data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)

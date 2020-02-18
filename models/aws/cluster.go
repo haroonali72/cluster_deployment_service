@@ -7,6 +7,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	"antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -159,17 +160,23 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 
 }
 
-func GetNetwork(token, projectId string, ctx utils.Context) error {
+func GetNetwork(token, projectId string, ctx utils.Context) (types.AWSNetwork,error) {
 
 	url := getNetworkHost("aws", projectId)
 
-	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.AWSNetwork{},err
+	}
+	var net types.AWSNetwork
+	err = json.Unmarshal(data.([]byte),&net)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  types.AWSNetwork{},err
 	}
 
-	return nil
+	return net,nil
 }
 func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)

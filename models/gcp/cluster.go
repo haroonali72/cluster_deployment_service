@@ -7,6 +7,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -111,7 +112,9 @@ type Data struct {
 	Region string `json:"region"`
 	Zone   string `json:"zone"`
 }
-
+type NetworkType struct{
+	IsPrivate        bool          `json:"is_private" bson:"is_private"`
+}
 type Machines struct {
 	MachineName []string `json:"machine_name" bson:"machine_name"`
 }
@@ -143,17 +146,22 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	}
 	return update
 }
-func GetNetwork(token, projectId string, ctx utils.Context) error {
+func GetNetwork(token, projectId string, ctx utils.Context) (types.GCPNetwork,error) {
 
 	url := getNetworkHost("gcp", projectId)
 
-	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.GCPNetwork{},err
 	}
-
-	return nil
+	var net  types.GCPNetwork
+	err = json.Unmarshal(data.([]byte),&net)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  types.GCPNetwork{},err
+	}
+	return net,nil
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, string, error) {
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint

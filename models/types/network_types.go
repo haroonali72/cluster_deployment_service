@@ -9,6 +9,7 @@ import (
 type GCPNetwork struct {
 	Name       string           `json:"name" bson:"name"`
 	Definition []*AWSDefinition `json:"definition" bson:"definition"`
+	IsPrivate  bool 			`json:"is_private" bson:"is_private"`
 }
 
 type AWSNetwork struct {
@@ -20,6 +21,7 @@ type AWSNetwork struct {
 	CreationDate     time.Time        `json:"-" bson:"creation_date"`
 	ModificationDate time.Time        `json:"-" bson:"modification_date"`
 	Definition       []*AWSDefinition `json:"definition" bson:"definition"`
+	IsPrivate		 bool             `json:"is_private" bson:"is_private"`
 }
 
 type AWSDefinition struct {
@@ -58,6 +60,7 @@ type AzureNetwork struct {
 	CreationDate     time.Time          `json:"-" bson:"creation_date"`
 	ModificationDate time.Time          `json:"-" bson:"modification_date"`
 	Definition       []*AzureDefinition `json:"definition" bson:"definition"`
+	IsPrivate        bool 				`json:"is_private" bson:"is_private"`
 }
 
 type AzureDefinition struct {
