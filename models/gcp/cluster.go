@@ -7,6 +7,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -145,22 +146,21 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	}
 	return update
 }
-func GetNetwork(token, projectId string, ctx utils.Context) (NetworkType,error) {
+func GetNetwork(token, projectId string, ctx utils.Context) (types.GCPNetwork,error) {
 
 	url := getNetworkHost("gcp", projectId)
 
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return NetworkType{},err
+		return types.GCPNetwork{},err
 	}
-	var net NetworkType
+	var net  types.GCPNetwork
 	err = json.Unmarshal(data.([]byte),&net)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  NetworkType{},err
+		return  types.GCPNetwork{},err
 	}
-	fmt.Println(net)
 	return net,nil
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, string, error) {

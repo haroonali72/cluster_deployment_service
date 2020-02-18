@@ -217,7 +217,7 @@ func (c *GcpClusterController) Post() {
 	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	isPrivate,err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	network,err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -225,7 +225,7 @@ func (c *GcpClusterController) Post() {
 		return
 	}
 	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=!isPrivate.IsPrivate
+		node.EnablePublicIP=!network.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
 
