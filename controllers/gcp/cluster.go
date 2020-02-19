@@ -128,7 +128,6 @@ func (c *GcpClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	token	header	string	token ""
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -145,14 +144,6 @@ func (c *GcpClusterController) Post() {
 
 	token := c.Ctx.Input.Header("token")
 
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		ctx.SendLogs("GcpClusterController: subscriptionId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400) //no need
-		c.Data["json"] = map[string]string{"error": "subscriptionId is empty"}
-		c.ServeJSON()
-		return
-	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -192,7 +183,7 @@ func (c *GcpClusterController) Post() {
 	}
 	cluster.CompanyId = userInfo.CompanyId
 
-	err = gcp.CreateCluster(subscriptionId, cluster, *ctx)
+	err = gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
@@ -219,7 +210,6 @@ func (c *GcpClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -235,14 +225,7 @@ func (c *GcpClusterController) Patch() {
 	var cluster gcp.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	token := c.Ctx.Input.Header("token")
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		ctx.SendLogs("GcpClusterController: subscriptionId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "subscriptionId is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -273,7 +256,7 @@ func (c *GcpClusterController) Patch() {
 	beego.Info("GcpClusterController: Patch cluster with name: ", cluster.Name)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	err = gcp.UpdateCluster(subscriptionId, cluster, true, *ctx)
+	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "does not exist") {

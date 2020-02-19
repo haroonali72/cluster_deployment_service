@@ -3,7 +3,6 @@ package gcp
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
-	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
@@ -211,7 +210,7 @@ func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Cont
 	return true, credentials.Credentials
 }
 
-func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster( cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil {
 		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
@@ -219,13 +218,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		beego.Error(text, err)
 		return errors.New(text)
 	}
-	if subscriptionId != "" {
-		err = checkCoresLimit(cluster, subscriptionId, ctx)
-		if err != nil { //core size limit exceed
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
-	}
+
 
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
@@ -311,7 +304,7 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 	return clusters, nil
 }
 
-func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster( cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
@@ -343,7 +336,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(subscriptionId, cluster, ctx)
+	err = CreateCluster( cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Update - Got error creating cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error("Cluster model: Update - Got error creating cluster: ", err)
@@ -401,7 +394,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster( cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -424,7 +417,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		}
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster( cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -436,7 +429,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster("", cluster, false, ctx)
+	confError = UpdateCluster( cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -562,7 +555,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster( cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -583,7 +576,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster( cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -603,7 +596,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		var nodes []*Node
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster("", cluster, false, ctx)
+	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -627,41 +620,6 @@ func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (priva
 		return "", err
 	}
 	return privateKey, err
-}
-
-func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
-
-	var coreCount int64 = 0
-	var machine []models.GCPMachine
-	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
-		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	}
-
-	found := false
-	for _, nodepool := range cluster.NodePools {
-		for _, mach := range machine {
-			if nodepool.MachineType == mach.InstanceType {
-				if nodepool.EnableScaling {
-					coreCount = coreCount + ( nodepool.Scaling.MaxScalingGroupSize * int64(mach.Cores))
-				}else {
-					coreCount = coreCount + (nodepool.NodeCount * int64(mach.Cores))
-				}
-				found = true
-			}
-		}
-	}
-	if !found {
-		return errors.New("Machine not found")
-	}
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		return err
-	}
-	if coreCount > coreLimit {
-		return errors.New("Exceeds the cores limit")
-	}
-
-	return nil
 }
 
 func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
