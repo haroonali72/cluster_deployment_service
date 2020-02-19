@@ -241,7 +241,6 @@ func (c *AzureClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	subscription_id	header	subscriptionId	token ""
 // @Param	body	body 	azure.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -263,13 +262,7 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "subscription_id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -301,7 +294,7 @@ func (c *AzureClusterController) Patch() {
 
 	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = azure.UpdateCluster(subscriptionId, cluster, true, *ctx)
+	err = azure.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -566,7 +559,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = azure.UpdateCluster("", cluster, false, *ctx)
+	err = azure.UpdateCluster( cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -792,7 +785,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
-	err = azure.UpdateCluster("", cluster, false, *ctx)
+	err = azure.UpdateCluster( cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}

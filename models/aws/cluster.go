@@ -121,6 +121,7 @@ func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 			return errors.New("Nodepool can't have more than 3 nodes")
 	}
 	}
+	return nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AwsProfile, error) {
 	data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
