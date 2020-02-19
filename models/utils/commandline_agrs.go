@@ -20,21 +20,54 @@ var (
 	mongo_azure_cluster_collection  = ""
 	mongo_gcp_template_collection   = ""
 	mongo_gcp_cluster_collection    = ""
+	mongo_do_template_collection    = ""
+	mongo_do_cluster_collection     = ""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
 	network_url                     = ""
 	raccoon_url                     = ""
 	rbac_url                        = ""
+	woodpecker_url                  = ""
 	ca_cert                         = ""
 	client_cert                     = ""
 	client_pem                      = ""
 	subscription_host               = ""
+	kill_bill_password              = ""
+	kill_bill_secret_key            = ""
+	kill_bill_user                  = ""
+	kill_bill_api_key               = ""
 )
 
 func InitFlags() error {
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "kill_bill_user",
+			Usage:       "kill_bill_user",
+			Destination: &kill_bill_user,
+			EnvVar:      "kill_bill_user",
+		},
+		cli.StringFlag{
+			Name:        "kill_bill_api_key",
+			Usage:       "kill_bill_api_key",
+			Destination: &kill_bill_api_key,
+			EnvVar:      "kill_bill_api_key",
+		},
+
+		cli.StringFlag{
+			Name:        "kill_bill_secret_key",
+			Usage:       "kill_bill_secret_key",
+			Destination: &kill_bill_secret_key,
+			EnvVar:      "kill_bill_secret_key",
+		},
+		cli.StringFlag{
+			Name:        "kill_bill_password",
+			Usage:       "kill_bill_password",
+			Destination: &kill_bill_password,
+			EnvVar:      "kill_bill_password",
+		},
+
 		cli.StringFlag{
 			Name:        "ca_cert",
 			Usage:       "ca_cert",
@@ -132,6 +165,18 @@ func InitFlags() error {
 			EnvVar:      "mongo_gcp_cluster_collection",
 		},
 		cli.StringFlag{
+			Name:        "mongo_do_template_collection",
+			Usage:       "do template collection name ",
+			Destination: &mongo_do_template_collection,
+			EnvVar:      "mongo_do_template_collection",
+		},
+		cli.StringFlag{
+			Name:        "mongo_do_cluster_collection",
+			Usage:       "do cluster collection name ",
+			Destination: &mongo_do_cluster_collection,
+			EnvVar:      "mongo_do_cluster_collection",
+		},
+		cli.StringFlag{
 			Name:        "redis_url",
 			Usage:       "redis host",
 			Destination: &redis_url,
@@ -167,6 +212,12 @@ func InitFlags() error {
 			Destination: &rbac_url,
 			EnvVar:      "rbac_url",
 		},
+		cli.StringFlag{
+			Name:        "woodpecker_url",
+			Usage:       "woodpecker_url",
+			Destination: &woodpecker_url,
+			EnvVar:      "woodpecker_url",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -176,6 +227,10 @@ func InitFlags() error {
 		log.Println(err)
 		return err
 	}
+	beego.AppConfig.Set("kill_bill_api_key", kill_bill_api_key)
+	beego.AppConfig.Set("kill_bill_user", kill_bill_user)
+	beego.AppConfig.Set("kill_bill_secret_key", kill_bill_secret_key)
+	beego.AppConfig.Set("kill_bill_password", kill_bill_password)
 	beego.AppConfig.Set("ca_certificate", ca_cert)
 	beego.AppConfig.Set("client_cert", client_cert)
 	beego.AppConfig.Set("client_pem", client_pem)
@@ -192,6 +247,8 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_azure_cluster_collection", mongo_azure_cluster_collection)
 	beego.AppConfig.Set("mongo_gcp_cluster_collection", mongo_gcp_cluster_collection)
 	beego.AppConfig.Set("mongo_gcp_template_collection", mongo_gcp_template_collection)
+	beego.AppConfig.Set("mongo_do_template_collection", mongo_do_template_collection)
+	beego.AppConfig.Set("mongo_do_cluster_collection", mongo_do_cluster_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)
 	beego.AppConfig.Set("network_url", network_url)
@@ -199,6 +256,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("raccoon_url", raccoon_url)
 	beego.AppConfig.Set("rbac_url", rbac_url)
 	beego.AppConfig.Set("subscription_host", subscription_host)
-
+	beego.AppConfig.Set("woodpecker_url", woodpecker_url)
 	return nil
 }

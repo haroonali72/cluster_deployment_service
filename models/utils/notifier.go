@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
+	"time"
 )
 
 /*var (
@@ -22,29 +23,41 @@ type Response struct {
 }
 
 func (notifier *Notifier) Notify(channel, status string, ctx Context) {
+
 	msg := Response{
 		Status:    status,
-		ID:        ctx.data.Company + "_" + channel,
+		ID:        ctx.Data.Company + "_" + channel,
 		Component: "Cluster",
 	}
+
 	b, err := json.Marshal(msg)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
 		return
 	}
-	cmd := notifier.Client.Publish(ctx.data.Company+"_"+channel, string(b))
+
+	cmd := notifier.Client.Publish(ctx.Data.Company+"_"+channel, string(b))
+
 	beego.Info(*cmd)
-	//b, err = json.Marshal(*cmd)
-	//if err != nil {
-	//	beego.Error(err.Error())
-	//	return
-	//}
-	ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	if cmd != nil {
-		if cmd.Err() != nil {
-			beego.Error(cmd.Err().Error())
+
+	if cmd != nil && (cmd.Err() != nil || cmd.Val() == 0) {
+
+		start := time.Now()
+		for int(time.Since(start).Minutes()) < 1 {
+
+			time.Sleep(5 * time.Second)
+			cmd = notifier.Client.Publish(ctx.Data.Company+"_"+channel, string(b))
+
+			if cmd != nil && cmd.Err() != nil {
+				beego.Error(cmd.Err().Error())
+			} else if cmd != nil && cmd.Val() == 0 {
+				beego.Info(*cmd)
+			} else if cmd != nil && cmd.Val() > 0 {
+				break
+			}
 		}
+
+		ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 }
 

@@ -1,6 +1,9 @@
 package d_duck
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"time"
+)
 
 type Catalogs struct {
 	XMLName  xml.Name `xml:"catalogs"`
@@ -13,8 +16,9 @@ type Versions struct {
 }
 
 type Version struct {
-	XMLName  xml.Name `xml:"version"`
-	Products Products `xml:"products"`
+	XMLName       xml.Name  `xml:"version"`
+	EffectiveDate time.Time `xml:"effectiveDate"`
+	Products      Products  `xml:"products"`
 }
 
 type Products struct {

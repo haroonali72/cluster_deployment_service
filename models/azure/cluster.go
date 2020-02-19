@@ -55,6 +55,7 @@ type NodePool struct {
 	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required, in(standard hdd|standard ssd|premium ssd)"`
 	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
 	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
+	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"`
 }
 type AutoScaling struct {
 	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
@@ -127,6 +128,9 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 			existingCluster.NodePools[index].Scaling.State = updatedCluster.NodePools[index].Scaling.State
 		}
 	}
+	if update {
+		existingCluster.TokenName = updatedCluster.TokenName
+	}
 	return update
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
@@ -148,31 +152,32 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token string) error {
+func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token string) (types.AzureNetwork,error) {
 
 	url := getNetworkHost("azure", projectId)
 
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.AzureNetwork{},err
 	}
 
 	var network types.AzureNetwork
 	err = json.Unmarshal(data.([]byte), &network)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.AzureNetwork{},err
 	}
+
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
 			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Resource Group is in correct")
+			return types.AzureNetwork{},errors.New("Resource Group is in correct")
 		}
 	} else {
-		return errors.New("Network not found")
+		return types.AzureNetwork{},errors.New("Network not found")
 	}
-	return nil
+	return  network,nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
 	data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
@@ -221,11 +226,11 @@ func CreateCluster( cluster Cluster_Def, ctx utils.Context) error {
 	}
 	defer session.Close()
 
-	err = checkClusterSize(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
+	//err = checkClusterSize(cluster)
+	//if err != nil { //cluster found
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	return err
+	//}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAzureClusterCollection, cluster)
 	if err != nil {
@@ -233,9 +238,6 @@ func CreateCluster( cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
-	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -255,8 +257,6 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
 	}
-	ctx.SendLogs(" Get Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return cluster, nil
 }
 
@@ -279,9 +279,6 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-
-	ctx.SendLogs(" Get all azure Cluster ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return clusters, nil
 }
 
@@ -292,6 +289,16 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
+
+	if oldCluster.Status == string(models.Deploying) && update {
+		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("cluster is in deploying state")
+	}
+	if oldCluster.Status == string(models.Terminating) && update {
+		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("cluster is in terminating state")
+	}
+
 	if oldCluster.Status == "Cluster Created" && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -314,8 +321,6 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	ctx.SendLogs(" Azure Cluster: "+cluster.Name+" of Project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 
@@ -333,8 +338,6 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	ctx.SendLogs(" Azure Cluster of Project Id: "+projectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	return nil
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
@@ -377,6 +380,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	cluster, confError = azure.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = "Cluster creation failed"
 		beego.Info("going to cleanup")
 		confError = azure.CleanUp(cluster, ctx, companyId)
 		if confError != nil {
@@ -402,7 +406,6 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	return nil
 }
@@ -426,22 +429,19 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		return Cluster_Def{}, err
 	}
 
-	c, e := azure.fetchStatus(cluster, token, ctx)
+	_, e := azure.fetchStatus(&cluster, token, ctx)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		return Cluster_Def{}, e
+		return cluster, e
 	}
 	/*err = UpdateCluster(c)
 	if err != nil {
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}*/
-
-	ctx.SendLogs(" AZURE Cluster "+cluster.Name+" of Project Id: "+projectId+"fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
-	return c, nil
+	return cluster, nil
 }
 func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {
 
@@ -457,10 +457,12 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	if cluster.Status != "Cluster Created" {
-		ctx.SendLogs("Cluster model: Cluster is not in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+	if cluster.Status == "" || cluster.Status == "new" {
+		text := "Cannot terminate a new cluster"
+		ctx.SendLogs("AzureClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return errors.New(text)
 	}
 
 	azure := AZURE{
@@ -470,9 +472,12 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		Subscription: credentials.Profile.SubscriptionId,
 		Region:       credentials.Profile.Location,
 	}
+
+	cluster.Status = string(models.Terminating)
+	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+
 	err = azure.init()
 	if err != nil {
-
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster("", cluster, false, ctx)
@@ -508,8 +513,6 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 			return err
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-
-		ctx.SendLogs(" Azure Cluster "+cluster.Name+" of Project Id: "+cluster.ProjectId+"terminated successfully ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 		return nil
 	}
@@ -552,7 +555,7 @@ func InsertSSHKeyPair(key key_utils.AZUREKey) (err error) {
 }
 func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
 
-	keys, err = vault.GetAllSSHKey("azure", ctx, token)
+	keys, err = vault.GetAllSSHKey("azure", ctx, token, "")
 	if err != nil {
 		beego.Error(err.Error())
 		return keys, err
@@ -579,21 +582,82 @@ func GetSSHKeyPair(keyname string) (keys *key_utils.AZUREKey, err error) {
 
 func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
-	privateKey, err = key_utils.GenerateKey(models.Azure, keyName, "azure@example.com", token, teams, ctx)
+	keyInfo, err := key_utils.GenerateKey(models.Azure, keyName, "azure@example.com", token, teams, ctx)
 	if err != nil {
 		return "", err
 	}
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
+	if err != nil {
+		beego.Error(err.Error())
+		return "", err
+	}
 
-	return privateKey, err
+	return keyInfo.PrivateKey, err
 }
 
 
 func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 
-	err := vault.DeleteSSHkey(string(models.Azure), keyName, token, ctx)
+	err := vault.DeleteSSHkey(string(models.Azure), keyName, token, ctx, "")
 	if err != nil {
 		return err
 	}
 
 	return err
+}
+func getCompanyAllCluster(companyId string, ctx utils.Context) (clusters []Cluster_Def, err error) {
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err1
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
+	err = c.Find(bson.M{"company_id": companyId}).All(&clusters)
+	if err != nil {
+		return nil, err
+	}
+
+	return clusters, nil
+}
+
+func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
+	clusters, err := getCompanyAllCluster(companyId, ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: GetAllCompany - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return true
+	}
+	for _, cluster := range clusters {
+		for _, pool := range cluster.NodePools {
+			if keyName == pool.KeyInfo.KeyName {
+				ctx.SendLogs("Key is used in other projects ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM, error) {
+
+	azure := AZURE{
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
+	}
+	err := azure.init()
+	if err != nil {
+		return []azureVM{}, err
+	}
+
+	instances, err := azure.getAllInstances()
+	if err != nil {
+		beego.Error(err.Error())
+		return []azureVM{}, err
+	}
+	return instances, nil
 }

@@ -3,9 +3,7 @@ package key_utils
 import (
 	"antelope/models"
 	"antelope/models/utils"
-	"antelope/models/vault"
 	"encoding/json"
-	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"os/exec"
@@ -22,12 +20,14 @@ type AWSKey struct {
 
 type AZUREKey struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type"`
-	NewKey         models.KeyType         `json:"key_type"  bson:"key_type"`
+	KeyType        models.KeyType         `json:"key_type" bson:"key_type" valid:"required, in(new|cp|aws|user)"`
 	KeyName        string                 `json:"key_name" bson:"key_name"`
 	Username       string                 `json:"username" bson:"username,omitempty"`
 	AdminPassword  string                 `json:"admin_password" bson:"admin_password,omitempty"`
 	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty"`
 	PublicKey      string                 `json:"public_key" bson:"public_key,omitempty"`
+	ID             int                    `json:"id" bson:"id,omitempty"`
+	FingerPrint    string                 `json:"finger_print" bson:"finger_print,omitempty"`
 	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
 }
 
@@ -98,18 +98,18 @@ func GenerateKeyPair(keyName, username string, ctx utils.Context) (KeyPairRespon
 	return res, nil
 }
 
-func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx utils.Context) (string, error) {
+func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx utils.Context) (AZUREKey, error) {
 
 	var keyInfo AZUREKey
-	_, err := vault.GetSSHKey(string(cloud), keyName, token, ctx)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		beego.Error(err.Error())
-		return "", err
-	}
-	if err == nil{
-		return "", errors.New("Key already exist")
-	}
+	//_, err := vault.GetSSHKey(string(cloud), keyName, token, ctx, "")
+	//if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	beego.Error(err.Error())
+	//	return keyInfo, err
+	//}
+	//if err == nil {
+	//	return keyInfo, errors.New("Key already exist")
+	//}
 	if userName == "" {
 		userName = "cloudplex"
 	}
@@ -117,7 +117,7 @@ func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx
 	res, err := GenerateKeyPair(keyName, userName, ctx)
 	if err != nil {
 		beego.Error("vm creation failed with error: " + err.Error())
-		return "", err
+		return keyInfo, err
 	}
 
 	keyInfo.Cloud = cloud
@@ -129,11 +129,5 @@ func GenerateKey(cloud models.Cloud, keyName, userName, token, teams string, ctx
 	ctx.SendLogs("SSHKey Created. ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("SSHKey Created. ", keyInfo.PrivateKey)
 
-	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams)
-	if err != nil {
-		beego.Error("vm creation failed with error: " + err.Error())
-		return "", err
-	}
-
-	return keyInfo.PrivateKey, nil
+	return keyInfo, nil
 }
