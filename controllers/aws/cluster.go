@@ -581,7 +581,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = aws.UpdateCluster("", cluster, false, *ctx)
+	err = aws.UpdateCluster( cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -811,7 +811,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
 
-	err = aws.UpdateCluster("", cluster, false, *ctx)
+	err = aws.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}

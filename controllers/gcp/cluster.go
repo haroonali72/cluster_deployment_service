@@ -584,7 +584,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = gcp.UpdateCluster("", cluster, false, *ctx)
+	err = gcp.UpdateCluster( cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -821,7 +821,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
 
-	err = gcp.UpdateCluster("", cluster, false, *ctx)
+	err = gcp.UpdateCluster( cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}

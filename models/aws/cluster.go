@@ -188,13 +188,13 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
+/*
 	err = checkClusterSize(cluster, ctx)
 	if err != nil { //cluster size limit exceed
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
+*/
 
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
