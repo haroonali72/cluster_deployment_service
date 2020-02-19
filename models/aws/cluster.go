@@ -115,14 +115,13 @@ func checkMasterPools(cluster Cluster_Def) error {
 	return nil
 }
 
-//func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
-//	for _, pools := range cluster.NodePools {
-//		if pools.NodeCount > 3 {
-//			return errors.New("Nodepool can't have more than 3 nodes")
-//		}
-//	}
-//	return nil
-//}
+func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
+	for _, pools := range cluster.NodePools {
+		if pools.NodeCount > 3 {
+			return errors.New("Nodepool can't have more than 3 nodes")
+	}
+	}
+}
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AwsProfile, error) {
 	data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
 	if err != nil {
