@@ -144,7 +144,6 @@ func (c *AzureClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	token	header	string	token ""
-// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	azure.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error message"}
@@ -165,15 +164,6 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "subscription_id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -225,8 +215,7 @@ func (c *AzureClusterController) Post() {
 	}
 
 	cluster.CompanyId = userInfo.CompanyId
-
-	err = azure.CreateCluster(subscriptionId, cluster, *ctx)
+	err = azure.CreateCluster( cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)

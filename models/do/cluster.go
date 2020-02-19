@@ -3,7 +3,6 @@ package do
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
-	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
@@ -137,45 +136,7 @@ func checkMasterPools(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
 
-	var coreCount int64 = 0
-	var machine []models.Machine
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		return err
-	}
-	if coreLimit == 0 {
-		return nil
-	}
-	if err := json.Unmarshal(cores.DOCores, &machine); err != nil {
-		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	}
-
-	found := true
-	for _, nodepool := range cluster.NodePools {
-		for _, mach := range machine {
-			if nodepool.MachineType == mach.InstanceType {
-				//if nodepool.EnableScaling {
-				//	coreCount = coreCount + (nodepool.Scaling.MaxScalingGroupSize * mach.Cores)
-				//} else {
-				//
-				coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
-				//}
-				found = true
-				break
-			}
-		}
-	}
-	if !found {
-		return errors.New("Machine not found")
-	}
-	if coreCount > coreLimit {
-		return errors.New("Exceeds the cores limit")
-	}
-
-	return nil
-}
 func CreateCluster(subscriptionID string, cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found

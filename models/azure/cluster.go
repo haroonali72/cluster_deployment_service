@@ -3,7 +3,6 @@ package azure
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
-	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	"antelope/models/rbac_authentication"
@@ -204,7 +203,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster( cluster Cluster_Def, ctx utils.Context) error {
 
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
@@ -217,14 +216,9 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-/*	if subscriptionId != "" {
-		err = checkCoresLimit(cluster, subscriptionId, ctx)
-		if err != nil { //core size limit exceed
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
-	}
-*/
+
+
+
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -322,7 +316,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(subscriptionId, cluster, ctx)
+	err = CreateCluster( cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -601,47 +595,6 @@ func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey s
 	return keyInfo.PrivateKey, err
 }
 
-func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
-
-	var coreCount int64 = 0
-	var machine []models.Machine
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		beego.Error("Subscription library error")
-		return err
-
-	}
-	if coreLimit == 0 {
-		return nil
-	}
-	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
-		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	}
-
-	found := false
-	for _, nodepool := range cluster.NodePools {
-		for _, mach := range machine {
-			if nodepool.MachineType == mach.InstanceType {
-				if nodepool.EnableScaling {
-					coreCount = coreCount + (nodepool.Scaling.MaxScalingGroupSize * mach.Cores)
-				} else {
-					coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
-				}
-				found = true
-				break
-			}
-		}
-	}
-	if !found {
-		return errors.New("Machine not found")
-	}
-
-	if coreCount > coreLimit {
-		return errors.New("Exceeds the cores limit")
-	}
-
-	return nil
-}
 
 func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 
