@@ -271,14 +271,6 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		ctx.SendLogs("GcpClusterController: subscriptionId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "subscriptionId is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {

@@ -282,7 +282,7 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 	return clusters, nil
 }
 
-func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster( cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
@@ -368,7 +368,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster( cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -388,7 +388,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		}
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -398,7 +398,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster("", cluster, false, ctx)
+	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -480,7 +480,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	if err != nil {
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster( cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -503,7 +503,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster( cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -523,7 +523,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		var nodes []*VM
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster("", cluster, false, ctx)
+	err = UpdateCluster( cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 

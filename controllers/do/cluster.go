@@ -154,7 +154,6 @@ func (c *DOClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	do.Cluster_Def		true	"body for cluster content"
-// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
@@ -179,13 +178,7 @@ func (c *DOClusterController) Post() {
 		return
 	}
 
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -233,7 +226,7 @@ func (c *DOClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err = do.CreateCluster(subscriptionId, cluster, *ctx)
+	err = do.CreateCluster( cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -259,7 +252,6 @@ func (c *DOClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	do.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -281,13 +273,7 @@ func (c *DOClusterController) Patch() {
 		return
 	}
 
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		c.Ctx.Output.SetStatus(405)
-		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -319,7 +305,7 @@ func (c *DOClusterController) Patch() {
 
 	ctx.SendLogs("DOClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = do.UpdateCluster(subscriptionId, cluster, true, *ctx)
+	err = do.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -592,7 +578,7 @@ func (c *DOClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = do.UpdateCluster("", cluster, false, *ctx)
+	err = do.UpdateCluster( cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -822,7 +808,7 @@ func (c *DOClusterController) TerminateCluster() {
 
 	go do.TerminateCluster(cluster, doProfile, *ctx, userInfo.CompanyId, token)
 
-	err = do.UpdateCluster("", cluster, false, *ctx)
+	err = do.UpdateCluster( cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
