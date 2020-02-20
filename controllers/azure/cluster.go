@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -205,6 +206,8 @@ func (c *AzureClusterController) Post() {
 	}
 	for _,node :=range cluster.NodePools{
 		node.EnablePublicIP = !network.IsPrivate
+		ctx.SendLogs("AZURE ENABLE PUBLICIP IS: "+strconv.FormatBool(node.EnablePublicIP)+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	}
 	res, err := govalidator.ValidateStruct(cluster)
 	if !res || err != nil {
