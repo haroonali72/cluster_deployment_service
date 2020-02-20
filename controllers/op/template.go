@@ -26,7 +26,6 @@ type OPTemplateController struct {
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId/ [get]
 func (c *OPTemplateController) Get() {
-
 	templateId := c.GetString(":templateId")
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)

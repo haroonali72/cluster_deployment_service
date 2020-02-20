@@ -175,3 +175,21 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 
 	}
 }
+func CheckCluster(projectId, companyId string, ctx utils.Context) error {
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+
+		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
+	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
