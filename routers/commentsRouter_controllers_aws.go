@@ -72,15 +72,6 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
-            Method: "GetNetworkInfo",
-            Router: `/getNetworkInfo/:prijectId`,
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
-        beego.ControllerComments{
             Method: "GetCores",
             Router: `/machine/info`,
             AllowHTTPMethods: []string{"get"},
