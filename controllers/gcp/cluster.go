@@ -302,7 +302,16 @@ func (c *GcpClusterController) Patch() {
 	}
 	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
-
+	network,err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	for _,node := range cluster.NodePools{
+		node.EnablePublicIP=!network.IsPrivate
+	}
 	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

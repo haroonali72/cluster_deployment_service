@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -206,7 +205,7 @@ func (c *AzureClusterController) Post() {
 	}
 	for _,node :=range cluster.NodePools{
 		node.EnablePublicIP = !network.IsPrivate
-		ctx.SendLogs("AZURE ENABLE PUBLICIP IS: "+strconv.FormatBool(node.EnablePublicIP)+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 
 	}
 	res, err := govalidator.ValidateStruct(cluster)
@@ -296,7 +295,16 @@ func (c *AzureClusterController) Patch() {
 	}
 
 	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	network,err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	for _,node :=range cluster.NodePools{
+		node.EnablePublicIP = !network.IsPrivate
+	}
 	err = azure.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {

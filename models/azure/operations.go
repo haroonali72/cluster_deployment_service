@@ -230,7 +230,6 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		var publicIPaddress network.PublicIPAddress
 		var err error
 		if pool.EnablePublicIP {
-			utils.SendLog(companyId, "PUBLIC IP ENABLED : "+projectId, "error", projectId)
 			IPname := "pip-" + pool.Name
 			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
 			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
@@ -240,7 +239,6 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 			utils.SendLog(companyId, "Public IP created successfully : "+IPname, "info", projectId)
 			cloud.Resources["Pip-"+projectId] = IPname
 		}
-		utils.SendLog(companyId, "PUBLIC IP Disabled : "+projectId, "error", projectId)
 		/*
 			making network interface
 		*/
