@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/resources/mgmt/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
@@ -48,6 +49,7 @@ type AZURE struct {
 	Authorizer       *autorest.BearerAuthorizer
 	AddressClient    network.PublicIPAddressesClient
 	InterfacesClient network.InterfacesClient
+	Location 		 subscriptions.Client
 	VMSSCLient       compute.VirtualMachineScaleSetsClient
 	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
 	VMClient         compute.VirtualMachinesClient
@@ -154,10 +156,8 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
-
 	for i, pool := range cluster.NodePools {
 		ctx.SendLogs("AZUREOperations creating nodes", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
 		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId, token)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -218,7 +218,6 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, error) {
 
 	var cpVms []*VM
-
 	subnetId := cloud.GetSubnets(pool, networkData)
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
 	vpcName := networkData.Definition[0].Vnet.Name
@@ -475,6 +474,7 @@ func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx utils.Con
 	return vm, nil
 }
 func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx utils.Context) (network.Interface, error) {
+
 	nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.context, resourceGroup, vmss, vm, nicName, "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -483,6 +483,7 @@ func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx utils.Co
 	return nicParameters, nil
 }
 func (cloud *AZURE) GetPIP(resourceGroup, vmss, vm, nic, ipConfig, ipAddress string, ctx utils.Context) (network.PublicIPAddress, error) {
+
 	publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.context, resourceGroup, vmss, vm, nic, ipConfig, ipAddress, "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -720,7 +721,6 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 			ID: sgIds[0],
 		}
 	}
-
 	future, err := cloud.InterfacesClient.CreateOrUpdate(cloud.context, resourceGroup, nicName, nicParameters)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -2039,7 +2039,6 @@ func (cloud *AZURE) getAllInstances() ([]azureVM, error) {
 		}
 		instanceList = append(instanceList, vm)
 	}
-
 	VMSSResult, err := cloud.VMSSCLient.ListAll(context.Background())
 	if err != nil {
 		beego.Error(err.Error())
@@ -2062,4 +2061,76 @@ func (cloud *AZURE) getAllInstances() ([]azureVM, error) {
 		instanceList = append(instanceList, vm)
 	}
 	return instanceList, nil
+}
+func (cloud *AZURE) getRegions() ([]*string, error) {
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			beego.Error(err.Error())
+			return []*string{}, err
+		}
+	}
+
+
+	LocResult, err := cloud.Location.ListLocations(cloud.context,cloud.Subscription)
+	if err != nil {
+		beego.Error(err.Error())
+		return []*string{}, err
+	}
+		fmt.Println(LocResult.Value)
+	return []*string{}, nil
+}
+func (cloud *AZURE) getAvailabilityZone() ([]*string, error) {
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			beego.Error(err.Error())
+			return []*string{}, err
+		}
+	}
+
+	var instanceList []azureVM
+	VmResult, err := cloud.VMClient.ListAll(context.Background())
+	if err != nil {
+		beego.Error(err.Error())
+		return []*string{}, err
+	}
+	for _, instance := range VmResult.Values() {
+		bytes, err := json.Marshal(instance)
+		if err != nil {
+			beego.Error(err.Error())
+			return []*string{}, err
+		}
+
+		var vm azureVM
+		err = json.Unmarshal(bytes, &vm)
+		if err != nil {
+			beego.Error(err.Error())
+			return []*string{}, err
+		}
+		instanceList = append(instanceList, vm)
+	}
+
+	VMSSResult, err := cloud.VMSSCLient.ListAll(context.Background())
+	if err != nil {
+		beego.Error(err.Error())
+		return []*string{}, err
+	}
+
+	for _, instance := range VMSSResult.Values() {
+		bytes, err := json.Marshal(instance)
+		if err != nil {
+			beego.Error(err.Error())
+			return []*string{}, err
+		}
+
+		var vm azureVM
+		err = json.Unmarshal(bytes, &vm)
+		if err != nil {
+			beego.Error(err.Error())
+			return []*string{}, err
+		}
+		instanceList = append(instanceList, vm)
+	}
+	return []*string{}, nil
 }

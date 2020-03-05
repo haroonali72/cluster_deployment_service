@@ -7,6 +7,7 @@ import (
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
+	
 	"github.com/astaxie/beego"
 	"strings"
 )
@@ -1118,7 +1119,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 // @Param	token	header	string	token  true""
 // @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
-// @Success 200 {object} gcp.Machines
+// @Success 200 []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
@@ -1189,11 +1190,11 @@ func (c *GcpClusterController) GetAllMachines() {
 		return
 	}
 
-	c.Data["json"] = machines
+	c.Data["json"] = machines.MachineName
 	c.ServeJSON()
 }
 
-// @Title GetZonesAgainstRegion
+// @Title Get Availibility zone
 // @Description return zones against a region
 // @Param	profileid	header	string	true	"profile of GCP"
 // @Param	token	header	string	token  true""
@@ -1264,3 +1265,69 @@ func (c *GcpClusterController) GetZones() {
 	c.Data["json"] = zones
 	c.ServeJSON()
 }
+
+
+// @Title Get All Regions
+// @Description return all regions
+// @Param	profileid	header	string	true	"profile of GCP"
+// @Param	token	header	string	token  true""
+// @Success 200 {object} []string
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 401 {"error": "authorization params missing or invalid"}
+// @router /getallregions [get]
+func (c *GcpClusterController) GetAllRegions() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("profileid")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profileid is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "us-east1", token, "", *ctx)
+	if !isValid {
+		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("GcpClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	regions, err := gcp.GetRegions(credentials, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = regions
+	c.ServeJSON()
+}
+
+

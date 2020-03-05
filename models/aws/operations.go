@@ -13,6 +13,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -368,6 +369,7 @@ func (cloud *AWS) init() error {
 	cloud.Roles = roles
 	return nil
 }
+
 
 func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string, token string) (*Cluster_Def, error) {
 	if cloud.Client == nil {
@@ -894,6 +896,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		}
 		cloud.Resources[pool.Name+"_instances"] = ids
 	}
+
 
 	return result, nil, subnetId
 
@@ -1523,3 +1526,45 @@ func (cloud *AWS) DeleteKeyPair(keyName string, ctx utils.Context) error {
 
 	return nil
 }
+
+func (cloud *AWS) GetZones( ctx utils.Context) ([]*string , error) {
+
+	azInput := ec2.DescribeAvailabilityZonesInput{}
+	res, err := cloud.Client.DescribeAvailabilityZones(&azInput)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []*string{}, err
+	}
+
+	if len(res.AvailabilityZones) <= 0 {
+		return []*string{}, errors.New("Availibility zones are not available")
+	}
+	var zone []*string
+	for _, az := range res.AvailabilityZones {
+		zone =append(zone,az.ZoneName)
+	}
+	return zone, nil
+}
+func (cloud *AWS) GetAllMachines( ctx utils.Context) ([]*string , error) {
+
+	instanceInput := ec2.DescribeInstancesInput{}
+	res, err := cloud.Client.DescribeInstances(&instanceInput)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []*string{}, err
+	}
+
+/*	if len(res.InstanceType) <= 0 {
+		return []*string{}, errors.New("Availibility zones are not available")
+	}
+	var zone []*string
+	for _, az := range res.AvailabilityZones {
+		zone =append(zone,az.ZoneName)
+	}
+*/
+fmt.Println(res)
+	return []*string{}, nil
+}
+
+
+

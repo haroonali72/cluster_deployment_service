@@ -1,0 +1,66 @@
+package cores
+
+var AWSRegions = []byte(
+	`[
+			{"region":"","alias":"eu-north-1"},
+			{"region":"","alias": "ap-south-1"},
+			{"region":"","alias": "eu-west-3"},
+			{"region":"","alias":"eu-west-2"},
+			{"region":"","alias": "eu-west-1"},
+			{"region":"","alias": "ap-northeast-2"},
+			{"region":"","alias":"ap-northeast-1"},
+			{"region":"","alias": "sa-east-1"},
+			{"region":"","alias": "ca-central-1"},
+			{"region":"","alias":"ap-southeast-1"},
+			{"region":"","alias":"ap-southeast-2"},
+			{"region":"","alias":  "eu-central-1"},
+			{"region":"","alias":"us-east-1"},
+			{"region":"","alias":"us-east-2"},
+			{"region":"","alias": "us-west-1"},
+			{"region":"","alias": "us-west-2"}
+]`)
+
+var AzureRegions = []byte(
+	`[
+			{"region":"East Asia","location":"eastasia"},
+			{"region":"Southeast Asia","location": "southeastasia"},
+			{"region":"Central US","location": "centralus"},
+			{"region":"East US","location":"eastus"},
+			{"region":"East US 2","location": "eastus2"},
+			{"region":"West US","location": "westus"},
+			{"region":"North Central US","location":"northcentralus"},
+			{"region":"South Central US","location": "southcentralus"},
+			{"region":"North Europe","location": "northeurope"},
+			{"region":"West Europe","location":"westeurope"},
+			{"region":"Japan West","location":"japanwest"},
+			{"region":"Japan East","location":"japaneast"},
+			{"region":"Brazil South","location":"brazilsouth"},
+			{"region":"Australia East","location":"australiaeast"},
+			{"region":"Australia Southeast","location":"australiasoutheast"},
+			{"region":"South India","location": "southindia"},
+			{"region":"Central India","location":"centralindia"},
+			{"region":"West India","location": "westindia"},
+			{"region":"Canada Central","location":"canadacentral"},
+			{"region":"Canada East","location": "canadaeast"},
+			{"region":"UK South","location":"uksouth"},
+			{"region":"UK West","location":"ukwest"},
+			{"region":"West Central US","location":"westcentralus"},
+			{"region":"West US 2","location":"westus2"},
+			{"region":"Korea Central","location":"koreacentral"},
+			{"region":"Korea South","location": "koreasouth"},
+			{"region":"France Central","location":"francecentral"},
+			{"region":"France South","location": "francesouth"},
+			{"region":"Australia Central","location":"australiacentral"},
+			{"region":"Australia Central 2","location": "australiacentral2"},
+			{"region":"UAE Central","location":"uaecentral"},
+			{"region":"UAE North","location":"uaenorth"},
+			{"region":"South Africa North","location":"southafricanorth"},
+			{"region":"South Africa West","location":"southafricawest"},
+			{"region":"Switzerland West","location": "switzerlandwest"},
+			{"region":"Switzerland North","location":"switzerlandnorth"},
+			{"region":"Germany North","location": "germanynorth"},
+			{"region":"Germany West Central","location":"germanywestcentral"},
+			{"region":"Norway West","location":"norwaywest"},
+			{"region":"Norway East","location": "norwayeast"}
+
+]`)

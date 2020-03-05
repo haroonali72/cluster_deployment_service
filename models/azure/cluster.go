@@ -661,3 +661,46 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 	}
 	return instances, nil
 }
+func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]*string, error) {
+
+	azure := AZURE{
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
+	}
+	err := azure.init()
+	if err != nil {
+		return []*string{}, err
+	}
+
+	regions, err := azure.getRegions()
+	if err != nil {
+		beego.Error(err.Error())
+		return []*string{}, err
+	}
+	return regions, nil
+}
+func GetAvailabilityZone(credentials vault.AzureProfile, ctx utils.Context) ([]*string, error) {
+
+	azure := AZURE{
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
+	}
+	err := azure.init()
+	if err != nil {
+		return []*string{}, err
+	}
+
+	az, err := azure.getAvailabilityZone()
+	if err != nil {
+		beego.Error(err.Error())
+		return []*string{}, err
+	}
+	return az, nil
+}
+

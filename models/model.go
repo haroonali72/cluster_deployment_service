@@ -123,6 +123,7 @@ type Machine struct {
 	InstanceType string `json: "instanceType" `
 	Cores        int64  `json: "cores" `
 }
+
 type GCPMachine struct {
 	InstanceType string  `json: "instanceType" `
 	Cores        float64 `json: "cores" `
@@ -141,3 +142,8 @@ const (
 	STORAGE_CONTRIBUTOR_GUID = "17d1049b-9a84-46fb-8f53-869881c3d3ab"
 	AVERE_CONTRIBUTER_GUID   = "4f8fab4f-1852-4a58-a46a-8eaf358af14a"
 )
+
+type Region struct {
+	Name 		 string    `json: "name" `
+	Location       string  `json: "location" `
+}

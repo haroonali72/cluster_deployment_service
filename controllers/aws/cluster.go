@@ -1297,4 +1297,124 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	c.ServeJSON()
 }
 
+// @Title GetRegions
+// @Description Get AWS Regions
+// @Success 200  map[string]string
+// @Failure 500  {"error": "error msg"}
+// @router /getallregions [get]
+func (c *AWSClusterController) GetAllRegions() {
 
+	ctx := new(utils.Context)
+	ctx.SendLogs("AWSClusterController: Fetch regions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	regions, err := aws.GetRegions(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("Region fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = regions
+	c.ServeJSON()
+}
+
+// @Title Get Availability Zone
+// @Description return zones against a region
+// @Param	token	header	string	token ""
+// @Param	region	path	string	true	"region of AWS"
+// @Param	X-Profile-Id	header	string	profileId	""
+// @Success 200 			[]*string
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 			{"error": "error msg"}
+// @router /getzones/:region [get]
+func (c *AWSClusterController) GetZones() {
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	ctx.SendLogs("AWSClusterController: fetch availability zones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region := c.GetString(":region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	az, err := aws.GetZones(awsProfile, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Region fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = az
+	c.ServeJSON()
+}
+
+// @Title Get Machine Types
+// @Description Get AWS  Machine Types
+// @Success 200 []string
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 			{"error": "error msg"}
+// @router /getallmachines [get]
+func (c *AWSClusterController) GetAllMachines() {
+	ctx := new(utils.Context)
+
+	ctx.SendLogs("AWSClusterController: Fetch machine Types.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+
+	machine, err := aws.GetAllMachines()
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Machine types fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = machine
+	c.ServeJSON()
+}
