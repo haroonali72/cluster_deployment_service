@@ -6,6 +6,7 @@ import (
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"errors"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -91,7 +92,7 @@ func checkMasterPools(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams string) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -102,6 +103,17 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+	/*
+		inserting key in vault
+		**/
+	for _, pool := range cluster.NodePools {
+
+		_, err := vault.PostSSHKey(pool.KeyInfo, pool.KeyInfo.KeyName, models.OP, ctx, token, teams, "")
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+	}
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoOPClusterCollection, cluster)
 	if err != nil {
@@ -111,7 +123,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
-func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context, teams, token string) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Cluster   does not exist in the database: "+cluster.Name+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -132,7 +144,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New("Cluster is in runnning state")
 
 	}
-	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx, token)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -141,7 +153,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(cluster, ctx)
+	err = CreateCluster(cluster, ctx, teams, token)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -149,7 +161,13 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 
 	return nil
 }
-func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
+func DeleteCluster(projectId, companyId string, ctx utils.Context, token string) error {
+	oldCluster, err := GetCluster(projectId, companyId, ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: Update - Cluster   does not exist in the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 
@@ -157,6 +175,14 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 		return err
 	}
 	defer session.Close()
+	for _, pool := range oldCluster.NodePools {
+		err := vault.DeleteSSHkey(string(models.OP), pool.KeyInfo.KeyName, token, ctx, "")
+		if err != nil {
+			ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+	}
+
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
 	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
@@ -176,19 +202,30 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 	}
 }
 func CheckCluster(projectId, companyId string, ctx utils.Context) error {
-	session, err := db.GetMongoSession(ctx)
+	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 
-		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	defer session.Close()
-	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
-	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	agent, err := GetGrpcAgentConnection(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
+	}
+	err = agent.InitializeAgentClient(projectId, companyId)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	for _, pool := range cluster.NodePools {
+		for _, node := range pool.Nodes {
+			err = agent.ExecCommand(*node, pool.KeyInfo.PrivateKey, ctx)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+		}
 	}
 
 	return nil

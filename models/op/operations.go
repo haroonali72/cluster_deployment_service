@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
@@ -59,7 +60,7 @@ func GetGrpcAgentConnection(context2 utils.Context) (*AgentConnection, error) {
 		PermitWithoutStream: true,             // send pings even without active streams
 	}
 
-	conn, err := grpc.Dial(constants.WoodpeckerURL, grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
+	conn, err := grpc.Dial(beego.AppConfig.String("woodpecker_url"), grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
 	if err != nil {
 		context2.SendLogs("error while connecting with agent :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return &AgentConnection{}, err
@@ -83,34 +84,35 @@ func (agent *AgentConnection) InitializeAgentClient(projectId, companyId string)
 
 }
 func (agent *AgentConnection) ExecCommand(node Node, private_key string, ctx utils.Context) error {
-	kubectlSshResp, err := agent.agentClient.RemoteSSH(agent.agentCtx, &agent_api.SSHRequestUnary{
+	_, err := agent.agentClient.RemoteSSH(agent.agentCtx, &agent_api.SSHRequestUnary{
 		Server: node.PrivateIP,
 		User:   node.UserName,
 		Key:    private_key,
 		Cmd:    "ssh",
 	})
-	kubectlSshResp.Status
+
 	if err != nil && (strings.Contains(err.Error(), "all SubConns are in TransientFailure") || strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "upstream request timeout") || strings.Contains(err.Error(), "transport is closing")) {
 		err = RetryAgentConn(agent, ctx)
 		if err != nil {
 			return err
 		}
 
-		kubectlStreamResp, err = agent.agentClient.RemoteSSH(agent.agentCtx, &agent_api.SSHRequestUnary{
+		_, err := agent.agentClient.RemoteSSH(agent.agentCtx, &agent_api.SSHRequestUnary{
 			Server: node.PrivateIP,
 			User:   node.UserName,
 			Key:    private_key,
 			Cmd:    "ssh",
 		})
 		if err != nil {
-			responseObj.Error = err.Error()
-			utils.Error.Println("kubectl stream :", err)
+			ctx.SendLogs("error while connecting to node :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("trying again ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
 	} else if err != nil {
-		responseObj.Error = err.Error()
-		utils.Error.Println("kubectl stream :", err)
+		ctx.SendLogs("error while connecting to node :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
 	}
+	return nil
 }
 func GetAgentID(projectId, companyId *string) *string {
 	base := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s+%s", *projectId, *companyId)))
