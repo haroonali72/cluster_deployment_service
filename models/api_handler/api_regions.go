@@ -3,7 +3,6 @@ package api_handler
 import (
 	"antelope/models"
 	"antelope/models/utils"
-	"fmt"
 	"github.com/russross/blackfriday"
 	"golang.org/x/net/html"
 
@@ -63,7 +62,8 @@ func GetAwsRegions() (reg []models.Region,err error){
 func GetGcpRegion() (reg []models.GcpRegion,err error){
 
 //	var region models.GcpRegion
-
+	var regions []string
+	var region models.GcpRegion
 	client := utils.InitReq()
 	host :="https://cloud.google.com/compute/docs/regions-zones.md"
 	req, err := utils.CreateGetRequest(host)
@@ -105,31 +105,17 @@ func GetGcpRegion() (reg []models.GcpRegion,err error){
 				break
 			}
 			if len(TxtContent) > 0 && TxtContent !="Region" && TxtContent != "Zones" && TxtContent !="Location"{
-				fmt.Println( TxtContent)
+				regions=append(regions,TxtContent)
 			}
-
 		}
 	}
-
-
-
-
-
-
-/*	regionsInfo=strings.ReplaceAll(regionsInfo,"<code>","")
-	regionsInfo=strings.ReplaceAll(regionsInfo,"</code> ","")
-	information := strings.Split(regionsInfo, "\n")
-
-	for _,info := range information{
-		if info == "|"{
-			break
+//	for _,reg := region {
+		for i:=0;i<len(regions);i=i+3{
+			region.Name =regions[i]
+			region.Zone =regions[i+1]
+			region.Location=regions[i+2]
+			reg =append(reg,region)
 		}
-		regionInfo:= strings.Split(info,"| ")
-		loc :=strings.Split(regionInfo[2],"(")
-		loca :=strings.Split(loc[1],")")
 
-		region[loca[0]]=regionInfo[1]
-	}
- */
 	return reg,nil
 }
