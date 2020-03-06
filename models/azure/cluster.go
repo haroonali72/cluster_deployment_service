@@ -661,7 +661,7 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 	}
 	return instances, nil
 }
-func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]*string, error) {
+func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, error) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -672,13 +672,13 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]*string, e
 	}
 	err := azure.init()
 	if err != nil {
-		return []*string{}, err
+		return []models.Region{}, err
 	}
 
 	regions, err := azure.getRegions(ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		return []*string{}, err
+		return []models.Region{}, err
 	}
 	return regions, nil
 }

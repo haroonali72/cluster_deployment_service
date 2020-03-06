@@ -1079,7 +1079,7 @@ func (c *AzureClusterController) GetInstances() {
 // @Description Get Azure Regions
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	false	""
-// @Success 200 []*string
+// @Success 200 []model.Region
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}

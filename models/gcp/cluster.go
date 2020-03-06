@@ -658,12 +658,12 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 
 	return mach, nil
 }
-func GetRegions() ([]models.GcpRegion, error) {
+func GetRegions() ([]models.Region, error) {
 
 
 	regionInfo, err :=api_handler.GetGcpRegion()
 	if err != nil {
-		return []models.GcpRegion{}, err
+		return []models.Region{}, err
 	}
 
 	return regionInfo, nil

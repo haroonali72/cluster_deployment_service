@@ -59,11 +59,11 @@ func GetAwsRegions() (reg []models.Region,err error){
 	return reg,nil
 }
 
-func GetGcpRegion() (reg []models.GcpRegion,err error){
+func GetGcpRegion() (reg []models.Region,err error){
 
 //	var region models.GcpRegion
 	var regions []string
-	var region models.GcpRegion
+	var region models.Region
 	client := utils.InitReq()
 	host :="https://cloud.google.com/compute/docs/regions-zones.md"
 	req, err := utils.CreateGetRequest(host)
@@ -112,7 +112,6 @@ func GetGcpRegion() (reg []models.GcpRegion,err error){
 //	for _,reg := region {
 		for i:=0;i<len(regions);i=i+3{
 			region.Name =regions[i]
-			region.Zone =regions[i+1]
 			region.Location=regions[i+2]
 			reg =append(reg,region)
 		}

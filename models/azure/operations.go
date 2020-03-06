@@ -120,7 +120,8 @@ func (cloud *AZURE) init() error {
 	cloud.RoleDefinition.Authorizer = cloud.Authorizer
 
 	cloud.Resources = make(map[string]interface{})
-
+	cloud.Location = subscriptions.NewClient()
+	cloud.Location.Authorizer = cloud.Authorizer
 	return nil
 }
 func getNetworkHost(cloudType, projectId string) string {
@@ -2065,27 +2066,27 @@ func (cloud *AZURE) getAllInstances() ([]azureVM, error) {
 	}
 	return instanceList, nil
 }
-func (cloud *AZURE) getRegions(ctx utils.Context) ([]*string, error) {
+func (cloud *AZURE) getRegions(ctx utils.Context) (region []models.Region, err error) {
+	var reg models.Region
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return []*string{}, err
+			return []models.Region{}, err
 		}
 	}
-	a,err := cloud.Location.GetPreparer(context.Background(),"aa94b050-2c52-4b7b-9ce3-2ac18253e61e")
-	if err != nil {
-		beego.Error(err.Error())
-		return []*string{}, err
-	}
-	fmt.Println(a)
+
 	LocResult, err := cloud.Location.ListLocations(cloud.context,cloud.Subscription)
 	if err != nil {
 		beego.Error(err.Error())
-		return []*string{}, err
+		return []models.Region{}, err
 	}
-		fmt.Println(LocResult)
-	return []*string{}, nil
+	for _,loc := range *LocResult.Value{
+		reg.Name=*loc.DisplayName
+		reg.Location=*loc.Name
+		region = append(region,reg)
+	}
+	return region, nil
 }
 
 func (cloud *AZURE) getAvailabilityZone() ([]string, error) {
