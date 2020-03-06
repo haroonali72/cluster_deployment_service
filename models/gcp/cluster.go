@@ -659,7 +659,7 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 	return mach, nil
 }
 func GetRegions(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
-	 api_handler.GetGcpRegion()
+	// api_handler.GetGcpRegion()
 	gcp, err := GetGCP(credentials)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
