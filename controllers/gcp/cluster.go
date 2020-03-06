@@ -1269,21 +1269,14 @@ func (c *GcpClusterController) GetZones() {
 
 // @Title Get All Regions
 // @Description return all regions
-// @Param	profileid	header	string	true	"profile of GCP"l
-// @Param	token	header	string	token  true""
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
 // @router /getallregions [get]
 func (c *GcpClusterController) GetAllRegions() {
-
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-
-
-
 	regions, err := gcp.GetRegions()
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)

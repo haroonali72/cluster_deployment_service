@@ -52,7 +52,7 @@ func GetAwsRegions() (reg []models.Region,err error){
 		//region[loca[0]]=regionInfo[1]
 
 		region.Name=loca[0]
-		region.Location=regionInfo[1]
+		region.Location=strings.TrimSpace(regionInfo[1])
 		reg =append(reg,*region)
 
 	}
