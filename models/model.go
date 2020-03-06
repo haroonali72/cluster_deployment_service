@@ -147,3 +147,9 @@ type Region struct {
 	Name 		   string    `json: "name" `
 	Location       string  	 `json: "location" `
 }
+type GcpRegion struct{
+	Name 		   string    `json: "name" `
+	Zone 		   string 	 `json: "zone" `
+	Location       string  	 `json: "location" `
+
+}

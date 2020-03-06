@@ -1281,51 +1281,17 @@ func (c *GcpClusterController) GetAllRegions() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("profileid")
-	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profileid is empty"}
-		c.ServeJSON()
-		return
-	}
 
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "us-east1", token, "", *ctx)
-	if !isValid {
-		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("GcpClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	regions, err := gcp.GetRegions(credentials, *ctx)
+	regions, err := gcp.GetRegions()
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs("GcpClusterController: Region fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	c.Data["json"] = regions
 	c.ServeJSON()
 }

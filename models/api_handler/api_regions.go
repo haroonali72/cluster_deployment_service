@@ -60,24 +60,25 @@ func GetAwsRegions() (reg []models.Region,err error){
 	return reg,nil
 }
 
-func GetGcpRegion() (map[string]string,error){
+func GetGcpRegion() (reg []models.GcpRegion,err error){
 
-	region := make(map[string]string)
+//	var region models.GcpRegion
+
 	client := utils.InitReq()
 	host :="https://cloud.google.com/compute/docs/regions-zones.md"
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
-		return  region,err
+		return  reg,err
 	}
 	response, err := client.SendRequest(req)
 	if err != nil {
-		return  region,err
+		return  reg,err
 	}
 	defer response.Body.Close()
 
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return  region,err
+		return  reg,err
 	}
 
 	s := string(contents)
@@ -115,7 +116,7 @@ func GetGcpRegion() (map[string]string,error){
 
 
 
-	regionsInfo=strings.ReplaceAll(regionsInfo,"<code>","")
+/*	regionsInfo=strings.ReplaceAll(regionsInfo,"<code>","")
 	regionsInfo=strings.ReplaceAll(regionsInfo,"</code> ","")
 	information := strings.Split(regionsInfo, "\n")
 
@@ -129,5 +130,6 @@ func GetGcpRegion() (map[string]string,error){
 
 		region[loca[0]]=regionInfo[1]
 	}
-	return region,nil
+ */
+	return reg,nil
 }
