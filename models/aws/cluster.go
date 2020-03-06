@@ -723,12 +723,12 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	return false
 }
 
-func GetRegions(ctx utils.Context) (map[string]string, error) {
+func GetRegions(ctx utils.Context) ([]models.Region, error) {
 
 	regions,err :=api_handler.GetAwsRegions()
 	if err != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, err
+		return []models.Region{}, err
 	}
 
 	return regions, nil

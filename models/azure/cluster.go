@@ -675,14 +675,14 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]*string, e
 		return []*string{}, err
 	}
 
-	regions, err := azure.getRegions()
+	regions, err := azure.getRegions(ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		return []*string{}, err
 	}
 	return regions, nil
 }
-func GetAvailabilityZone(credentials vault.AzureProfile, ctx utils.Context) ([]*string, error) {
+func GetAvailabilityZone(credentials vault.AzureProfile, ctx utils.Context) ([]string, error) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -693,14 +693,22 @@ func GetAvailabilityZone(credentials vault.AzureProfile, ctx utils.Context) ([]*
 	}
 	err := azure.init()
 	if err != nil {
-		return []*string{}, err
+		return []string{}, err
 	}
 
 	az, err := azure.getAvailabilityZone()
 	if err != nil {
 		beego.Error(err.Error())
-		return []*string{}, err
+		return []string{}, err
 	}
 	return az, nil
 }
+func GetAllMachines() ([]string, error) {
 
+	regions, err := getAllVMSizes()
+	if err != nil {
+		beego.Error(err.Error())
+		return []string{}, err
+	}
+	return regions, nil
+}

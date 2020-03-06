@@ -1115,7 +1115,7 @@ func (c *GcpClusterController) DeleteSSHKey() {
 
 // @Title GetAllMachines
 // @Description return machines against a region and zone
-// @Param	profileid	header	string	true	"profile of GCP"
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	token	header	string	token  true""
 // @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
@@ -1129,7 +1129,7 @@ func (c *GcpClusterController) GetAllMachines() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GellAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("profileid")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profileid is empty"}
@@ -1196,7 +1196,7 @@ func (c *GcpClusterController) GetAllMachines() {
 
 // @Title Get Availibility zone
 // @Description return zones against a region
-// @Param	profileid	header	string	true	"profile of GCP"
+// @Param	X-Profile-Id	header	string	profileId	""
 // @Param	token	header	string	token  true""
 // @Param	region	path	string	true	"region of GCP"
 // @Success 200 {object} []string
@@ -1209,7 +1209,7 @@ func (c *GcpClusterController) GetZones() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GellZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("profileid")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profileid is empty"}
@@ -1269,7 +1269,7 @@ func (c *GcpClusterController) GetZones() {
 
 // @Title Get All Regions
 // @Description return all regions
-// @Param	profileid	header	string	true	"profile of GCP"
+// @Param	profileid	header	string	true	"profile of GCP"l
 // @Param	token	header	string	token  true""
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}

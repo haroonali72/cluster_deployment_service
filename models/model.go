@@ -144,6 +144,6 @@ const (
 )
 
 type Region struct {
-	Name 		 string    `json: "name" `
-	Location       string  `json: "location" `
+	Name 		   string    `json: "name" `
+	Location       string  	 `json: "location" `
 }

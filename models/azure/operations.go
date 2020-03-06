@@ -14,10 +14,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/resources/mgmt/subscriptions"
+	c "github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/compute/mgmt/compute"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
+
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
@@ -56,6 +58,7 @@ type AZURE struct {
 	DiskClient       compute.DisksClient
 	AccountClient    storage.AccountsClient
 	context          context.Context
+
 	ID               string
 	Key              string
 	Tenant           string
@@ -2062,7 +2065,7 @@ func (cloud *AZURE) getAllInstances() ([]azureVM, error) {
 	}
 	return instanceList, nil
 }
-func (cloud *AZURE) getRegions() ([]*string, error) {
+func (cloud *AZURE) getRegions(ctx utils.Context) ([]*string, error) {
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
@@ -2070,67 +2073,43 @@ func (cloud *AZURE) getRegions() ([]*string, error) {
 			return []*string{}, err
 		}
 	}
-
-
+	a,err := cloud.Location.GetPreparer(context.Background(),"aa94b050-2c52-4b7b-9ce3-2ac18253e61e")
+	if err != nil {
+		beego.Error(err.Error())
+		return []*string{}, err
+	}
+	fmt.Println(a)
 	LocResult, err := cloud.Location.ListLocations(cloud.context,cloud.Subscription)
 	if err != nil {
 		beego.Error(err.Error())
 		return []*string{}, err
 	}
-		fmt.Println(LocResult.Value)
+		fmt.Println(LocResult)
 	return []*string{}, nil
 }
-func (cloud *AZURE) getAvailabilityZone() ([]*string, error) {
+
+func (cloud *AZURE) getAvailabilityZone() ([]string, error) {
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
 			beego.Error(err.Error())
-			return []*string{}, err
+			return []string{}, err
 		}
 	}
 
-	var instanceList []azureVM
-	VmResult, err := cloud.VMClient.ListAll(context.Background())
-	if err != nil {
-		beego.Error(err.Error())
-		return []*string{}, err
-	}
-	for _, instance := range VmResult.Values() {
-		bytes, err := json.Marshal(instance)
-		if err != nil {
-			beego.Error(err.Error())
-			return []*string{}, err
-		}
+	zone := []string{"a","b","c"}
+	return zone, nil
+}
+func getAllVMSizes() ([]string, error) {
 
-		var vm azureVM
-		err = json.Unmarshal(bytes, &vm)
-		if err != nil {
-			beego.Error(err.Error())
-			return []*string{}, err
-		}
-		instanceList = append(instanceList, vm)
+	VmResult := c.PossibleVirtualMachineSizeTypesValues()
+	if VmResult ==nil  {
+		return []string{},errors.New("VM Machine Type Not Fetched")
 	}
-
-	VMSSResult, err := cloud.VMSSCLient.ListAll(context.Background())
-	if err != nil {
-		beego.Error(err.Error())
-		return []*string{}, err
+	var machine []string
+	for _,vm :=range VmResult{
+		fmt.Println(string(vm))
+		machine=append(machine,string(vm))
 	}
-
-	for _, instance := range VMSSResult.Values() {
-		bytes, err := json.Marshal(instance)
-		if err != nil {
-			beego.Error(err.Error())
-			return []*string{}, err
-		}
-
-		var vm azureVM
-		err = json.Unmarshal(bytes, &vm)
-		if err != nil {
-			beego.Error(err.Error())
-			return []*string{}, err
-		}
-		instanceList = append(instanceList, vm)
-	}
-	return []*string{}, nil
+	return machine,nil
 }

@@ -1299,7 +1299,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 // @Title GetRegions
 // @Description Get AWS Regions
-// @Success 200  map[string]string
+// @Success 200  []models.Region
 // @Failure 500  {"error": "error msg"}
 // @router /getallregions [get]
 func (c *AWSClusterController) GetAllRegions() {

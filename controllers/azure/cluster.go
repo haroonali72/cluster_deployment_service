@@ -1126,7 +1126,7 @@ func (c *AzureClusterController) GetRegions()  {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, "eastus", token, *ctx)
+	azureProfile, err := azure.GetProfile(profileId, "useast", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(500)
@@ -1152,7 +1152,7 @@ func (c *AzureClusterController) GetRegions()  {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	false	""
 // @Param	region	header	string	false	""
-// @Success 200 []*string
+// @Success 200 []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -1208,6 +1208,32 @@ func (c *AzureClusterController) GetZones()  {
 	}
 
 	instances, err := azure.GetAvailabilityZone(azureProfile,*ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = instances
+	c.ServeJSON()
+}
+
+
+// @Title Get VM Sizes
+// @Description Get Azure VM Sizes
+// @Success 200 []string
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getallmachines [get]
+func (c *AzureClusterController) GetAllMachines()  {
+	beego.Info("AzureClusterController: Get All Machine Types")
+
+
+
+	instances, err := azure.GetAllMachines()
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
