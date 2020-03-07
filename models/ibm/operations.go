@@ -40,12 +40,13 @@ type WorkerPoolInput struct {
 	WorkerName  string `json:"name"`
 	VPCId       string `json:"vpcID"`
 	Count       int    `json:"workerCount"`
-	Zone        []Zone `json:"zones"`
 }
 
-type Zone struct {
-	Name     string `json:"name"`
-	Provider string `json:"provider"`
+type ZoneInput struct {
+	Cluster    string `json:"cluster"`
+	Id         string `json:"id"`
+	Subnet     string `json:"subnetID"`
+	WorkerPool string `json:"workerpool"`
 }
 type KubeClusterResponse struct {
 	ID string `json:"id"`
@@ -202,20 +203,11 @@ func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Contex
 		Count:       cluster.NodePools[0].NodeCount,
 	}
 
-	var zones []Zone
-	zone := Zone{
-		Name:     cluster.NodePools[0].Zone[0].Name,
-		Provider: cluster.NodePools[0].Zone[0].Provider,
-	}
-	zones = append(zones, zone)
-
-	workerpool.Zone = zones
-
 	input.WorkerPool = workerpool
 
 	bytes, err := json.Marshal(input)
 
-	req, _ := utils.CreatePostRequest(bytes, models.IBM_Kubernetes_Endpoint)
+	req, _ := utils.CreatePostRequest(bytes, models.IBM_Kube_Cluster_Endpoint)
 
 	m := make(map[string]string)
 
@@ -258,22 +250,15 @@ func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Contex
 	}
 	return kubeResponse.ID, nil
 }
-func (cloud *IBM) createWorkerPool(rg, cluster string, pool NodePool, ctx utils.Context) (string, error) {
+func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool NodePool, ctx utils.Context) (string, error) {
 
 	workerpool := WorkerPoolInput{
+		Cluster:     clusterID,
 		MachineType: pool.MachineType,
 		WorkerName:  pool.Name,
+		VPCId:       vpcID,
 		Count:       pool.NodeCount,
 	}
-
-	var zones []Zone
-	zone := Zone{
-		Name:     pool.Zone[0].Name,
-		Provider: pool.Zone[0].Provider,
-	}
-	zones = append(zones, zone)
-
-	workerpool.Zone = zones
 
 	bytes, err := json.Marshal(workerpool)
 
@@ -319,4 +304,41 @@ func (cloud *IBM) createWorkerPool(rg, cluster string, pool NodePool, ctx utils.
 		return "", err
 	}
 	return response.ID, nil
+}
+func (cloud *IBM) AddZonesToPools(rg, poolID, zoneID, subnetID, clusterID string, ctx utils.Context) error {
+
+	zoneInput := ZoneInput{
+		Cluster:    clusterID,
+		Id:         zoneID,
+		Subnet:     subnetID,
+		WorkerPool: poolID,
+	}
+
+	bytes, err := json.Marshal(zoneInput)
+
+	req, _ := utils.CreatePostRequest(bytes, models.IBM_Zone)
+
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Auth-Resource-Group"] = rg //rg id
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	if res.StatusCode != 201 {
+		ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	return nil
 }
