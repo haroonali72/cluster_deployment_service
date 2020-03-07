@@ -43,6 +43,13 @@ type DOCredentials struct {
 	AccessKey string `json:"access_token"`
 	Region    string `json:"region"`
 }
+type IBMProfile struct {
+	Profile IBMCredentials `json:"credentials"`
+}
+type IBMCredentials struct {
+	IAMKey string `json:"iam_key"`
+	Region string `json:"region"`
+}
 
 func getVaultHost() string {
 	return beego.AppConfig.String("vault_url") + models.VaultEndpoint
@@ -69,8 +76,12 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 400, err
 	}
-	req.Header.Set("token", token)
-	req.Header.Set("teams", teams)
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["token"] = token
+	m["teams"] = teams
+	utils.SetHeaders(req, m)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -250,7 +261,12 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region st
 		return err
 	}
 	client := utils.InitReq()
-	req.Header.Set("token", token)
+
+	m := make(map[string]string)
+	m["Content-Type"] = "application/json"
+	m["token"] = token
+	utils.SetHeaders(req, m)
+
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

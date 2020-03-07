@@ -225,6 +225,10 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 
 		req, err = utils.CreatePutRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
 	}
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	utils.SetHeaders(req, m)
 	if err != nil {
 		beego.Info(err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -257,6 +261,12 @@ func DeletePolicy(cloud models.Cloud, resourceId string, token string, ctx utils
 	q.Add("resource_id", resourceId)
 	q.Add("resource_type", "clusterTemplate")
 	q.Add("sub_type", string(cloud))
+
+	m := make(map[string]string)
+	m["Content-Type"] = "application/json"
+	m["token"] = token
+	utils.SetHeaders(req, m)
+
 	req.Header.Set("token", token)
 	req.URL.RawQuery = q.Encode()
 
