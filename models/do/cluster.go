@@ -546,3 +546,20 @@ func GetRegionsAndCores(credentials vault.DOCredentials, ctx utils.Context) ([]g
 	}
 	return regions, err
 }
+
+func ValidateProfile(key string, ctx utils.Context) error {
+	do := DO{
+		AccessKey: key,
+	}
+	err := do.init(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	_, err = do.getCores(ctx)
+	if err != nil {
+
+		return  err
+	}
+	return  err
+}
