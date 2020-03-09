@@ -82,7 +82,10 @@ func (c *Context) Log(msg, message_type string, logType models.Logger) (int, err
 		beego.Error("%s", err)
 		return 400, err
 	}
+	m := make(map[string]string)
 
+	m["Content-Type"] = "application/json"
+	SetHeaders(req, m)
 	response, err := logger.SendRequest(req)
 	if err != nil {
 		beego.Error("%s", err)
