@@ -14,6 +14,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
+	"weasel/models/ibm"
 )
 
 type Cluster_Def struct {
@@ -438,4 +439,26 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
+}
+
+func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesResponse, error) {
+	ibm, err := GetIBM(profile.Profile)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+
+	err = ibm.init(profile.Profile.Region, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+
+	machineTypes, err := ibm.GetAllInstances(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+
+	return machineTypes, nil
 }
