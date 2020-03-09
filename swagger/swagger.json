@@ -2405,6 +2405,41 @@
                 }
             }
         },
+        "/cluster/gke/config/{projectId}": {
+            "get": {
+                "tags": [
+                    "cluster/gke"
+                ],
+                "description": "get cluster",
+                "operationId": "GKEClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/gke.ServerConfig"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gke/start/{projectId}": {
             "post": {
                 "tags": [
@@ -4811,11 +4846,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc0008093b0.false": {
+        "600.0xc000859620.false": {
             "title": "false",
             "type": "object"
         },
-        "660.0xc000af73b0.false": {
+        "660.0xc000b51620.false": {
             "title": "false",
             "type": "object"
         },
@@ -4871,7 +4906,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc0008093b0.false"
+                    "$ref": "#/definitions/600.0xc000859620.false"
                 },
                 "name": {
                     "type": "string"
@@ -5439,7 +5474,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/660.0xc000af73b0.false"
+                    "$ref": "#/definitions/660.0xc000b51620.false"
                 },
                 "name": {
                     "type": "string"
@@ -5952,16 +5987,16 @@
             "title": "GKECluster",
             "type": "object",
             "properties": {
-                "addons_config": {
+                "addonsConfig": {
                     "$ref": "#/definitions/gke.AddonsConfig"
                 },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
-                "cloud_status": {
+                "cloudStatus": {
                     "type": "string"
                 },
-                "cluster_ipv4_cidr": {
+                "clusterIpv4Cidr": {
                     "type": "string"
                 },
                 "company_id": {
@@ -5973,40 +6008,57 @@
                         "$ref": "#/definitions/gke.StatusCondition"
                     }
                 },
-                "create_time": {
+                "createTime": {
                     "type": "string"
                 },
-                "current_master_version": {
+                "currentMasterVersion": {
                     "type": "string"
                 },
-                "default_max_pods_constraint": {
+                "currentNodeCount": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "currentNodeVersion": {
+                    "type": "string"
+                },
+                "defaultMaxPodsConstraint": {
                     "$ref": "#/definitions/gke.MaxPodsConstraint"
                 },
                 "description": {
                     "type": "string"
                 },
-                "enable_kubernetes_alpha": {
+                "enableKubernetesAlpha": {
                     "type": "boolean"
                 },
-                "enable_tpu": {
+                "enableTpu": {
                     "type": "boolean"
                 },
                 "endpoint": {
                     "type": "string"
                 },
-                "expire_time": {
+                "expireTime": {
                     "type": "string"
                 },
-                "initial_cluster_version": {
+                "initialClusterVersion": {
                     "type": "string"
                 },
-                "ip_allocation_policy": {
+                "initialNodeCount": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "instanceGroupUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ipAllocationPolicy": {
                     "$ref": "#/definitions/gke.IPAllocationPolicy"
                 },
-                "label_fingerprint": {
+                "labelFingerprint": {
                     "type": "string"
                 },
-                "legacy_abac": {
+                "legacyAbac": {
                     "$ref": "#/definitions/gke.LegacyAbac"
                 },
                 "location": {
@@ -6018,19 +6070,19 @@
                         "type": "string"
                     }
                 },
-                "logging_service": {
+                "loggingService": {
                     "type": "string"
                 },
-                "maintenance_policy": {
+                "maintenancePolicy": {
                     "$ref": "#/definitions/gke.MaintenancePolicy"
                 },
-                "master_auth": {
+                "masterAuth": {
                     "$ref": "#/definitions/gke.MasterAuth"
                 },
-                "master_authorized_networks_config": {
+                "masterAuthorizedNetworksConfig": {
                     "$ref": "#/definitions/gke.MasterAuthorizedNetworksConfig"
                 },
-                "monitoring_service": {
+                "monitoringService": {
                     "type": "string"
                 },
                 "name": {
@@ -6039,52 +6091,55 @@
                 "network": {
                     "type": "string"
                 },
-                "network_config": {
+                "networkConfig": {
                     "$ref": "#/definitions/gke.NetworkConfig"
                 },
-                "network_policy": {
+                "networkPolicy": {
                     "$ref": "#/definitions/gke.NetworkPolicy"
                 },
-                "node_ipv4_cidr_size": {
+                "nodeConfig": {
+                    "$ref": "#/definitions/gke.NodeConfig"
+                },
+                "nodeIpv4CidrSize": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "node_pools": {
+                "nodePools": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/gke.NodePool"
                     }
                 },
-                "private_cluster_config": {
+                "privateClusterConfig": {
                     "$ref": "#/definitions/gke.PrivateClusterConfig"
                 },
                 "project_id": {
                     "type": "string"
                 },
-                "resource_labels": {
+                "resourceLabels": {
                     "additionalProperties": {
                         "type": "string"
                     }
                 },
-                "resource_usage_export_config": {
+                "resourceUsageExportConfig": {
                     "$ref": "#/definitions/gke.ResourceUsageExportConfig"
                 },
-                "self_link": {
+                "selfLink": {
                     "type": "string"
                 },
-                "services_ipv4_cidr": {
+                "servicesIpv4Cidr": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
                 },
-                "status_message": {
+                "statusMessage": {
                     "type": "string"
                 },
                 "subnetwork": {
                     "type": "string"
                 },
-                "tpu_ipv4_cidr_block": {
+                "tpuIpv4CidrBlock": {
                     "type": "string"
                 },
                 "zone": {
@@ -6096,16 +6151,16 @@
             "title": "GKEClusterTemplate",
             "type": "object",
             "properties": {
-                "addons_config": {
+                "addonsConfig": {
                     "$ref": "#/definitions/gke.AddonsConfig"
                 },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
-                "cloud_status": {
+                "cloudStatus": {
                     "type": "string"
                 },
-                "cluster_ipv4_cidr": {
+                "clusterIpv4Cidr": {
                     "type": "string"
                 },
                 "company_id": {
@@ -6117,40 +6172,57 @@
                         "$ref": "#/definitions/gke.StatusCondition"
                     }
                 },
-                "create_time": {
+                "createTime": {
                     "type": "string"
                 },
-                "current_master_version": {
+                "currentMasterVersion": {
                     "type": "string"
                 },
-                "default_max_pods_constraint": {
+                "currentNodeCount": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "currentNodeVersion": {
+                    "type": "string"
+                },
+                "defaultMaxPodsConstraint": {
                     "$ref": "#/definitions/gke.MaxPodsConstraint"
                 },
                 "description": {
                     "type": "string"
                 },
-                "enable_kubernetes_alpha": {
+                "enableKubernetesAlpha": {
                     "type": "boolean"
                 },
-                "enable_tpu": {
+                "enableTpu": {
                     "type": "boolean"
                 },
                 "endpoint": {
                     "type": "string"
                 },
-                "expire_time": {
+                "expireTime": {
                     "type": "string"
                 },
-                "initial_cluster_version": {
+                "initialClusterVersion": {
                     "type": "string"
                 },
-                "ip_allocation_policy": {
+                "initialNodeCount": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "instanceGroupUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ipAllocationPolicy": {
                     "$ref": "#/definitions/gke.IPAllocationPolicy"
                 },
-                "label_fingerprint": {
+                "labelFingerprint": {
                     "type": "string"
                 },
-                "legacy_abac": {
+                "legacyAbac": {
                     "$ref": "#/definitions/gke.LegacyAbac"
                 },
                 "location": {
@@ -6162,19 +6234,19 @@
                         "type": "string"
                     }
                 },
-                "logging_service": {
+                "loggingService": {
                     "type": "string"
                 },
-                "maintenance_policy": {
+                "maintenancePolicy": {
                     "$ref": "#/definitions/gke.MaintenancePolicy"
                 },
-                "master_auth": {
+                "masterAuth": {
                     "$ref": "#/definitions/gke.MasterAuth"
                 },
-                "master_authorized_networks_config": {
+                "masterAuthorizedNetworksConfig": {
                     "$ref": "#/definitions/gke.MasterAuthorizedNetworksConfig"
                 },
-                "monitoring_service": {
+                "monitoringService": {
                     "type": "string"
                 },
                 "name": {
@@ -6183,43 +6255,46 @@
                 "network": {
                     "type": "string"
                 },
-                "network_config": {
+                "networkConfig": {
                     "$ref": "#/definitions/gke.NetworkConfig"
                 },
-                "network_policy": {
+                "networkPolicy": {
                     "$ref": "#/definitions/gke.NetworkPolicy"
                 },
-                "node_ipv4_cidr_size": {
+                "nodeConfig": {
+                    "$ref": "#/definitions/gke.NodeConfig"
+                },
+                "nodeIpv4CidrSize": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "node_pools": {
+                "nodePools": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/gke.NodePool"
                     }
                 },
-                "private_cluster_config": {
+                "privateClusterConfig": {
                     "$ref": "#/definitions/gke.PrivateClusterConfig"
                 },
-                "resource_labels": {
+                "resourceLabels": {
                     "additionalProperties": {
                         "type": "string"
                     }
                 },
-                "resource_usage_export_config": {
+                "resourceUsageExportConfig": {
                     "$ref": "#/definitions/gke.ResourceUsageExportConfig"
                 },
-                "self_link": {
+                "selfLink": {
                     "type": "string"
                 },
-                "services_ipv4_cidr": {
+                "servicesIpv4Cidr": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
                 },
-                "status_message": {
+                "statusMessage": {
                     "type": "string"
                 },
                 "subnetwork": {
@@ -6228,7 +6303,7 @@
                 "template_id": {
                     "type": "string"
                 },
-                "tpu_ipv4_cidr_block": {
+                "tpuIpv4CidrBlock": {
                     "type": "string"
                 },
                 "zone": {
@@ -6268,6 +6343,10 @@
             "title": "NetworkPolicy",
             "type": "object"
         },
+        "gke.NodeConfig": {
+            "title": "NodeConfig",
+            "type": "object"
+        },
         "gke.NodePool": {
             "title": "NodePool",
             "type": "object"
@@ -6278,6 +6357,10 @@
         },
         "gke.ResourceUsageExportConfig": {
             "title": "ResourceUsageExportConfig",
+            "type": "object"
+        },
+        "gke.ServerConfig": {
+            "title": "ServerConfig",
             "type": "object"
         },
         "gke.StatusCondition": {
@@ -6351,7 +6434,8 @@
                 "Azure = \"azure\"",
                 "GCP = \"gcp\"",
                 "GKE = \"gke\"",
-                "DO = \"do\""
+                "DO = \"do\"",
+                "IBM = \"ibm\""
             ],
             "example": "aws"
         },

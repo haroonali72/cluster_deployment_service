@@ -223,7 +223,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context) error {
 			cloud.ProjectId,
 			cloud.Zone,
 			clusterName,
-		).Context(context.TODO()).Do()
+		).Context(context.Background()).Do()
 		if err != nil {
 			ctx.SendLogs(
 				"GKE cluster creation/updation for '"+clusterName+"' failed: "+err.Error(),
@@ -260,7 +260,7 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 			cloud.Zone,
 			clusterName,
 			nodeName,
-		).Context(context.TODO()).Do()
+		).Context(context.Background()).Do()
 		if err != nil {
 			ctx.SendLogs(
 				"GKE node creation/updation for cluster '"+clusterName+"' and node '"+nodeName+"' failed: "+err.Error(),
@@ -287,6 +287,23 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 		}
 		time.Sleep(time.Second * 5)
 	}
+}
+
+func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, error) {
+	config, err := cloud.Client.Projects.Zones.GetServerconfig("*", cloud.Zone).
+		Context(context.Background()).
+		Do()
+
+	if err != nil {
+		ctx.SendLogs(
+			"GKE server config for '"+cloud.ProjectId+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return nil, err
+	}
+
+	return config, nil
 }
 
 func (cloud *GKE) getGCPNetwork(token string, ctx utils.Context) (gcpNetwork types.GCPNetwork) {

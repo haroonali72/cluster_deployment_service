@@ -18,16 +18,17 @@ func GetMongoSession(ctx utils.Context) (session *mgo.Session, err error) {
 
 	beego.Info("connecting to mongo host: " + conf.mongoHost)
 
+	if !conf.mongoAuth {
+		session, err = mgo.Dial(conf.mongoHost)
+		beego.Info("Mongo host connected: " + conf.mongoHost)
+		return session, err
+	}
+
 	tlsconfig := getTLSCertificate()
 	if tlsconfig == nil {
 		return
 	}
 
-	if !conf.mongoAuth {
-		session, err = mgo.Dial(conf.mongoHost)
-		beego.Info("Mongo host connected" + conf.mongoHost)
-		return session, err
-	}
 	session, err = mgo.DialWithInfo(&mgo.DialInfo{
 		Addrs:    strings.Split(conf.mongoHost, ","),
 		Username: conf.mongoUser,
