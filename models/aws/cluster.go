@@ -767,3 +767,25 @@ func GetAllMachines() ([]string, error) {
 
 	return machines, nil
 }
+
+func ValidateProfile(key,secret,region string, ctx utils.Context) (error) {
+
+	aws := AWS{
+		AccessKey: key,
+		SecretKey: secret,
+		Region:    region,
+	}
+	err := aws.init()
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+
+	err = aws.validateProfile( ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+
+	return  nil
+}

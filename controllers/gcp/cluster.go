@@ -1290,3 +1290,76 @@ func (c *GcpClusterController) GetAllRegions() {
 }
 
 
+// @Title Validate Profile
+// @Description check if profile is valid
+// @Param	token	header	string	token ""
+// @Param	body	body 	gcp.GcpCredentials	true	"body for cluster content"
+// @Success 200 {"msg": "cluster created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "profile is invalid"}
+// @Failure 500 {"error": "error msg"}
+// @router /validateProfile [post]
+func (c *GcpClusterController) ValidateProfile() {
+
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	var profile gcp.GcpCredentials
+
+	prof :=c.Ctx.Input.RequestBody
+
+	json.Unmarshal(c.Ctx.Input.RequestBody, &profile)
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	ctx.SendLogs("Check Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+
+	var regions []models.Region
+	if err := json.Unmarshal(cores.GCPRegions, &regions); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	for _,region := range regions {
+		err = gcp.ValidateProfile(prof,region.Location,"b", *ctx)
+		if err != nil {
+			ctx.SendLogs("GcpClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if err==nil{
+			break
+		}
+	}
+
+	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	c.Data["json"] = map[string]string{"msg": "profile is valid"}
+	c.ServeJSON()
+}
+
+

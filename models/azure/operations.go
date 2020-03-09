@@ -2114,3 +2114,4 @@ func getAllVMSizes() ([]string, error) {
 	}
 	return machine,nil
 }
+

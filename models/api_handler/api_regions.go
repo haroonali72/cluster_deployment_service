@@ -111,8 +111,8 @@ func GetGcpRegion() (reg []models.Region,err error){
 	}
 //	for _,reg := region {
 		for i:=0;i<len(regions);i=i+3{
-			region.Name =regions[i]
-			region.Location=regions[i+2]
+			region.Location=regions[i]
+			region.Name =regions[i+2]
 			reg =append(reg,region)
 		}
 

@@ -151,6 +151,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
+        beego.ControllerComments{
+            Method: "ValidateProfile",
+            Router: `/validateProfile/:clientId/:clientSecret/:subscriptionId/:tenantId`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureTemplateController"],
         beego.ControllerComments{
             Method: "Post",

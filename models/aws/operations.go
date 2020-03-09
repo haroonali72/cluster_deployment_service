@@ -1541,7 +1541,10 @@ func (cloud *AWS) GetZones( ctx utils.Context) ([]*string , error) {
 	}
 	var zone []*string
 	for _, az := range res.AvailabilityZones {
-		zone =append(zone,az.ZoneName)
+		z := *az.ZoneName
+		a := z[len(z)-1:]
+		fmt.Println(a)
+		zone =append(zone,&a)
 	}
 	return zone, nil
 }
@@ -1567,4 +1570,16 @@ fmt.Println(res)
 }
 
 
+func (cloud *AWS) validateProfile( ctx utils.Context)  error {
+	
+	accountInput := &ec2.DescribeAccountAttributesInput{}
+
+	_, err := cloud.Client.DescribeAccountAttributes(accountInput)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+
+	return nil
+}
 

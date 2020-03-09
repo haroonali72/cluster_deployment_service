@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -724,4 +725,51 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 		}
 	}
 	return false
+}
+func ValidateProfile(profile []byte,region,zone string, ctx utils.Context)  error {
+	credentials := GcpResponse{}
+
+	err := json.Unmarshal(profile, &credentials.Credentials.AccountData)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	jsonData, err := json.Marshal(credentials.Credentials.AccountData)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	credentials.Credentials.RawData = string(jsonData)
+	credentials.Credentials.Region = region
+	credentials.Credentials.Zone = zone
+	_, err = govalidator.ValidateStruct(credentials.Credentials)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	cre := GcpCredentials{
+	AccountData: credentials.Credentials.AccountData,
+	RawData:     string(jsonData),
+	Region:      region,
+	Zone:        zone,
+	}
+	gcp, err := GetGCP(cre)
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+	err = gcp.init()
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+
+	_, err = gcp.GetAllMachines(ctx)
+	if err != nil {
+		return  err
+	}
+
+
+	return  nil
 }

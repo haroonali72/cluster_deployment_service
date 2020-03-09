@@ -2,22 +2,22 @@ package cores
 
 var AWSRegions = []byte(
 	`[
-			{"region":"","alias":"eu-north-1"},
-			{"region":"","alias": "ap-south-1"},
-			{"region":"","alias": "eu-west-3"},
-			{"region":"","alias":"eu-west-2"},
-			{"region":"","alias": "eu-west-1"},
-			{"region":"","alias": "ap-northeast-2"},
-			{"region":"","alias":"ap-northeast-1"},
-			{"region":"","alias": "sa-east-1"},
-			{"region":"","alias": "ca-central-1"},
-			{"region":"","alias":"ap-southeast-1"},
-			{"region":"","alias":"ap-southeast-2"},
-			{"region":"","alias":  "eu-central-1"},
-			{"region":"","alias":"us-east-1"},
-			{"region":"","alias":"us-east-2"},
-			{"region":"","alias": "us-west-1"},
-			{"region":"","alias": "us-west-2"}
+`			{"name":"","location":"eu-north-1"},
+			{"name":"","location": "ap-south-1"},
+			{"name":"","location": "eu-west-3"},
+			{"name":"","location":"eu-west-2"},
+			{"name":"","location": "eu-west-1"},
+			{"name":"","location": "ap-northeast-2"},
+			{"name":"","location":"ap-northeast-1"},
+			{"name":"","location": "sa-east-1"},
+			{"name":"","location": "ca-central-1"},
+			{"name":"","location":"ap-southeast-1"},
+			{"name":"","location":"ap-southeast-2"},
+			{"name":"","location":  "eu-central-1"},
+			{"name":"","location":"us-east-1"},
+			{"name":"","location":"us-east-2"},
+			{"name":"","location": "us-west-1"},
+			{"name":"","location": "us-west-2"}
 ]`)
 
 var AzureRegions = []byte(
@@ -36,7 +36,7 @@ var AzureRegions = []byte(
 			{"region":"Japan East","location":"japaneast"},
 			{"region":"Brazil South","location":"brazilsouth"},
 			{"region":"Australia East","location":"australiaeast"},
-			{"region":"Australia Southeast","location":"australiasoutheast"},
+			{"region":"Australia Southeast","location":"austrlocationoutheast"},
 			{"region":"South India","location": "southindia"},
 			{"region":"Central India","location":"centralindia"},
 			{"region":"West India","location": "westindia"},
@@ -63,4 +63,31 @@ var AzureRegions = []byte(
 			{"region":"Norway West","location":"norwaywest"},
 			{"region":"Norway East","location": "norwayeast"}
 
+]`)
+
+
+var GCPRegions = []byte(
+	`[
+			{"name":"","location":"asia-east1"},
+			{"name":"","location": "asia-east2"},
+			{"name":"","location": "asia-northeast1"},
+			{"name":"","location":"asia-northeast2"},
+			{"name":"","location": "asia-northeast3"},
+			{"name":"","location": "asia-south1"},
+			{"name":"","location":"asia-southeast1"},
+			{"name":"","location": "australia-southeast1"},
+			{"name":"","location": "europe-north1"},
+			{"name":"","location":"europe-west1"},
+			{"name":"","location":"europe-west2"},
+			{"name":"","location":  "europe-west3"},
+			{"name":"","location":"europe-west4"},
+			{"name":"","location":"europe-west6"},
+			{"name":"","location": "northamerica-northeast1"},
+			{"name":"","location": "southamerica-east1"},
+			{"name":"","location":"us-central1"},
+			{"name":"","location":"us-east1"},
+			{"name":"","location": "us-east4"},
+			{"name":"","location": "us-west1"},
+			{"name":"","location": "us-west2"},
+			{"name":"","location": "us-west3"}
 ]`)
