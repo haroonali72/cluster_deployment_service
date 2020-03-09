@@ -38,6 +38,7 @@ const (
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
 	DO    Cloud = "do"
+	IBM   Cloud = "ibm"
 )
 
 type KeyType string
@@ -87,7 +88,12 @@ const (
 	VaultCreateKeyURI  = "/template/sshKey"
 	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{region}/{name}"
 )
-
+const (
+	IBM_IAM_Endpoint          = "https://iam.cloud.ibm.com/identity/token"
+	IBM_Kube_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
+	IBM_WorkerPool_Endpoint   = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
+	IBM_Zone                  = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
+)
 const (
 	RbacEndpoint = "/security/api/rbac/"
 

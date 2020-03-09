@@ -44,7 +44,9 @@ func SendLog(companyId, msg, message_type, env_id string) (int, error) {
 		beego.Error("%s", err)
 		return 400, err
 	}
-
+	m := make(map[string]string)
+	m["Content-Type"] = "application/json"
+	SetHeaders(req, m)
 	response, err := logger.SendRequest(req)
 	if err != nil {
 		beego.Error("%s", err)
