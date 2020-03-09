@@ -1322,9 +1322,9 @@ func (c *AWSClusterController) GetAllRegions() {
 
 // @Title Get Availability Zone
 // @Description return zones against a region
-// @Param	token	header	string	token ""
+// @Param	token	header	string	token true""
 // @Param	region	path	string	true	"region of AWS"
-// @Param	X-Profile-Id	header	string	profileId	""
+// @Param	X-Profile-Id	header	string	profileId	true""
 // @Success 200 			[]*string
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}

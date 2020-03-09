@@ -2,7 +2,7 @@ package cores
 
 var AWSRegions = []byte(
 	`[
-`			{"name":"","location":"eu-north-1"},
+			{"name":"","location":"eu-north-1"},
 			{"name":"","location": "ap-south-1"},
 			{"name":"","location": "eu-west-3"},
 			{"name":"","location":"eu-west-2"},

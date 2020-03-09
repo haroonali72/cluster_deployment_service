@@ -2088,19 +2088,6 @@ func (cloud *AZURE) getRegions(ctx utils.Context) (region []models.Region, err e
 	}
 	return region, nil
 }
-
-func (cloud *AZURE) getAvailabilityZone() ([]string, error) {
-	if cloud == nil {
-		err := cloud.init()
-		if err != nil {
-			beego.Error(err.Error())
-			return []string{}, err
-		}
-	}
-
-	zone := []string{"a","b","c"}
-	return zone, nil
-}
 func getAllVMSizes() ([]string, error) {
 
 	VmResult := c.PossibleVirtualMachineSizeTypesValues()
