@@ -3,11 +3,12 @@ package models
 type Type string
 
 const (
-	Existing    Type = "existing"
-	New         Type = "new"
-	Created     Type = "created"
-	Deploying   Type = "deploying"
-	Terminating Type = "terminating"
+	Existing       Type = "existing"
+	New            Type = "new"
+	Created        Type = "created"
+	ClusterCreated Type = "cluster created"
+	Deploying      Type = "deploying"
+	Terminating    Type = "terminating"
 )
 
 type RequestType string
@@ -37,6 +38,7 @@ const (
 	AWS   Cloud = "aws"
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
+	GKE   Cloud = "gke"
 	DO    Cloud = "do"
 	IBM   Cloud = "ibm"
 )
