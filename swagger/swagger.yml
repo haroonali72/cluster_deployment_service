@@ -3184,14 +3184,329 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/ibm/:
+    put:
+      tags:
+      - template/ibm
+      description: update an existing template
+      operationId: IBMTemplateController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/ibm.Template'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/ibm
+      description: create a new template
+      operationId: IBMTemplateController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/ibm.Template'
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/ibm/{templateId}:
+    get:
+      tags:
+      - template/ibm
+      description: get template
+      operationId: IBMTemplateController.Get
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: Id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/ibm.Template'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+    delete:
+      tags:
+      - template/ibm
+      description: delete a templates
+      operationId: IBMTemplateController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: Name of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "name is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/ibm/all:
+    get:
+      tags:
+      - template/ibm
+      description: get all the templates
+      operationId: IBMTemplateController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ibm.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/ibm/allCustomerTemplates:
+    get:
+      tags:
+      - template/ibm
+      description: get all the customer templates
+      operationId: IBMTemplateController.Get All Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ibm.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/ibm/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/ibm
+      description: get all the customer templates info
+      operationId: IBMTemplateController.GetAllCustomerTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ibm.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/ibm/allTemplatesInfo:
+    get:
+      tags:
+      - template/ibm
+      description: get all the templates info
+      operationId: IBMTemplateController.GetAllTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ibm.TemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/ibm/customerTemplate:
+    put:
+      tags:
+      - template/ibm
+      description: update an existing customer template
+      operationId: IBMTemplateController.Update customer templates
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/ibm.Template'
+      responses:
+        "200":
+          description: '{"msg": "customer template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/ibm
+      description: create a new customer template
+      operationId: IBMTemplateController.Create Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/ibm.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/ibm/customerTemplate/{templateId}:
+    get:
+      tags:
+      - template/ibm
+      description: get customer template
+      operationId: IBMTemplateController.Get customer template
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/ibm.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+    delete:
+      tags:
+      - template/ibm
+      description: delete a customer template
+      operationId: IBMTemplateController.Delete customer template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "customer template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  13357.0xc000b0a240.false:
+  12961.0xc00106ae10.false:
     title: "false"
     type: object
-  13431.0xc000de64b0.false:
+  13357.0xc000b644e0.false:
+    title: "false"
+    type: object
+  13431.0xc000e46750.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3231,7 +3546,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13357.0xc000b0a240.false'
+        $ref: '#/definitions/13357.0xc000b644e0.false'
       name:
         type: string
       network_name:
@@ -3614,7 +3929,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc000de64b0.false'
+        $ref: '#/definitions/13431.0xc000e46750.false'
       name:
         type: string
       network_name:
@@ -4190,6 +4505,159 @@ definitions:
   godo.Region:
     title: Region
     type: object
+  ibm.AllInstancesResponse:
+    title: AllInstancesResponse
+    type: object
+    properties:
+      profiles:
+        type: array
+        items:
+          $ref: '#/definitions/ibm.InstanceProfile'
+  ibm.Cluster_Def:
+    title: Cluster_Def
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      disablePublicServiceEndpoint:
+        type: boolean
+      kube_credentials:
+        $ref: '#/definitions/12961.0xc00106ae10.false'
+      kubeVersion:
+        type: string
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/ibm.NodePool'
+      project_id:
+        type: string
+      status:
+        type: string
+      token_name:
+        type: string
+      vpcID:
+        type: string
+  ibm.InstanceProfile:
+    title: InstanceProfile
+    type: object
+    properties:
+      family:
+        type: string
+      name:
+        type: string
+  ibm.Node:
+    title: Node
+    type: object
+    properties:
+      cloud_id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      node_state:
+        type: string
+      private_dns:
+        type: string
+      private_ip:
+        type: string
+      public_dns:
+        type: string
+      public_ip:
+        type: string
+      user_name:
+        type: string
+      volume_id:
+        type: string
+  ibm.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      pool_role:
+        $ref: '#/definitions/models.PoolRole'
+      zones:
+        type: array
+        items:
+          $ref: '#/definitions/ibm.Zone'
+  ibm.NodePoolT:
+    title: NodePoolT
+    type: object
+    properties:
+      enable_public_ip:
+        type: boolean
+      enable_scaling:
+        type: boolean
+      is_external:
+        type: boolean
+      machine_type:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/ibm.Node'
+      pool_id:
+        type: string
+      pool_role:
+        type: string
+      subnet_id:
+        type: string
+  ibm.Template:
+    title: Template
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      is_cloudplex:
+        type: boolean
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/ibm.NodePoolT'
+      template_id:
+        type: string
+      vpc_name:
+        type: string
+  ibm.TemplateMetadata:
+    title: TemplateMetadata
+    type: object
+    properties:
+      is_cloudplex:
+        type: boolean
+      pool_count:
+        type: integer
+        format: int64
+      template_id:
+        type: string
+  ibm.Zone:
+    title: Zone
+    type: object
   key_utils.AWSKey:
     title: AWSKey
     type: object
@@ -4334,3 +4802,6 @@ tags:
 - name: cluster/do
   description: |
     Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: template/ibm
+  description: |
+    Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]

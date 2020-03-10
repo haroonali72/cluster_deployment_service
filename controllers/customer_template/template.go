@@ -41,7 +41,7 @@ func (c *CustomerTempalteController) Post() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	awstemplates, azuretemplates, gcptemplates, dotemplates, err := register_customer_template.GetCustomerTemplate(*ctx)
+	awstemplates, azuretemplates, gcptemplates, dotemplates, ibmtemplates, err := register_customer_template.GetCustomerTemplate(*ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)
@@ -50,7 +50,7 @@ func (c *CustomerTempalteController) Post() {
 		return
 	}
 
-	err = register_customer_template.RegisterCustomerTemplate(awstemplates, azuretemplates, gcptemplates, dotemplates, userInfo.CompanyId, *ctx)
+	err = register_customer_template.RegisterCustomerTemplate(awstemplates, azuretemplates, gcptemplates, dotemplates, ibmtemplates, userInfo.CompanyId, *ctx)
 	if err != nil {
 
 		c.Ctx.Output.SetStatus(500)
@@ -62,7 +62,7 @@ func (c *CustomerTempalteController) Post() {
 
 	beego.Info("creating policy " + token + " user id " + userInfo.UserId + " company id " + userInfo.CompanyId)
 
-	err = register_customer_template.CreatePolicy(awstemplates, azuretemplates, gcptemplates, dotemplates, token, *ctx)
+	err = register_customer_template.CreatePolicy(awstemplates, azuretemplates, gcptemplates, dotemplates, ibmtemplates, token, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
