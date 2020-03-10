@@ -3188,10 +3188,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  600.0xc000859620.false:
+  600.0xc00087d590.false:
     title: "false"
     type: object
-  660.0xc000b51620.false:
+  660.0xc000b77590.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3231,7 +3231,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/600.0xc000859620.false'
+        $ref: '#/definitions/600.0xc00087d590.false'
       name:
         type: string
       network_name:
@@ -3614,7 +3614,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/660.0xc000b51620.false'
+        $ref: '#/definitions/660.0xc000b77590.false'
       name:
         type: string
       network_name:
@@ -3978,11 +3978,6 @@ definitions:
         type: string
       currentMasterVersion:
         type: string
-      currentNodeCount:
-        type: integer
-        format: int64
-      currentNodeVersion:
-        type: string
       defaultMaxPodsConstraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
@@ -3997,13 +3992,6 @@ definitions:
         type: string
       initialClusterVersion:
         type: string
-      initialNodeCount:
-        type: integer
-        format: int64
-      instanceGroupUrls:
-        type: array
-        items:
-          type: string
       ipAllocationPolicy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
       labelFingerprint:
@@ -4034,8 +4022,6 @@ definitions:
         $ref: '#/definitions/gke.NetworkConfig'
       networkPolicy:
         $ref: '#/definitions/gke.NetworkPolicy'
-      nodeConfig:
-        $ref: '#/definitions/gke.NodeConfig'
       nodeIpv4CidrSize:
         type: integer
         format: int64
@@ -4088,11 +4074,6 @@ definitions:
         type: string
       currentMasterVersion:
         type: string
-      currentNodeCount:
-        type: integer
-        format: int64
-      currentNodeVersion:
-        type: string
       defaultMaxPodsConstraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
@@ -4107,13 +4088,6 @@ definitions:
         type: string
       initialClusterVersion:
         type: string
-      initialNodeCount:
-        type: integer
-        format: int64
-      instanceGroupUrls:
-        type: array
-        items:
-          type: string
       ipAllocationPolicy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
       labelFingerprint:
@@ -4144,8 +4118,6 @@ definitions:
         $ref: '#/definitions/gke.NetworkConfig'
       networkPolicy:
         $ref: '#/definitions/gke.NetworkPolicy'
-      nodeConfig:
-        $ref: '#/definitions/gke.NodeConfig'
       nodeIpv4CidrSize:
         type: integer
         format: int64
@@ -4199,9 +4171,6 @@ definitions:
     type: object
   gke.NetworkPolicy:
     title: NetworkPolicy
-    type: object
-  gke.NodeConfig:
-    title: NodeConfig
     type: object
   gke.NodePool:
     title: NodePool
