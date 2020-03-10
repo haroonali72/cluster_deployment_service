@@ -3,11 +3,12 @@ package models
 type Type string
 
 const (
-	Existing    Type = "existing"
-	New         Type = "new"
-	Created     Type = "created"
-	Deploying   Type = "deploying"
-	Terminating Type = "terminating"
+	Existing       Type = "existing"
+	New            Type = "new"
+	Created        Type = "created"
+	ClusterCreated Type = "cluster created"
+	Deploying      Type = "deploying"
+	Terminating    Type = "terminating"
 )
 
 type RequestType string
@@ -37,6 +38,7 @@ const (
 	AWS   Cloud = "aws"
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
+	GKE   Cloud = "gke"
 	DO    Cloud = "do"
 	IBM   Cloud = "ibm"
 )
@@ -89,10 +91,12 @@ const (
 	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{region}/{name}"
 )
 const (
-	IBM_IAM_Endpoint          = "https://iam.cloud.ibm.com/identity/token"
-	IBM_Kube_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
-	IBM_WorkerPool_Endpoint   = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
-	IBM_Zone                  = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
+	IBM_IAM_Endpoint           = "https://iam.cloud.ibm.com/identity/token"
+	IBM_Kube_Cluster_Endpoint  = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
+	IBM_WorkerPool_Endpoint    = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
+	IBM_Zone                   = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
+	IBM_All_Instances_Endpoint = ".iaas.cloud.ibm.com/v1/instance/profiles"
+	IBM_Version                = "?version=2020-01-28&generation=1"
 )
 const (
 	RbacEndpoint = "/security/api/rbac/"
