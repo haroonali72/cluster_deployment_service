@@ -39,6 +39,8 @@ var (
 	kill_bill_secret_key            = ""
 	kill_bill_user                  = ""
 	kill_bill_api_key               = ""
+	jump_host_ssh_key               = ""
+	jump_host_ssh_ip                = ""
 )
 
 func InitFlags() error {
@@ -231,6 +233,18 @@ func InitFlags() error {
 			Usage:       "woodpecker_url",
 			Destination: &woodpecker_url,
 			EnvVar:      "woodpecker_url",
+		},
+		cli.StringFlag{
+			Name:        "jump_host_ssh_key",
+			Usage:       "jump_host_ssh_key",
+			Destination: &jump_host_ssh_key,
+			EnvVar:      "jump_host_ssh_key",
+		},
+		cli.StringFlag{
+			Name:        "jump_host_ssh_ip",
+			Usage:       "jump_host_ssh_ip",
+			Destination: &jump_host_ssh_ip,
+			EnvVar:      "jump_host_ssh_ip",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
