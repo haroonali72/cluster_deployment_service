@@ -55,6 +55,15 @@ type WorkerPoolResponse struct {
 	ID string `json:"workerPoolID"`
 }
 
+type AllInstancesResponse struct {
+	Profile []InstanceProfile `json:"profiles"`
+}
+
+type InstanceProfile struct {
+	Family string `json:"family"`
+	Name   string `json:"name"`
+}
+
 func (cloud *IBM) init(region string, ctx utils.Context) error {
 
 	client := utils.InitReq()
@@ -341,4 +350,46 @@ func (cloud *IBM) AddZonesToPools(rg, poolID, zoneID, subnetID, clusterID string
 		return err
 	}
 	return nil
+}
+
+func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, error) {
+	url := "https://" + cloud.Region + models.IBM_All_Instances_Endpoint + models.IBM_Version
+
+	req, _ := utils.CreateGetRequest(url)
+
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+	defer res.Body.Close()
+
+	// Reading response
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+
+	// body is []byte format
+	// parse the JSON-encoded body and stores the result in the struct object for the res
+	var InstanceList AllInstancesResponse
+	err = json.Unmarshal(body, &InstanceList)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+
+	return InstanceList, nil
 }

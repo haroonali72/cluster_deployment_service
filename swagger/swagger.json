@@ -4846,11 +4846,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "600.0xc00087d590.false": {
+        "13357.0xc000b0a240.false": {
             "title": "false",
             "type": "object"
         },
-        "660.0xc000b77590.false": {
+        "13431.0xc000de64b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -4906,7 +4906,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc00087d590.false"
+                    "$ref": "#/definitions/13357.0xc000b0a240.false"
                 },
                 "name": {
                     "type": "string"
@@ -5474,7 +5474,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/660.0xc000b77590.false"
+                    "$ref": "#/definitions/13431.0xc000de64b0.false"
                 },
                 "name": {
                     "type": "string"
