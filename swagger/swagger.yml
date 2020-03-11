@@ -1615,6 +1615,42 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/gke/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/gke
+      description: Apply cloudplex Agent file to a gke cluster
+      operationId: GKEClusterController.Start
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/gke/config/{projectId}:
     get:
       tags:
@@ -3188,10 +3224,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  13357.0xc000b0a240.false:
+  29793.0xc0009fdf20.false:
     title: "false"
     type: object
-  13431.0xc000de64b0.false:
+  58168.0xc00076db30.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3231,7 +3267,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13357.0xc000b0a240.false'
+        $ref: '#/definitions/58168.0xc00076db30.false'
       name:
         type: string
       network_name:
@@ -3614,7 +3650,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc000de64b0.false'
+        $ref: '#/definitions/29793.0xc0009fdf20.false'
       name:
         type: string
       network_name:

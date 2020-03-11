@@ -6,11 +6,16 @@ import (
 	"antelope/models/gcp"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/woodpecker"
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
+	"golang.org/x/crypto/ssh"
 	gke "google.golang.org/api/container/v1"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
+	"net"
 	"strings"
 	"time"
 )
@@ -678,4 +683,66 @@ func PrintError(confError error, name, projectId string, companyId string) {
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
 		_, _ = utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
+}
+
+func TestGKE(credentials gcp.GcpCredentials, companyId string, token string, ctx utils.Context, projetcID string, clusterName string) (confError error) {
+
+	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
+	output, err := remoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
+	}
+
+	if credentials.Zone != "" {
+		cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e zone=" + credentials.Region + "-" + credentials.Zone + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GCPAuthContianrName
+	} else {
+		cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e region=" + credentials.Region + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GCPAuthContianrName
+	}
+
+	output, err = remoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
+	}
+	return nil
+}
+func remoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
+	clientPem, err := ioutil.ReadFile(privateKey)
+	if err != nil {
+		return "", err
+	}
+
+	key, err := ssh.ParsePrivateKey(clientPem)
+	if err != nil {
+		return "", err
+	}
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+	client, err := ssh.Dial("tcp", net.JoinHostPort(addr, "22"), config)
+	if err != nil {
+		return "", err
+	}
+	session, err := client.NewSession()
+	if err != nil {
+		return "", err
+	}
+	defer session.Close()
+	var b bytes.Buffer
+	session.Stdout = &b
+	err = session.Run(cmd)
+	return b.String(), err
 }

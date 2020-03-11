@@ -128,6 +128,8 @@ const (
 	FrontEndLoggingURI   = "frontend/logging"
 	AuditTrailLoggingURI = "audit/store"
 )
+const WoodPeckerCertificate = "/agent/api/v1/clientcert/{profileId}"
+const GCPAuthContianrName = "jhgcp"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
