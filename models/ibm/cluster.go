@@ -4,7 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
-	"antelope/models/do"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -39,7 +38,7 @@ type NodePool struct {
 	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
 	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
 	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
-	Zone        []Zone          `json:"zones"`
+	//Zone        []Zone          `json:"zones"`
 }
 type Node struct {
 	CloudId    int    `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -283,7 +282,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = ibm.createCluster(cluster, ctx, companyId, token)
+	/*cluster, confError = ibm.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		confError = do.CleanUp(ctx)
@@ -298,7 +297,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
-	}
+	}*/
 
 	cluster.Status = "Cluster Created"
 	confError = UpdateCluster(cluster, false, ctx)
@@ -330,12 +329,12 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		return Cluster_Def{}, err
 	}
 
-	e := ibm.fetchStatus(&cluster, ctx, companyId, token)
+	/*e := ibm.fetchStatus(&cluster, ctx, companyId, token)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, e
-	}
+	}*/
 	return cluster, nil
 }
 func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.Context, companyId, token string) error {
@@ -383,7 +382,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		return err
 	}
 
-	err = ibm.terminateCluster(&cluster, ctx, companyId)
+	/*err = ibm.terminateCluster(&cluster, ctx, companyId)
 	if err != nil {
 		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
 
@@ -398,7 +397,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
-	}
+	}*/
 
 	//var flagcheck bool
 	//for {
@@ -421,11 +420,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	//	time.Sleep(time.Second * 5)
 	//}
 
-	for _, pools := range cluster.NodePools {
+	/*for _, pools := range cluster.NodePools {
 		var nodes []*Node
 		pools.Nodes = nodes
 		pools.KeyInfo.KeyType = models.CPKey
-	}
+	}*/
 	cluster.Status = "Cluster Terminated"
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
