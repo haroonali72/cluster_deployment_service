@@ -722,14 +722,70 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	}
 	return false
 }
-func GetNetworkInfo(projectId,companyId string,ctx utils.Context ) (info map[string]bool,err error) {
-	info = make(map[string]bool)
-	cluster,err := GetCluster(projectId, companyId, ctx)
-	if err !=nil{
-		return info,err
+
+func GetRegions(ctx utils.Context) ([]models.Region, error) {
+
+	regions,err :=api_handler.GetAwsRegions()
+	if err != nil {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []models.Region{}, err
 	}
-	for _, node := range cluster.NodePools {
-			info[node.PoolSubnet]= node.EnablePublicIP
-		}
-		return info,nil
+
+	return regions, nil
+}
+func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error) {
+
+	aws := AWS{
+		AccessKey: credentials.Profile.AccessKey,
+		SecretKey: credentials.Profile.SecretKey,
+		Region:    credentials.Profile.Region,
+	}
+	err := aws.init()
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err
+	}
+
+	zones, e := aws.GetZones( ctx)
+	if e != nil {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		return nil, e
+	}
+	//var zone []string
+	/*for _,z := range zones{
+		z := z[len(z)-1:]
+		zone = append(zone,*z)
+	}*/
+	return zones, nil
+}
+func GetAllMachines() ([]string, error) {
+	machines ,err := api_handler.GetAwsMachines()
+	if err !=nil{
+		return []string{},nil
+	}
+
+	return machines, nil
+}
+
+func ValidateProfile(key,secret,region string, ctx utils.Context) (error) {
+
+	aws := AWS{
+		AccessKey: key,
+		SecretKey: secret,
+		Region:    region,
+	}
+	err := aws.init()
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+
+	err = aws.validateProfile( ctx)
+	if err != nil {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+
+	return  nil
 }

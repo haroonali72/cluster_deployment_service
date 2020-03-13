@@ -1073,3 +1073,201 @@ func (c *AzureClusterController) GetInstances() {
 	c.Data["json"] = instances
 	c.ServeJSON()
 }
+
+
+// @Title Get Azure Regions
+// @Description Get Azure Regions
+// @Param	token	header	string	token true""
+// @Param	X-Profile-Id	header	string	true	""
+// @Success 200 []model.Region
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getallregions [get]
+func (c *AzureClusterController) GetRegions()  {
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	beego.Info("AzureClusterController: Get All Regions.")
+
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	var regions []models.Region
+	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {
+		beego.Error("Unmarshalling of regions failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	azureProfile, err := azure.GetProfile(profileId, "useast", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	reg, err := azure.GetRegions(azureProfile,*ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = reg
+	c.ServeJSON()
+}
+
+// @Title Get VM Sizes
+// @Description Get Azure VM Sizes
+// @Success 200 []string
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getallmachines [get]
+func (c *AzureClusterController) GetAllMachines()  {
+	beego.Info("AzureClusterController: Get All Machine Types")
+
+	instances, err := azure.GetAllMachines()
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = instances
+	c.ServeJSON()
+}
+
+
+// @Title Validate Profile
+// @Description check if profile is valid
+// @Param	token	header	string	token ""
+// @Param	clientId	path	string	true	"Client Id"
+// @Param	clientSecret	path	string	true	"Client Secret"
+// @Param	subscriptionId	path	string	true	"Subscription Id"
+// @Param	tenantId	path	string	true	"Tenant Id"
+// @Success 200 {"msg": "cluster created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "profile is invalid"}
+// @Failure 500 {"error": "error msg"}
+// @router /validateProfile/:clientId/:clientSecret/:subscriptionId/:tenantId [get]
+func (c *AzureClusterController) ValidateProfile() {
+
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	clientId := c.GetString(":clientId")
+	if clientId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "ami id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	clientSecret := c.GetString(":clientSecret")
+	if clientSecret == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "ami id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	subscriptionId := c.GetString(":subscriptionId")
+	if subscriptionId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "ami id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	tenantId := c.GetString(":tenantId")
+	if tenantId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "ami id is empty"}
+		c.ServeJSON()
+		return
+	}
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	ctx.SendLogs("Check Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+
+	var regions []models.Region
+	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	for _,region := range regions {
+		err = azure.ValidateProfile(clientId,clientSecret,subscriptionId,tenantId,region.Location, *ctx)
+		if err != nil {
+			ctx.SendLogs("AzureClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if err==nil{
+			break
+		}
+	}
+
+	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	c.Data["json"] = map[string]string{"msg": "profile is valid"}
+	c.ServeJSON()
+}
