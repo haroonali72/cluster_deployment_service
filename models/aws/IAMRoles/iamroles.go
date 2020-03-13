@@ -184,7 +184,7 @@ func (cloud *AWSIAMRoles) CheckInstanceProfile(iamProfileName string) bool {
 	iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(iamProfileName)}
 
 	start := time.Now()
-	timeToWait := 60 *1.5//seconds
+	timeToWait := 60 * 1.5 //seconds
 	retry := true
 
 	region := cloud.Region

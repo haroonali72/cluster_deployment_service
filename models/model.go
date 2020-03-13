@@ -162,6 +162,16 @@ const (
 	AVERE_CONTRIBUTER_GUID   = "4f8fab4f-1852-4a58-a46a-8eaf358af14a"
 )
 
+type Region struct {
+	Name     string `json: "name" `
+	Location string `json: "location" `
+}
+type GcpRegion struct {
+	Name     string `json: "name" `
+	Zone     string `json: "zone" `
+	Location string `json: "location" `
+}
+
 func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
 	clientPem, err := ioutil.ReadFile(privateKey)
 	if err != nil {

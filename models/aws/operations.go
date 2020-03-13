@@ -13,6 +13,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -1516,6 +1517,61 @@ func (cloud *AWS) DeleteKeyPair(keyName string, ctx utils.Context) error {
 	}
 
 	_, err := cloud.Client.DeleteKeyPair(params)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
+
+func (cloud *AWS) GetZones(ctx utils.Context) ([]*string, error) {
+
+	azInput := ec2.DescribeAvailabilityZonesInput{}
+	res, err := cloud.Client.DescribeAvailabilityZones(&azInput)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []*string{}, err
+	}
+
+	if len(res.AvailabilityZones) <= 0 {
+		return []*string{}, errors.New("Availibility zones are not available")
+	}
+	var zone []*string
+	for _, az := range res.AvailabilityZones {
+		z := *az.ZoneName
+		a := z[len(z)-1:]
+		fmt.Println(a)
+		zone = append(zone, &a)
+	}
+	return zone, nil
+}
+func (cloud *AWS) GetAllMachines(ctx utils.Context) ([]*string, error) {
+
+	instanceInput := ec2.DescribeInstancesInput{}
+	res, err := cloud.Client.DescribeInstances(&instanceInput)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []*string{}, err
+	}
+
+	/*	if len(res.InstanceType) <= 0 {
+			return []*string{}, errors.New("Availibility zones are not available")
+		}
+		var zone []*string
+		for _, az := range res.AvailabilityZones {
+			zone =append(zone,az.ZoneName)
+		}
+	*/
+	fmt.Println(res)
+	return []*string{}, nil
+}
+
+func (cloud *AWS) validateProfile(ctx utils.Context) error {
+
+	accountInput := &ec2.DescribeAccountAttributesInput{}
+
+	_, err := cloud.Client.DescribeAccountAttributes(accountInput)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err

@@ -137,7 +137,7 @@ func checkMasterPools(cluster Cluster_Def) error {
 	return nil
 }
 
-func CreateCluster( cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -155,13 +155,13 @@ func CreateCluster( cluster Cluster_Def, ctx utils.Context) error {
 	//	return err
 	//}
 
-/*	if subscriptionID != "" {
+	/*	if subscriptionID != "" {
 		err = checkCoresLimit(cluster, subscriptionID, ctx)
 		if err != nil { //core size limit exceed
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
-	}*/ 
+	}*/
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoDOClusterCollection, cluster)
 	if err != nil {
@@ -171,7 +171,7 @@ func CreateCluster( cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
-func UpdateCluster( cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Cluster   does not exist in the database: "+cluster.Name+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -204,7 +204,7 @@ func UpdateCluster( cluster Cluster_Def, update bool, ctx utils.Context) error {
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster( cluster, ctx)
+	err = CreateCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -288,7 +288,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = "Cluster Creation Failed"
-		confError = UpdateCluster( cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -306,7 +306,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 		}
 
 		cluster.Status = "Cluster Creation Failed"
-		confError = UpdateCluster( cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -315,7 +315,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	}
 
 	cluster.Status = "Cluster Created"
-	confError = UpdateCluster( cluster, false, ctx)
+	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -387,7 +387,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster( cluster, false, ctx)
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -402,7 +402,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster( cluster, false, ctx)
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -441,7 +441,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		pools.KeyInfo.KeyType = models.CPKey
 	}
 	cluster.Status = "Cluster Terminated"
-	err = UpdateCluster( cluster, false, ctx)
+	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -545,4 +545,21 @@ func GetRegionsAndCores(credentials vault.DOCredentials, ctx utils.Context) ([]g
 		return nil, err
 	}
 	return regions, err
+}
+
+func ValidateProfile(key string, ctx utils.Context) error {
+	do := DO{
+		AccessKey: key,
+	}
+	err := do.init(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	_, err = do.getCores(ctx)
+	if err != nil {
+
+		return err
+	}
+	return err
 }

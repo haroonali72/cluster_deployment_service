@@ -178,7 +178,6 @@ func (c *DOClusterController) Post() {
 		return
 	}
 
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -226,7 +225,7 @@ func (c *DOClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err = do.CreateCluster( cluster, *ctx)
+	err = do.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -272,7 +271,6 @@ func (c *DOClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -578,7 +576,7 @@ func (c *DOClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = do.UpdateCluster( cluster, false, *ctx)
+	err = do.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -808,7 +806,7 @@ func (c *DOClusterController) TerminateCluster() {
 
 	go do.TerminateCluster(cluster, doProfile, *ctx, userInfo.CompanyId, token)
 
-	err = do.UpdateCluster( cluster, false, *ctx)
+	err = do.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1117,5 +1115,59 @@ func (c *DOClusterController) DeleteSSHKey() {
 	}
 	ctx.SendLogs(" DO cluster key "+keyName+"of region"+region+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
+	c.ServeJSON()
+}
+
+// @Title ValidateProfile
+// @Description validate if profile is valid
+// @Param	key	 path	string	true "Access Key"
+// @Param	token	header	string	token  true""
+// @Success 200 {object} []godo.Region
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @router /validateprofile/:key [get]
+func (c *DOClusterController) ValidateProfile() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("DOClusterController:Check if profile is valid.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	key := c.GetString(":key")
+	if key == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("DOClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs("DOClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	err = do.ValidateProfile(key, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = map[string]string{"msg": "profile is valid"}
 	c.ServeJSON()
 }

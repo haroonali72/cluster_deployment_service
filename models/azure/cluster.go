@@ -173,7 +173,7 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
 			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return types.AzureNetwork{}, errors.New("Resource Group is in correct")
+			return types.AzureNetwork{},errors.New("Resource Group is in correct")
 		}
 	} else {
 		return types.AzureNetwork{}, errors.New("Network not found")
@@ -658,6 +658,57 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 		return []azureVM{}, err
 	}
 	return instances, nil
+}
+func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, error) {
+
+	azure := AZURE{
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
+	}
+	err := azure.init()
+	if err != nil {
+		return []models.Region{}, err
+	}
+
+	regions, err := azure.getRegions(ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		return []models.Region{}, err
+	}
+	return regions, nil
+}
+func GetAllMachines() ([]string, error) {
+
+	regions, err := getAllVMSizes()
+	if err != nil {
+		beego.Error(err.Error())
+		return []string{}, err
+	}
+	return regions, nil
+}
+func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region string, ctx utils.Context) error {
+
+	azure := AZURE{
+		ID:           clientId,
+		Key:          clientSecret,
+		Tenant:       tenantId,
+		Subscription: subscriptionId,
+		Region:       region,
+	}
+	err := azure.init()
+	if err != nil {
+		return err
+	}
+
+	_, err = azure.getRegions(ctx)
+	if err != nil {
+		beego.Error("Profile is not valid")
+		return err
+	}
+	return nil
 }
 func ApplyAgent(credentials vault.AzureProfile, companyId, token string, ctx utils.Context, projetcID, clusterName, resourceGroup string) (confError error) {
 
