@@ -13,7 +13,7 @@ RUN mkdir -p ~/.ssh && umask 0077 && echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa \
     && ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
 
 WORKDIR /go/src
-RUN git clone git@bitbucket.org:cloudplex-devs/d-duck.git
+#RUN git clone git@bitbucket.org:cloudplex-devs/d-duck.git
 
 WORKDIR /go/src/antelope
 

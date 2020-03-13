@@ -1,3 +1,5 @@
+# bitbucket.org/cloudplex-devs/woodpecker v0.0.0-20200130130714-b6df537e38c6
+bitbucket.org/cloudplex-devs/woodpecker/agent-api
 # cloud.google.com/go v0.43.0
 cloud.google.com/go/compute/metadata
 # github.com/Azure/azure-sdk-for-go v21.4.0+incompatible
@@ -98,14 +100,12 @@ github.com/hashicorp/golang-lru/simplelru
 github.com/jmespath/go-jmespath
 # github.com/jtolds/gls v4.20.0+incompatible
 github.com/jtolds/gls
+# github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+github.com/kballard/go-shellquote
 # github.com/russross/blackfriday v1.5.2
 github.com/russross/blackfriday
-# github.com/russross/blackfriday/v2 v2.0.1
-github.com/russross/blackfriday/v2
 # github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644
 github.com/shiena/ansicolor
-# github.com/shurcooL/sanitized_anchor_name v1.0.0
-github.com/shurcooL/sanitized_anchor_name
 # github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3
 github.com/smartystreets/assertions
 github.com/smartystreets/assertions/internal/go-diff/diffmatchpatch
@@ -115,6 +115,8 @@ github.com/smartystreets/assertions/internal/oglematchers
 github.com/smartystreets/goconvey/convey
 github.com/smartystreets/goconvey/convey/reporting
 github.com/smartystreets/goconvey/convey/gotest
+# github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
+github.com/tmc/scp
 # github.com/urfave/cli v1.20.0
 github.com/urfave/cli
 # go.opencensus.io v0.22.0
@@ -147,10 +149,11 @@ golang.org/x/crypto/internal/subtle
 # golang.org/x/net v0.0.0-20190724013045-ca1201d0de80
 golang.org/x/net/html
 golang.org/x/net/html/atom
+golang.org/x/net/context
+golang.org/x/net/trace
 golang.org/x/net/idna
 golang.org/x/net/context/ctxhttp
-golang.org/x/net/trace
-golang.org/x/net/context
+golang.org/x/net/publicsuffix
 golang.org/x/net/internal/timeseries
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
@@ -196,10 +199,12 @@ google.golang.org/appengine/internal/remote_api
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.22.1
 google.golang.org/grpc
-google.golang.org/grpc/naming
+google.golang.org/grpc/keepalive
+google.golang.org/grpc/metadata
+google.golang.org/grpc/codes
+google.golang.org/grpc/status
 google.golang.org/grpc/balancer
 google.golang.org/grpc/balancer/roundrobin
-google.golang.org/grpc/codes
 google.golang.org/grpc/connectivity
 google.golang.org/grpc/credentials
 google.golang.org/grpc/encoding
@@ -214,15 +219,13 @@ google.golang.org/grpc/internal/envconfig
 google.golang.org/grpc/internal/grpcrand
 google.golang.org/grpc/internal/grpcsync
 google.golang.org/grpc/internal/transport
-google.golang.org/grpc/keepalive
-google.golang.org/grpc/metadata
+google.golang.org/grpc/naming
 google.golang.org/grpc/peer
 google.golang.org/grpc/resolver
 google.golang.org/grpc/resolver/dns
 google.golang.org/grpc/resolver/passthrough
 google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
-google.golang.org/grpc/status
 google.golang.org/grpc/tap
 google.golang.org/grpc/balancer/base
 google.golang.org/grpc/credentials/internal
@@ -234,5 +237,7 @@ gopkg.in/mgo.v2
 gopkg.in/mgo.v2/internal/json
 gopkg.in/mgo.v2/internal/sasl
 gopkg.in/mgo.v2/internal/scram
+# gopkg.in/resty.v1 v1.12.0
+gopkg.in/resty.v1
 # gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2
