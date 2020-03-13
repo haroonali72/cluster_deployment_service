@@ -5,10 +5,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 const (
 	registryPath = "/v2/registry"
+	// RegistryServer is the hostname of the DigitalOcean registry service
+	RegistryServer = "registry.digitalocean.com"
 )
 
 // RegistryService is an interface for interfacing with the Registry endpoints
@@ -41,7 +44,8 @@ type RegistryDockerCredentialsRequest struct {
 
 // Registry represents a registry.
 type Registry struct {
-	Name string `json:"name,omitempty"`
+	Name      string    `json:"name,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
 type registryRoot struct {
