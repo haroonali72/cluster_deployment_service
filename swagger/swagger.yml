@@ -3443,10 +3443,10 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  577.0xc000b027e0.false:
+  577.0xc000adbf80.false:
     title: "false"
     type: object
-  637.0xc000dfaf00.false:
+  637.0xc000de26c0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3486,7 +3486,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc000b027e0.false'
+        $ref: '#/definitions/577.0xc000adbf80.false'
       name:
         type: string
       network_name:
@@ -3869,7 +3869,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc000dfaf00.false'
+        $ref: '#/definitions/637.0xc000de26c0.false'
       name:
         type: string
       network_name:
