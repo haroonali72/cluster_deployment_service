@@ -90,7 +90,9 @@ func NewFailoverClient(failoverOpt *FailoverOptions) *Client {
 			opt:      opt,
 			connPool: failover.Pool(),
 
-			onClose: failover.Close,
+			onClose: func() error {
+				return failover.Close()
+			},
 		},
 	}
 	c.baseClient.init()
@@ -162,39 +164,6 @@ func (c *SentinelClient) Sentinels(name string) *SliceCmd {
 	return cmd
 }
 
-// Failover forces a failover as if the master was not reachable, and without
-// asking for agreement to other Sentinels.
-func (c *SentinelClient) Failover(name string) *StatusCmd {
-	cmd := NewStatusCmd("sentinel", "failover", name)
-	c.Process(cmd)
-	return cmd
-}
-
-// Reset resets all the masters with matching name. The pattern argument is a
-// glob-style pattern. The reset process clears any previous state in a master
-// (including a failover in progress), and removes every slave and sentinel
-// already discovered and associated with the master.
-func (c *SentinelClient) Reset(pattern string) *IntCmd {
-	cmd := NewIntCmd("sentinel", "reset", pattern)
-	c.Process(cmd)
-	return cmd
-}
-
-// FlushConfig forces Sentinel to rewrite its configuration on disk, including
-// the current Sentinel state.
-func (c *SentinelClient) FlushConfig() *StatusCmd {
-	cmd := NewStatusCmd("sentinel", "flushconfig")
-	c.Process(cmd)
-	return cmd
-}
-
-// Master shows the state and info of the specified master.
-func (c *SentinelClient) Master(name string) *StringStringMapCmd {
-	cmd := NewStringStringMapCmd("sentinel", "master", name)
-	c.Process(cmd)
-	return cmd
-}
-
 type sentinelFailover struct {
 	sentinelAddrs []string
 
@@ -207,7 +176,6 @@ type sentinelFailover struct {
 	masterName  string
 	_masterAddr string
 	sentinel    *SentinelClient
-	pubsub      *PubSub
 }
 
 func (c *sentinelFailover) Close() error {
@@ -336,27 +304,13 @@ func (c *sentinelFailover) switchMaster(addr string) {
 func (c *sentinelFailover) setSentinel(sentinel *SentinelClient) {
 	c.discoverSentinels(sentinel)
 	c.sentinel = sentinel
-
-	c.pubsub = sentinel.Subscribe("+switch-master")
-	go c.listen(c.pubsub)
+	go c.listen(sentinel)
 }
 
 func (c *sentinelFailover) closeSentinel() error {
-	var firstErr error
-
-	err := c.pubsub.Close()
-	if err != nil && firstErr == err {
-		firstErr = err
-	}
-	c.pubsub = nil
-
-	err = c.sentinel.Close()
-	if err != nil && firstErr == err {
-		firstErr = err
-	}
+	err := c.sentinel.Close()
 	c.sentinel = nil
-
-	return firstErr
+	return err
 }
 
 func (c *sentinelFailover) discoverSentinels(sentinel *SentinelClient) {
@@ -381,7 +335,10 @@ func (c *sentinelFailover) discoverSentinels(sentinel *SentinelClient) {
 	}
 }
 
-func (c *sentinelFailover) listen(pubsub *PubSub) {
+func (c *sentinelFailover) listen(sentinel *SentinelClient) {
+	pubsub := sentinel.Subscribe("+switch-master")
+	defer pubsub.Close()
+
 	ch := pubsub.Channel()
 	for {
 		msg, ok := <-ch
@@ -389,7 +346,8 @@ func (c *sentinelFailover) listen(pubsub *PubSub) {
 			break
 		}
 
-		if msg.Channel == "+switch-master" {
+		switch msg.Channel {
+		case "+switch-master":
 			parts := strings.Split(msg.Payload, " ")
 			if parts[0] != c.masterName {
 				internal.Logf("sentinel: ignore addr for master=%q", parts[0])
