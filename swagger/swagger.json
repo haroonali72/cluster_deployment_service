@@ -248,6 +248,96 @@
                 }
             }
         },
+        "/cluster/aws/getallmachines": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Get AWS  Machine Types",
+                "operationId": "AWSClusterController.Get Machine Types",
+                "responses": {
+                    "200": {
+                        "description": "[]string"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/getallregions": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Get AWS Regions",
+                "operationId": "AWSClusterController.GetRegions",
+                "responses": {
+                    "200": {
+                        "description": "[]models.Region"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/getzones/{region}": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "return zones against a region",
+                "operationId": "AWSClusterController.Get Availability Zone",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of AWS",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "[]*string"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/machine/info": {
             "get": {
                 "tags": [
@@ -572,6 +662,57 @@
                 }
             }
         },
+        "/cluster/aws/validateProfile/{key}/{secret}": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "check if profile is valid",
+                "operationId": "AWSClusterController.Validate Profile",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "key",
+                        "description": "Access Key",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "secret",
+                        "description": "Access Secret",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"profile is invalid\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/{projectId}/": {
             "get": {
                 "tags": [
@@ -817,6 +958,72 @@
                 "responses": {
                     "200": {
                         "description": "[]compute.VirtualMachines"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/getallmachines": {
+            "get": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Get Azure VM Sizes",
+                "operationId": "AzureClusterController.Get VM Sizes",
+                "responses": {
+                    "200": {
+                        "description": "[]string"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/getallregions": {
+            "get": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Get Azure Regions",
+                "operationId": "AzureClusterController.Get Azure Regions",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "[]model.Region"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
@@ -1109,6 +1316,71 @@
                     },
                     "404": {
                         "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/validateProfile/{clientId}/{clientSecret}/{subscriptionId}/{tenantId}": {
+            "get": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "check if profile is valid",
+                "operationId": "AzureClusterController.Validate Profile",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "clientId",
+                        "description": "Client Id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "clientSecret",
+                        "description": "Client Secret",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "subscriptionId",
+                        "description": "Subscription Id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "tenantId",
+                        "description": "Tenant Id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"profile is invalid\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -1621,6 +1893,47 @@
                 }
             }
         },
+        "/cluster/do/validateprofile/{key}": {
+            "get": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "validate if profile is valid",
+                "operationId": "DOClusterController.ValidateProfile",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "key",
+                        "description": "Access Key",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/godo.Region"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/do/{projectId}/": {
             "get": {
                 "tags": [
@@ -1797,9 +2110,8 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "profileid",
-                        "description": "profile of GCP",
-                        "required": true,
+                        "name": "X-Profile-Id",
+                        "description": "true",
                         "type": "string"
                     },
                     {
@@ -1825,10 +2137,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/gcp.Machines"
-                        }
+                        "description": "[]string"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
@@ -1842,35 +2151,13 @@
                 }
             }
         },
-        "/cluster/gcp/getzones/{region}": {
+        "/cluster/gcp/getallregions": {
             "get": {
                 "tags": [
                     "cluster/gcp"
                 ],
-                "description": "return zones against a region",
-                "operationId": "GcpClusterController.GetZonesAgainstRegion",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "profileid",
-                        "description": "profile of GCP",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "true",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "region",
-                        "description": "region of GCP",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
+                "description": "return all regions",
+                "operationId": "GcpClusterController.Get All Regions",
                 "responses": {
                     "200": {
                         "description": "",
@@ -2229,6 +2516,52 @@
                     },
                     "404": {
                         "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gcp/validateProfile": {
+            "post": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "check if profile is valid",
+                "operationId": "GcpClusterController.Validate Profile",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gcp.GcpCredentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"profile is invalid\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4900,11 +5233,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "29793.0xc0009fdf20.false": {
+        "577.0xc000b027e0.false": {
             "title": "false",
             "type": "object"
         },
-        "58168.0xc00076db30.false": {
+        "637.0xc000dfaf00.false": {
             "title": "false",
             "type": "object"
         },
@@ -4960,7 +5293,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/58168.0xc00076db30.false"
+                    "$ref": "#/definitions/577.0xc000b027e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -5528,7 +5861,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/29793.0xc0009fdf20.false"
+                    "$ref": "#/definitions/637.0xc000dfaf00.false"
                 },
                 "name": {
                     "type": "string"
@@ -5752,6 +6085,42 @@
             "title": "string",
             "type": "object"
         },
+        "gcp.AccountData": {
+            "title": "AccountData",
+            "type": "object",
+            "properties": {
+                "auth_provider_x509_cert_url": {
+                    "type": "string"
+                },
+                "auth_uri": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "client_x509_cert_url": {
+                    "type": "string"
+                },
+                "private_key": {
+                    "type": "string"
+                },
+                "private_key_id": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "token_uri": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
             "type": "object",
@@ -5801,6 +6170,24 @@
                 }
             }
         },
+        "gcp.GcpCredentials": {
+            "title": "GcpCredentials",
+            "type": "object",
+            "properties": {
+                "account_data": {
+                    "$ref": "#/definitions/gcp.AccountData"
+                },
+                "raw_account_data": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
         "gcp.Image": {
             "title": "Image",
             "type": "object",
@@ -5810,18 +6197,6 @@
                 },
                 "project": {
                     "type": "string"
-                }
-            }
-        },
-        "gcp.Machines": {
-            "title": "Machines",
-            "type": "object",
-            "properties": {
-                "machine_name": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
