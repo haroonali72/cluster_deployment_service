@@ -63,24 +63,6 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
         beego.ControllerComments{
-            Method: "GetAllMachines",
-            Router: `/getallmachines`,
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
-        beego.ControllerComments{
-            Method: "GetRegions",
-            Router: `/getallregions`,
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
-        beego.ControllerComments{
             Method: "GetCores",
             Router: `/machine/info`,
             AllowHTTPMethods: []string{"get"},
@@ -138,15 +120,6 @@ func init() {
             Method: "TerminateCluster",
             Router: `/terminate/:projectId/`,
             AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
-        beego.ControllerComments{
-            Method: "ValidateProfile",
-            Router: `/validateProfile/:clientId/:clientSecret/:subscriptionId/:tenantId`,
-            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
