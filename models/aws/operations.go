@@ -370,7 +370,6 @@ func (cloud *AWS) init() error {
 	return nil
 }
 
-
 func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string, token string) (*Cluster_Def, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -896,7 +895,6 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 		}
 		cloud.Resources[pool.Name+"_instances"] = ids
 	}
-
 
 	return result, nil, subnetId
 
@@ -1527,7 +1525,7 @@ func (cloud *AWS) DeleteKeyPair(keyName string, ctx utils.Context) error {
 	return nil
 }
 
-func (cloud *AWS) GetZones( ctx utils.Context) ([]*string , error) {
+func (cloud *AWS) GetZones(ctx utils.Context) ([]*string, error) {
 
 	azInput := ec2.DescribeAvailabilityZonesInput{}
 	res, err := cloud.Client.DescribeAvailabilityZones(&azInput)
@@ -1544,11 +1542,11 @@ func (cloud *AWS) GetZones( ctx utils.Context) ([]*string , error) {
 		z := *az.ZoneName
 		a := z[len(z)-1:]
 		fmt.Println(a)
-		zone =append(zone,&a)
+		zone = append(zone, &a)
 	}
 	return zone, nil
 }
-func (cloud *AWS) GetAllMachines( ctx utils.Context) ([]*string , error) {
+func (cloud *AWS) GetAllMachines(ctx utils.Context) ([]*string, error) {
 
 	instanceInput := ec2.DescribeInstancesInput{}
 	res, err := cloud.Client.DescribeInstances(&instanceInput)
@@ -1557,29 +1555,27 @@ func (cloud *AWS) GetAllMachines( ctx utils.Context) ([]*string , error) {
 		return []*string{}, err
 	}
 
-/*	if len(res.InstanceType) <= 0 {
-		return []*string{}, errors.New("Availibility zones are not available")
-	}
-	var zone []*string
-	for _, az := range res.AvailabilityZones {
-		zone =append(zone,az.ZoneName)
-	}
-*/
-fmt.Println(res)
+	/*	if len(res.InstanceType) <= 0 {
+			return []*string{}, errors.New("Availibility zones are not available")
+		}
+		var zone []*string
+		for _, az := range res.AvailabilityZones {
+			zone =append(zone,az.ZoneName)
+		}
+	*/
+	fmt.Println(res)
 	return []*string{}, nil
 }
 
+func (cloud *AWS) validateProfile(ctx utils.Context) error {
 
-func (cloud *AWS) validateProfile( ctx utils.Context)  error {
-	
 	accountInput := &ec2.DescribeAccountAttributesInput{}
 
 	_, err := cloud.Client.DescribeAccountAttributes(accountInput)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  err
+		return err
 	}
 
 	return nil
 }
-

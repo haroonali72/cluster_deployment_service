@@ -1076,7 +1076,7 @@ func (cloud *GCP) GetRegions(ctx utils.Context) (*compute.RegionList, error) {
 		}
 	}
 	reqCtx := context.Background()
-	regionInfo, err :=cloud.Client.Regions.List(cloud.ProjectId).Context(reqCtx).Do()
+	regionInfo, err := cloud.Client.Regions.List(cloud.ProjectId).Context(reqCtx).Do()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return &compute.RegionList{}, err
@@ -1103,5 +1103,3 @@ func (cloud *GCP) GetZones(ctx utils.Context) (*compute.Region, error) {
 
 	return regionInfo, nil
 }
-
-

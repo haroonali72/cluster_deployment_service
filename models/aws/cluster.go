@@ -119,7 +119,7 @@ func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
 	for _, pools := range cluster.NodePools {
 		if pools.NodeCount > 3 {
 			return errors.New("Nodepool can't have more than 3 nodes")
-	}
+		}
 	}
 	return nil
 }
@@ -159,23 +159,23 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 
 }
 
-func GetNetwork(token, projectId string, ctx utils.Context) (types.AWSNetwork,error) {
+func GetNetwork(token, projectId string, ctx utils.Context) (types.AWSNetwork, error) {
 
 	url := getNetworkHost("aws", projectId)
 
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.AWSNetwork{},err
+		return types.AWSNetwork{}, err
 	}
 	var net types.AWSNetwork
-	err = json.Unmarshal(data.([]byte),&net)
+	err = json.Unmarshal(data.([]byte), &net)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  types.AWSNetwork{},err
+		return types.AWSNetwork{}, err
 	}
 
-	return net,nil
+	return net, nil
 }
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
@@ -188,13 +188,13 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-/*
-	err = checkClusterSize(cluster, ctx)
-	if err != nil { //cluster size limit exceed
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-*/
+	/*
+		err = checkClusterSize(cluster, ctx)
+		if err != nil { //cluster size limit exceed
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+	*/
 
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
@@ -245,7 +245,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	return clusters, nil
 }
 
-func UpdateCluster( cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Cluster   does not exist in the database: "+cluster.Name+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -329,7 +329,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = "Cluster Creation Failed"
-		confError = UpdateCluster( cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -367,7 +367,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	}
 
 	UpdateScalingStatus(&cluster)
-	confError = UpdateCluster( cluster, false, ctx)
+	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -461,7 +461,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster( cluster, false, ctx)
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -500,7 +500,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		pools.KeyInfo.KeyType = models.CPKey
 	}
 	cluster.Status = "Cluster Terminated"
-	err = UpdateCluster( cluster, false, ctx)
+	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -655,7 +655,7 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 		return e
 	}
 	UpdateScalingStatus(&cluster)
-	err = UpdateCluster( cluster, false, ctx)
+	err = UpdateCluster(cluster, false, ctx)
 	if e != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -677,7 +677,6 @@ func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams
 
 	return keyMaterial, err
 }
-
 
 func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) error {
 
@@ -725,7 +724,7 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 
 func GetRegions(ctx utils.Context) ([]models.Region, error) {
 
-	regions,err :=api_handler.GetAwsRegions()
+	regions, err := api_handler.GetAwsRegions()
 	if err != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []models.Region{}, err
@@ -746,7 +745,7 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error
 		return nil, err
 	}
 
-	zones, e := aws.GetZones( ctx)
+	zones, e := aws.GetZones(ctx)
 	if e != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -760,15 +759,15 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error
 	return zones, nil
 }
 func GetAllMachines() ([]string, error) {
-	machines ,err := api_handler.GetAwsMachines()
-	if err !=nil{
-		return []string{},nil
+	machines, err := api_handler.GetAwsMachines()
+	if err != nil {
+		return []string{}, nil
 	}
 
 	return machines, nil
 }
 
-func ValidateProfile(key,secret,region string, ctx utils.Context) (error) {
+func ValidateProfile(key, secret, region string, ctx utils.Context) error {
 
 	aws := AWS{
 		AccessKey: key,
@@ -778,14 +777,14 @@ func ValidateProfile(key,secret,region string, ctx utils.Context) (error) {
 	err := aws.init()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  err
+		return err
 	}
 
-	err = aws.validateProfile( ctx)
+	err = aws.validateProfile(ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  err
+		return err
 	}
 
-	return  nil
+	return nil
 }

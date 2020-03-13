@@ -660,8 +660,7 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 }
 func GetRegions() ([]models.Region, error) {
 
-
-	regionInfo, err :=api_handler.GetGcpRegion()
+	regionInfo, err := api_handler.GetGcpRegion()
 	if err != nil {
 		return []models.Region{}, err
 	}
@@ -725,7 +724,7 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	}
 	return false
 }
-func ValidateProfile(profile []byte,region,zone string, ctx utils.Context)  error {
+func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) error {
 	credentials := GcpResponse{}
 
 	err := json.Unmarshal(profile, &credentials.Credentials.AccountData)
@@ -748,27 +747,26 @@ func ValidateProfile(profile []byte,region,zone string, ctx utils.Context)  erro
 	}
 
 	cre := GcpCredentials{
-	AccountData: credentials.Credentials.AccountData,
-	RawData:     string(jsonData),
-	Region:      region,
-	Zone:        zone,
+		AccountData: credentials.Credentials.AccountData,
+		RawData:     string(jsonData),
+		Region:      region,
+		Zone:        zone,
 	}
 	gcp, err := GetGCP(cre)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  err
+		return err
 	}
 	err = gcp.init()
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  err
+		return err
 	}
 
 	_, err = gcp.GetAllMachines(ctx)
 	if err != nil {
-		return  err
+		return err
 	}
 
-
-	return  nil
+	return nil
 }

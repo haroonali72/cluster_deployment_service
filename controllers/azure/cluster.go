@@ -196,16 +196,15 @@ func (c *AzureClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 
-	network,err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
+	network, err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node :=range cluster.NodePools{
+	for _, node := range cluster.NodePools {
 		node.EnablePublicIP = !network.IsPrivate
-
 
 	}
 	res, err := govalidator.ValidateStruct(cluster)
@@ -217,7 +216,7 @@ func (c *AzureClusterController) Post() {
 	}
 
 	cluster.CompanyId = userInfo.CompanyId
-	err = azure.CreateCluster( cluster, *ctx)
+	err = azure.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -264,8 +263,6 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -295,14 +292,14 @@ func (c *AzureClusterController) Patch() {
 	}
 
 	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	network,err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
+	network, err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node :=range cluster.NodePools{
+	for _, node := range cluster.NodePools {
 		node.EnablePublicIP = !network.IsPrivate
 	}
 	err = azure.UpdateCluster(cluster, true, *ctx)
@@ -570,7 +567,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = azure.UpdateCluster( cluster, false, *ctx)
+	err = azure.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -796,7 +793,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
-	err = azure.UpdateCluster( cluster, false, *ctx)
+	err = azure.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1074,7 +1071,6 @@ func (c *AzureClusterController) GetInstances() {
 	c.ServeJSON()
 }
 
-
 // @Title Get Azure Regions
 // @Description Get Azure Regions
 // @Param	token	header	string	token true""
@@ -1085,7 +1081,7 @@ func (c *AzureClusterController) GetInstances() {
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /getallregions [get]
-func (c *AzureClusterController) GetRegions()  {
+func (c *AzureClusterController) GetRegions() {
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -1108,7 +1104,6 @@ func (c *AzureClusterController) GetRegions()  {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	beego.Info("AzureClusterController: Get All Regions.")
-
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -1136,7 +1131,7 @@ func (c *AzureClusterController) GetRegions()  {
 		return
 	}
 
-	reg, err := azure.GetRegions(azureProfile,*ctx)
+	reg, err := azure.GetRegions(azureProfile, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -1156,7 +1151,7 @@ func (c *AzureClusterController) GetRegions()  {
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /getallmachines [get]
-func (c *AzureClusterController) GetAllMachines()  {
+func (c *AzureClusterController) GetAllMachines() {
 	beego.Info("AzureClusterController: Get All Machine Types")
 
 	instances, err := azure.GetAllMachines()
@@ -1170,7 +1165,6 @@ func (c *AzureClusterController) GetAllMachines()  {
 	c.Data["json"] = instances
 	c.ServeJSON()
 }
-
 
 // @Title Validate Profile
 // @Description check if profile is valid
@@ -1242,7 +1236,6 @@ func (c *AzureClusterController) ValidateProfile() {
 
 	ctx.SendLogs("Check Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	var regions []models.Region
 	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
@@ -1252,8 +1245,8 @@ func (c *AzureClusterController) ValidateProfile() {
 		return
 	}
 
-	for _,region := range regions {
-		err = azure.ValidateProfile(clientId,clientSecret,subscriptionId,tenantId,region.Location, *ctx)
+	for _, region := range regions {
+		err = azure.ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region.Location, *ctx)
 		if err != nil {
 			ctx.SendLogs("AzureClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(409)
@@ -1261,7 +1254,7 @@ func (c *AzureClusterController) ValidateProfile() {
 			c.ServeJSON()
 			return
 		}
-		if err==nil{
+		if err == nil {
 			break
 		}
 	}

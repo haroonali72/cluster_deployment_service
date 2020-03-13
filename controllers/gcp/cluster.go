@@ -7,7 +7,7 @@ import (
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
-	
+
 	"github.com/astaxie/beego"
 	"strings"
 )
@@ -176,7 +176,6 @@ func (c *GcpClusterController) Post() {
 		return
 	}
 
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -209,15 +208,15 @@ func (c *GcpClusterController) Post() {
 	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	network,err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=!network.IsPrivate
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
 
@@ -272,7 +271,6 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -303,15 +301,15 @@ func (c *GcpClusterController) Patch() {
 	}
 	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
-	network,err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=!network.IsPrivate
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
 	}
 	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
@@ -586,7 +584,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = gcp.UpdateCluster( cluster, false, *ctx)
+	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -823,7 +821,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
 
-	err = gcp.UpdateCluster( cluster, false, *ctx)
+	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1194,7 +1192,6 @@ func (c *GcpClusterController) GetAllMachines() {
 	c.ServeJSON()
 }
 
-
 // @Title Get All Regions
 // @Description return all regions
 // @Success 200 {object} []string
@@ -1216,7 +1213,6 @@ func (c *GcpClusterController) GetAllRegions() {
 	c.Data["json"] = regions
 	c.ServeJSON()
 }
-
 
 // @Title Validate Profile
 // @Description check if profile is valid
@@ -1243,7 +1239,7 @@ func (c *GcpClusterController) ValidateProfile() {
 
 	var profile gcp.GcpCredentials
 
-	prof :=c.Ctx.Input.RequestBody
+	prof := c.Ctx.Input.RequestBody
 
 	json.Unmarshal(c.Ctx.Input.RequestBody, &profile)
 
@@ -1260,7 +1256,6 @@ func (c *GcpClusterController) ValidateProfile() {
 
 	ctx.SendLogs("Check Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	var regions []models.Region
 	if err := json.Unmarshal(cores.GCPRegions, &regions); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
@@ -1270,8 +1265,8 @@ func (c *GcpClusterController) ValidateProfile() {
 		return
 	}
 
-	for _,region := range regions {
-		err = gcp.ValidateProfile(prof,region.Location,"b", *ctx)
+	for _, region := range regions {
+		err = gcp.ValidateProfile(prof, region.Location, "b", *ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(409)
@@ -1279,7 +1274,7 @@ func (c *GcpClusterController) ValidateProfile() {
 			c.ServeJSON()
 			return
 		}
-		if err==nil{
+		if err == nil {
 			break
 		}
 	}
@@ -1289,5 +1284,3 @@ func (c *GcpClusterController) ValidateProfile() {
 	c.Data["json"] = map[string]string{"msg": "profile is valid"}
 	c.ServeJSON()
 }
-
-
