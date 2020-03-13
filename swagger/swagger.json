@@ -3022,6 +3022,191 @@
             }
         },
         "/cluster/gke/{projectId}/{forceDelete}": {},
+        "/cluster/op/": {
+            "put": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "update an existing cluster",
+                "operationId": "OPClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/op.Cluster_Def"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "405": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "create a new cluster",
+                "operationId": "OPClusterController.Create",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/op.Cluster_Def"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"msg\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"cluster against this project already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/op/all": {
+            "get": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "get all the clusters",
+                "operationId": "OPClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/op.Cluster_Def"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/op/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "get cluster",
+                "operationId": "OPClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/op.Cluster_Def"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/op/{projectId}/{companyID}": {},
+        "/cluster/op/{projectId}/{forceDelete}": {},
         "/customerTemplate/register": {
             "post": {
                 "tags": [
@@ -5226,6 +5411,221 @@
                     }
                 }
             }
+        },
+        "/template/op/": {
+            "put": {
+                "tags": [
+                    "template/op"
+                ],
+                "description": "update an existing template",
+                "operationId": "OPTemplateController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/op.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/op"
+                ],
+                "description": "create a new template",
+                "operationId": "OPTemplateController.Create",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/op.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/op/all": {
+            "get": {
+                "tags": [
+                    "template/op"
+                ],
+                "description": "get all the templates",
+                "operationId": "OPTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/op.Template"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/op/{templateId}": {
+            "delete": {
+                "tags": [
+                    "template/op"
+                ],
+                "description": "delete a template",
+                "operationId": "OPTemplateController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/op/{templateId}/": {
+            "get": {
+                "tags": [
+                    "template/op"
+                ],
+                "description": "get template",
+                "operationId": "OPTemplateController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/op.Template"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -5233,11 +5633,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "577.0xc000aa71a0.false": {
+        "13726.0xc0431daed0.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc000daf8c0.false": {
+        "459.0xc04319d170.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "577.0xc042c35140.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "637.0xc042f07620.false": {
             "title": "false",
             "type": "object"
         },
@@ -5293,7 +5701,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/577.0xc000aa71a0.false"
+                    "$ref": "#/definitions/577.0xc042c35140.false"
                 },
                 "name": {
                     "type": "string"
@@ -5861,7 +6269,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc000daf8c0.false"
+                    "$ref": "#/definitions/637.0xc042f07620.false"
                 },
                 "name": {
                     "type": "string"
@@ -6820,7 +7228,8 @@
                 "GCP = \"gcp\"",
                 "GKE = \"gke\"",
                 "DO = \"do\"",
-                "IBM = \"ibm\""
+                "IBM = \"ibm\"",
+                "OP = \"op\""
             ],
             "example": "aws"
         },
@@ -6898,6 +7307,176 @@
                 "Terminating = \"terminating\""
             ],
             "example": "existing"
+        },
+        "op.Cluster_Def": {
+            "title": "Cluster_Def",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "kube_credentials": {
+                    "$ref": "#/definitions/459.0xc04319d170.false"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/op.NodePool"
+                    }
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "token_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "op.Node": {
+            "title": "Node",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "private_ip": {
+                    "type": "string"
+                },
+                "public_ip": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "op.NodePool": {
+            "title": "NodePool",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "key_info": {
+                    "$ref": "#/definitions/key_utils.AZUREKey"
+                },
+                "machine_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/op.Node"
+                    }
+                },
+                "pool_role": {
+                    "$ref": "#/definitions/models.PoolRole"
+                }
+            }
+        },
+        "op.NodePoolT": {
+            "title": "NodePoolT",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "key_info": {
+                    "$ref": "#/definitions/key_utils.AZUREKey"
+                },
+                "machine_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/op.NodeT"
+                    }
+                },
+                "pool_role": {
+                    "$ref": "#/definitions/models.PoolRole"
+                }
+            }
+        },
+        "op.NodeT": {
+            "title": "NodeT",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "private_ip": {
+                    "type": "string"
+                },
+                "public_ip": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "op.Template": {
+            "title": "Template",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "kube_credentials": {
+                    "$ref": "#/definitions/13726.0xc0431daed0.false"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/op.NodePoolT"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "token_name": {
+                    "type": "string"
+                }
+            }
         }
     },
     "tags": [
@@ -6948,6 +7527,14 @@
         {
             "name": "cluster/do",
             "description": "Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
+        },
+        {
+            "name": "template/op",
+            "description": "Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "cluster/op",
+            "description": "Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }
