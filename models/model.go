@@ -3,11 +3,12 @@ package models
 type Type string
 
 const (
-	Existing    Type = "existing"
-	New         Type = "new"
-	Created     Type = "created"
-	Deploying   Type = "deploying"
-	Terminating Type = "terminating"
+	Existing       Type = "existing"
+	New            Type = "new"
+	Created        Type = "created"
+	ClusterCreated Type = "cluster created"
+	Deploying      Type = "deploying"
+	Terminating    Type = "terminating"
 )
 
 type RequestType string
@@ -37,7 +38,9 @@ const (
 	AWS   Cloud = "aws"
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
+	GKE   Cloud = "gke"
 	DO    Cloud = "do"
+	IBM   Cloud = "ibm"
 	OP    Cloud = "op"
 )
 
@@ -88,7 +91,14 @@ const (
 	VaultCreateKeyURI  = "/template/sshKey"
 	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{region}/{name}"
 )
-
+const (
+	IBM_IAM_Endpoint           = "https://iam.cloud.ibm.com/identity/token"
+	IBM_Kube_Cluster_Endpoint  = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
+	IBM_WorkerPool_Endpoint    = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
+	IBM_Zone                   = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
+	IBM_All_Instances_Endpoint = ".iaas.cloud.ibm.com/v1/instance/profiles"
+	IBM_Version                = "?version=2020-01-28&generation=1"
+)
 const (
 	RbacEndpoint = "/security/api/rbac/"
 
@@ -119,11 +129,14 @@ const (
 	FrontEndLoggingURI   = "frontend/logging"
 	AuditTrailLoggingURI = "audit/store"
 )
+const WoodPeckerCertificate = "/agent/api/v1/clientcert/{profileId}"
+const GCPAuthContianrName = "jhgcp"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
 	Cores        int64  `json: "cores" `
 }
+
 type GCPMachine struct {
 	InstanceType string  `json: "instanceType" `
 	Cores        float64 `json: "cores" `
@@ -142,3 +155,13 @@ const (
 	STORAGE_CONTRIBUTOR_GUID = "17d1049b-9a84-46fb-8f53-869881c3d3ab"
 	AVERE_CONTRIBUTER_GUID   = "4f8fab4f-1852-4a58-a46a-8eaf358af14a"
 )
+
+type Region struct {
+	Name     string `json: "name" `
+	Location string `json: "location" `
+}
+type GcpRegion struct {
+	Name     string `json: "name" `
+	Zone     string `json: "zone" `
+	Location string `json: "location" `
+}

@@ -14,6 +14,7 @@ import (
 	"antelope/controllers/customer_template"
 	"antelope/controllers/do"
 	"antelope/controllers/gcp"
+	"antelope/controllers/gke"
 	"antelope/controllers/op"
 	"github.com/astaxie/beego"
 )
@@ -58,6 +59,16 @@ func init() {
 		beego.NSNamespace("/template/gcp",
 			beego.NSInclude(
 				&gcp.GcpTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/gke",
+			beego.NSInclude(
+				&gke.GKEClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/gke",
+			beego.NSInclude(
+				&gke.GKETemplateController{},
 			),
 		),
 		beego.NSNamespace("/template/do",

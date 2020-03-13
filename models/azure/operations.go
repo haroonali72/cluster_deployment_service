@@ -14,9 +14,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	c "github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/compute/mgmt/compute"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
+
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
@@ -48,20 +51,22 @@ type AZURE struct {
 	Authorizer       *autorest.BearerAuthorizer
 	AddressClient    network.PublicIPAddressesClient
 	InterfacesClient network.InterfacesClient
+	Location         subscriptions.Client
 	VMSSCLient       compute.VirtualMachineScaleSetsClient
 	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
 	VMClient         compute.VirtualMachinesClient
 	DiskClient       compute.DisksClient
 	AccountClient    storage.AccountsClient
 	context          context.Context
-	ID               string
-	Key              string
-	Tenant           string
-	Subscription     string
-	Region           string
-	Resources        map[string]interface{}
-	RoleAssignment   authorization.RoleAssignmentsClient
-	RoleDefinition   authorization.RoleDefinitionsClient
+
+	ID             string
+	Key            string
+	Tenant         string
+	Subscription   string
+	Region         string
+	Resources      map[string]interface{}
+	RoleAssignment authorization.RoleAssignmentsClient
+	RoleDefinition authorization.RoleDefinitionsClient
 }
 
 func (cloud *AZURE) init() error {
@@ -115,7 +120,8 @@ func (cloud *AZURE) init() error {
 	cloud.RoleDefinition.Authorizer = cloud.Authorizer
 
 	cloud.Resources = make(map[string]interface{})
-
+	cloud.Location = subscriptions.NewClient()
+	cloud.Location.Authorizer = cloud.Authorizer
 	return nil
 }
 func getNetworkHost(cloudType, projectId string) string {
@@ -154,10 +160,8 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
-
 	for i, pool := range cluster.NodePools {
 		ctx.SendLogs("AZUREOperations creating nodes", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
 		result, private_key, err := cloud.CreateInstance(pool, azureNetwork, cluster.ResourceGroup, cluster.ProjectId, i, ctx, companyId, token)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -218,7 +222,6 @@ func (cloud *AZURE) AddRoles(ctx utils.Context, companyId string, resourceGroup 
 func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwork, resourceGroup string, projectId string, poolIndex int, ctx utils.Context, companyId string, token string) ([]*VM, string, error) {
 
 	var cpVms []*VM
-
 	subnetId := cloud.GetSubnets(pool, networkData)
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
 	vpcName := networkData.Definition[0].Vnet.Name
@@ -230,7 +233,6 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		var publicIPaddress network.PublicIPAddress
 		var err error
 		if pool.EnablePublicIP {
-
 			IPname := "pip-" + pool.Name
 			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
 			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
@@ -476,6 +478,7 @@ func (cloud *AZURE) GetInstance(name string, resourceGroup string, ctx utils.Con
 	return vm, nil
 }
 func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx utils.Context) (network.Interface, error) {
+
 	nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.context, resourceGroup, vmss, vm, nicName, "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -484,6 +487,7 @@ func (cloud *AZURE) GetNIC(resourceGroup, vmss, vm, nicName string, ctx utils.Co
 	return nicParameters, nil
 }
 func (cloud *AZURE) GetPIP(resourceGroup, vmss, vm, nic, ipConfig, ipAddress string, ctx utils.Context) (network.PublicIPAddress, error) {
+
 	publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.context, resourceGroup, vmss, vm, nic, ipConfig, ipAddress, "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -721,7 +725,6 @@ func (cloud *AZURE) createNIC(pool *NodePool, resourceGroup string, publicIPaddr
 			ID: sgIds[0],
 		}
 	}
-
 	future, err := cloud.InterfacesClient.CreateOrUpdate(cloud.context, resourceGroup, nicName, nicParameters)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -2040,7 +2043,6 @@ func (cloud *AZURE) getAllInstances() ([]azureVM, error) {
 		}
 		instanceList = append(instanceList, vm)
 	}
-
 	VMSSResult, err := cloud.VMSSCLient.ListAll(context.Background())
 	if err != nil {
 		beego.Error(err.Error())
@@ -2063,4 +2065,39 @@ func (cloud *AZURE) getAllInstances() ([]azureVM, error) {
 		instanceList = append(instanceList, vm)
 	}
 	return instanceList, nil
+}
+func (cloud *AZURE) getRegions(ctx utils.Context) (region []models.Region, err error) {
+	var reg models.Region
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			beego.Error(err.Error())
+			return []models.Region{}, err
+		}
+	}
+
+	LocResult, err := cloud.Location.ListLocations(cloud.context, cloud.Subscription)
+	if err != nil {
+		beego.Error(err.Error())
+		return []models.Region{}, err
+	}
+	for _, loc := range *LocResult.Value {
+		reg.Name = *loc.DisplayName
+		reg.Location = *loc.Name
+		region = append(region, reg)
+	}
+	return region, nil
+}
+func getAllVMSizes() ([]string, error) {
+
+	VmResult := c.PossibleVirtualMachineSizeTypesValues()
+	if VmResult == nil {
+		return []string{}, errors.New("VM Machine Type Not Fetched")
+	}
+	var machine []string
+	for _, vm := range VmResult {
+		fmt.Println(string(vm))
+		machine = append(machine, string(vm))
+	}
+	return machine, nil
 }

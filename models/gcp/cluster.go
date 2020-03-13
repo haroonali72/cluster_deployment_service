@@ -3,10 +3,10 @@ package gcp
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
-	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -111,7 +112,9 @@ type Data struct {
 	Region string `json:"region"`
 	Zone   string `json:"zone"`
 }
-
+type NetworkType struct {
+	IsPrivate bool `json:"is_private" bson:"is_private"`
+}
 type Machines struct {
 	MachineName []string `json:"machine_name" bson:"machine_name"`
 }
@@ -143,17 +146,22 @@ func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	}
 	return update
 }
-func GetNetwork(token, projectId string, ctx utils.Context) error {
+func GetNetwork(token, projectId string, ctx utils.Context) (types.GCPNetwork, error) {
 
 	url := getNetworkHost("gcp", projectId)
 
-	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.GCPNetwork{}, err
 	}
-
-	return nil
+	var net types.GCPNetwork
+	err = json.Unmarshal(data.([]byte), &net)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return types.GCPNetwork{}, err
+	}
+	return net, nil
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, string, error) {
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
@@ -214,13 +222,14 @@ func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Cont
 	return true, credentials.Credentials
 }
 
-func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil {
 		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
 		ctx.SendLogs("GcpClusterModel: "+text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
+
 	/*if subscriptionId != "" {
 		err = checkCoresLimit(cluster, subscriptionId, ctx)
 		if err != nil { //core size limit exceed
@@ -303,7 +312,7 @@ func GetAllCluster(data rbac_athentication.List, ctx utils.Context) (clusters []
 	return clusters, nil
 }
 
-func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := "Cluster model: Update - Cluster '%s' does not exist in the database: " + cluster.Name + err.Error()
@@ -343,7 +352,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(subscriptionId, cluster, ctx)
+	err = CreateCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Update - Got error creating cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -373,7 +382,6 @@ func PrintError(confError error, name, projectId string, companyId string) {
 		beego.Error(confError.Error())
 		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
 		utils.SendLog(companyId, confError.Error(), "error", projectId)
-
 	}
 }
 
@@ -395,7 +403,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -412,7 +420,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -433,7 +441,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster("", cluster, false, ctx)
+	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -552,7 +560,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -570,7 +578,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel :Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -588,7 +596,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		var nodes []*Node
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster("", cluster, false, ctx)
+	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel :Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -614,45 +622,6 @@ func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (priva
 	}
 
 	return keyInfo.PrivateKey, err
-}
-
-func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
-
-	var coreCount int64 = 0
-	var machine []models.GCPMachine
-	if err := json.Unmarshal(cores.GCPCores, &machine); err != nil {
-		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	}
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		return err
-	}
-	if coreLimit == 0 {
-		return nil
-	}
-
-	found := false
-	for _, nodepool := range cluster.NodePools {
-		for _, mach := range machine {
-			if nodepool.MachineType == mach.InstanceType {
-				if nodepool.EnableScaling {
-					coreCount = coreCount + (nodepool.Scaling.MaxScalingGroupSize * int64(mach.Cores))
-				} else {
-					coreCount = coreCount + (nodepool.NodeCount * int64(mach.Cores))
-				}
-				found = true
-			}
-		}
-	}
-	if !found {
-		return errors.New("Machine not found")
-	}
-
-	if coreCount > coreLimit {
-		return errors.New("Exceeds the cores limit")
-	}
-
-	return nil
 }
 
 func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
@@ -689,7 +658,15 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 
 	return mach, nil
 }
+func GetRegions() ([]models.Region, error) {
 
+	regionInfo, err := api_handler.GetGcpRegion()
+	if err != nil {
+		return []models.Region{}, err
+	}
+
+	return regionInfo, nil
+}
 func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
 	gcp, err := GetGCP(credentials)
 	if err != nil {
@@ -706,7 +683,6 @@ func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-
 	var zones []string
 	for _, zone := range regionInfo.Zones {
 		zone := zone[len(zone)-1:]
@@ -747,4 +723,50 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 		}
 	}
 	return false
+}
+func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) error {
+	credentials := GcpResponse{}
+
+	err := json.Unmarshal(profile, &credentials.Credentials.AccountData)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	jsonData, err := json.Marshal(credentials.Credentials.AccountData)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	credentials.Credentials.RawData = string(jsonData)
+	credentials.Credentials.Region = region
+	credentials.Credentials.Zone = zone
+	_, err = govalidator.ValidateStruct(credentials.Credentials)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	cre := GcpCredentials{
+		AccountData: credentials.Credentials.AccountData,
+		RawData:     string(jsonData),
+		Region:      region,
+		Zone:        zone,
+	}
+	gcp, err := GetGCP(cre)
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	err = gcp.init()
+	if err != nil {
+		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	_, err = gcp.GetAllMachines(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

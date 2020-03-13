@@ -40,7 +40,7 @@ func CreatePutRequest(request_data []byte, url string) (*http.Request, error) {
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	//req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
 func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
@@ -54,7 +54,7 @@ func CreatePostRequest(request_data []byte, url string) (*http.Request, error) {
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	//req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
 
@@ -85,10 +85,14 @@ func CreateDeleteRequest(url string) (*http.Request, error) {
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	//	req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
-
+func SetHeaders(req *http.Request, headers map[string]string) {
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+}
 func (httpReq *HTTPClient) SendRequest(req *http.Request) (*http.Response, error) {
 	start := time.Now()
 

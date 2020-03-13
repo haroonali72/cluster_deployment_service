@@ -20,6 +20,8 @@ var (
 	mongo_azure_cluster_collection  = ""
 	mongo_gcp_template_collection   = ""
 	mongo_gcp_cluster_collection    = ""
+	mongo_gke_template_collection   = ""
+	mongo_gke_cluster_collection    = ""
 	mongo_do_template_collection    = ""
 	mongo_do_cluster_collection     = ""
 	redis_url                       = ""
@@ -37,6 +39,8 @@ var (
 	kill_bill_secret_key            = ""
 	kill_bill_user                  = ""
 	kill_bill_api_key               = ""
+	jump_host_ssh_key               = ""
+	jump_host_ip                    = ""
 )
 
 func InitFlags() error {
@@ -165,6 +169,18 @@ func InitFlags() error {
 			EnvVar:      "mongo_gcp_cluster_collection",
 		},
 		cli.StringFlag{
+			Name:        "mongo_gke_template_collection",
+			Usage:       "gke template collection name ",
+			Destination: &mongo_gke_template_collection,
+			EnvVar:      "mongo_gke_template_collection",
+		},
+		cli.StringFlag{
+			Name:        "mongo_gke_cluster_collection",
+			Usage:       "gke cluster collection name ",
+			Destination: &mongo_gke_cluster_collection,
+			EnvVar:      "mongo_gke_cluster_collection",
+		},
+		cli.StringFlag{
 			Name:        "mongo_do_template_collection",
 			Usage:       "do template collection name ",
 			Destination: &mongo_do_template_collection,
@@ -218,6 +234,18 @@ func InitFlags() error {
 			Destination: &woodpecker_url,
 			EnvVar:      "woodpecker_url",
 		},
+		cli.StringFlag{
+			Name:        "jump_host_ssh_key",
+			Usage:       "jump_host_ssh_key",
+			Destination: &jump_host_ssh_key,
+			EnvVar:      "jump_host_ssh_key",
+		},
+		cli.StringFlag{
+			Name:        "jump_host_ip",
+			Usage:       "jump_host_ip",
+			Destination: &jump_host_ip,
+			EnvVar:      "jump_host_ip",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -247,6 +275,8 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_azure_cluster_collection", mongo_azure_cluster_collection)
 	beego.AppConfig.Set("mongo_gcp_cluster_collection", mongo_gcp_cluster_collection)
 	beego.AppConfig.Set("mongo_gcp_template_collection", mongo_gcp_template_collection)
+	beego.AppConfig.Set("mongo_gke_cluster_collection", mongo_gke_cluster_collection)
+	beego.AppConfig.Set("mongo_gke_template_collection", mongo_gke_template_collection)
 	beego.AppConfig.Set("mongo_do_template_collection", mongo_do_template_collection)
 	beego.AppConfig.Set("mongo_do_cluster_collection", mongo_do_cluster_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
@@ -257,5 +287,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("rbac_url", rbac_url)
 	beego.AppConfig.Set("subscription_host", subscription_host)
 	beego.AppConfig.Set("woodpecker_url", woodpecker_url)
+	beego.AppConfig.Set("jump_host_ssh_key", jump_host_ssh_key)
+	beego.AppConfig.Set("jump_host_ip", jump_host_ip)
 	return nil
 }

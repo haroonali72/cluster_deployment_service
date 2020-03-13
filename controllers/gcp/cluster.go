@@ -7,6 +7,7 @@ import (
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
+
 	"github.com/astaxie/beego"
 	"strings"
 )
@@ -150,7 +151,6 @@ func (c *GcpClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	token	header	string	token ""
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -172,15 +172,6 @@ func (c *GcpClusterController) Post() {
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		ctx.SendLogs("GcpClusterController: subscriptionId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400) //no need
-		c.Data["json"] = map[string]string{"error": "subscriptionId is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -217,17 +208,19 @@ func (c *GcpClusterController) Post() {
 	ctx.SendLogs("GcpClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 
-	err = gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
+	}
 	cluster.CompanyId = userInfo.CompanyId
 
-	err = gcp.CreateCluster(subscriptionId, cluster, *ctx)
+	err = gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
@@ -254,7 +247,6 @@ func (c *GcpClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	subscription_id	header	string	subscriptionId ""
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -271,18 +263,10 @@ func (c *GcpClusterController) Patch() {
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
+
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	subscriptionId := c.Ctx.Input.Header("subscription_id")
-	if subscriptionId == "" {
-		ctx.SendLogs("GcpClusterController: subscriptionId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "subscriptionId is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -317,8 +301,17 @@ func (c *GcpClusterController) Patch() {
 	}
 	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
-
-	err = gcp.UpdateCluster(subscriptionId, cluster, true, *ctx)
+	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
+	}
+	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "does not exist") {
@@ -591,7 +584,7 @@ func (c *GcpClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = gcp.UpdateCluster("", cluster, false, *ctx)
+	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -828,7 +821,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
 
-	err = gcp.UpdateCluster("", cluster, false, *ctx)
+	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1120,11 +1113,11 @@ func (c *GcpClusterController) DeleteSSHKey() {
 
 // @Title GetAllMachines
 // @Description return machines against a region and zone
-// @Param	profileid	header	string	true	"profile of GCP"
+// @Param	X-Profile-Id	header	string	profileId	true""
 // @Param	token	header	string	token  true""
 // @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
-// @Success 200 {object} gcp.Machines
+// @Success 200 []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
@@ -1134,7 +1127,7 @@ func (c *GcpClusterController) GetAllMachines() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GellAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("profileid")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profileid is empty"}
@@ -1195,32 +1188,46 @@ func (c *GcpClusterController) GetAllMachines() {
 		return
 	}
 
-	c.Data["json"] = machines
+	c.Data["json"] = machines.MachineName
 	c.ServeJSON()
 }
 
-// @Title GetZonesAgainstRegion
-// @Description return zones against a region
-// @Param	profileid	header	string	true	"profile of GCP"
-// @Param	token	header	string	token  true""
-// @Param	region	path	string	true	"region of GCP"
+// @Title Get All Regions
+// @Description return all regions
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
-// @router /getzones/:region [get]
-func (c *GcpClusterController) GetZones() {
-
+// @router /getallregions [get]
+func (c *GcpClusterController) GetAllRegions() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("GcpClusterController: GellZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	profileId := c.Ctx.Input.Header("profileid")
-	if profileId == "" {
+	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	regions, err := gcp.GetRegions()
+	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profileid is empty"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+	ctx.SendLogs("GcpClusterController: Region fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	c.Data["json"] = regions
+	c.ServeJSON()
+}
+
+// @Title Validate Profile
+// @Description check if profile is valid
+// @Param	token	header	string	token ""
+// @Param	body	body 	gcp.GcpCredentials	true	"body for cluster content"
+// @Success 200 {"msg": "cluster created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "profile is invalid"}
+// @Failure 500 {"error": "error msg"}
+// @router /validateProfile [post]
+func (c *GcpClusterController) ValidateProfile() {
+
+	ctx := new(utils.Context)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -1229,6 +1236,12 @@ func (c *GcpClusterController) GetZones() {
 		c.ServeJSON()
 		return
 	}
+
+	var profile gcp.GcpCredentials
+
+	prof := c.Ctx.Input.RequestBody
+
+	json.Unmarshal(c.Ctx.Input.RequestBody, &profile)
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -1240,33 +1253,34 @@ func (c *GcpClusterController) GetZones() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GcpClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	region := c.GetString(":region")
-	if region == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region is empty"}
-		c.ServeJSON()
-		return
-	}
+	ctx.SendLogs("Check Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, "", *ctx)
-	if !isValid {
-		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("GcpClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	zones, err := gcp.GetZones(credentials, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+	var regions []models.Region
+	if err := json.Unmarshal(cores.GCPRegions, &regions); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	c.Data["json"] = zones
+
+	for _, region := range regions {
+		err = gcp.ValidateProfile(prof, region.Location, "b", *ctx)
+		if err != nil {
+			ctx.SendLogs("GcpClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if err == nil {
+			break
+		}
+	}
+
+	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	c.Data["json"] = map[string]string{"msg": "profile is valid"}
 	c.ServeJSON()
 }

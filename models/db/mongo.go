@@ -18,16 +18,17 @@ func GetMongoSession(ctx utils.Context) (session *mgo.Session, err error) {
 
 	beego.Info("connecting to mongo host: " + conf.mongoHost)
 
+	if !conf.mongoAuth {
+		session, err = mgo.Dial(conf.mongoHost)
+		beego.Info("Mongo host connected: " + conf.mongoHost)
+		return session, err
+	}
+
 	tlsconfig := getTLSCertificate()
 	if tlsconfig == nil {
 		return
 	}
 
-	if !conf.mongoAuth {
-		session, err = mgo.Dial(conf.mongoHost)
-		beego.Info("Mongo host connected" + conf.mongoHost)
-		return session, err
-	}
 	session, err = mgo.DialWithInfo(&mgo.DialInfo{
 		Addrs:    strings.Split(conf.mongoHost, ","),
 		Username: conf.mongoUser,
@@ -114,13 +115,20 @@ func GetMongoConf() mongConf {
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
 	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
+	conf.MongoGKEClusterCollection = beego.AppConfig.String("mongo_gke_cluster_collection")
+	conf.MongoGKETemplateCollection = beego.AppConfig.String("mongo_gke_template_collection")
 	conf.MongoDOClusterCollection = beego.AppConfig.String("mongo_do_cluster_collection")
 	conf.MongoDOTemplateCollection = beego.AppConfig.String("mongo_do_template_collection")
+	conf.MongoIBMClusterCollection = beego.AppConfig.String("mongo_ibm_cluster_collection")
+	conf.MongoIBMTemplateCollection = beego.AppConfig.String("mongo_ibm_template_collection")
 	conf.MongoOPClusterCollection = beego.AppConfig.String("mongo_op_cluster_collection")
 	conf.MongoOPTemplateCollection = beego.AppConfig.String("mongo_op_template_collection")
 	conf.MongoAwsCustomerTemplateCollection = "mongo_aws_customer_template_collection"
 	conf.MongoAzureCustomerTemplateCollection = "mongo_azure_customer_template_collection"
 	conf.MongoGcpCustomerTemplateCollection = "mongo_gcp_customer_template_collection"
+	conf.MongoGKECustomerTemplateCollection = "mongo_gke_customer_template_collection"
+	conf.MongoDOCustomerTemplateCollection = "mongo_do_customer_template_collection"
+	conf.MongoIBMCustomerTemplateCollection = "mongo_ibm_customer_template_collection"
 	return conf
 
 }
@@ -140,10 +148,16 @@ type mongConf struct {
 	MongoGcpTemplateCollection           string
 	MongoGcpCustomerTemplateCollection   string
 	MongoGcpClusterCollection            string
+	MongoGKETemplateCollection           string
+	MongoGKECustomerTemplateCollection   string
+	MongoGKEClusterCollection            string
 	MongoSshKeyCollection                string
 	MongoDOClusterCollection             string
 	MongoDOTemplateCollection            string
 	MongoDOCustomerTemplateCollection    string
+	MongoIBMClusterCollection            string
+	MongoIBMTemplateCollection           string
+	MongoIBMCustomerTemplateCollection   string
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
 }

@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-
+	//setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -42,4 +42,40 @@ func main() {
 	//beego.InsertFilter("*", beego.BeforeRouter, authPlugin)
 
 	beego.Run()
+}
+
+func setEnv() {
+
+	os.Setenv("kill_bill_user", "admin")
+	os.Setenv("kill_bill_password", "password")
+	os.Setenv("kill_bill_secret_key", "cloudplex")
+	os.Setenv("kill_bill_api_key", "cloudplex")
+	os.Setenv("ca_cert", "/home/haroon/CloudPlex/cloudFiles/mongoCA.crt")
+	os.Setenv("client_cert", "/home/haroon/CloudPlex/cloudFiles/antelope.crt")
+	os.Setenv("client_pem", "/home/haroon/CloudPlex/cloudFiles/antelope.pem")
+	os.Setenv("subscription_host", "35.246.150.221:30906")
+	os.Setenv("rbac_url", "https://dapis.cloudplex.cf")
+	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
+	//os.Setenv("mongo_host", "localhost:27017")
+
+	os.Setenv("mongo_auth", "true")
+	os.Setenv("mongo_db", "antelope")
+	os.Setenv("mongo_user", "antelope")
+	os.Setenv("mongo_pass", "DbSn3hAzJU6pPVRcn61apb3KDEKmcSb7Bl..")
+	os.Setenv("mongo_aws_template_collection", "aws_template")
+	os.Setenv("mongo_aws_cluster_collection", "aws_cluster")
+	os.Setenv("mongo_azure_template_collection", "azure_template")
+	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
+	os.Setenv("mongo_gcp_template_collection", "gcp_template")
+	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
+	os.Setenv("mongo_gke_template_collection", "gke_template")
+	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
+	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
+	os.Setenv("redis_url", "35.242.236.151:31845")
+	os.Setenv("logger_url", "https://dapis.cloudplex.cf")
+	os.Setenv("network_url", "https://dapis.cloudplex.cf")
+	os.Setenv("vault_url", "https://dapis.cloudplex.cf")
+	os.Setenv("raccoon_url", "https://dapis.cloudplex.cf")
+	os.Setenv("jum_host_ip", "18.139.0.104")
+	os.Setenv("jump_host_ssh_key", "/home/mahmad/ahmadnewkey.pem")
 }

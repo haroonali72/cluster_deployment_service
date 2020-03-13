@@ -72,6 +72,33 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
 		beego.ControllerComments{
+			Method:           "GetAllMachines",
+			Router:           `/getallmachines`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+		beego.ControllerComments{
+			Method:           "GetAllRegions",
+			Router:           `/getallregions`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+		beego.ControllerComments{
+			Method:           "GetZones",
+			Router:           `/getzones/:region`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+		beego.ControllerComments{
 			Method:           "GetCores",
 			Router:           `/machine/info`,
 			AllowHTTPMethods: []string{"get"},
@@ -129,6 +156,15 @@ func init() {
 			Method:           "TerminateCluster",
 			Router:           `/terminate/:projectId/`,
 			AllowHTTPMethods: []string{"post"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+		beego.ControllerComments{
+			Method:           "ValidateProfile",
+			Router:           `/validateProfile/:key/:secret`,
+			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})

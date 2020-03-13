@@ -3,7 +3,6 @@ package azure
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
-	"antelope/models/cores"
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	"antelope/models/rbac_authentication"
@@ -153,31 +152,32 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token string) error {
+func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token string) (types.AzureNetwork, error) {
 
 	url := getNetworkHost("azure", projectId)
 
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.AzureNetwork{}, err
 	}
 
 	var network types.AzureNetwork
 	err = json.Unmarshal(data.([]byte), &network)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return types.AzureNetwork{}, err
 	}
+
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
 			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Resource Group is in correct")
+			return types.AzureNetwork{}, errors.New("Resource Group is in correct")
 		}
 	} else {
-		return errors.New("Network not found")
+		return types.AzureNetwork{}, errors.New("Network not found")
 	}
-	return nil
+	return network, nil
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
 	data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
@@ -203,7 +203,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 	}
 	return nil
 }
-func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context) error {
+func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
@@ -216,14 +216,7 @@ func CreateCluster(subscriptionId string, cluster Cluster_Def, ctx utils.Context
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-/*	if subscriptionId != "" {
-		err = checkCoresLimit(cluster, subscriptionId, ctx)
-		if err != nil { //core size limit exceed
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
-	}
-*/
+
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -287,7 +280,7 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 	return clusters, nil
 }
 
-func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx utils.Context) error {
+func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		text := fmt.Sprintf("Cluster model: Update - Cluster '%s' does not exist in the database: ", cluster.Name)
@@ -321,7 +314,7 @@ func UpdateCluster(subscriptionId string, cluster Cluster_Def, update bool, ctx 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(subscriptionId, cluster, ctx)
+	err = CreateCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -373,7 +366,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -393,7 +386,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		}
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateCluster("", cluster, false, ctx)
+		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -403,7 +396,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateCluster("", cluster, false, ctx)
+	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -485,7 +478,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	if err != nil {
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -508,7 +501,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster("", cluster, false, ctx)
+		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -528,7 +521,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		var nodes []*VM
 		pools.Nodes = nodes
 	}
-	err = UpdateCluster("", cluster, false, ctx)
+	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -600,48 +593,6 @@ func CreateSSHkey(keyName, token, teams string, ctx utils.Context) (privateKey s
 	return keyInfo.PrivateKey, err
 }
 
-func checkCoresLimit(cluster Cluster_Def, subscriptionId string, ctx utils.Context) error {
-
-	var coreCount int64 = 0
-	var machine []models.Machine
-	coreLimit, err := cores.GetCoresLimit(subscriptionId)
-	if err != nil {
-		beego.Error("Subscription library error")
-		return err
-
-	}
-	if coreLimit == 0 {
-		return nil
-	}
-	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
-		ctx.SendLogs("Unmarshalling of machine instances failed "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	}
-
-	found := false
-	for _, nodepool := range cluster.NodePools {
-		for _, mach := range machine {
-			if nodepool.MachineType == mach.InstanceType {
-				if nodepool.EnableScaling {
-					coreCount = coreCount + (nodepool.Scaling.MaxScalingGroupSize * mach.Cores)
-				} else {
-					coreCount = coreCount + (nodepool.NodeCount * mach.Cores)
-				}
-				found = true
-				break
-			}
-		}
-	}
-	if !found {
-		return errors.New("Machine not found")
-	}
-
-	if coreCount > coreLimit {
-		return errors.New("Exceeds the cores limit")
-	}
-
-	return nil
-}
-
 func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 
 	err := vault.DeleteSSHkey(string(models.Azure), keyName, token, ctx, "")
@@ -706,4 +657,55 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 		return []azureVM{}, err
 	}
 	return instances, nil
+}
+func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, error) {
+
+	azure := AZURE{
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
+	}
+	err := azure.init()
+	if err != nil {
+		return []models.Region{}, err
+	}
+
+	regions, err := azure.getRegions(ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		return []models.Region{}, err
+	}
+	return regions, nil
+}
+func GetAllMachines() ([]string, error) {
+
+	regions, err := getAllVMSizes()
+	if err != nil {
+		beego.Error(err.Error())
+		return []string{}, err
+	}
+	return regions, nil
+}
+func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region string, ctx utils.Context) error {
+
+	azure := AZURE{
+		ID:           clientId,
+		Key:          clientSecret,
+		Tenant:       tenantId,
+		Subscription: subscriptionId,
+		Region:       region,
+	}
+	err := azure.init()
+	if err != nil {
+		return err
+	}
+
+	_, err = azure.getRegions(ctx)
+	if err != nil {
+		beego.Error("Profile is not valid")
+		return err
+	}
+	return nil
 }

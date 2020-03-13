@@ -30,12 +30,6 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
-                    },
-                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -84,12 +78,6 @@
                         "schema": {
                             "$ref": "#/definitions/aws.Cluster_Def"
                         }
-                    },
-                    {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
                     },
                     {
                         "in": "header",
@@ -244,6 +232,96 @@
                 "responses": {
                     "200": {
                         "description": "{\"msg\": \"cluster autoscaled successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/getallmachines": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Get AWS  Machine Types",
+                "operationId": "AWSClusterController.Get Machine Types",
+                "responses": {
+                    "200": {
+                        "description": "[]string"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/getallregions": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "Get AWS Regions",
+                "operationId": "AWSClusterController.GetRegions",
+                "responses": {
+                    "200": {
+                        "description": "[]models.Region"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/getzones/{region}": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "return zones against a region",
+                "operationId": "AWSClusterController.Get Availability Zone",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of AWS",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "[]*string"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
@@ -584,6 +662,57 @@
                 }
             }
         },
+        "/cluster/aws/validateProfile/{key}/{secret}": {
+            "get": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "check if profile is valid",
+                "operationId": "AWSClusterController.Validate Profile",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "key",
+                        "description": "Access Key",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "secret",
+                        "description": "Access Secret",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"profile is invalid\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/{projectId}/": {
             "get": {
                 "tags": [
@@ -687,14 +816,6 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "token",
-                        "schema": {
-                            "$ref": "#/definitions/subscriptionId"
-                        }
-                    },
-                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -736,12 +857,6 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
                         "type": "string"
                     },
                     {
@@ -843,6 +958,72 @@
                 "responses": {
                     "200": {
                         "description": "[]compute.VirtualMachines"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/getallmachines": {
+            "get": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Get Azure VM Sizes",
+                "operationId": "AzureClusterController.Get VM Sizes",
+                "responses": {
+                    "200": {
+                        "description": "[]string"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/azure/getallregions": {
+            "get": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Get Azure Regions",
+                "operationId": "AzureClusterController.Get Azure Regions",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "[]model.Region"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
@@ -1142,6 +1323,71 @@
                 }
             }
         },
+        "/cluster/azure/validateProfile/{clientId}/{clientSecret}/{subscriptionId}/{tenantId}": {
+            "get": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "check if profile is valid",
+                "operationId": "AzureClusterController.Validate Profile",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "clientId",
+                        "description": "Client Id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "clientSecret",
+                        "description": "Client Secret",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "subscriptionId",
+                        "description": "Subscription Id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "tenantId",
+                        "description": "Tenant Id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"profile is invalid\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/azure/{projectId}/": {
             "get": {
                 "tags": [
@@ -1199,12 +1445,6 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
-                    },
-                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -1253,12 +1493,6 @@
                         "schema": {
                             "$ref": "#/definitions/do.Cluster_Def"
                         }
-                    },
-                    {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
                     },
                     {
                         "in": "header",
@@ -1659,6 +1893,47 @@
                 }
             }
         },
+        "/cluster/do/validateprofile/{key}": {
+            "get": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "validate if profile is valid",
+                "operationId": "DOClusterController.ValidateProfile",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "key",
+                        "description": "Access Key",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/godo.Region"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/do/{projectId}/": {
             "get": {
                 "tags": [
@@ -1716,12 +1991,6 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
-                    },
-                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
@@ -1759,12 +2028,6 @@
                 "description": "create a new cluster",
                 "operationId": "GcpClusterController.Create",
                 "parameters": [
-                    {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
-                    },
                     {
                         "in": "header",
                         "name": "token",
@@ -1847,9 +2110,8 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "profileid",
-                        "description": "profile of GCP",
-                        "required": true,
+                        "name": "X-Profile-Id",
+                        "description": "true",
                         "type": "string"
                     },
                     {
@@ -1875,10 +2137,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/gcp.Machines"
-                        }
+                        "description": "[]string"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
@@ -1892,35 +2151,13 @@
                 }
             }
         },
-        "/cluster/gcp/getzones/{region}": {
+        "/cluster/gcp/getallregions": {
             "get": {
                 "tags": [
                     "cluster/gcp"
                 ],
-                "description": "return zones against a region",
-                "operationId": "GcpClusterController.GetZonesAgainstRegion",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "profileid",
-                        "description": "profile of GCP",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "true",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "region",
-                        "description": "region of GCP",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
+                "description": "return all regions",
+                "operationId": "GcpClusterController.Get All Regions",
                 "responses": {
                     "200": {
                         "description": "",
@@ -2286,6 +2523,52 @@
                 }
             }
         },
+        "/cluster/gcp/validateProfile": {
+            "post": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "check if profile is valid",
+                "operationId": "GcpClusterController.Validate Profile",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gcp.GcpCredentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"profile is invalid\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/{projectId}/": {
             "get": {
                 "tags": [
@@ -2331,13 +2614,13 @@
             }
         },
         "/cluster/gcp/{projectId}/{forceDelete}": {},
-        "/cluster/op/": {
+        "/cluster/gke/": {
             "put": {
                 "tags": [
-                    "cluster/op"
+                    "cluster/gke"
                 ],
                 "description": "update an existing cluster",
-                "operationId": "OPClusterController.Update",
+                "operationId": "GKEClusterController.Update",
                 "parameters": [
                     {
                         "in": "header",
@@ -2346,18 +2629,12 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
-                    },
-                    {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/op.Cluster_Def"
+                            "$ref": "#/definitions/gke.GKECluster"
                         }
                     }
                 ],
@@ -2375,10 +2652,7 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "405": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"no cluster exists with this name\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -2387,31 +2661,25 @@
             },
             "post": {
                 "tags": [
-                    "cluster/op"
+                    "cluster/gke"
                 ],
-                "description": "create a new cluster",
-                "operationId": "OPClusterController.Create",
+                "description": "add a new cluster",
+                "operationId": "GKEClusterController.Add",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
                     {
                         "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/op.Cluster_Def"
+                            "$ref": "#/definitions/gke.GKECluster"
                         }
-                    },
-                    {
-                        "in": "header",
-                        "name": "subscription_id",
-                        "description": "subscriptionId",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -2419,16 +2687,13 @@
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"msg\": \"error msg\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "409": {
-                        "description": "{\"error\": \"cluster against this project already exists\"}"
+                        "description": "{\"error\": \"cluster against same project id already exists\"}"
                     },
                     "410": {
                         "description": "{\"error\": \"Core limit exceeded\"}"
@@ -2439,13 +2704,13 @@
                 }
             }
         },
-        "/cluster/op/all": {
+        "/cluster/gke/all": {
             "get": {
                 "tags": [
-                    "cluster/op"
+                    "cluster/gke"
                 ],
                 "description": "get all the clusters",
-                "operationId": "OPClusterController.Get All",
+                "operationId": "GKEClusterController.Get All",
                 "parameters": [
                     {
                         "in": "header",
@@ -2460,7 +2725,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/op.Cluster_Def"
+                                "$ref": "#/definitions/gke.GKECluster"
                             }
                         }
                     },
@@ -2473,13 +2738,252 @@
                 }
             }
         },
-        "/cluster/op/{projectId}/": {
+        "/cluster/gke/applyagent/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/gke"
+                ],
+                "description": "Apply cloudplex Agent file to a gke cluster",
+                "operationId": "GKEClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "clusterName",
+                        "description": "clusterName",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"Agent Applied successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gke/config/{projectId}": {
             "get": {
                 "tags": [
-                    "cluster/op"
+                    "cluster/gke"
                 ],
                 "description": "get cluster",
-                "operationId": "OPClusterController.Get",
+                "operationId": "GKEClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/gke.ServerConfig"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gke/start/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/gke"
+                ],
+                "description": "starts a  cluster",
+                "operationId": "GKEClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gke/status/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/gke"
+                ],
+                "description": "returns status of nodes",
+                "operationId": "GKEClusterController.Status",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/gke.GKECluster"
+                        }
+                    },
+                    "206": {
+                        "description": "{object} gke.GKECluster"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gke/terminate/{projectId}/": {
+            "post": {
+                "tags": [
+                    "cluster/gke"
+                ],
+                "description": "terminates a  cluster",
+                "operationId": "GKEClusterController.Terminate",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gke/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/gke"
+                ],
+                "description": "get cluster",
+                "operationId": "GKEClusterController.Get",
                 "parameters": [
                     {
                         "in": "path",
@@ -2499,7 +3003,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/op.Cluster_Def"
+                            "$ref": "#/definitions/gke.GKECluster"
                         }
                     },
                     "400": {
@@ -2510,11 +3014,14 @@
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
         },
-        "/cluster/op/{projectId}/{forceDelete}": {},
+        "/cluster/gke/{projectId}/{forceDelete}": {},
         "/customerTemplate/register": {
             "post": {
                 "tags": [
@@ -4513,13 +5020,13 @@
                 }
             }
         },
-        "/template/op/": {
+        "/template/gke/": {
             "put": {
                 "tags": [
-                    "template/op"
+                    "template/gke"
                 ],
                 "description": "update an existing template",
-                "operationId": "OPTemplateController.Update",
+                "operationId": "GKETemplateController.Update",
                 "parameters": [
                     {
                         "in": "header",
@@ -4530,7 +5037,7 @@
                     {
                         "in": "header",
                         "name": "teams",
-                        "description": "token",
+                        "description": "teams",
                         "type": "string"
                     },
                     {
@@ -4539,7 +5046,7 @@
                         "description": "body for template content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/op.Template"
+                            "$ref": "#/definitions/gke.GKEClusterTemplate"
                         }
                     }
                 ],
@@ -4563,11 +5070,20 @@
             },
             "post": {
                 "tags": [
-                    "template/op"
+                    "template/gke"
                 ],
                 "description": "create a new template",
-                "operationId": "OPTemplateController.Create",
+                "operationId": "GKETemplateController.Create",
                 "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gke.GKEClusterTemplate"
+                        }
+                    },
                     {
                         "in": "header",
                         "name": "token",
@@ -4579,15 +5095,6 @@
                         "name": "teams",
                         "description": "teams",
                         "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "body for template content",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/op.Template"
-                        }
                     }
                 ],
                 "responses": {
@@ -4609,13 +5116,13 @@
                 }
             }
         },
-        "/template/op/all": {
+        "/template/gke/all": {
             "get": {
                 "tags": [
-                    "template/op"
+                    "template/gke"
                 ],
                 "description": "get all the templates",
-                "operationId": "OPTemplateController.Get All",
+                "operationId": "GKETemplateController.Get All",
                 "parameters": [
                     {
                         "in": "header",
@@ -4630,7 +5137,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/op.Template"
+                                "$ref": "#/definitions/gke.GKEClusterTemplate"
                             }
                         }
                     },
@@ -4643,13 +5150,13 @@
                 }
             }
         },
-        "/template/op/{templateId}": {
-            "delete": {
+        "/template/gke/{templateId}": {
+            "get": {
                 "tags": [
-                    "template/op"
+                    "template/gke"
                 ],
-                "description": "delete a template",
-                "operationId": "OPTemplateController.Delete",
+                "description": "get template",
+                "operationId": "GKETemplateController.Get",
                 "parameters": [
                     {
                         "in": "header",
@@ -4660,7 +5167,43 @@
                     {
                         "in": "path",
                         "name": "templateId",
-                        "description": "template id of the template",
+                        "description": "Id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/gke.GKEClusterTemplate"
+                        }
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/gke"
+                ],
+                "description": "delete a templates",
+                "operationId": "GKETemplateController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Name of the template",
                         "required": true,
                         "type": "string"
                     }
@@ -4676,51 +5219,7 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
-        "/template/op/{templateId}/": {
-            "get": {
-                "tags": [
-                    "template/op"
-                ],
-                "description": "get template",
-                "operationId": "OPTemplateController.Get",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "templateId",
-                        "description": "Template Id of the template",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/op.Template"
-                        }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"name is empty\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4734,19 +5233,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "417.0xc042edd1d0.false": {
+        "577.0xc000aa71a0.false": {
             "title": "false",
             "type": "object"
         },
-        "600.0xc042a683c0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "686.0xc042d2d530.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "7544.0xc042efafc0.false": {
+        "637.0xc000daf8c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -4802,7 +5293,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/600.0xc042a683c0.false"
+                    "$ref": "#/definitions/577.0xc000aa71a0.false"
                 },
                 "name": {
                     "type": "string"
@@ -5351,7 +5842,7 @@
         },
         "bson.ObjectId": {
             "title": "ObjectId",
-            "type": "string"
+            "type": "object"
         },
         "do.Cluster_Def": {
             "title": "Cluster_Def",
@@ -5370,7 +5861,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/686.0xc042d2d530.false"
+                    "$ref": "#/definitions/637.0xc000daf8c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -5594,6 +6085,42 @@
             "title": "string",
             "type": "object"
         },
+        "gcp.AccountData": {
+            "title": "AccountData",
+            "type": "object",
+            "properties": {
+                "auth_provider_x509_cert_url": {
+                    "type": "string"
+                },
+                "auth_uri": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "client_x509_cert_url": {
+                    "type": "string"
+                },
+                "private_key": {
+                    "type": "string"
+                },
+                "private_key_id": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "token_uri": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "gcp.AutoScaling": {
             "title": "AutoScaling",
             "type": "object",
@@ -5643,6 +6170,24 @@
                 }
             }
         },
+        "gcp.GcpCredentials": {
+            "title": "GcpCredentials",
+            "type": "object",
+            "properties": {
+                "account_data": {
+                    "$ref": "#/definitions/gcp.AccountData"
+                },
+                "raw_account_data": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
         "gcp.Image": {
             "title": "Image",
             "type": "object",
@@ -5652,18 +6197,6 @@
                 },
                 "project": {
                     "type": "string"
-                }
-            }
-        },
-        "gcp.Machines": {
-            "title": "Machines",
-            "type": "object",
-            "properties": {
-                "machine_name": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -5875,6 +6408,350 @@
                 }
             }
         },
+        "gke.AddonsConfig": {
+            "title": "AddonsConfig",
+            "type": "object"
+        },
+        "gke.GKECluster": {
+            "title": "GKECluster",
+            "type": "object",
+            "properties": {
+                "addonsConfig": {
+                    "$ref": "#/definitions/gke.AddonsConfig"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "cloudStatus": {
+                    "type": "string"
+                },
+                "clusterIpv4Cidr": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gke.StatusCondition"
+                    }
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "currentMasterVersion": {
+                    "type": "string"
+                },
+                "defaultMaxPodsConstraint": {
+                    "$ref": "#/definitions/gke.MaxPodsConstraint"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enableKubernetesAlpha": {
+                    "type": "boolean"
+                },
+                "enableTpu": {
+                    "type": "boolean"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "expireTime": {
+                    "type": "string"
+                },
+                "initialClusterVersion": {
+                    "type": "string"
+                },
+                "ipAllocationPolicy": {
+                    "$ref": "#/definitions/gke.IPAllocationPolicy"
+                },
+                "labelFingerprint": {
+                    "type": "string"
+                },
+                "legacyAbac": {
+                    "$ref": "#/definitions/gke.LegacyAbac"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "loggingService": {
+                    "type": "string"
+                },
+                "maintenancePolicy": {
+                    "$ref": "#/definitions/gke.MaintenancePolicy"
+                },
+                "masterAuth": {
+                    "$ref": "#/definitions/gke.MasterAuth"
+                },
+                "masterAuthorizedNetworksConfig": {
+                    "$ref": "#/definitions/gke.MasterAuthorizedNetworksConfig"
+                },
+                "monitoringService": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network": {
+                    "type": "string"
+                },
+                "networkConfig": {
+                    "$ref": "#/definitions/gke.NetworkConfig"
+                },
+                "networkPolicy": {
+                    "$ref": "#/definitions/gke.NetworkPolicy"
+                },
+                "nodeIpv4CidrSize": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "nodePools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gke.NodePool"
+                    }
+                },
+                "privateClusterConfig": {
+                    "$ref": "#/definitions/gke.PrivateClusterConfig"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "resourceLabels": {
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "resourceUsageExportConfig": {
+                    "$ref": "#/definitions/gke.ResourceUsageExportConfig"
+                },
+                "selfLink": {
+                    "type": "string"
+                },
+                "servicesIpv4Cidr": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "statusMessage": {
+                    "type": "string"
+                },
+                "subnetwork": {
+                    "type": "string"
+                },
+                "tpuIpv4CidrBlock": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "gke.GKEClusterTemplate": {
+            "title": "GKEClusterTemplate",
+            "type": "object",
+            "properties": {
+                "addonsConfig": {
+                    "$ref": "#/definitions/gke.AddonsConfig"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "cloudStatus": {
+                    "type": "string"
+                },
+                "clusterIpv4Cidr": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gke.StatusCondition"
+                    }
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "currentMasterVersion": {
+                    "type": "string"
+                },
+                "defaultMaxPodsConstraint": {
+                    "$ref": "#/definitions/gke.MaxPodsConstraint"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enableKubernetesAlpha": {
+                    "type": "boolean"
+                },
+                "enableTpu": {
+                    "type": "boolean"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "expireTime": {
+                    "type": "string"
+                },
+                "initialClusterVersion": {
+                    "type": "string"
+                },
+                "ipAllocationPolicy": {
+                    "$ref": "#/definitions/gke.IPAllocationPolicy"
+                },
+                "labelFingerprint": {
+                    "type": "string"
+                },
+                "legacyAbac": {
+                    "$ref": "#/definitions/gke.LegacyAbac"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "loggingService": {
+                    "type": "string"
+                },
+                "maintenancePolicy": {
+                    "$ref": "#/definitions/gke.MaintenancePolicy"
+                },
+                "masterAuth": {
+                    "$ref": "#/definitions/gke.MasterAuth"
+                },
+                "masterAuthorizedNetworksConfig": {
+                    "$ref": "#/definitions/gke.MasterAuthorizedNetworksConfig"
+                },
+                "monitoringService": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network": {
+                    "type": "string"
+                },
+                "networkConfig": {
+                    "$ref": "#/definitions/gke.NetworkConfig"
+                },
+                "networkPolicy": {
+                    "$ref": "#/definitions/gke.NetworkPolicy"
+                },
+                "nodeIpv4CidrSize": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "nodePools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gke.NodePool"
+                    }
+                },
+                "privateClusterConfig": {
+                    "$ref": "#/definitions/gke.PrivateClusterConfig"
+                },
+                "resourceLabels": {
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "resourceUsageExportConfig": {
+                    "$ref": "#/definitions/gke.ResourceUsageExportConfig"
+                },
+                "selfLink": {
+                    "type": "string"
+                },
+                "servicesIpv4Cidr": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "statusMessage": {
+                    "type": "string"
+                },
+                "subnetwork": {
+                    "type": "string"
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "tpuIpv4CidrBlock": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "gke.IPAllocationPolicy": {
+            "title": "IPAllocationPolicy",
+            "type": "object"
+        },
+        "gke.LegacyAbac": {
+            "title": "LegacyAbac",
+            "type": "object"
+        },
+        "gke.MaintenancePolicy": {
+            "title": "MaintenancePolicy",
+            "type": "object"
+        },
+        "gke.MasterAuth": {
+            "title": "MasterAuth",
+            "type": "object"
+        },
+        "gke.MasterAuthorizedNetworksConfig": {
+            "title": "MasterAuthorizedNetworksConfig",
+            "type": "object"
+        },
+        "gke.MaxPodsConstraint": {
+            "title": "MaxPodsConstraint",
+            "type": "object"
+        },
+        "gke.NetworkConfig": {
+            "title": "NetworkConfig",
+            "type": "object"
+        },
+        "gke.NetworkPolicy": {
+            "title": "NetworkPolicy",
+            "type": "object"
+        },
+        "gke.NodePool": {
+            "title": "NodePool",
+            "type": "object"
+        },
+        "gke.PrivateClusterConfig": {
+            "title": "PrivateClusterConfig",
+            "type": "object"
+        },
+        "gke.ResourceUsageExportConfig": {
+            "title": "ResourceUsageExportConfig",
+            "type": "object"
+        },
+        "gke.ServerConfig": {
+            "title": "ServerConfig",
+            "type": "object"
+        },
+        "gke.StatusCondition": {
+            "title": "StatusCondition",
+            "type": "object"
+        },
         "godo.Region": {
             "title": "Region",
             "type": "object"
@@ -5941,8 +6818,9 @@
                 "AWS = \"aws\"",
                 "Azure = \"azure\"",
                 "GCP = \"gcp\"",
+                "GKE = \"gke\"",
                 "DO = \"do\"",
-                "OP = \"op\""
+                "IBM = \"ibm\""
             ],
             "example": "aws"
         },
@@ -6015,184 +6893,11 @@
                 "Existing = \"existing\"",
                 "New = \"new\"",
                 "Created = \"created\"",
+                "ClusterCreated = \"cluster created\"",
                 "Deploying = \"deploying\"",
                 "Terminating = \"terminating\""
             ],
             "example": "existing"
-        },
-        "op.Cluster_Def": {
-            "title": "Cluster_Def",
-            "type": "object",
-            "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "company_id": {
-                    "type": "string"
-                },
-                "kube_credentials": {
-                    "$ref": "#/definitions/417.0xc042edd1d0.false"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "node_pools": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/op.NodePool"
-                    }
-                },
-                "project_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "token_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "op.Node": {
-            "title": "Node",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "private_ip": {
-                    "type": "string"
-                },
-                "public_ip": {
-                    "type": "string"
-                },
-                "user_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "op.NodePool": {
-            "title": "NodePool",
-            "type": "object",
-            "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey"
-                },
-                "machine_type": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "node_count": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/op.Node"
-                    }
-                },
-                "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
-                }
-            }
-        },
-        "op.NodePoolT": {
-            "title": "NodePoolT",
-            "type": "object",
-            "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey"
-                },
-                "machine_type": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "node_count": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/op.NodeT"
-                    }
-                },
-                "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
-                }
-            }
-        },
-        "op.NodeT": {
-            "title": "NodeT",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "private_ip": {
-                    "type": "string"
-                },
-                "public_ip": {
-                    "type": "string"
-                },
-                "user_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "op.Template": {
-            "title": "Template",
-            "type": "object",
-            "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "company_id": {
-                    "type": "string"
-                },
-                "kube_credentials": {
-                    "$ref": "#/definitions/7544.0xc042efafc0.false"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "node_pools": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/op.NodePoolT"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                },
-                "template_id": {
-                    "type": "string"
-                },
-                "token_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "subscriptionId": {
-            "title": "subscriptionId",
-            "type": "object"
         }
     },
     "tags": [
@@ -6229,20 +6934,20 @@
             "description": "Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
         },
         {
+            "name": "cluster/gke",
+            "description": "Operations about GKE cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
+        },
+        {
+            "name": "template/gke",
+            "description": "Operations about GKE template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
             "name": "template/do",
             "description": "Operations about DO template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
         },
         {
             "name": "cluster/do",
             "description": "Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
-        },
-        {
-            "name": "template/op",
-            "description": "Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
-        },
-        {
-            "name": "cluster/op",
-            "description": "Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }

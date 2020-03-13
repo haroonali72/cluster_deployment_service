@@ -1,17 +1,15 @@
-package do
+package ibm
 
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
-	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
-	"github.com/digitalocean/godo"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -20,7 +18,6 @@ import (
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
-	DOProjectId      string        `json:"do_project_id" bson:"do_project_id"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
@@ -29,25 +26,20 @@ type Cluster_Def struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
+	PublicEndpoint   bool          `json:"disablePublicServiceEndpoint"`
+	KubeVersion      string        `json:"kubeVersion"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
+	VPCId            string        `json:"vpcID"`
 }
-
 type NodePool struct {
-	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
-	Image              ImageReference     `json:"image" bson:"image"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
-	Nodes              []*Node            `json:"nodes" bson:"nodes"`
-	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
-	IsExternal         bool               `json:"is_external" bson:"is_external"`
-	ExternalVolume     Volume             `json:"external_volume" bson:"external_volume"`
-	PrivateNetworking  bool               `json:"private_networking" bson:"private_networking"`
+	ID          bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
+	Name        string          `json:"name" bson:"name" valid:"required"`
+	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
+	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
+	//Zone        []Zone          `json:"zones"`
 }
-
 type Node struct {
 	CloudId    int    `json:"cloud_id" bson:"cloud_id",omitempty"`
 	NodeState  string `json:"node_state" bson:"node_state",omitempty"`
@@ -59,20 +51,42 @@ type Node struct {
 	UserName   string `json:"user_name" bson:"user_name",omitempty"`
 	VolumeId   string `json:"volume_id" bson:"volume_id"`
 }
-
-type ImageReference struct {
-	ID      bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Slug    string        `json:"slug" bson:"slug,omitempty"`
-	ImageId int           `json:"image_id" bson:"image_id,omitempty"`
-}
-type Volume struct {
-	VolumeSize int64 `json:"volume_size" bson:"volume_size"`
-}
 type Project struct {
 	ProjectData Data `json:"data"`
 }
 type Data struct {
 	Region string `json:"region"`
+}
+
+func getNetworkHost(cloudType, projectId string) string {
+
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", projectId, -1)
+	}
+
+	return host
+}
+
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.IBMProfile, error) {
+	data, err := vault.GetCredentialProfile("ibm", profileId, token, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return vault.IBMProfile{}, err
+	}
+	ibmProfile := vault.IBMProfile{}
+	err = json.Unmarshal(data, &ibmProfile)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return vault.IBMProfile{}, err
+	}
+	ibmProfile.Profile.Region = region
+	return ibmProfile, nil
 }
 
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
@@ -85,7 +99,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoDOClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIBMClusterCollection)
 	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -103,7 +117,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoDOClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIBMClusterCollection)
 	err = c.Find(bson.M{}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -114,7 +128,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 }
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
-	url := getNetworkHost("do", projectId)
+	url := getNetworkHost("ibm", projectId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -149,21 +163,8 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		return err
 	}
 
-	//err = checkClusterSize(cluster, ctx)
-	//if err != nil { //cluster size limit exceed
-	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	return err
-	//}
-
-	/*	if subscriptionID != "" {
-		err = checkCoresLimit(cluster, subscriptionID, ctx)
-		if err != nil { //core size limit exceed
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
-	}*/
 	mc := db.GetMongoConf()
-	err = db.InsertInMongo(mc.MongoDOClusterCollection, cluster)
+	err = db.InsertInMongo(mc.MongoIBMClusterCollection, cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -221,7 +222,7 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoDOClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIBMClusterCollection)
 	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -249,22 +250,6 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.DOProfile, error) {
-	data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.DOProfile{}, err
-	}
-	doProfile := vault.DOProfile{}
-	err = json.Unmarshal(data, &doProfile)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.DOProfile{}, err
-	}
-	doProfile.Profile.Region = region
-	return doProfile, nil
-
-}
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -273,18 +258,18 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx utils.Context, companyId string, token string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx utils.Context, companyId string, token string) (confError error) {
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		return confError
 	}
-	do := DO{
-		AccessKey: credentials.AccessKey,
-		Region:    credentials.Region,
+	ibm, err := GetIBM(credentials)
+	if err != nil {
+		return err
 	}
-	confError = do.init(ctx)
+	confError = ibm.init(credentials.Region, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = "Cluster Creation Failed"
@@ -297,7 +282,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = do.createCluster(cluster, ctx, companyId, token)
+	/*cluster, confError = ibm.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		confError = do.CleanUp(ctx)
@@ -312,7 +297,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
-	}
+	}*/
 
 	cluster.Status = "Cluster Created"
 	confError = UpdateCluster(cluster, false, ctx)
@@ -326,7 +311,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 
 	return nil
 }
-func FetchStatus(credentials vault.DOProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
@@ -334,25 +319,25 @@ func FetchStatus(credentials vault.DOProfile, projectId string, ctx utils.Contex
 		return Cluster_Def{}, err
 	}
 	//splits := strings.Split(credentials, ":")
-	do := DO{
-		AccessKey: credentials.Profile.AccessKey,
-		Region:    credentials.Profile.Region,
+	ibm, err := GetIBM(credentials.Profile)
+	if err != nil {
+		return cluster, err
 	}
-	err = do.init(ctx)
+	err = ibm.init(credentials.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, err
 	}
 
-	e := do.fetchStatus(&cluster, ctx, companyId, token)
+	/*e := ibm.fetchStatus(&cluster, ctx, companyId, token)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, e
-	}
+	}*/
 	return cluster, nil
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Context, companyId, token string) error {
+func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.Context, companyId, token string) error {
 
 	publisher := utils.Notifier{}
 
@@ -375,15 +360,15 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		return errors.New(text)
 	}
 
-	do := DO{
-		AccessKey: profile.Profile.AccessKey,
-		Region:    profile.Profile.Region,
+	ibm, err := GetIBM(profile.Profile)
+	if err != nil {
+		return err
 	}
 
 	cluster.Status = string(models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = do.init(ctx)
+	err = ibm.init(profile.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
@@ -397,7 +382,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		return err
 	}
 
-	err = do.terminateCluster(&cluster, ctx, companyId)
+	/*err = ibm.terminateCluster(&cluster, ctx, companyId)
 	if err != nil {
 		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
 
@@ -412,7 +397,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
-	}
+	}*/
 
 	//var flagcheck bool
 	//for {
@@ -435,11 +420,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 	//	time.Sleep(time.Second * 5)
 	//}
 
-	for _, pools := range cluster.NodePools {
+	/*for _, pools := range cluster.NodePools {
 		var nodes []*Node
 		pools.Nodes = nodes
 		pools.KeyInfo.KeyType = models.CPKey
-	}
+	}*/
 	cluster.Status = "Cluster Terminated"
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
@@ -453,113 +438,25 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
 
-	keys, err = vault.GetAllSSHKey("do", ctx, token, "")
+func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesResponse, error) {
+	ibm, err := GetIBM(profile.Profile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return keys, err
+		return AllInstancesResponse{}, err
 	}
-	return keys, nil
-}
-func CreateSSHkey(keyName string, credentials vault.DOCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err error) {
 
-	keyInfo, err := key_utils.GenerateKey(models.DO, keyName, "do@example.com", token, teams, ctx)
-	if err != nil {
-		return "", err
-	}
-	do := DO{
-		AccessKey: credentials.AccessKey,
-		Region:    credentials.Region,
-	}
-	err = do.init(ctx)
+	err = ibm.init(profile.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
-
-	}
-	err, key := do.importKey(keyInfo.KeyName, keyInfo.PublicKey, ctx)
-	if err != nil {
-		return "", err
-
-	}
-	keyInfo.FingerPrint = key.Fingerprint
-	keyInfo.ID = key.ID
-	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
-	if err != nil {
-		return "", err
+		return AllInstancesResponse{}, err
 	}
 
-	return keyInfo.PrivateKey, err
-}
-
-func DeleteSSHkey(keyName, token string, credentials vault.DOCredentials, ctx utils.Context) error {
-
-	bytes, err := vault.GetSSHKey(string(models.DO), keyName, token, ctx, "")
-
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-		return err
-	}
-
-	key, err := key_utils.AzureKeyConversion(bytes, ctx)
-	if err != nil {
-		return err
-	}
-
-	err = vault.DeleteSSHkey(string(models.DO), keyName, token, ctx, credentials.Region)
+	machineTypes, err := ibm.GetAllInstances(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return AllInstancesResponse{}, err
 	}
 
-	do := DO{
-		AccessKey: credentials.AccessKey,
-		Region:    credentials.Region,
-	}
-
-	confError := do.init(ctx)
-	if confError != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return confError
-	}
-
-	err = do.deleteKey(key.ID, ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-func GetRegionsAndCores(credentials vault.DOCredentials, ctx utils.Context) ([]godo.Region, error) {
-	do := DO{
-		AccessKey: credentials.AccessKey,
-	}
-	err := do.init(ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, err
-	}
-	regions, err := do.getCores(ctx)
-	if err != nil {
-
-		return nil, err
-	}
-	return regions, err
-}
-
-func ValidateProfile(key string, ctx utils.Context) error {
-	do := DO{
-		AccessKey: key,
-	}
-	err := do.init(ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-	_, err = do.getCores(ctx)
-	if err != nil {
-
-		return err
-	}
-	return err
+	return machineTypes, nil
 }
