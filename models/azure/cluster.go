@@ -661,3 +661,54 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 	}
 	return instances, nil
 }
+func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, error) {
+
+	azure := AZURE{
+		ID:           credentials.Profile.ClientId,
+		Key:          credentials.Profile.ClientSecret,
+		Tenant:       credentials.Profile.TenantId,
+		Subscription: credentials.Profile.SubscriptionId,
+		Region:       credentials.Profile.Location,
+	}
+	err := azure.init()
+	if err != nil {
+		return []models.Region{}, err
+	}
+
+	regions, err := azure.getRegions(ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		return []models.Region{}, err
+	}
+	return regions, nil
+}
+func GetAllMachines() ([]string, error) {
+
+	regions, err := getAllVMSizes()
+	if err != nil {
+		beego.Error(err.Error())
+		return []string{}, err
+	}
+	return regions, nil
+}
+func ValidateProfile(clientId,clientSecret,subscriptionId,tenantId,region string , ctx utils.Context)  error {
+
+	azure := AZURE{
+		ID:           clientId,
+		Key:          clientSecret,
+		Tenant:       tenantId,
+		Subscription: subscriptionId,
+		Region:       region,
+	}
+	err := azure.init()
+	if err != nil {
+		return  err
+	}
+
+	_,err = azure.getRegions(ctx)
+	if err != nil {
+		beego.Error("Profile is not valid")
+		return  err
+	}
+	return  nil
+}
