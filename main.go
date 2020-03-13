@@ -76,4 +76,6 @@ func setEnv() {
 	os.Setenv("network_url", "https://dapis.cloudplex.cf")
 	os.Setenv("vault_url", "https://dapis.cloudplex.cf")
 	os.Setenv("raccoon_url", "https://dapis.cloudplex.cf")
+	os.Setenv("jum_host_ip", "18.139.0.104")
+	os.Setenv("jump_host_ssh_key", "/home/mahmad/ahmadnewkey.pem")
 }

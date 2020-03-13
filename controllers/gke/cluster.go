@@ -863,3 +863,106 @@ func (c *GKEClusterController) TerminateCluster() {
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }
+
+// @Title Start
+// @Description Apply cloudplex Agent file to a gke cluster
+// @Param	clusterName	header	string	clusterName ""
+// @Param	token	header	string	token ""
+// @Success 200 {"msg": "Agent Applied successfully"}
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	projectId	path	string	true	"Id of the project"
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /applyagent/:projectId [post]
+func (c *GKEClusterController) ApplyAgent() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	clusterName := c.Ctx.Input.Header("clusterName")
+	if clusterName == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
+		c.ServeJSON()
+		return
+	}
+	userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("GKEClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	_, err = rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	//if !allowed {
+	//	c.Ctx.Output.SetStatus(401)
+	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+	//	c.ServeJSON()
+	//	return
+	//}
+
+	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
+	//if err != nil {
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
+	if !isValid {
+		ctx.SendLogs("GKEClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("GKEClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	go gke.TestGKE(credentials, userInfo.CompanyId, token, *ctx, projectId, clusterName)
+
+	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+	c.ServeJSON()
+}

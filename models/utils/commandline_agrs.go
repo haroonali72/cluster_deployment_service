@@ -39,6 +39,8 @@ var (
 	kill_bill_secret_key            = ""
 	kill_bill_user                  = ""
 	kill_bill_api_key               = ""
+	jump_host_ssh_key               = ""
+	jump_host_ip                    = ""
 )
 
 func InitFlags() error {
@@ -232,6 +234,18 @@ func InitFlags() error {
 			Destination: &woodpecker_url,
 			EnvVar:      "woodpecker_url",
 		},
+		cli.StringFlag{
+			Name:        "jump_host_ssh_key",
+			Usage:       "jump_host_ssh_key",
+			Destination: &jump_host_ssh_key,
+			EnvVar:      "jump_host_ssh_key",
+		},
+		cli.StringFlag{
+			Name:        "jump_host_ip",
+			Usage:       "jump_host_ip",
+			Destination: &jump_host_ip,
+			EnvVar:      "jump_host_ip",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -273,5 +287,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("rbac_url", rbac_url)
 	beego.AppConfig.Set("subscription_host", subscription_host)
 	beego.AppConfig.Set("woodpecker_url", woodpecker_url)
+	beego.AppConfig.Set("jump_host_ssh_key", jump_host_ssh_key)
+	beego.AppConfig.Set("jump_host_ip", jump_host_ip)
 	return nil
 }
