@@ -787,6 +787,66 @@
                 }
             }
         },
+        "/cluster/azure/applyagent/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/azure"
+                ],
+                "description": "Apply cloudplex Agent file to a aks cluster",
+                "operationId": "AzureClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "clusterName",
+                        "description": "clusterName",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "resourceGroup",
+                        "description": "resourceGroup",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"Agent Applied successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/azure/getAllInstances": {
             "get": {
                 "tags": [
@@ -4900,11 +4960,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "29793.0xc0009fdf20.false": {
+        "29793.0xc000a5fa10.false": {
             "title": "false",
             "type": "object"
         },
-        "58168.0xc00076db30.false": {
+        "58168.0xc0007ccc00.false": {
             "title": "false",
             "type": "object"
         },
@@ -4960,7 +5020,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/58168.0xc00076db30.false"
+                    "$ref": "#/definitions/58168.0xc0007ccc00.false"
                 },
                 "name": {
                     "type": "string"
@@ -5528,7 +5588,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/29793.0xc0009fdf20.false"
+                    "$ref": "#/definitions/29793.0xc000a5fa10.false"
                 },
                 "name": {
                     "type": "string"

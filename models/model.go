@@ -1,5 +1,12 @@
 package models
 
+import (
+	"bytes"
+	"golang.org/x/crypto/ssh"
+	"io/ioutil"
+	"net"
+)
+
 type Type string
 
 const (
@@ -129,7 +136,8 @@ const (
 	AuditTrailLoggingURI = "audit/store"
 )
 const WoodPeckerCertificate = "/agent/api/v1/clientcert/{profileId}"
-const GCPAuthContianrName = "jhgcp"
+const GKEAuthContainerName = "jhgke"
+const AKSAuthContainerName = "jhaks"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
@@ -153,3 +161,37 @@ const (
 	STORAGE_CONTRIBUTOR_GUID = "17d1049b-9a84-46fb-8f53-869881c3d3ab"
 	AVERE_CONTRIBUTER_GUID   = "4f8fab4f-1852-4a58-a46a-8eaf358af14a"
 )
+
+func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
+	clientPem, err := ioutil.ReadFile(privateKey)
+	if err != nil {
+		return "", err
+	}
+
+	key, err := ssh.ParsePrivateKey(clientPem)
+	if err != nil {
+		return "", err
+	}
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+	client, err := ssh.Dial("tcp", net.JoinHostPort(addr, "22"), config)
+	if err != nil {
+		return "", err
+	}
+	session, err := client.NewSession()
+	if err != nil {
+		return "", err
+	}
+	defer session.Close()
+	var b bytes.Buffer
+	session.Stdout = &b
+	err = session.Run(cmd)
+	return b.String(), err
+}
