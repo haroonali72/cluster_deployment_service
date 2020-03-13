@@ -65,7 +65,6 @@ var AzureRegions = []byte(
 
 ]`)
 
-
 var GCPRegions = []byte(
 	`[
 			{"name":"","location":"asia-east1"},

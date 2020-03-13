@@ -51,7 +51,7 @@ type AZURE struct {
 	Authorizer       *autorest.BearerAuthorizer
 	AddressClient    network.PublicIPAddressesClient
 	InterfacesClient network.InterfacesClient
-	Location 		 subscriptions.Client
+	Location         subscriptions.Client
 	VMSSCLient       compute.VirtualMachineScaleSetsClient
 	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
 	VMClient         compute.VirtualMachinesClient
@@ -59,14 +59,14 @@ type AZURE struct {
 	AccountClient    storage.AccountsClient
 	context          context.Context
 
-	ID               string
-	Key              string
-	Tenant           string
-	Subscription     string
-	Region           string
-	Resources        map[string]interface{}
-	RoleAssignment   authorization.RoleAssignmentsClient
-	RoleDefinition   authorization.RoleDefinitionsClient
+	ID             string
+	Key            string
+	Tenant         string
+	Subscription   string
+	Region         string
+	Resources      map[string]interface{}
+	RoleAssignment authorization.RoleAssignmentsClient
+	RoleDefinition authorization.RoleDefinitionsClient
 }
 
 func (cloud *AZURE) init() error {
@@ -2076,29 +2076,28 @@ func (cloud *AZURE) getRegions(ctx utils.Context) (region []models.Region, err e
 		}
 	}
 
-	LocResult, err := cloud.Location.ListLocations(cloud.context,cloud.Subscription)
+	LocResult, err := cloud.Location.ListLocations(cloud.context, cloud.Subscription)
 	if err != nil {
 		beego.Error(err.Error())
 		return []models.Region{}, err
 	}
-	for _,loc := range *LocResult.Value{
-		reg.Name=*loc.DisplayName
-		reg.Location=*loc.Name
-		region = append(region,reg)
+	for _, loc := range *LocResult.Value {
+		reg.Name = *loc.DisplayName
+		reg.Location = *loc.Name
+		region = append(region, reg)
 	}
 	return region, nil
 }
 func getAllVMSizes() ([]string, error) {
 
 	VmResult := c.PossibleVirtualMachineSizeTypesValues()
-	if VmResult ==nil  {
-		return []string{},errors.New("VM Machine Type Not Fetched")
+	if VmResult == nil {
+		return []string{}, errors.New("VM Machine Type Not Fetched")
 	}
 	var machine []string
-	for _,vm :=range VmResult{
+	for _, vm := range VmResult {
 		fmt.Println(string(vm))
-		machine=append(machine,string(vm))
+		machine = append(machine, string(vm))
 	}
-	return machine,nil
+	return machine, nil
 }
-

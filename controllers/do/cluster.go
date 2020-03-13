@@ -178,7 +178,6 @@ func (c *DOClusterController) Post() {
 		return
 	}
 
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -226,7 +225,7 @@ func (c *DOClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err = do.CreateCluster( cluster, *ctx)
+	err = do.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -272,7 +271,6 @@ func (c *DOClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -578,7 +576,7 @@ func (c *DOClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = do.UpdateCluster( cluster, false, *ctx)
+	err = do.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -808,7 +806,7 @@ func (c *DOClusterController) TerminateCluster() {
 
 	go do.TerminateCluster(cluster, doProfile, *ctx, userInfo.CompanyId, token)
 
-	err = do.UpdateCluster( cluster, false, *ctx)
+	err = do.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1120,7 +1118,6 @@ func (c *DOClusterController) DeleteSSHKey() {
 	c.ServeJSON()
 }
 
-
 // @Title ValidateProfile
 // @Description validate if profile is valid
 // @Param	key	 path	string	true "Access Key"
@@ -1162,11 +1159,9 @@ func (c *DOClusterController) ValidateProfile() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
-
 	ctx.SendLogs("DOClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	 err = do.ValidateProfile(key, *ctx)
+	err = do.ValidateProfile(key, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": err.Error()}

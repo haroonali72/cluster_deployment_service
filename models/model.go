@@ -41,6 +41,7 @@ const (
 	GKE   Cloud = "gke"
 	DO    Cloud = "do"
 	IBM   Cloud = "ibm"
+	OP    Cloud = "op"
 )
 
 type KeyType string
@@ -156,12 +157,11 @@ const (
 )
 
 type Region struct {
-	Name 		   string    `json: "name" `
-	Location       string  	 `json: "location" `
+	Name     string `json: "name" `
+	Location string `json: "location" `
 }
-type GcpRegion struct{
-	Name 		   string    `json: "name" `
-	Zone 		   string 	 `json: "zone" `
-	Location       string  	 `json: "location" `
-
+type GcpRegion struct {
+	Name     string `json: "name" `
+	Zone     string `json: "zone" `
+	Location string `json: "location" `
 }

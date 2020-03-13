@@ -217,18 +217,18 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	network,err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=!network.IsPrivate
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err = aws.CreateCluster( cluster, *ctx)
+	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -276,7 +276,6 @@ func (c *AWSClusterController) Patch() {
 		return
 	}
 
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -307,15 +306,15 @@ func (c *AWSClusterController) Patch() {
 	//=============================================================================//
 
 	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	network,err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=!network.IsPrivate
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
 	}
 	err = aws.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
@@ -590,7 +589,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = aws.UpdateCluster( cluster, false, *ctx)
+	err = aws.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1351,7 +1350,6 @@ func (c *AWSClusterController) GetZones() {
 		return
 	}
 
-
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	ctx.SendLogs("AWSClusterController: fetch availability zones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -1406,7 +1404,6 @@ func (c *AWSClusterController) GetAllMachines() {
 
 	ctx.SendLogs("AWSClusterController: Fetch machine Types.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	machine, err := aws.GetAllMachines()
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -1418,7 +1415,6 @@ func (c *AWSClusterController) GetAllMachines() {
 	c.Data["json"] = machine
 	c.ServeJSON()
 }
-
 
 // @Title Validate Profile
 // @Description check if profile is valid
@@ -1471,7 +1467,6 @@ func (c *AWSClusterController) ValidateProfile() {
 
 	ctx.SendLogs("Check Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	var regions []models.Region
 	if err := json.Unmarshal(cores.AWSRegions, &regions); err != nil {
 		beego.Error("Unmarshalling of machine instances failed ", err.Error())
@@ -1481,18 +1476,18 @@ func (c *AWSClusterController) ValidateProfile() {
 		return
 	}
 
-	for _,region := range regions {
-	err = aws.ValidateProfile(key,secret,region.Location, *ctx)
-	if err != nil {
-		ctx.SendLogs("AWSClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if err==nil{
-		break
-	}
+	for _, region := range regions {
+		err = aws.ValidateProfile(key, secret, region.Location, *ctx)
+		if err != nil {
+			ctx.SendLogs("AWSClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if err == nil {
+			break
+		}
 	}
 
 	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
