@@ -19,11 +19,12 @@ type GKEClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	token	header	string	token ""
 // @Success 200 {object} gke.ServerConfig
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /config/:projectId [get]
+// @router /config/:zone [get]
 func (c *GKEClusterController) GetServerConfig() {
 	ctx := new(utils.Context)
 
@@ -36,11 +37,11 @@ func (c *GKEClusterController) GetServerConfig() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	zone := c.GetString(":zone")
+	if zone == "" {
+		ctx.SendLogs("GKEClusterController: Zone field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "zone is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -53,16 +54,7 @@ func (c *GKEClusterController) GetServerConfig() {
 		return
 	}
 
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", token, zone, *ctx)
 	if !isValid {
 		ctx.SendLogs("GKEClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
