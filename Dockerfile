@@ -5,7 +5,7 @@ FROM golang:1.11.3  AS build-env
 #RUN apk add bash ca-certificates git gcc g++ libc-dev
 WORKDIR /go/src/antelope
 
-RUN go get -u github.com/golang/dep/cmd/dep
+#RUN go get -u github.com/golang/dep/cmd/dep
 
 ARG SSH_PRIVATE_KEY
 RUN mkdir -p ~/.ssh && umask 0077 && echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa \
@@ -13,11 +13,11 @@ RUN mkdir -p ~/.ssh && umask 0077 && echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa \
     && ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
 
 WORKDIR /go/src
-RUN git clone git@bitbucket.org:cloudplex-devs/d-duck.git
+#RUN git clone git@bitbucket.org:cloudplex-devs/d-duck.git
 
 WORKDIR /go/src/antelope
 
-COPY Gopkg.toml Gopkg.lock ./
+#COPY Gopkg.toml Gopkg.lock ./
 #RUN dep ensure -vendor-only
 
 COPY . .
