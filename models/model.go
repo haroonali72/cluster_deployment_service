@@ -48,6 +48,7 @@ const (
 	GKE   Cloud = "gke"
 	DO    Cloud = "do"
 	IBM   Cloud = "ibm"
+	OP    Cloud = "op"
 )
 
 type KeyType string
