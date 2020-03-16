@@ -1,6 +1,6 @@
 # https://stackoverflow.com/questions/55645868/can-not-use-conf-in-golang-beego-framework-when-docker-multi-stage-build
 # build stage
-FROM golang:1.13.8 AS build-env
+FROM golang:1.12.13 AS build-env
 
 #RUN apk add bash ca-certificates git gcc g++ libc-dev
 WORKDIR /go/src/antelope
