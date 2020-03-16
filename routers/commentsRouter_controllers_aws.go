@@ -63,6 +63,15 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
 		beego.ControllerComments{
+			Method:           "ApplyAgent",
+			Router:           `/applyagent/:projectId`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+		beego.ControllerComments{
 			Method:           "EnableAutoScaling",
 			Router:           `/enablescaling/:projectId/`,
 			AllowHTTPMethods: []string{"post"},

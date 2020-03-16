@@ -918,7 +918,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	_, err = rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -926,21 +926,21 @@ func (c *GKEClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-	//if !allowed {
-	//	c.Ctx.Output.SetStatus(401)
-	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-	//	c.ServeJSON()
-	//	return
-	//}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
-	//if err != nil {
-	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	c.Ctx.Output.SetStatus(500)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
@@ -951,10 +951,10 @@ func (c *GKEClusterController) ApplyAgent() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("GKEClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go gke.TestGKE(credentials, userInfo.CompanyId, token, *ctx, projectId, clusterName)
+	go gke.ApplyAgent(credentials, token, *ctx, clusterName)
 
-	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()
 }

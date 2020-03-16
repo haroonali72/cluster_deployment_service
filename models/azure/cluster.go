@@ -9,6 +9,7 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"antelope/models/woodpecker"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -705,6 +706,31 @@ func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region st
 	_, err = azure.getRegions(ctx)
 	if err != nil {
 		beego.Error("Profile is not valid")
+		return err
+	}
+	return nil
+}
+func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
+	companyId := ctx.Data.Company
+	projetcID := ctx.Data.ProjectId
+	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
+	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e resourceGroup=" + resourceGroup + " -e cluster=" + clusterName + " -e clientID=" + credentials.Profile.ClientId + " -e tenant=" + credentials.Profile.TenantId + " -e clientSecret=" + credentials.Profile.ClientSecret + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.AKSAuthContainerName
+
+	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
