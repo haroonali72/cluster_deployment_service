@@ -953,7 +953,7 @@ func (c *GKEClusterController) ApplyAgent() {
 
 	ctx.SendLogs("GKEClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go gke.ApplyAgent(credentials, userInfo.CompanyId, token, *ctx, projectId, clusterName)
+	go gke.ApplyAgent(credentials, token, *ctx, clusterName)
 
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()

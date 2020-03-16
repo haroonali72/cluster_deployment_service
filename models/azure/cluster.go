@@ -173,7 +173,7 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
 			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return types.AzureNetwork{},errors.New("Resource Group is in correct")
+			return types.AzureNetwork{}, errors.New("Resource Group is in correct")
 		}
 	} else {
 		return types.AzureNetwork{}, errors.New("Network not found")
@@ -710,13 +710,15 @@ func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region st
 	}
 	return nil
 }
-func ApplyAgent(credentials vault.AzureProfile, companyId, token string, ctx utils.Context, projetcID, clusterName, resourceGroup string) (confError error) {
-
+func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
+	companyId := ctx.Data.Company
+	projetcID := ctx.Data.ProjectId
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+
 	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)

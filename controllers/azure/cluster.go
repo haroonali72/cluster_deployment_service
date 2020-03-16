@@ -196,16 +196,15 @@ func (c *AzureClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 
-	network,err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
+	network, err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node :=range cluster.NodePools{
+	for _, node := range cluster.NodePools {
 		node.EnablePublicIP = !network.IsPrivate
-
 
 	}
 	res, err := govalidator.ValidateStruct(cluster)
@@ -217,7 +216,7 @@ func (c *AzureClusterController) Post() {
 	}
 
 	cluster.CompanyId = userInfo.CompanyId
-	err = azure.CreateCluster( cluster, *ctx)
+	err = azure.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -264,8 +263,6 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -295,14 +292,14 @@ func (c *AzureClusterController) Patch() {
 	}
 
 	ctx.SendLogs("AzureClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	network,err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
+	network, err := azure.GetNetwork(cluster.ProjectId, *ctx, cluster.ResourceGroup, token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node :=range cluster.NodePools{
+	for _, node := range cluster.NodePools {
 		node.EnablePublicIP = !network.IsPrivate
 	}
 	err = azure.UpdateCluster(cluster, true, *ctx)
@@ -570,7 +567,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = azure.UpdateCluster( cluster, false, *ctx)
+	err = azure.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -796,7 +793,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs("AzureClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	go azure.TerminateCluster(cluster, azureProfile, *ctx, userInfo.CompanyId)
 
-	err = azure.UpdateCluster( cluster, false, *ctx)
+	err = azure.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1364,7 +1361,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	}
 	ctx.SendLogs("AKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go azure.ApplyAgent(azureProfile, userInfo.CompanyId, token, *ctx, projectId, clusterName, resourceGroup)
+	go azure.ApplyAgent(azureProfile, token, *ctx, clusterName, resourceGroup)
 
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()

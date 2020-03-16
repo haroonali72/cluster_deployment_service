@@ -536,7 +536,21 @@ func DeployGKECluster(
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
+	if confError != nil {
+		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
+		cluster.Status = "Cluster creation failed"
+		confError = UpdateGKECluster(cluster, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return nil
+	}
 	cluster.Status = "Cluster Created"
 
 	confError = UpdateGKECluster(cluster, ctx)
@@ -681,20 +695,15 @@ func PrintError(confError error, name, projectId string, companyId string) {
 	}
 }
 
-func ApplyAgent(credentials gcp.GcpCredentials, companyId string, token string, ctx utils.Context, projetcID string, clusterName string) (confError error) {
-	publisher := utils.Notifier{}
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
-		ctx.SendLogs("GKEClusterModel :"+pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return pub_err
-	}
-
-	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context, clusterName string) (confError error) {
+	projectID := ctx.Data.ProjectId
+	companyId := ctx.Data.Company
+	data2, err := woodpecker.GetCertificate(projectID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	filePath := "/tmp/" + companyId + "/" + projectID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
@@ -703,9 +712,9 @@ func ApplyAgent(credentials gcp.GcpCredentials, companyId string, token string, 
 	}
 
 	if credentials.Zone != "" {
-		cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e zone=" + credentials.Region + "-" + credentials.Zone + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GKEAuthContainerName
+		cmd = "sudo docker run --rm --name " + companyId + projectID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e zone=" + credentials.Region + "-" + credentials.Zone + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GKEAuthContainerName
 	} else {
-		cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e region=" + credentials.Region + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GKEAuthContainerName
+		cmd = "sudo docker run --rm --name " + companyId + projectID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e region=" + credentials.Region + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GKEAuthContainerName
 	}
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
@@ -713,6 +722,5 @@ func ApplyAgent(credentials gcp.GcpCredentials, companyId string, token string, 
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	publisher.Notify(projetcID, "Status Available", ctx)
 	return nil
 }

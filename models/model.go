@@ -138,6 +138,7 @@ const (
 const WoodPeckerCertificate = "/agent/api/v1/clientcert/{profileId}"
 const GKEAuthContainerName = "jhgke"
 const AKSAuthContainerName = "jhaks"
+const EKSAuthContainerName = "jheks"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
