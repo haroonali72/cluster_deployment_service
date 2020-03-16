@@ -22,7 +22,7 @@ WORKDIR /go/src/antelope
 
 COPY . .
 
-RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/src/antelope/antelope
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/src/antelope/antelope
 
 # final stage
 FROM ubuntu:bionic
