@@ -1497,7 +1497,7 @@ func (c *AWSClusterController) ValidateProfile() {
 }
 
 // @Title Start
-// @Description Apply cloudplex Agent file to a eks cluster
+// @Description Apply cloudplex Agent file to eks cluster
 // @Param	clusterName	header	string	clusterName ""
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "Agent Applied successfully"}
@@ -1509,7 +1509,6 @@ func (c *AWSClusterController) ValidateProfile() {
 // @Failure 500 {"error": "error msg"}
 // @router /applyagent/:projectId [post]
 func (c *AWSClusterController) ApplyAgent() {
-
 	ctx := new(utils.Context)
 	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1573,8 +1572,14 @@ func (c *AWSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-
-	awsProfile, err := aws.GetProfile(profileId, "", token, *ctx)
+	region, err := aws.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		c.Ctx.Output.SetStatus(400)

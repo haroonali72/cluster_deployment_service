@@ -718,7 +718,6 @@ func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context,
 		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-
 	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)

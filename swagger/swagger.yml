@@ -191,6 +191,42 @@ paths:
           description: '{"error": "ami id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/aws/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/aws
+      description: Apply cloudplex Agent file to eks cluster
+      operationId: AWSClusterController.Start
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/aws/enablescaling/{projectId}/:
     post:
       tags:
@@ -214,6 +250,65 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster autoscaled successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/aws/getallmachines:
+    get:
+      tags:
+      - cluster/aws
+      description: Get AWS  Machine Types
+      operationId: AWSClusterController.Get Machine Types
+      responses:
+        "200":
+          description: '[]string'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/aws/getallregions:
+    get:
+      tags:
+      - cluster/aws
+      description: Get AWS Regions
+      operationId: AWSClusterController.GetRegions
+      responses:
+        "200":
+          description: '[]models.Region'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/aws/getzones/{region}:
+    get:
+      tags:
+      - cluster/aws
+      description: return zones against a region
+      operationId: AWSClusterController.Get Availability Zone
+      parameters:
+      - in: header
+        name: token
+        description: "true"
+        type: string
+      - in: path
+        name: region
+        description: region of AWS
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: "true"
+        type: string
+      responses:
+        "200":
+          description: '[]*string'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -435,6 +530,40 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/aws/validateProfile/{key}/{secret}:
+    get:
+      tags:
+      - cluster/aws
+      description: check if profile is valid
+      operationId: AWSClusterController.Validate Profile
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: key
+        description: Access Key
+        required: true
+        type: string
+      - in: path
+        name: secret
+        description: Access Secret
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "profile is invalid"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/azure/:
     put:
       tags:
@@ -608,6 +737,49 @@ paths:
       responses:
         "200":
           description: '[]compute.VirtualMachines'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/azure/getallmachines:
+    get:
+      tags:
+      - cluster/azure
+      description: Get Azure VM Sizes
+      operationId: AzureClusterController.Get VM Sizes
+      responses:
+        "200":
+          description: '[]string'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/azure/getallregions:
+    get:
+      tags:
+      - cluster/azure
+      description: Get Azure Regions
+      operationId: AzureClusterController.Get Azure Regions
+      parameters:
+      - in: header
+        name: token
+        description: "true"
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: "true"
+        type: string
+      responses:
+        "200":
+          description: '[]model.Region'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -800,6 +972,50 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/azure/validateProfile/{clientId}/{clientSecret}/{subscriptionId}/{tenantId}:
+    get:
+      tags:
+      - cluster/azure
+      description: check if profile is valid
+      operationId: AzureClusterController.Validate Profile
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: clientId
+        description: Client Id
+        required: true
+        type: string
+      - in: path
+        name: clientSecret
+        description: Client Secret
+        required: true
+        type: string
+      - in: path
+        name: subscriptionId
+        description: Subscription Id
+        required: true
+        type: string
+      - in: path
+        name: tenantId
+        description: Tenant Id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "profile is invalid"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/do/:
@@ -1134,6 +1350,33 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/do/validateprofile/{key}:
+    get:
+      tags:
+      - cluster/do
+      description: validate if profile is valid
+      operationId: DOClusterController.ValidateProfile
+      parameters:
+      - in: path
+        name: key
+        description: Access Key
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: "true"
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/godo.Region'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
   /cluster/gcp/:
     put:
       tags:
@@ -1253,9 +1496,8 @@ paths:
       operationId: GcpClusterController.GetAllMachines
       parameters:
       - in: header
-        name: profileid
-        description: profile of GCP
-        required: true
+        name: X-Profile-Id
+        description: "true"
         type: string
       - in: header
         name: token
@@ -1273,36 +1515,19 @@ paths:
         type: string
       responses:
         "200":
-          description: ""
-          schema:
-            $ref: '#/definitions/gcp.Machines'
+          description: '[]string'
         "400":
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "authorization params missing or invalid"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/gcp/getzones/{region}:
+  /cluster/gcp/getallregions:
     get:
       tags:
       - cluster/gcp
-      description: return zones against a region
-      operationId: GcpClusterController.GetZonesAgainstRegion
-      parameters:
-      - in: header
-        name: profileid
-        description: profile of GCP
-        required: true
-        type: string
-      - in: header
-        name: token
-        description: "true"
-        type: string
-      - in: path
-        name: region
-        description: region of GCP
-        required: true
-        type: string
+      description: return all regions
+      operationId: GcpClusterController.Get All Regions
       responses:
         "200":
           description: ""
@@ -1544,6 +1769,36 @@ paths:
           description: '{"error": "error_msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/gcp/validateProfile:
+    post:
+      tags:
+      - cluster/gcp
+      description: check if profile is valid
+      operationId: GcpClusterController.Validate Profile
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/gcp.GcpCredentials'
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "profile is invalid"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/gke/:
     put:
       tags:
@@ -1691,7 +1946,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/gke/config/{projectId}:
+  /cluster/gke/config/{zone}:
     get:
       tags:
       - cluster/gke
@@ -1702,6 +1957,10 @@ paths:
         name: X-Profile-Id
         description: vault credentials profile id
         required: true
+        type: string
+      - in: header
+        name: token
+        description: token
         type: string
       responses:
         "200":
@@ -1813,6 +2072,128 @@ paths:
             service_account_json''"}'
         "404":
           description: '{"error": "error_msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/op/:
+    put:
+      tags:
+      - cluster/op
+      description: update an existing cluster
+      operationId: OPClusterController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/op.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "402":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "405":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - cluster/op
+      description: create a new cluster
+      operationId: OPClusterController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/op.Cluster_Def'
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"msg": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "cluster against this project already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/op/{projectId}/:
+    get:
+      tags:
+      - cluster/op
+      description: get cluster
+      operationId: OPClusterController.Get
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/op.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+  /cluster/op/{projectId}/{companyID}: {}
+  /cluster/op/{projectId}/{forceDelete}: {}
+  /cluster/op/all:
+    get:
+      tags:
+      - cluster/op
+      description: get all the clusters
+      operationId: OPClusterController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/op.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /customerTemplate/register:
@@ -3260,14 +3641,161 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/op/:
+    put:
+      tags:
+      - template/op
+      description: update an existing template
+      operationId: OPTemplateController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/op.Template'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/op
+      description: create a new template
+      operationId: OPTemplateController.Create
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/op.Template'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/op/{templateId}:
+    delete:
+      tags:
+      - template/op
+      description: delete a template
+      operationId: OPTemplateController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/op/{templateId}/:
+    get:
+      tags:
+      - template/op
+      description: get template
+      operationId: OPTemplateController.Get
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/op.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/op/all:
+    get:
+      tags:
+      - template/op
+      description: get all the templates
+      operationId: OPTemplateController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/op.Template'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
 definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  29793.0xc000a5fa10.false:
+  4411.0xc000d92e70.false:
     title: "false"
     type: object
-  58168.0xc0007ccc00.false:
+  10028.0xc000db4330.false:
+    title: "false"
+    type: object
+  29793.0xc000b58990.false:
+    title: "false"
+    type: object
+  59682.0xc0008c9620.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3307,7 +3835,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/58168.0xc0007ccc00.false'
+        $ref: '#/definitions/59682.0xc0008c9620.false'
       name:
         type: string
       network_name:
@@ -3690,7 +4218,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/29793.0xc000a5fa10.false'
+        $ref: '#/definitions/29793.0xc000b58990.false'
       name:
         type: string
       network_name:
@@ -3840,6 +4368,30 @@ definitions:
   do.string:
     title: string
     type: object
+  gcp.AccountData:
+    title: AccountData
+    type: object
+    properties:
+      auth_provider_x509_cert_url:
+        type: string
+      auth_uri:
+        type: string
+      client_email:
+        type: string
+      client_id:
+        type: string
+      client_x509_cert_url:
+        type: string
+      private_key:
+        type: string
+      private_key_id:
+        type: string
+      project_id:
+        type: string
+      token_uri:
+        type: string
+      type:
+        type: string
   gcp.AutoScaling:
     title: AutoScaling
     type: object
@@ -3873,6 +4425,18 @@ definitions:
         type: string
       vpc_name:
         type: string
+  gcp.GcpCredentials:
+    title: GcpCredentials
+    type: object
+    properties:
+      account_data:
+        $ref: '#/definitions/gcp.AccountData'
+      raw_account_data:
+        type: string
+      region:
+        type: string
+      zone:
+        type: string
   gcp.Image:
     title: Image
     type: object
@@ -3881,14 +4445,6 @@ definitions:
         type: string
       project:
         type: string
-  gcp.Machines:
-    title: Machines
-    type: object
-    properties:
-      machine_name:
-        type: array
-        items:
-          type: string
   gcp.Node:
     title: Node
     type: object
@@ -4313,6 +4869,7 @@ definitions:
     - GKE = "gke"
     - DO = "do"
     - IBM = "ibm"
+    - OP = "op"
     example: aws
   models.CredentialsType:
     title: CredentialsType
@@ -4373,6 +4930,120 @@ definitions:
     - Deploying = "deploying"
     - Terminating = "terminating"
     example: existing
+  op.Cluster_Def:
+    title: Cluster_Def
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      kube_credentials:
+        $ref: '#/definitions/10028.0xc000db4330.false'
+      name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/op.NodePool'
+      project_id:
+        type: string
+      status:
+        type: string
+      token_name:
+        type: string
+  op.Node:
+    title: Node
+    type: object
+    properties:
+      name:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
+        type: string
+      user_name:
+        type: string
+  op.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      key_info:
+        $ref: '#/definitions/key_utils.AZUREKey'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/op.Node'
+      pool_role:
+        $ref: '#/definitions/models.PoolRole'
+  op.NodePoolT:
+    title: NodePoolT
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      key_info:
+        $ref: '#/definitions/key_utils.AZUREKey'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/op.NodeT'
+      pool_role:
+        $ref: '#/definitions/models.PoolRole'
+  op.NodeT:
+    title: NodeT
+    type: object
+    properties:
+      name:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
+        type: string
+      user_name:
+        type: string
+  op.Template:
+    title: Template
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      kube_credentials:
+        $ref: '#/definitions/4411.0xc000d92e70.false'
+      name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/op.NodePoolT'
+      status:
+        type: string
+      template_id:
+        type: string
+      token_name:
+        type: string
 tags:
 - name: health
   description: |
@@ -4410,3 +5081,9 @@ tags:
 - name: cluster/do
   description: |
     Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: template/op
+  description: |
+    Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: cluster/op
+  description: |
+    Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
