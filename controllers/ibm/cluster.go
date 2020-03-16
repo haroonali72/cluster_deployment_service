@@ -10,6 +10,7 @@ import (
 	"github.com/astaxie/beego"
 	"strings"
 	"time"
+	"weasel/models/rbac"
 )
 
 // Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
@@ -892,5 +893,47 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 		return
 	}
 	c.Data["json"] = machineTypes
+	c.ServeJSON()
+}
+
+// @Title Get Regions
+// @Description fetch regions of ibm
+// @Param	token	header	string	token ""
+// @Success 200 {object} []ibm.Regions
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getregions/ [get]
+func (c *IBMClusterController) FetchRegions() {
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token must not be empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	regions, err := ibm.GetRegions(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs(" IBM network subnets fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = regions
 	c.ServeJSON()
 }

@@ -2635,6 +2635,407 @@
             }
         },
         "/cluster/gke/{projectId}/{forceDelete}": {},
+        "/cluster/ibm/": {
+            "put": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "update an existing cluster",
+                "operationId": "IBMClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ibm.Cluster_Def"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "405": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "create a new cluster",
+                "operationId": "IBMClusterController.Create",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ibm.Cluster_Def"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"msg\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"cluster against this project already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/all": {
+            "get": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "get all the clusters",
+                "operationId": "IBMClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ibm.Cluster_Def"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/getallmachines/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "get all instance list",
+                "operationId": "IBMClusterController.Get All Instance List",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "schema": {
+                            "$ref": "#/definitions/X-Profile-Id"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ibm.AllInstancesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/getregions/": {
+            "get": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "fetch regions of ibm",
+                "operationId": "IBMClusterController.Get Regions",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ibm.Regions"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/start/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "starts a  cluster",
+                "operationId": "IBMClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/status/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "returns status of nodes",
+                "operationId": "IBMClusterController.Status",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ibm.Cluster_Def"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/terminate/{projectId}/": {
+            "post": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "terminates a  cluster",
+                "operationId": "IBMClusterController.Terminate",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "profileId",
+                        "schema": {
+                            "$ref": "#/definitions/X-Profile-Id"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "get cluster",
+                "operationId": "IBMClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ibm.Cluster_Def"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/ibm/{projectId}/{forceDelete}": {},
         "/customerTemplate/register": {
             "post": {
                 "tags": [
@@ -5322,15 +5723,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "12961.0xc00106ae10.false": {
+        "12939.0xc00106f350.false": {
             "title": "false",
             "type": "object"
         },
-        "13357.0xc000b644e0.false": {
+        "13357.0xc000b64a50.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc000e46750.false": {
+        "13431.0xc000e48cc0.false": {
             "title": "false",
             "type": "object"
         },
@@ -5386,7 +5787,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13357.0xc000b644e0.false"
+                    "$ref": "#/definitions/13357.0xc000b64a50.false"
                 },
                 "name": {
                     "type": "string"
@@ -5954,7 +6355,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc000e46750.false"
+                    "$ref": "#/definitions/13431.0xc000e48cc0.false"
                 },
                 "name": {
                     "type": "string"
@@ -6839,7 +7240,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/12961.0xc00106ae10.false"
+                    "$ref": "#/definitions/12939.0xc00106f350.false"
                 },
                 "name": {
                     "type": "string"
@@ -6932,12 +7333,6 @@
                 },
                 "pool_role": {
                     "$ref": "#/definitions/models.PoolRole"
-                },
-                "zones": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ibm.Zone"
-                    }
                 }
             }
         },
@@ -6974,6 +7369,18 @@
                     "type": "string"
                 },
                 "subnet_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "ibm.Regions": {
+            "title": "Regions",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
                     "type": "string"
                 }
             }
@@ -7029,10 +7436,6 @@
                     "type": "string"
                 }
             }
-        },
-        "ibm.Zone": {
-            "title": "Zone",
-            "type": "object"
         },
         "key_utils.AWSKey": {
             "title": "AWSKey",
@@ -7230,6 +7633,10 @@
         {
             "name": "template/ibm",
             "description": "Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "cluster/ibm",
+            "description": "Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }
