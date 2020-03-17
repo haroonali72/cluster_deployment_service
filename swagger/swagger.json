@@ -5753,19 +5753,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10028.0xc000db4330.false": {
+        "13726.0xc043249f80.false": {
             "title": "false",
             "type": "object"
         },
-        "29793.0xc000b58990.false": {
+        "459.0xc043224240.false": {
             "title": "false",
             "type": "object"
         },
-        "4411.0xc000d92e70.false": {
+        "631.0xc042c95320.false": {
             "title": "false",
             "type": "object"
         },
-        "59682.0xc0008c9620.false": {
+        "637.0xc042f82bd0.false": {
             "title": "false",
             "type": "object"
         },
@@ -5821,7 +5821,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/59682.0xc0008c9620.false"
+                    "$ref": "#/definitions/631.0xc042c95320.false"
                 },
                 "name": {
                     "type": "string"
@@ -6389,7 +6389,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/29793.0xc000b58990.false"
+                    "$ref": "#/definitions/637.0xc042f82bd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7442,7 +7442,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10028.0xc000db4330.false"
+                    "$ref": "#/definitions/459.0xc043224240.false"
                 },
                 "name": {
                     "type": "string"
@@ -7576,7 +7576,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/4411.0xc000d92e70.false"
+                    "$ref": "#/definitions/13726.0xc043249f80.false"
                 },
                 "name": {
                     "type": "string"
