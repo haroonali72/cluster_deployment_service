@@ -2294,6 +2294,57 @@
                 }
             }
         },
+        "/cluster/gcp/getzones/{region}": {
+            "get": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "return zones against a region",
+                "operationId": "GcpClusterController.GetZonesAgainstRegion",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "profileid",
+                        "description": "profile of GCP",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of GCP",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/machine/info": {
             "get": {
                 "tags": [
@@ -5753,19 +5804,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10028.0xc000db4330.false": {
+        "13356.0xc00116fb60.false": {
             "title": "false",
             "type": "object"
         },
-        "29793.0xc000b58990.false": {
+        "442.0xc001125e00.false": {
             "title": "false",
             "type": "object"
         },
-        "4411.0xc000d92e70.false": {
+        "607.0xc000bb4ae0.false": {
             "title": "false",
             "type": "object"
         },
-        "59682.0xc0008c9620.false": {
+        "637.0xc000eae5d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -5821,7 +5872,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/59682.0xc0008c9620.false"
+                    "$ref": "#/definitions/607.0xc000bb4ae0.false"
                 },
                 "name": {
                     "type": "string"
@@ -6389,7 +6440,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/29793.0xc000b58990.false"
+                    "$ref": "#/definitions/637.0xc000eae5d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7442,7 +7493,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10028.0xc000db4330.false"
+                    "$ref": "#/definitions/442.0xc001125e00.false"
                 },
                 "name": {
                     "type": "string"
@@ -7576,7 +7627,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/4411.0xc000d92e70.false"
+                    "$ref": "#/definitions/13356.0xc00116fb60.false"
                 },
                 "name": {
                     "type": "string"
