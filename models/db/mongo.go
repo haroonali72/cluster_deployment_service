@@ -118,6 +118,7 @@ func GetMongoConf() mongConf {
 	conf.MongoGKEClusterCollection = beego.AppConfig.String("mongo_gke_cluster_collection")
 	conf.MongoGKETemplateCollection = beego.AppConfig.String("mongo_gke_template_collection")
 	conf.MongoDOClusterCollection = beego.AppConfig.String("mongo_do_cluster_collection")
+	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
 	conf.MongoDOTemplateCollection = beego.AppConfig.String("mongo_do_template_collection")
 	conf.MongoIBMClusterCollection = beego.AppConfig.String("mongo_ibm_cluster_collection")
 	conf.MongoIBMTemplateCollection = beego.AppConfig.String("mongo_ibm_template_collection")
@@ -160,6 +161,8 @@ type mongConf struct {
 	MongoIBMCustomerTemplateCollection   string
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
+	MongoDOKSClusterCollection           string
+
 }
 type tlsConfig struct {
 	ClientCert string

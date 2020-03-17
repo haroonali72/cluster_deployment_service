@@ -487,13 +487,7 @@ func DeleteGKECluster(projectId, companyId string, ctx utils.Context) error {
 	return nil
 }
 
-func DeployGKECluster(
-	cluster GKECluster,
-	credentials gcp.GcpCredentials,
-	companyId string,
-	token string,
-	ctx utils.Context,
-) (confError error) {
+func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, companyId string, token string, ctx utils.Context, ) (confError error) {
 
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
