@@ -1284,6 +1284,7 @@ func (c *GcpClusterController) ValidateProfile() {
 	c.Data["json"] = map[string]string{"msg": "profile is valid"}
 	c.ServeJSON()
 }
+
 // @Title GetZonesAgainstRegion
 // @Description return zones against a region
 // @Param	profileid	header	string	true	"profile of GCP"
