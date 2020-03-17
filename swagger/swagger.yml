@@ -191,6 +191,42 @@ paths:
           description: '{"error": "ami id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/aws/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/aws
+      description: Apply cloudplex Agent file to eks cluster
+      operationId: AWSClusterController.Start
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/aws/enablescaling/{projectId}/:
     post:
       tags:
@@ -636,6 +672,46 @@ paths:
             items:
               $ref: '#/definitions/azure.Cluster_Def'
         "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/azure/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/azure
+      description: Apply cloudplex Agent file to a aks cluster
+      operationId: AzureClusterController.Start
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        type: string
+      - in: header
+        name: resourceGroup
+        description: resourceGroup
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -1465,6 +1541,40 @@ paths:
           description: '{"error": "authorization params missing or invalid"}'
         "404":
           description: '{"error": "error msg"}'
+  /cluster/gcp/getzones/{region}:
+    get:
+      tags:
+      - cluster/gcp
+      description: return zones against a region
+      operationId: GcpClusterController.GetZonesAgainstRegion
+      parameters:
+      - in: header
+        name: profileid
+        description: profile of GCP
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: "true"
+        type: string
+      - in: path
+        name: region
+        description: region of GCP
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              type: string
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "authorization params missing or invalid"}'
+        "404":
+          description: '{"error": "error msg"}'
   /cluster/gcp/machine/info:
     get:
       tags:
@@ -1870,7 +1980,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/gke/config/{projectId}:
+  /cluster/gke/config/{zone}:
     get:
       tags:
       - cluster/gke
@@ -1881,6 +1991,10 @@ paths:
         name: X-Profile-Id
         description: vault credentials profile id
         required: true
+        type: string
+      - in: header
+        name: token
+        description: token
         type: string
       responses:
         "200":
@@ -3706,16 +3820,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  459.0xc04319d170.false:
+  442.0xc001125e00.false:
     title: "false"
     type: object
-  577.0xc042c35140.false:
+  607.0xc000bb4ae0.false:
     title: "false"
     type: object
-  637.0xc042f07620.false:
+  637.0xc000eae5d0.false:
     title: "false"
     type: object
-  13726.0xc0431daed0.false:
+  13356.0xc00116fb60.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3755,7 +3869,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc042c35140.false'
+        $ref: '#/definitions/607.0xc000bb4ae0.false'
       name:
         type: string
       network_name:
@@ -4138,7 +4252,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc042f07620.false'
+        $ref: '#/definitions/637.0xc000eae5d0.false'
       name:
         type: string
       network_name:
@@ -4861,7 +4975,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/459.0xc04319d170.false'
+        $ref: '#/definitions/442.0xc001125e00.false'
       name:
         type: string
       node_pools:
@@ -4951,7 +5065,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13726.0xc0431daed0.false'
+        $ref: '#/definitions/13356.0xc00116fb60.false'
       name:
         type: string
       node_pools:
