@@ -47,8 +47,7 @@ func IsBadConn(err error, allowTimeout bool) bool {
 		return false
 	}
 	if IsRedisError(err) {
-		// #790
-		return IsReadOnlyError(err)
+		return strings.HasPrefix(err.Error(), "READONLY ")
 	}
 	if allowTimeout {
 		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
@@ -82,8 +81,4 @@ func IsMovedError(err error) (moved bool, ask bool, addr string) {
 
 func IsLoadingError(err error) bool {
 	return strings.HasPrefix(err.Error(), "LOADING ")
-}
-
-func IsReadOnlyError(err error) bool {
-	return strings.HasPrefix(err.Error(), "READONLY ")
 }

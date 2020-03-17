@@ -1,5 +1,12 @@
 package models
 
+import (
+	"bytes"
+	"golang.org/x/crypto/ssh"
+	"io/ioutil"
+	"net"
+)
+
 type Type string
 
 const (
@@ -130,13 +137,14 @@ const (
 	AuditTrailLoggingURI = "audit/store"
 )
 const WoodPeckerCertificate = "/agent/api/v1/clientcert/{profileId}"
-const GCPAuthContianrName = "jhgcp"
+const GKEAuthContainerName = "jhgke"
+const AKSAuthContainerName = "jhaks"
+const EKSAuthContainerName = "jheks"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
 	Cores        int64  `json: "cores" `
 }
-
 type GCPMachine struct {
 	InstanceType string  `json: "instanceType" `
 	Cores        float64 `json: "cores" `
@@ -164,4 +172,38 @@ type GcpRegion struct {
 	Name     string `json: "name" `
 	Zone     string `json: "zone" `
 	Location string `json: "location" `
+}
+
+func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
+	clientPem, err := ioutil.ReadFile(privateKey)
+	if err != nil {
+		return "", err
+	}
+
+	key, err := ssh.ParsePrivateKey(clientPem)
+	if err != nil {
+		return "", err
+	}
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+	client, err := ssh.Dial("tcp", net.JoinHostPort(addr, "22"), config)
+	if err != nil {
+		return "", err
+	}
+	session, err := client.NewSession()
+	if err != nil {
+		return "", err
+	}
+	defer session.Close()
+	var b bytes.Buffer
+	session.Stdout = &b
+	err = session.Run(cmd)
+	return b.String(), err
 }

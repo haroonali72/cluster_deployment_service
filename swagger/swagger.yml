@@ -191,6 +191,42 @@ paths:
           description: '{"error": "ami id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/aws/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/aws
+      description: Apply cloudplex Agent file to eks cluster
+      operationId: AWSClusterController.Start
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/aws/enablescaling/{projectId}/:
     post:
       tags:
@@ -636,6 +672,46 @@ paths:
             items:
               $ref: '#/definitions/azure.Cluster_Def'
         "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/azure/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/azure
+      description: Apply cloudplex Agent file to a aks cluster
+      operationId: AzureClusterController.Start
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        type: string
+      - in: header
+        name: resourceGroup
+        description: resourceGroup
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -1870,7 +1946,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/gke/config/{projectId}:
+  /cluster/gke/config/{zone}:
     get:
       tags:
       - cluster/gke
@@ -1881,6 +1957,10 @@ paths:
         name: X-Profile-Id
         description: vault credentials profile id
         required: true
+        type: string
+      - in: header
+        name: token
+        description: token
         type: string
       responses:
         "200":
@@ -3706,16 +3786,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  459.0xc04319d170.false:
+  4411.0xc000d92e70.false:
     title: "false"
     type: object
-  577.0xc042c35140.false:
+  10028.0xc000db4330.false:
     title: "false"
     type: object
-  637.0xc042f07620.false:
+  29793.0xc000b58990.false:
     title: "false"
     type: object
-  13726.0xc0431daed0.false:
+  59682.0xc0008c9620.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3755,7 +3835,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/577.0xc042c35140.false'
+        $ref: '#/definitions/59682.0xc0008c9620.false'
       name:
         type: string
       network_name:
@@ -4138,7 +4218,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc042f07620.false'
+        $ref: '#/definitions/29793.0xc000b58990.false'
       name:
         type: string
       network_name:
@@ -4861,7 +4941,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/459.0xc04319d170.false'
+        $ref: '#/definitions/10028.0xc000db4330.false'
       name:
         type: string
       node_pools:
@@ -4951,7 +5031,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13726.0xc0431daed0.false'
+        $ref: '#/definitions/4411.0xc000d92e70.false'
       name:
         type: string
       node_pools:
