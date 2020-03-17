@@ -3,12 +3,18 @@ package doks
 import (
 	"antelope/models"
 	"antelope/models/db"
+	"antelope/models/gcp"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"antelope/models/woodpecker"
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
+	"golang.org/x/crypto/ssh"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
+	"net"
 	"strings"
 	"time"
 	rbacAuthentication "antelope/models/rbac_authentication"
@@ -41,7 +47,6 @@ type KubernetesCluster struct {
 	CreatedAt 			time.Time                			`json:"created_at,omitempty"`
 	UpdatedAt 			time.Time                			`json:"updated_at,omitempty"`
 }
-
 type KubernetesNodePool struct {
 	ID        	string            		`json:"id,omitempty"`
 	Name     	string            		`json:"name,omitempty"`
@@ -52,29 +57,36 @@ type KubernetesNodePool struct {
 	AutoScale 	bool             		`json:"auto_scale,omitempty"`
 	MinNodes  	int               		`json:"min_nodes,omitempty"`
 	MaxNodes  	int               		`json:"max_nodes,omitempty"`
-
 	Nodes 		[]*KubernetesNode 		`json:"nodes,omitempty"`
 }
 type KubernetesNode struct {
-	ID        string                `json:"id,omitempty"`
-	Name      string                `json:"name,omitempty"`
-	Status    *KubernetesNodeStatus `json:"status,omitempty"`
-	DropletID string                `json:"droplet_id,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	ID        	string                	`json:"id,omitempty"`
+	Name      	string                	`json:"name,omitempty"`
+	Status    	*KubernetesNodeStatus 	`json:"status,omitempty"`
+	DropletID 	string                	`json:"droplet_id,omitempty"`
+	CreatedAt 	time.Time 				`json:"created_at,omitempty"`
+	UpdatedAt 	time.Time 				`json:"updated_at,omitempty"`
+}
+type KubernetesNodeSize struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+type KubernetesRegion struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 type KubernetesMaintenancePolicy struct {
-	StartTime string                         `json:"start_time"`
-	Duration  string                         `json:"duration"`
-	Day       KubernetesMaintenancePolicyDay `json:"day"`
+	StartTime 	string                      `json:"start_time"`
+	Duration  	string                      `json:"duration"`
+	Day       	string 						`json:"day"`
 }
 type KubernetesClusterStatus struct {
-	State   KubernetesClusterStatusState `json:"state,omitempty"`
-	Message string                       `json:"message,omitempty"`
+	State   	string 						 `json:"state,omitempty"`
+	Message 	string                       `json:"message,omitempty"`
 }
 type KubernetesNodeStatus struct {
-	State   string `json:"state,omitempty"`
-	Message string `json:"message,omitempty"`
+	State   	string 						`json:"state,omitempty"`
+	Message 	string 						`json:"message,omitempty"`
 }
 
 
@@ -395,4 +407,65 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (*doks.
 	}
 
 	return gkeOps.getGKEVersions(ctx)
+}
+func TestDOKS(credentials vault.DOCredentials, companyId string, token string, ctx utils.Context, projetcID string, clusterName string) (confError error) {
+
+	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
+	output, err := remoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
+	}
+
+	if credentials.Zone != "" {
+		cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e zone=" + credentials.Region + "-" + credentials.Zone + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GCPAuthContianrName
+	} else {
+		cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e region=" + credentials.Region + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GCPAuthContianrName
+	}
+
+	output, err = remoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return
+	}
+	return nil
+}
+func remoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
+	clientPem, err := ioutil.ReadFile(privateKey)
+	if err != nil {
+		return "", err
+	}
+
+	key, err := ssh.ParsePrivateKey(clientPem)
+	if err != nil {
+		return "", err
+	}
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+	client, err := ssh.Dial("tcp", net.JoinHostPort(addr, "22"), config)
+	if err != nil {
+		return "", err
+	}
+	session, err := client.NewSession()
+	if err != nil {
+		return "", err
+	}
+	defer session.Close()
+	var b bytes.Buffer
+	session.Stdout = &b
+	err = session.Run(cmd)
+	return b.String(), err
 }

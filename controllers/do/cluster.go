@@ -565,7 +565,6 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
-
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
