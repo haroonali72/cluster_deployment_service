@@ -772,8 +772,8 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/validateProfile/{key}/{secret}:
-    get:
+  /cluster/aws/validateProfile/:
+    post:
       tags:
       - cluster/aws
       description: check if profile is valid
@@ -783,16 +783,12 @@ paths:
         name: token
         description: token
         type: string
-      - in: path
-        name: key
-        description: Access Key
+      - in: body
+        name: body
+        description: body for cluster content
         required: true
-        type: string
-      - in: path
-        name: secret
-        description: Access Secret
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/vault.AwsCredentials'
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
@@ -1216,8 +1212,8 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/azure/validateProfile/{clientId}/{clientSecret}/{subscriptionId}/{tenantId}:
-    get:
+  /cluster/azure/validateProfile/:
+    post:
       tags:
       - cluster/azure
       description: check if profile is valid
@@ -1227,29 +1223,15 @@ paths:
         name: token
         description: token
         type: string
-      - in: path
-        name: clientId
-        description: Client Id
+      - in: body
+        name: body
+        description: body for cluster content
         required: true
-        type: string
-      - in: path
-        name: clientSecret
-        description: Client Secret
-        required: true
-        type: string
-      - in: path
-        name: subscriptionId
-        description: Subscription Id
-        required: true
-        type: string
-      - in: path
-        name: tenantId
-        description: Tenant Id
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/vault.AzureCredentials'
       responses:
         "200":
-          description: '{"msg": "cluster created successfully"}'
+          description: '{"msg": "Profile is valid"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -1373,7 +1355,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/getregions/:
+  /cluster/do/getallregions/:
     get:
       tags:
       - cluster/do
@@ -1381,9 +1363,8 @@ paths:
       operationId: DOClusterController.GetRegions
       parameters:
       - in: header
-        name: profileid
-        description: profile of DO
-        required: true
+        name: X-Profile-Id
+        description: DO profile
         type: string
       - in: header
         name: token
@@ -1592,29 +1573,26 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/validateprofile/{key}:
-    get:
+  /cluster/do/validateprofile/:
+    post:
       tags:
       - cluster/do
       description: validate if profile is valid
       operationId: DOClusterController.ValidateProfile
       parameters:
-      - in: path
-        name: key
-        description: Access Key
-        required: true
-        type: string
       - in: header
         name: token
         description: "true"
         type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/vault.DOCredentials'
       responses:
         "200":
-          description: ""
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/godo.Region'
+          description: '{"msg": "Profile is valid"}'
         "400":
           description: '{"error": "error msg"}'
         "404":
@@ -1770,6 +1748,39 @@ paths:
       - cluster/gcp
       description: return all regions
       operationId: GcpClusterController.Get All Regions
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              type: string
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "authorization params missing or invalid"}'
+        "404":
+          description: '{"error": "error msg"}'
+  /cluster/gcp/getzones/{region}:
+    get:
+      tags:
+      - cluster/gcp
+      description: return zones against a region
+      operationId: GcpClusterController.GetZonesAgainstRegion
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: "true"
+        type: string
+      - in: header
+        name: token
+        description: "true"
+        type: string
+      - in: path
+        name: region
+        description: region of GCP
+        required: true
+        type: string
       responses:
         "200":
           description: ""
@@ -2414,8 +2425,37 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/op/{projectId}/{companyID}: {}
-  /cluster/op/{projectId}/{forceDelete}: {}
+  /cluster/op/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/op
+      description: delete a cluster
+      operationId: OPClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/op/all:
     get:
       tags:
@@ -2436,6 +2476,33 @@ paths:
               $ref: '#/definitions/op.Cluster_Def'
         "400":
           description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/op/checkCluster/{projectId}/:
+    get:
+      tags:
+      - cluster/op
+      description: validates a cluster
+      operationId: OPClusterController.ValidateCluster
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster is running successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /customerTemplate/register:
@@ -4164,22 +4231,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc00125dc80.false:
+  442.0xc0011fa270.false:
     title: "false"
     type: object
-  1260.string:
-    title: string
-    type: object
-  6051.0xc0012811a0.false:
+  607.0xc000c60f30.false:
     title: "false"
     type: object
-  12228.string:
-    title: string
-    type: object
-  13387.0xc000d161e0.false:
+  637.0xc000f5ca20.false:
     title: "false"
     type: object
-  13431.0xc001007ce0.false:
+  13356.0xc00121ffb0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -4331,7 +4392,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13387.0xc000d161e0.false'
+        $ref: '#/definitions/607.0xc000c60f30.false'
       name:
         type: string
       network_name:
@@ -4714,7 +4775,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc001007ce0.false'
+        $ref: '#/definitions/637.0xc000f5ca20.false'
       name:
         type: string
       network_name:
@@ -5438,7 +5499,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/6051.0xc0012811a0.false'
+        $ref: '#/definitions/442.0xc0011fa270.false'
       name:
         type: string
       node_pools:
@@ -5528,7 +5589,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc00125dc80.false'
+        $ref: '#/definitions/13356.0xc00121ffb0.false'
       name:
         type: string
       node_pools:
@@ -5541,6 +5602,38 @@ definitions:
         type: string
       token_name:
         type: string
+  vault.AwsCredentials:
+    title: AwsCredentials
+    type: object
+    properties:
+      access_key:
+        type: string
+      access_secret:
+        type: string
+      region:
+        type: string
+  vault.AzureCredentials:
+    title: AzureCredentials
+    type: object
+    properties:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+      region:
+        type: string
+      subscription_id:
+        type: string
+      tenant_id:
+        type: string
+  vault.DOCredentials:
+    title: DOCredentials
+    type: object
+    properties:
+      access_token:
+        type: string
+      region:
+        type: string
 tags:
 - name: health
   description: |
@@ -5548,6 +5641,12 @@ tags:
 - name: customerTemplate
   description: |
     customer template endpoint
+- name: template/op
+  description: |
+    Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: cluster/op
+  description: |
+    Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
 - name: template/aws
   description: |
     Operations about AWS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]

@@ -32,6 +32,16 @@ func init() {
 				&customer_template.CustomerTempalteController{},
 			),
 		),
+		beego.NSNamespace("/template/op",
+			beego.NSInclude(
+				&op.OPTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/op",
+			beego.NSInclude(
+				&op.OPClusterController{},
+			),
+		),
 		beego.NSNamespace("/template/aws",
 			beego.NSInclude(
 				&aws.AWSTemplateController{},
