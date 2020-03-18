@@ -1131,7 +1131,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/getallregions/:
+  /cluster/do/getregions/:
     get:
       tags:
       - cluster/do
@@ -3875,16 +3875,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0011b68a0.false:
+  459.0xc043258870.false:
     title: "false"
     type: object
-  607.0xc000c2b560.false:
+  631.0xc042cc9950.false:
     title: "false"
     type: object
-  637.0xc000f1b050.false:
+  637.0xc042fb7200.false:
     title: "false"
     type: object
-  13356.0xc0011f0600.false:
+  13726.0xc0432885d0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3924,7 +3924,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/607.0xc000c2b560.false'
+        $ref: '#/definitions/631.0xc042cc9950.false'
       name:
         type: string
       network_name:
@@ -4307,7 +4307,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc000f1b050.false'
+        $ref: '#/definitions/637.0xc042fb7200.false'
       name:
         type: string
       network_name:
@@ -5030,7 +5030,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0011b68a0.false'
+        $ref: '#/definitions/459.0xc043258870.false'
       name:
         type: string
       node_pools:
@@ -5120,7 +5120,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13356.0xc0011f0600.false'
+        $ref: '#/definitions/13726.0xc0432885d0.false'
       name:
         type: string
       node_pools:
