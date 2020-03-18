@@ -1,9 +1,11 @@
 package main
 
 import (
+	"antelope/models/aks"
 	"antelope/models/db"
 	"antelope/models/utils"
 	_ "antelope/routers"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
 	"os"
@@ -15,7 +17,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -40,6 +42,7 @@ func main() {
 	// TODO enable basic authentication if required
 	//authPlugin := auth.NewBasicAuthenticator(SecretAuth, "Authorization Required")
 	//beego.InsertFilter("*", beego.BeforeRouter, authPlugin)
+	myfunc()
 
 	beego.Run()
 }
@@ -79,4 +82,19 @@ func setEnv() {
 	os.Setenv("jump_host_ip", "52.220.196.92")
 	os.Setenv("jump_host_ssh_key", "/home/mahmad/ahmadnewkey.pem")
 	os.Setenv("woodpecker_url", "http://woodpecker:3300")
+}
+
+func myfunc() {
+	var creds aks.AKS
+	creds.Subscription = "aa94b050-2c52-4b7b-9ce3-2ac18253e61e"
+	creds.ID = "87b20591-1867-49ac-add7-ada0f22a70e4"
+	creds.Key = "IV54Er?tiv8H3CSYwjZzPaAMl*UoFl?="
+	creds.Tenant = "959c117c-1656-470a-8403-947584c67e55"
+	creds.Region = "east us 2"
+	err := creds.Init()
+	if err != nil {
+		fmt.Println(err)
+	}
+	//creds.CreateCluster(aks.AKSCluster{}, "", utils.Context{})
+	creds.ListClustersByResourceGroup(utils.Context{}, "haroontest8")
 }
