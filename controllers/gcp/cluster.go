@@ -1050,7 +1050,7 @@ func (c *GcpClusterController) GetCores() {
 	c.ServeJSON()
 }
 
-// @Title DeleteSSHKey
+// @Title DeleteSSHKeyat
 // @Description Delete SSH key
 // @Param	keyname	 	path	string	true	""
 // @Param	token		header	string	token 	""

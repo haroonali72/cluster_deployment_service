@@ -2415,7 +2415,7 @@
                     "cluster/gcp"
                 ],
                 "description": "Delete SSH key",
-                "operationId": "GcpClusterController.DeleteSSHKey",
+                "operationId": "GcpClusterController.DeleteSSHKeyat",
                 "parameters": [
                     {
                         "in": "path",
@@ -5804,19 +5804,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13356.0xc001133740.false": {
+        "13356.0xc0011afb60.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc0010fb9e0.false": {
+        "442.0xc001169e00.false": {
             "title": "false",
             "type": "object"
         },
-        "607.0xc000b946c0.false": {
+        "607.0xc000bf8ae0.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc000e961b0.false": {
+        "637.0xc000eee5d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -5872,7 +5872,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/607.0xc000b946c0.false"
+                    "$ref": "#/definitions/607.0xc000bf8ae0.false"
                 },
                 "name": {
                     "type": "string"
@@ -6440,7 +6440,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc000e961b0.false"
+                    "$ref": "#/definitions/637.0xc000eee5d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7493,7 +7493,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0010fb9e0.false"
+                    "$ref": "#/definitions/442.0xc001169e00.false"
                 },
                 "name": {
                     "type": "string"
@@ -7627,7 +7627,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13356.0xc001133740.false"
+                    "$ref": "#/definitions/13356.0xc0011afb60.false"
                 },
                 "name": {
                     "type": "string"
