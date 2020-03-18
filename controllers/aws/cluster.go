@@ -1510,7 +1510,7 @@ func (c *AWSClusterController) ValidateProfile() {
 // @router /applyagent/:projectId [post]
 func (c *AWSClusterController) ApplyAgent() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -1587,7 +1587,7 @@ func (c *AWSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("EKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go aws.ApplyAgent(awsProfile, token, *ctx, clusterName)
 

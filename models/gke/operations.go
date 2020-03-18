@@ -497,6 +497,6 @@ func GetGKE(credentials gcp.GcpCredentials) (GKE, error) {
 		Credentials: credentials.RawData,
 		ProjectId:   credentials.AccountData.ProjectId,
 		Region:      credentials.Region,
-		Zone:        credentials.Zone,
+		Zone:        credentials.Region + "-" + credentials.Zone,
 	}, nil
 }
