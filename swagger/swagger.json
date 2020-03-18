@@ -716,8 +716,8 @@
                 }
             }
         },
-        "/cluster/aws/validateProfile/": {
-            "post": {
+        "/cluster/aws/validateProfile/{key}/{secret}": {
+            "get": {
                 "tags": [
                     "cluster/aws"
                 ],
@@ -731,13 +731,18 @@
                         "type": "string"
                     },
                     {
-                        "in": "body",
-                        "name": "body",
-                        "description": "body for cluster content",
+                        "in": "path",
+                        "name": "key",
+                        "description": "Access Key",
                         "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/vault.AwsCredentials"
-                        }
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "secret",
+                        "description": "Access Secret",
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1432,8 +1437,8 @@
                 }
             }
         },
-        "/cluster/azure/validateProfile/": {
-            "post": {
+        "/cluster/azure/validateProfile/{clientId}/{clientSecret}/{subscriptionId}/{tenantId}": {
+            "get": {
                 "tags": [
                     "cluster/azure"
                 ],
@@ -1447,18 +1452,37 @@
                         "type": "string"
                     },
                     {
-                        "in": "body",
-                        "name": "body",
-                        "description": "body for cluster content",
+                        "in": "path",
+                        "name": "clientId",
+                        "description": "Client Id",
                         "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/vault.AzureCredentials"
-                        }
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "clientSecret",
+                        "description": "Client Secret",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "subscriptionId",
+                        "description": "Subscription Id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "tenantId",
+                        "description": "Tenant Id",
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"Profile is valid\"}"
+                        "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
@@ -1660,8 +1684,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "X-Profile-Id",
-                        "description": "DO profile",
+                        "name": "profileid",
+                        "description": "profile of DO",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1982,8 +2007,8 @@
                 }
             }
         },
-        "/cluster/do/validateprofile/": {
-            "post": {
+        "/cluster/do/validateprofile/{key}": {
+            "get": {
                 "tags": [
                     "cluster/do"
                 ],
@@ -1991,24 +2016,28 @@
                 "operationId": "DOClusterController.ValidateProfile",
                 "parameters": [
                     {
+                        "in": "path",
+                        "name": "key",
+                        "description": "Access Key",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "in": "header",
                         "name": "token",
                         "description": "true",
                         "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "body for cluster content",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/vault.DOCredentials"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"Profile is valid\"}"
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/godo.Region"
+                            }
+                        }
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
@@ -5860,19 +5889,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13356.0xc00121ffb0.false": {
+        "13726.0xc043279f80.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc0011fa270.false": {
+        "459.0xc043256240.false": {
             "title": "false",
             "type": "object"
         },
-        "607.0xc000c60f30.false": {
+        "631.0xc042cd5320.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc000f5ca20.false": {
+        "637.0xc042fb8bd0.false": {
             "title": "false",
             "type": "object"
         },
@@ -5928,7 +5957,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/607.0xc000c60f30.false"
+                    "$ref": "#/definitions/631.0xc042cd5320.false"
                 },
                 "name": {
                     "type": "string"
@@ -6496,7 +6525,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc000f5ca20.false"
+                    "$ref": "#/definitions/637.0xc042fb8bd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7549,7 +7578,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0011fa270.false"
+                    "$ref": "#/definitions/459.0xc043256240.false"
                 },
                 "name": {
                     "type": "string"
@@ -7683,7 +7712,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13356.0xc00121ffb0.false"
+                    "$ref": "#/definitions/13726.0xc043279f80.false"
                 },
                 "name": {
                     "type": "string"
@@ -7701,54 +7730,6 @@
                     "type": "string"
                 },
                 "token_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "vault.AwsCredentials": {
-            "title": "AwsCredentials",
-            "type": "object",
-            "properties": {
-                "access_key": {
-                    "type": "string"
-                },
-                "access_secret": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                }
-            }
-        },
-        "vault.AzureCredentials": {
-            "title": "AzureCredentials",
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "string"
-                },
-                "client_secret": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "subscription_id": {
-                    "type": "string"
-                },
-                "tenant_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "vault.DOCredentials": {
-            "title": "DOCredentials",
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "region": {
                     "type": "string"
                 }
             }
