@@ -36,15 +36,6 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"],
 		beego.ControllerComments{
-			Method:           "CheckCluster",
-			Router:           `/:projectId/:companyID`,
-			AllowHTTPMethods: []string{"Get"},
-			MethodParams:     param.Make(),
-			Filters:          nil,
-			Params:           nil})
-
-	beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"],
-		beego.ControllerComments{
 			Method:           "Delete",
 			Router:           `/:projectId/:forceDelete`,
 			AllowHTTPMethods: []string{"delete"},
@@ -57,6 +48,15 @@ func init() {
 			Method:           "GetAll",
 			Router:           `/all`,
 			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"],
+		beego.ControllerComments{
+			Method:           "CheckCluster",
+			Router:           `checkCluster/:projectId/:companyID`,
+			AllowHTTPMethods: []string{"Get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})
