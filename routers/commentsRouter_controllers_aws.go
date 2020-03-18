@@ -172,8 +172,8 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
 		beego.ControllerComments{
 			Method:           "ValidateProfile",
-			Router:           `/validateProfile/:key/:secret`,
-			AllowHTTPMethods: []string{"get"},
+			Router:           `/validateProfile/`,
+			AllowHTTPMethods: []string{"post"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})
