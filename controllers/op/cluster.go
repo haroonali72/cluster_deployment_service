@@ -462,16 +462,16 @@ func (c *OPClusterController) Delete() {
 	c.ServeJSON()
 }
 
-// @Title ValidateCluster
+// @Title CheckCluster
 // @Description validates a cluster
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"project id of the cluster"
-// @Success 200 {"msg": "cluster is runing successfully"}
+// @Success 200 {"msg": "cluster is running successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId/:companyID  [Get]
+// @router checkCluster/:projectId/:companyID  [Get]
 func (c *OPClusterController) CheckCluster() {
 	id := c.GetString(":projectId")
 	if id == "" {
