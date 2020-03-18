@@ -6,6 +6,7 @@ import (
 	"antelope/models/do"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
@@ -968,18 +969,18 @@ func (c *DOClusterController) PostSSHKey() {
 
 // @Title GetRegions
 // @Description return regions and their supported machine sizes
-// @Param	profileid	header	string	true	"profile of DO"
+// @Param	X-Profile-Id	header	string	X-Profile-Id	"DO profile"
 // @Param	token	header	string	token  true""
 // @Success 200 {object} []godo.Region
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @router /getregions/ [get]
+// @router /getallregions/ [get]
 func (c *DOClusterController) GetRegions() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("DOClusterController: GellZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOClusterController: GetallZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("profileid")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profileid is empty"}
@@ -1120,24 +1121,19 @@ func (c *DOClusterController) DeleteSSHKey() {
 
 // @Title ValidateProfile
 // @Description validate if profile is valid
-// @Param	key	 path	string	true "Access Key"
 // @Param	token	header	string	token  true""
-// @Success 200 {object} []godo.Region
+// @Param	body	body 	vault.DOCredentials		true	"body for cluster content"
+// @Success 200 {"msg": "Profile is valid"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @router /validateprofile/:key [get]
+// @router /validateprofile/ [post]
 func (c *DOClusterController) ValidateProfile() {
+
+	var credentials vault.DOCredentials
+	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOClusterController:Check if profile is valid.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	key := c.GetString(":key")
-	if key == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -1161,7 +1157,7 @@ func (c *DOClusterController) ValidateProfile() {
 
 	ctx.SendLogs("DOClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = do.ValidateProfile(key, *ctx)
+	err = do.ValidateProfile(credentials.AccessKey, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": err.Error()}

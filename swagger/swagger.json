@@ -1674,61 +1674,7 @@
                 }
             }
         },
-        "/cluster/do/applyagent/{projectId}": {
-            "post": {
-                "tags": [
-                    "cluster/do"
-                ],
-                "description": "Apply cloudplex Agent file to eks cluster",
-                "operationId": "DOClusterController.Start",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "clusterName",
-                        "description": "clusterName",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"Agent Applied successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/do/getregions/": {
+        "/cluster/do/getallregions/": {
             "get": {
                 "tags": [
                     "cluster/do"
@@ -2326,6 +2272,56 @@
                 ],
                 "description": "return all regions",
                 "operationId": "GcpClusterController.Get All Regions",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/gcp/getzones/{region}": {
+            "get": {
+                "tags": [
+                    "cluster/gcp"
+                ],
+                "description": "return zones against a region",
+                "operationId": "GcpClusterController.GetZonesAgainstRegion",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "true",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of GCP",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -3338,6 +3334,47 @@
                 }
             }
         },
+        "/cluster/op/checkCluster/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "validates a cluster",
+                "operationId": "OPClusterController.ValidateCluster",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster is running successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/op/{projectId}/": {
             "get": {
                 "tags": [
@@ -3379,8 +3416,53 @@
                 }
             }
         },
-        "/cluster/op/{projectId}/{companyID}": {},
-        "/cluster/op/{projectId}/{forceDelete}": {},
+        "/cluster/op/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "delete a cluster",
+                "operationId": "OPClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/customerTemplate/register": {
             "post": {
                 "tags": [
@@ -5807,19 +5889,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10028.0xc000e2c000.false": {
+        "13726.0xc043279f80.false": {
             "title": "false",
             "type": "object"
         },
-        "29823.0xc000bc3d70.false": {
+        "459.0xc043256240.false": {
             "title": "false",
             "type": "object"
         },
-        "4411.0xc000e0ab40.false": {
+        "631.0xc042cd5320.false": {
             "title": "false",
             "type": "object"
         },
-        "59682.0xc0009389f0.false": {
+        "637.0xc042fb8bd0.false": {
             "title": "false",
             "type": "object"
         },
@@ -5875,7 +5957,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/59682.0xc0009389f0.false"
+                    "$ref": "#/definitions/631.0xc042cd5320.false"
                 },
                 "name": {
                     "type": "string"
@@ -6443,7 +6525,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/29823.0xc000bc3d70.false"
+                    "$ref": "#/definitions/637.0xc042fb8bd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7496,7 +7578,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10028.0xc000e2c000.false"
+                    "$ref": "#/definitions/459.0xc043256240.false"
                 },
                 "name": {
                     "type": "string"
@@ -7630,7 +7712,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/4411.0xc000e0ab40.false"
+                    "$ref": "#/definitions/13726.0xc043279f80.false"
                 },
                 "name": {
                     "type": "string"
@@ -7661,6 +7743,14 @@
         {
             "name": "customerTemplate",
             "description": "customer template endpoint\n"
+        },
+        {
+            "name": "template/op",
+            "description": "Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "cluster/op",
+            "description": "Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         },
         {
             "name": "template/aws",
@@ -7701,14 +7791,6 @@
         {
             "name": "cluster/do",
             "description": "Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
-        },
-        {
-            "name": "template/op",
-            "description": "Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
-        },
-        {
-            "name": "cluster/op",
-            "description": "Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }

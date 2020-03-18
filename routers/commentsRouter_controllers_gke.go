@@ -64,7 +64,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/gke:GKEClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gke:GKEClusterController"],
 		beego.ControllerComments{
 			Method:           "GetServerConfig",
-			Router:           `/config/:projectId`,
+			Router:           `/config/:zone`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

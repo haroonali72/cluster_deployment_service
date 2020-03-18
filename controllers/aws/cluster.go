@@ -6,6 +6,7 @@ import (
 	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
@@ -1419,15 +1420,14 @@ func (c *AWSClusterController) GetAllMachines() {
 // @Title Validate Profile
 // @Description check if profile is valid
 // @Param	token	header	string	token ""
-// @Param	key	path	string	true	"Access Key"
-// @Param	secret	path	string	true	"Access Secret"
+// @Param	body	body 	vault.AwsCredentials		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 409 {"error": "profile is invalid"}
 // @Failure 500 {"error": "error msg"}
-// @router /validateProfile/:key/:secret [get]
+// @router /validateProfile/ [post]
 func (c *AWSClusterController) ValidateProfile() {
 
 	ctx := new(utils.Context)
@@ -1440,20 +1440,9 @@ func (c *AWSClusterController) ValidateProfile() {
 		return
 	}
 
-	key := c.GetString(":key")
-	if key == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "ami id is empty"}
-		c.ServeJSON()
-		return
-	}
-	secret := c.GetString(":secret")
-	if secret == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "ami id is empty"}
-		c.ServeJSON()
-		return
-	}
+	var credentials vault.AwsCredentials
+	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -1477,7 +1466,7 @@ func (c *AWSClusterController) ValidateProfile() {
 	}
 
 	for _, region := range regions {
-		err = aws.ValidateProfile(key, secret, region.Location, *ctx)
+		err = aws.ValidateProfile(credentials.AccessKey, credentials.SecretKey, region.Location, *ctx)
 		if err != nil {
 			ctx.SendLogs("AWSClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(409)
