@@ -191,16 +191,16 @@ func (c *AKSClusterController) GetAll() {
 		return
 	}
 
-	clusters, err := gke.GetAllGKECluster(data, *ctx)
+	clusters, err := aks.GetAllAKSCluster(data, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("All GKE cluster fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("All AKS cluster fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -208,7 +208,7 @@ func (c *AKSClusterController) GetAll() {
 // @Title Add
 // @Description add a new cluster
 // @Param	token	header	string	token ""
-// @Param	body	body 	gke.GKECluster		true	"body for cluster content"
+// @Param	body	body 	aks.AKSCluster		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -216,9 +216,9 @@ func (c *AKSClusterController) GetAll() {
 // @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
-func (c *GKEClusterController) Post() {
+func (c *AKSClusterController) Post() {
 
-	var cluster gke.GKECluster
+	var cluster aks.AKSCluster
 
 	ctx := new(utils.Context)
 
@@ -242,9 +242,9 @@ func (c *GKEClusterController) Post() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GKEClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -259,14 +259,14 @@ func (c *GKEClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	beego.Info("GKEClusterController: JSON Payload: ", cluster)
+	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
 	cluster.CompanyId = userInfo.CompanyId
 
-	err = gke.AddGKECluster(cluster, *ctx)
+	err = aks.AddAKSCluster(cluster, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
@@ -284,7 +284,7 @@ func (c *GKEClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -292,7 +292,7 @@ func (c *GKEClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	body	body 	gke.GKECluster	true	"body for cluster content"
+// @Param	body	body 	aks.AKSCluster	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -300,10 +300,10 @@ func (c *GKEClusterController) Post() {
 // @Failure 404 {"error": "no cluster exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
-func (c *GKEClusterController) Patch() {
+func (c *AKSClusterController) Patch() {
 	ctx := new(utils.Context)
 
-	var cluster gke.GKECluster
+	var cluster aks.AKSCluster
 	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
@@ -325,9 +325,9 @@ func (c *GKEClusterController) Patch() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GKEClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: update cluster cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -341,10 +341,10 @@ func (c *GKEClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("GKEClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	beego.Info("GKEClusterController: JSON Payload: ", cluster)
+	ctx.SendLogs("AKSClusterController: Patch cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
-	err = gke.UpdateGKECluster(cluster, *ctx)
+	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "does not exist") {
@@ -377,7 +377,7 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
