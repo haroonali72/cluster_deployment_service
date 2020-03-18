@@ -18,7 +18,7 @@ type Cluster_Def struct {
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(OP|op)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
