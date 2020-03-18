@@ -118,8 +118,8 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
         beego.ControllerComments{
             Method: "ValidateProfile",
-            Router: `/validateprofile/:key`,
-            AllowHTTPMethods: []string{"get"},
+            Router: `/validateprofile/`,
+            AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
