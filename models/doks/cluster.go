@@ -3,90 +3,82 @@ package doks
 import (
 	"antelope/models"
 	"antelope/models/db"
-	"antelope/models/gcp"
+	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
-	"antelope/models/woodpecker"
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
-	"golang.org/x/crypto/ssh"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
-	"net"
 	"strings"
 	"time"
-	rbacAuthentication "antelope/models/rbac_authentication"
 )
 
 type KubernetesClusterConfig struct{
 	KubeconfigYAML []byte
 }
 type KubernetesCluster struct {
-	ID            		string   							`json:"id,omitempty"`
-	ProjectId			string								`json:"id,omitempty"`
-	CompanyId			string								`json:"id,omitempty"`
-	Cloud            	models.Cloud  						`json:"cloud" bson:"cloud"`
+	ID            		string   							`json:"id,omitempty" bson:"id"`
+	ProjectId			string								`json:"project_id" bson:"project_id" valid:"required"`
+	CompanyId			string								`json:"company_id" bson:"company_id" valid:"required"`
+	Cloud            	models.Cloud  						`json:"cloud" bson:"cloud" valid:"required"`
 	CreationDate     	time.Time     						`json:"-" bson:"creation_date"`
 	ModificationDate 	time.Time     						`json:"-" bson:"modification_date"`
 	CloudplexStatus  	string        						`json:"status" bson:"status"`
-	Name          		string   							`json:"name,omitempty"`
-	RegionSlug    		string  							`json:"region,omitempty"`
-	VersionSlug  		string   							`json:"version,omitempty"`
-	ClusterSubnet 		string   							`json:"cluster_subnet,omitempty"`
-	ServiceSubnet 		string   							`json:"service_subnet,omitempty"`
-	IPv4          		string   							`json:"ipv4,omitempty"`
-	Endpoint      		string   							`json:"endpoint,omitempty"`
-	Tags          		[]string 							`json:"tags,omitempty"`
-	VPCUUID       		string   							`json:"vpc_uuid,omitempty"`
-	NodePools 			[]*KubernetesNodePool 				`json:"node_pools,omitempty"`
-	MaintenancePolicy 	*KubernetesMaintenancePolicy 		`json:"maintenance_policy,omitempty"`
-	AutoUpgrade       	bool                         		`json:"auto_upgrade,omitempty"`
-	Status   	 		*KubernetesClusterStatus 			`json:"status,omitempty"`
-	CreatedAt 			time.Time                			`json:"created_at,omitempty"`
-	UpdatedAt 			time.Time                			`json:"updated_at,omitempty"`
+	Name          		string   							`json:"name,omitempty" bson:"name" valid:"required"`
+	Region    			string  							`json:"region,omitempty" bson:"region" `
+	Version		  		string   							`json:"version,omitempty" bson:"version" "`
+	ClusterSubnet 		string   							`json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
+	ServiceSubnet 		string   							`json:"service_subnet,omitempty" bson:"service_subnet"`
+	IPv4          		string   							`json:"ipv4,omitempty" bson:"ivp4"`
+	Endpoint      		string   							`json:"endpoint,omitempty" bson:"endpoint"`
+	Tags          		[]string 							`json:"tags,omitempty" bson:"tags"`
+	VPCUUID       		string   							`json:"vpc_uuid,omitempty" bson:"vpc_uuid"`
+	NodePools 			[]*KubernetesNodePool 				`json:"node_pools,omitempty" bson:"node_pools"`
+	MaintenancePolicy 	*KubernetesMaintenancePolicy 		`json:"maintenance_policy,omitempty" bson:"maintenance_policy"`
+	AutoUpgrade       	bool                         		`json:"auto_upgrade,omitempty" bson:"auto_upgrade"`
+	Status   	 		*KubernetesClusterStatus 			`json:"status,omitempty" bson:"status"`
 }
 type KubernetesNodePool struct {
-	ID        	string            		`json:"id,omitempty"`
-	Name     	string            		`json:"name,omitempty"`
-	Size      	string            		`json:"size,omitempty"`
-	Count     	int               		`json:"count,omitempty"`
-	Tags      	[]string          		`json:"tags,omitempty"`
-	Labels    	map[string]string 		`json:"labels,omitempty"`
-	AutoScale 	bool             		`json:"auto_scale,omitempty"`
-	MinNodes  	int               		`json:"min_nodes,omitempty"`
-	MaxNodes  	int               		`json:"max_nodes,omitempty"`
-	Nodes 		[]*KubernetesNode 		`json:"nodes,omitempty"`
+	ID        	string            		`json:"id,omitempty"  bson:"id"`
+	Name     	string            		`json:"name,omitempty"  bson:"name"`
+	Size      	string            		`json:"size,omitempty"  bson:"size"`
+	Count     	int               		`json:"count,omitempty"  bson:"count"`
+	Tags      	[]string          		`json:"tags,omitempty"  bson:"tags"`
+	Labels    	map[string]string 		`json:"labels,omitempty"  bson:"labels"`
+	AutoScale 	bool             		`json:"auto_scale,omitempty"  bson:"auto_scale"`
+	MinNodes  	int               		`json:"min_nodes,omitempty"  bson:"min_nodes"`
+	MaxNodes  	int               		`json:"max_nodes,omitempty"  bson:"max_nodes"`
+	Nodes 		[]*KubernetesNode 		`json:"nodes,omitempty"  bson:"nodes"`
 }
 type KubernetesNode struct {
-	ID        	string                	`json:"id,omitempty"`
-	Name      	string                	`json:"name,omitempty"`
-	Status    	*KubernetesNodeStatus 	`json:"status,omitempty"`
-	DropletID 	string                	`json:"droplet_id,omitempty"`
-	CreatedAt 	time.Time 				`json:"created_at,omitempty"`
-	UpdatedAt 	time.Time 				`json:"updated_at,omitempty"`
+	ID        	string                	`json:"id,omitempty" bson:"id"`
+	Name      	string                	`json:"name,omitempty" bson:"name"`
+	Status    	*KubernetesNodeStatus 	`json:"status,omitempty" bson:"status"`
+	DropletID 	string                	`json:"droplet_id,omitempty" bson:"droplet_id"`
+	CreatedAt 	time.Time 				`json:"created_at,omitempty" bson:"created_at"`
+	UpdatedAt 	time.Time 				`json:"updated_at,omitempty" bson:"updated_at"`
 }
 type KubernetesNodeSize struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name string `json:"name" bson:"name"`
+	Slug string `json:"slug" bson:"slug"`
 }
 type KubernetesRegion struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name string `json:"name" bson:"name"`
+	Slug string `json:"slug" bson:"slug"`
 }
 type KubernetesMaintenancePolicy struct {
-	StartTime 	string                      `json:"start_time"`
-	Duration  	string                      `json:"duration"`
-	Day       	string 						`json:"day"`
+	StartTime 	string                      `json:"start_time" bson:"start_time"`
+	Duration  	string                      `json:"duration" bson:"duration"`
+	Day       	string 						`json:"day" bson:"day"`
 }
 type KubernetesClusterStatus struct {
-	State   	string 						 `json:"state,omitempty"`
-	Message 	string                       `json:"message,omitempty"`
+	State   	string 						 `json:"state,omitempty" bson:"state"`
+	Message 	string                       `json:"message,omitempty" bson:"message"`
 }
 type KubernetesNodeStatus struct {
-	State   	string 						`json:"state,omitempty"`
-	Message 	string 						`json:"message,omitempty"`
+	State   	string 						`json:"state,omitempty" bson:"state"`
+	Message 	string 						`json:"message,omitempty" bson:"message"`
 }
 
 
@@ -245,11 +237,11 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return err
 	}
 
-	err = doksOps.init()
+	err = doksOps.init(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status = "Cluster creation failed"
-		confError = UpdateDOKSCluster(cluster, ctx)
+		cluster.Status.State = "Cluster creation failed"
+		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -259,14 +251,13 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	confError = doksOps.CreateCluster(cluster, token, ctx)
-
+	_,confError = doksOps.createCluster(cluster,  ctx,companyId,token)
 	if confError != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
-		cluster.Status = "Cluster creation failed"
-		confError = UpdateDOKSCluster(cluster, ctx)
+		cluster.Status.State = "Cluster creation failed"
+		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -276,9 +267,9 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return nil
 	}
 
-	cluster.Status = "Cluster Created"
+	cluster.Status.State = "Cluster Created"
 
-	confError = UpdateDOKSCluster(cluster, ctx)
+	confError = UpdateKubernetesCluster(cluster, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -291,25 +282,25 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	return nil
 }
 func FetchStatus(credentials vault.DOCredentials, token, projectId, companyId string, ctx utils.Context) (KubernetesCluster, error) {
-	cluster, err := GetGKECluster(projectId, companyId, ctx)
+	cluster, err := GetKubernetesCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
 
-	gkeOps, err := GetGKE(credentials)
+	gkeOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
 
-	err = gkeOps.init()
+	err = gkeOps.init(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
 
-	err = gkeOps.fetchClusterStatus(&cluster, ctx)
+	//_,err = gkeOps.fetchStatus(&cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
@@ -325,33 +316,33 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 		return pubErr
 	}
 
-	cluster, err := GetGKECluster(projectId, companyId, ctx)
+	cluster, err := GetKubernetesCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	if cluster.Status == "" || cluster.Status == "new" {
+	if cluster.Status.State == "" || cluster.Status.State == "new" {
 		text := "GKEClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return errors.New(text)
 	}
 
-	gkeOps, err := GetGKE(credentials)
+	gkeOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status.State = string(models.Terminating)
 	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = gkeOps.init()
+	err = gkeOps.init(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Terminate -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status = "Cluster Termination Failed"
-		err = UpdateGKECluster(cluster, ctx)
+		cluster.Status.State = "Cluster Termination Failed"
+		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -362,12 +353,12 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 		return err
 	}
 
-	err = gkeOps.deleteCluster(cluster, ctx)
+	_,err = gkeOps.deleteCluster(cluster, ctx,projectId,companyId)
 	if err != nil {
 		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
-		err = UpdateGKECluster(cluster, ctx)
+		cluster.Status.State = "Cluster Termination Failed"
+		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -379,9 +370,9 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 		return nil
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status.State = "Cluster Terminated"
 
-	err = UpdateGKECluster(cluster, ctx)
+	err = UpdateKubernetesCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -393,21 +384,22 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (*doks.ServerConfig, error) {
-	gkeOps, err := GetGKE(credentials)
+func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) ( KubernetesClusterConfig, error) {
+	gkeOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : GetServerConfig - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, err
+		return KubernetesClusterConfig{}, err
 	}
 
-	err = gkeOps.init()
+	err = gkeOps.init(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : GetServerConfig -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, err
+		return KubernetesClusterConfig{}, err
 	}
 
-	return gkeOps.getGKEVersions(ctx)
+	return KubernetesClusterConfig{},nil
 }
+/*
 func TestDOKS(credentials vault.DOCredentials, companyId string, token string, ctx utils.Context, projetcID string, clusterName string) (confError error) {
 
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
@@ -468,4 +460,12 @@ func remoteRun(user string, addr string, privateKey string, cmd string) (string,
 	session.Stdout = &b
 	err = session.Run(cmd)
 	return b.String(), err
+}
+
+ */
+func GetDOKS(credentials vault.DOCredentials) (DOKS, error) {
+	return DOKS{
+		AccessKey : credentials.AccessKey,
+		Region   : credentials.Region,
+	}, nil
 }

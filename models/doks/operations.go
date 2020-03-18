@@ -1,7 +1,6 @@
 package doks
 
 import (
-	"antelope/modelrs/doks"
 	"antelope/models"
 	"antelope/models/api_handler"
 	"fmt"
@@ -107,12 +106,12 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 
 	input :=godo.KubernetesClusterCreateRequest{
 		Name:              cluster.Name,
-		RegionSlug:        cluster.RegionSlug,
-		VersionSlug:       cluster.VersionSlug,
+		RegionSlug:        cluster.Region,
+		VersionSlug:       cluster.Version,
 		Tags:              cluster.Tags,
 		VPCUUID:           cluster.VPCUUID,
-		NodePools:         cluster.NodePools,
-		MaintenancePolicy: cluster.MaintenancePolicy,
+		//NodePools:         cluster.NodePools,
+		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade:       cluster.AutoUpgrade,
 	}
 
@@ -175,7 +174,7 @@ func (cloud *DOKS) createNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 
 	_,resp,err :=cloud.Client.Kubernetes.CreateNodePool(context.Background(),clusterId,&input)
 	if err == nil{
-		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", projectId)
 		return *nodepool, err
 	}
 
@@ -183,17 +182,43 @@ func (cloud *DOKS) createNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 
 	return *nodepool, nil
 }
-func (cloud *DOKS) deleteCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) deleteNodepool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) deleteNode(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) GetCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) GetNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) GetKubeConfig(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) ListCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) ListNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) getVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
-func (cloud *DOKS) fetchStatus(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {}
+func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context,projectId,companyId string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) deleteNodepool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) deleteNode(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) GetCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) GetNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) GetKubeConfig(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) ListCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) ListNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) getVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
+func (cloud *DOKS) fetchStatus(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+	return KubernetesNodePool{}, nil
+}
 

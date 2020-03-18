@@ -2,15 +2,13 @@ package doks
 
 import (
 	"antelope/models"
-	"antelope/models/doks"
 	"antelope/models/do"
+	"antelope/models/doks"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
-	"time"
 )
 type DOKSClusterController struct {
 	beego.Controller
@@ -261,7 +259,7 @@ func (c *DOKSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -269,13 +267,13 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
@@ -600,8 +598,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", cluster.ProjectId)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -727,8 +724,7 @@ func (c *DOKSClusterController) GetStatus() {
 	}
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		utils.SendLog(userInfo.CompanyId, "File not fetched ", "error", projectId)
+		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", projectId)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -850,7 +846,15 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	go doks.TerminateCluster(credentials, projectId, userInfo.CompanyId, *ctx)
+	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", cluster.ProjectId)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	go doks.TerminateCluster(doProfile.Profile, projectId, userInfo.CompanyId, *ctx)
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
@@ -939,8 +943,15 @@ func (c *DOKSClusterController) ApplyAgent() {
 
 
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	go doks.TestDOKS(credentials, userInfo.CompanyId, token, *ctx, projectId, clusterName)
+	_, err = do.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", projectId)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+//	go doks.TestDOKS(doProfile.Profile, userInfo.CompanyId, token, *ctx, projectId, clusterName)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()

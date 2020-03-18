@@ -13,6 +13,7 @@ import (
 	"antelope/controllers/azure"
 	"antelope/controllers/customer_template"
 	"antelope/controllers/do"
+	"antelope/controllers/doks"
 	"antelope/controllers/gcp"
 	"antelope/controllers/gke"
 	"antelope/controllers/op"
@@ -79,6 +80,11 @@ func init() {
 		beego.NSNamespace("/cluster/do",
 			beego.NSInclude(
 				&do.DOClusterController{},
+			),
+		),
+		beego.NSNamespace("/cluster/doks",
+			beego.NSInclude(
+				&doks.DOKSClusterController{},
 			),
 		),
 		beego.NSNamespace("/template/op",
