@@ -1287,7 +1287,7 @@ func (c *GcpClusterController) ValidateProfile() {
 
 // @Title GetZonesAgainstRegion
 // @Description return zones against a region
-// @Param	X-Profile-Id	header	string	profileId	true""
+// @Param	X-Profile-Id	header	string	X-Profile-Id	true""
 // @Param	token	header	string	token  true""
 // @Param	region	path	string	true	"region of GCP"
 // @Success 200 {object} []string
