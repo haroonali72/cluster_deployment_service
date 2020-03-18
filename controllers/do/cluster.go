@@ -973,11 +973,11 @@ func (c *DOClusterController) PostSSHKey() {
 // @Success 200 {object} []godo.Region
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @router /getregions/ [get]
+// @router /getallregions/ [get]
 func (c *DOClusterController) GetRegions() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("DOClusterController: GellZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOClusterController: GetallZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("profileid")
 	if profileId == "" {
