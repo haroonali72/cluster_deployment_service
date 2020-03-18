@@ -3,8 +3,7 @@ package aks
 import (
 	"antelope/models"
 	"antelope/models/aks"
-	"antelope/models/gcp"
-	"antelope/models/gke"
+	"antelope/models/azure"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
@@ -12,70 +11,10 @@ import (
 	"strings"
 )
 
-// Operations about GKE cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+// Operations about AKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
 type AKSClusterController struct {
 	beego.Controller
 }
-
-// @Title Get
-// @Description get cluster
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	token ""
-// @Success 200 {object} aks.ServerConfig
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
-// @router /config/:zone [get]
-//func (c *GKEClusterController) GetServerConfig() {
-//	ctx := new(utils.Context)
-//
-//	profileId := c.Ctx.Input.Header("X-Profile-Id")
-//	if profileId == "" {
-//		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-//		c.Ctx.Output.SetStatus(400)
-//		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-//		c.ServeJSON()
-//		return
-//	}
-//
-//	zone := c.GetString(":zone")
-//	if zone == "" {
-//		ctx.SendLogs("GKEClusterController: Zone field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-//		c.Ctx.Output.SetStatus(400)
-//		c.Data["json"] = map[string]string{"error": "zone is empty"}
-//		c.ServeJSON()
-//		return
-//	}
-//
-//	token := c.Ctx.Input.Header("token")
-//	if token == "" {
-//		c.Ctx.Output.SetStatus(400)
-//		c.Data["json"] = map[string]string{"error": "token is empty"}
-//		c.ServeJSON()
-//		return
-//	}
-//
-//	isValid, credentials := gcp.IsValidGcpCredentials(profileId, "", token, zone, *ctx)
-//	if !isValid {
-//		ctx.SendLogs("GKEClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-//		c.Ctx.Output.SetStatus(401)
-//		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
-//		c.ServeJSON()
-//		return
-//	}
-//
-//	config, err := gke.GetServerConfig(credentials, *ctx)
-//	if err != nil {
-//		ctx.SendLogs("GKEClusterController: error getting gke server config "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-//		c.Ctx.Output.SetStatus(500)
-//		c.Data["json"] = map[string]string{"error": err.Error()}
-//		c.ServeJSON()
-//		return
-//	}
-//
-//	c.Data["json"] = config
-//	c.ServeJSON()
-//}
 
 // @Title Get
 // @Description get cluster
@@ -208,7 +147,7 @@ func (c *AKSClusterController) GetAll() {
 // @Title Add
 // @Description add a new cluster
 // @Param	token	header	string	token ""
-// @Param	body	body 	aks.AKSCluster		true	"body for cluster content"
+// @Param body body aks.AKSCluster true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -392,13 +331,13 @@ func (c *AKSClusterController) Patch() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId/:forceDelete  [delete]
-func (c *GKEClusterController) Delete() {
+// @router /:projectId/:forceDelete [delete]
+func (c *AKSClusterController) Delete() {
 	ctx := new(utils.Context)
 
 	id := c.GetString(":projectId")
 	if id == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -429,9 +368,9 @@ func (c *GKEClusterController) Delete() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GKEClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
+	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -446,9 +385,9 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.GetGKECluster(id, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -456,7 +395,7 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 	if strings.ToLower(cluster.Status) == string(models.ClusterCreated) && !forceDelete {
-		ctx.SendLogs("GKEClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
@@ -464,7 +403,7 @@ func (c *GKEClusterController) Delete() {
 	}
 
 	if cluster.Status == string(models.Deploying) && !forceDelete {
-		ctx.SendLogs("GKEClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -472,23 +411,23 @@ func (c *GKEClusterController) Delete() {
 	}
 
 	if cluster.Status == string(models.Terminating) && !forceDelete {
-		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
 
-	err = gke.DeleteGKECluster(id, userInfo.CompanyId, *ctx)
+	err = aks.DeleteAKSCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -504,14 +443,14 @@ func (c *GKEClusterController) Delete() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
-func (c *GKEClusterController) StartCluster() {
+func (c *AKSClusterController) StartCluster() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -520,7 +459,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -546,44 +485,45 @@ func (c *GKEClusterController) StartCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
+	//allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//if !allowed {
+	//	c.Ctx.Output.SetStatus(401)
+	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+	//	c.ServeJSON()
+	//	return
+	//}
 
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	//region, err := azure.GetRegion(token, projectId, *ctx)
+	//if err != nil {
+	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
-	if !isValid {
-		ctx.SendLogs("GKEClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	azureProfile, err := azure.GetProfile(profileId, "eastus2", token, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.GetGKECluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -591,7 +531,7 @@ func (c *GKEClusterController) StartCluster() {
 	}
 
 	if cluster.Status == "Cluster Created" {
-		ctx.SendLogs("GKEClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
 		c.ServeJSON()
@@ -599,7 +539,7 @@ func (c *GKEClusterController) StartCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("GKEClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -607,7 +547,7 @@ func (c *GKEClusterController) StartCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
@@ -615,18 +555,18 @@ func (c *GKEClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = gke.UpdateGKECluster(cluster, *ctx)
+	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("GKEClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Creating Cluster. "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go gke.DeployGKECluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
+	go aks.DeployAKSCluster(cluster, azureProfile.Profile, userInfo.CompanyId, token, *ctx)
 
-	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -636,20 +576,20 @@ func (c *GKEClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} gke.GKECluster
-// @Failure 206 {object} gke.GKECluster
+// @Success 200 {object} aks.AKSCluster
+// @Failure 206 {object} aks.AKSCluster
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
 // @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
-func (c *GKEClusterController) GetStatus() {
+func (c *AKSClusterController) GetStatus() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -658,7 +598,7 @@ func (c *GKEClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -683,9 +623,9 @@ func (c *GKEClusterController) GetStatus() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GKEClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
+	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -699,29 +639,29 @@ func (c *GKEClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
-	if !isValid {
-		ctx.SendLogs("GKEClusterController : GKE credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
 	}
 
@@ -740,13 +680,13 @@ func (c *GKEClusterController) GetStatus() {
 // @Failure 404 {"error": "error_msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
-func (c *GKEClusterController) TerminateCluster() {
+func (c *AKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -755,7 +695,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -780,9 +720,9 @@ func (c *GKEClusterController) TerminateCluster() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
+	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -797,30 +737,29 @@ func (c *GKEClusterController) TerminateCluster() {
 		return
 	}
 
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
+	region, err := azure.GetRegion(token, projectId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
-	if !isValid {
-		ctx.SendLogs("GKEClusterController: authorization params missing or invalid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("GKEClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.GetGKECluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -828,7 +767,7 @@ func (c *GKEClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("GKEClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -836,126 +775,23 @@ func (c *GKEClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("GKEClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
 
-	go gke.TerminateCluster(credentials, projectId, userInfo.CompanyId, *ctx)
+	go aks.TerminateCluster(azureProfile.Profile, projectId, userInfo.CompanyId, *ctx)
 
-	err = gke.UpdateGKECluster(cluster, *ctx)
+	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
-	c.ServeJSON()
-}
-
-// @Title Start
-// @Description Apply cloudplex Agent file to a gke cluster
-// @Param	clusterName	header	string	clusterName ""
-// @Param	token	header	string	token ""
-// @Success 200 {"msg": "Agent Applied successfully"}
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	projectId	path	string	true	"Id of the project"
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
-// @router /applyagent/:projectId [post]
-func (c *GKEClusterController) ApplyAgent() {
-
-	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	clusterName := c.Ctx.Input.Header("clusterName")
-	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
-		c.ServeJSON()
-		return
-	}
-	userInfo, err := rbacAuthentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GKEClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-
-	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
-	if !isValid {
-		ctx.SendLogs("GKEClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.SendLogs("GKEClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	go gke.ApplyAgent(credentials, token, *ctx, clusterName)
-
-	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()
 }

@@ -5,8 +5,9 @@ go 1.12
 require (
 	bitbucket.org/cloudplex-devs/woodpecker v0.0.0-20200130130714-b6df537e38c6
 	cloud.google.com/go v0.43.0 // indirect
-	github.com/Azure/azure-sdk-for-go v21.4.0+incompatible
+	github.com/Azure/azure-sdk-for-go v40.4.0+incompatible
 	github.com/Azure/go-autorest v11.1.2+incompatible
+	github.com/Azure/go-autorest/tracing v0.5.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20180315120708-ccb8e960c48f
 	github.com/astaxie/beego v1.12.0
 	github.com/aws/aws-sdk-go v1.21.7

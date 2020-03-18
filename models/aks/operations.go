@@ -3,15 +3,14 @@ package aks
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
-	models_azure "antelope/models/azure"
-
 	"antelope/models/types"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 
@@ -24,19 +23,20 @@ import (
 )
 
 type AKS struct {
-	Authorizer     *autorest.BearerAuthorizer
-	Location       subscriptions.Client
-	MCClient       containerservice.ManagedClustersClient
-	Context        context.Context
-	ProjectId      string
-	ID             string
-	Key            string
-	Tenant         string
-	Subscription   string
-	Region         string
-	Resources      map[string]interface{}
-	RoleAssignment authorization.RoleAssignmentsClient
-	RoleDefinition authorization.RoleDefinitionsClient
+	Authorizer        *autorest.BearerAuthorizer
+	Location          subscriptions.Client
+	MCClient          containerservice.ManagedClustersClient
+	KubeVersionClient containerservice.ContainerServicesClient
+	Context           context.Context
+	ProjectId         string
+	ID                string
+	Key               string
+	Tenant            string
+	Subscription      string
+	Region            string
+	Resources         map[string]interface{}
+	RoleAssignment    authorization.RoleAssignmentsClient
+	RoleDefinition    authorization.RoleDefinitionsClient
 }
 
 func (cloud *AKS) init() error {
@@ -64,6 +64,9 @@ func (cloud *AKS) init() error {
 
 	cloud.MCClient = containerservice.NewManagedClustersClient(cloud.Subscription)
 	cloud.MCClient.Authorizer = cloud.Authorizer
+
+	cloud.KubeVersionClient = containerservice.NewContainerServicesClient(cloud.Subscription)
+	cloud.KubeVersionClient.Authorizer = cloud.Authorizer
 
 	cloud.RoleAssignment = authorization.NewRoleAssignmentsClient(cloud.Subscription)
 	cloud.RoleAssignment.Authorizer = cloud.Authorizer
@@ -108,6 +111,37 @@ func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupNa
 	return result, nil
 }
 
+func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, error) {
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return nil, err
+		}
+	}
+
+	cloud.Context = context.Background()
+	pages, err := cloud.MCClient.List(cloud.Context)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS list clusters within specified subscription failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return nil, err
+	}
+
+	result := []AKSCluster{}
+	for pages.NotDone() {
+		for _, v := range pages.Values() {
+			result = append(result, cloud.generateClusterFromResponse(v))
+		}
+		_ = pages.Next()
+	}
+
+	return result, nil
+}
+
 func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName string) (*AKSCluster, error) {
 	if cloud == nil {
 		err := cloud.init()
@@ -133,25 +167,19 @@ func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName s
 }
 
 func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.Context) error {
-	//err := validate(aksCluster)
-	//if err != nil {
-	//	ctx.SendLogs(
-	//		"AKS cluster validation for '"+*aksCluster.Name+"' failed: "+err.Error(),
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return err
-	//}
-
-	region := "east us 2"
-	name := "mytestingcluster"
-	managedCluster := containerservice.ManagedCluster{
-		ManagedClusterProperties: aksCluster.ClusterProperties,
-		Name:                     &name,
-		Location:                 &region,
+	err := validate(aksCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS cluster validation for '"+*aksCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
 	}
 
-	future, err := cloud.MCClient.CreateOrUpdate(context.Background(), "haroontest8", "mytestingcluster", managedCluster)
+	request := cloud.generateClusterCreateRequest(aksCluster)
+	cloud.Context = context.Background()
+	future, err := cloud.MCClient.CreateOrUpdate(cloud.Context, aksCluster.ResourceGoup, *request.Name, *request)
 	if err != nil {
 		fmt.Println("there is some error", err)
 		return err
@@ -457,70 +485,63 @@ func (cloud *AKS) getAzureNetwork(token string, ctx utils.Context) (azureNetwork
 }
 
 func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster) AKSCluster {
+	var agentPoolArr []ManagedClusterAgentPoolProfile
+	for _, aksAgentPool := range *v.AgentPoolProfiles {
+		var pool ManagedClusterAgentPoolProfile
+		pool.Name = aksAgentPool.Name
+		pool.VnetSubnetID = aksAgentPool.VnetSubnetID
+		pool.Count = aksAgentPool.Count
+		pool.MaxPods = aksAgentPool.MaxPods
+		agentPoolArr = append(agentPoolArr, pool)
+	}
 	return AKSCluster{
-		ProjectId:         cloud.ProjectId,
-		Cloud:             models.AKS,
-		ClusterProperties: v.ManagedClusterProperties,
-		ResourceID:        v.ID,
-		Name:              v.Name,
-		Type:              v.Type,
-		Location:          v.Location,
-		Tags:              v.Tags,
+		ProjectId: cloud.ProjectId,
+		Cloud:     models.AKS,
+		ClusterProperties: &ManagedClusterProperties{
+			ProvisioningState: v.ProvisioningState,
+			KubernetesVersion: v.KubernetesVersion,
+			AgentPoolProfiles: agentPoolArr,
+		},
+		ResourceID: v.ID,
+		Name:       v.Name,
+		Type:       v.Type,
+		Location:   v.Location,
+		Tags:       v.Tags,
 	}
 }
 
-//func (cloud *GKE) generateClusterCreateRequest(c GKECluster) *gke.CreateClusterRequest {
-//	request := gke.CreateClusterRequest{
-//		Cluster: &gke.Cluster{
-//			AddonsConfig:                   c.AddonsConfig,
-//			ClusterIpv4Cidr:                c.ClusterIpv4Cidr,
-//			DefaultMaxPodsConstraint:       c.DefaultMaxPodsConstraint,
-//			Description:                    c.Description,
-//			EnableKubernetesAlpha:          c.EnableKubernetesAlpha,
-//			EnableTpu:                      c.EnableTpu,
-//			InitialClusterVersion:          c.InitialClusterVersion,
-//			IpAllocationPolicy:             c.IpAllocationPolicy,
-//			LabelFingerprint:               c.LabelFingerprint,
-//			LegacyAbac:                     c.LegacyAbac,
-//			Locations:                      c.Locations,
-//			LoggingService:                 c.LoggingService,
-//			MaintenancePolicy:              c.MaintenancePolicy,
-//			MonitoringService:              c.MonitoringService,
-//			MasterAuthorizedNetworksConfig: c.MasterAuthorizedNetworksConfig,
-//			MasterAuth:                     c.MasterAuth,
-//			Name:                           c.Name,
-//			Network:                        c.Network,
-//			NetworkConfig:                  c.NetworkConfig,
-//			NetworkPolicy:                  c.NetworkPolicy,
-//			NodePools:                      c.NodePools,
-//			PrivateClusterConfig:           c.PrivateClusterConfig,
-//			ResourceLabels:                 c.ResourceLabels,
-//			ResourceUsageExportConfig:      c.ResourceUsageExportConfig,
-//			Subnetwork:                     c.Subnetwork,
-//		},
-//		ProjectId: cloud.ProjectId,
-//		Zone:      cloud.Zone,
-//	}
-//	return &request
-//}
-//
-//func (cloud *GKE) init() error {
-//	if cloud.Client != nil {
-//		return nil
-//	}
-//
-//	var err error
-//	ctx := context.Background()
-//
-//	cloud.Client, err = gke.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
-//	if err != nil {
-//		beego.Error(err.Error())
-//		return err
-//	}
-//
-//	return nil
-//}
-//
+func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.ManagedCluster {
+	var AKSNodePools []containerservice.ManagedClusterAgentPoolProfile
+	if c.ClusterProperties != nil {
+		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
+			AKSnodepool.Name = nodepool.Name
+			AKSnodepool.Count = nodepool.Count
+			AKSnodepool.VnetSubnetID = nodepool.VnetSubnetID
+			AKSNodePools = append(AKSNodePools, AKSnodepool)
+		}
+	}
+	request := containerservice.ManagedCluster{
+		Name:     c.Name,
+		Location: c.Location,
+		ManagedClusterProperties: &containerservice.ManagedClusterProperties{
+			//ProvisioningState:       nil,
+			//KubernetesVersion:       nil,
+			//DNSPrefix:               nil,
+			//Fqdn:                    nil,
+			AgentPoolProfiles: &AKSNodePools,
+			//LinuxProfile:            nil,
+			//ServicePrincipalProfile: nil,
+			//AddonProfiles:           nil,
+			//NodeResourceGroup:       nil,
+			//EnableRBAC:              nil,
+			//NetworkProfile:          nil,
+			//AadProfile:              nil,
+		},
+	}
+	return &request
+}
+
 func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) error {
 	if cloud == nil {
 		err := cloud.init()
@@ -594,12 +615,12 @@ func getNetworkHost(cloudType, projectId string) string {
 	return host
 }
 
-func GetAKS(credentials models_azure.AZURE) (AKS, error) {
+func GetAKS(credentials vault.AzureCredentials) (AKS, error) {
 	return AKS{
-		ID:           credentials.ID,
-		Tenant:       credentials.Tenant,
-		Key:          credentials.Key,
-		Subscription: credentials.Subscription,
-		Region:       credentials.Region,
+		ID:           credentials.ClientId,
+		Tenant:       credentials.TenantId,
+		Key:          credentials.ClientSecret,
+		Subscription: credentials.SubscriptionId,
+		Region:       credentials.Location,
 	}, nil
 }

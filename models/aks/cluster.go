@@ -2,10 +2,10 @@ package aks
 
 import (
 	"antelope/models"
-	"antelope/models/azure"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"errors"
 	"fmt"
 	//aks "github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
@@ -21,10 +21,10 @@ type AKSCluster struct {
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	CloudplexStatus  string        `json:"status" bson:"status"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-	Status           string        `json:"status" bson:"status"`
-	ResourceGoup     string        `json:"resource_group" bson:"resource_group"`
+	//CloudplexStatus  string        `json:"status" bson:"status"`
+	CompanyId    string `json:"company_id" bson:"company_id"`
+	Status       string `json:"status,omitempty" bson:"status,omitempty"`
+	ResourceGoup string `json:"resource_group" bson:"resource_group"`
 	// ManagedClusterProperties - Properties of a managed cluster.
 	ClusterProperties *ManagedClusterProperties `json:"properties,omitempty"`
 	// ID - Resource Id
@@ -149,8 +149,8 @@ func AddAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
 		cluster.ModificationDate = time.Now()
-		if cluster.CloudplexStatus == "" {
-			cluster.CloudplexStatus = "new"
+		if cluster.Status == "" {
+			cluster.Status = "new"
 		}
 		cluster.Cloud = models.GKE
 	}
@@ -177,7 +177,7 @@ func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	if oldCluster.CloudplexStatus == string(models.Deploying) {
+	if oldCluster.Status == string(models.Deploying) {
 		ctx.SendLogs(
 			"AKSUpdateClusterModel:  Update - Cluster is in deploying state.",
 			models.LOGGING_LEVEL_ERROR,
@@ -185,7 +185,7 @@ func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.CloudplexStatus == string(models.Terminating) {
+	if oldCluster.Status == string(models.Terminating) {
 		ctx.SendLogs(
 			"AKSUpdateClusterModel:  Update - Cluster is in terminating state.",
 			models.LOGGING_LEVEL_ERROR,
@@ -193,7 +193,7 @@ func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		)
 		return errors.New("cluster is in terminating state")
 	}
-	if strings.ToLower(oldCluster.CloudplexStatus) == strings.ToLower(string(models.ClusterCreated)) {
+	if strings.ToLower(oldCluster.Status) == strings.ToLower(string(models.ClusterCreated)) {
 		ctx.SendLogs(
 			"AKSUpdateClusterModel:  Update - Cluster is in running state.",
 			models.LOGGING_LEVEL_ERROR,
@@ -257,7 +257,7 @@ func DeleteAKSCluster(projectId, companyId string, ctx utils.Context) error {
 
 func DeployAKSCluster(
 	cluster AKSCluster,
-	credentials azure.AZURE,
+	credentials vault.AzureCredentials,
 	companyId string,
 	token string,
 	ctx utils.Context,
@@ -338,7 +338,7 @@ func DeployAKSCluster(
 	return nil
 }
 
-func FetchStatus(credentials azure.AZURE, token, projectId, companyId string, ctx utils.Context) (AKSCluster, error) {
+func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (AKSCluster, error) {
 	cluster, err := GetAKSCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -366,7 +366,7 @@ func FetchStatus(credentials azure.AZURE, token, projectId, companyId string, ct
 	return cluster, nil
 }
 
-func TerminateCluster(credentials azure.AZURE, projectId, companyId string, ctx utils.Context) error {
+func TerminateCluster(credentials vault.AzureCredentials, projectId, companyId string, ctx utils.Context) error {
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {

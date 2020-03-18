@@ -5,7 +5,6 @@ import (
 	"antelope/models/db"
 	"antelope/models/utils"
 	_ "antelope/routers"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
 	"os"
@@ -42,7 +41,7 @@ func main() {
 	// TODO enable basic authentication if required
 	//authPlugin := auth.NewBasicAuthenticator(SecretAuth, "Authorization Required")
 	//beego.InsertFilter("*", beego.BeforeRouter, authPlugin)
-	myfunc()
+	//myfunc()
 
 	beego.Run()
 }
@@ -54,8 +53,8 @@ func setEnv() {
 	os.Setenv("kill_bill_secret_key", "cloudplex")
 	os.Setenv("kill_bill_api_key", "cloudplex")
 	os.Setenv("ca_cert", "/home/haroon/CloudPlex/cloudFiles/mongoCA.crt")
-	os.Setenv("client_cert", "/home/haroon/CloudPlex/cloudFiles/antelope.crt")
-	os.Setenv("client_pem", "/home/haroon/CloudPlex/cloudFiles/antelope.pem")
+	os.Setenv("client_cert", "/home/haroon/CloudPlex/cloudFiles/weasel.crt")
+	os.Setenv("client_pem", "/home/haroon/CloudPlex/cloudFiles/weasel.pem")
 	os.Setenv("subscription_host", "35.246.150.221:30906")
 	os.Setenv("rbac_url", "https://dapis.cloudplex.cf")
 	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
@@ -73,6 +72,8 @@ func setEnv() {
 	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
 	os.Setenv("mongo_gke_template_collection", "gke_template")
 	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
+	os.Setenv("mongo_aks_template_collection", "aks_template")
+	os.Setenv("mongo_aks_cluster_collection", "aks_cluster")
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
 	os.Setenv("redis_url", "35.242.236.151:31845")
 	os.Setenv("logger_url", "https://dapis.cloudplex.cf")
@@ -91,10 +92,10 @@ func myfunc() {
 	creds.Key = "IV54Er?tiv8H3CSYwjZzPaAMl*UoFl?="
 	creds.Tenant = "959c117c-1656-470a-8403-947584c67e55"
 	creds.Region = "east us 2"
-	err := creds.Init()
-	if err != nil {
-		fmt.Println(err)
-	}
+	//err := creds.Init()
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
 	//creds.CreateCluster(aks.AKSCluster{}, "", utils.Context{})
 	creds.ListClustersByResourceGroup(utils.Context{}, "haroontest8")
 }

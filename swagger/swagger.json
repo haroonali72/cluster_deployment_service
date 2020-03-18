@@ -15,6 +15,371 @@
     },
     "basePath": "/antelope",
     "paths": {
+        "/cluster/aks/": {
+            "put": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "update an existing cluster",
+                "operationId": "AKSClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "add a new cluster",
+                "operationId": "AKSClusterController.Add",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aks/all": {
+            "get": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "get all the clusters",
+                "operationId": "AKSClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/aks.AKSCluster"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aks/start/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "starts a  cluster",
+                "operationId": "AKSClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aks/status/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "returns status of nodes",
+                "operationId": "AKSClusterController.Status",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSCluster"
+                        }
+                    },
+                    "206": {
+                        "description": "{object} aks.AKSCluster"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aks/terminate/{projectId}/": {
+            "post": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "terminates a  cluster",
+                "operationId": "AKSClusterController.Terminate",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aks/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "get cluster",
+                "operationId": "AKSClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSCluster"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aks/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "delete a cluster",
+                "operationId": "AKSClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aws/": {
             "put": {
                 "tags": [
@@ -3369,6 +3734,213 @@
                 }
             }
         },
+        "/template/aks/": {
+            "put": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "update an existing template",
+                "operationId": "AKSTemplateController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSClusterTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "create a new template",
+                "operationId": "AKSTemplateController.Create",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSClusterTemplate"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aks/all": {
+            "get": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "get all the templates",
+                "operationId": "AKSTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/aks.AKSClusterTemplate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aks/{templateId}": {
+            "get": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "get template",
+                "operationId": "AKSTemplateController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSClusterTemplate"
+                        }
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "delete a templates",
+                "operationId": "AKSTemplateController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Name of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"name is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/aws/": {
             "put": {
                 "tags": [
@@ -5753,25 +6325,198 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "10028.0xc000db4330.false": {
+        "12228.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "1260.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "13387.0xc000d161e0.false": {
             "title": "false",
             "type": "object"
         },
-        "29793.0xc000b58990.false": {
+        "13431.0xc001007ce0.false": {
             "title": "false",
             "type": "object"
         },
-        "4411.0xc000d92e70.false": {
+        "434.0xc00125dc80.false": {
             "title": "false",
             "type": "object"
         },
-        "59682.0xc0008c9620.false": {
+        "6051.0xc0012811a0.false": {
             "title": "false",
             "type": "object"
         },
         "X-Profile-Id": {
             "title": "X-Profile-Id",
             "type": "object"
+        },
+        "aks.AKSCluster": {
+            "title": "AKSCluster",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "cloudStatus": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "properties": {
+                    "$ref": "#/definitions/aks.ManagedClusterProperties"
+                },
+                "resource_group": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "$ref": "#/definitions/12228.string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "aks.AKSClusterTemplate": {
+            "title": "AKSClusterTemplate",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "properties": {
+                    "$ref": "#/definitions/aks.ManagedClusterPropertiesTemplate"
+                },
+                "resource_group": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "$ref": "#/definitions/1260.string"
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "aks.ManagedClusterAgentPoolProfile": {
+            "title": "ManagedClusterAgentPoolProfile",
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "maxPods": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "osDiskSizeGB": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "vnetSubnetID": {
+                    "type": "string"
+                }
+            }
+        },
+        "aks.ManagedClusterAgentPoolProfileTemplate": {
+            "title": "ManagedClusterAgentPoolProfileTemplate",
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "maxPods": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "osDiskSizeGB": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "vnetSubnetID": {
+                    "type": "string"
+                }
+            }
+        },
+        "aks.ManagedClusterProperties": {
+            "title": "ManagedClusterProperties",
+            "type": "object",
+            "properties": {
+                "agentPoolProfiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/aks.ManagedClusterAgentPoolProfile"
+                    }
+                },
+                "kubernetesVersion": {
+                    "type": "string"
+                },
+                "provisioningState": {
+                    "type": "string"
+                }
+            }
+        },
+        "aks.ManagedClusterPropertiesTemplate": {
+            "title": "ManagedClusterPropertiesTemplate",
+            "type": "object",
+            "properties": {
+                "agentPoolProfiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/aks.ManagedClusterAgentPoolProfileTemplate"
+                    }
+                },
+                "kubernetesVersion": {
+                    "type": "string"
+                },
+                "provisioningState": {
+                    "type": "string"
+                }
+            }
         },
         "aws.Ami": {
             "title": "Ami",
@@ -5821,7 +6566,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/59682.0xc0008c9620.false"
+                    "$ref": "#/definitions/13387.0xc000d161e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -6389,7 +7134,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/29793.0xc000b58990.false"
+                    "$ref": "#/definitions/13431.0xc001007ce0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7349,7 +8094,8 @@
                 "GKE = \"gke\"",
                 "DO = \"do\"",
                 "IBM = \"ibm\"",
-                "OP = \"op\""
+                "OP = \"op\"",
+                "AKS = \"aks\""
             ],
             "example": "aws"
         },
@@ -7442,7 +8188,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/10028.0xc000db4330.false"
+                    "$ref": "#/definitions/6051.0xc0012811a0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7576,7 +8322,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/4411.0xc000d92e70.false"
+                    "$ref": "#/definitions/434.0xc00125dc80.false"
                 },
                 "name": {
                     "type": "string"
@@ -7655,6 +8401,14 @@
         {
             "name": "cluster/op",
             "description": "Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
+        },
+        {
+            "name": "template/aks",
+            "description": "Operations about AKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "cluster/aks",
+            "description": "Operations about AKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }
