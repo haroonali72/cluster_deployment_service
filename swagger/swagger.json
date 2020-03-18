@@ -3335,6 +3335,47 @@
                 }
             }
         },
+        "/cluster/op/checkCluster/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "validates a cluster",
+                "operationId": "OPClusterController.ValidateCluster",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster is running successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/op/{projectId}/": {
             "get": {
                 "tags": [
@@ -3376,8 +3417,53 @@
                 }
             }
         },
-        "/cluster/op/{projectId}/{forceDelete}": {},
-        "/cluster/opcheckCluster/{projectId}/{companyID}": {},
+        "/cluster/op/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/op"
+                ],
+                "description": "delete a cluster",
+                "operationId": "OPClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/customerTemplate/register": {
             "post": {
                 "tags": [
@@ -5804,19 +5890,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13726.0xc043223260.false": {
+        "13726.0xc04326c900.false": {
             "title": "false",
             "type": "object"
         },
-        "459.0xc0431e3500.false": {
+        "459.0xc043232ba0.false": {
             "title": "false",
             "type": "object"
         },
-        "631.0xc042c84600.false": {
+        "631.0xc042cafc80.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc042f45e90.false": {
+        "637.0xc042f9d530.false": {
             "title": "false",
             "type": "object"
         },
@@ -5872,7 +5958,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/631.0xc042c84600.false"
+                    "$ref": "#/definitions/631.0xc042cafc80.false"
                 },
                 "name": {
                     "type": "string"
@@ -6440,7 +6526,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc042f45e90.false"
+                    "$ref": "#/definitions/637.0xc042f9d530.false"
                 },
                 "name": {
                     "type": "string"
@@ -7493,7 +7579,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/459.0xc0431e3500.false"
+                    "$ref": "#/definitions/459.0xc043232ba0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7627,7 +7713,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13726.0xc043223260.false"
+                    "$ref": "#/definitions/13726.0xc04326c900.false"
                 },
                 "name": {
                     "type": "string"
@@ -7658,6 +7744,14 @@
         {
             "name": "customerTemplate",
             "description": "customer template endpoint\n"
+        },
+        {
+            "name": "template/op",
+            "description": "Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "cluster/op",
+            "description": "Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         },
         {
             "name": "template/aws",
@@ -7698,14 +7792,6 @@
         {
             "name": "cluster/do",
             "description": "Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
-        },
-        {
-            "name": "template/op",
-            "description": "Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
-        },
-        {
-            "name": "cluster/op",
-            "description": "Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }
