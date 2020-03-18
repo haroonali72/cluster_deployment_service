@@ -52,6 +52,15 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
+	beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/op:OPClusterController"],
+		beego.ControllerComments{
+			Method:           "CheckCluster",
+			Router:           `checkCluster/:projectId/:companyID`,
+			AllowHTTPMethods: []string{"Get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
 	beego.GlobalControllerRouter["antelope/controllers/op:OPTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/op:OPTemplateController"],
 		beego.ControllerComments{
 			Method:           "Post",
