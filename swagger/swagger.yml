@@ -1549,9 +1549,8 @@ paths:
       operationId: GcpClusterController.GetZonesAgainstRegion
       parameters:
       - in: header
-        name: profileid
-        description: profile of GCP
-        required: true
+        name: X-Profile-Id
+        description: "true"
         type: string
       - in: header
         name: token
@@ -3820,16 +3819,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  459.0xc0431e3500.false:
+  442.0xc00115fe00.false:
     title: "false"
     type: object
-  631.0xc042c84600.false:
+  607.0xc000becae0.false:
     title: "false"
     type: object
-  637.0xc042f45e90.false:
+  637.0xc000ee65d0.false:
     title: "false"
     type: object
-  13726.0xc043223260.false:
+  13356.0xc0011a5b60.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3869,7 +3868,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/631.0xc042c84600.false'
+        $ref: '#/definitions/607.0xc000becae0.false'
       name:
         type: string
       network_name:
@@ -4252,7 +4251,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc042f45e90.false'
+        $ref: '#/definitions/637.0xc000ee65d0.false'
       name:
         type: string
       network_name:
@@ -4975,7 +4974,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/459.0xc0431e3500.false'
+        $ref: '#/definitions/442.0xc00115fe00.false'
       name:
         type: string
       node_pools:
@@ -5065,7 +5064,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13726.0xc043223260.false'
+        $ref: '#/definitions/13356.0xc0011a5b60.false'
       name:
         type: string
       node_pools:

@@ -1287,7 +1287,7 @@ func (c *GcpClusterController) ValidateProfile() {
 
 // @Title GetZonesAgainstRegion
 // @Description return zones against a region
-// @Param	profileid	header	string	true	"profile of GCP"
+// @Param	X-Profile-Id	header	string	profileId	true""
 // @Param	token	header	string	token  true""
 // @Param	region	path	string	true	"region of GCP"
 // @Success 200 {object} []string
@@ -1300,7 +1300,7 @@ func (c *GcpClusterController) GetZones() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GellZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("profileid")
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profileid is empty"}
