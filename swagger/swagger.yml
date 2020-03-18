@@ -2206,6 +2206,7 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
+  /cluster/op/{projectId}/{forceDelete}: {}
   /cluster/op/all:
     get:
       tags:
@@ -3819,16 +3820,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  459.0xc043208780.false:
+  459.0xc0431e3500.false:
     title: "false"
     type: object
-  631.0xc042c7d860.false:
+  631.0xc042c84600.false:
     title: "false"
     type: object
-  637.0xc042f71110.false:
+  637.0xc042f45e90.false:
     title: "false"
     type: object
-  13726.0xc0432404e0.false:
+  13726.0xc043223260.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3868,7 +3869,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/631.0xc042c7d860.false'
+        $ref: '#/definitions/631.0xc042c84600.false'
       name:
         type: string
       network_name:
@@ -4251,7 +4252,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc042f71110.false'
+        $ref: '#/definitions/637.0xc042f45e90.false'
       name:
         type: string
       network_name:
@@ -4974,7 +4975,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/459.0xc043208780.false'
+        $ref: '#/definitions/459.0xc0431e3500.false'
       name:
         type: string
       node_pools:
@@ -5064,7 +5065,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13726.0xc0432404e0.false'
+        $ref: '#/definitions/13726.0xc043223260.false'
       name:
         type: string
       node_pools:
