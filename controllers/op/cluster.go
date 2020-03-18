@@ -348,6 +348,84 @@ func (c *OPClusterController) Patch() {
 	c.ServeJSON()
 }
 
+// @Title CheckCluster
+// @Description validates a cluster
+// @Param	token	header	string	token ""
+// @Param	projectId	path	string	true	"project id of the cluster"
+// @Success 200 {"msg": "cluster is running successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "project id is empty"}
+// @Failure 500 {"error": "error msg"}
+// @router checkCluster/:projectId/:companyID  [Get]
+func (c *OPClusterController) CheckCluster() {
+	id := c.GetString(":projectId")
+	if id == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "Get", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "View", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+
+	//=============================================================================//
+
+	ctx.SendLogs("OPClusterController: Check cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	if id == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	err = op.CheckCluster(id, userInfo.CompanyId, *ctx)
+
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]string{"msg": "cluster is working successfully"}
+	c.ServeJSON()
+}
+
 // @Title Delete
 // @Description delete a cluster
 // @Param	token	header	string	token ""
@@ -459,83 +537,5 @@ func (c *OPClusterController) Delete() {
 	}
 	ctx.SendLogs(" OP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
-	c.ServeJSON()
-}
-
-// @Title CheckCluster
-// @Description validates a cluster
-// @Param	token	header	string	token ""
-// @Param	projectId	path	string	true	"project id of the cluster"
-// @Success 200 {"msg": "cluster is running successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
-// @router checkCluster/:projectId/:companyID  [Get]
-func (c *OPClusterController) CheckCluster() {
-	id := c.GetString(":projectId")
-	if id == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "Get", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-
-	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "View", token, *ctx)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-
-	//=============================================================================//
-
-	ctx.SendLogs("OPClusterController: Check cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	if id == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	err = op.CheckCluster(id, userInfo.CompanyId, *ctx)
-
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	c.Data["json"] = map[string]string{"msg": "cluster is working successfully"}
 	c.ServeJSON()
 }
