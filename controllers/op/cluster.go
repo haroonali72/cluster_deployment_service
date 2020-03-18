@@ -437,6 +437,7 @@ func (c *OPClusterController) CheckCluster() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId/:forceDelete  [delete]
+
 func (c *OPClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
