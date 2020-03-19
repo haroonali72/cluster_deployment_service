@@ -18,7 +18,7 @@ type Cluster_Def struct {
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(OP|op)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
@@ -30,7 +30,6 @@ type NodePool struct {
 	ID          bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
 	Name        string             `json:"name" bson:"name" valid:"required"`
 	NodeCount   int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType string             `json:"machine_type" bson:"machine_type" valid:"required"`
 	Nodes       []*Node            `json:"nodes" bson:"nodes"`
 	KeyInfo     key_utils.AZUREKey `json:"key_info" bson:"key_info"`
 	PoolRole    models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
@@ -115,7 +114,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams s
 		}
 	}
 	mc := db.GetMongoConf()
-	err = db.InsertInMongo(mc.MongoOPClusterCollection, cluster)
+	err = db.InsertInMongo(mc.MongoOPClusterCollection , cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err

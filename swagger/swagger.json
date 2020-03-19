@@ -8491,9 +8491,6 @@
                 "key_info": {
                     "$ref": "#/definitions/key_utils.AZUREKey"
                 },
-                "machine_type": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 },
@@ -8521,9 +8518,6 @@
                 },
                 "key_info": {
                     "$ref": "#/definitions/key_utils.AZUREKey"
-                },
-                "machine_type": {
-                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -8575,7 +8569,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001276390.false"
+                    "$ref": "#/definitions/13266.0xc00120ff80.false"
                 },
                 "name": {
                     "type": "string"

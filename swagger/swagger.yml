@@ -5637,8 +5637,6 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
-      machine_type:
-        type: string
       name:
         type: string
       node_count:
@@ -5658,8 +5656,6 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
-      machine_type:
-        type: string
       name:
         type: string
       node_count:

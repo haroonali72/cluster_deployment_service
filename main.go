@@ -65,6 +65,7 @@ func setEnv() {
 	os.Setenv("mongo_user", "antelope")
 	os.Setenv("mongo_pass", "DbSn3hAzJU6pPVRcn61apb3KDEKmcSb7Bl..")
 	os.Setenv("mongo_aws_template_collection", "aws_template")
+	os.Setenv("mongo_op_cluster_collection", "op_cluster")
 	os.Setenv("mongo_aws_cluster_collection", "aws_cluster")
 	os.Setenv("mongo_azure_template_collection", "azure_template")
 	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
