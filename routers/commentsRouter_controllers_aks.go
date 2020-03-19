@@ -54,6 +54,24 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"],
 		beego.ControllerComments{
+			Method:           "GetAKSVms",
+			Router:           `/getvms/`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"],
+		beego.ControllerComments{
+			Method:           "GetKubeConfig",
+			Router:           `/kubeconfig/:projectId`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"],
+		beego.ControllerComments{
 			Method:           "StartCluster",
 			Router:           `/start/:projectId`,
 			AllowHTTPMethods: []string{"post"},

@@ -7,6 +7,7 @@ import (
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 )
@@ -167,6 +168,15 @@ func (c *AKSClusterController) Post() {
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	res, err := govalidator.ValidateStruct(cluster)
+	if !res || err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -485,32 +495,31 @@ func (c *AKSClusterController) StartCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
-	//allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
-	//if err != nil {
-	//	beego.Error(err.Error())
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//if !allowed {
-	//	c.Ctx.Output.SetStatus(401)
-	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-	//	c.ServeJSON()
-	//	return
-	//}
+	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
-	//region, err := azure.GetRegion(token, projectId, *ctx)
-	//if err != nil {
-	//	ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	c.Ctx.Output.SetStatus(500)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
+	region, err := azure.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
-	//azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
-	azureProfile, err := azure.GetProfile(profileId, "eastus2", token, *ctx)
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
@@ -782,8 +791,7 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	go aks.TerminateCluster(azureProfile.Profile, projectId, userInfo.CompanyId, *ctx)
-
+	cluster.Status = string(models.Terminating)
 	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -791,7 +799,144 @@ func (c *AKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
+	go aks.TerminateCluster(azureProfile.Profile, projectId, userInfo.CompanyId, *ctx)
+
 	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.ServeJSON()
+}
+
+// @Title GetAKSVmsTypes
+// @Description get aks vm types
+// @Param	token	header	string	token ""
+// @Success 200 {object} []aks.VMSizeTypes
+// @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
+// @Failure 400 {"error": "error_msg"}
+// @Failure 404 {"error": "error_msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getvms/ [get]
+func (c *AKSClusterController) GetAKSVms() {
+	ctx := new(utils.Context)
+	ctx.SendLogs("AKSClusterController: GetVms.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("AKSClusterController: GetVms.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	aksVms := aks.GetAKSVms(*ctx)
+
+	c.Data["json"] = aksVms
+	c.ServeJSON()
+}
+
+// @Title Kubeconfig
+// @Description get cluter kubeconfig
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	token	header	string	token ""
+// @Param	projectId	path	string	true	"Id of the project"
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /kubeconfig/:projectId [get]
+func (c *AKSClusterController) GetKubeConfig() {
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("AKSClusterController: GetKubeConfig.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		ctx.SendLogs("AKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		ctx.SendLogs("AKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+
+	region, err := azure.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("AKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("AKSClusterController: GetKubeConfig. "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	kubeconfig, err := aks.GetKubeCofing(azureProfile.Profile, cluster, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = kubeconfig
 	c.ServeJSON()
 }

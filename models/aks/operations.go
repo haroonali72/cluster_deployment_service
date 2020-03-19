@@ -9,10 +9,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
+	"github.com/Azure/go-autorest/autorest/to"
 
 	"strings"
 
@@ -181,60 +181,42 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	cloud.Context = context.Background()
 	future, err := cloud.MCClient.CreateOrUpdate(cloud.Context, aksCluster.ResourceGoup, *request.Name, *request)
 	if err != nil {
-		fmt.Println("there is some error", err)
+		ctx.SendLogs(
+			"AKS cluster creation for '"+*aksCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
 		return err
 	}
 	err = future.WaitForCompletionRef(context.Background(), cloud.MCClient.Client)
 	if err != nil {
-		fmt.Println("there is some error", err)
+		ctx.SendLogs(
+			"AKS cluster creation for '"+*aksCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
 		return err
 	}
+
+	AKSclusterResp, err := future.Result(cloud.MCClient)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS cluster creation for '"+*aksCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+	if *AKSclusterResp.ProvisioningState != "Succeeded" {
+		ctx.SendLogs(
+			"AKS cluster creation for '"+*aksCluster.Name+"' failed",
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return errors.New("AKS cluster provision state is not succeeded")
+	}
+
 	return nil
-
-	//cloud.Context = context.Background()
-	//cloud.MCClient.CreateOrUpdate(cloud.Context, "haroontest8", "apitestingcluster", )
-
-	//clusterRequest := cloud.generateClusterCreateRequest(gkeCluster)
-	//networkInformation := cloud.getAzureNetwork(token, ctx)
-
-	// overriding network configurations with network from current project
-	//if len(networkInformation.Definition) > 0 {
-	//	aksCluster.ClusterProperties = networkInformation.Definition[0].Vpc.Name
-	//	if len(networkInformation.Definition[0].Subnets) > 0 {
-	//		clusterRequest.Cluster.Subnetwork = networkInformation.Definition[0].Subnets[0].Name
-	//	}
-	//}
-	//
-	//_, err = cloud.Client.Projects.Zones.Clusters.Create(
-	//	cloud.ProjectId,
-	//	cloud.Zone,
-	//	clusterRequest,
-	//).Context(context.Background()).Do()
-	//
-	//requestJson, _ := json.Marshal(clusterRequest)
-	//ctx.SendLogs(
-	//	"GKE cluster creation request for '"+gkeCluster.Name+"' submitted: "+string(requestJson),
-	//	models.LOGGING_LEVEL_INFO,
-	//	models.Backend_Logging,
-	//)
-	//
-	//if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
-	//	ctx.SendLogs(
-	//		"GKE cluster creation request for '"+gkeCluster.Name+"' failed: "+err.Error(),
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return err
-	//} else if err != nil && strings.Contains(err.Error(), "alreadyExists") {
-	//	ctx.SendLogs(
-	//		"GKE cluster '"+gkeCluster.Name+"' already exists.",
-	//		models.LOGGING_LEVEL_INFO,
-	//		models.Backend_Logging,
-	//	)
-	//	return nil
-	//}
-	//
-	//return cloud.waitForCluster(gkeCluster.Name, ctx)
 }
 
 //func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.Context) error {
@@ -326,7 +308,7 @@ func (cloud *AKS) DeleteCluster(cluster AKSCluster, ctx utils.Context) error {
 	}
 
 	cloud.Context = context.Background()
-	future, err := cloud.MCClient.Delete(cloud.Context, cluster.ResourceGoup, *cluster.Name)
+	_, err := cloud.MCClient.Delete(cloud.Context, cluster.ResourceGoup, *cluster.Name)
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
 		ctx.SendLogs(
 			"AKS cluster deletion for '"+*cluster.Name+"' failed: "+err.Error(),
@@ -335,20 +317,20 @@ func (cloud *AKS) DeleteCluster(cluster AKSCluster, ctx utils.Context) error {
 		)
 		return err
 	}
-	err = future.WaitForCompletionRef(cloud.Context, cloud.MCClient.Client)
-	if err != nil {
-		ctx.SendLogs(
-			"AKS cluster deletion for '"+*cluster.Name+"' failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		return err
-	}
+	//err = future.WaitForCompletionRef(cloud.Context, cloud.MCClient.Client)
+	//if err != nil {
+	//	ctx.SendLogs(
+	//		"AKS cluster deletion for '"+*cluster.Name+"' failed: "+err.Error(),
+	//		models.LOGGING_LEVEL_ERROR,
+	//		models.Backend_Logging,
+	//	)
+	//	return err
+	//}
 
 	return nil
 }
 
-func (cloud *AKS) GetKubeConfig(ctx utils.Context, resourceGroupName, clusterName string) (*containerservice.CredentialResult, error) {
+func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*containerservice.CredentialResult, error) {
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
@@ -358,10 +340,10 @@ func (cloud *AKS) GetKubeConfig(ctx utils.Context, resourceGroupName, clusterNam
 	}
 
 	cloud.Context = context.Background()
-	results, err := cloud.MCClient.ListClusterUserCredentials(cloud.Context, resourceGroupName, clusterName)
+	results, err := cloud.MCClient.ListClusterUserCredentials(cloud.Context, cluster.ResourceGoup, *cluster.Name)
 	if err != nil {
 		ctx.SendLogs(
-			"AKS getting user credentials for '"+clusterName+"' failed: "+err.Error(),
+			"AKS getting user credentials for '"+*cluster.Name+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -512,31 +494,40 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 
 func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.ManagedCluster {
 	var AKSNodePools []containerservice.ManagedClusterAgentPoolProfile
+	var AKSapiServerAccessProfile containerservice.ManagedClusterAPIServerAccessProfile
 	if c.ClusterProperties != nil {
 		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
 			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
 			AKSnodepool.Name = nodepool.Name
 			AKSnodepool.Count = nodepool.Count
 			AKSnodepool.VnetSubnetID = nodepool.VnetSubnetID
+			AKSnodepool.VMSize = nodepool.VMSize
+			if nodepool.EnableAutoScaling != nil && *nodepool.EnableAutoScaling {
+				AKSnodepool.EnableAutoScaling = nodepool.EnableAutoScaling
+				AKSnodepool.MinCount = nodepool.MinCount
+				AKSnodepool.MaxCount = nodepool.MaxCount
+			}
 			AKSNodePools = append(AKSNodePools, AKSnodepool)
 		}
+
+		if c.ClusterProperties.APIServerAccessProfile.EnablePrivateCluster != nil && *c.ClusterProperties.APIServerAccessProfile.EnablePrivateCluster {
+			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
+		} else {
+			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
+		}
 	}
+
+	var AKSservicePrincipal containerservice.ManagedClusterServicePrincipalProfile
+	AKSservicePrincipal.ClientID = &cloud.ID
+	AKSservicePrincipal.Secret = &cloud.Key
 	request := containerservice.ManagedCluster{
 		Name:     c.Name,
 		Location: c.Location,
 		ManagedClusterProperties: &containerservice.ManagedClusterProperties{
-			//ProvisioningState:       nil,
-			//KubernetesVersion:       nil,
-			//DNSPrefix:               nil,
-			//Fqdn:                    nil,
-			AgentPoolProfiles: &AKSNodePools,
-			//LinuxProfile:            nil,
-			//ServicePrincipalProfile: nil,
-			//AddonProfiles:           nil,
-			//NodeResourceGroup:       nil,
-			//EnableRBAC:              nil,
-			//NetworkProfile:          nil,
-			//AadProfile:              nil,
+			DNSPrefix:               to.StringPtr(*c.Name + "-dns"),
+			AgentPoolProfiles:       &AKSNodePools,
+			ServicePrincipalProfile: &AKSservicePrincipal,
+			APIServerAccessProfile:  &AKSapiServerAccessProfile,
 		},
 	}
 	return &request
@@ -552,7 +543,7 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 	}
 
 	cloud.Context = context.Background()
-	result, err := cloud.MCClient.Get(cloud.Context, cluster.ResourceGoup, *cluster.Name)
+	AKScluster, err := cloud.MCClient.Get(cloud.Context, cluster.ResourceGoup, *cluster.Name)
 	if err != nil {
 		ctx.SendLogs(
 			"AKS get cluster within resource group '"+cluster.ResourceGoup+"' failed: "+err.Error(),
@@ -562,12 +553,28 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 		return err
 	}
 
-	for index, agentPool := range *result.AgentPoolProfiles {
+	for index, agentPool := range *AKScluster.AgentPoolProfiles {
 		cluster.ClusterProperties.AgentPoolProfiles[index].Name = agentPool.Name
 		cluster.ClusterProperties.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
 		cluster.ClusterProperties.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
+		cluster.ClusterProperties.AgentPoolProfiles[index].VMSize = agentPool.VMSize
+		cluster.ClusterProperties.AgentPoolProfiles[index].OsType = agentPool.OsType
+		cluster.ClusterProperties.AgentPoolProfiles[index].Count = agentPool.Count
 	}
+	cluster.ResourceID = AKScluster.ID
+	cluster.Type = AKScluster.Type
+	cluster.ClusterProperties.ProvisioningState = AKScluster.ProvisioningState
+	cluster.ClusterProperties.KubernetesVersion = AKScluster.KubernetesVersion
+	cluster.ClusterProperties.DNSPrefix = AKScluster.DNSPrefix
+	cluster.ClusterProperties.Fqdn = AKScluster.Fqdn
 
+	var networkProfile NetworkProfileType
+	networkProfile.DNSServiceIP = AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
+	networkProfile.PodCidr = AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
+	networkProfile.ServiceCidr = AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
+	networkProfile.DockerBridgeCidr = AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
+
+	cluster.ClusterProperties.NetworkProfile = &networkProfile
 	return nil
 }
 
@@ -593,6 +600,10 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 //
 //	return nil
 //}
+
+func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
+	return containerservice.PossibleVMSizeTypesValues()
+}
 
 func validate(aksCluster AKSCluster) error {
 	if aksCluster.ProjectId == "" {

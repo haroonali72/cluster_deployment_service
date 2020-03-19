@@ -16,6 +16,7 @@ require (
 	github.com/aws/aws-sdk-go v1.29.26
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/digitalocean/godo v1.32.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect

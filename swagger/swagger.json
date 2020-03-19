@@ -139,6 +139,91 @@
                 }
             }
         },
+        "/cluster/aks/getvms/": {
+            "get": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "get aks vm types",
+                "operationId": "AKSClusterController.GetAKSVmsTypes",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/aks.VMSizeTypes"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aks/kubeconfig/{projectId}": {
+            "get": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "get cluter kubeconfig",
+                "operationId": "AKSClusterController.Kubeconfig",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aks/start/{projectId}": {
             "post": {
                 "tags": [
@@ -6432,7 +6517,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "12204.string": {
+        "12300.string": {
             "title": "string",
             "type": "object"
         },
@@ -6440,19 +6525,19 @@
             "title": "string",
             "type": "object"
         },
-        "13387.0xc000ce4660.false": {
+        "13387.0xc000d288d0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc000ff0180.false": {
+        "13431.0xc0010223f0.false": {
             "title": "false",
             "type": "object"
         },
-        "434.0xc00124a120.false": {
+        "434.0xc001276390.false": {
             "title": "false",
             "type": "object"
         },
-        "6051.0xc00124b620.false": {
+        "6051.0xc001277890.false": {
             "title": "false",
             "type": "object"
         },
@@ -6492,7 +6577,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/12204.string"
+                    "$ref": "#/definitions/12300.string"
                 },
                 "type": {
                     "type": "string"
@@ -6538,6 +6623,15 @@
                 }
             }
         },
+        "aks.ManagedClusterAPIServerAccessProfile": {
+            "title": "ManagedClusterAPIServerAccessProfile",
+            "type": "object",
+            "properties": {
+                "enablePrivateCluster": {
+                    "type": "boolean"
+                }
+            }
+        },
         "aks.ManagedClusterAgentPoolProfile": {
             "title": "ManagedClusterAgentPoolProfile",
             "type": "object",
@@ -6546,7 +6640,18 @@
                     "type": "integer",
                     "format": "int32"
                 },
+                "enableAutoScaling": {
+                    "type": "boolean"
+                },
+                "maxCount": {
+                    "type": "integer",
+                    "format": "int32"
+                },
                 "maxPods": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "minCount": {
                     "type": "integer",
                     "format": "int32"
                 },
@@ -6557,8 +6662,14 @@
                     "type": "integer",
                     "format": "int32"
                 },
-                "vnetSubnetID": {
+                "osType": {
+                    "$ref": "#/definitions/aks.OSType"
+                },
+                "subnet_id": {
                     "type": "string"
+                },
+                "vmSize": {
+                    "$ref": "#/definitions/aks.VMSizeTypes"
                 }
             }
         },
@@ -6596,8 +6707,20 @@
                         "$ref": "#/definitions/aks.ManagedClusterAgentPoolProfile"
                     }
                 },
+                "apiServerAccessProfile": {
+                    "$ref": "#/definitions/aks.ManagedClusterAPIServerAccessProfile"
+                },
+                "dnsPrefix": {
+                    "type": "string"
+                },
+                "fqdn": {
+                    "type": "string"
+                },
                 "kubernetesVersion": {
                     "type": "string"
+                },
+                "networkProfile": {
+                    "$ref": "#/definitions/aks.NetworkProfileType"
                 },
                 "provisioningState": {
                     "type": "string"
@@ -6621,6 +6744,32 @@
                     "type": "string"
                 }
             }
+        },
+        "aks.NetworkProfileType": {
+            "title": "NetworkProfileType",
+            "type": "object",
+            "properties": {
+                "dnsServiceIP": {
+                    "type": "string"
+                },
+                "dockerBridgeCidr": {
+                    "type": "string"
+                },
+                "podCidr": {
+                    "type": "string"
+                },
+                "serviceCidr": {
+                    "type": "string"
+                }
+            }
+        },
+        "aks.OSType": {
+            "title": "OSType",
+            "type": "object"
+        },
+        "aks.VMSizeTypes": {
+            "title": "VMSizeTypes",
+            "type": "object"
         },
         "aws.Ami": {
             "title": "Ami",
@@ -6670,7 +6819,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13387.0xc000ce4660.false"
+                    "$ref": "#/definitions/13387.0xc000d288d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7238,7 +7387,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc000ff0180.false"
+                    "$ref": "#/definitions/13431.0xc0010223f0.false"
                 },
                 "name": {
                     "type": "string"
@@ -8292,7 +8441,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/6051.0xc00124b620.false"
+                    "$ref": "#/definitions/6051.0xc001277890.false"
                 },
                 "name": {
                     "type": "string"
@@ -8426,7 +8575,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc00124a120.false"
+                    "$ref": "#/definitions/434.0xc001276390.false"
                 },
                 "name": {
                     "type": "string"
