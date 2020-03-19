@@ -207,12 +207,6 @@ func InitFlags() error {
 			EnvVar:      "mongo_op_template_collection",
 		},
 		cli.StringFlag{
-			Name:        "mongo_op_cluster_collection",
-			Usage:       "op cluster collection name ",
-			Destination: &mongo_op_cluster_collection,
-			EnvVar:      "mongo_op_cluster_collection",
-		},
-		cli.StringFlag{
 			Name:        "redis_url",
 			Usage:       "redis host",
 			Destination: &redis_url,
