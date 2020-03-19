@@ -3853,16 +3853,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc00118c630.false:
+  442.0xc0011b16b0.false:
     title: "false"
     type: object
-  607.0xc000bfd2f0.false:
+  607.0xc000c48390.false:
     title: "false"
     type: object
-  637.0xc000ef2de0.false:
+  637.0xc000f17e60.false:
     title: "false"
     type: object
-  13266.0xc0011c4390.false:
+  13266.0xc0011f5410.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3902,7 +3902,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/607.0xc000bfd2f0.false'
+        $ref: '#/definitions/607.0xc000c48390.false'
       name:
         type: string
       network_name:
@@ -4285,7 +4285,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc000ef2de0.false'
+        $ref: '#/definitions/637.0xc000f17e60.false'
       name:
         type: string
       network_name:
@@ -5008,7 +5008,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc00118c630.false'
+        $ref: '#/definitions/442.0xc0011b16b0.false'
       name:
         type: string
       node_pools:
@@ -5060,8 +5060,6 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
-      machine_type:
-        type: string
       name:
         type: string
       node_count:
@@ -5096,7 +5094,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13266.0xc0011c4390.false'
+        $ref: '#/definitions/13266.0xc0011f5410.false'
       name:
         type: string
       node_pools:
