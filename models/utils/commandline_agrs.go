@@ -25,6 +25,7 @@ var (
 	mongo_do_template_collection    = ""
 	mongo_do_cluster_collection     = ""
 	mongo_op_cluster_collection     =""
+	mongo_op_template_collection  =""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
