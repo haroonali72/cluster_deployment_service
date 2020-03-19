@@ -461,7 +461,7 @@ func (c *OPClusterController) Delete() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId/:companyID  [Get]
+// @router /validate/:projectId  [Get]
 func (c *OPClusterController) CheckCluster() {
 	id := c.GetString(":projectId")
 	if id == "" {
@@ -495,7 +495,7 @@ func (c *OPClusterController) CheckCluster() {
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
