@@ -50,7 +50,7 @@ func setEnv() {
 	os.Setenv("kill_bill_password", "password")
 	os.Setenv("kill_bill_secret_key", "cloudplex")
 	os.Setenv("kill_bill_api_key", "cloudplex")
-	os.Setenv("ca_cert","/home/zunaira/Downloads/mongoCA.crt")
+	os.Setenv("ca_cert", "/home/zunaira/Downloads/mongoCA.crt")
 	os.Setenv("client_cert", "/home/zunaira/Downloads/antelope.crt")
 	os.Setenv("client_pem", "/home/zunaira/Downloads/antelope.pem")
 	os.Setenv("subscription_host", "35.246.150.221:30906")

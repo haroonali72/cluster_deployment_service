@@ -6,6 +6,7 @@ import (
 	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
@@ -1169,20 +1170,20 @@ func (c *AzureClusterController) GetAllMachines() {
 // @Title Validate Profile
 // @Description check if profile is valid
 // @Param	token	header	string	token ""
-// @Param	clientId	path	string	true	"Client Id"
-// @Param	clientSecret	path	string	true	"Client Secret"
-// @Param	subscriptionId	path	string	true	"Subscription Id"
-// @Param	tenantId	path	string	true	"Tenant Id"
-// @Success 200 {"msg": "cluster created successfully"}
+// @Param	body	body 	vault.AzureCredentials		true	"body for cluster content"
+// @Success 200 {"msg": "Profile is valid"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 409 {"error": "profile is invalid"}
 // @Failure 500 {"error": "error msg"}
-// @router /validateProfile/:clientId/:clientSecret/:subscriptionId/:tenantId [get]
+// @router /validateProfile/ [post]
 func (c *AzureClusterController) ValidateProfile() {
 
 	ctx := new(utils.Context)
+
+	var credentials vault.AzureCredentials
+	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -1192,37 +1193,6 @@ func (c *AzureClusterController) ValidateProfile() {
 		return
 	}
 
-	clientId := c.GetString(":clientId")
-	if clientId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "ami id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	clientSecret := c.GetString(":clientSecret")
-	if clientSecret == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "ami id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	subscriptionId := c.GetString(":subscriptionId")
-	if subscriptionId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "ami id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	tenantId := c.GetString(":tenantId")
-	if tenantId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "ami id is empty"}
-		c.ServeJSON()
-		return
-	}
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -1246,7 +1216,7 @@ func (c *AzureClusterController) ValidateProfile() {
 	}
 
 	for _, region := range regions {
-		err = azure.ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region.Location, *ctx)
+		err = azure.ValidateProfile(credentials.ClientId, credentials.ClientSecret, credentials.SubscriptionId, credentials.TenantId, region.Location, *ctx)
 		if err != nil {
 			ctx.SendLogs("AzureClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(409)
