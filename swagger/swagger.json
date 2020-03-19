@@ -5804,19 +5804,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13356.0xc001166a80.false": {
+        "13265.0xc0011f0990.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc001138d20.false": {
+        "442.0xc0011b4c30.false": {
             "title": "false",
             "type": "object"
         },
-        "607.0xc000baf9e0.false": {
+        "607.0xc000c298f0.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc000ea54d0.false": {
+        "637.0xc000f1b3e0.false": {
             "title": "false",
             "type": "object"
         },
@@ -5872,7 +5872,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/607.0xc000baf9e0.false"
+                    "$ref": "#/definitions/607.0xc000c298f0.false"
                 },
                 "name": {
                     "type": "string"
@@ -6440,7 +6440,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc000ea54d0.false"
+                    "$ref": "#/definitions/637.0xc000f1b3e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7493,7 +7493,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc001138d20.false"
+                    "$ref": "#/definitions/442.0xc0011b4c30.false"
                 },
                 "name": {
                     "type": "string"
@@ -7542,9 +7542,6 @@
                 },
                 "key_info": {
                     "$ref": "#/definitions/key_utils.AZUREKey"
-                },
-                "machine_type": {
-                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -7627,7 +7624,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13356.0xc001166a80.false"
+                    "$ref": "#/definitions/13265.0xc0011f0990.false"
                 },
                 "name": {
                     "type": "string"

@@ -179,12 +179,7 @@ func (c *OPClusterController) Post() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-	if teams == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -275,12 +270,7 @@ func (c *OPClusterController) Patch() {
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-	if teams == "" {
-		c.Ctx.Output.SetStatus(405)
-		c.Data["json"] = map[string]string{"error": "subscription Id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
