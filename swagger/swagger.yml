@@ -530,8 +530,8 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/validateProfile/{key}/{secret}:
-    get:
+  /cluster/aws/validateProfile/:
+    post:
       tags:
       - cluster/aws
       description: check if profile is valid
@@ -541,16 +541,12 @@ paths:
         name: token
         description: token
         type: string
-      - in: path
-        name: key
-        description: Access Key
+      - in: body
+        name: body
+        description: body for cluster content
         required: true
-        type: string
-      - in: path
-        name: secret
-        description: Access Secret
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/vault.AwsCredentials'
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
@@ -974,8 +970,8 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/azure/validateProfile/{clientId}/{clientSecret}/{subscriptionId}/{tenantId}:
-    get:
+  /cluster/azure/validateProfile/:
+    post:
       tags:
       - cluster/azure
       description: check if profile is valid
@@ -985,29 +981,15 @@ paths:
         name: token
         description: token
         type: string
-      - in: path
-        name: clientId
-        description: Client Id
+      - in: body
+        name: body
+        description: body for cluster content
         required: true
-        type: string
-      - in: path
-        name: clientSecret
-        description: Client Secret
-        required: true
-        type: string
-      - in: path
-        name: subscriptionId
-        description: Subscription Id
-        required: true
-        type: string
-      - in: path
-        name: tenantId
-        description: Tenant Id
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/vault.AzureCredentials'
       responses:
         "200":
-          description: '{"msg": "cluster created successfully"}'
+          description: '{"msg": "Profile is valid"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -1139,9 +1121,8 @@ paths:
       operationId: DOClusterController.GetRegions
       parameters:
       - in: header
-        name: profileid
-        description: profile of DO
-        required: true
+        name: X-Profile-Id
+        description: DO profile
         type: string
       - in: header
         name: token
@@ -1350,29 +1331,26 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/validateprofile/{key}:
-    get:
+  /cluster/do/validateprofile/:
+    post:
       tags:
       - cluster/do
       description: validate if profile is valid
       operationId: DOClusterController.ValidateProfile
       parameters:
-      - in: path
-        name: key
-        description: Access Key
-        required: true
-        type: string
       - in: header
         name: token
         description: "true"
         type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/vault.DOCredentials'
       responses:
         "200":
-          description: ""
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/godo.Region'
+          description: '{"msg": "Profile is valid"}'
         "400":
           description: '{"error": "error msg"}'
         "404":
@@ -3875,16 +3853,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  459.0xc043256240.false:
+  442.0xc0011ee240.false:
     title: "false"
     type: object
-  631.0xc042cd5320.false:
+  607.0xc000c54f00.false:
     title: "false"
     type: object
-  637.0xc042fb8bd0.false:
+  637.0xc000f529f0.false:
     title: "false"
     type: object
-  13726.0xc043279f80.false:
+  13266.0xc00120ff80.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3924,7 +3902,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/631.0xc042cd5320.false'
+        $ref: '#/definitions/607.0xc000c54f00.false'
       name:
         type: string
       network_name:
@@ -4307,7 +4285,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc042fb8bd0.false'
+        $ref: '#/definitions/637.0xc000f529f0.false'
       name:
         type: string
       network_name:
@@ -5030,7 +5008,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/459.0xc043256240.false'
+        $ref: '#/definitions/442.0xc0011ee240.false'
       name:
         type: string
       node_pools:
@@ -5063,8 +5041,6 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
-      machine_type:
-        type: string
       name:
         type: string
       node_count:
@@ -5084,8 +5060,6 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
-      machine_type:
-        type: string
       name:
         type: string
       node_count:
@@ -5120,7 +5094,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13726.0xc043279f80.false'
+        $ref: '#/definitions/13266.0xc00120ff80.false'
       name:
         type: string
       node_pools:
@@ -5132,6 +5106,38 @@ definitions:
       template_id:
         type: string
       token_name:
+        type: string
+  vault.AwsCredentials:
+    title: AwsCredentials
+    type: object
+    properties:
+      access_key:
+        type: string
+      access_secret:
+        type: string
+      region:
+        type: string
+  vault.AzureCredentials:
+    title: AzureCredentials
+    type: object
+    properties:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+      region:
+        type: string
+      subscription_id:
+        type: string
+      tenant_id:
+        type: string
+  vault.DOCredentials:
+    title: DOCredentials
+    type: object
+    properties:
+      access_token:
+        type: string
+      region:
         type: string
 tags:
 - name: health

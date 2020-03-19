@@ -24,8 +24,8 @@ var (
 	mongo_gke_cluster_collection    = ""
 	mongo_do_template_collection    = ""
 	mongo_do_cluster_collection     = ""
-	mongo_op_template_collection    = ""
-	mongo_op_cluster_collection     = ""
+	mongo_op_cluster_collection     =""
+	mongo_op_template_collection  =""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
@@ -141,6 +141,12 @@ func InitFlags() error {
 			EnvVar:      "mongo_aws_template_collection",
 		},
 		cli.StringFlag{
+			Name:        "mongo_op_cluster_collection",
+			Usage:       "op cluster collection name ",
+			Destination: &mongo_op_cluster_collection,
+			EnvVar:      "mongo_op_cluster_collection",
+		},
+		cli.StringFlag{
 			Name:        "mongo_aws_cluster_collection",
 			Usage:       "aws cluster collection name ",
 			Destination: &mongo_aws_cluster_collection,
@@ -199,12 +205,6 @@ func InitFlags() error {
 			Usage:       "op template collection name ",
 			Destination: &mongo_op_template_collection,
 			EnvVar:      "mongo_op_template_collection",
-		},
-		cli.StringFlag{
-			Name:        "mongo_op_cluster_collection",
-			Usage:       "op cluster collection name ",
-			Destination: &mongo_op_cluster_collection,
-			EnvVar:      "mongo_op_cluster_collection",
 		},
 		cli.StringFlag{
 			Name:        "redis_url",
