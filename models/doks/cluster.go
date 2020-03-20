@@ -18,7 +18,7 @@ type KubernetesClusterConfig struct{
 	KubeconfigYAML []byte
 }
 type KubernetesCluster struct {
-	ID            		string   							`json:"id,omitempty" bson:"id"`
+	ID            		string   							`json:"id" bson:"id"`
 	ProjectId			string								`json:"project_id" bson:"project_id" valid:"required"`
 	CompanyId			string								`json:"company_id" bson:"company_id" valid:"required"`
 	Cloud            	models.Cloud  						`json:"cloud" bson:"cloud" valid:"required"`
@@ -26,18 +26,18 @@ type KubernetesCluster struct {
 	ModificationDate 	time.Time     						`json:"-" bson:"modification_date"`
 	CloudplexStatus  	string        						`json:"status" bson:"status"`
 	Name          		string   							`json:"name,omitempty" bson:"name" valid:"required"`
-	Region    			string  							`json:"region,omitempty" bson:"region" `
-	Version		  		string   							`json:"version,omitempty" bson:"version" "`
+	Region    			string  							`json:"region,omitempty" bson:"region"`
+	Version		  		string   							`json:"version,omitempty" bson:"version"`
 	ClusterSubnet 		string   							`json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	ServiceSubnet 		string   							`json:"service_subnet,omitempty" bson:"service_subnet"`
 	IPv4          		string   							`json:"ipv4,omitempty" bson:"ivp4"`
 	Endpoint      		string   							`json:"endpoint,omitempty" bson:"endpoint"`
 	Tags          		[]string 							`json:"tags,omitempty" bson:"tags"`
-	VPCUUID       		string   							`json:"vpc_uuid,omitempty" bson:"vpc_uuid"`
+	VPCUUID       		string   							`json:"vpc_uuid" bson:"vpc_uuid"`
 	NodePools 			[]*KubernetesNodePool 				`json:"node_pools,omitempty" bson:"node_pools"`
 	MaintenancePolicy 	*KubernetesMaintenancePolicy 		`json:"maintenance_policy,omitempty" bson:"maintenance_policy"`
 	AutoUpgrade       	bool                         		`json:"auto_upgrade,omitempty" bson:"auto_upgrade"`
-	Status   	 		*KubernetesClusterStatus 			`json:"status,omitempty" bson:"status"`
+	Status   	 		*KubernetesClusterStatus 			`json:"kube_status,omitempty" bson:"kube_status"`
 }
 type KubernetesNodePool struct {
 	ID        	string            		`json:"id,omitempty"  bson:"id"`
@@ -89,7 +89,6 @@ func GetKubernetesCluster(projectId string, companyId string, ctx utils.Context)
 		ctx.SendLogs( "DOKSGetClusterModel:  Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
 	}
-
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
@@ -177,7 +176,7 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Cluster is in running state.", models.LOGGING_LEVEL_ERROR, models.Backend_Logging,)
 		return errors.New("cluster is in running state")
 	}
-
+cluster.ProjectId="string"
 	err = DeleteKubernetesCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Got error deleting cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

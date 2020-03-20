@@ -134,7 +134,7 @@ func (c *DOKSClusterController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -142,13 +142,13 @@ func (c *DOKSClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+	/*if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	ctx.SendLogs("DOKSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
@@ -197,15 +197,15 @@ func (c *DOKSClusterController) GetAll() {
 
 	ctx.SendLogs("DOKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DOKS, *ctx)
-	if err != nil {
+	_, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DOKS, *ctx)
+	/*if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	clusters, err := doks.GetAllKubernetesCluster(data, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -341,7 +341,7 @@ func (c *DOKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -349,13 +349,13 @@ func (c *DOKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+	/*if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("DOKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	*/ctx.SendLogs("DOKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
@@ -393,117 +393,6 @@ func (c *DOKSClusterController) Patch() {
 
 	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
-	c.ServeJSON()
-}
-
-// @Title Delete
-// @Description delete a kubernetes cluster
-// @Param	projectId	path	string	true	"project id of the cluster"
-// @Param	forceDelete path  boolean	true ""
-// @Param	token	header	string	token ""
-// @Success 200 {"msg": "cluster deleted successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
-// @router /:projectId/:forceDelete  [delete]
-func (c *DOKSClusterController) Delete() {
-	ctx := new(utils.Context)
-
-	id := c.GetString(":projectId")
-	if id == "" {
-		ctx.SendLogs("DOKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-	forceDelete, err := c.GetBool(":forceDelete")
-	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	userInfo, err := rbacAuthentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", id, "Delete", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.SendLogs("DOKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	cluster, err := doks.GetKubernetesCluster(id, userInfo.CompanyId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if strings.ToLower(cluster.Status.State) == string(models.ClusterCreated) && !forceDelete {
-		ctx.SendLogs("DOKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
-		c.ServeJSON()
-		return
-	}
-
-	if cluster.Status.State == string(models.Deploying) && !forceDelete {
-		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
-		c.ServeJSON()
-		return
-	}
-
-	if cluster.Status.State == string(models.Terminating) && !forceDelete {
-		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
-
-	err =doks.DeleteKubernetesCluster(id, userInfo.CompanyId, *ctx)
-	if err != nil {
-		ctx.SendLogs("DOKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
 
@@ -560,7 +449,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -568,13 +457,13 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+	/*if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	region, err := do.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -954,5 +843,116 @@ func (c *DOKSClusterController) ApplyAgent() {
 //	go doks.TestDOKS(doProfile.Profile, userInfo.CompanyId, token, *ctx, projectId, clusterName)
 
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+	c.ServeJSON()
+}
+
+// @Title Delete
+// @Description delete a kubernetes cluster
+// @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	forceDelete path  boolean	true ""
+// @Param	token	header	string	token ""
+// @Success 200 {"msg": "cluster deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "project id is empty"}
+// @Failure 500 {"error": "error msg"}
+// @router /:projectId/:forceDelete [delete]
+func (c *DOKSClusterController) Delete() {
+	ctx := new(utils.Context)
+
+	id := c.GetString(":projectId")
+	if id == "" {
+		ctx.SendLogs("DOKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+	forceDelete, err := c.GetBool(":forceDelete")
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("DOKSClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", id, "Delete", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+/*	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+*/
+	ctx.SendLogs("DOKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	cluster, err := doks.GetKubernetesCluster(id, userInfo.CompanyId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if strings.ToLower(cluster.Status.State) == string(models.ClusterCreated) && !forceDelete {
+		ctx.SendLogs("DOKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status.State == string(models.Deploying) && !forceDelete {
+		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status.State == string(models.Terminating) && !forceDelete {
+		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}
+
+	err =doks.DeleteKubernetesCluster(id, userInfo.CompanyId, *ctx)
+	if err != nil {
+		ctx.SendLogs("DOKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }

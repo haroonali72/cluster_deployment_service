@@ -2497,7 +2497,53 @@
                 }
             }
         },
-        "/cluster/doks/{projectId}/{forceDelete}": {},
+        "/cluster/doks/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "delete a kubernetes cluster",
+                "operationId": "DOKSClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/": {
             "put": {
                 "tags": [
@@ -6212,19 +6258,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13356.0xc00128ae70.false": {
+        "13356.0xc0012f4ff0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc001251110.false": {
+        "442.0xc0012bf290.false": {
             "title": "false",
             "type": "object"
         },
-        "607.0xc000c69c20.false": {
+        "607.0xc000cd3320.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc000f6b710.false": {
+        "637.0xc000fcce10.false": {
             "title": "false",
             "type": "object"
         },
@@ -6284,7 +6330,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/607.0xc000c69c20.false"
+                    "$ref": "#/definitions/607.0xc000cd3320.false"
                 },
                 "name": {
                     "type": "string"
@@ -6852,7 +6898,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc000f6b710.false"
+                    "$ref": "#/definitions/637.0xc000fcce10.false"
                 },
                 "name": {
                     "type": "string"
@@ -7101,6 +7147,9 @@
                 "ipv4": {
                     "type": "string"
                 },
+                "kube_status": {
+                    "$ref": "#/definitions/doks.KubernetesClusterStatus"
+                },
                 "maintenance_policy": {
                     "$ref": "#/definitions/doks.KubernetesMaintenancePolicy"
                 },
@@ -7123,7 +7172,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/doks.KubernetesClusterStatus"
+                    "type": "string"
                 },
                 "tags": {
                     "type": "array",
@@ -8085,7 +8134,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc001251110.false"
+                    "$ref": "#/definitions/442.0xc0012bf290.false"
                 },
                 "name": {
                     "type": "string"
@@ -8219,7 +8268,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13356.0xc00128ae70.false"
+                    "$ref": "#/definitions/13356.0xc0012f4ff0.false"
                 },
                 "name": {
                     "type": "string"
