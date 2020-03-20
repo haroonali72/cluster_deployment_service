@@ -1331,7 +1331,7 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/validateprofile/:
+  /cluster/do/validateProfile/:
     post:
       tags:
       - cluster/do
@@ -3853,16 +3853,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0011fa270.false:
+  442.0xc0011bb5f0.false:
     title: "false"
     type: object
-  607.0xc000c60f30.false:
+  607.0xc000c582d0.false:
     title: "false"
     type: object
-  637.0xc000f5ca20.false:
+  637.0xc000f27da0.false:
     title: "false"
     type: object
-  13356.0xc00121ffb0.false:
+  13356.0xc001201350.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3902,7 +3902,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/607.0xc000c60f30.false'
+        $ref: '#/definitions/607.0xc000c582d0.false'
       name:
         type: string
       network_name:
@@ -4285,7 +4285,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc000f5ca20.false'
+        $ref: '#/definitions/637.0xc000f27da0.false'
       name:
         type: string
       network_name:
@@ -5008,7 +5008,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0011fa270.false'
+        $ref: '#/definitions/442.0xc0011bb5f0.false'
       name:
         type: string
       node_pools:
@@ -5098,7 +5098,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13356.0xc00121ffb0.false'
+        $ref: '#/definitions/13356.0xc001201350.false'
       name:
         type: string
       node_pools:
