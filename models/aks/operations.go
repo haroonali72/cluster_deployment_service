@@ -178,6 +178,18 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	}
 
 	request := cloud.generateClusterCreateRequest(aksCluster)
+	networkInformation := cloud.getAzureNetwork(token, ctx)
+
+	if len(networkInformation.Definition) > 0 {
+		for _, AKSnodePool := range *request.ManagedClusterProperties.AgentPoolProfiles {
+			for _, subnet := range networkInformation.Definition[0].Subnets {
+				if subnet.Name == *AKSnodePool.VnetSubnetID {
+					*AKSnodePool.VnetSubnetID = subnet.SubnetId
+					break
+				}
+			}
+		}
+	}
 	cloud.Context = context.Background()
 	future, err := cloud.MCClient.CreateOrUpdate(cloud.Context, aksCluster.ResourceGoup, *request.Name, *request)
 	if err != nil {
@@ -219,85 +231,6 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	return nil
 }
 
-//func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.Context) error {
-//	if newVersion == "" {
-//		return nil
-//	}
-//
-//	_, err := cloud.Client.Projects.Zones.Clusters.Update(
-//		cloud.ProjectId,
-//		cloud.Zone,
-//		clusterName,
-//		&gke.UpdateClusterRequest{
-//			Update: &gke.ClusterUpdate{
-//				DesiredMasterVersion: newVersion,
-//			},
-//		},
-//	).Context(context.Background()).Do()
-//	if err != nil {
-//		ctx.SendLogs(
-//			"GKE cluster update request for '"+clusterName+"' failed: "+err.Error(),
-//			models.LOGGING_LEVEL_ERROR,
-//			models.Backend_Logging,
-//		)
-//		return err
-//	}
-//
-//	return cloud.waitForCluster(clusterName, ctx)
-//}
-//
-//func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ctx utils.Context) error {
-//	if newVersion == "" {
-//		return nil
-//	}
-//
-//	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Update(
-//		cloud.ProjectId,
-//		cloud.Zone,
-//		clusterName,
-//		nodeName,
-//		&gke.UpdateNodePoolRequest{
-//			NodeVersion: newVersion,
-//		},
-//	).Context(context.Background()).Do()
-//	if err != nil {
-//		ctx.SendLogs(
-//			"GKE node update request for cluster '"+clusterName+"' and node '"+nodeName+"' failed: "+err.Error(),
-//			models.LOGGING_LEVEL_ERROR,
-//			models.Backend_Logging,
-//		)
-//		return err
-//	}
-//
-//	return cloud.waitForNodePool(clusterName, nodeName, ctx)
-//}
-//
-//func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, ctx utils.Context) error {
-//	if newCount == 0 {
-//		return nil
-//	}
-//
-//	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.SetSize(
-//		cloud.ProjectId,
-//		cloud.Zone,
-//		clusterName,
-//		nodeName,
-//		&gke.SetNodePoolSizeRequest{
-//			NodeCount: newCount,
-//		},
-//	).Context(context.Background()).Do()
-//	if err != nil {
-//		ctx.SendLogs(
-//			"GKE node update request for cluster '"+clusterName+"' and node '"+nodeName+"' failed: "+err.Error(),
-//			models.LOGGING_LEVEL_ERROR,
-//			models.Backend_Logging,
-//		)
-//		return err
-//	}
-//
-//	return cloud.waitForNodePool(clusterName, nodeName, ctx)
-//}
-//
 func (cloud *AKS) DeleteCluster(cluster AKSCluster, ctx utils.Context) error {
 	if cloud == nil {
 		err := cloud.init()
@@ -356,97 +289,6 @@ func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*contain
 
 	return nil, nil
 }
-
-//
-//func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context) error {
-//	message := ""
-//	for {
-//		cluster, err := cloud.Client.Projects.Zones.Clusters.Get(
-//			cloud.ProjectId,
-//			cloud.Zone,
-//			clusterName,
-//		).Context(context.Background()).Do()
-//		if err != nil {
-//			ctx.SendLogs(
-//				"GKE cluster creation/updation for '"+clusterName+"' failed: "+err.Error(),
-//				models.LOGGING_LEVEL_ERROR,
-//				models.Backend_Logging,
-//			)
-//			return err
-//		}
-//		if cluster.Status == statusRunning {
-//			ctx.SendLogs(
-//				"GKE cluster '"+clusterName+"' is running.",
-//				models.LOGGING_LEVEL_INFO,
-//				models.Backend_Logging,
-//			)
-//			return nil
-//		}
-//		if cluster.Status != message {
-//			ctx.SendLogs(
-//				"GKE cluster '"+clusterName+"' is creating/updating.",
-//				models.LOGGING_LEVEL_INFO,
-//				models.Backend_Logging,
-//			)
-//			message = cluster.Status
-//		}
-//		time.Sleep(time.Second * 5)
-//	}
-//}
-//
-//func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Context) error {
-//	message := ""
-//	for {
-//		nodepool, err := cloud.Client.Projects.Zones.Clusters.NodePools.Get(
-//			cloud.ProjectId,
-//			cloud.Zone,
-//			clusterName,
-//			nodeName,
-//		).Context(context.Background()).Do()
-//		if err != nil {
-//			ctx.SendLogs(
-//				"GKE node creation/updation for cluster '"+clusterName+"' and node '"+nodeName+"' failed: "+err.Error(),
-//				models.LOGGING_LEVEL_ERROR,
-//				models.Backend_Logging,
-//			)
-//			return err
-//		}
-//		if nodepool.Status == statusRunning {
-//			ctx.SendLogs(
-//				"GKE node '"+nodeName+"' for cluster '"+clusterName+"' is running.",
-//				models.LOGGING_LEVEL_INFO,
-//				models.Backend_Logging,
-//			)
-//			return nil
-//		}
-//		if nodepool.Status != message {
-//			ctx.SendLogs(
-//				"GKE node '"+nodeName+"' for cluster '"+clusterName+"' is creating/updating.",
-//				models.LOGGING_LEVEL_INFO,
-//				models.Backend_Logging,
-//			)
-//			message = nodepool.Status
-//		}
-//		time.Sleep(time.Second * 5)
-//	}
-//}
-//
-//func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, error) {
-//	config, err := cloud.Client.Projects.Zones.GetServerconfig("*", cloud.Zone).
-//		Context(context.Background()).
-//		Do()
-//
-//	if err != nil {
-//		ctx.SendLogs(
-//			"GKE server config for '"+cloud.ProjectId+"' failed: "+err.Error(),
-//			models.LOGGING_LEVEL_ERROR,
-//			models.Backend_Logging,
-//		)
-//		return nil, err
-//	}
-//
-//	return config, nil
-//}
 
 func (cloud *AKS) getAzureNetwork(token string, ctx utils.Context) (azureNetwork types.AzureNetwork) {
 	url := getNetworkHost(string(models.Azure), cloud.ProjectId)
@@ -577,29 +419,6 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 	cluster.ClusterProperties.NetworkProfile = &networkProfile
 	return nil
 }
-
-//
-//func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) error {
-//	if cloud.Client == nil {
-//		err := cloud.init()
-//		if err != nil {
-//			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-//			return err
-//		}
-//	}
-//
-//	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.ProjectId, cloud.Zone, cluster.Name).Do()
-//	if err != nil {
-//		ctx.SendLogs(
-//			"GKE delete cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
-//			models.LOGGING_LEVEL_ERROR,
-//			models.Backend_Logging,
-//		)
-//		return err
-//	}
-//
-//	return nil
-//}
 
 func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
 	return containerservice.PossibleVMSizeTypesValues()

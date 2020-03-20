@@ -6517,7 +6517,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "12300.string": {
+        "12364.string": {
             "title": "string",
             "type": "object"
         },
@@ -6525,19 +6525,19 @@
             "title": "string",
             "type": "object"
         },
-        "13387.0xc000d288d0.false": {
+        "13387.0xc000d2e480.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc0010223f0.false": {
+        "13431.0xc00101df80.false": {
             "title": "false",
             "type": "object"
         },
-        "434.0xc001276390.false": {
+        "434.0xc00126bf20.false": {
             "title": "false",
             "type": "object"
         },
-        "6051.0xc001277890.false": {
+        "5960.0xc001299440.false": {
             "title": "false",
             "type": "object"
         },
@@ -6552,7 +6552,7 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
-                "company_id": {
+                "companyId": {
                     "type": "string"
                 },
                 "id": {
@@ -6564,20 +6564,20 @@
                 "name": {
                     "type": "string"
                 },
-                "project_id": {
+                "projectId": {
                     "type": "string"
                 },
                 "properties": {
                     "$ref": "#/definitions/aks.ManagedClusterProperties"
                 },
-                "resource_group": {
+                "resourceGroup": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/12300.string"
+                    "$ref": "#/definitions/12364.string"
                 },
                 "type": {
                     "type": "string"
@@ -6665,7 +6665,7 @@
                 "osType": {
                     "$ref": "#/definitions/aks.OSType"
                 },
-                "subnet_id": {
+                "subnetId": {
                     "type": "string"
                 },
                 "vmSize": {
@@ -6819,7 +6819,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13387.0xc000d288d0.false"
+                    "$ref": "#/definitions/13387.0xc000d2e480.false"
                 },
                 "name": {
                     "type": "string"
@@ -7387,7 +7387,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc0010223f0.false"
+                    "$ref": "#/definitions/13431.0xc00101df80.false"
                 },
                 "name": {
                     "type": "string"
@@ -8441,7 +8441,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/6051.0xc001277890.false"
+                    "$ref": "#/definitions/5960.0xc001299440.false"
                 },
                 "name": {
                     "type": "string"
@@ -8569,7 +8569,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13266.0xc00120ff80.false"
+                    "$ref": "#/definitions/434.0xc00126bf20.false"
                 },
                 "name": {
                     "type": "string"
