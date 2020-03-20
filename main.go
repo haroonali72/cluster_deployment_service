@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	setEnv()
+	//setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -50,7 +50,7 @@ func setEnv() {
 	os.Setenv("kill_bill_password", "password")
 	os.Setenv("kill_bill_secret_key", "cloudplex")
 	os.Setenv("kill_bill_api_key", "cloudplex")
-	os.Setenv("ca_cert","/home/zunaira/Downloads/mongoCA.crt")
+	os.Setenv("ca_cert", "/home/zunaira/Downloads/mongoCA.crt")
 	os.Setenv("client_cert", "/home/zunaira/Downloads/antelope.crt")
 	os.Setenv("client_pem", "/home/zunaira/Downloads/antelope.pem")
 	os.Setenv("subscription_host", "35.246.150.221:30906")
@@ -61,6 +61,7 @@ func setEnv() {
 	os.Setenv("mongo_user", "antelope")
 	os.Setenv("mongo_pass", "DbSn3hAzJU6pPVRcn61apb3KDEKmcSb7Bl..")
 	os.Setenv("mongo_aws_template_collection", "aws_template")
+	os.Setenv("mongo_op_cluster_collection", "op_cluster")
 	os.Setenv("mongo_aws_cluster_collection", "aws_cluster")
 	os.Setenv("mongo_azure_template_collection", "azure_template")
 	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
