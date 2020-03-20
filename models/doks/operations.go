@@ -104,12 +104,15 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 
 	utils.SendLog(companyId, "Creating DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
+	list := godo.ListOptions{}
+	re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
+	fmt.Println(re)
 	input :=godo.KubernetesClusterCreateRequest{
 		Name:              cluster.Name,
 		RegionSlug:        cluster.Region,
 		VersionSlug:       cluster.Version,
 		Tags:              cluster.Tags,
-		VPCUUID:           cluster.VPCUUID,
+		//VPCUUID:           cluster.VPCUUID,
 		//NodePools:         cluster.NodePools,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade:       cluster.AutoUpgrade,
@@ -227,17 +230,13 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId,companyId,projectId 
 		}
 	}
 	clusterId ="fb29ad6f-085e-4328-b1cf-39f71d26de84"
-	//list := godo.ListOptions{}
 	status,_,err := cloud.Client.Kubernetes.Get(context.Background(),clusterId)
-	// cloud.Client.Kubernetes.List(context.Background(),&list)
 
+	fmt.Println(status)
 	if err != nil{
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", projectId)
 		return KubernetesCluster{}, err
 	}
-	var cluster *KubernetesCluster
-	println(status)
-
-	return &status, nil
+	return KubernetesCluster{}, nil
 }
 
