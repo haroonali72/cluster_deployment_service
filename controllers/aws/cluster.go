@@ -1443,7 +1443,6 @@ func (c *AWSClusterController) ValidateProfile() {
 	var credentials vault.AwsCredentials
 	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
 
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())

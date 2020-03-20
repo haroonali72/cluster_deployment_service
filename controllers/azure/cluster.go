@@ -1185,7 +1185,6 @@ func (c *AzureClusterController) ValidateProfile() {
 	var credentials vault.AzureCredentials
 	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
 
-
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -1193,7 +1192,6 @@ func (c *AzureClusterController) ValidateProfile() {
 		c.ServeJSON()
 		return
 	}
-
 
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
