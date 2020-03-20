@@ -280,26 +280,26 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func FetchStatus(credentials vault.DOCredentials, token, projectId, companyId string, ctx utils.Context) (KubernetesCluster, error) {
-	cluster, err := GetKubernetesCluster(projectId, companyId, ctx)
+func FetchStatus(credentials vault.DOCredentials,clusterId, projectId, companyId string, ctx utils.Context) (KubernetesCluster, error) {
+	/*cluster, err := GetKubernetesCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
-
-	gkeOps, err := GetDOKS(credentials)
+*/
+	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return KubernetesCluster{}, err
 	}
 
-	err = gkeOps.init(ctx)
+	err = doksOps.init(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return KubernetesCluster{}, err
 	}
 
-	//_,err = gkeOps.fetchStatus(&cluster, ctx)
+	cluster,err := doksOps.fetchStatus(ctx,clusterId,companyId,projectId)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err

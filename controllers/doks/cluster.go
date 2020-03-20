@@ -540,8 +540,8 @@ func (c *DOKSClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} DOKS.DOKSCluster
-// @Failure 206 {object} DOKS.DOKSCluster
+// @Success 200 {object} doks.DOKSCluster
+// @Failure 206 {object} doks.DOKSCluster
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "authorization params missing or invalid"}

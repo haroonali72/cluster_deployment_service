@@ -218,7 +218,26 @@ func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Contex
 func (cloud *DOKS) getVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) fetchStatus(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
-	return KubernetesNodePool{}, nil
+func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId,companyId,projectId string) (KubernetesCluster, error) {
+
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != nil {
+			return KubernetesCluster{}, err
+		}
+	}
+	clusterId ="fb29ad6f-085e-4328-b1cf-39f71d26de84"
+	//list := godo.ListOptions{}
+	status,_,err := cloud.Client.Kubernetes.Get(context.Background(),clusterId)
+	// cloud.Client.Kubernetes.List(context.Background(),&list)
+
+	if err != nil{
+		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", projectId)
+		return KubernetesCluster{}, err
+	}
+	var cluster *KubernetesCluster
+	println(status)
+
+	return &status, nil
 }
 
