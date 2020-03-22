@@ -3708,6 +3708,182 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/gke/allCustomerTemplates:
+    get:
+      tags:
+      - template/gke
+      description: get all the customer templates
+      operationId: GKETemplateController.Get All Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gke.GKEClusterTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/gke/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/gke
+      description: get all the customer templates info
+      operationId: GKETemplateController.GetAllCustomerTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gke.GKEClusterTemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/gke/allTemplatesInfo:
+    get:
+      tags:
+      - template/gke
+      description: get all the templates info
+      operationId: GKETemplateController.GetAllTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/gke.GKEClusterTemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/gke/customerTemplate:
+    put:
+      tags:
+      - template/gke
+      description: update an existing customer template
+      operationId: GKETemplateController.Update customer templates
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/gke.GKEClusterTemplate'
+      responses:
+        "200":
+          description: '{"msg": "customer template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/gke
+      description: create a new customer template
+      operationId: GKETemplateController.Create Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/gke.GKEClusterTemplate'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/gke/customerTemplate/{templateId}:
+    get:
+      tags:
+      - template/gke
+      description: get customer template
+      operationId: GKETemplateController.Get customer template
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/gke.GKEClusterTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+    delete:
+      tags:
+      - template/gke
+      description: delete a customer template
+      operationId: GKETemplateController.Delete customer template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "customer template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/op/:
     put:
       tags:
@@ -3853,16 +4029,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001199fb0.false:
+  459.0xc000f858c0.false:
     title: "false"
     type: object
-  607.0xc000c32c90.false:
+  631.0xc0009bce10.false:
     title: "false"
     type: object
-  637.0xc000f26780.false:
+  660.0xc000cb46c0.false:
     title: "false"
     type: object
-  13266.0xc0011d3d10.false:
+  13635.0xc000fc5620.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3902,7 +4078,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/607.0xc000c32c90.false'
+        $ref: '#/definitions/631.0xc0009bce10.false'
       name:
         type: string
       network_name:
@@ -4285,7 +4461,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc000f26780.false'
+        $ref: '#/definitions/660.0xc000cb46c0.false'
       name:
         type: string
       network_name:
@@ -4652,20 +4828,80 @@ definitions:
         $ref: '#/definitions/models.GCPDiskType'
       is_blank:
         type: boolean
+  gke.AcceleratorConfig:
+    title: AcceleratorConfig
+    type: object
+    properties:
+      accelerator_count:
+        type: integer
+        format: int64
+      accelerator_type:
+        type: string
   gke.AddonsConfig:
     title: AddonsConfig
     type: object
+    properties:
+      horizontal_pod_autoscaling:
+        $ref: '#/definitions/gke.HorizontalPodAutoscaling'
+      http_load_balancing:
+        $ref: '#/definitions/gke.HttpLoadBalancing'
+      kubernetes_dashboard:
+        $ref: '#/definitions/gke.KubernetesDashboard'
+      network_policy_config:
+        $ref: '#/definitions/gke.NetworkPolicyConfig'
+  gke.AutoUpgradeOptions:
+    title: AutoUpgradeOptions
+    type: object
+    properties:
+      auto_upgrade_start_time:
+        type: string
+      description:
+        type: string
+  gke.BigQueryDestination:
+    title: BigQueryDestination
+    type: object
+    properties:
+      dataset_id:
+        type: string
+  gke.CidrBlock:
+    title: CidrBlock
+    type: object
+    properties:
+      cidr_block:
+        type: string
+      display_name:
+        type: string
+  gke.ClientCertificateConfig:
+    title: ClientCertificateConfig
+    type: object
+    properties:
+      issue_client_certificate:
+        type: boolean
+  gke.ConsumptionMeteringConfig:
+    title: ConsumptionMeteringConfig
+    type: object
+    properties:
+      enabled:
+        type: boolean
+  gke.DailyMaintenanceWindow:
+    title: DailyMaintenanceWindow
+    type: object
+    properties:
+      duration:
+        type: string
+      start_time:
+        type: string
   gke.GKECluster:
     title: GKECluster
     type: object
     properties:
-      addonsConfig:
+      addons_config:
         $ref: '#/definitions/gke.AddonsConfig'
       cloud:
         $ref: '#/definitions/models.Cloud'
-      cloudStatus:
+      cloud_status:
         type: string
-      clusterIpv4Cidr:
+      cluster_ipv_4_cidr:
         type: string
       company_id:
         type: string
@@ -4673,29 +4909,29 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gke.StatusCondition'
-      createTime:
+      create_time:
         type: string
-      currentMasterVersion:
+      current_master_version:
         type: string
-      defaultMaxPodsConstraint:
+      default_max_pods_constraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
         type: string
-      enableKubernetesAlpha:
+      enable_kubernetes_alpha:
         type: boolean
-      enableTpu:
+      enable_tpu:
         type: boolean
       endpoint:
         type: string
-      expireTime:
+      expire_time:
         type: string
-      initialClusterVersion:
+      initial_cluster_version:
         type: string
-      ipAllocationPolicy:
+      ip_allocation_policy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
-      labelFingerprint:
+      label_fingerprint:
         type: string
-      legacyAbac:
+      legacy_abac:
         $ref: '#/definitions/gke.LegacyAbac'
       location:
         type: string
@@ -4703,51 +4939,51 @@ definitions:
         type: array
         items:
           type: string
-      loggingService:
+      logging_service:
         type: string
-      maintenancePolicy:
+      maintenance_policy:
         $ref: '#/definitions/gke.MaintenancePolicy'
-      masterAuth:
+      master_auth:
         $ref: '#/definitions/gke.MasterAuth'
-      masterAuthorizedNetworksConfig:
+      master_authorized_networks_config:
         $ref: '#/definitions/gke.MasterAuthorizedNetworksConfig'
-      monitoringService:
+      monitoring_service:
         type: string
       name:
         type: string
       network:
         type: string
-      networkConfig:
+      network_config:
         $ref: '#/definitions/gke.NetworkConfig'
-      networkPolicy:
+      network_policy:
         $ref: '#/definitions/gke.NetworkPolicy'
-      nodeIpv4CidrSize:
+      node_ipv_4_cidr_size:
         type: integer
         format: int64
-      nodePools:
+      node_pools:
         type: array
         items:
           $ref: '#/definitions/gke.NodePool'
-      privateClusterConfig:
+      private_cluster_config:
         $ref: '#/definitions/gke.PrivateClusterConfig'
       project_id:
         type: string
-      resourceLabels:
+      resource_labels:
         additionalProperties:
           type: string
-      resourceUsageExportConfig:
+      resource_usage_export_config:
         $ref: '#/definitions/gke.ResourceUsageExportConfig'
-      selfLink:
+      self_link:
         type: string
-      servicesIpv4Cidr:
+      services_ipv_4_cidr:
         type: string
       status:
         type: string
-      statusMessage:
+      status_message:
         type: string
       subnetwork:
         type: string
-      tpuIpv4CidrBlock:
+      tpu_ipv_4_cidr_block:
         type: string
       zone:
         type: string
@@ -4755,13 +4991,13 @@ definitions:
     title: GKEClusterTemplate
     type: object
     properties:
-      addonsConfig:
+      addons_config:
         $ref: '#/definitions/gke.AddonsConfig'
       cloud:
         $ref: '#/definitions/models.Cloud'
-      cloudStatus:
+      cloud_status:
         type: string
-      clusterIpv4Cidr:
+      cluster_ipv_4_cidr:
         type: string
       company_id:
         type: string
@@ -4769,29 +5005,31 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gke.StatusCondition'
-      createTime:
+      create_time:
         type: string
-      currentMasterVersion:
+      current_master_version:
         type: string
-      defaultMaxPodsConstraint:
+      default_max_pods_constraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
         type: string
-      enableKubernetesAlpha:
+      enable_kubernetes_alpha:
         type: boolean
-      enableTpu:
+      enable_tpu:
         type: boolean
       endpoint:
         type: string
-      expireTime:
+      expire_time:
         type: string
-      initialClusterVersion:
+      initial_cluster_version:
         type: string
-      ipAllocationPolicy:
+      ip_allocation_policy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
-      labelFingerprint:
+      is_cloudplex:
+        type: boolean
+      label_fingerprint:
         type: string
-      legacyAbac:
+      legacy_abac:
         $ref: '#/definitions/gke.LegacyAbac'
       location:
         type: string
@@ -4799,93 +5037,323 @@ definitions:
         type: array
         items:
           type: string
-      loggingService:
+      logging_service:
         type: string
-      maintenancePolicy:
+      maintenance_policy:
         $ref: '#/definitions/gke.MaintenancePolicy'
-      masterAuth:
+      master_auth:
         $ref: '#/definitions/gke.MasterAuth'
-      masterAuthorizedNetworksConfig:
+      master_authorized_networks_config:
         $ref: '#/definitions/gke.MasterAuthorizedNetworksConfig'
-      monitoringService:
+      monitoring_service:
         type: string
       name:
         type: string
       network:
         type: string
-      networkConfig:
+      network_config:
         $ref: '#/definitions/gke.NetworkConfig'
-      networkPolicy:
+      network_policy:
         $ref: '#/definitions/gke.NetworkPolicy'
-      nodeIpv4CidrSize:
+      node_ipv_4_cidr_size:
         type: integer
         format: int64
-      nodePools:
+      node_pools:
         type: array
         items:
           $ref: '#/definitions/gke.NodePool'
-      privateClusterConfig:
+      private_cluster_config:
         $ref: '#/definitions/gke.PrivateClusterConfig'
-      resourceLabels:
+      resource_labels:
         additionalProperties:
           type: string
-      resourceUsageExportConfig:
+      resource_usage_export_config:
         $ref: '#/definitions/gke.ResourceUsageExportConfig'
-      selfLink:
+      self_link:
         type: string
-      servicesIpv4Cidr:
+      services_ipv_4_cidr:
         type: string
       status:
         type: string
-      statusMessage:
+      status_message:
         type: string
       subnetwork:
         type: string
       template_id:
         type: string
-      tpuIpv4CidrBlock:
+      tpu_ipv_4_cidr_block:
         type: string
       zone:
         type: string
+  gke.GKEClusterTemplateMetadata:
+    title: GKEClusterTemplateMetadata
+    type: object
+  gke.HorizontalPodAutoscaling:
+    title: HorizontalPodAutoscaling
+    type: object
+    properties:
+      disabled:
+        type: boolean
+  gke.HttpLoadBalancing:
+    title: HttpLoadBalancing
+    type: object
+    properties:
+      disabled:
+        type: boolean
   gke.IPAllocationPolicy:
     title: IPAllocationPolicy
     type: object
+    properties:
+      cluster_ipv_4_cidr:
+        type: string
+      cluster_ipv_4_cidr_block:
+        type: string
+      cluster_secondary_range_name:
+        type: string
+      create_subnetwork:
+        type: boolean
+      node_ipv_4_cidr:
+        type: string
+      node_ipv_4_cidr_block:
+        type: string
+      services_ipv_4_cidr:
+        type: string
+      services_ipv_4_cidr_block:
+        type: string
+      services_secondary_range_name:
+        type: string
+      subnetwork_name:
+        type: string
+      tpu_ipv_4_cidr_block:
+        type: string
+      use_ip_aliases:
+        type: boolean
+  gke.KubernetesDashboard:
+    title: KubernetesDashboard
+    type: object
+    properties:
+      disabled:
+        type: boolean
   gke.LegacyAbac:
     title: LegacyAbac
     type: object
+    properties:
+      enabled:
+        type: boolean
   gke.MaintenancePolicy:
     title: MaintenancePolicy
     type: object
+    properties:
+      window:
+        $ref: '#/definitions/gke.MaintenanceWindow'
+  gke.MaintenanceWindow:
+    title: MaintenanceWindow
+    type: object
+    properties:
+      daily_maintenance_window:
+        $ref: '#/definitions/gke.DailyMaintenanceWindow'
   gke.MasterAuth:
     title: MasterAuth
     type: object
+    properties:
+      client_certificate:
+        type: string
+      client_certificate_config:
+        $ref: '#/definitions/gke.ClientCertificateConfig'
+      client_key:
+        type: string
+      cluster_ca_certificate:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
   gke.MasterAuthorizedNetworksConfig:
     title: MasterAuthorizedNetworksConfig
     type: object
+    properties:
+      cidr_blocks:
+        type: array
+        items:
+          $ref: '#/definitions/gke.CidrBlock'
+      enabled:
+        type: boolean
   gke.MaxPodsConstraint:
     title: MaxPodsConstraint
     type: object
+    properties:
+      max_pods_per_node:
+        type: integer
+        format: int64
   gke.NetworkConfig:
     title: NetworkConfig
     type: object
+    properties:
+      network:
+        type: string
+      subnetwork:
+        type: string
   gke.NetworkPolicy:
     title: NetworkPolicy
     type: object
+    properties:
+      enabled:
+        type: boolean
+      provider:
+        type: string
+  gke.NetworkPolicyConfig:
+    title: NetworkPolicyConfig
+    type: object
+    properties:
+      disabled:
+        type: boolean
+  gke.NodeConfig:
+    title: NodeConfig
+    type: object
+    properties:
+      accelerators:
+        type: array
+        items:
+          $ref: '#/definitions/gke.AcceleratorConfig'
+      disk_size_gb:
+        type: integer
+        format: int64
+      disk_type:
+        type: string
+      image_type:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+      local_ssd_count:
+        type: integer
+        format: int64
+      machine_type:
+        type: string
+      metadata:
+        additionalProperties:
+          type: string
+      min_cpu_platform:
+        type: string
+      oauth_scopes:
+        type: array
+        items:
+          type: string
+      preemptible:
+        type: boolean
+      service_account:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
+      taints:
+        type: array
+        items:
+          $ref: '#/definitions/gke.NodeTaint'
+  gke.NodeManagement:
+    title: NodeManagement
+    type: object
+    properties:
+      auto_repair:
+        type: boolean
+      auto_upgrade:
+        type: boolean
+      upgrade_options:
+        $ref: '#/definitions/gke.AutoUpgradeOptions'
   gke.NodePool:
     title: NodePool
     type: object
+    properties:
+      autoscaling:
+        $ref: '#/definitions/gke.NodePoolAutoscaling'
+      conditions:
+        type: array
+        items:
+          $ref: '#/definitions/gke.StatusCondition'
+      config:
+        $ref: '#/definitions/gke.NodeConfig'
+      initial_node_count:
+        type: integer
+        format: int64
+      instance_group_urls:
+        type: array
+        items:
+          type: string
+      management:
+        $ref: '#/definitions/gke.NodeManagement'
+      max_pods_constraint:
+        $ref: '#/definitions/gke.MaxPodsConstraint'
+      name:
+        type: string
+      pod_ipv_4_cidr_size:
+        type: integer
+        format: int64
+      self_link:
+        type: string
+      status:
+        type: string
+      status_message:
+        type: string
+      version:
+        type: string
+  gke.NodePoolAutoscaling:
+    title: NodePoolAutoscaling
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      max_node_count:
+        type: integer
+        format: int64
+      min_node_count:
+        type: integer
+        format: int64
+  gke.NodeTaint:
+    title: NodeTaint
+    type: object
+    properties:
+      effect:
+        type: string
+      key:
+        type: string
+      value:
+        type: string
   gke.PrivateClusterConfig:
     title: PrivateClusterConfig
     type: object
+    properties:
+      enable_private_endpoint:
+        type: boolean
+      enable_private_nodes:
+        type: boolean
+      master_ipv_4_cidr_block:
+        type: string
+      private_endpoint:
+        type: string
+      public_endpoint:
+        type: string
   gke.ResourceUsageExportConfig:
     title: ResourceUsageExportConfig
     type: object
+    properties:
+      bigquery_destination:
+        $ref: '#/definitions/gke.BigQueryDestination'
+      consumption_metering_config:
+        $ref: '#/definitions/gke.ConsumptionMeteringConfig'
+      enable_network_egress_metering:
+        type: boolean
   gke.ServerConfig:
     title: ServerConfig
     type: object
   gke.StatusCondition:
     title: StatusCondition
     type: object
+    properties:
+      code:
+        type: string
+      message:
+        type: string
   godo.Region:
     title: Region
     type: object
@@ -5008,7 +5476,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001199fb0.false'
+        $ref: '#/definitions/459.0xc000f858c0.false'
       name:
         type: string
       node_pools:
@@ -5094,7 +5562,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13266.0xc0011d3d10.false'
+        $ref: '#/definitions/13635.0xc000fc5620.false'
       name:
         type: string
       node_pools:
