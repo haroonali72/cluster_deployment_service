@@ -223,6 +223,14 @@ func (c *GKEClusterController) Post() {
 
 	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
+	err := gke.Validate(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -305,8 +313,15 @@ func (c *GKEClusterController) Patch() {
 	var cluster gke.GKECluster
 	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	token := c.Ctx.Input.Header("token")
+	err := gke.Validate(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
+	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
@@ -504,7 +519,6 @@ func (c *GKEClusterController) Delete() {
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *GKEClusterController) StartCluster() {
-
 	ctx := new(utils.Context)
 	ctx.SendLogs("GKEClusterController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
