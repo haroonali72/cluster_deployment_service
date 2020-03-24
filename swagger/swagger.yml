@@ -5075,25 +5075,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc00141eb70.false:
+  434.0xc0014210b0.false:
     title: "false"
     type: object
   1502.string:
     title: string
     type: object
-  5960.0xc001452090.false:
+  5960.0xc00144a5d0.false:
     title: "false"
     type: object
-  12939.0xc0013a57d0.false:
+  12939.0xc0013b5d10.false:
     title: "false"
     type: object
   13223.string:
     title: string
     type: object
-  13387.0xc000e3efc0.false:
+  13387.0xc000e49500.false:
     title: "false"
     type: object
-  13461.0xc001136b10.false:
+  13461.0xc00113f050.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -5300,7 +5300,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13387.0xc000e3efc0.false'
+        $ref: '#/definitions/13387.0xc000e49500.false'
       name:
         type: string
       network_name:
@@ -5683,7 +5683,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13461.0xc001136b10.false'
+        $ref: '#/definitions/13461.0xc00113f050.false'
       name:
         type: string
       network_name:
@@ -6600,7 +6600,7 @@ definitions:
       disablePublicServiceEndpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/12939.0xc0013a57d0.false'
+        $ref: '#/definitions/12939.0xc0013b5d10.false'
       kubeVersion:
         type: string
       name:
@@ -6853,7 +6853,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001452090.false'
+        $ref: '#/definitions/5960.0xc00144a5d0.false'
       name:
         type: string
       node_pools:
@@ -6939,7 +6939,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc00141eb70.false'
+        $ref: '#/definitions/434.0xc0014210b0.false'
       name:
         type: string
       node_pools:
@@ -7045,3 +7045,6 @@ tags:
 - name: cluster/aks
   description: |
     Operations about AKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: cluster/ibm
+  description: |
+    Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
