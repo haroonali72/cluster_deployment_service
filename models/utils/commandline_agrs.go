@@ -24,9 +24,11 @@ var (
 	mongo_gke_cluster_collection    = ""
 	mongo_do_template_collection    = ""
 	mongo_do_cluster_collection     = ""
+	mongo_op_template_collection    = ""
 	mongo_doks_cluster_collection     = ""
-	mongo_op_cluster_collection     =""
-	mongo_op_template_collection  =""
+	mongo_op_cluster_collection     = ""
+	mongo_aks_template_collection   = ""
+	mongo_aks_cluster_collection    = ""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
@@ -267,6 +269,18 @@ func InitFlags() error {
 			Destination: &jump_host_ip,
 			EnvVar:      "jump_host_ip",
 		},
+		cli.StringFlag{
+			Name:        "mongo_aks_template_collection",
+			Usage:       "aks template collection name ",
+			Destination: &mongo_aks_template_collection,
+			EnvVar:      "mongo_aks_template_collection",
+		},
+		cli.StringFlag{
+			Name:        "mongo_aks_cluster_collection",
+			Usage:       "aks cluster collection name ",
+			Destination: &mongo_aks_cluster_collection,
+			EnvVar:      "mongo_aks_cluster_collection",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -303,6 +317,8 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_doks_cluster_collection", mongo_doks_cluster_collection)
 	beego.AppConfig.Set("mongo_op_template_collection", mongo_op_template_collection)
 	beego.AppConfig.Set("mongo_op_cluster_collection", mongo_op_cluster_collection)
+	beego.AppConfig.Set("mongo_aks_cluster_collection", mongo_aks_cluster_collection)
+	beego.AppConfig.Set("mongo_aks_template_collection", mongo_aks_template_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)
 	beego.AppConfig.Set("network_url", network_url)

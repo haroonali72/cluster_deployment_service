@@ -9,6 +9,7 @@ package routers
 
 import (
 	"antelope/controllers"
+	"antelope/controllers/aks"
 	"antelope/controllers/aws"
 	"antelope/controllers/azure"
 	"antelope/controllers/customer_template"
@@ -95,6 +96,26 @@ func init() {
 		beego.NSNamespace("/cluster/doks",
 			beego.NSInclude(
 				&doks.DOKSClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/op",
+			beego.NSInclude(
+				&op.OPTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/op",
+			beego.NSInclude(
+				&op.OPClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/aks",
+			beego.NSInclude(
+				&aks.AKSTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/aks",
+			beego.NSInclude(
+				&aks.AKSClusterController{},
 			),
 		),
 	)

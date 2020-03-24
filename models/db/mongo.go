@@ -119,6 +119,8 @@ func GetMongoConf() mongConf {
 	conf.MongoGcpTemplateCollection = beego.AppConfig.String("mongo_gcp_template_collection")
 	conf.MongoGKEClusterCollection = beego.AppConfig.String("mongo_gke_cluster_collection")
 	conf.MongoGKETemplateCollection = beego.AppConfig.String("mongo_gke_template_collection")
+	conf.MongoAKSClusterCollection = beego.AppConfig.String("mongo_aks_cluster_collection")
+	conf.MongoAKSTemplateCollection = beego.AppConfig.String("mongo_aks_template_collection")
 	conf.MongoDOClusterCollection = beego.AppConfig.String("mongo_do_cluster_collection")
 	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
 	conf.MongoDOTemplateCollection = beego.AppConfig.String("mongo_do_template_collection")
@@ -130,6 +132,7 @@ func GetMongoConf() mongConf {
 	conf.MongoAzureCustomerTemplateCollection = "mongo_azure_customer_template_collection"
 	conf.MongoGcpCustomerTemplateCollection = "mongo_gcp_customer_template_collection"
 	conf.MongoGKECustomerTemplateCollection = "mongo_gke_customer_template_collection"
+	conf.MongoAKSCustomerTemplateCollection = "mongo_aks_customer_template_collection"
 	conf.MongoDOCustomerTemplateCollection = "mongo_do_customer_template_collection"
 	conf.MongoIBMCustomerTemplateCollection = "mongo_ibm_customer_template_collection"
 	return conf
@@ -154,6 +157,9 @@ type mongConf struct {
 	MongoGKETemplateCollection           string
 	MongoGKECustomerTemplateCollection   string
 	MongoGKEClusterCollection            string
+	MongoAKSTemplateCollection           string
+	MongoAKSCustomerTemplateCollection   string
+	MongoAKSClusterCollection            string
 	MongoSshKeyCollection                string
 	MongoDOClusterCollection             string
 	MongoDOTemplateCollection            string
