@@ -6521,11 +6521,11 @@
             "title": "string",
             "type": "object"
         },
-        "13387.0xc000d3a5d0.false": {
+        "13387.0xc000d50690.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc00103c0f0.false": {
+        "13431.0xc00104e1b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -6533,11 +6533,11 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc00129c090.false": {
+        "434.0xc0012b2150.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00129d590.false": {
+        "5960.0xc0012b3650.false": {
             "title": "false",
             "type": "object"
         },
@@ -6838,7 +6838,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13387.0xc000d3a5d0.false"
+                    "$ref": "#/definitions/13387.0xc000d50690.false"
                 },
                 "name": {
                     "type": "string"
@@ -7406,7 +7406,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc00103c0f0.false"
+                    "$ref": "#/definitions/13431.0xc00104e1b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -8460,7 +8460,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00129d590.false"
+                    "$ref": "#/definitions/5960.0xc0012b3650.false"
                 },
                 "name": {
                     "type": "string"
@@ -8588,7 +8588,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc00129c090.false"
+                    "$ref": "#/definitions/434.0xc0012b2150.false"
                 },
                 "name": {
                     "type": "string"
