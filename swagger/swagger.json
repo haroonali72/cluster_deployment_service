@@ -6517,27 +6517,27 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "12364.string": {
+        "13224.string": {
             "title": "string",
             "type": "object"
         },
-        "1259.string": {
+        "13387.0xc000d409f0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "13431.0xc001032510.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "1503.string": {
             "title": "string",
             "type": "object"
         },
-        "13387.0xc000d2e480.false": {
+        "434.0xc0012944b0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc00101df80.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "434.0xc00126bf20.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "5960.0xc001299440.false": {
+        "5960.0xc0012959b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -6552,10 +6552,10 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
-                "companyId": {
+                "cluster_id": {
                     "type": "string"
                 },
-                "id": {
+                "company_id": {
                     "type": "string"
                 },
                 "location": {
@@ -6564,20 +6564,20 @@
                 "name": {
                     "type": "string"
                 },
-                "projectId": {
+                "project_id": {
                     "type": "string"
                 },
                 "properties": {
                     "$ref": "#/definitions/aks.ManagedClusterProperties"
                 },
-                "resourceGroup": {
+                "resource_group": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/12364.string"
+                    "$ref": "#/definitions/13224.string"
                 },
                 "type": {
                     "type": "string"
@@ -6588,13 +6588,16 @@
             "title": "AKSClusterTemplate",
             "type": "object",
             "properties": {
+                "Template_id": {
+                    "type": "string"
+                },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
-                "company_id": {
+                "cluster_id": {
                     "type": "string"
                 },
-                "id": {
+                "company_id": {
                     "type": "string"
                 },
                 "location": {
@@ -6613,10 +6616,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1259.string"
-                },
-                "template_id": {
-                    "type": "string"
+                    "$ref": "#/definitions/1503.string"
                 },
                 "type": {
                     "type": "string"
@@ -6627,7 +6627,16 @@
             "title": "ManagedClusterAPIServerAccessProfile",
             "type": "object",
             "properties": {
-                "enablePrivateCluster": {
+                "enable_private_cluster": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "aks.ManagedClusterAPIServerAccessProfileTemplate": {
+            "title": "ManagedClusterAPIServerAccessProfileTemplate",
+            "type": "object",
+            "properties": {
+                "enable_private_cluster": {
                     "type": "boolean"
                 }
             }
@@ -6640,35 +6649,35 @@
                     "type": "integer",
                     "format": "int32"
                 },
-                "enableAutoScaling": {
+                "enable_auto_scaling": {
                     "type": "boolean"
                 },
-                "maxCount": {
+                "max_count": {
                     "type": "integer",
                     "format": "int32"
                 },
-                "maxPods": {
+                "max_pods": {
                     "type": "integer",
                     "format": "int32"
                 },
-                "minCount": {
+                "min_count": {
                     "type": "integer",
                     "format": "int32"
                 },
                 "name": {
                     "type": "string"
                 },
-                "osDiskSizeGB": {
+                "os_disk_size_gb": {
                     "type": "integer",
                     "format": "int32"
                 },
-                "osType": {
+                "os_type": {
                     "$ref": "#/definitions/aks.OSType"
                 },
-                "subnetId": {
+                "subnet_id": {
                     "type": "string"
                 },
-                "vmSize": {
+                "vm_size": {
                     "$ref": "#/definitions/aks.VMSizeTypes"
                 }
             }
@@ -6681,19 +6690,32 @@
                     "type": "integer",
                     "format": "int32"
                 },
-                "maxPods": {
+                "enable_auto_scaling": {
+                    "type": "boolean"
+                },
+                "max_count": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "min_count": {
                     "type": "integer",
                     "format": "int32"
                 },
                 "name": {
                     "type": "string"
                 },
-                "osDiskSizeGB": {
+                "os_disk_size_gb": {
                     "type": "integer",
                     "format": "int32"
                 },
-                "vnetSubnetID": {
+                "os_type": {
+                    "$ref": "#/definitions/aks.OSType"
+                },
+                "subnet_id": {
                     "type": "string"
+                },
+                "vm_size": {
+                    "$ref": "#/definitions/aks.VMSizeTypes"
                 }
             }
         },
@@ -6701,28 +6723,28 @@
             "title": "ManagedClusterProperties",
             "type": "object",
             "properties": {
-                "agentPoolProfiles": {
+                "agent_pool": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/aks.ManagedClusterAgentPoolProfile"
                     }
                 },
-                "apiServerAccessProfile": {
+                "api_server_access_profile": {
                     "$ref": "#/definitions/aks.ManagedClusterAPIServerAccessProfile"
                 },
-                "dnsPrefix": {
+                "dns_prefix": {
                     "type": "string"
                 },
                 "fqdn": {
                     "type": "string"
                 },
-                "kubernetesVersion": {
+                "kubernetes_version": {
                     "type": "string"
                 },
-                "networkProfile": {
+                "network_profile": {
                     "$ref": "#/definitions/aks.NetworkProfileType"
                 },
-                "provisioningState": {
+                "provisioning_state": {
                     "type": "string"
                 }
             }
@@ -6731,17 +6753,14 @@
             "title": "ManagedClusterPropertiesTemplate",
             "type": "object",
             "properties": {
-                "agentPoolProfiles": {
+                "agent_pool": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/aks.ManagedClusterAgentPoolProfileTemplate"
                     }
                 },
-                "kubernetesVersion": {
-                    "type": "string"
-                },
-                "provisioningState": {
-                    "type": "string"
+                "api_server_access_profile": {
+                    "$ref": "#/definitions/aks.ManagedClusterAPIServerAccessProfileTemplate"
                 }
             }
         },
@@ -6749,16 +6768,16 @@
             "title": "NetworkProfileType",
             "type": "object",
             "properties": {
-                "dnsServiceIP": {
+                "dns_service_ip": {
                     "type": "string"
                 },
-                "dockerBridgeCidr": {
+                "docker_bridge_cidr": {
                     "type": "string"
                 },
-                "podCidr": {
+                "pod_cidr": {
                     "type": "string"
                 },
-                "serviceCidr": {
+                "service_cidr": {
                     "type": "string"
                 }
             }
@@ -6819,7 +6838,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13387.0xc000d2e480.false"
+                    "$ref": "#/definitions/13387.0xc000d409f0.false"
                 },
                 "name": {
                     "type": "string"
@@ -7387,7 +7406,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc00101df80.false"
+                    "$ref": "#/definitions/13431.0xc001032510.false"
                 },
                 "name": {
                     "type": "string"
@@ -8441,7 +8460,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc001299440.false"
+                    "$ref": "#/definitions/5960.0xc0012959b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -8569,7 +8588,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc00126bf20.false"
+                    "$ref": "#/definitions/434.0xc0012944b0.false"
                 },
                 "name": {
                     "type": "string"

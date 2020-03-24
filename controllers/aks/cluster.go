@@ -547,33 +547,33 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
-		c.ServeJSON()
-		return
-	}
-
-	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
-
-	cluster.Status = string(models.Deploying)
-	err = aks.UpdateAKSCluster(cluster, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	//if cluster.Status == string(models.Deploying) {
+	//	ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//if cluster.Status == string(models.Terminating) {
+	//	ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//cluster.Status = string(models.Deploying)
+	//err = aks.UpdateAKSCluster(cluster, *ctx)
+	//if err != nil {
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
 	ctx.SendLogs("AKSClusterController: Creating Cluster. "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go aks.DeployAKSCluster(cluster, azureProfile.Profile, userInfo.CompanyId, token, *ctx)
+	go aks.DeployAKSCluster(cluster, azureProfile, userInfo.CompanyId, token, *ctx)
 
 	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
