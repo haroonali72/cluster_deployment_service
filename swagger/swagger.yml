@@ -3763,13 +3763,13 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  12939.0xc00106f350.false:
+  12939.0xc00114ce70.false:
     title: "false"
     type: object
-  13357.0xc000b64a50.false:
+  13357.0xc000c42570.false:
     title: "false"
     type: object
-  13431.0xc000e48cc0.false:
+  13431.0xc000f287e0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -3809,7 +3809,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13357.0xc000b64a50.false'
+        $ref: '#/definitions/13357.0xc000c42570.false'
       name:
         type: string
       network_name:
@@ -4192,7 +4192,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc000e48cc0.false'
+        $ref: '#/definitions/13431.0xc000f287e0.false'
       name:
         type: string
       network_name:
@@ -4789,7 +4789,7 @@ definitions:
       disablePublicServiceEndpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/12939.0xc00106f350.false'
+        $ref: '#/definitions/12939.0xc00114ce70.false'
       kubeVersion:
         type: string
       name:
