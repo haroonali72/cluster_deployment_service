@@ -18,6 +18,7 @@ import (
 	"antelope/controllers/gke"
 	"antelope/controllers/ibm"
 	"antelope/controllers/op"
+	"antelope/controllers/ibm"
 	"github.com/astaxie/beego"
 )
 
@@ -91,6 +92,16 @@ func init() {
 		beego.NSNamespace("/cluster/do",
 			beego.NSInclude(
 				&do.DOClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/ibm",
+			beego.NSInclude(
+				&ibm.IBMTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/ibm",
+			beego.NSInclude(
+				&ibm.IBMClusterController{},
 			),
 		),
 		beego.NSNamespace("/template/op",

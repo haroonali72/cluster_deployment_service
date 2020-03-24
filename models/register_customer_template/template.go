@@ -7,6 +7,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/do"
 	"antelope/models/gcp"
+	"antelope/models/ibm"
 	rbac "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"errors"
@@ -16,7 +17,7 @@ import (
 	"time"
 )
 
-func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, companyId string, ctx utils.Context) error {
+func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, ibmTemplates []ibm.Template, companyId string, ctx utils.Context) error {
 
 	for index, template := range awsTemplates {
 		awsTemplates[index].CompanyId = companyId
@@ -60,6 +61,17 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		}
 		doTemplates[index].ID = bson.NewObjectId()
 		doTemplates[index].IsCloudplex = true
+	}
+
+	for index, template := range ibmTemplates {
+		ibmTemplates[index].CompanyId = companyId
+		ibmTemplates[index].CreationDate = time.Now()
+		if template.TemplateId == "" {
+			i := rand.Int()
+			doTemplates[index].TemplateId = template.Name + strconv.Itoa(i)
+		}
+		ibmTemplates[index].ID = bson.NewObjectId()
+		ibmTemplates[index].IsCloudplex = true
 	}
 
 	s := db.GetMongoConf()
@@ -107,13 +119,24 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+
+	var ibmInterface []interface{}
+	for _, template := range ibmTemplates {
+		ibmInterface = append(ibmInterface, template)
+	}
+
+	err = db.InsertManyInMongo(s.MongoIBMTemplateCollection, ibmInterface)
+	if err != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
 	return nil
 }
-func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, []gcp.Template, []do.Template, error) {
+func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, []gcp.Template, []do.Template, []ibm.Template, error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, nil, nil, nil, err1
+		return nil, nil, nil, nil, nil, err1
 	}
 
 	defer session.Close()
@@ -124,7 +147,7 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 	err := c.Find(bson.M{}).All(&awsTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err1
 	}
 
 	var azureTemplates []azure.Template
@@ -132,7 +155,7 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 	err = c.Find(bson.M{}).All(&azureTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err1
 	}
 
 	var gcpTemplates []gcp.Template
@@ -140,7 +163,7 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 	err = c.Find(bson.M{}).All(&gcpTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err1
 	}
 
 	var doTemplates []do.Template
@@ -148,12 +171,20 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 	err = c.Find(bson.M{}).All(&doTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err1
 	}
 
-	return awsTemplates, azureTemplates, gcpTemplates, doTemplates, nil
+	var ibmTemplates []ibm.Template
+	c = session.DB(s.MongoDb).C(s.MongoIBMCustomerTemplateCollection)
+	err = c.Find(bson.M{}).All(&ibmTemplates)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, nil, nil, nil, nil, err1
+	}
+
+	return awsTemplates, azureTemplates, gcpTemplates, doTemplates, ibmTemplates, nil
 }
-func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, token string, ctx utils.Context) error {
+func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, ibmTemplates []ibm.Template, token string, ctx utils.Context) error {
 
 	for _, template := range awsTemplates {
 		statusCode, err := rbac.CreatePolicy(template.TemplateId, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.AWS, ctx)
@@ -178,6 +209,13 @@ func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, 
 
 	for _, template := range doTemplates {
 		statusCode, err := rbac.CreatePolicy(template.TemplateId, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.DO, ctx)
+		if err != nil || statusCode != 200 {
+			return errors.New("error occured in creation policy")
+		}
+	}
+
+	for _, template := range ibmTemplates {
+		statusCode, err := rbac.CreatePolicy(template.TemplateId, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.IBM, ctx)
 		if err != nil || statusCode != 200 {
 			return errors.New("error occured in creation policy")
 		}
