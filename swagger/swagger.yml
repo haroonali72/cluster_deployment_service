@@ -4154,16 +4154,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001290ed0.false:
+  442.0xc00127ea20.false:
     title: "false"
     type: object
-  607.0xc000cb8e10.false:
+  607.0xc000ca8960.false:
     title: "false"
     type: object
-  637.0xc000fb0900.false:
+  637.0xc000f9c450.false:
     title: "false"
     type: object
-  13266.0xc0012c0c30.false:
+  13266.0xc0012aa780.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -4203,7 +4203,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/607.0xc000cb8e10.false'
+        $ref: '#/definitions/607.0xc000ca8960.false'
       name:
         type: string
       network_name:
@@ -4586,7 +4586,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc000fb0900.false'
+        $ref: '#/definitions/637.0xc000f9c450.false'
       name:
         type: string
       network_name:
@@ -4762,6 +4762,8 @@ definitions:
       maintenance_policy:
         $ref: '#/definitions/doks.KubernetesMaintenancePolicy'
       name:
+        type: string
+      network_name:
         type: string
       node_pools:
         type: array
@@ -5436,7 +5438,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001290ed0.false'
+        $ref: '#/definitions/442.0xc00127ea20.false'
       name:
         type: string
       node_pools:
@@ -5522,7 +5524,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13266.0xc0012c0c30.false'
+        $ref: '#/definitions/13266.0xc0012aa780.false'
       name:
         type: string
       node_pools:

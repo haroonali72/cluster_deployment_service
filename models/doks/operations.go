@@ -3,13 +3,13 @@ package doks
 import (
 	"antelope/models"
 	"antelope/models/api_handler"
+	"antelope/models/types"
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	"antelope/models/types"
 	"antelope/models/utils"
 	"context"
-	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
@@ -104,89 +104,70 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 
 	utils.SendLog(companyId, "Creating DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-	list := godo.ListOptions{}
+/*	list := godo.ListOptions{}
 	re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
 	fmt.Println(re)
+*/
+ 	var nodepool []*godo.KubernetesNodePoolCreateRequest
+	for _,node := range cluster.NodePools{
+		pool:= godo.KubernetesNodePoolCreateRequest{
+		Name:      node.Name,
+		Size:      node.Size,
+		Count:     node.Count,
+		Tags:      node.Tags,
+		Labels:    node.Labels,
+		AutoScale: node.AutoScale,
+		MinNodes:  node.MinNodes,
+		MaxNodes:  node.MaxNodes,
+	}
+	nodepool =append(nodepool,&pool)
+	}
+
+
 	input :=godo.KubernetesClusterCreateRequest{
 		Name:              cluster.Name,
 		RegionSlug:        cluster.Region,
-		VersionSlug:       cluster.Version,
+		VersionSlug:       "1.16.6-do.2",
 		Tags:              cluster.Tags,
-		//VPCUUID:           cluster.VPCUUID,
-		//NodePools:         cluster.NodePools,
+		VPCUUID:           cluster.VPCUUID,
+		NodePools:         nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade:       cluster.AutoUpgrade,
 	}
 
+
 	clus,resp,err :=cloud.Client.Kubernetes.Create(context.Background(),&input)
-	if err == nil{
+	if err != nil{
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
 		return cluster, err
 	}
 	cluster.ID=clus.ID
 	fmt.Println(resp)
+	fmt.Println(&clus)
 
-	//cloud.Resources["project"] = append(cloud.Resources["project"], cluster.DOProjectId)
 	utils.SendLog(companyId, "DOKS cluster created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
-
-	utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
-	for index, nodepool := range cluster.NodePools {
-		nodepool, err := cloud.createNodePool(nodepool, ctx,cluster.ProjectId,companyId, cluster.ID, token )
-		if err != nil {
-			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
-			return cluster, err
-		}
-		cluster.NodePools[index].Nodes = nodepool.Nodes
-	}
-		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
-
 	return cluster, nil
 }
-func (cloud *DOKS) createNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
 
+func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context,projectId,companyId string)  error {
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return *nodepool, err
+			return  err
 		}
 	}
-	var doksNetwork types.DONetwork
-	url := getNetworkHost("do", projectId)
-	network, err := api_handler.GetAPIStatus(token, url, ctx)
-	if err != nil || network == nil {
-		return *nodepool, errors.New("error in fetching network")
-	}
-	err = json.Unmarshal(network.([]byte), &doksNetwork)
-	if err != nil {
-		beego.Error(err.Error())
-		return *nodepool, err
+
+	utils.SendLog(companyId, "Deleting DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
+
+
+	_,err :=cloud.Client.Kubernetes.Delete(context.Background(),cluster.ID)
+	if err != nil{
+		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
+		return  err
 	}
 
-	utils.SendLog(companyId, "Creating DOKS nodepool With ID : "+projectId, "info", projectId)
-
-	input:= godo.KubernetesNodePoolCreateRequest{
-			Name:       nodepool.Name,
-			Size:      nodepool.Size,
-			Count:     nodepool.Count,
-			Tags:      nodepool.Tags,
-			Labels:    nodepool.Labels,
-			AutoScale: nodepool.AutoScale,
-			MinNodes:  nodepool.MinNodes,
-			MaxNodes:  nodepool.MaxNodes,
-	}
-
-	_,resp,err :=cloud.Client.Kubernetes.CreateNodePool(context.Background(),clusterId,&input)
-	if err == nil{
-		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", projectId)
-		return *nodepool, err
-	}
-
-	fmt.Println(resp)
-
-	return *nodepool, nil
-}
-func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context,projectId,companyId string) (KubernetesNodePool, error) {
-	return KubernetesNodePool{}, nil
+	utils.SendLog(companyId, "DOKS cluster deleted successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+	return nil
 }
 func (cloud *DOKS) deleteNodepool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil

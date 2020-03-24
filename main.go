@@ -72,7 +72,7 @@ func setEnv() {
 	os.Setenv("mongo_gke_template_collection", "gke_template")
 	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
-	os.Setenv("redis_url", "35.242.236.151:31845")
+	os.Setenv("redis_url", "34.89.148.78:31845")
 	os.Setenv("logger_url", "https://dapis.cloudplex.cf")
 	os.Setenv("network_url", "https://dapis.cloudplex.cf")
 	os.Setenv("vault_url", "https://dapis.cloudplex.cf")
