@@ -2,9 +2,13 @@ package ibm
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
+	"errors"
+	"github.com/astaxie/beego"
 	"io/ioutil"
 )
 
@@ -132,86 +136,51 @@ func (cloud *IBM) init(region string, ctx utils.Context) error {
 	return nil
 }
 
-/*func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
-
-var doNetwork types.IBM
-	url := getNetworkHost("do", cluster.ProjectId)
+	var ibmNetwork types.IBMNetwork
+	url := getNetworkHost("ibm", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil || network == nil {
 		return cluster, errors.New("error in fetching network")
 	}
-	err = json.Unmarshal(network.([]byte), &doNetwork)
+	err = json.Unmarshal(network.([]byte), &ibmNetwork)
 
 	if err != nil {
 		beego.Error(err.Error())
 		return cluster, err
 	}
 
+	vpcID := cloud.GetVPC(cluster.VPCId, ibmNetwork)
+	if vpcID == "" {
+		return cluster, errors.New("error in fetching network")
+	}
 
+	clusterId, err := cloud.createCluster(vpcID, cluster, ibmNetwork, ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		return cluster, err
+	}
 
 	for index, pool := range cluster.NodePools {
+		if index == 0 {
+			continue
+		}
+		beego.Info("IBMOperations creating worker pools")
 
-		beego.Info("IBMOperations creating nodes")
+		utils.SendLog(companyId, "Creating Worker Pools : "+cluster.Name, "info", cluster.ProjectId)
 
-		utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
-		droplets, err := cloud.createInstances(*pool, doNetwork, key, ctx, token, cluster.ProjectId)
+		err := cloud.createWorkerPool(cluster.ResourceGroup, clusterId, vpcID, pool, ibmNetwork, ctx)
 		if err != nil {
 			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
 			return cluster, err
 		}
 		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
-
-		var nodes []*Node
-		if droplets != nil && len(droplets) > 0 {
-			var dropletsIds []int
-			for in, droplet := range droplets {
-
-				dropletsIds = append(dropletsIds, droplet.ID)
-
-				cloud.Resources["droplets"] = append(cloud.Resources["droplets"], strconv.Itoa(droplet.ID))
-
-				publicIp, _ := droplet.PublicIPv4()
-
-				privateIp, _ := droplet.PrivateIPv4()
-
-				var volID string
-				if pool.IsExternal {
-
-					utils.SendLog(companyId, "Creating Volume : "+pool.Name+strconv.Itoa(in), "info", cluster.ProjectId)
-					volume, err := cloud.createVolume(pool.Name+strconv.Itoa(in), pool.ExternalVolume, ctx)
-					if err != nil {
-						return cluster, err
-					}
-					cloud.Resources["volumes"] = append(cloud.Resources["volumes"], volume.ID)
-					volID = volume.ID
-					err = cloud.attachVolume(volume.ID, droplets[in].ID, ctx)
-					if err != nil {
-						return cluster, err
-					}
-					utils.SendLog(companyId, "Volume Created Successfully : "+pool.Name+strconv.Itoa(in), "info", cluster.ProjectId)
-
-				}
-				nodes = append(nodes, &Node{CloudId: droplet.ID, NodeState: droplet.Status, Name: droplet.Name, PublicIP: publicIp, PrivateIP: privateIp, UserName: "root", VolumeId: volID})
-			}
-
-			err := cloud.assignResources(dropletsIds, cluster.DOProjectId, ctx)
-			if err != nil {
-				return cluster, err
-			}
-
-			sgId, err := cloud.getSgId(doNetwork, *pool.PoolSecurityGroups[0])
-			err = cloud.assignSG(sgId, dropletsIds, ctx)
-			if err != nil {
-				return cluster, err
-			}
-		}
-		cluster.NodePools[index].Nodes = nodes
 	}
 
 	return cluster, nil
-}*/
-func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Context) (string, error) {
+}
+func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types.IBMNetwork, ctx utils.Context) (string, error) {
 
 	input := KubeClusterInput{
 		PublicEndpoint: cluster.PublicEndpoint,
@@ -224,13 +193,17 @@ func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Contex
 		DiskEncryption: false,
 		MachineType:    cluster.NodePools[0].MachineType,
 		WorkerName:     cluster.NodePools[0].Name,
-		VPCId:          cluster.VPCId,
+		VPCId:          vpcId,
 		Count:          cluster.NodePools[0].NodeCount,
 	}
 
+	subentId := cloud.GetSubnets(cluster.NodePools[0], network)
+	if subentId == "" {
+		return "", errors.New("error in gettinh subnet id")
+	}
 	zone := ClusterZone{
 		Id:     cloud.Region,
-		Subnet: cluster.SubnetID,
+		Subnet: cluster.NodePools[0].SubnetID,
 	}
 	var zones []ClusterZone
 	zones = append(zones, zone)
@@ -248,7 +221,7 @@ func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Contex
 	m["Accept"] = "application/json"
 	m["Authorization"] = cloud.IAMToken
 	m["X-Auth-Refresh-Token"] = cloud.RefreshToken
-	m["X-Auth-Resource-Group"] = rg
+	m["X-Auth-Resource-Group"] = cluster.ResourceGroup
 	utils.SetHeaders(req, m)
 
 	client := utils.InitReq()
@@ -283,7 +256,7 @@ func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Contex
 	}
 	return kubeResponse.ID, nil
 }
-func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool NodePool, ctx utils.Context) (string, error) {
+func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, network types.IBMNetwork, ctx utils.Context) error {
 
 	workerpool := WorkerPoolInput{
 		Cluster:     clusterID,
@@ -313,18 +286,18 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool NodePool, c
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+		return err
 	}
 
 	if res.StatusCode != 201 {
 		ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+		return err
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+		return err
 	}
 
 	// body is []byte format
@@ -334,9 +307,19 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool NodePool, c
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+		return err
 	}
-	return response.ID, nil
+
+	subentId := cloud.GetSubnets(pool, network)
+	if subentId == "" {
+		return errors.New("error in gettinh subnet id")
+	}
+	err = cloud.AddZonesToPools(rg, response.ID, pool.SubnetID, clusterID, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	return nil
 }
 func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx utils.Context) error {
 
@@ -416,4 +399,23 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, erro
 	}
 
 	return InstanceList, nil
+}
+func (cloud *IBM) GetSubnets(pool *NodePool, network types.IBMNetwork) string {
+	for _, definition := range network.Definition {
+		for _, subnet := range definition.Subnets {
+			if subnet.Name == pool.SubnetID {
+				return subnet.SubnetId
+			}
+		}
+	}
+	return ""
+}
+func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
+	for _, definition := range network.Definition {
+		if vpcID == definition.Vpc.Name {
+			return definition.Vpc.VpcId
+
+		}
+	}
+	return ""
 }

@@ -106,3 +106,36 @@ type DOBound struct {
 	PortRange  string   `json:"port_range" bson:"port_range"`
 	IpProtocol string   `json:"ip_protocol" bson:"ip_protocol" valid:"in(tcp|udp|icmp|all|UDP|TCP|ICMP|ALL|58|-1)"`
 }
+type IBMNetwork struct {
+	ID               bson.ObjectId    `json:"-" bson:"_id,omitempty"`
+	ProjectId        string           `json:"project_id" bson:"project_id" valid:"required"`
+	Name             string           `json:"name" bson:"name" valid:"required"`
+	Type             models.Type      `json:"type" bson:"type" valid:"required,in(New|Existing|new|existing)"`
+	Cloud            models.Cloud     `json:"-" bson:"cloud" valid:"in(ibm|Azure|ibm|azure)"`
+	CreationDate     time.Time        `json:"-" bson:"creation_date"`
+	ModificationDate time.Time        `json:"-" bson:"modification_date"`
+	Definition       []*IBMDefinition `json:"definition" bson:"definition" valid:"required"`
+	CompanyId        string           `json:"company_id" bson:"company_id"`
+}
+
+type IBMDefinition struct {
+	ID      bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Vpc     IBMVpc        `json:"vpc" bson:"vpc" valid:"required"`
+	Subnets []*IBMSubnet  `json:"subnets" bson:"subnets" valid:"optional"`
+}
+type IBMVpc struct {
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	VpcId            string        `json:"vpc_id" bson:"vpc_id"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone"`
+	CIDR             string        `json:"cidr" bson:"cidr" valid:"required,cidr"`
+}
+type IBMSubnet struct {
+	ID                      bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	SubnetId                string        `json:"subnet_id" bson:"subnet_id"`
+	Name                    string        `json:"name" bson:"name" valid:"required"`
+	CIDR                    string        `json:"cidr" bson:"cidr" valid:"required,cidr"`
+	RouteTableAssociationId string        `json:"route_table_association_id" bson:"route_table_association_id,omitempty"`
+	AvailabilityZone        string        `json:"availability_zone" bson:"availability_zone"`
+	KubeTag                 bool          `json:"tag_assigned" bson:"tag_assigned"`
+}

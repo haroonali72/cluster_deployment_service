@@ -32,7 +32,7 @@ type Cluster_Def struct {
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 	VPCId            string        `json:"vpcID"`
-	SubnetID         string        `json:"subnetID"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
 	ID          bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
@@ -40,6 +40,7 @@ type NodePool struct {
 	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
 	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
 	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
+	SubnetID    string          `json:"subnetID"`
 }
 type Node struct {
 	CloudId    int    `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -283,7 +284,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = ibm.createCluster(rg, cluster, ctx, companyId, token)
+	cluster, confError = ibm.create(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		confError = do.CleanUp(ctx)
