@@ -10,7 +10,6 @@ import (
 	"github.com/astaxie/beego"
 	"strings"
 	"time"
-	"weasel/models/rbac"
 )
 
 // Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
@@ -914,7 +913,7 @@ func (c *IBMClusterController) FetchRegions() {
 		return
 	}
 
-	userInfo, err := rbac.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
