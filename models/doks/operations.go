@@ -182,8 +182,29 @@ func (cloud *DOKS) GetCluster(nodepool *KubernetesNodePool, ctx utils.Context,pr
 func (cloud *DOKS) GetNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) GetKubeConfig(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
-	return KubernetesNodePool{}, nil
+func (cloud *DOKS) GetKubeConfig(ctx utils.Context,cluster KubernetesCluster)  (KubernetesClusterConfig, error) {
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != nil {
+			return  KubernetesClusterConfig{},err
+		}
+	}
+
+//	utils.SendLog(companyId, "Deleting DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
+		list := godo.ListOptions{}
+		re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
+		fmt.Println(re)
+
+	config, _,err :=cloud.Client.Kubernetes.GetKubeConfig(context.Background(),"b01f9429-459b-4fc6-9726-ba9c21e88272")
+	if err != nil{
+		utils.SendLog(cluster.CompanyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
+		return KubernetesClusterConfig{},err
+	}
+	fmt.Println(config)
+	//utils.SendLog(companyId, "DOKS cluster deleted successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+
+
+	return KubernetesClusterConfig{},nil
 }
 func (cloud *DOKS) ListCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil

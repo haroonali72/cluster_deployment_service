@@ -388,20 +388,65 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) ( KubernetesClusterConfig, error) {
-	gkeOps, err := GetDOKS(credentials)
-	if err != nil {
-		ctx.SendLogs("GKEClusterModel : GetServerConfig - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubernetesClusterConfig{}, err
+func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context,cluster KubernetesCluster) (config KubernetesClusterConfig,confError error) {
+	publisher := utils.Notifier{}
+	confError = publisher.Init_notifier()
+
+	if confError != nil {
+		//PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return config,confError
 	}
 
-	err = gkeOps.init(ctx)
+	doksOps, err := GetDOKS(credentials)
 	if err != nil {
-		ctx.SendLogs("GKEClusterModel : GetServerConfig -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubernetesClusterConfig{}, err
+		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return config,confError
 	}
 
-	return KubernetesClusterConfig{},nil
+	err = doksOps.init(ctx)
+	if err != nil {
+		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	cluster.Status.State = "Cluster creation failed"
+	//	confError = UpdateKubernetesCluster(cluster, ctx)
+	//	if confError != nil {
+	//		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+	//		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	}
+	//	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	//	return err
+	}
+
+	_,confError = doksOps.GetKubeConfig(ctx,cluster)
+	if confError != nil {}
+	/*	ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+
+		cluster.Status.State = "Cluster creation failed"
+		confError = UpdateKubernetesCluster(cluster, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return nil
+	}
+
+	cluster.CloudplexStatus = "Cluster Created"
+
+	confError = UpdateKubernetesCluster(cluster, ctx)
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return confError
+	}
+
+	_, _ = utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	*/
+	return config,confError
 }
 /*
 func TestDOKS(credentials vault.DOCredentials, companyId string, token string, ctx utils.Context, projetcID string, clusterName string) (confError error) {
