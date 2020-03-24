@@ -6,6 +6,7 @@ import (
 	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
@@ -217,18 +218,18 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	network,err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=!network.IsPrivate
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err = aws.CreateCluster( cluster, *ctx)
+	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -276,7 +277,6 @@ func (c *AWSClusterController) Patch() {
 		return
 	}
 
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -307,15 +307,15 @@ func (c *AWSClusterController) Patch() {
 	//=============================================================================//
 
 	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	network,err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
+	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	for _,node := range cluster.NodePools{
-		node.EnablePublicIP=!network.IsPrivate
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
 	}
 	err = aws.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
@@ -590,7 +590,7 @@ func (c *AWSClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = aws.UpdateCluster( cluster, false, *ctx)
+	err = aws.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1297,4 +1297,289 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	c.ServeJSON()
 }
 
+// @Title GetRegions
+// @Description Get AWS Regions
+// @Success 200  []models.Region
+// @Failure 500  {"error": "error msg"}
+// @router /getallregions [get]
+func (c *AWSClusterController) GetAllRegions() {
 
+	ctx := new(utils.Context)
+	ctx.SendLogs("AWSClusterController: Fetch regions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	regions, err := aws.GetRegions(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("Region fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = regions
+	c.ServeJSON()
+}
+
+// @Title Get Availability Zone
+// @Description return zones against a region
+// @Param	token	header	string	token true""
+// @Param	region	path	string	true	"region of AWS"
+// @Param	X-Profile-Id	header	string	profileId	true""
+// @Success 200 			[]*string
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 			{"error": "error msg"}
+// @router /getzones/:region [get]
+func (c *AWSClusterController) GetZones() {
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	ctx.SendLogs("AWSClusterController: fetch availability zones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region := c.GetString(":region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	az, err := aws.GetZones(awsProfile, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Region fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = az
+	c.ServeJSON()
+}
+
+// @Title Get Machine Types
+// @Description Get AWS  Machine Types
+// @Success 200 []string
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 			{"error": "error msg"}
+// @router /getallmachines [get]
+func (c *AWSClusterController) GetAllMachines() {
+	ctx := new(utils.Context)
+
+	ctx.SendLogs("AWSClusterController: Fetch machine Types.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	machine, err := aws.GetAllMachines()
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("Machine types fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = machine
+	c.ServeJSON()
+}
+
+// @Title Validate Profile
+// @Description check if profile is valid
+// @Param	token	header	string	token ""
+// @Param	body	body 	vault.AwsCredentials		true	"body for cluster content"
+// @Success 200 {"msg": "cluster created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "profile is invalid"}
+// @Failure 500 {"error": "error msg"}
+// @router /validateProfile/ [post]
+func (c *AWSClusterController) ValidateProfile() {
+
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	var credentials vault.AwsCredentials
+	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	ctx.SendLogs("Check Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	var regions []models.Region
+	if err := json.Unmarshal(cores.AWSRegions, &regions); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	for _, region := range regions {
+		err = aws.ValidateProfile(credentials.AccessKey, credentials.SecretKey, region.Location, *ctx)
+		if err != nil {
+			ctx.SendLogs("AWSClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if err == nil {
+			break
+		}
+	}
+
+	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	c.Data["json"] = map[string]string{"msg": "profile is valid"}
+	c.ServeJSON()
+}
+
+// @Title Start
+// @Description Apply cloudplex Agent file to eks cluster
+// @Param	clusterName	header	string	clusterName ""
+// @Param	token	header	string	token ""
+// @Success 200 {"msg": "Agent Applied successfully"}
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	projectId	path	string	true	"Id of the project"
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /applyagent/:projectId [post]
+func (c *AWSClusterController) ApplyAgent() {
+	ctx := new(utils.Context)
+	ctx.SendLogs("EKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		ctx.SendLogs("EKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		ctx.SendLogs("EKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	clusterName := c.Ctx.Input.Header("clusterName")
+	if clusterName == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("EKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	region, err := aws.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("EKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	go aws.ApplyAgent(awsProfile, token, *ctx, clusterName)
+
+	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
+	c.ServeJSON()
+}

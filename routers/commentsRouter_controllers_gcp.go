@@ -63,6 +63,15 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
         beego.ControllerComments{
+            Method: "GetAllRegions",
+            Router: `/getallregions`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
+        beego.ControllerComments{
             Method: "GetZones",
             Router: `/getzones/:region`,
             AllowHTTPMethods: []string{"get"},
@@ -137,6 +146,15 @@ func init() {
         beego.ControllerComments{
             Method: "TerminateCluster",
             Router: `/terminate/:projectId/`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
+        beego.ControllerComments{
+            Method: "ValidateProfile",
+            Router: `/validateProfile`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,

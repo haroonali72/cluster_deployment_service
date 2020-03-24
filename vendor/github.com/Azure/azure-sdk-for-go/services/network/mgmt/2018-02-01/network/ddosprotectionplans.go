@@ -21,6 +21,7 @@ import (
 	"context"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/tracing"
 	"net/http"
 )
 
@@ -34,7 +35,9 @@ func NewDdosProtectionPlansClient(subscriptionID string) DdosProtectionPlansClie
 	return NewDdosProtectionPlansClientWithBaseURI(DefaultBaseURI, subscriptionID)
 }
 
-// NewDdosProtectionPlansClientWithBaseURI creates an instance of the DdosProtectionPlansClient client.
+// NewDdosProtectionPlansClientWithBaseURI creates an instance of the DdosProtectionPlansClient client using a custom
+// endpoint.  Use this when interacting with an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure
+// stack).
 func NewDdosProtectionPlansClientWithBaseURI(baseURI string, subscriptionID string) DdosProtectionPlansClient {
 	return DdosProtectionPlansClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
@@ -45,6 +48,16 @@ func NewDdosProtectionPlansClientWithBaseURI(baseURI string, subscriptionID stri
 // ddosProtectionPlanName - the name of the DDoS protection plan.
 // parameters - parameters supplied to the create or update operation.
 func (client DdosProtectionPlansClient) CreateOrUpdate(ctx context.Context, resourceGroupName string, ddosProtectionPlanName string, parameters DdosProtectionPlan) (result DdosProtectionPlansCreateOrUpdateFuture, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/DdosProtectionPlansClient.CreateOrUpdate")
+		defer func() {
+			sc := -1
+			if result.Response() != nil {
+				sc = result.Response().StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	req, err := client.CreateOrUpdatePreparer(ctx, resourceGroupName, ddosProtectionPlanName, parameters)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.DdosProtectionPlansClient", "CreateOrUpdate", nil, "Failure preparing request")
@@ -73,6 +86,7 @@ func (client DdosProtectionPlansClient) CreateOrUpdatePreparer(ctx context.Conte
 		"api-version": APIVersion,
 	}
 
+	parameters.Etag = nil
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/json; charset=utf-8"),
 		autorest.AsPut(),
@@ -87,8 +101,7 @@ func (client DdosProtectionPlansClient) CreateOrUpdatePreparer(ctx context.Conte
 // http.Response Body if it receives an error.
 func (client DdosProtectionPlansClient) CreateOrUpdateSender(req *http.Request) (future DdosProtectionPlansCreateOrUpdateFuture, err error) {
 	var resp *http.Response
-	resp, err = autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
+	resp, err = client.Send(req, azure.DoRetryWithRegistration(client.Client))
 	if err != nil {
 		return
 	}
@@ -114,6 +127,16 @@ func (client DdosProtectionPlansClient) CreateOrUpdateResponder(resp *http.Respo
 // resourceGroupName - the name of the resource group.
 // ddosProtectionPlanName - the name of the DDoS protection plan.
 func (client DdosProtectionPlansClient) Delete(ctx context.Context, resourceGroupName string, ddosProtectionPlanName string) (result DdosProtectionPlansDeleteFuture, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/DdosProtectionPlansClient.Delete")
+		defer func() {
+			sc := -1
+			if result.Response() != nil {
+				sc = result.Response().StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	req, err := client.DeletePreparer(ctx, resourceGroupName, ddosProtectionPlanName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.DdosProtectionPlansClient", "Delete", nil, "Failure preparing request")
@@ -154,8 +177,7 @@ func (client DdosProtectionPlansClient) DeletePreparer(ctx context.Context, reso
 // http.Response Body if it receives an error.
 func (client DdosProtectionPlansClient) DeleteSender(req *http.Request) (future DdosProtectionPlansDeleteFuture, err error) {
 	var resp *http.Response
-	resp, err = autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
+	resp, err = client.Send(req, azure.DoRetryWithRegistration(client.Client))
 	if err != nil {
 		return
 	}
@@ -180,6 +202,16 @@ func (client DdosProtectionPlansClient) DeleteResponder(resp *http.Response) (re
 // resourceGroupName - the name of the resource group.
 // ddosProtectionPlanName - the name of the DDoS protection plan.
 func (client DdosProtectionPlansClient) Get(ctx context.Context, resourceGroupName string, ddosProtectionPlanName string) (result DdosProtectionPlan, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/DdosProtectionPlansClient.Get")
+		defer func() {
+			sc := -1
+			if result.Response.Response != nil {
+				sc = result.Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	req, err := client.GetPreparer(ctx, resourceGroupName, ddosProtectionPlanName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "network.DdosProtectionPlansClient", "Get", nil, "Failure preparing request")
@@ -225,8 +257,7 @@ func (client DdosProtectionPlansClient) GetPreparer(ctx context.Context, resourc
 // GetSender sends the Get request. The method will close the
 // http.Response Body if it receives an error.
 func (client DdosProtectionPlansClient) GetSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // GetResponder handles the response to the Get request. The method always
@@ -244,6 +275,16 @@ func (client DdosProtectionPlansClient) GetResponder(resp *http.Response) (resul
 
 // List gets all DDoS protection plans in a subscription.
 func (client DdosProtectionPlansClient) List(ctx context.Context) (result DdosProtectionPlanListResultPage, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/DdosProtectionPlansClient.List")
+		defer func() {
+			sc := -1
+			if result.dpplr.Response.Response != nil {
+				sc = result.dpplr.Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	result.fn = client.listNextResults
 	req, err := client.ListPreparer(ctx)
 	if err != nil {
@@ -288,8 +329,7 @@ func (client DdosProtectionPlansClient) ListPreparer(ctx context.Context) (*http
 // ListSender sends the List request. The method will close the
 // http.Response Body if it receives an error.
 func (client DdosProtectionPlansClient) ListSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // ListResponder handles the response to the List request. The method always
@@ -306,8 +346,8 @@ func (client DdosProtectionPlansClient) ListResponder(resp *http.Response) (resu
 }
 
 // listNextResults retrieves the next set of results, if any.
-func (client DdosProtectionPlansClient) listNextResults(lastResults DdosProtectionPlanListResult) (result DdosProtectionPlanListResult, err error) {
-	req, err := lastResults.ddosProtectionPlanListResultPreparer()
+func (client DdosProtectionPlansClient) listNextResults(ctx context.Context, lastResults DdosProtectionPlanListResult) (result DdosProtectionPlanListResult, err error) {
+	req, err := lastResults.ddosProtectionPlanListResultPreparer(ctx)
 	if err != nil {
 		return result, autorest.NewErrorWithError(err, "network.DdosProtectionPlansClient", "listNextResults", nil, "Failure preparing next results request")
 	}
@@ -328,6 +368,16 @@ func (client DdosProtectionPlansClient) listNextResults(lastResults DdosProtecti
 
 // ListComplete enumerates all values, automatically crossing page boundaries as required.
 func (client DdosProtectionPlansClient) ListComplete(ctx context.Context) (result DdosProtectionPlanListResultIterator, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/DdosProtectionPlansClient.List")
+		defer func() {
+			sc := -1
+			if result.Response().Response.Response != nil {
+				sc = result.page.Response().Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	result.page, err = client.List(ctx)
 	return
 }
@@ -336,6 +386,16 @@ func (client DdosProtectionPlansClient) ListComplete(ctx context.Context) (resul
 // Parameters:
 // resourceGroupName - the name of the resource group.
 func (client DdosProtectionPlansClient) ListByResourceGroup(ctx context.Context, resourceGroupName string) (result DdosProtectionPlanListResultPage, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/DdosProtectionPlansClient.ListByResourceGroup")
+		defer func() {
+			sc := -1
+			if result.dpplr.Response.Response != nil {
+				sc = result.dpplr.Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	result.fn = client.listByResourceGroupNextResults
 	req, err := client.ListByResourceGroupPreparer(ctx, resourceGroupName)
 	if err != nil {
@@ -381,8 +441,7 @@ func (client DdosProtectionPlansClient) ListByResourceGroupPreparer(ctx context.
 // ListByResourceGroupSender sends the ListByResourceGroup request. The method will close the
 // http.Response Body if it receives an error.
 func (client DdosProtectionPlansClient) ListByResourceGroupSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // ListByResourceGroupResponder handles the response to the ListByResourceGroup request. The method always
@@ -399,8 +458,8 @@ func (client DdosProtectionPlansClient) ListByResourceGroupResponder(resp *http.
 }
 
 // listByResourceGroupNextResults retrieves the next set of results, if any.
-func (client DdosProtectionPlansClient) listByResourceGroupNextResults(lastResults DdosProtectionPlanListResult) (result DdosProtectionPlanListResult, err error) {
-	req, err := lastResults.ddosProtectionPlanListResultPreparer()
+func (client DdosProtectionPlansClient) listByResourceGroupNextResults(ctx context.Context, lastResults DdosProtectionPlanListResult) (result DdosProtectionPlanListResult, err error) {
+	req, err := lastResults.ddosProtectionPlanListResultPreparer(ctx)
 	if err != nil {
 		return result, autorest.NewErrorWithError(err, "network.DdosProtectionPlansClient", "listByResourceGroupNextResults", nil, "Failure preparing next results request")
 	}
@@ -421,6 +480,16 @@ func (client DdosProtectionPlansClient) listByResourceGroupNextResults(lastResul
 
 // ListByResourceGroupComplete enumerates all values, automatically crossing page boundaries as required.
 func (client DdosProtectionPlansClient) ListByResourceGroupComplete(ctx context.Context, resourceGroupName string) (result DdosProtectionPlanListResultIterator, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/DdosProtectionPlansClient.ListByResourceGroup")
+		defer func() {
+			sc := -1
+			if result.Response().Response.Response != nil {
+				sc = result.page.Response().Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	result.page, err = client.ListByResourceGroup(ctx, resourceGroupName)
 	return
 }

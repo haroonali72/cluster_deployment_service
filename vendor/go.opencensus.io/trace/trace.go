@@ -170,6 +170,7 @@ func StartSpan(ctx context.Context, name string, o ...StartOption) (context.Cont
 	var opts StartOptions
 	var parent SpanContext
 	if p := FromContext(ctx); p != nil {
+		p.addChild()
 		parent = p.spanContext
 	}
 	for _, op := range o {
@@ -295,7 +296,7 @@ func (s *Span) makeSpanData() *SpanData {
 	var sd SpanData
 	s.mu.Lock()
 	sd = *s.data
-	if s.lruAttributes.simpleLruMap.Len() > 0 {
+	if s.lruAttributes.len() > 0 {
 		sd.Attributes = s.lruAttributesToAttributeMap()
 		sd.DroppedAttributeCount = s.lruAttributes.droppedCount
 	}
@@ -369,8 +370,8 @@ func (s *Span) interfaceArrayToAnnotationArray() []Annotation {
 
 func (s *Span) lruAttributesToAttributeMap() map[string]interface{} {
 	attributes := make(map[string]interface{})
-	for _, key := range s.lruAttributes.simpleLruMap.Keys() {
-		value, ok := s.lruAttributes.simpleLruMap.Get(key)
+	for _, key := range s.lruAttributes.keys() {
+		value, ok := s.lruAttributes.get(key)
 		if ok {
 			keyStr := key.(string)
 			attributes[keyStr] = value
@@ -383,6 +384,15 @@ func (s *Span) copyToCappedAttributes(attributes []Attribute) {
 	for _, a := range attributes {
 		s.lruAttributes.add(a.key, a.value)
 	}
+}
+
+func (s *Span) addChild() {
+	if !s.IsRecordingEvents() {
+		return
+	}
+	s.mu.Lock()
+	s.data.ChildSpanCount++
+	s.mu.Unlock()
 }
 
 // AddAttributes sets attributes in the span.

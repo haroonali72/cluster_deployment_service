@@ -9,12 +9,14 @@ package routers
 
 import (
 	"antelope/controllers"
+	"antelope/controllers/aks"
 	"antelope/controllers/aws"
 	"antelope/controllers/azure"
 	"antelope/controllers/customer_template"
 	"antelope/controllers/do"
 	"antelope/controllers/gcp"
 	"antelope/controllers/gke"
+	"antelope/controllers/op"
 	"antelope/controllers/ibm"
 	"github.com/astaxie/beego"
 )
@@ -29,6 +31,16 @@ func init() {
 		beego.NSNamespace("/customerTemplate",
 			beego.NSInclude(
 				&customer_template.CustomerTempalteController{},
+			),
+		),
+		beego.NSNamespace("/template/op",
+			beego.NSInclude(
+				&op.OPTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/op",
+			beego.NSInclude(
+				&op.OPClusterController{},
 			),
 		),
 		beego.NSNamespace("/template/aws",
@@ -89,6 +101,26 @@ func init() {
 		beego.NSNamespace("/cluster/ibm",
 			beego.NSInclude(
 				&ibm.IBMClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/op",
+			beego.NSInclude(
+				&op.OPTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/op",
+			beego.NSInclude(
+				&op.OPClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/aks",
+			beego.NSInclude(
+				&aks.AKSTemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/aks",
+			beego.NSInclude(
+				&aks.AKSClusterController{},
 			),
 		),
 	)

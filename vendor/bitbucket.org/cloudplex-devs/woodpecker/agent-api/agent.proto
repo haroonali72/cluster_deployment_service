@@ -1,0 +1,134 @@
+syntax = "proto3";
+package agent_api;
+
+service AgentServer {
+  rpc CreateFile (CreateFileRequest) returns (FileResponse) {}
+  rpc DeleteFile (CreateFileRequest) returns (FileResponse) {}
+  rpc ExecKubectl(ExecKubectlRequest) returns (ExecKubectlResponse) {}
+  rpc ExecKubectlStream (ExecKubectlRequest) returns (stream ExecKubectlResponse) {}
+  rpc ExecHttp (HttpRequest) returns (HttpResponse) {}
+  rpc ExecHttpStream (HttpRequest) returns (stream HttpResponse) {}
+  rpc Chunker(HttpRequest) returns (stream Chunk) {}
+  rpc SayHello(PingMessage) returns (PingMessage) {}
+
+  //
+  rpc RemoteSSHStream(SSHRequest) returns (stream SSHResponse) {}
+  rpc RemoteSCPStream(SCPRequest) returns (stream SCPResponse) {}
+
+  rpc RemoteSSH(SSHRequestUnary) returns ( SSHResponse) {}
+  rpc RemoteSCP(SCPRequestUnary) returns ( SCPResponse) {}
+
+
+
+}
+
+message PingMessage {
+  string greeting = 1;
+}
+//https://jbrandhorst.com/post/grpc-binary-blob-stream/
+message Chunk {
+  bytes chunk = 1;
+}
+
+/*
+  Payload for running kubectl command
+*/
+message ExecKubectlRequest {
+  string command = 1;
+  repeated string args = 2;
+}
+
+message ExecKubectlResponse {
+  string status = 1;
+  repeated string stdout = 2;
+  repeated string stderr = 3;
+  string command = 4;
+}
+
+/*
+  Payload for creating file
+*/
+message CreateFileRequest {
+  string name = 1;
+  repeated File files = 2;
+}
+
+
+message File {
+  string name = 1;
+  string path = 2;
+  string data = 3;
+}
+
+message FileResponse {
+  string status = 1;
+  repeated string error = 2;
+  string name = 3;
+  string path = 4;
+}
+
+/*
+  Payload for http api
+*/
+message HttpRequest {
+  string url = 1;
+  string requestType = 2;
+  repeated Headers headers = 3;
+  string body = 4;
+
+}
+message Headers {
+  string key = 1;
+  string value = 2;
+}
+message HttpResponse {
+  bytes body = 1;
+  string error = 2;
+  int32 responseCode = 3;
+  repeated Headers headers = 4;
+}
+
+/*
+ payload for ssh and scp
+*/
+
+message SSHRequest{
+  string server = 1;
+  string user = 2;
+  string key = 3;
+  repeated string cmd = 4;
+}
+message SSHRequestUnary{
+  string server = 1;
+  string user = 2;
+  string key = 3;
+  string cmd = 4;
+}
+message SSHResponse{
+  string status = 1;
+  string stdout = 2;
+  string stderr = 3;
+  string command = 4;
+
+}
+
+message SCPRequest{
+  string server = 1;
+  string user = 2;
+  string key = 3;
+  repeated File Files = 4;
+}
+message SCPRequestUnary{
+  string server = 1;
+  string user = 2;
+  string key = 3;
+  File Files = 4;
+}
+
+
+message SCPResponse{
+  string status = 1;
+  string error = 2;
+  string name = 3;
+  string path = 4;
+}

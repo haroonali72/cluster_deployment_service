@@ -1067,7 +1067,23 @@ func (cloud *GCP) GetAllMachines(ctx utils.Context) (*compute.MachineTypeList, e
 
 	return machines, nil
 }
+func (cloud *GCP) GetRegions(ctx utils.Context) (*compute.RegionList, error) {
+	if cloud.Client == nil {
+		err := cloud.init()
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return &compute.RegionList{}, err
+		}
+	}
+	reqCtx := context.Background()
+	regionInfo, err := cloud.Client.Regions.List(cloud.ProjectId).Context(reqCtx).Do()
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &compute.RegionList{}, err
+	}
 
+	return regionInfo, nil
+}
 func (cloud *GCP) GetZones(ctx utils.Context) (*compute.Region, error) {
 	if cloud.Client == nil {
 		err := cloud.init()

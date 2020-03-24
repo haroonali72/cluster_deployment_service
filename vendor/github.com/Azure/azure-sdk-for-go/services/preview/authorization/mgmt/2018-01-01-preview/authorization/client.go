@@ -1,9 +1,6 @@
 // Package authorization implements the Azure ARM Authorization service API version .
 //
-// Role based access control provides you a way to apply granular level policy administration down to individual
-// resources or resource groups. These operations enable you to manage role definitions and role assignments. A role
-// definition describes the set of actions that can be performed on resources. A role assignment grants access to Azure
-// Active Directory users.
+//
 package authorization
 
 // Copyright (c) Microsoft and contributors.  All rights reserved.
@@ -44,7 +41,8 @@ func New(subscriptionID string) BaseClient {
 	return NewWithBaseURI(DefaultBaseURI, subscriptionID)
 }
 
-// NewWithBaseURI creates an instance of the BaseClient client.
+// NewWithBaseURI creates an instance of the BaseClient client using a custom endpoint.  Use this when interacting with
+// an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure stack).
 func NewWithBaseURI(baseURI string, subscriptionID string) BaseClient {
 	return BaseClient{
 		Client:         autorest.NewClientWithUserAgent(UserAgent()),

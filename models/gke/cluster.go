@@ -6,6 +6,7 @@ import (
 	"antelope/models/gcp"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/woodpecker"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -24,275 +25,224 @@ type GKECluster struct {
 	CloudplexStatus  string        `json:"status" bson:"status"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 
-	// AddonsConfig: Configurations for the various addons available to run
-	// in the cluster.
-	AddonsConfig *gke.AddonsConfig `json:"addonsConfig,omitempty"`
+	AddonsConfig                   *AddonsConfig                   `json:"addons_config,omitempty" bson:"addons_config,omitempty"`
+	ClusterIpv4Cidr                string                          `json:"cluster_ipv_4_cidr,omitempty" bson:"cluster_ipv_4_cidr,omitempty"`
+	Conditions                     []*StatusCondition              `json:"conditions,omitempty" bson:"conditions,omitempty"`
+	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty"`
+	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty"`
+	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constraint,omitempty" bson:"default_max_pods_constraint,omitempty"`
+	Description                    string                          `json:"description,omitempty" bson:"description,omitempty"`
+	EnableKubernetesAlpha          bool                            `json:"enable_kubernetes_alpha,omitempty" bson:"enable_kubernetes_alpha,omitempty"`
+	EnableTpu                      bool                            `json:"enable_tpu,omitempty" bson:"enable_tpu,omitempty"`
+	Endpoint                       string                          `json:"endpoint,omitempty" bson:"endpoint,omitempty"`
+	ExpireTime                     string                          `json:"expire_time,omitempty" bson:"expire_time,omitempty"`
+	InitialClusterVersion          string                          `json:"initial_cluster_version,omitempty" bson:"initial_cluster_version,omitempty"`
+	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy,omitempty" bson:"ip_allocation_policy,omitempty"`
+	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty"`
+	LegacyAbac                     *LegacyAbac                     `json:"legacy_abac,omitempty" bson:"legacy_abac,omitempty"`
+	Location                       string                          `json:"location,omitempty" bson:"location,omitempty"`
+	Locations                      []string                        `json:"locations,omitempty" bson:"locations,omitempty"`
+	LoggingService                 string                          `json:"logging_service,omitempty" bson:"logging_service,omitempty"`
+	MaintenancePolicy              *MaintenancePolicy              `json:"maintenance_policy,omitempty" bson:"maintenance_policy,omitempty"`
+	MasterAuth                     *MasterAuth                     `json:"master_auth,omitempty" bson:"master_auth,omitempty"`
+	MasterAuthorizedNetworksConfig *MasterAuthorizedNetworksConfig `json:"master_authorized_networks_config,omitempty" bson:"master_authorized_networks_config,omitempty"`
+	MonitoringService              string                          `json:"monitoring_service,omitempty" bson:"monitoring_service,omitempty"`
+	Name                           string                          `json:"name,omitempty" bson:"name,omitempty"`
+	Network                        string                          `json:"network,omitempty" bson:"network,omitempty"`
+	NetworkConfig                  *NetworkConfig                  `json:"network_config,omitempty" bson:"network_config,omitempty"`
+	NetworkPolicy                  *NetworkPolicy                  `json:"network_policy,omitempty" bson:"network_policy,omitempty"`
+	NodeIpv4CidrSize               int64                           `json:"node_ipv_4_cidr_size,omitempty" bson:"node_ipv_4_cidr_size,omitempty"`
+	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty"`
+	PrivateClusterConfig           *PrivateClusterConfig           `json:"private_cluster_config,omitempty" bson:"private_cluster_config,omitempty"`
+	ResourceLabels                 map[string]string               `json:"resource_labels,omitempty" bson:"resource_labels,omitempty"`
+	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
+	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty"`
+	ServicesIpv4Cidr               string                          `json:"services_ipv_4_cidr,omitempty" bson:"services_ipv_4_cidr,omitempty"`
+	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
+	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty"`
+	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
+	TpuIpv4CidrBlock               string                          `json:"tpu_ipv_4_cidr_block,omitempty" bson:"tpu_ipv_4_cidr_block,omitempty"`
+	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty"`
+}
 
-	// ClusterIpv4Cidr: The IP address range of the container pods in this
-	// cluster,
-	// in
-	// [CIDR](http://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing)
-	//
-	// notation (e.g. `10.96.0.0/14`). Leave blank to have
-	// one automatically chosen or specify a `/14` block in `10.0.0.0/8`.
-	ClusterIpv4Cidr string `json:"clusterIpv4Cidr,omitempty"`
+type AddonsConfig struct {
+	HorizontalPodAutoscaling *HorizontalPodAutoscaling `json:"horizontal_pod_autoscaling,omitempty" bson:"horizontal_pod_autoscaling,omitempty"`
+	HttpLoadBalancing        *HttpLoadBalancing        `json:"http_load_balancing,omitempty" bson:"http_load_balancing,omitempty"`
+	KubernetesDashboard      *KubernetesDashboard      `json:"kubernetes_dashboard,omitempty" bson:"kubernetes_dashboard,omitempty"`
+	NetworkPolicyConfig      *NetworkPolicyConfig      `json:"network_policy_config,omitempty" bson:"network_policy_config,omitempty"`
+}
 
-	// Conditions: Which conditions caused the current cluster state.
-	Conditions []*gke.StatusCondition `json:"conditions,omitempty"`
+type HorizontalPodAutoscaling struct {
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+}
 
-	// CreateTime: [Output only] The time the cluster was created,
-	// in
-	// [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) text format.
-	CreateTime string `json:"createTime,omitempty"`
+type HttpLoadBalancing struct {
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+}
 
-	// CurrentMasterVersion: [Output only] The current software version of
-	// the master endpoint.
-	CurrentMasterVersion string `json:"currentMasterVersion,omitempty"`
+type KubernetesDashboard struct {
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+}
 
-	// DefaultMaxPodsConstraint: The default constraint on the maximum
-	// number of pods that can be run
-	// simultaneously on a node in the node pool of this cluster. Only
-	// honored
-	// if cluster created with IP Alias support.
-	DefaultMaxPodsConstraint *gke.MaxPodsConstraint `json:"defaultMaxPodsConstraint,omitempty"`
+type NetworkPolicyConfig struct {
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+}
 
-	// Description: An optional description of this cluster.
-	Description string `json:"description,omitempty"`
+type StatusCondition struct {
+	Code    string `json:"code,omitempty" bson:"code,omitempty"`
+	Message string `json:"message,omitempty" bson:"message,omitempty"`
+}
 
-	// EnableKubernetesAlpha: Kubernetes alpha features are enabled on this
-	// cluster. This includes alpha
-	// API groups (e.g. v1alpha1) and features that may not be production
-	// ready in
-	// the kubernetes version of the master and nodes.
-	// The cluster has no SLA for uptime and master/node upgrades are
-	// disabled.
-	// Alpha enabled clusters are automatically deleted thirty days
-	// after
-	// creation.
-	EnableKubernetesAlpha bool `json:"enableKubernetesAlpha,omitempty"`
+type MaxPodsConstraint struct {
+	MaxPodsPerNode int64 `json:"max_pods_per_node,omitempty" bson:"max_pods_per_node,omitempty"`
+}
 
-	// EnableTpu: Enable the ability to use Cloud TPUs in this cluster.
-	EnableTpu bool `json:"enableTpu,omitempty"`
+type IPAllocationPolicy struct {
+	ClusterIpv4Cidr            string `json:"cluster_ipv_4_cidr,omitempty" bson:"cluster_ipv_4_cidr,omitempty"`
+	ClusterIpv4CidrBlock       string `json:"cluster_ipv_4_cidr_block,omitempty" bson:"cluster_ipv_4_cidr_block,omitempty"`
+	ClusterSecondaryRangeName  string `json:"cluster_secondary_range_name,omitempty" bson:"cluster_secondary_range_name,omitempty"`
+	CreateSubnetwork           bool   `json:"create_subnetwork,omitempty" bson:"create_subnetwork,omitempty"`
+	NodeIpv4Cidr               string `json:"node_ipv_4_cidr,omitempty" bson:"node_ipv_4_cidr,omitempty"`
+	NodeIpv4CidrBlock          string `json:"node_ipv_4_cidr_block,omitempty" bson:"node_ipv_4_cidr_block,omitempty"`
+	ServicesIpv4Cidr           string `json:"services_ipv_4_cidr,omitempty" bson:"services_ipv_4_cidr,omitempty"`
+	ServicesIpv4CidrBlock      string `json:"services_ipv_4_cidr_block,omitempty" bson:"services_ipv_4_cidr_block,omitempty"`
+	ServicesSecondaryRangeName string `json:"services_secondary_range_name,omitempty" bson:"services_secondary_range_name,omitempty"`
+	SubnetworkName             string `json:"subnetwork_name,omitempty" bson:"subnetwork_name,omitempty"`
+	TpuIpv4CidrBlock           string `json:"tpu_ipv_4_cidr_block,omitempty" bson:"tpu_ipv_4_cidr_block,omitempty"`
+	UseIpAliases               bool   `json:"use_ip_aliases,omitempty" bson:"use_ip_aliases,omitempty"`
+}
 
-	// Endpoint: [Output only] The IP address of this cluster's master
-	// endpoint.
-	// The endpoint can be accessed from the internet
-	// at
-	// `https://username:password@endpoint/`.
-	//
-	// See the `masterAuth` property of this resource for username
-	// and
-	// password information.
-	Endpoint string `json:"endpoint,omitempty"`
+type LegacyAbac struct {
+	Enabled bool `json:"enabled,omitempty" bson:"enabled,omitempty"`
+}
 
-	// ExpireTime: [Output only] The time the cluster will be
-	// automatically
-	// deleted in [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) text
-	// format.
-	ExpireTime string `json:"expireTime,omitempty"`
+type MaintenancePolicy struct {
+	Window *MaintenanceWindow `json:"window,omitempty" bson:"window,omitempty"`
+}
 
-	// InitialClusterVersion: The initial Kubernetes version for this
-	// cluster.  Valid versions are those
-	// found in validMasterVersions returned by getServerConfig.  The
-	// version can
-	// be upgraded over time; such upgrades are reflected
-	// in
-	// currentMasterVersion and currentNodeVersion.
-	//
-	// Users may specify either explicit versions offered by
-	// Kubernetes Engine or version aliases, which have the following
-	// behavior:
-	//
-	// - "latest": picks the highest valid Kubernetes version
-	// - "1.X": picks the highest valid patch+gke.N patch in the 1.X
-	// version
-	// - "1.X.Y": picks the highest valid gke.N patch in the 1.X.Y version
-	// - "1.X.Y-gke.N": picks an explicit Kubernetes version
-	// - "","-": picks the default Kubernetes version
-	InitialClusterVersion string `json:"initialClusterVersion,omitempty"`
+type MaintenanceWindow struct {
+	DailyMaintenanceWindow *DailyMaintenanceWindow `json:"daily_maintenance_window,omitempty" bson:"daily_maintenance_window,omitempty"`
+}
 
-	// IpAllocationPolicy: Configuration for cluster IP allocation.
-	IpAllocationPolicy *gke.IPAllocationPolicy `json:"ipAllocationPolicy,omitempty"`
+type DailyMaintenanceWindow struct {
+	Duration  string `json:"duration,omitempty" bson:"duration,omitempty"`
+	StartTime string `json:"start_time,omitempty" bson:"start_time,omitempty"`
+}
 
-	// LabelFingerprint: The fingerprint of the set of labels for this
-	// cluster.
-	LabelFingerprint string `json:"labelFingerprint,omitempty"`
+type MasterAuth struct {
+	ClientCertificate       string                   `json:"client_certificate,omitempty" bson:"client_certificate,omitempty"`
+	ClientCertificateConfig *ClientCertificateConfig `json:"client_certificate_config,omitempty" bson:"client_certificate_config,omitempty"`
+	ClientKey               string                   `json:"client_key,omitempty" bson:"client_key,omitempty"`
+	ClusterCaCertificate    string                   `json:"cluster_ca_certificate,omitempty" bson:"cluster_ca_certificate,omitempty"`
+	Password                string                   `json:"password,omitempty" bson:"password,omitempty"`
+	Username                string                   `json:"username,omitempty" bson:"username,omitempty"`
+}
 
-	// LegacyAbac: Configuration for the legacy ABAC authorization mode.
-	LegacyAbac *gke.LegacyAbac `json:"legacyAbac,omitempty"`
+type ClientCertificateConfig struct {
+	IssueClientCertificate bool `json:"issue_client_certificate,omitempty" bson:"issue_client_certificate,omitempty"`
+}
 
-	// Location: [Output only] The name of the Google Compute
-	// Engine
-	// [zone](/compute/docs/regions-zones/regions-zones#available)
-	// or
-	// [region](/compute/docs/regions-zones/regions-zones#available) in
-	// which
-	// the cluster resides.
-	Location string `json:"location,omitempty"`
+type MasterAuthorizedNetworksConfig struct {
+	CidrBlocks []*CidrBlock `json:"cidr_blocks,omitempty" bson:"cidr_blocks,omitempty"`
+	Enabled    bool         `json:"enabled,omitempty" bson:"enabled,omitempty"`
+}
 
-	// Locations: The list of Google Compute
-	// Engine
-	// [zones](/compute/docs/zones#available) in which the cluster's
-	// nodes
-	// should be located.
-	Locations []string `json:"locations,omitempty"`
+type CidrBlock struct {
+	CidrBlock   string `json:"cidr_block,omitempty" bson:"cidr_block,omitempty"`
+	DisplayName string `json:"display_name,omitempty" bson:"display_name,omitempty"`
+}
 
-	// LoggingService: The logging service the cluster should use to write
-	// logs.
-	// Currently available options:
-	//
-	// * "logging.googleapis.com/kubernetes" - the Google Cloud
-	// Logging
-	// service with Kubernetes-native resource model in Stackdriver
-	// * `logging.googleapis.com` - the Google Cloud Logging service.
-	// * `none` - no logs will be exported from the cluster.
-	// * if left as an empty string,`logging.googleapis.com` will be used.
-	LoggingService string `json:"loggingService,omitempty"`
+type NetworkConfig struct {
+	Network    string `json:"network,omitempty" bson:"network,omitempty"`
+	Subnetwork string `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
+}
 
-	// MaintenancePolicy: Configure the maintenance policy for this cluster.
-	MaintenancePolicy *gke.MaintenancePolicy `json:"maintenancePolicy,omitempty"`
+type NetworkPolicy struct {
+	Enabled  bool   `json:"enabled,omitempty" bson:"enabled,omitempty"`
+	Provider string `json:"provider,omitempty" bson:"provider,omitempty"`
+}
 
-	// MasterAuth: The authentication information for accessing the master
-	// endpoint.
-	// If unspecified, the defaults are used:
-	// For clusters before v1.12, if master_auth is unspecified, `username`
-	// will
-	// be set to "admin", a random password will be generated, and a
-	// client
-	// certificate will be issued.
-	MasterAuth *gke.MasterAuth `json:"masterAuth,omitempty"`
+type PrivateClusterConfig struct {
+	EnablePrivateEndpoint bool   `json:"enable_private_endpoint,omitempty" bson:"enable_private_endpoint,omitempty"`
+	EnablePrivateNodes    bool   `json:"enable_private_nodes,omitempty" bson:"enable_private_nodes,omitempty"`
+	MasterIpv4CidrBlock   string `json:"master_ipv_4_cidr_block,omitempty" bson:"master_ipv_4_cidr_block,omitempty"`
+	PrivateEndpoint       string `json:"private_endpoint,omitempty" bson:"private_endpoint,omitempty"`
+	PublicEndpoint        string `json:"public_endpoint,omitempty" bson:"public_endpoint,omitempty"`
+}
 
-	// MasterAuthorizedNetworksConfig: The configuration options for master
-	// authorized networks feature.
-	MasterAuthorizedNetworksConfig *gke.MasterAuthorizedNetworksConfig `json:"masterAuthorizedNetworksConfig,omitempty"`
+type ResourceUsageExportConfig struct {
+	BigqueryDestination         *BigQueryDestination       `json:"bigquery_destination,omitempty" bson:"bigquery_destination,omitempty"`
+	ConsumptionMeteringConfig   *ConsumptionMeteringConfig `json:"consumption_metering_config,omitempty" bson:"consumption_metering_config,omitempty"`
+	EnableNetworkEgressMetering bool                       `json:"enable_network_egress_metering,omitempty" bson:"enable_network_egress_metering,omitempty"`
+}
 
-	// MonitoringService: The monitoring service the cluster should use to
-	// write metrics.
-	// Currently available options:
-	//
-	// * `monitoring.googleapis.com` - the Google Cloud Monitoring
-	// service.
-	// * `none` - no metrics will be exported from the cluster.
-	// * if left as an empty string, `monitoring.googleapis.com` will be
-	// used.
-	MonitoringService string `json:"monitoringService,omitempty"`
+type BigQueryDestination struct {
+	DatasetId string `json:"dataset_id,omitempty" bson:"dataset_id,omitempty"`
+}
 
-	// Name: The name of this cluster. The name must be unique within this
-	// project
-	// and zone, and can be up to 40 characters with the following
-	// restrictions:
-	//
-	// * Lowercase letters, numbers, and hyphens only.
-	// * Must start with a letter.
-	// * Must end with a number or a letter.
-	Name string `json:"name,omitempty"`
+type ConsumptionMeteringConfig struct {
+	Enabled bool `json:"enabled,omitempty" bson:"enabled,omitempty"`
+}
 
-	// Network: The name of the Google Compute
-	// Engine
-	// [network](/compute/docs/networks-and-firewalls#networks) to which
-	// the
-	// cluster is connected. If left unspecified, the `default` network
-	// will be used.
-	Network string `json:"network,omitempty"`
+type NodePool struct {
+	Autoscaling       *NodePoolAutoscaling `json:"autoscaling,omitempty" bson:"autoscaling,omitempty"`
+	Conditions        []*StatusCondition   `json:"conditions,omitempty" bson:"conditions,omitempty"`
+	Config            *NodeConfig          `json:"config,omitempty" bson:"config,omitempty"`
+	InitialNodeCount  int64                `json:"initial_node_count,omitempty" bson:"initial_node_count,omitempty"`
+	InstanceGroupUrls []string             `json:"instance_group_urls,omitempty" bson:"instance_group_urls,omitempty"`
+	Management        *NodeManagement      `json:"management,omitempty" bson:"management,omitempty"`
+	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty"`
+	Name              string               `json:"name,omitempty" bson:"name,omitempty"`
+	PodIpv4CidrSize   int64                `json:"pod_ipv_4_cidr_size,omitempty" bson:"pod_ipv_4_cidr_size,omitempty"`
+	SelfLink          string               `json:"self_link,omitempty" bson:"self_link,omitempty"`
+	Status            string               `json:"status,omitempty" bson:"status,omitempty"`
+	StatusMessage     string               `json:"status_message,omitempty" bson:"status_message,omitempty"`
+	Version           string               `json:"version,omitempty" bson:"version,omitempty"`
+}
 
-	// NetworkConfig: Configuration for cluster networking.
-	NetworkConfig *gke.NetworkConfig `json:"networkConfig,omitempty"`
+type NodePoolAutoscaling struct {
+	Enabled      bool  `json:"enabled,omitempty" bson:"enabled,omitempty"`
+	MaxNodeCount int64 `json:"max_node_count,omitempty" bson:"max_node_count,omitempty"`
+	MinNodeCount int64 `json:"min_node_count,omitempty" bson:"min_node_count,omitempty"`
+}
 
-	// NetworkPolicy: Configuration options for the NetworkPolicy feature.
-	NetworkPolicy *gke.NetworkPolicy `json:"networkPolicy,omitempty"`
+type NodeConfig struct {
+	Accelerators   []*AcceleratorConfig `json:"accelerators,omitempty" bson:"accelerators,omitempty"`
+	DiskSizeGb     int64                `json:"disk_size_gb,omitempty" bson:"disk_size_gb,omitempty"`
+	DiskType       string               `json:"disk_type,omitempty" bson:"disk_type,omitempty"`
+	ImageType      string               `json:"image_type,omitempty" bson:"image_type,omitempty"`
+	Labels         map[string]string    `json:"labels,omitempty" bson:"labels,omitempty"`
+	LocalSsdCount  int64                `json:"local_ssd_count,omitempty" bson:"local_ssd_count,omitempty"`
+	MachineType    string               `json:"machine_type,omitempty" bson:"machine_type,omitempty"`
+	Metadata       map[string]string    `json:"metadata,omitempty" bson:"metadata,omitempty"`
+	MinCpuPlatform string               `json:"min_cpu_platform,omitempty" bson:"min_cpu_platform,omitempty"`
+	OauthScopes    []string             `json:"oauth_scopes,omitempty" bson:"oauth_scopes,omitempty"`
+	Preemptible    bool                 `json:"preemptible,omitempty" bson:"preemptible,omitempty"`
+	ServiceAccount string               `json:"service_account,omitempty" bson:"service_account,omitempty"`
+	Tags           []string             `json:"tags,omitempty" bson:"tags,omitempty"`
+	Taints         []*NodeTaint         `json:"taints,omitempty" bson:"taints,omitempty"`
+}
 
-	// NodeIpv4CidrSize: [Output only] The size of the address space on each
-	// node for hosting
-	// containers. This is provisioned from within the
-	// `container_ipv4_cidr`
-	// range. This field will only be set when cluster is in route-based
-	// network
-	// mode.
-	NodeIpv4CidrSize int64 `json:"nodeIpv4CidrSize,omitempty"`
+type AcceleratorConfig struct {
+	AcceleratorCount int64  `json:"accelerator_count,omitempty" bson:"accelerator_count,omitempty"`
+	AcceleratorType  string `json:"accelerator_type,omitempty" bson:"accelerator_type,omitempty"`
+}
 
-	// NodePools: The node pools associated with this cluster.
-	// This field should not be set if "node_config" or "initial_node_count"
-	// are
-	// specified.
-	NodePools []*gke.NodePool `json:"nodePools,omitempty"`
+type NodeTaint struct {
+	Effect string `json:"effect,omitempty" bson:"effect,omitempty"`
+	Key    string `json:"key,omitempty" bson:"key,omitempty"`
+	Value  string `json:"value,omitempty" bson:"value,omitempty"`
+}
 
-	// PrivateClusterConfig: Configuration for private cluster.
-	PrivateClusterConfig *gke.PrivateClusterConfig `json:"privateClusterConfig,omitempty"`
+type NodeManagement struct {
+	AutoRepair     bool                `json:"auto_repair,omitempty" bson:"auto_repair,omitempty"`
+	AutoUpgrade    bool                `json:"auto_upgrade,omitempty" bson:"auto_upgrade,omitempty"`
+	UpgradeOptions *AutoUpgradeOptions `json:"upgrade_options,omitempty" bson:"upgrade_options,omitempty"`
+}
 
-	// ResourceLabels: The resource labels for the cluster to use to
-	// annotate any related
-	// Google Compute Engine resources.
-	ResourceLabels map[string]string `json:"resourceLabels,omitempty"`
-
-	// ResourceUsageExportConfig: Configuration for exporting resource
-	// usages. Resource usage export is
-	// disabled when this config is unspecified.
-	ResourceUsageExportConfig *gke.ResourceUsageExportConfig `json:"resourceUsageExportConfig,omitempty"`
-
-	// SelfLink: [Output only] Server-defined URL for the resource.
-	SelfLink string `json:"selfLink,omitempty"`
-
-	// ServicesIpv4Cidr: [Output only] The IP address range of the
-	// Kubernetes services in
-	// this cluster,
-	// in
-	// [CIDR](http://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing)
-	//
-	// notation (e.g. `1.2.3.4/29`). Service addresses are
-	// typically put in the last `/16` from the container CIDR.
-	ServicesIpv4Cidr string `json:"servicesIpv4Cidr,omitempty"`
-
-	// Status: [Output only] The current status of this cluster.
-	//
-	// Possible values:
-	//   "STATUS_UNSPECIFIED" - Not set.
-	//   "PROVISIONING" - The PROVISIONING state indicates the cluster is
-	// being created.
-	//   "RUNNING" - The RUNNING state indicates the cluster has been
-	// created and is fully
-	// usable.
-	//   "RECONCILING" - The RECONCILING state indicates that some work is
-	// actively being done on
-	// the cluster, such as upgrading the master or node software. Details
-	// can
-	// be found in the `statusMessage` field.
-	//   "STOPPING" - The STOPPING state indicates the cluster is being
-	// deleted.
-	//   "ERROR" - The ERROR state indicates the cluster may be unusable.
-	// Details
-	// can be found in the `statusMessage` field.
-	//   "DEGRADED" - The DEGRADED state indicates the cluster requires user
-	// action to restore
-	// full functionality. Details can be found in the `statusMessage`
-	// field.
-	Status string `json:"cloudStatus,omitempty" bson:"cloudstatus,omitempty"`
-
-	// StatusMessage: [Output only] Additional information about the current
-	// status of this
-	// cluster, if available.
-	StatusMessage string `json:"statusMessage,omitempty"`
-
-	// Subnetwork: The name of the Google Compute
-	// Engine
-	// [subnetwork](/compute/docs/subnetworks) to which the
-	// cluster is connected.
-	Subnetwork string `json:"subnetwork,omitempty"`
-
-	// TpuIpv4CidrBlock: [Output only] The IP address range of the Cloud
-	// TPUs in this cluster,
-	// in
-	// [CIDR](http://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing)
-	//
-	// notation (e.g. `1.2.3.4/29`).
-	TpuIpv4CidrBlock string `json:"tpuIpv4CidrBlock,omitempty"`
-
-	// Zone: [Output only] The name of the Google Compute
-	// Engine
-	// [zone](/compute/docs/zones#available) in which the
-	// cluster
-	// resides.
-	// This field is deprecated, use location instead.
-	Zone string `json:"zone,omitempty"`
+type AutoUpgradeOptions struct {
+	AutoUpgradeStartTime string `json:"auto_upgrade_start_time,omitempty" bson:"auto_upgrade_start_time,omitempty"`
+	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
 func GetGKECluster(projectId string, companyId string, ctx utils.Context) (cluster GKECluster, err error) {
@@ -535,7 +485,21 @@ func DeployGKECluster(
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
+	if confError != nil {
+		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
+		cluster.Status = "Cluster creation failed"
+		confError = UpdateGKECluster(cluster, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return nil
+	}
 	cluster.Status = "Cluster Created"
 
 	confError = UpdateGKECluster(cluster, ctx)
@@ -678,4 +642,34 @@ func PrintError(confError error, name, projectId string, companyId string) {
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
 		_, _ = utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
+}
+
+func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context, clusterName string) (confError error) {
+	projectID := ctx.Data.ProjectId
+	companyId := ctx.Data.Company
+	data2, err := woodpecker.GetCertificate(projectID, token, ctx)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	filePath := "/tmp/" + companyId + "/" + projectID + "/"
+	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
+	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	if credentials.Zone != "" {
+		cmd = "sudo docker run --rm --name " + companyId + projectID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e zone=" + credentials.Region + "-" + credentials.Zone + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GKEAuthContainerName
+	} else {
+		cmd = "sudo docker run --rm --name " + companyId + projectID + " -e gcpProject=" + credentials.AccountData.ProjectId + " -e cluster=" + clusterName + " -e region=" + credentials.Region + " -e serviceAccount=" + filePath + "gcp-auth.json" + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.GKEAuthContainerName
+	}
+
+	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	return nil
 }

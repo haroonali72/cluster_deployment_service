@@ -21,6 +21,7 @@ import (
 	"context"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/tracing"
 	"net/http"
 )
 
@@ -36,13 +37,24 @@ func NewTenantsClient() TenantsClient {
 	return NewTenantsClientWithBaseURI(DefaultBaseURI)
 }
 
-// NewTenantsClientWithBaseURI creates an instance of the TenantsClient client.
+// NewTenantsClientWithBaseURI creates an instance of the TenantsClient client using a custom endpoint.  Use this when
+// interacting with an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure stack).
 func NewTenantsClientWithBaseURI(baseURI string) TenantsClient {
 	return TenantsClient{NewWithBaseURI(baseURI)}
 }
 
 // List gets the tenants for your account.
 func (client TenantsClient) List(ctx context.Context) (result TenantListResultPage, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/TenantsClient.List")
+		defer func() {
+			sc := -1
+			if result.tlr.Response.Response != nil {
+				sc = result.tlr.Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	result.fn = client.listNextResults
 	req, err := client.ListPreparer(ctx)
 	if err != nil {
@@ -83,8 +95,7 @@ func (client TenantsClient) ListPreparer(ctx context.Context) (*http.Request, er
 // ListSender sends the List request. The method will close the
 // http.Response Body if it receives an error.
 func (client TenantsClient) ListSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	return client.Send(req, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
 }
 
 // ListResponder handles the response to the List request. The method always
@@ -101,8 +112,8 @@ func (client TenantsClient) ListResponder(resp *http.Response) (result TenantLis
 }
 
 // listNextResults retrieves the next set of results, if any.
-func (client TenantsClient) listNextResults(lastResults TenantListResult) (result TenantListResult, err error) {
-	req, err := lastResults.tenantListResultPreparer()
+func (client TenantsClient) listNextResults(ctx context.Context, lastResults TenantListResult) (result TenantListResult, err error) {
+	req, err := lastResults.tenantListResultPreparer(ctx)
 	if err != nil {
 		return result, autorest.NewErrorWithError(err, "subscriptions.TenantsClient", "listNextResults", nil, "Failure preparing next results request")
 	}
@@ -123,6 +134,16 @@ func (client TenantsClient) listNextResults(lastResults TenantListResult) (resul
 
 // ListComplete enumerates all values, automatically crossing page boundaries as required.
 func (client TenantsClient) ListComplete(ctx context.Context) (result TenantListResultIterator, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/TenantsClient.List")
+		defer func() {
+			sc := -1
+			if result.Response().Response.Response != nil {
+				sc = result.page.Response().Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
 	result.page, err = client.List(ctx)
 	return
 }

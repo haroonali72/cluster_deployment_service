@@ -37,7 +37,7 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster, error) {
 		}
 	}
 
-	list, err := cloud.Client.Projects.Zones.Clusters.List(cloud.ProjectId, cloud.Zone).Do()
+	list, err := cloud.Client.Projects.Zones.Clusters.List(cloud.ProjectId, cloud.Region+"-"+cloud.Zone).Do()
 	if err != nil {
 		ctx.SendLogs(
 			"GKE list clusters for '"+cloud.ProjectId+"' failed: "+err.Error(),
@@ -50,7 +50,7 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster, error) {
 	result := []GKECluster{}
 	for _, v := range list.Clusters {
 		if v != nil {
-			result = append(result, cloud.generateClusterFromResponse(*v))
+			result = append(result, GenerateClusterFromResponse(*v))
 		}
 	}
 
@@ -58,7 +58,7 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster, error) {
 }
 
 func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.Context) error {
-	err := validate(gkeCluster)
+	err := Validate(gkeCluster)
 	if err != nil {
 		ctx.SendLogs(
 			"GKE cluster validation for '"+gkeCluster.Name+"' failed: "+err.Error(),
@@ -68,7 +68,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 		return err
 	}
 
-	clusterRequest := cloud.generateClusterCreateRequest(gkeCluster)
+	clusterRequest := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, gkeCluster)
 	networkInformation := cloud.getGCPNetwork(token, ctx)
 
 	// overriding network configurations with network from current project
@@ -81,7 +81,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 
 	_, err = cloud.Client.Projects.Zones.Clusters.Create(
 		cloud.ProjectId,
-		cloud.Zone,
+		cloud.Region+"-"+cloud.Zone,
 		clusterRequest,
 	).Context(context.Background()).Do()
 
@@ -118,7 +118,7 @@ func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
 		cloud.ProjectId,
-		cloud.Zone,
+		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 		&gke.UpdateClusterRequest{
 			Update: &gke.ClusterUpdate{
@@ -145,7 +145,7 @@ func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ct
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Update(
 		cloud.ProjectId,
-		cloud.Zone,
+		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 		nodeName,
 		&gke.UpdateNodePoolRequest{
@@ -171,7 +171,7 @@ func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, 
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.SetSize(
 		cloud.ProjectId,
-		cloud.Zone,
+		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 		nodeName,
 		&gke.SetNodePoolSizeRequest{
@@ -193,7 +193,7 @@ func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, 
 func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) error {
 	_, err := cloud.Client.Projects.Zones.Clusters.Delete(
 		cloud.ProjectId,
-		cloud.Zone,
+		cloud.Region+"-"+cloud.Zone,
 		clusterName,
 	).Context(context.Background()).Do()
 
@@ -221,7 +221,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context) error {
 	for {
 		cluster, err := cloud.Client.Projects.Zones.Clusters.Get(
 			cloud.ProjectId,
-			cloud.Zone,
+			cloud.Region+"-"+cloud.Zone,
 			clusterName,
 		).Context(context.Background()).Do()
 		if err != nil {
@@ -257,7 +257,7 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 	for {
 		nodepool, err := cloud.Client.Projects.Zones.Clusters.NodePools.Get(
 			cloud.ProjectId,
-			cloud.Zone,
+			cloud.Region+"-"+cloud.Zone,
 			clusterName,
 			nodeName,
 		).Context(context.Background()).Do()
@@ -324,86 +324,6 @@ func (cloud *GKE) getGCPNetwork(token string, ctx utils.Context) (gcpNetwork typ
 	return gcpNetwork
 }
 
-func (cloud *GKE) generateClusterFromResponse(v gke.Cluster) GKECluster {
-	return GKECluster{
-		ProjectId:                      cloud.ProjectId,
-		Cloud:                          models.GKE,
-		AddonsConfig:                   v.AddonsConfig,
-		ClusterIpv4Cidr:                v.ClusterIpv4Cidr,
-		Conditions:                     v.Conditions,
-		CreateTime:                     v.CreateTime,
-		CurrentMasterVersion:           v.CurrentMasterVersion,
-		DefaultMaxPodsConstraint:       v.DefaultMaxPodsConstraint,
-		Description:                    v.Description,
-		EnableKubernetesAlpha:          v.EnableKubernetesAlpha,
-		EnableTpu:                      v.EnableTpu,
-		Endpoint:                       v.Endpoint,
-		ExpireTime:                     v.ExpireTime,
-		InitialClusterVersion:          v.InitialClusterVersion,
-		IpAllocationPolicy:             v.IpAllocationPolicy,
-		LabelFingerprint:               v.LabelFingerprint,
-		LegacyAbac:                     v.LegacyAbac,
-		Location:                       v.Location,
-		Locations:                      v.Locations,
-		LoggingService:                 v.LoggingService,
-		MaintenancePolicy:              v.MaintenancePolicy,
-		MasterAuth:                     v.MasterAuth,
-		MasterAuthorizedNetworksConfig: v.MasterAuthorizedNetworksConfig,
-		MonitoringService:              v.MonitoringService,
-		Name:                           v.Name,
-		Network:                        v.Network,
-		NetworkConfig:                  v.NetworkConfig,
-		NetworkPolicy:                  v.NetworkPolicy,
-		NodeIpv4CidrSize:               v.NodeIpv4CidrSize,
-		NodePools:                      v.NodePools,
-		PrivateClusterConfig:           v.PrivateClusterConfig,
-		ResourceLabels:                 v.ResourceLabels,
-		ResourceUsageExportConfig:      v.ResourceUsageExportConfig,
-		SelfLink:                       v.SelfLink,
-		ServicesIpv4Cidr:               v.ServicesIpv4Cidr,
-		Status:                         v.Status,
-		StatusMessage:                  v.StatusMessage,
-		Subnetwork:                     v.Subnetwork,
-		TpuIpv4CidrBlock:               v.TpuIpv4CidrBlock,
-		Zone:                           v.Zone,
-	}
-}
-
-func (cloud *GKE) generateClusterCreateRequest(c GKECluster) *gke.CreateClusterRequest {
-	request := gke.CreateClusterRequest{
-		Cluster: &gke.Cluster{
-			AddonsConfig:                   c.AddonsConfig,
-			ClusterIpv4Cidr:                c.ClusterIpv4Cidr,
-			DefaultMaxPodsConstraint:       c.DefaultMaxPodsConstraint,
-			Description:                    c.Description,
-			EnableKubernetesAlpha:          c.EnableKubernetesAlpha,
-			EnableTpu:                      c.EnableTpu,
-			InitialClusterVersion:          c.InitialClusterVersion,
-			IpAllocationPolicy:             c.IpAllocationPolicy,
-			LabelFingerprint:               c.LabelFingerprint,
-			LegacyAbac:                     c.LegacyAbac,
-			Locations:                      c.Locations,
-			LoggingService:                 c.LoggingService,
-			MaintenancePolicy:              c.MaintenancePolicy,
-			MonitoringService:              c.MonitoringService,
-			MasterAuthorizedNetworksConfig: c.MasterAuthorizedNetworksConfig,
-			MasterAuth:                     c.MasterAuth,
-			Name:                           c.Name,
-			Network:                        c.Network,
-			NetworkConfig:                  c.NetworkConfig,
-			NetworkPolicy:                  c.NetworkPolicy,
-			NodePools:                      c.NodePools,
-			PrivateClusterConfig:           c.PrivateClusterConfig,
-			ResourceLabels:                 c.ResourceLabels,
-			ResourceUsageExportConfig:      c.ResourceUsageExportConfig,
-			Subnetwork:                     c.Subnetwork,
-		},
-		ProjectId: cloud.ProjectId,
-		Zone:      cloud.Zone,
-	}
-	return &request
-}
-
 func (cloud *GKE) init() error {
 	if cloud.Client != nil {
 		return nil
@@ -430,7 +350,7 @@ func (cloud *GKE) fetchClusterStatus(cluster *GKECluster, ctx utils.Context) err
 		}
 	}
 
-	latestCluster, err := cloud.Client.Projects.Zones.Clusters.Get(cloud.ProjectId, cloud.Zone, cluster.Name).Do()
+	latestCluster, err := cloud.Client.Projects.Zones.Clusters.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
 	if err != nil && !strings.Contains(err.Error(), "not exist") {
 		ctx.SendLogs(
 			"GKE get cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
@@ -441,7 +361,7 @@ func (cloud *GKE) fetchClusterStatus(cluster *GKECluster, ctx utils.Context) err
 	}
 
 	if latestCluster != nil {
-		cluster.NodePools = latestCluster.NodePools
+		cluster.NodePools = GenerateNodePoolFromResponse(latestCluster.NodePools)
 	}
 
 	return nil
@@ -456,7 +376,7 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) error {
 		}
 	}
 
-	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.ProjectId, cloud.Zone, cluster.Name).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
 	if err != nil {
 		ctx.SendLogs(
 			"GKE delete cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
@@ -469,11 +389,9 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) error {
 	return nil
 }
 
-func validate(gkeCluster GKECluster) error {
+func Validate(gkeCluster GKECluster) error {
 	if gkeCluster.ProjectId == "" {
 		return errors.New("project id is required")
-	} else if gkeCluster.Zone == "" {
-		return errors.New("zone is required")
 	} else if gkeCluster.Name == "" {
 		return errors.New("cluster name is required")
 	}
@@ -497,6 +415,6 @@ func GetGKE(credentials gcp.GcpCredentials) (GKE, error) {
 		Credentials: credentials.RawData,
 		ProjectId:   credentials.AccountData.ProjectId,
 		Region:      credentials.Region,
-		Zone:        credentials.Zone,
+		Zone:        credentials.Region + "-" + credentials.Zone,
 	}, nil
 }

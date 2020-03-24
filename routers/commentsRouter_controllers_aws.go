@@ -63,9 +63,45 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
+            Method: "ApplyAgent",
+            Router: `/applyagent/:projectId`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+        beego.ControllerComments{
             Method: "EnableAutoScaling",
             Router: `/enablescaling/:projectId/`,
             AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+        beego.ControllerComments{
+            Method: "GetAllMachines",
+            Router: `/getallmachines`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+        beego.ControllerComments{
+            Method: "GetAllRegions",
+            Router: `/getallregions`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+        beego.ControllerComments{
+            Method: "GetZones",
+            Router: `/getzones/:region`,
+            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
@@ -128,6 +164,15 @@ func init() {
         beego.ControllerComments{
             Method: "TerminateCluster",
             Router: `/terminate/:projectId/`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+        beego.ControllerComments{
+            Method: "ValidateProfile",
+            Router: `/validateProfile/`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
