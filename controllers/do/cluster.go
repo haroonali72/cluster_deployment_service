@@ -1127,7 +1127,7 @@ func (c *DOClusterController) DeleteSSHKey() {
 // @Success 200 {"msg": "Profile is valid"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @router /validateprofile/ [post]
+// @router /validateProfile/ [post]
 func (c *DOClusterController) ValidateProfile() {
 
 	var credentials vault.DOCredentials
