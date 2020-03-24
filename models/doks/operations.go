@@ -111,6 +111,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
  	var nodepool []*godo.KubernetesNodePoolCreateRequest
 	for _,node := range cluster.NodePools{
 		pool:= godo.KubernetesNodePoolCreateRequest{
+
 		Name:      node.Name,
 		Size:      node.Size,
 		Count:     node.Count,

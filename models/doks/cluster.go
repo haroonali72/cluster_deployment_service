@@ -97,7 +97,7 @@ func GetKubernetesCluster(projectId string, companyId string, ctx utils.Context)
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
 	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("DOKSGetClusterModel:  Get - Got error while fetching from database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging )

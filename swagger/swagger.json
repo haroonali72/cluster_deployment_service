@@ -7294,7 +7294,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13266.0xc0014893e0.false": {
+        "13266.0xc001455d10.false": {
             "title": "false",
             "type": "object"
         },
@@ -7306,15 +7306,15 @@
             "title": "string",
             "type": "object"
         },
-        "442.0xc001447680.false": {
+        "442.0xc00140ffb0.false": {
             "title": "false",
             "type": "object"
         },
-        "607.0xc000e17470.false": {
+        "607.0xc000de9e00.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc001114f90.false": {
+        "667.0xc0010e5920.false": {
             "title": "false",
             "type": "object"
         },
@@ -7615,7 +7615,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/607.0xc000e17470.false"
+                    "$ref": "#/definitions/607.0xc000de9e00.false"
                 },
                 "name": {
                     "type": "string"
@@ -8183,7 +8183,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/667.0xc001114f90.false"
+                    "$ref": "#/definitions/667.0xc0010e5920.false"
                 },
                 "name": {
                     "type": "string"
@@ -9838,7 +9838,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc001447680.false"
+                    "$ref": "#/definitions/442.0xc00140ffb0.false"
                 },
                 "name": {
                     "type": "string"
@@ -9966,7 +9966,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13266.0xc0014893e0.false"
+                    "$ref": "#/definitions/13266.0xc001455d10.false"
                 },
                 "name": {
                     "type": "string"
