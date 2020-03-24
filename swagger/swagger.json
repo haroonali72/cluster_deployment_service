@@ -2061,6 +2061,460 @@
             }
         },
         "/cluster/do/{projectId}/{forceDelete}": {},
+        "/cluster/doks/": {
+            "put": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "update an existing cluster",
+                "operationId": "DOKSClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "add a new cluster",
+                "operationId": "DOKSClusterController.Add",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/all": {
+            "get": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "get all the clusters",
+                "operationId": "DOKSClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/doks.KubernetesCluster"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/applyagent/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "Apply cloudplex Agent file to a DOKS cluster",
+                "operationId": "DOKSClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "clusterName",
+                        "description": "clusterName",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"Agent Applied successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/config/{zone}": {
+            "get": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "get server config file",
+                "operationId": "DOKSClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/doks.ServerConfig"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/start/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "starts a  cluster",
+                "operationId": "DOKSClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/status/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "returns status of nodes",
+                "operationId": "DOKSClusterController.Status",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/doks.DOKSCluster"
+                        }
+                    },
+                    "206": {
+                        "description": "{object} doks.DOKSCluster"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/terminate/{projectId}/": {
+            "post": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "terminates a  cluster",
+                "operationId": "DOKSClusterController.Terminate",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "get kubernetes cluster",
+                "operationId": "DOKSClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesCluster"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "delete a kubernetes cluster",
+                "operationId": "DOKSClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gcp/": {
             "put": {
                 "tags": [
@@ -6129,19 +6583,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13635.0xc000fc5620.false": {
+        "13266.0xc0012fc840.false": {
             "title": "false",
             "type": "object"
         },
-        "459.0xc000f858c0.false": {
+        "442.0xc0012ccae0.false": {
             "title": "false",
             "type": "object"
         },
-        "631.0xc0009bce10.false": {
+        "607.0xc000ca5230.false": {
             "title": "false",
             "type": "object"
         },
-        "660.0xc000cb46c0.false": {
+        "637.0xc000f9ed20.false": {
             "title": "false",
             "type": "object"
         },
@@ -6197,7 +6651,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/631.0xc0009bce10.false"
+                    "$ref": "#/definitions/607.0xc000ca5230.false"
                 },
                 "name": {
                     "type": "string"
@@ -6765,7 +7219,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/660.0xc000cb46c0.false"
+                    "$ref": "#/definitions/637.0xc000f9ed20.false"
                 },
                 "name": {
                     "type": "string"
@@ -6987,6 +7441,165 @@
         },
         "do.string": {
             "title": "string",
+            "type": "object"
+        },
+        "doks.DOKSCluster": {
+            "title": "DOKSCluster",
+            "type": "object"
+        },
+        "doks.KubernetesCluster": {
+            "title": "KubernetesCluster",
+            "type": "object",
+            "properties": {
+                "auto_upgrade": {
+                    "type": "boolean"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kube_status": {
+                    "$ref": "#/definitions/doks.KubernetesClusterStatus"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network_name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.KubernetesNodePool"
+                    }
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "version": {
+                    "type": "string"
+                },
+                "vpc_uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.KubernetesClusterStatus": {
+            "title": "KubernetesClusterStatus",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.KubernetesNode": {
+            "title": "KubernetesNode",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "format": "datetime"
+                },
+                "droplet_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/doks.KubernetesNodeStatus"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "datetime"
+                }
+            }
+        },
+        "doks.KubernetesNodePool": {
+            "title": "KubernetesNodePool",
+            "type": "object",
+            "properties": {
+                "auto_scale": {
+                    "type": "boolean"
+                },
+                "count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "labels": {
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "max_nodes": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "min_nodes": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.KubernetesNode"
+                    }
+                },
+                "size": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "doks.KubernetesNodeStatus": {
+            "title": "KubernetesNodeStatus",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.ServerConfig": {
+            "title": "ServerConfig",
             "type": "object"
         },
         "gcp.AccountData": {
@@ -8165,6 +8778,7 @@
                 "GCP = \"gcp\"",
                 "GKE = \"gke\"",
                 "DO = \"do\"",
+                "DOKS = \"doks\"",
                 "IBM = \"ibm\"",
                 "OP = \"op\""
             ],
@@ -8259,7 +8873,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/459.0xc000f858c0.false"
+                    "$ref": "#/definitions/442.0xc0012ccae0.false"
                 },
                 "name": {
                     "type": "string"
@@ -8387,7 +9001,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13635.0xc000fc5620.false"
+                    "$ref": "#/definitions/13266.0xc0012fc840.false"
                 },
                 "name": {
                     "type": "string"
