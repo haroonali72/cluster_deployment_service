@@ -398,7 +398,7 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 	return cluster, nil
 }
 
-func TerminateCluster(credentials vault.AzureCredentials, projectId, companyId string, ctx utils.Context) error {
+func TerminateCluster(credentials vault.AzureProfile, projectId, companyId string, ctx utils.Context) error {
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {
@@ -419,7 +419,7 @@ func TerminateCluster(credentials vault.AzureCredentials, projectId, companyId s
 		return errors.New(text)
 	}
 
-	aksOps, err := GetAKS(credentials)
+	aksOps, err := GetAKS(credentials.Profile)
 	if err != nil {
 		ctx.SendLogs("AKSClusterModel : Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -443,7 +443,7 @@ func TerminateCluster(credentials vault.AzureCredentials, projectId, companyId s
 		return err
 	}
 
-	err = aksOps.DeleteCluster(cluster, ctx)
+	err = aksOps.TerminateCluster(cluster, ctx)
 	if err != nil {
 		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+*cluster.Name, "error", cluster.ProjectId)
 

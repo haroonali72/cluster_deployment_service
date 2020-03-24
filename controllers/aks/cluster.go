@@ -775,32 +775,40 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("AKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if cluster.Status == "Cluster Terminated" {
+		ctx.SendLogs("AKSClusterController : Cluster is terminated", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.Data["json"] = map[string]string{"error": "cluster is already in terminated state"}
 		c.ServeJSON()
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("AKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
+	//if cluster.Status == string(models.Deploying) {
+	//	ctx.SendLogs("AKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//if cluster.Status == string(models.Terminating) {
+	//	ctx.SendLogs("AKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(400)
+	//	c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//cluster.Status = string(models.Terminating)
+	//err = aks.UpdateAKSCluster(cluster, *ctx)
+	//if err != nil {
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
 
-	cluster.Status = string(models.Terminating)
-	err = aks.UpdateAKSCluster(cluster, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	go aks.TerminateCluster(azureProfile.Profile, projectId, userInfo.CompanyId, *ctx)
+	go aks.TerminateCluster(azureProfile, projectId, userInfo.CompanyId, *ctx)
 
 	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}

@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/go-autorest/autorest/to"
+	"time"
 
 	"strings"
 
@@ -231,7 +232,7 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	return nil
 }
 
-func (cloud *AKS) DeleteCluster(cluster AKSCluster, ctx utils.Context) error {
+func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) error {
 	if cloud == nil {
 		err := cloud.init()
 		if err != nil {
@@ -249,6 +250,38 @@ func (cloud *AKS) DeleteCluster(cluster AKSCluster, ctx utils.Context) error {
 			models.Backend_Logging,
 		)
 		return err
+	}
+
+	for {
+		akscluster, err := cloud.MCClient.Get(cloud.Context, cluster.ResourceGoup, *cluster.Name)
+		if err != nil {
+			ctx.SendLogs(
+				"AKS cluster deletion for '"+*cluster.Name+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+
+		if akscluster.ProvisioningState == to.StringPtr("Deleting") {
+			ctx.SendLogs(
+				"AKS cluster deletion for '"+*cluster.Name+"' is in progress ",
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+
+			time.Sleep(10 * time.Second)
+		} else if akscluster.ProvisioningState == to.StringPtr("Deleted") {
+			break
+		} else {
+			ctx.SendLogs(
+				"AKS cluster deletion for '"+*cluster.Name+"' failed: ",
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+
+			return errors.New("AKS cluster deletion for '" + *cluster.Name + "' failed: ")
+		}
 	}
 	//err = future.WaitForCompletionRef(cloud.Context, cloud.MCClient.Client)
 	//if err != nil {
