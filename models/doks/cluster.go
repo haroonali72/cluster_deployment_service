@@ -402,11 +402,11 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (KubernetesClusterConfig, error) {
-	gkeOps, err := GetDOKS(credentials)
+func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context,cluster KubernetesCluster) (KubernetesClusterConfig, error) {
+	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return config,confError
+		return KubernetesClusterConfig{}, err
 	}
 
 	err = doksOps.init(ctx)
@@ -422,7 +422,7 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (Kubern
 	//	return err
 	}
 
-	_,confError = doksOps.GetKubeConfig(ctx,cluster)
+	_,confError := doksOps.GetKubeConfig(ctx,cluster)
 	if confError != nil {}
 	/*	ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
@@ -515,6 +515,9 @@ func remoteRun(user string, addr string, privateKey string, cmd string) (string,
 }
 
 */
+	return KubernetesClusterConfig{}, nil
+}
+
 func GetDOKS(credentials vault.DOCredentials) (DOKS, error) {
 	return DOKS{
 		AccessKey: credentials.AccessKey,
@@ -547,7 +550,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	}
 	return nil
 }
-	func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context,cluster KubernetesCluster) (config KubernetesClusterConfig,confError error) {
+func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context,cluster KubernetesCluster) (config KubernetesClusterConfig,confError error) {
 		publisher := utils.Notifier{}
 		confError = publisher.Init_notifier()
 

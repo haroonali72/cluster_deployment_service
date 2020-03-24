@@ -80,7 +80,16 @@ func (c *DOKSClusterController) GetServerConfig() {
 		return
 	}
 
-	config, err := doks.GetServerConfig(doProfile.Profile, *ctx)
+	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		ctx.SendLogs("DOKSGetClusterController: error getting DOKS cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.ServeJSON()
+		return
+	}
+
+	config, err := doks.GetServerConfig(doProfile.Profile, *ctx,cluster)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController: error getting DOKS server config "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -103,7 +112,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /kubeconfig/{projectId} [get]
-func (c *DOKSClusterController) GetServerConfig() {
+func (c *DOKSClusterController) GetKubeConfig() {
 
 	ctx := new(utils.Context)
 

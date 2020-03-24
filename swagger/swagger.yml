@@ -1835,7 +1835,7 @@ paths:
     post:
       tags:
       - cluster/doks
-      description: Apply cloudplex Agent file to a DOKS cluster
+      description: Apply cloudplex Agent file to eks cluster
       operationId: DOKSClusterController.Start
       parameters:
       - in: header
@@ -1864,6 +1864,29 @@ paths:
         "401":
           description: '{"error": "error msg"}'
         "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/doks/config/{zone}:
+    get:
+      tags:
+      - cluster/doks
+      description: get server config file
+      operationId: DOKSClusterController.Get
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/doks.ServerConfig'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -5385,22 +5408,22 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0014c4c30.false:
+  442.0xc00150c600.false:
     title: "false"
     type: object
-  501.0xc00141bf50.false:
+  501.0xc001465920.false:
     title: "false"
     type: object
-  607.0xc000e52ab0.false:
+  607.0xc000e875c0.false:
     title: "false"
     type: object
-  667.0xc00114e5d0.false:
+  667.0xc00116f0e0.false:
     title: "false"
     type: object
   1635.string:
     title: string
     type: object
-  13266.0xc0014f4990.false:
+  13266.0xc00153e360.false:
     title: "false"
     type: object
   40408.string:
@@ -5610,7 +5633,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/607.0xc000e52ab0.false'
+        $ref: '#/definitions/607.0xc000e875c0.false'
       name:
         type: string
       network_name:
@@ -5993,7 +6016,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/667.0xc00114e5d0.false'
+        $ref: '#/definitions/667.0xc00116f0e0.false'
       name:
         type: string
       network_name:
@@ -7018,7 +7041,7 @@ definitions:
       disablePublicServiceEndpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/501.0xc00141bf50.false'
+        $ref: '#/definitions/501.0xc001465920.false'
       kubeVersion:
         type: string
       name:
@@ -7272,7 +7295,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0014c4c30.false'
+        $ref: '#/definitions/442.0xc00150c600.false'
       name:
         type: string
       node_pools:
@@ -7358,7 +7381,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13266.0xc0014f4990.false'
+        $ref: '#/definitions/13266.0xc00153e360.false'
       name:
         type: string
       node_pools:

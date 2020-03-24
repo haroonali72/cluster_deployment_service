@@ -2694,7 +2694,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "Apply cloudplex Agent file to a DOKS cluster",
+                "description": "Apply cloudplex Agent file to eks cluster",
                 "operationId": "DOKSClusterController.Start",
                 "parameters": [
                     {
@@ -2735,6 +2735,41 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/config/{zone}": {
+            "get": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "get server config file",
+                "operationId": "DOKSClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/doks.ServerConfig"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -8184,7 +8219,7 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13266.0xc0014f4990.false": {
+        "13266.0xc00153e360.false": {
             "title": "false",
             "type": "object"
         },
@@ -8196,19 +8231,19 @@
             "title": "string",
             "type": "object"
         },
-        "442.0xc0014c4c30.false": {
+        "442.0xc00150c600.false": {
             "title": "false",
             "type": "object"
         },
-        "501.0xc00141bf50.false": {
+        "501.0xc001465920.false": {
             "title": "false",
             "type": "object"
         },
-        "607.0xc000e52ab0.false": {
+        "607.0xc000e875c0.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc00114e5d0.false": {
+        "667.0xc00116f0e0.false": {
             "title": "false",
             "type": "object"
         },
@@ -8509,7 +8544,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/607.0xc000e52ab0.false"
+                    "$ref": "#/definitions/607.0xc000e875c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -9077,7 +9112,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/667.0xc00114e5d0.false"
+                    "$ref": "#/definitions/667.0xc00116f0e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10604,7 +10639,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/501.0xc00141bf50.false"
+                    "$ref": "#/definitions/501.0xc001465920.false"
                 },
                 "name": {
                     "type": "string"
@@ -10961,7 +10996,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0014c4c30.false"
+                    "$ref": "#/definitions/442.0xc00150c600.false"
                 },
                 "name": {
                     "type": "string"
@@ -11089,7 +11124,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13266.0xc0014f4990.false"
+                    "$ref": "#/definitions/13266.0xc00153e360.false"
                 },
                 "name": {
                     "type": "string"
