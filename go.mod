@@ -6,7 +6,7 @@ require (
 	bitbucket.org/cloudplex-devs/woodpecker v0.0.0-20200130130714-b6df537e38c6
 	cloud.google.com/go v0.55.0 // indirect
 	github.com/Azure/azure-sdk-for-go v40.4.0+incompatible
-	github.com/Azure/go-autorest v14.0.0+incompatible
+	github.com/Azure/go-autorest v14.0.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.10.0
 	github.com/Azure/go-autorest/autorest/adal v0.8.2
 	github.com/Azure/go-autorest/autorest/to v0.3.0
