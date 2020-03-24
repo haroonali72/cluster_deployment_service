@@ -18,7 +18,6 @@ import (
 	"antelope/controllers/gke"
 	"antelope/controllers/ibm"
 	"antelope/controllers/op"
-	"antelope/controllers/ibm"
 	"github.com/astaxie/beego"
 )
 
