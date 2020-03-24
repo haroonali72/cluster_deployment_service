@@ -2420,6 +2420,245 @@ paths:
           description: '{"error": "error_msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/ibm/:
+    put:
+      tags:
+      - cluster/ibm
+      description: update an existing cluster
+      operationId: IBMClusterController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/ibm.Cluster_Def'
+      responses:
+        "200":
+          description: '{"msg": "cluster updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "402":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "405":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - cluster/ibm
+      description: create a new cluster
+      operationId: IBMClusterController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/ibm.Cluster_Def'
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"msg": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "cluster against this project already exists"}'
+        "410":
+          description: '{"error": "Core limit exceeded"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/ibm/{projectId}/:
+    get:
+      tags:
+      - cluster/ibm
+      description: get cluster
+      operationId: IBMClusterController.Get
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/ibm.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+  /cluster/ibm/{projectId}/{forceDelete}: {}
+  /cluster/ibm/all:
+    get:
+      tags:
+      - cluster/ibm
+      description: get all the clusters
+      operationId: IBMClusterController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ibm.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/ibm/getallmachines/{projectId}/:
+    get:
+      tags:
+      - cluster/ibm
+      description: get all instance list
+      operationId: IBMClusterController.Get All Instance List
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        schema:
+          $ref: '#/definitions/X-Profile-Id'
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/ibm.AllInstancesResponse'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/ibm/start/{projectId}:
+    post:
+      tags:
+      - cluster/ibm
+      description: starts a  cluster
+      operationId: IBMClusterController.Start
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/ibm/status/{projectId}/:
+    get:
+      tags:
+      - cluster/ibm
+      description: returns status of nodes
+      operationId: IBMClusterController.Status
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/ibm.Cluster_Def'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/ibm/terminate/{projectId}/:
+    post:
+      tags:
+      - cluster/ibm
+      description: terminates a  cluster
+      operationId: IBMClusterController.Terminate
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: profileId
+        schema:
+          $ref: '#/definitions/X-Profile-Id'
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "cluster terminated successfully"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/op/:
     put:
       tags:
@@ -4500,22 +4739,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001296150.false:
+  434.0xc0013a5260.false:
+    title: "false"
+    type: object
+  514.0xc00135c1e0.false:
     title: "false"
     type: object
   1502.string:
     title: string
     type: object
-  5960.0xc001297650.false:
+  5960.0xc0013cc780.false:
     title: "false"
     type: object
   13223.string:
     title: string
     type: object
-  13387.0xc000d30690.false:
+  13387.0xc000df9290.false:
     title: "false"
     type: object
-  13431.0xc0010301b0.false:
+  13461.0xc0010f0de0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -4722,7 +4964,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13387.0xc000d30690.false'
+        $ref: '#/definitions/13387.0xc000df9290.false'
       name:
         type: string
       network_name:
@@ -5105,7 +5347,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc0010301b0.false'
+        $ref: '#/definitions/13461.0xc0010f0de0.false'
       name:
         type: string
       network_name:
@@ -6001,6 +6243,69 @@ definitions:
   godo.Region:
     title: Region
     type: object
+  ibm.AllInstancesResponse:
+    title: AllInstancesResponse
+    type: object
+    properties:
+      profiles:
+        type: array
+        items:
+          $ref: '#/definitions/ibm.InstanceProfile'
+  ibm.Cluster_Def:
+    title: Cluster_Def
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      disablePublicServiceEndpoint:
+        type: boolean
+      kube_credentials:
+        $ref: '#/definitions/514.0xc00135c1e0.false'
+      kubeVersion:
+        type: string
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/ibm.NodePool'
+      project_id:
+        type: string
+      status:
+        type: string
+      token_name:
+        type: string
+      vpcID:
+        type: string
+  ibm.InstanceProfile:
+    title: InstanceProfile
+    type: object
+    properties:
+      family:
+        type: string
+      name:
+        type: string
+  ibm.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      pool_role:
+        $ref: '#/definitions/models.PoolRole'
   key_utils.AWSKey:
     title: AWSKey
     type: object
@@ -6121,7 +6426,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001297650.false'
+        $ref: '#/definitions/5960.0xc0013cc780.false'
       name:
         type: string
       node_pools:
@@ -6207,7 +6512,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001296150.false'
+        $ref: '#/definitions/434.0xc0013a5260.false'
       name:
         type: string
       node_pools:
@@ -6307,3 +6612,6 @@ tags:
 - name: cluster/aks
   description: |
     Operations about AKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: cluster/ibm
+  description: |
+    Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
