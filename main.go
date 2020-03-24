@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -56,8 +56,6 @@ func setEnv() {
 	os.Setenv("subscription_host", "35.246.150.221:30906")
 	os.Setenv("rbac_url", "https://dapis.cloudplex.cf")
 	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
-	//os.Setenv("mongo_host", "localhost:27017")
-
 	os.Setenv("mongo_auth", "true")
 	os.Setenv("mongo_db", "antelope")
 	os.Setenv("mongo_user", "antelope")
@@ -69,10 +67,12 @@ func setEnv() {
 	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
 	os.Setenv("mongo_gcp_template_collection", "gcp_template")
 	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
+	os.Setenv("mongo_doks_template_collection", "doks_template")
+	os.Setenv("mongo_doks_cluster_collection", "doks_cluster")
 	os.Setenv("mongo_gke_template_collection", "gke_template")
 	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
-	os.Setenv("redis_url", "35.242.236.151:31845")
+	os.Setenv("redis_url", "34.89.148.78:31845")
 	os.Setenv("logger_url", "https://dapis.cloudplex.cf")
 	os.Setenv("network_url", "https://dapis.cloudplex.cf")
 	os.Setenv("vault_url", "https://dapis.cloudplex.cf")

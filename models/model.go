@@ -47,6 +47,7 @@ const (
 	GCP   Cloud = "gcp"
 	GKE   Cloud = "gke"
 	DO    Cloud = "do"
+	DOKS    Cloud = "doks"
 	IBM   Cloud = "ibm"
 	OP    Cloud = "op"
 )

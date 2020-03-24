@@ -558,15 +558,16 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	region, err := do.GetRegion(token, projectId, *ctx)
+	/*region, err := do.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+	*/
+	region := "nyc1"
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
-
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
