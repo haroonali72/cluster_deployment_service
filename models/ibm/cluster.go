@@ -58,6 +58,11 @@ type Data struct {
 	Region string `json:"region"`
 }
 
+type Regions struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 func getNetworkHost(cloudType, projectId string) string {
 
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
@@ -459,4 +464,40 @@ func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesRe
 	}
 
 	return machineTypes, nil
+}
+
+func GetRegions(ctx utils.Context) ([]Regions, error) {
+	regionsDetails := []byte(`{"regions": [
+    {
+      "name": "Dallas",
+      "value": "us-south"
+    },
+    {
+      "name": "Washington DC",
+      "value": "us-east"
+    },
+    {
+      "name": "Frankfurt",
+      "value": "eu-de"
+    },
+    {
+      "name": "Tokyo",
+      "value": "jp-tok"
+    },
+    {
+      "name": "London",
+      "value": "eu-gb"
+    },
+    {
+      "name": "Sydney",
+      "value": "au-syd"
+    }
+  ]}`)
+	var regions []Regions
+	err := json.Unmarshal(regionsDetails, &regions)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []Regions{}, err
+	}
+	return regions, nil
 }
