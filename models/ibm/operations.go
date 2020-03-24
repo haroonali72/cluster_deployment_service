@@ -419,3 +419,32 @@ func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 	}
 	return ""
 }
+func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context, companyId string) error {
+
+	req, _ := utils.CreateDeleteRequest(models.IBM_Kube_Delete_Cluster_Endpoint + cluster.ClusterId + "?yes")
+
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Auth-Refresh-Token"] = cloud.RefreshToken
+	m["X-Auth-Resource-Group"] = cluster.ResourceGroup
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	if res.StatusCode != 204 {
+		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	return nil
+}

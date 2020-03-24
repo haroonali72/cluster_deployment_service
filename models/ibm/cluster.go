@@ -18,6 +18,7 @@ import (
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ClusterId        string        `json:"cluster_id" bson:"cluster_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
@@ -362,7 +363,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 	if cluster.Status == "" || cluster.Status == "new" {
 		text := "Cannot terminate a new cluster"
-		ctx.SendLogs("DOClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IBMClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return errors.New(text)
 	}
@@ -389,7 +390,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		return err
 	}
 
-	/*err = ibm.terminateCluster(&cluster, ctx, companyId)
+	err = ibm.terminateCluster(&cluster, ctx, companyId)
 	if err != nil {
 		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
 
@@ -404,34 +405,8 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
-	}*/
+	}
 
-	//var flagcheck bool
-	//for {
-	//	flagcheck = false
-	//	err = do.fetchStatus(&cluster, ctx, companyId, token)
-	//	if err != nil {
-	//		beego.Error(err)
-	//	}
-	//	for _, nodePools := range cluster.NodePools {
-	//		for _, node := range nodePools.Nodes {
-	//			if node.NodeState != "terminated" {
-	//				flagcheck = true
-	//				break
-	//			}
-	//		}
-	//	}
-	//	if !flagcheck {
-	//		break
-	//	}
-	//	time.Sleep(time.Second * 5)
-	//}
-
-	/*for _, pools := range cluster.NodePools {
-		var nodes []*Node
-		pools.Nodes = nodes
-		pools.KeyInfo.KeyType = models.CPKey
-	}*/
 	cluster.Status = "Cluster Terminated"
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {

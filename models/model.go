@@ -453,12 +453,13 @@ const (
 	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{region}/{name}"
 )
 const (
-	IBM_IAM_Endpoint           = "https://iam.cloud.ibm.com/identity/token"
-	IBM_Kube_Cluster_Endpoint  = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
-	IBM_WorkerPool_Endpoint    = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
-	IBM_Zone                   = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
-	IBM_All_Instances_Endpoint = ".iaas.cloud.ibm.com/v1/instance/profiles"
-	IBM_Version                = "?version=2020-01-28&generation=1"
+	IBM_IAM_Endpoint                 = "https://iam.cloud.ibm.com/identity/token"
+	IBM_Kube_Cluster_Endpoint        = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
+	IBM_Kube_Delete_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v1/clusters/"
+	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
+	IBM_Zone                         = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
+	IBM_All_Instances_Endpoint       = ".iaas.cloud.ibm.com/v1/instance/profiles"
+	IBM_Version                      = "?version=2020-01-28&generation=1"
 )
 const (
 	RbacEndpoint = "/security/api/rbac/"
