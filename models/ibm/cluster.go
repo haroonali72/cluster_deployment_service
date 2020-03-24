@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
+	"antelope/models/do"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -31,6 +32,7 @@ type Cluster_Def struct {
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 	VPCId            string        `json:"vpcID"`
+	SubnetID         string        `json:"subnetID"`
 }
 type NodePool struct {
 	ID          bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
@@ -38,7 +40,6 @@ type NodePool struct {
 	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
 	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
 	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
-	//Zone        []Zone          `json:"zones"`
 }
 type Node struct {
 	CloudId    int    `json:"cloud_id" bson:"cloud_id",omitempty"`
@@ -282,7 +283,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	/*cluster, confError = ibm.createCluster(cluster, ctx, companyId, token)
+	cluster, confError = ibm.createCluster(rg, cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		confError = do.CleanUp(ctx)
@@ -297,7 +298,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
-	}*/
+	}
 
 	cluster.Status = "Cluster Created"
 	confError = UpdateCluster(cluster, false, ctx)

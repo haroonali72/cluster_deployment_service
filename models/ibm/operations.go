@@ -29,10 +29,24 @@ type Token struct {
 	Scope        string `json:"scope"`
 }
 type KubeClusterInput struct {
-	PublicEndpoint bool            `json:"disablePublicServiceEndpoint"`
-	KubeVersion    string          `json:"kubeVersion"`
-	Name           string          `json:"name"`
-	WorkerPool     WorkerPoolInput `json:"workerPool"`
+	PublicEndpoint bool                   `json:"disablePublicServiceEndpoint"`
+	KubeVersion    string                 `json:"kubeVersion"`
+	Name           string                 `json:"name"`
+	Provider       string                 `json:"provider"`
+	WorkerPool     ClusterWorkerPoolInput `json:"workerPool"`
+}
+type ClusterWorkerPoolInput struct {
+	DiskEncryption bool          `json:"diskEncryption"`
+	MachineType    string        `json:"flavor"`
+	WorkerName     string        `json:"name"`
+	VPCId          string        `json:"vpcID"`
+	Count          int           `json:"workerCount"`
+	Zones          []ClusterZone `json:"zones"`
+}
+
+type ClusterZone struct {
+	Id     string `json:"id"`
+	Subnet string `json:"subnetID"`
 }
 type WorkerPoolInput struct {
 	Cluster     string `json:"cluster"`
@@ -203,15 +217,25 @@ func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Contex
 		PublicEndpoint: cluster.PublicEndpoint,
 		KubeVersion:    cluster.KubeVersion,
 		Name:           cluster.Name,
+		Provider:       "vpc-classic",
 	}
 
-	workerpool := WorkerPoolInput{
-		MachineType: cluster.NodePools[0].MachineType,
-		WorkerName:  cluster.NodePools[0].Name,
-		VPCId:       cluster.VPCId,
-		Count:       cluster.NodePools[0].NodeCount,
+	workerpool := ClusterWorkerPoolInput{
+		DiskEncryption: false,
+		MachineType:    cluster.NodePools[0].MachineType,
+		WorkerName:     cluster.NodePools[0].Name,
+		VPCId:          cluster.VPCId,
+		Count:          cluster.NodePools[0].NodeCount,
 	}
 
+	zone := ClusterZone{
+		Id:     cloud.Region,
+		Subnet: cluster.SubnetID,
+	}
+	var zones []ClusterZone
+	zones = append(zones, zone)
+
+	workerpool.Zones = zones
 	input.WorkerPool = workerpool
 
 	bytes, err := json.Marshal(input)
@@ -238,7 +262,7 @@ func (cloud *IBM) createCluster(rg string, cluster Cluster_Def, ctx utils.Contex
 	}
 
 	if res.StatusCode != 201 {
-		ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
 
@@ -314,11 +338,11 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool NodePool, c
 	}
 	return response.ID, nil
 }
-func (cloud *IBM) AddZonesToPools(rg, poolID, zoneID, subnetID, clusterID string, ctx utils.Context) error {
+func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx utils.Context) error {
 
 	zoneInput := ZoneInput{
 		Cluster:    clusterID,
-		Id:         zoneID,
+		Id:         cloud.Region,
 		Subnet:     subnetID,
 		WorkerPool: poolID,
 	}
