@@ -1650,6 +1650,60 @@
                 }
             }
         },
+        "/cluster/do/applyagent/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "Apply cloudplex Agent file to eks cluster",
+                "operationId": "DOClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "clusterName",
+                        "description": "clusterName",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"Agent Applied successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/do/getallregions/": {
             "get": {
                 "tags": [
@@ -6129,19 +6183,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13266.0xc00127f440.false": {
+        "29823.0xc000c3e120.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc0012496e0.false": {
+        "4411.0xc000ecaae0.false": {
             "title": "false",
             "type": "object"
         },
-        "607.0xc000c84810.false": {
+        "59682.0xc000994d80.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc000f88300.false": {
+        "9937.0xc000ecbf80.false": {
             "title": "false",
             "type": "object"
         },
@@ -6197,7 +6251,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/607.0xc000c84810.false"
+                    "$ref": "#/definitions/59682.0xc000994d80.false"
                 },
                 "name": {
                     "type": "string"
@@ -6765,7 +6819,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc000f88300.false"
+                    "$ref": "#/definitions/29823.0xc000c3e120.false"
                 },
                 "name": {
                     "type": "string"
@@ -8259,7 +8313,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0012496e0.false"
+                    "$ref": "#/definitions/9937.0xc000ecbf80.false"
                 },
                 "name": {
                     "type": "string"
@@ -8387,7 +8441,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13266.0xc00127f440.false"
+                    "$ref": "#/definitions/4411.0xc000ecaae0.false"
                 },
                 "name": {
                     "type": "string"

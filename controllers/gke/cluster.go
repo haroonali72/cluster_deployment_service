@@ -519,7 +519,6 @@ func (c *GKEClusterController) Delete() {
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *GKEClusterController) StartCluster() {
-
 	ctx := new(utils.Context)
 	ctx.SendLogs("GKEClusterController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
