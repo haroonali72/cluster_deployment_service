@@ -169,7 +169,6 @@ type mongConf struct {
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
 	MongoDOKSClusterCollection           string
-
 }
 type tlsConfig struct {
 	ClientCert string

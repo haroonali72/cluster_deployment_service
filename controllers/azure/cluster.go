@@ -156,7 +156,13 @@ func (c *AzureClusterController) GetAll() {
 // @router / [post]
 func (c *AzureClusterController) Post() {
 	var cluster azure.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -208,8 +214,8 @@ func (c *AzureClusterController) Post() {
 		node.EnablePublicIP = !network.IsPrivate
 
 	}
-	res, err := govalidator.ValidateStruct(cluster)
-	if !res || err != nil {
+	_, err = govalidator.ValidateStruct(cluster)
+	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
