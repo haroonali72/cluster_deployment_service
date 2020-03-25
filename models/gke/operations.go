@@ -81,7 +81,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 
 	_, err = cloud.Client.Projects.Zones.Clusters.Create(
 		cloud.ProjectId,
-		cloud.Region+"-"+cloud.Zone,
+		cloud.Zone,
 		clusterRequest,
 	).Context(context.Background()).Do()
 
