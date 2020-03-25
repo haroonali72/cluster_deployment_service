@@ -7717,15 +7717,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "12939.0xc0013a1a10.false": {
+        "12939.0xc0013de330.false": {
             "title": "false",
             "type": "object"
         },
-        "13387.0xc000e3b200.false": {
+        "13385.0xc000e5bb00.false": {
             "title": "false",
             "type": "object"
         },
-        "13461.0xc001124d50.false": {
+        "13461.0xc00114f650.false": {
             "title": "false",
             "type": "object"
         },
@@ -7733,11 +7733,11 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc001412db0.false": {
+        "434.0xc0014376b0.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00143c2d0.false": {
+        "5960.0xc001464bd0.false": {
             "title": "false",
             "type": "object"
         },
@@ -7996,9 +7996,6 @@
             "title": "Ami",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "ami_id": {
                     "type": "string"
                 },
@@ -8030,9 +8027,6 @@
             "title": "Cluster_Def",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
@@ -8040,7 +8034,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13387.0xc000e3b200.false"
+                    "$ref": "#/definitions/13385.0xc000e5bb00.false"
                 },
                 "name": {
                     "type": "string"
@@ -8105,9 +8099,6 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "ami": {
                     "$ref": "#/definitions/aws.Ami"
                 },
@@ -8608,7 +8599,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13461.0xc001124d50.false"
+                    "$ref": "#/definitions/13461.0xc00114f650.false"
                 },
                 "name": {
                     "type": "string"
@@ -9976,7 +9967,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/12939.0xc0013a1a10.false"
+                    "$ref": "#/definitions/12939.0xc0013de330.false"
                 },
                 "name": {
                     "type": "string"
@@ -10332,7 +10323,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00143c2d0.false"
+                    "$ref": "#/definitions/5960.0xc001464bd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10460,7 +10451,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001412db0.false"
+                    "$ref": "#/definitions/434.0xc0014376b0.false"
                 },
                 "name": {
                     "type": "string"
