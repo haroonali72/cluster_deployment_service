@@ -81,10 +81,12 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		awsInterface = append(awsInterface, template)
 	}
 
-	err := db.InsertManyInMongo(s.MongoAwsTemplateCollection, awsInterface)
-	if err != nil {
-		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if len(awsInterface) > 0 {
+		err := db.InsertManyInMongo(s.MongoAwsTemplateCollection, awsInterface)
+		if err != nil {
+			ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 
 	var azureInterface []interface{}
@@ -92,10 +94,12 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		azureInterface = append(azureInterface, template)
 	}
 
-	err = db.InsertManyInMongo(s.MongoAzureTemplateCollection, azureInterface)
-	if err != nil {
-		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if len(azureInterface) > 0 {
+		err := db.InsertManyInMongo(s.MongoAzureTemplateCollection, azureInterface)
+		if err != nil {
+			ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 
 	var gcpInterface []interface{}
@@ -103,10 +107,12 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		gcpInterface = append(gcpInterface, template)
 	}
 
-	err = db.InsertManyInMongo(s.MongoGcpTemplateCollection, gcpInterface)
-	if err != nil {
-		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if len(gcpInterface) > 0 {
+		err := db.InsertManyInMongo(s.MongoGcpTemplateCollection, gcpInterface)
+		if err != nil {
+			ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 
 	var doInterface []interface{}
@@ -114,10 +120,12 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		doInterface = append(doInterface, template)
 	}
 
-	err = db.InsertManyInMongo(s.MongoDOTemplateCollection, doInterface)
-	if err != nil {
-		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if len(doInterface) > 0 {
+		err := db.InsertManyInMongo(s.MongoDOTemplateCollection, doInterface)
+		if err != nil {
+			ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 
 	var ibmInterface []interface{}
@@ -125,10 +133,12 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 		ibmInterface = append(ibmInterface, template)
 	}
 
-	err = db.InsertManyInMongo(s.MongoIBMTemplateCollection, ibmInterface)
-	if err != nil {
-		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if len(ibmInterface) > 0 {
+		err := db.InsertManyInMongo(s.MongoIBMTemplateCollection, ibmInterface)
+		if err != nil {
+			ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 	return nil
 }
