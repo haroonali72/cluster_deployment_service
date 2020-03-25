@@ -151,6 +151,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 			return
 		}
 	*/
+	region :="nyc1"
 
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -161,7 +162,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	region :="nyc1"
+
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, "Can not fetch config file"+err.Error(), "error", projectId)
@@ -180,7 +181,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	config, err := doks.GetServerConfig(doProfile.Profile,*ctx, cluster)
+	config, err := doks.GetKubeConfig(doProfile.Profile,*ctx, cluster)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController: error getting DOKS server config "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -566,7 +567,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 	*/
-	region, err := do.GetRegion(token, projectId, *ctx)
+/*	region, err := do.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -574,8 +575,8 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
-	//	region:="nyc1"
+*/
+		region:="nyc1"
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
@@ -801,7 +802,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	region, err := do.GetRegion(token, projectId, *ctx)
+	/*region, err := do.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -809,7 +810,8 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+*/
+	region :="nyc1"
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)

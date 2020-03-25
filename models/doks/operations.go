@@ -2,9 +2,6 @@ package doks
 
 import (
 	"antelope/models"
-	"antelope/models/api_handler"
-	"antelope/models/types"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -89,7 +86,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		}
 	}
 
-	var doksNetwork types.DONetwork
+/*	var doksNetwork types.DONetwork
 	url := getNetworkHost("do", cluster.ProjectId)
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
@@ -101,7 +98,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		beego.Error(err.Error())
 		return cluster, err
 	}
-
+*/
 	utils.SendLog(companyId, "Creating DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
 /*	list := godo.ListOptions{}
@@ -128,7 +125,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 	input :=godo.KubernetesClusterCreateRequest{
 		Name:              cluster.Name,
 		RegionSlug:        cluster.Region,
-		VersionSlug:       "1.16.6-do.2",
+		VersionSlug:       cluster.KubeVersion,
 		Tags:              cluster.Tags,
 		VPCUUID:           cluster.VPCUUID,
 		NodePools:         nodepool,
@@ -183,28 +180,25 @@ func (cloud *DOKS) GetNodePool(nodepool *KubernetesNodePool, ctx utils.Context,p
 	return KubernetesNodePool{}, nil
 }
 func (cloud *DOKS) GetKubeConfig(ctx utils.Context,cluster KubernetesCluster)  (KubernetesClusterConfig, error) {
+
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
 			return  KubernetesClusterConfig{},err
 		}
 	}
-
-//	utils.SendLog(companyId, "Deleting DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
-		list := godo.ListOptions{}
-		re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
-		fmt.Println(re)
-
-	config, _,err :=cloud.Client.Kubernetes.GetKubeConfig(context.Background(),"b01f9429-459b-4fc6-9726-ba9c21e88272")
+   //"b01f9429-459b-4fc6-9726-ba9c21e88272"
+	config, _,err :=cloud.Client.Kubernetes.GetKubeConfig(context.Background(),cluster.ID)
 	if err != nil{
-		utils.SendLog(cluster.CompanyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
+		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
 		return KubernetesClusterConfig{},err
 	}
-	fmt.Println(config)
-	//utils.SendLog(companyId, "DOKS cluster deleted successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+	var con KubernetesClusterConfig
+	con.KubeconfigYAML = config.KubeconfigYAML
 
+	utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-	return KubernetesClusterConfig{},nil
+	return con,nil
 }
 func (cloud *DOKS) ListCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
@@ -242,4 +236,21 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId,companyId,projectId 
 	}
 	return KubernetesCluster{}, nil
 }
+func (cloud *DOKS) GetServerConfig(ctx utils.Context,cluster KubernetesCluster)  (*godo.KubernetesOptions, error) {
 
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != nil {
+			return  &godo.KubernetesOptions{},err
+		}
+	}
+	options, _,err :=cloud.Client.Kubernetes.GetOptions(context.Background())
+	if err != nil{
+		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
+		return &godo.KubernetesOptions{},err
+	}
+
+	utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+
+	return options,nil
+}
