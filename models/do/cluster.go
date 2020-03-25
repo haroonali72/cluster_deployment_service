@@ -586,7 +586,7 @@ func ApplyAgent(credentials vault.DOProfile, token string, ctx utils.Context, cl
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
+	return err
+}
 	return nil
 }
