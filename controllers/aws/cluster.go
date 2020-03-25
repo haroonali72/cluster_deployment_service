@@ -8,6 +8,7 @@ import (
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 	"time"
@@ -59,20 +60,20 @@ func (c *AWSClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	//allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
-	//if err != nil {
-	//	beego.Error(err.Error())
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//if !allowed {
-	//	c.Ctx.Output.SetStatus(401)
-	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-	//	c.ServeJSON()
-	//	return
-	//}
+	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	//====================================================================================//
 
@@ -196,43 +197,43 @@ func (c *AWSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	//allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Create", token, *ctx)
-	//if err != nil {
-	//	beego.Error(err.Error())
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//if !allowed {
-	//	c.Ctx.Output.SetStatus(401)
-	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-	//	c.ServeJSON()
-	//	return
-	//}
+	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	//=============================================================================//
 
 	ctx.SendLogs("AWSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	//res, err := govalidator.ValidateStruct(cluster)
-	//if !res || err != nil {
-	//	beego.Error(err.Error())
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
-	//if err != nil {
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//for _, node := range cluster.NodePools {
-	//	node.EnablePublicIP = !network.IsPrivate
-	//}
+	res, err := govalidator.ValidateStruct(cluster)
+	if !res || err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	for _, node := range cluster.NodePools {
+		node.EnablePublicIP = !network.IsPrivate
+	}
 	cluster.CompanyId = userInfo.CompanyId
 	err = aws.CreateCluster(cluster, *ctx)
 	if err != nil {
