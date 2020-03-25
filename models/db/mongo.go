@@ -111,6 +111,7 @@ func GetMongoConf() mongConf {
 	conf.MongoSshKeyCollection = beego.AppConfig.String("mongo_ssh_keys_collection")
 	conf.MongoAwsTemplateCollection = beego.AppConfig.String("mongo_aws_template_collection")
 	conf.MongoAwsClusterCollection = beego.AppConfig.String("mongo_aws_cluster_collection")
+	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
 	conf.MongoAzureClusterCollection = beego.AppConfig.String("mongo_azure_cluster_collection")
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
@@ -120,6 +121,7 @@ func GetMongoConf() mongConf {
 	conf.MongoAKSClusterCollection = beego.AppConfig.String("mongo_aks_cluster_collection")
 	conf.MongoAKSTemplateCollection = beego.AppConfig.String("mongo_aks_template_collection")
 	conf.MongoDOClusterCollection = beego.AppConfig.String("mongo_do_cluster_collection")
+	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
 	conf.MongoDOTemplateCollection = beego.AppConfig.String("mongo_do_template_collection")
 	conf.MongoIBMClusterCollection = beego.AppConfig.String("mongo_ibm_cluster_collection")
 	conf.MongoIBMTemplateCollection = beego.AppConfig.String("mongo_ibm_template_collection")
@@ -166,6 +168,8 @@ type mongConf struct {
 	MongoIBMCustomerTemplateCollection   string
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
+	MongoDOKSClusterCollection           string
+
 }
 type tlsConfig struct {
 	ClientCert string

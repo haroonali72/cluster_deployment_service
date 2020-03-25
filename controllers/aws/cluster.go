@@ -167,7 +167,13 @@ func (c *AWSClusterController) GetAll() {
 func (c *AWSClusterController) Post() {
 
 	var cluster aws.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	cluster.CreationDate = time.Now()
 
