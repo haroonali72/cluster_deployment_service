@@ -8232,15 +8232,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "12939.0xc00148c360.false": {
+        "12939.0xc0014b4810.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000ea9a70.false": {
+        "13385.0xc000ec3f20.false": {
             "title": "false",
             "type": "object"
         },
-        "13461.0xc00118f5c0.false": {
+        "13461.0xc0011b9a70.false": {
             "title": "false",
             "type": "object"
         },
@@ -8248,11 +8248,11 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc0014ef6e0.false": {
+        "434.0xc001513b90.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00150ec00.false": {
+        "5960.0xc0015390b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -8549,7 +8549,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000ea9a70.false"
+                    "$ref": "#/definitions/13385.0xc000ec3f20.false"
                 },
                 "name": {
                     "type": "string"
@@ -9114,7 +9114,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13461.0xc00118f5c0.false"
+                    "$ref": "#/definitions/13461.0xc0011b9a70.false"
                 },
                 "name": {
                     "type": "string"
@@ -10641,7 +10641,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/12939.0xc00148c360.false"
+                    "$ref": "#/definitions/12939.0xc0014b4810.false"
                 },
                 "name": {
                     "type": "string"
@@ -10998,7 +10998,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00150ec00.false"
+                    "$ref": "#/definitions/5960.0xc0015390b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11126,7 +11126,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0014ef6e0.false"
+                    "$ref": "#/definitions/434.0xc001513b90.false"
                 },
                 "name": {
                     "type": "string"
