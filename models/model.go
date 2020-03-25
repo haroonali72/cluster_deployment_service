@@ -3,7 +3,6 @@ package models
 import (
 	"bytes"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"net"
 )
 
@@ -530,11 +529,11 @@ type GcpRegion struct {
 }
 
 func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
-	clientPem, err := ioutil.ReadFile(privateKey)
-	if err != nil {
-		return "", err
-	}
-
+	//clientPem, err := ioutil.ReadFile(privateKey)
+	//if err != nil {
+	//	return "", err
+	//}
+	clientPem := []byte(privateKey)
 	key, err := ssh.ParsePrivateKey(clientPem)
 	if err != nil {
 		return "", err
