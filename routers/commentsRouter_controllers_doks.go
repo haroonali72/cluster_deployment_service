@@ -64,7 +64,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
         beego.ControllerComments{
             Method: "GetServerConfig",
-            Router: `/config/:zone`,
+            Router: `/config/:projectId`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -73,7 +73,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
         beego.ControllerComments{
             Method: "GetKubeConfig",
-            Router: `/kubeconfig/{projectId}`,
+            Router: `/kubeconfig/:projectId`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

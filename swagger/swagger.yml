@@ -1867,7 +1867,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/doks/config/{zone}:
+  /cluster/doks/config/{projectId}:
     get:
       tags:
       - cluster/doks
@@ -1878,6 +1878,15 @@ paths:
         name: X-Profile-Id
         description: vault credentials profile id
         required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
         type: string
       responses:
         "200":
@@ -5408,22 +5417,22 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001501aa0.false:
+  442.0xc001496e70.false:
     title: "false"
     type: object
-  501.0xc00146cde0.false:
+  501.0xc0014141b0.false:
     title: "false"
     type: object
-  607.0xc000e8ea80.false:
+  607.0xc000e178c0.false:
     title: "false"
     type: object
-  667.0xc0011785a0.false:
+  667.0xc0010fd3e0.false:
     title: "false"
     type: object
   1635.string:
     title: string
     type: object
-  13266.0xc001537800.false:
+  13266.0xc0014c4bd0.false:
     title: "false"
     type: object
   40408.string:
@@ -5633,7 +5642,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/607.0xc000e8ea80.false'
+        $ref: '#/definitions/607.0xc000e178c0.false'
       name:
         type: string
       network_name:
@@ -6016,7 +6025,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/667.0xc0011785a0.false'
+        $ref: '#/definitions/667.0xc0010fd3e0.false'
       name:
         type: string
       network_name:
@@ -7041,7 +7050,7 @@ definitions:
       disablePublicServiceEndpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/501.0xc00146cde0.false'
+        $ref: '#/definitions/501.0xc0014141b0.false'
       kubeVersion:
         type: string
       name:
@@ -7295,7 +7304,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001501aa0.false'
+        $ref: '#/definitions/442.0xc001496e70.false'
       name:
         type: string
       node_pools:
@@ -7381,7 +7390,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13266.0xc001537800.false'
+        $ref: '#/definitions/13266.0xc0014c4bd0.false'
       name:
         type: string
       node_pools:
