@@ -165,7 +165,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		beego.Error(err.Error())
 		return cluster, err
 	}
-
+	cluster.ClusterId = clusterId
 	for index, pool := range cluster.NodePools {
 		if index == 0 {
 			continue
@@ -423,7 +423,7 @@ func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 	}
 	return ""
 }
-func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context, companyId string) error {
+func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) error {
 
 	req, _ := utils.CreateDeleteRequest(models.IBM_Kube_Delete_Cluster_Endpoint + cluster.ClusterId + "?yes")
 

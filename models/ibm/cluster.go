@@ -4,7 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
-	"antelope/models/do"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -283,7 +282,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	cluster, confError = ibm.create(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		confError = do.CleanUp(ctx)
+		confError = ibm.terminateCluster(&cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -379,7 +378,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		return err
 	}
 
-	err = ibm.terminateCluster(&cluster, ctx, companyId)
+	err = ibm.terminateCluster(&cluster, ctx)
 	if err != nil {
 		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
 
