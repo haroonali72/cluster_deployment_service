@@ -85,7 +85,7 @@ func (c *AKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -191,7 +191,7 @@ func (c *AKSClusterController) Post() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
@@ -208,7 +208,7 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
 	cluster.CompanyId = userInfo.CompanyId
@@ -233,7 +233,7 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -274,7 +274,7 @@ func (c *AKSClusterController) Patch() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AKSClusterController: update cluster cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
@@ -290,7 +290,7 @@ func (c *AKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKSClusterController: Patch cluster with name: "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
 	err = aks.UpdateAKSCluster(cluster, *ctx)
@@ -326,7 +326,7 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -437,7 +437,7 @@ func (c *AKSClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -571,11 +571,11 @@ func (c *AKSClusterController) StartCluster() {
 	//	c.ServeJSON()
 	//	return
 	//}
-	ctx.SendLogs("AKSClusterController: Creating Cluster. "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go aks.DeployAKSCluster(cluster, azureProfile, userInfo.CompanyId, token, *ctx)
 
-	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -810,7 +810,7 @@ func (c *AKSClusterController) TerminateCluster() {
 
 	go aks.TerminateCluster(azureProfile, projectId, userInfo.CompanyId, *ctx)
 
-	ctx.SendLogs(" AKS cluster "+*cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }
@@ -934,7 +934,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKSClusterController: GetKubeConfig. "+*cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AKSClusterController: GetKubeConfig. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	kubeconfig, err := aks.GetKubeCofing(azureProfile.Profile, cluster, *ctx)
 	if err != nil {

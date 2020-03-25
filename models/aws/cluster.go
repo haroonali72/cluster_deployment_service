@@ -20,7 +20,7 @@ import (
 )
 
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
@@ -35,7 +35,7 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId    `json:"_id" bson:"_id,omitempty"`
+	ID                 bson.ObjectId    `json:"-" bson:"_id,omitempty"`
 	Name               string           `json:"name" bson:"name" valid:"required"`
 	NodeCount          int64            `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
 	MachineType        string           `json:"machine_type" bson:"machine_type" valid:"required"`
@@ -69,7 +69,7 @@ type Node struct {
 }
 
 type Ami struct {
-	ID         bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ID         bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	Name       string        `json:"name" bson:"name"`
 	AmiId      string        `json:"ami_id" bson:"ami_id" valid:"required"`
 	Username   string        `json:"username" bson:"username" valid:"required"`

@@ -81,7 +81,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 
 	_, err = cloud.Client.Projects.Zones.Clusters.Create(
 		cloud.ProjectId,
-		cloud.Region+"-"+cloud.Zone,
+		cloud.Region + "-" + cloud.Zone,
 		clusterRequest,
 	).Context(context.Background()).Do()
 
@@ -415,6 +415,6 @@ func GetGKE(credentials gcp.GcpCredentials) (GKE, error) {
 		Credentials: credentials.RawData,
 		ProjectId:   credentials.AccountData.ProjectId,
 		Region:      credentials.Region,
-		Zone:        credentials.Region + "-" + credentials.Zone,
+		Zone:        credentials.Zone,
 	}, nil
 }

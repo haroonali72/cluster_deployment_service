@@ -69,6 +69,7 @@ func setEnv() {
 	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
 	os.Setenv("mongo_gcp_template_collection", "gcp_template")
 	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
+	os.Setenv("mongo_doks_cluster_collection", "doks_cluster")
 	os.Setenv("mongo_gke_template_collection", "gke_template")
 	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
 	os.Setenv("mongo_aks_template_collection", "aks_template")
@@ -80,6 +81,8 @@ func setEnv() {
 	os.Setenv("vault_url", "https://dapis.cloudplex.cf")
 	os.Setenv("raccoon_url", "https://dapis.cloudplex.cf")
 	os.Setenv("jump_host_ip", "52.220.196.92")
+	os.Setenv("jump_host_ssh_key", "/home/haroon/CloudPlex/cloudFiles/ahmadnewkey.txt")
+	//os.Setenv("jump_host_ip", "52.220.196.92")
 	os.Setenv("jump_host_ssh_key", "/home/mahmad/ahmadnewkey.pem")
 	os.Setenv("woodpecker_url", "http://woodpecker:3300")
 }
