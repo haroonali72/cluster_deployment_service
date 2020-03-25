@@ -597,7 +597,7 @@ func (c *IBMClusterController) StartCluster() {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} ibm.Cluster_Def
+// @Success 200 {object} ibm.KubeClusterStatus
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}

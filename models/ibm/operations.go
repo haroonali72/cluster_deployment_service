@@ -47,7 +47,6 @@ type ClusterWorkerPoolInput struct {
 	Count          int           `json:"workerCount"`
 	Zones          []ClusterZone `json:"zones"`
 }
-
 type ClusterZone struct {
 	Id     string `json:"id"`
 	Subnet string `json:"subnetID"`
@@ -59,7 +58,6 @@ type WorkerPoolInput struct {
 	VPCId       string `json:"vpcID"`
 	Count       int    `json:"workerCount"`
 }
-
 type ZoneInput struct {
 	Cluster    string `json:"cluster"`
 	Id         string `json:"id"`
@@ -72,11 +70,17 @@ type KubeClusterResponse struct {
 type WorkerPoolResponse struct {
 	ID string `json:"workerPoolID"`
 }
-
+type KubeClusterStatus struct {
+	ID                string `json:"id"`
+	Name              string `json:"name"`
+	Region            string `json:"region"`
+	ResourceGroupName string `json:"resourceGroupName"`
+	State             string `json:"state"`
+	WorkerCount       string `json:"workerCount"`
+}
 type AllInstancesResponse struct {
 	Profile []InstanceProfile `json:"profiles"`
 }
-
 type InstanceProfile struct {
 	Family string `json:"family"`
 	Name   string `json:"name"`
@@ -447,4 +451,48 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context, comp
 		return err
 	}
 	return nil
+}
+func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, error) {
+
+	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?" + cluster.ClusterId)
+
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Auth-Refresh-Token"] = cloud.RefreshToken
+	m["X-Auth-Resource-Group"] = cluster.ResourceGroup
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return KubeClusterStatus{}, err
+	}
+
+	if res.StatusCode != 200 {
+		ctx.SendLogs("error in fetching cluster ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return KubeClusterStatus{}, err
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return KubeClusterStatus{}, err
+	}
+
+	// body is []byte format
+	// parse the JSON-encoded body and stores the result in the struct object for the res
+	var response KubeClusterStatus
+	err = json.Unmarshal([]byte(body), &response)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return KubeClusterStatus{}, err
+	}
+	return response, nil
 }

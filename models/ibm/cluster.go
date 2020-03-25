@@ -43,17 +43,7 @@ type NodePool struct {
 	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
 	SubnetID    string          `json:"subnetID"`
 }
-type Node struct {
-	CloudId    int    `json:"cloud_id" bson:"cloud_id",omitempty"`
-	NodeState  string `json:"node_state" bson:"node_state",omitempty"`
-	Name       string `json:"name" bson:"name",omitempty"`
-	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty"`
-	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty"`
-	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty"`
-	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
-	UserName   string `json:"user_name" bson:"user_name",omitempty"`
-	VolumeId   string `json:"volume_id" bson:"volume_id"`
-}
+
 type Project struct {
 	ProjectData Data `json:"data"`
 }
@@ -319,31 +309,30 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	return nil
 }
-func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) (KubeClusterStatus, error) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, err
+		return KubeClusterStatus{}, err
 	}
-	//splits := strings.Split(credentials, ":")
 	ibm, err := GetIBM(credentials.Profile)
 	if err != nil {
-		return cluster, err
+		return KubeClusterStatus{}, err
 	}
 	err = ibm.init(credentials.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, err
+		return KubeClusterStatus{}, err
 	}
 
-	/*e := ibm.fetchStatus(&cluster, ctx, companyId, token)
+	response, e := ibm.fetchStatus(&cluster, ctx, companyId)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, e
-	}*/
-	return cluster, nil
+		return KubeClusterStatus{}, e
+	}
+	return response, nil
 }
 func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.Context, companyId, token string) error {
 
@@ -420,7 +409,6 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-
 func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesResponse, error) {
 	ibm, err := GetIBM(profile.Profile)
 	if err != nil {
@@ -442,7 +430,6 @@ func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesRe
 
 	return machineTypes, nil
 }
-
 func GetRegions(ctx utils.Context) ([]Regions, error) {
 	regionsDetails := []byte(`{"regions": [
     {
