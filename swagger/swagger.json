@@ -139,6 +139,43 @@
                 }
             }
         },
+        "/cluster/aks/getallkubeversions/": {
+            "get": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "fetch version of kubernetes cluster",
+                "operationId": "AKSClusterController.Get Kube Versions",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aks/getvms/": {
             "get": {
                 "tags": [
@@ -4318,6 +4355,50 @@
                 }
             }
         },
+        "/cluster/ibm/getallkubeversions/": {
+            "get": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "fetch version of kubernetes cluster",
+                "operationId": "IBMClusterController.Get Kube Versions",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ibm.Versions"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/ibm/getallmachines/{projectId}/": {
             "get": {
                 "tags": [
@@ -8238,15 +8319,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13111.0xc0014c34a0.false": {
+        "13183.0xc0014599e0.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000ee7500.false": {
+        "13385.0xc000e9fa40.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc0011e3020.false": {
+        "13431.0xc001185560.false": {
             "title": "false",
             "type": "object"
         },
@@ -8254,15 +8335,15 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc0015373e0.false": {
+        "434.0xc0014f8120.false": {
             "title": "false",
             "type": "object"
         },
-        "447.0xc00148baa0.false": {
+        "518.0xc00143e000.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00155e900.false": {
+        "5960.0xc0014f9620.false": {
             "title": "false",
             "type": "object"
         },
@@ -8354,6 +8435,12 @@
             "title": "ManagedClusterAPIServerAccessProfile",
             "type": "object",
             "properties": {
+                "authorized_ip_ranges": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "enable_private_cluster": {
                     "type": "boolean"
                 }
@@ -8462,6 +8549,9 @@
                 "dns_prefix": {
                     "type": "string"
                 },
+                "enable_rbac": {
+                    "type": "boolean"
+                },
                 "fqdn": {
                     "type": "string"
                 },
@@ -8559,7 +8649,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000ee7500.false"
+                    "$ref": "#/definitions/13385.0xc000e9fa40.false"
                 },
                 "name": {
                     "type": "string"
@@ -9124,7 +9214,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc0011e3020.false"
+                    "$ref": "#/definitions/13431.0xc001185560.false"
                 },
                 "name": {
                     "type": "string"
@@ -10654,7 +10744,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13111.0xc0014c34a0.false"
+                    "$ref": "#/definitions/13183.0xc0014599e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10746,28 +10836,6 @@
                 }
             }
         },
-        "ibm.NodePoolT": {
-            "title": "NodePoolT",
-            "type": "object",
-            "properties": {
-                "machine_type": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "node_count": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
-                },
-                "subnetID": {
-                    "type": "string"
-                }
-            }
-        },
         "ibm.Regions": {
             "title": "Regions",
             "type": "object",
@@ -10784,6 +10852,9 @@
             "title": "Template",
             "type": "object",
             "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
@@ -10800,7 +10871,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/447.0xc00148baa0.false"
+                    "$ref": "#/definitions/518.0xc00143e000.false"
                 },
                 "name": {
                     "type": "string"
@@ -10811,8 +10882,11 @@
                 "node_pools": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ibm.NodePoolT"
+                        "$ref": "#/definitions/ibm.NodePool"
                     }
+                },
+                "project_id": {
+                    "type": "string"
                 },
                 "resource_group": {
                     "type": "string"
@@ -10843,6 +10917,21 @@
                     "format": "int64"
                 },
                 "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "ibm.Versions": {
+            "title": "Versions",
+            "type": "object",
+            "properties": {
+                "major": {
+                    "type": "string"
+                },
+                "minor": {
+                    "type": "string"
+                },
+                "patch": {
                     "type": "string"
                 }
             }
@@ -11007,7 +11096,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00155e900.false"
+                    "$ref": "#/definitions/5960.0xc0014f9620.false"
                 },
                 "name": {
                     "type": "string"
@@ -11135,7 +11224,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0015373e0.false"
+                    "$ref": "#/definitions/434.0xc0014f8120.false"
                 },
                 "name": {
                     "type": "string"
