@@ -937,7 +937,8 @@ func (c *DOKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if strings.ToLower(cluster.Status.State) == string(models.ClusterCreated) && !forceDelete {
+
+	if strings.ToLower(cluster.CloudplexStatus) == string(models.ClusterCreated) && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
@@ -945,7 +946,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status.State == string(models.Deploying) && !forceDelete {
+	if cluster.CloudplexStatus == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -953,7 +954,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status.State == string(models.Terminating) && !forceDelete {
+	if cluster.CloudplexStatus == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
