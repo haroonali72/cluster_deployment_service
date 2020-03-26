@@ -127,21 +127,20 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		RegionSlug:        cluster.Region,
 		VersionSlug:       cluster.KubeVersion,
 		Tags:              cluster.Tags,
-		VPCUUID:           cluster.VPCUUID,
+		//VPCUUID:           cluster.VPCUUID,
 		NodePools:         nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade:       cluster.AutoUpgrade,
 	}
 
 
-	clus,resp,err :=cloud.Client.Kubernetes.Create(context.Background(),&input)
+	clus,_,err :=cloud.Client.Kubernetes.Create(context.Background(),&input)
 	if err != nil{
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
 		return cluster, err
 	}
 	cluster.ID=clus.ID
-	fmt.Println(resp)
-	fmt.Println(&clus)
+
 
 	utils.SendLog(companyId, "DOKS cluster created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 	return cluster, nil
@@ -157,7 +156,10 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context,pr
 
 	utils.SendLog(companyId, "Deleting DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-
+/*		list := godo.ListOptions{}
+		re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
+		fmt.Println(re)
+*/
 	_,err :=cloud.Client.Kubernetes.Delete(context.Background(),cluster.ID)
 	if err != nil{
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
