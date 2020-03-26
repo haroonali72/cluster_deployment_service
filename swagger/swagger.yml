@@ -2875,6 +2875,46 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/ibm/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/ibm
+      description: Apply cloudplex Agent file to eks cluster
+      operationId: IBMClusterController.Start
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        type: string
+      - in: header
+        name: resourceGroup
+        description: resourceGroup
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/ibm/getallmachines/{projectId}/:
     get:
       tags:
@@ -5417,23 +5457,23 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001528390.false:
+  4411.0xc00121fe90.false:
     title: "false"
     type: object
-  501.0xc0014796b0.false:
+  9937.0xc00123f350.false:
     title: "false"
     type: object
-  605.0xc000ea6e40.false:
-    title: "false"
-    type: object
-  667.0xc00118e960.false:
-    title: "false"
-    type: object
-  13266.0xc00155c0f0.false:
-    title: "false"
-    type: object
-  40304.string:
+  16722.string:
     title: string
+    type: object
+  23874.0xc0011d4ea0.false:
+    title: "false"
+    type: object
+  29823.0xc000f06f30.false:
+    title: "false"
+    type: object
+  59680.0xc000c59b90.false:
+    title: "false"
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -5488,7 +5528,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/40304.string'
+        $ref: '#/definitions/16722.string'
       type:
         type: string
   aks.ManagedClusterAPIServerAccessProfile:
@@ -5636,7 +5676,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000ea6e40.false'
+        $ref: '#/definitions/59680.0xc000c59b90.false'
       name:
         type: string
       network_name:
@@ -6017,7 +6057,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/667.0xc00118e960.false'
+        $ref: '#/definitions/29823.0xc000f06f30.false'
       name:
         type: string
       network_name:
@@ -7042,7 +7082,7 @@ definitions:
       disablePublicServiceEndpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/501.0xc0014796b0.false'
+        $ref: '#/definitions/23874.0xc0011d4ea0.false'
       kubeVersion:
         type: string
       name:
@@ -7296,7 +7336,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001528390.false'
+        $ref: '#/definitions/9937.0xc00123f350.false'
       name:
         type: string
       node_pools:
@@ -7382,7 +7422,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13266.0xc00155c0f0.false'
+        $ref: '#/definitions/4411.0xc00121fe90.false'
       name:
         type: string
       node_pools:
