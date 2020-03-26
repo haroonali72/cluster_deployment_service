@@ -23,10 +23,9 @@ type AKSCluster struct {
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	//CloudplexStatus  string        `json:"status" bson:"status"`
-	CompanyId    string `json:"company_id" bson:"company_id"`
-	Status       string `json:"status,omitempty" bson:"status,omitempty"`
-	ResourceGoup string `json:"resource_group" bson:"resource_group" validate:"required"`
+	CompanyId        string        `json:"company_id" bson:"company_id"`
+	Status           string        `json:"status,omitempty" bson:"status,omitempty"`
+	ResourceGoup     string        `json:"resource_group" bson:"resource_group" validate:"required"`
 	// ManagedClusterProperties - Properties of a managed cluster.
 	ClusterProperties ManagedClusterProperties `json:"properties" bson:"properties" validate:"required"`
 	// ID - Resource Id
@@ -56,10 +55,14 @@ type ManagedClusterProperties struct {
 	AgentPoolProfiles []ManagedClusterAgentPoolProfile `json:"agent_pool,omitempty" bson:"agent_pool,omitempty"`
 	// APIServerAccessProfile - Access profile for managed cluster API server.
 	APIServerAccessProfile ManagedClusterAPIServerAccessProfile `json:"api_server_access_profile,omitempty" bson:"api_server_access_profile,omitempty"`
+	// EnableRBAC - Whether to enable Kubernetes Role-Based Access Control.
+	EnableRBAC bool `json:"enable_rbac,omitempty" bson:"enable_rbac,omitempty"`
 }
 
 // ManagedClusterAPIServerAccessProfile access profile for managed cluster API server.
 type ManagedClusterAPIServerAccessProfile struct {
+	// AuthorizedIPRanges - Authorized IP Ranges to kubernetes API server.
+	AuthorizedIPRanges []string `json:"authorized_ip_ranges,omitempty"`
 	// EnablePrivateCluster - Whether to create the cluster as a private cluster or not.
 	EnablePrivateCluster bool `json:"enable_private_cluster,omitempty" bson:"enable_private_cluster,omitempty"`
 }
@@ -520,4 +523,9 @@ func GetAKSVms(ctx utils.Context) []string {
 		}
 	}
 	return vms
+}
+
+func GetKubeVersions(ctx utils.Context) []string {
+	kubeVersions := []string{"1.17.3 (preview)", "1.16.7", "1.15.10", "1.15.7", "1.14.8", "1.14.7"}
+	return kubeVersions
 }
