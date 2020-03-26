@@ -364,6 +364,7 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 			ProvisioningState: *v.ProvisioningState,
 			KubernetesVersion: *v.KubernetesVersion,
 			AgentPoolProfiles: agentPoolArr,
+			EnableRBAC:        *v.EnableRBAC,
 		},
 		ResourceID: *v.ID,
 		Name:       *v.Name,
@@ -408,6 +409,7 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			AgentPoolProfiles:       &AKSNodePools,
 			ServicePrincipalProfile: &AKSservicePrincipal,
 			APIServerAccessProfile:  &AKSapiServerAccessProfile,
+			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
 		},
 	}
 	return &request
@@ -447,6 +449,7 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 	cluster.ClusterProperties.KubernetesVersion = *AKScluster.KubernetesVersion
 	cluster.ClusterProperties.DNSPrefix = *AKScluster.DNSPrefix
 	cluster.ClusterProperties.Fqdn = *AKScluster.Fqdn
+	cluster.ClusterProperties.EnableRBAC = *AKScluster.EnableRBAC
 
 	var networkProfile NetworkProfileType
 	networkProfile.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
