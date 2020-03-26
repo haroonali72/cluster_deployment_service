@@ -498,6 +498,7 @@ const GKEAuthContainerName = "jhgke"
 const AKSAuthContainerName = "jhaks"
 const EKSAuthContainerName = "jheks"
 const DOAuthContainerName = "jhdo"
+const IBMKSAuthContainerName = "jhibmks"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
@@ -533,11 +534,11 @@ type GcpRegion struct {
 }
 
 func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
-	clientPem, err := ioutil.ReadFile(privateKey)
-	if err != nil {
-		return "", err
-	}
-
+	//clientPem, err := ioutil.ReadFile(privateKey)
+	//if err != nil {
+	//	return "", err
+	//}
+	clientPem := []byte(privateKey)
 	key, err := ssh.ParsePrivateKey(clientPem)
 	if err != nil {
 		return "", err

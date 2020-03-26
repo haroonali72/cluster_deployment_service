@@ -4312,6 +4312,66 @@
                 }
             }
         },
+        "/cluster/ibm/applyagent/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/ibm"
+                ],
+                "description": "Apply cloudplex Agent file to eks cluster",
+                "operationId": "IBMClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "clusterName",
+                        "description": "clusterName",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "resourceGroup",
+                        "description": "resourceGroup",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"Agent Applied successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/ibm/getallmachines/{projectId}/": {
             "get": {
                 "tags": [
@@ -8232,27 +8292,27 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "12939.0xc00148c360.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "13385.0xc000ea9a70.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "13461.0xc00118f5c0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "1502.string": {
+        "16722.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc0014ef6e0.false": {
+        "23874.0xc0011d4ea0.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00150ec00.false": {
+        "29823.0xc000f06f30.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "4411.0xc00121fe90.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "59680.0xc000c59b90.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "9937.0xc00123f350.false": {
             "title": "false",
             "type": "object"
         },
@@ -8333,7 +8393,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1502.string"
+                    "$ref": "#/definitions/16722.string"
                 },
                 "type": {
                     "type": "string"
@@ -8549,7 +8609,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000ea9a70.false"
+                    "$ref": "#/definitions/59680.0xc000c59b90.false"
                 },
                 "name": {
                     "type": "string"
@@ -9114,7 +9174,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13461.0xc00118f5c0.false"
+                    "$ref": "#/definitions/29823.0xc000f06f30.false"
                 },
                 "name": {
                     "type": "string"
@@ -10641,7 +10701,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/12939.0xc00148c360.false"
+                    "$ref": "#/definitions/23874.0xc0011d4ea0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10998,7 +11058,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00150ec00.false"
+                    "$ref": "#/definitions/9937.0xc00123f350.false"
                 },
                 "name": {
                     "type": "string"
@@ -11126,7 +11186,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0014ef6e0.false"
+                    "$ref": "#/definitions/4411.0xc00121fe90.false"
                 },
                 "name": {
                     "type": "string"

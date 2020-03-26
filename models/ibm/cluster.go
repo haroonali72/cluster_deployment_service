@@ -7,6 +7,7 @@ import (
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"antelope/models/woodpecker"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
@@ -463,4 +464,30 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
 		return []Regions{}, err
 	}
 	return regions, nil
+}
+func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
+	companyId := ctx.Data.Company
+	projetcID := ctx.Data.ProjectId
+	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	if err != nil {
+		ctx.SendLogs("IBMKubernetesClusterController : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
+	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("IBMKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e resourceGroup=" + resourceGroup + " -e apikey=" + credentials.Profile.IAMKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.IBMKSAuthContainerName
+
+	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("IBMKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	return nil
 }
