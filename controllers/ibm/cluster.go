@@ -902,7 +902,7 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getregions/ [get]
+// @router /getallregions/ [get]
 func (c *IBMClusterController) FetchRegions() {
 
 	token := c.Ctx.Input.Header("token")

@@ -431,30 +431,61 @@ func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesRe
 	return machineTypes, nil
 }
 func GetRegions(ctx utils.Context) ([]Regions, error) {
-	regionsDetails := []byte(`{"regions": [
+	regionsDetails := []byte(`{
+  "regions": [
     {
       "name": "Dallas",
-      "value": "us-south"
+      "value": "us-south",
+      "zones": [
+        "us-south-1",
+        "us-south-2",
+        "us-south-3"
+      ]
     },
     {
       "name": "Washington DC",
-      "value": "us-east"
+      "value": "us-east",
+      "zones": [
+        "us-east-1",
+        "us-east-2",
+        "us-east-3"
+      ]
     },
     {
       "name": "Frankfurt",
-      "value": "eu-de"
+      "value": "eu-de",
+      "zones": [
+        "eu-de-1",
+        "eu-de-2",
+        "eu-de-3"
+      ]
     },
     {
       "name": "Tokyo",
-      "value": "jp-tok"
+      "value": "jp-tok",
+      "zones": [
+        "jp-tok-1",
+        "jp-tok-2",
+        "jp-tok-3"
+      ]
     },
     {
       "name": "London",
-      "value": "eu-gb"
+      "value": "eu-gb",
+      "zones": [
+        "eu-gb-1",
+        "eu-gb-2",
+        "eu-gb-3"
+      ]
     },
     {
       "name": "Sydney",
-      "value": "au-syd"
+      "value": "au-syd",
+      "zones": [
+        "au-syd-1",
+        "au-syd-2",
+        "au-syd-3"
+      ]
     }
   ]}`)
 	var regions []Regions
