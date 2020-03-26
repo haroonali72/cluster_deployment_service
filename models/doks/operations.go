@@ -190,7 +190,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context,cluster KubernetesCluster)  (
 		}
 	}
    //"b01f9429-459b-4fc6-9726-ba9c21e88272"
-	config, _,err :=cloud.Client.Kubernetes.GetKubeConfig(context.Background(),"b01f9429-459b-4fc6-9726-ba9c21e88272")
+	config, _,err :=cloud.Client.Kubernetes.GetKubeConfig(context.Background(),cluster.ID)
 	if err != nil{
 		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
 		return KubernetesClusterConfig{},err
