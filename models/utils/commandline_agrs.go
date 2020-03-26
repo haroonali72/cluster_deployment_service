@@ -329,7 +329,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_do_template_collection", mongo_do_template_collection)
 	beego.AppConfig.Set("mongo_do_cluster_collection", mongo_do_cluster_collection)
 	beego.AppConfig.Set("mongo_doks_cluster_collection", mongo_doks_cluster_collection)
-	beego.AppConfig.Set("mongo_doks_template_collection", mongo_doks_template_collection)
 	beego.AppConfig.Set("mongo_op_template_collection", mongo_op_template_collection)
 	beego.AppConfig.Set("mongo_op_cluster_collection", mongo_op_cluster_collection)
 	beego.AppConfig.Set("mongo_aks_cluster_collection", mongo_aks_cluster_collection)
