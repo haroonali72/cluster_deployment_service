@@ -3,7 +3,6 @@ package models
 import (
 	"bytes"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"net"
 )
 
@@ -461,6 +460,7 @@ const (
 	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
 	IBM_Zone                         = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
 	IBM_All_Instances_Endpoint       = ".iaas.cloud.ibm.com/v1/instance/profiles"
+	IBM_ALL_Kube_Version_Endpoint    = "https://containers.cloud.ibm.com/global/v2/getVersions"
 	IBM_Version                      = "?version=2020-01-28&generation=1"
 )
 const (
