@@ -63,6 +63,15 @@ func init() {
 
 	beego.GlobalControllerRouter["antelope/controllers/ibm:IBMClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/ibm:IBMClusterController"],
 		beego.ControllerComments{
+			Method:           "FetchKubeVersions",
+			Router:           `/getallkubeversions/`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/ibm:IBMClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/ibm:IBMClusterController"],
+		beego.ControllerComments{
 			Method:           "GetAllMachineTypes",
 			Router:           `/getallmachines/:projectId/`,
 			AllowHTTPMethods: []string{"get"},
