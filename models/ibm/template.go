@@ -14,34 +14,32 @@ import (
 )
 
 type Template struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	TemplateId       string        `json:"template_id" bson:"template_id"`
-	Name             string        `json:"name" bson:"name"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	TemplateId       string        `json:"template_id" bson:"template_id" valid:"required"`
+	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools"`
-	NetworkName      string        `json:"network_name" bson:"network_name"`
-	VPCName          string        `json:"vpc_name" bson:"vpc_name"`
+	NodePools        []*NodePoolT  `json:"node_pools" bson:"node_pools" valid:"required"`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
+	PublicEndpoint   bool          `json:"disablePublicServiceEndpoint"`
+	KubeVersion      string        `json:"kubeVersion"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
+	TokenName        string        `json:"token_name" bson:"token_name"`
+	VPCId            string        `json:"vpcID"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 	IsCloudplex      bool          `json:"is_cloudplex" bson:"is_cloudplex"`
 }
 
 type NodePoolT struct {
-	ID          bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	PoolId      string        `json:"pool_id" bson:"pool_id"`
-	NodeCount   int64         `json:"node_count" bson:"node_count"`
-	MachineType string        `json:"machine_type" bson:"machine_type"`
-	//Image          Image         `json:"image" bson:"image"`
-	//Volume         Volume        `json:"volume" bson:"volume"`
-	//RootVolume     Volume        `json:"root_volume" bson:"root_volume"`
-	EnableVolume  bool    `json:"is_external" bson:"is_external"`
-	PoolSubnet    string  `json:"subnet_id" bson:"subnet_id"`
-	PoolRole      string  `json:"pool_role" bson:"pool_role"`
-	Nodes         []*Node `json:"nodes" bson:"nodes"`
-	EnableScaling bool    `json:"enable_scaling" bson:"enable_scaling"`
-	//Scaling        AutoScaling   `json:"auto_scaling" bson:"auto_scaling"`
-	EnablePublicIP bool `json:"enable_public_ip" bson:"enable_public_ip"`
+	ID          bson.ObjectId   `json:"-" bson:"_id,omitempty"`
+	Name        string          `json:"name" bson:"name" valid:"required"`
+	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
+	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
+	SubnetID    string          `json:"subnetID"`
 }
 type TemplateMetadata struct {
 	TemplateId  string `json:"template_id" bson:"template_id"`

@@ -3,7 +3,6 @@ package models
 import (
 	"bytes"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"net"
 )
 
