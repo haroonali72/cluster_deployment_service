@@ -2879,6 +2879,35 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+  /cluster/ibm/getallkubeversions/:
+    get:
+      tags:
+      - cluster/ibm
+      description: fetch version of kubernetes cluster
+      operationId: IBMClusterController.Get Kube Versions
+      parameters:
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ibm.Versions'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/ibm/getallmachines/{projectId}/:
     get:
       tags:
@@ -5421,25 +5450,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0015373e0.false:
+  434.0xc001519170.false:
     title: "false"
     type: object
-  447.0xc00148baa0.false:
+  518.0xc00145d050.false:
     title: "false"
     type: object
   1502.string:
     title: string
     type: object
-  5960.0xc00155e900.false:
+  5960.0xc00153e690.false:
     title: "false"
     type: object
-  13111.0xc0014c34a0.false:
+  13183.0xc00149ea50.false:
     title: "false"
     type: object
-  13385.0xc000ee7500.false:
+  13385.0xc000ed0ab0.false:
     title: "false"
     type: object
-  13431.0xc0011e3020.false:
+  13431.0xc0011c85d0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -5643,7 +5672,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000ee7500.false'
+        $ref: '#/definitions/13385.0xc000ed0ab0.false'
       name:
         type: string
       network_name:
@@ -6024,7 +6053,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc0011e3020.false'
+        $ref: '#/definitions/13431.0xc0011c85d0.false'
       name:
         type: string
       network_name:
@@ -7051,7 +7080,7 @@ definitions:
       disablePublicServiceEndpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13111.0xc0014c34a0.false'
+        $ref: '#/definitions/13183.0xc00149ea50.false'
       kubeVersion:
         type: string
       name:
@@ -7113,21 +7142,6 @@ definitions:
         $ref: '#/definitions/models.PoolRole'
       subnetID:
         type: string
-  ibm.NodePoolT:
-    title: NodePoolT
-    type: object
-    properties:
-      machine_type:
-        type: string
-      name:
-        type: string
-      node_count:
-        type: integer
-        format: int64
-      pool_role:
-        $ref: '#/definitions/models.PoolRole'
-      subnetID:
-        type: string
   ibm.Regions:
     title: Regions
     type: object
@@ -7140,6 +7154,8 @@ definitions:
     title: Template
     type: object
     properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
       company_id:
@@ -7149,7 +7165,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/447.0xc00148baa0.false'
+        $ref: '#/definitions/518.0xc00145d050.false'
       kubeVersion:
         type: string
       name:
@@ -7159,7 +7175,9 @@ definitions:
       node_pools:
         type: array
         items:
-          $ref: '#/definitions/ibm.NodePoolT'
+          $ref: '#/definitions/ibm.NodePool'
+      project_id:
+        type: string
       resource_group:
         type: string
       status:
@@ -7180,6 +7198,16 @@ definitions:
         type: integer
         format: int64
       template_id:
+        type: string
+  ibm.Versions:
+    title: Versions
+    type: object
+    properties:
+      major:
+        type: string
+      minor:
+        type: string
+      patch:
         type: string
   key_utils.AWSKey:
     title: AWSKey
@@ -7302,7 +7330,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc00155e900.false'
+        $ref: '#/definitions/5960.0xc00153e690.false'
       name:
         type: string
       node_pools:
@@ -7388,7 +7416,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0015373e0.false'
+        $ref: '#/definitions/434.0xc001519170.false'
       name:
         type: string
       node_pools:
