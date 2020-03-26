@@ -85,6 +85,11 @@ type InstanceProfile struct {
 	Family string `json:"family"`
 	Name   string `json:"name"`
 }
+type Versions struct {
+	Major string `json:"major"`
+	Minor string `json:"minor"`
+	Patch string `json:"patch"`
+}
 
 func (cloud *IBM) init(region string, ctx utils.Context) error {
 
@@ -362,26 +367,19 @@ func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx ut
 	}
 	return nil
 }
-
-func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, error) {
-	url := "https://" + cloud.Region + models.IBM_All_Instances_Endpoint + models.IBM_Version
+func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, error) {
+	url := "https://" + cloud.Region + models.IBM_ALL_Kube_Version_Endpoint + models.IBM_Version
 
 	req, _ := utils.CreateGetRequest(url)
 
-	m := make(map[string]string)
-
-	m["Content-Type"] = "application/json"
-	m["Accept"] = "application/json"
-	m["Authorization"] = cloud.IAMToken
-
-	utils.SetHeaders(req, m)
+	utils.SetHeaders(req, nil)
 
 	client := utils.InitReq()
 	res, err := client.SendRequest(req)
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return AllInstancesResponse{}, err
+		return Versions{}, err
 	}
 	defer res.Body.Close()
 
@@ -389,20 +387,20 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, erro
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return AllInstancesResponse{}, err
+		return Versions{}, err
 	}
 
 	// body is []byte format
 	// parse the JSON-encoded body and stores the result in the struct object for the res
-	var InstanceList AllInstancesResponse
-	err = json.Unmarshal(body, &InstanceList)
+	var versions Versions
+	err = json.Unmarshal(body, &versions)
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return AllInstancesResponse{}, err
+		return Versions{}, err
 	}
 
-	return InstanceList, nil
+	return versions, nil
 }
 func (cloud *IBM) GetSubnets(pool *NodePool, network types.IBMNetwork) string {
 	for _, definition := range network.Definition {
@@ -495,4 +493,45 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		return KubeClusterStatus{}, err
 	}
 	return response, nil
+}
+func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, error) {
+	url := "https://" + cloud.Region + models.IBM_All_Instances_Endpoint + models.IBM_Version
+
+	req, _ := utils.CreateGetRequest(url)
+
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+	defer res.Body.Close()
+
+	// Reading response
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+
+	// body is []byte format
+	// parse the JSON-encoded body and stores the result in the struct object for the res
+	var InstanceList AllInstancesResponse
+	err = json.Unmarshal(body, &InstanceList)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AllInstancesResponse{}, err
+	}
+
+	return InstanceList, nil
 }

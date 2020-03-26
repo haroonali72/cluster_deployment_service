@@ -496,6 +496,27 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
 	}
 	return regions, nil
 }
+func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, error) {
+	ibm, err := GetIBM(profile.Profile)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Versions{}, err
+	}
+
+	err = ibm.init(profile.Profile.Region, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Versions{}, err
+	}
+
+	machineTypes, err := ibm.GetAllVersions(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Versions{}, err
+	}
+
+	return machineTypes, nil
+}
 func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId
