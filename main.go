@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -50,9 +50,9 @@ func setEnv() {
 	os.Setenv("kill_bill_password", "password")
 	os.Setenv("kill_bill_secret_key", "cloudplex")
 	os.Setenv("kill_bill_api_key", "cloudplex")
-	os.Setenv("ca_cert", "/home/haroon/CloudPlex/cloudFiles/mongoCA.crt")
-	os.Setenv("client_cert", "/home/haroon/CloudPlex/cloudFiles/weasel.crt")
-	os.Setenv("client_pem", "/home/haroon/CloudPlex/cloudFiles/weasel.pem")
+	os.Setenv("ca_cert", "/home/zunaira/Downloads/mongoCA.crt")
+	os.Setenv("client_cert", "/home/zunaira/Downloads/antelope.crt")
+	os.Setenv("client_pem", "/home/zunaira/Downloads/antelope.pem")
 	os.Setenv("subscription_host", "35.246.150.221:30906")
 	os.Setenv("rbac_url", "https://dapis.cloudplex.cf")
 	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
@@ -69,7 +69,8 @@ func setEnv() {
 	os.Setenv("mongo_azure_cluster_collection", "azure_cluster")
 	os.Setenv("mongo_gcp_template_collection", "gcp_template")
 	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
-	os.Setenv("mongo_doks_cluster_collection", "doks_cluster")
+	//os.Setenv("mongo_doks_cluster_collection", "doks_cluster")
+	os.Setenv("mongo_doks_template_collection", "doks_template")
 	os.Setenv("mongo_gke_template_collection", "gke_template")
 	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
 	os.Setenv("mongo_aks_template_collection", "aks_template")
