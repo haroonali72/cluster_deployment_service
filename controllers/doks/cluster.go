@@ -16,7 +16,7 @@ type DOKSClusterController struct {
 }
 
 // @Title Get
-// @Description get server config file
+// @Description get kubernetes version,machine types and regions
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
@@ -827,7 +827,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status.State == string(models.Deploying) {
+	if cluster.CloudplexStatus == string(models.Deploying) {
 		ctx.SendLogs("DOKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -835,7 +835,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status.State == string(models.Terminating) {
+	if cluster.CloudplexStatus == string(models.Terminating) {
 		ctx.SendLogs("DOKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}

@@ -12,7 +12,6 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"time"
 )
 
@@ -189,18 +188,21 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 		return errors.New(text)
 	}
 
-	if oldCluster.CloudplexStatus == string(models.Deploying) {
+	/*if oldCluster.CloudplexStatus == string(models.Deploying) {
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Cluster is in deploying state.", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
+
 	if oldCluster.CloudplexStatus == string(models.Terminating) {
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Cluster is in terminating state.", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
-	if strings.ToLower(oldCluster.CloudplexStatus) == strings.ToLower(string(models.ClusterCreated)) {
+	*/
+	/*if strings.ToLower(oldCluster.CloudplexStatus) == strings.ToLower(string(models.ClusterCreated)) {
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Cluster is in running state.", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in running state")
 	}
+	 */
 	err = DeleteKubernetesCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Got error deleting cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -274,7 +276,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	_, confError = doksOps.createCluster(cluster, ctx, companyId, token)
+	cluster, confError = doksOps.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
@@ -289,7 +291,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
-	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
+	/*confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
@@ -304,6 +306,8 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
+
+	 */
 	cluster.CloudplexStatus = "Cluster Created"
 
 	confError = UpdateKubernetesCluster(cluster, ctx)
@@ -406,7 +410,7 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
-
+	cluster.ID=""
 	cluster.CloudplexStatus = "Cluster Terminated"
 
 	err = UpdateKubernetesCluster(cluster, ctx)
@@ -442,7 +446,7 @@ func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context,cluster Ku
 		return config,err
 	}
 
-	_,confError = doksOps.GetKubeConfig(ctx,cluster)
+	config,confError = doksOps.GetKubeConfig(ctx,cluster)
 	if confError != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return config,nil
