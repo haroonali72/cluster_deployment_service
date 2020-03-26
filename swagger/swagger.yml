@@ -1412,42 +1412,6 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/do/applyagent/{projectId}:
-    post:
-      tags:
-      - cluster/do
-      description: Apply cloudplex Agent file to eks cluster
-      operationId: DOClusterController.Start
-      parameters:
-      - in: header
-        name: clusterName
-        description: clusterName
-        type: string
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: header
-        name: X-Profile-Id
-        description: vault credentials profile id
-        required: true
-        type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "error msg"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/do/getallregions/:
     get:
       tags:
@@ -2947,7 +2911,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/ibm/getregions/:
+  /cluster/ibm/getallregions/:
     get:
       tags:
       - cluster/ibm
@@ -3026,7 +2990,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/ibm.Cluster_Def'
+            $ref: '#/definitions/ibm.KubeClusterStatus'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -5457,22 +5421,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  4411.0xc00121fe90.false:
+  434.0xc0015373e0.false:
     title: "false"
     type: object
-  9937.0xc00123f350.false:
+  447.0xc00148baa0.false:
     title: "false"
     type: object
-  16722.string:
+  1502.string:
     title: string
     type: object
-  23874.0xc0011d4ea0.false:
+  5960.0xc00155e900.false:
     title: "false"
     type: object
-  29823.0xc000f06f30.false:
+  13111.0xc0014c34a0.false:
     title: "false"
     type: object
-  59680.0xc000c59b90.false:
+  13385.0xc000ee7500.false:
+    title: "false"
+    type: object
+  13431.0xc0011e3020.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -5528,7 +5495,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/16722.string'
+        $ref: '#/definitions/1502.string'
       type:
         type: string
   aks.ManagedClusterAPIServerAccessProfile:
@@ -5676,7 +5643,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/59680.0xc000c59b90.false'
+        $ref: '#/definitions/13385.0xc000ee7500.false'
       name:
         type: string
       network_name:
@@ -6057,7 +6024,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/29823.0xc000f06f30.false'
+        $ref: '#/definitions/13431.0xc0011e3020.false'
       name:
         type: string
       network_name:
@@ -7077,12 +7044,14 @@ definitions:
         $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
+      cluster_id:
+        type: string
       company_id:
         type: string
       disablePublicServiceEndpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/23874.0xc0011d4ea0.false'
+        $ref: '#/definitions/13111.0xc0014c34a0.false'
       kubeVersion:
         type: string
       name:
@@ -7094,6 +7063,8 @@ definitions:
         items:
           $ref: '#/definitions/ibm.NodePool'
       project_id:
+        type: string
+      resource_group:
         type: string
       status:
         type: string
@@ -7109,28 +7080,21 @@ definitions:
         type: string
       name:
         type: string
-  ibm.Node:
-    title: Node
+  ibm.KubeClusterStatus:
+    title: KubeClusterStatus
     type: object
     properties:
-      cloud_id:
-        type: integer
-        format: int64
+      id:
+        type: string
       name:
         type: string
-      node_state:
+      region:
         type: string
-      private_dns:
+      resourceGroupName:
         type: string
-      private_ip:
+      state:
         type: string
-      public_dns:
-        type: string
-      public_ip:
-        type: string
-      user_name:
-        type: string
-      volume_id:
+      workerCount:
         type: string
   ibm.NodePool:
     title: NodePool
@@ -7147,30 +7111,22 @@ definitions:
         format: int64
       pool_role:
         $ref: '#/definitions/models.PoolRole'
+      subnetID:
+        type: string
   ibm.NodePoolT:
     title: NodePoolT
     type: object
     properties:
-      enable_public_ip:
-        type: boolean
-      enable_scaling:
-        type: boolean
-      is_external:
-        type: boolean
       machine_type:
+        type: string
+      name:
         type: string
       node_count:
         type: integer
         format: int64
-      nodes:
-        type: array
-        items:
-          $ref: '#/definitions/ibm.Node'
-      pool_id:
-        type: string
       pool_role:
-        type: string
-      subnet_id:
+        $ref: '#/definitions/models.PoolRole'
+      subnetID:
         type: string
   ibm.Regions:
     title: Regions
@@ -7184,14 +7140,18 @@ definitions:
     title: Template
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
       cloud:
         $ref: '#/definitions/models.Cloud'
       company_id:
         type: string
+      disablePublicServiceEndpoint:
+        type: boolean
       is_cloudplex:
         type: boolean
+      kube_credentials:
+        $ref: '#/definitions/447.0xc00148baa0.false'
+      kubeVersion:
+        type: string
       name:
         type: string
       network_name:
@@ -7200,9 +7160,15 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/ibm.NodePoolT'
+      resource_group:
+        type: string
+      status:
+        type: string
       template_id:
         type: string
-      vpc_name:
+      token_name:
+        type: string
+      vpcID:
         type: string
   ibm.TemplateMetadata:
     title: TemplateMetadata
@@ -7336,7 +7302,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/9937.0xc00123f350.false'
+        $ref: '#/definitions/5960.0xc00155e900.false'
       name:
         type: string
       node_pools:
@@ -7422,7 +7388,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/4411.0xc00121fe90.false'
+        $ref: '#/definitions/434.0xc0015373e0.false'
       name:
         type: string
       node_pools:
@@ -7528,6 +7494,3 @@ tags:
 - name: cluster/aks
   description: |
     Operations about AKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
-- name: cluster/ibm
-  description: |
-    Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]

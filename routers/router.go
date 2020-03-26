@@ -129,11 +129,6 @@ func init() {
 				&aks.AKSClusterController{},
 			),
 		),
-		beego.NSNamespace("/cluster/ibm",
-			beego.NSInclude(
-				&ibm.IBMClusterController{},
-			),
-		),
 	)
 	beego.AddNamespace(ns)
 }

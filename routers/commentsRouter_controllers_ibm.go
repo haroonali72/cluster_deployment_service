@@ -73,7 +73,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/ibm:IBMClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/ibm:IBMClusterController"],
 		beego.ControllerComments{
 			Method:           "FetchRegions",
-			Router:           `/getregions/`,
+			Router:           `/getallregions/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
