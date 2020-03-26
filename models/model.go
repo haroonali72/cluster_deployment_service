@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"golang.org/x/crypto/ssh"
+	"io/ioutil"
 	"net"
 )
 
@@ -46,7 +47,7 @@ const (
 	GCP   Cloud = "gcp"
 	GKE   Cloud = "gke"
 	DO    Cloud = "do"
-	DOKS    Cloud = "doks"
+	DOKS  Cloud = "doks"
 	IBM   Cloud = "ibm"
 	OP    Cloud = "op"
 	AKS   Cloud = "aks"
@@ -495,6 +496,7 @@ const GKEAuthContainerName = "jhgke"
 const AKSAuthContainerName = "jhaks"
 const EKSAuthContainerName = "jheks"
 const DOAuthContainerName = "jhdo"
+const IBMKSAuthContainerName = "jhibmks"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
