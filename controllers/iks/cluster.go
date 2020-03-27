@@ -21,7 +21,7 @@ type IKSClusterController struct {
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
-// @Success 200 {object} ibm.Cluster_Def
+// @Success 200 {object} iks.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -100,7 +100,7 @@ func (c *IKSClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.Cluster_Def
+// @Success 200 {object} []iks.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
@@ -152,7 +152,7 @@ func (c *IKSClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	body	body 	ibm.Cluster_Def		true	"body for cluster content"
+// @Param	body	body 	iks.Cluster_Def		true	"body for cluster content"
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
@@ -250,7 +250,7 @@ func (c *IKSClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
-// @Param	body	body 	ibm.Cluster_Def	true	"body for cluster content"
+// @Param	body	body 	iks.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -597,7 +597,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} ibm.KubeClusterStatus
+// @Success 200 {object} iks.KubeClusterStatus
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
@@ -822,7 +822,7 @@ func (c *IKSClusterController) TerminateCluster() {
 // @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
-// @Success 200 {object} ibm.AllInstancesResponse
+// @Success 200 {object} iks.AllInstancesResponse
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -898,7 +898,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 // @Title Get Regions
 // @Description fetch regions of ibm
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.Regions
+// @Success 200 {object} []iks.Regions
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -941,7 +941,7 @@ func (c *IKSClusterController) FetchRegions() {
 // @Description fetch version of kubernetes cluster
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.Versions
+// @Success 200 {object} []iks.Versions
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -1126,7 +1126,7 @@ func (c *IKSClusterController) ApplyAgent() {
 // @Description get zone
 // @Param	region	path	string	true	"Id of region"
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.Zone
+// @Success 200 {object} []iks.Zone
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
