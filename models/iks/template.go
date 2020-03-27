@@ -25,11 +25,11 @@ type Template struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
-	PublicEndpoint   bool          `json:"disablePublicServiceEndpoint"`
-	KubeVersion      string        `json:"kubeVersion"`
+	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
-	VPCId            string        `json:"vpcID"`
+	VPCId            string        `json:"vpc_id" bson:"vpc_id"`
 	IsCloudplex      bool          `json:"is_cloudplex" bson:"is_cloudplex"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
@@ -39,7 +39,7 @@ type NodePoolT struct {
 	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
 	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
 	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
-	SubnetID    string          `json:"subnetID"`
+	SubnetID    string          `json:"subnet_id" bson:"subnet_id"`
 }
 
 type TemplateMetadata struct {
