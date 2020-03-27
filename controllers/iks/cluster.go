@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+// Operations about ikscluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
 type IKSClusterController struct {
 	beego.Controller
 }
@@ -92,7 +92,7 @@ func (c *IKSClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" IBM cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" ikscluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -145,7 +145,7 @@ func (c *IKSClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" All IBM clusters fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" All iksclusters fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -242,7 +242,7 @@ func (c *IKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" IBM cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" ikscluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -333,7 +333,7 @@ func (c *IKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" IBM cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" ikscluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -447,7 +447,7 @@ func (c *IKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" IBM cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" ikscluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -587,7 +587,7 @@ func (c *IKSClusterController) StartCluster() {
 
 	go iks.DeployCluster(cluster, ibmProfile.Profile, *ctx, userInfo.CompanyId, token)
 
-	ctx.SendLogs(" IBM cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" ikscluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -812,7 +812,7 @@ func (c *IKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" IBM cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" ikscluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }
@@ -932,7 +932,7 @@ func (c *IKSClusterController) FetchRegions() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" IBM network subnets fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" iksnetwork subnets fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = regions
 	c.ServeJSON()
 }
@@ -1167,7 +1167,7 @@ func (c *IKSClusterController) FetchZones() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs(" IBM network subnets fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" IKS zones fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = regions
 	c.ServeJSON()
 }

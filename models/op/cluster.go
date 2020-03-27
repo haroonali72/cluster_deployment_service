@@ -27,12 +27,12 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID          bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name        string             `json:"name" bson:"name" valid:"required"`
-	NodeCount   int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	Nodes       []*Node            `json:"nodes" bson:"nodes"`
-	KeyInfo     key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	PoolRole    models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
+	ID        bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
+	Name      string             `json:"name" bson:"name" valid:"required"`
+	NodeCount int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	Nodes     []*Node            `json:"nodes" bson:"nodes"`
+	KeyInfo   key_utils.AZUREKey `json:"key_info" bson:"key_info"`
+	PoolRole  models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
 }
 
 type Node struct {
@@ -105,16 +105,20 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams s
 	/*
 		inserting key in vault
 		**/
-	for _, pool := range cluster.NodePools {
+	for index, pool := range cluster.NodePools {
 
 		_, err := vault.PostSSHKey(pool.KeyInfo, pool.KeyInfo.KeyName, models.OP, ctx, token, teams, "")
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
+		for i, nodes := range pool.Nodes {
+			cluster.NodePools[index].Nodes[i].PrivateIP = nodes.PublicIP
+		}
 	}
+
 	mc := db.GetMongoConf()
-	err = db.InsertInMongo(mc.MongoOPClusterCollection , cluster)
+	err = db.InsertInMongo(mc.MongoOPClusterCollection, cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
