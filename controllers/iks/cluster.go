@@ -1,8 +1,8 @@
-package ibm
+package iks
 
 import (
 	"antelope/models"
-	"antelope/models/ibm"
+	"antelope/models/iks"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 )
 
 // Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
-type IBMClusterController struct {
+type IKSClusterController struct {
 	beego.Controller
 }
 
@@ -26,7 +26,7 @@ type IBMClusterController struct {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @router /:projectId/ [get]
-func (c *IBMClusterController) Get() {
+func (c *IKSClusterController) Get() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -75,7 +75,7 @@ func (c *IBMClusterController) Get() {
 
 	//====================================================================================//
 
-	ctx.SendLogs("IBMClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -84,7 +84,7 @@ func (c *IBMClusterController) Get() {
 		return
 	}
 
-	cluster, err := ibm.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := iks.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -104,7 +104,7 @@ func (c *IBMClusterController) Get() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
-func (c *IBMClusterController) GetAll() {
+func (c *IKSClusterController) GetAll() {
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -136,9 +136,9 @@ func (c *IBMClusterController) GetAll() {
 		return
 	}
 	//====================================================================================//
-	ctx.SendLogs("IBMClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	clusters, err := ibm.GetAllCluster(*ctx, data)
+	clusters, err := iks.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -162,9 +162,9 @@ func (c *IBMClusterController) GetAll() {
 // @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
-func (c *IBMClusterController) Post() {
+func (c *IKSClusterController) Post() {
 
-	var cluster ibm.Cluster_Def
+	var cluster iks.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	cluster.CreationDate = time.Now()
@@ -206,7 +206,7 @@ func (c *IBMClusterController) Post() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("IBMClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	res, err := govalidator.ValidateStruct(cluster)
 	if !res || err != nil {
@@ -216,7 +216,7 @@ func (c *IBMClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	err = ibm.GetNetwork(token, cluster.ProjectId, *ctx)
+	err = iks.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -224,7 +224,7 @@ func (c *IBMClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err = ibm.CreateCluster(cluster, *ctx)
+	err = iks.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -259,8 +259,8 @@ func (c *IBMClusterController) Post() {
 // @Failure 405 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
-func (c *IBMClusterController) Patch() {
-	var cluster ibm.Cluster_Def
+func (c *IKSClusterController) Patch() {
+	var cluster iks.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
@@ -300,9 +300,9 @@ func (c *IBMClusterController) Patch() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("IBMClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = ibm.UpdateCluster(cluster, true, *ctx)
+	err = iks.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -349,7 +349,7 @@ func (c *IBMClusterController) Patch() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId/:forceDelete  [delete]
-func (c *IBMClusterController) Delete() {
+func (c *IKSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -401,7 +401,7 @@ func (c *IBMClusterController) Delete() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("IBMClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -410,7 +410,7 @@ func (c *IBMClusterController) Delete() {
 		return
 	}
 
-	cluster, err := ibm.GetCluster(id, userInfo.CompanyId, *ctx)
+	cluster, err := iks.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -440,7 +440,7 @@ func (c *IBMClusterController) Delete() {
 		return
 	}
 
-	err = ibm.DeleteCluster(id, userInfo.CompanyId, *ctx)
+	err = iks.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -463,7 +463,7 @@ func (c *IBMClusterController) Delete() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
-func (c *IBMClusterController) StartCluster() {
+func (c *IKSClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -520,11 +520,11 @@ func (c *IBMClusterController) StartCluster() {
 		return
 	}
 
-	var cluster ibm.Cluster_Def
+	var cluster iks.Cluster_Def
 
-	ctx.SendLogs("IBMClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = ibm.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err = iks.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -556,14 +556,14 @@ func (c *IBMClusterController) StartCluster() {
 		return
 	}
 
-	region, err := ibm.GetRegion(token, projectId, *ctx)
+	region, err := iks.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ibmProfile, err := ibm.GetProfile(profileId, region, token, *ctx)
+	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
@@ -575,7 +575,7 @@ func (c *IBMClusterController) StartCluster() {
 	}
 
 	cluster.Status = string(models.Deploying)
-	err = ibm.UpdateCluster(cluster, false, *ctx)
+	err = iks.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -583,9 +583,9 @@ func (c *IBMClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go ibm.DeployCluster(cluster, ibmProfile.Profile, *ctx, userInfo.CompanyId, token)
+	go iks.DeployCluster(cluster, ibmProfile.Profile, *ctx, userInfo.CompanyId, token)
 
 	ctx.SendLogs(" IBM cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
@@ -597,13 +597,13 @@ func (c *IBMClusterController) StartCluster() {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} ibm.Cluster_Def
+// @Success 200 {object} ibm.KubeClusterStatus
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
-func (c *IBMClusterController) GetStatus() {
+func (c *IKSClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -650,7 +650,7 @@ func (c *IBMClusterController) GetStatus() {
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("IBMClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -660,9 +660,9 @@ func (c *IBMClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	region, err := ibm.GetRegion(token, projectId, *ctx)
+	region, err := iks.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -670,7 +670,7 @@ func (c *IBMClusterController) GetStatus() {
 		return
 	}
 
-	ibmProfile, err := ibm.GetProfile(profileId, region, token, *ctx)
+	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -678,7 +678,7 @@ func (c *IBMClusterController) GetStatus() {
 		return
 	}
 
-	cluster, err := ibm.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
+	cluster, err := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "nodes not found") {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -700,7 +700,7 @@ func (c *IBMClusterController) GetStatus() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
-func (c *IBMClusterController) TerminateCluster() {
+func (c *IKSClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -747,7 +747,7 @@ func (c *IBMClusterController) TerminateCluster() {
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("IBMClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -757,7 +757,7 @@ func (c *IBMClusterController) TerminateCluster() {
 		return
 	}
 
-	region, err := ibm.GetRegion(token, projectId, *ctx)
+	region, err := iks.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -765,7 +765,7 @@ func (c *IBMClusterController) TerminateCluster() {
 		return
 	}
 
-	ibmProfile, err := ibm.GetProfile(profileId, region, token, *ctx)
+	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -773,11 +773,11 @@ func (c *IBMClusterController) TerminateCluster() {
 		return
 	}
 
-	var cluster ibm.Cluster_Def
+	var cluster iks.Cluster_Def
 
-	ctx.SendLogs("IBMClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err = ibm.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err = iks.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -786,7 +786,7 @@ func (c *IBMClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("IBMClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -794,18 +794,18 @@ func (c *IBMClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("IBMClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go ibm.TerminateCluster(cluster, ibmProfile, *ctx, userInfo.CompanyId, token)
+	go iks.TerminateCluster(cluster, ibmProfile, *ctx, userInfo.CompanyId, token)
 
-	err = ibm.UpdateCluster(cluster, false, *ctx)
+	err = iks.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -827,7 +827,7 @@ func (c *IBMClusterController) TerminateCluster() {
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /getallmachines/:projectId/ [get]
-func (c *IBMClusterController) GetAllMachineTypes() {
+func (c *IKSClusterController) GetAllMachineTypes() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -856,7 +856,7 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IBMClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -866,7 +866,7 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	region, err := ibm.GetRegion(token, projectId, *ctx)
+	region, err := iks.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -874,7 +874,7 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	ibmProfile, err := ibm.GetProfile(profileId, region, token, *ctx)
+	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -882,9 +882,9 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	machineTypes, err := ibm.GetAllMachines(ibmProfile, *ctx)
+	machineTypes, err := iks.GetAllMachines(ibmProfile, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -902,8 +902,8 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getregions/ [get]
-func (c *IBMClusterController) FetchRegions() {
+// @router /getallregions/ [get]
+func (c *IKSClusterController) FetchRegions() {
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -925,7 +925,242 @@ func (c *IBMClusterController) FetchRegions() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	regions, err := ibm.GetRegions(*ctx)
+	regions, err := iks.GetRegions(*ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs(" IBM network subnets fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = regions
+	c.ServeJSON()
+}
+
+// @Title Get Kube Versions
+// @Description fetch version of kubernetes cluster
+// @Param	projectId	path	string	true	"Id of the project"
+// @Param	token	header	string	token ""
+// @Success 200 {object} []ibm.Versions
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getallkubeversions/ [get]
+func (c *IKSClusterController) FetchKubeVersions() {
+
+	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("IKSClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region, err := iks.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("IKSClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	machineTypes, err := iks.GetAllVersions(ibmProfile, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = machineTypes
+	c.ServeJSON()
+}
+
+// @Title Start
+// @Description Apply cloudplex Agent file to eks cluster
+// @Param	clusterName	header	string	clusterName ""
+// @Param	resourceGroup	header	string	resourceGroup ""
+// @Param	token	header	string	token ""
+// @Success 200 {"msg": "Agent Applied successfully"}
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	projectId	path	string	true	"Id of the project"
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /applyagent/:projectId [post]
+func (c *IKSClusterController) ApplyAgent() {
+	ctx := new(utils.Context)
+	ctx.SendLogs("IBMKubernetesClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		ctx.SendLogs("IBMKubernetesClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	projectId := c.GetString(":projectId")
+	if projectId == "" {
+		ctx.SendLogs("IBMKubernetesClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	clusterName := c.Ctx.Input.Header("clusterName")
+	if clusterName == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
+		c.ServeJSON()
+		return
+	}
+	resourceGroup := c.Ctx.Input.Header("resourceGroup")
+	if resourceGroup == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "resourceGroup is empty"}
+		c.ServeJSON()
+		return
+	}
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("IBMKubernetesClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	region, err := iks.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+
+	if err != nil {
+		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
+		//	utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("IBMKubernetesClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	go iks.ApplyAgent(ibmProfile, token, *ctx, clusterName, resourceGroup)
+
+	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
+	c.ServeJSON()
+}
+
+// @Title Get Zone
+// @Description get zone
+// @Param	region	path	string	true	"Id of region"
+// @Param	token	header	string	token ""
+// @Success 200 {object} []ibm.Zone
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /getzone/:region/ [get]
+func (c *IKSClusterController) FetchZones() {
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token must not be empty"}
+		c.ServeJSON()
+		return
+	}
+	region := c.Ctx.Input.Header("region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region must not be empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	regions, err := iks.GeZones(region, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}

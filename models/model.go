@@ -3,7 +3,6 @@ package models
 import (
 	"bytes"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"net"
 )
 
@@ -47,7 +46,7 @@ const (
 	GCP   Cloud = "gcp"
 	GKE   Cloud = "gke"
 	DO    Cloud = "do"
-	DOKS    Cloud = "doks"
+	DOKS  Cloud = "doks"
 	IBM   Cloud = "ibm"
 	OP    Cloud = "op"
 	AKS   Cloud = "aks"
@@ -454,12 +453,15 @@ const (
 	VaultDeleteKeyURI  = "/template/sshKey/{cloudType}/{region}/{name}"
 )
 const (
-	IBM_IAM_Endpoint           = "https://iam.cloud.ibm.com/identity/token"
-	IBM_Kube_Cluster_Endpoint  = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
-	IBM_WorkerPool_Endpoint    = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
-	IBM_Zone                   = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
-	IBM_All_Instances_Endpoint = ".iaas.cloud.ibm.com/v1/instance/profiles"
-	IBM_Version                = "?version=2020-01-28&generation=1"
+	IBM_IAM_Endpoint                 = "https://iam.cloud.ibm.com/identity/token"
+	IBM_Kube_Cluster_Endpoint        = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
+	IBM_Kube_GetCluster_Endpoint     = "https://containers.cloud.ibm.com/global/v2/getCluster"
+	IBM_Kube_Delete_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v1/clusters/"
+	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
+	IBM_Zone                         = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
+	IBM_All_Instances_Endpoint       = ".iaas.cloud.ibm.com/v1/instance/profiles"
+	IBM_ALL_Kube_Version_Endpoint    = "https://containers.cloud.ibm.com/global/v2/getVersions"
+	IBM_Version                      = "?version=2020-01-28&generation=1"
 )
 const (
 	RbacEndpoint = "/security/api/rbac/"
@@ -496,6 +498,7 @@ const GKEAuthContainerName = "jhgke"
 const AKSAuthContainerName = "jhaks"
 const EKSAuthContainerName = "jheks"
 const DOAuthContainerName = "jhdo"
+const IBMKSAuthContainerName = "jhibmks"
 
 type Machine struct {
 	InstanceType string `json: "instanceType" `
@@ -531,11 +534,11 @@ type GcpRegion struct {
 }
 
 func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
-	clientPem, err := ioutil.ReadFile(privateKey)
-	if err != nil {
-		return "", err
-	}
-
+	//clientPem, err := ioutil.ReadFile(privateKey)
+	//if err != nil {
+	//	return "", err
+	//}
+	clientPem := []byte(privateKey)
 	key, err := ssh.ParsePrivateKey(clientPem)
 	if err != nil {
 		return "", err

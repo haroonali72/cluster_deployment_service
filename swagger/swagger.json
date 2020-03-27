@@ -139,6 +139,43 @@
                 }
             }
         },
+        "/cluster/aks/getallkubeversions/": {
+            "get": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "fetch version of kubernetes cluster",
+                "operationId": "AKSClusterController.Get Kube Versions",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aks/getvms/": {
             "get": {
                 "tags": [
@@ -2100,60 +2137,6 @@
                 }
             }
         },
-        "/cluster/do/applyagent/{projectId}": {
-            "post": {
-                "tags": [
-                    "cluster/do"
-                ],
-                "description": "Apply cloudplex Agent file to eks cluster",
-                "operationId": "DOClusterController.Start",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "clusterName",
-                        "description": "clusterName",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"Agent Applied successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
         "/cluster/do/getallregions/": {
             "get": {
                 "tags": [
@@ -2748,7 +2731,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get server config file",
+                "description": "get kubernetes version,machine types and regions",
                 "operationId": "DOKSClusterController.Get",
                 "parameters": [
                     {
@@ -4182,13 +4165,13 @@
             }
         },
         "/cluster/gke/{projectId}/{forceDelete}": {},
-        "/cluster/ibm/": {
+        "/cluster/iks/": {
             "put": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "update an existing cluster",
-                "operationId": "IBMClusterController.Update",
+                "operationId": "IKSClusterController.Update",
                 "parameters": [
                     {
                         "in": "header",
@@ -4232,10 +4215,10 @@
             },
             "post": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "create a new cluster",
-                "operationId": "IBMClusterController.Create",
+                "operationId": "IKSClusterController.Create",
                 "parameters": [
                     {
                         "in": "body",
@@ -4278,13 +4261,13 @@
                 }
             }
         },
-        "/cluster/ibm/all": {
+        "/cluster/iks/all": {
             "get": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "get all the clusters",
-                "operationId": "IBMClusterController.Get All",
+                "operationId": "IKSClusterController.Get All",
                 "parameters": [
                     {
                         "in": "header",
@@ -4312,13 +4295,117 @@
                 }
             }
         },
-        "/cluster/ibm/getallmachines/{projectId}/": {
+        "/cluster/iks/applyagent/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/iks"
+                ],
+                "description": "Apply cloudplex Agent file to eks cluster",
+                "operationId": "IKSClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "clusterName",
+                        "description": "clusterName",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "resourceGroup",
+                        "description": "resourceGroup",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"Agent Applied successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/iks/getallkubeversions/": {
             "get": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
+                ],
+                "description": "fetch version of kubernetes cluster",
+                "operationId": "IKSClusterController.Get Kube Versions",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ibm.Versions"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/iks/getallmachines/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/iks"
                 ],
                 "description": "get all instance list",
-                "operationId": "IBMClusterController.Get All Instance List",
+                "operationId": "IKSClusterController.Get All Instance List",
                 "parameters": [
                     {
                         "in": "header",
@@ -4361,13 +4448,13 @@
                 }
             }
         },
-        "/cluster/ibm/getregions/": {
+        "/cluster/iks/getallregions/": {
             "get": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "fetch regions of ibm",
-                "operationId": "IBMClusterController.Get Regions",
+                "operationId": "IKSClusterController.Get Regions",
                 "parameters": [
                     {
                         "in": "header",
@@ -4398,13 +4485,13 @@
                 }
             }
         },
-        "/cluster/ibm/start/{projectId}": {
+        "/cluster/iks/start/{projectId}": {
             "post": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "starts a  cluster",
-                "operationId": "IBMClusterController.Start",
+                "operationId": "IKSClusterController.Start",
                 "parameters": [
                     {
                         "in": "header",
@@ -4445,13 +4532,13 @@
                 }
             }
         },
-        "/cluster/ibm/status/{projectId}/": {
+        "/cluster/iks/status/{projectId}/": {
             "get": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "returns status of nodes",
-                "operationId": "IBMClusterController.Status",
+                "operationId": "IKSClusterController.Status",
                 "parameters": [
                     {
                         "in": "header",
@@ -4477,7 +4564,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/ibm.Cluster_Def"
+                            "$ref": "#/definitions/ibm.KubeClusterStatus"
                         }
                     },
                     "400": {
@@ -4495,13 +4582,13 @@
                 }
             }
         },
-        "/cluster/ibm/terminate/{projectId}/": {
+        "/cluster/iks/terminate/{projectId}/": {
             "post": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "terminates a  cluster",
-                "operationId": "IBMClusterController.Terminate",
+                "operationId": "IKSClusterController.Terminate",
                 "parameters": [
                     {
                         "in": "header",
@@ -4541,13 +4628,13 @@
                 }
             }
         },
-        "/cluster/ibm/{projectId}/": {
+        "/cluster/iks/{projectId}/": {
             "get": {
                 "tags": [
-                    "cluster/ibm"
+                    "cluster/iks"
                 ],
                 "description": "get cluster",
-                "operationId": "IBMClusterController.Get",
+                "operationId": "IKSClusterController.Get",
                 "parameters": [
                     {
                         "in": "path",
@@ -4582,7 +4669,7 @@
                 }
             }
         },
-        "/cluster/ibm/{projectId}/{forceDelete}": {},
+        "/cluster/iks/{projectId}/{forceDelete}": {},
         "/cluster/op/": {
             "put": {
                 "tags": [
@@ -5019,6 +5106,275 @@
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aks/allCustomerTemplates": {
+            "get": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "get all the customer templates",
+                "operationId": "AKSTemplateController.Get All Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/aks.AKSClusterTemplate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aks/allCustomerTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "get all the customer templates info",
+                "operationId": "AKSTemplateController.GetAllCustomerTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/aks.AKSClusterTemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aks/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "get all the templates info",
+                "operationId": "AKSTemplateController.GetAllTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/aks.AKSClusterTemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aks/customerTemplate": {
+            "put": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "update an existing customer template",
+                "operationId": "AKSTemplateController.Update customer templates",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSClusterTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "create a new customer template",
+                "operationId": "AKSTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSClusterTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/aks/customerTemplate/{templateId}": {
+            "get": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "get customer template",
+                "operationId": "AKSTemplateController.Get customer template",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/aks.AKSClusterTemplate"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/aks"
+                ],
+                "description": "delete a customer template",
+                "operationId": "AKSTemplateController.Delete customer template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -7535,13 +7891,13 @@
                 }
             }
         },
-        "/template/ibm/": {
+        "/template/iks/": {
             "put": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "update an existing template",
-                "operationId": "IBMTemplateController.Update",
+                "operationId": "IKSTemplateController.Update",
                 "parameters": [
                     {
                         "in": "header",
@@ -7585,10 +7941,10 @@
             },
             "post": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "create a new template",
-                "operationId": "IBMTemplateController.Create",
+                "operationId": "IKSTemplateController.Create",
                 "parameters": [
                     {
                         "in": "body",
@@ -7631,13 +7987,13 @@
                 }
             }
         },
-        "/template/ibm/all": {
+        "/template/iks/all": {
             "get": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "get all the templates",
-                "operationId": "IBMTemplateController.Get All",
+                "operationId": "IKSTemplateController.Get All",
                 "parameters": [
                     {
                         "in": "header",
@@ -7665,13 +8021,13 @@
                 }
             }
         },
-        "/template/ibm/allCustomerTemplates": {
+        "/template/iks/allCustomerTemplates": {
             "get": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "get all the customer templates",
-                "operationId": "IBMTemplateController.Get All Customer Template",
+                "operationId": "IKSTemplateController.Get All Customer Template",
                 "parameters": [
                     {
                         "in": "header",
@@ -7702,13 +8058,13 @@
                 }
             }
         },
-        "/template/ibm/allCustomerTemplatesInfo": {
+        "/template/iks/allCustomerTemplatesInfo": {
             "get": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "get all the customer templates info",
-                "operationId": "IBMTemplateController.GetAllCustomerTemplateInfo",
+                "operationId": "IKSTemplateController.GetAllCustomerTemplateInfo",
                 "parameters": [
                     {
                         "in": "header",
@@ -7736,13 +8092,13 @@
                 }
             }
         },
-        "/template/ibm/allTemplatesInfo": {
+        "/template/iks/allTemplatesInfo": {
             "get": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "get all the templates info",
-                "operationId": "IBMTemplateController.GetAllTemplateInfo",
+                "operationId": "IKSTemplateController.GetAllTemplateInfo",
                 "parameters": [
                     {
                         "in": "header",
@@ -7770,13 +8126,13 @@
                 }
             }
         },
-        "/template/ibm/customerTemplate": {
+        "/template/iks/customerTemplate": {
             "put": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "update an existing customer template",
-                "operationId": "IBMTemplateController.Update customer templates",
+                "operationId": "IKSTemplateController.Update customer templates",
                 "parameters": [
                     {
                         "in": "header",
@@ -7820,10 +8176,10 @@
             },
             "post": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "create a new customer template",
-                "operationId": "IBMTemplateController.Create Customer Template",
+                "operationId": "IKSTemplateController.Create Customer Template",
                 "parameters": [
                     {
                         "in": "header",
@@ -7854,13 +8210,13 @@
                 }
             }
         },
-        "/template/ibm/customerTemplate/{templateId}": {
+        "/template/iks/customerTemplate/{templateId}": {
             "get": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "get customer template",
-                "operationId": "IBMTemplateController.Get customer template",
+                "operationId": "IKSTemplateController.Get customer template",
                 "parameters": [
                     {
                         "in": "path",
@@ -7896,10 +8252,10 @@
             },
             "delete": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "delete a customer template",
-                "operationId": "IBMTemplateController.Delete customer template",
+                "operationId": "IKSTemplateController.Delete customer template",
                 "parameters": [
                     {
                         "in": "header",
@@ -7934,13 +8290,13 @@
                 }
             }
         },
-        "/template/ibm/{templateId}": {
+        "/template/iks/{templateId}": {
             "get": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "get template",
-                "operationId": "IBMTemplateController.Get",
+                "operationId": "IKSTemplateController.Get",
                 "parameters": [
                     {
                         "in": "header",
@@ -7973,10 +8329,10 @@
             },
             "delete": {
                 "tags": [
-                    "template/ibm"
+                    "template/iks"
                 ],
                 "description": "delete a templates",
-                "operationId": "IBMTemplateController.Delete",
+                "operationId": "IKSTemplateController.Delete",
                 "parameters": [
                     {
                         "in": "header",
@@ -8232,27 +8588,23 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13266.0xc00155c0f0.false": {
+        "13385.0xc000f3ec60.false": {
             "title": "false",
             "type": "object"
         },
-        "40304.string": {
+        "13431.0xc00123a780.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "1559.string": {
             "title": "string",
             "type": "object"
         },
-        "442.0xc001528390.false": {
+        "434.0xc001586ed0.false": {
             "title": "false",
             "type": "object"
         },
-        "501.0xc0014796b0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "605.0xc000ea6e40.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "667.0xc00118e960.false": {
+        "5960.0xc0015b43f0.false": {
             "title": "false",
             "type": "object"
         },
@@ -8317,6 +8669,9 @@
                 "company_id": {
                     "type": "string"
                 },
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
                 "location": {
                     "type": "string"
                 },
@@ -8324,7 +8679,7 @@
                     "type": "string"
                 },
                 "properties": {
-                    "$ref": "#/definitions/aks.ManagedClusterPropertiesTemplate"
+                    "$ref": "#/definitions/aks.ManagedClusterPropertiesT"
                 },
                 "resource_group": {
                     "type": "string"
@@ -8333,26 +8688,42 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/40304.string"
+                    "$ref": "#/definitions/1559.string"
                 },
                 "type": {
                     "type": "string"
                 }
             }
         },
+        "aks.AKSClusterTemplateMetadata": {
+            "title": "AKSClusterTemplateMetadata",
+            "type": "object"
+        },
         "aks.ManagedClusterAPIServerAccessProfile": {
             "title": "ManagedClusterAPIServerAccessProfile",
             "type": "object",
             "properties": {
+                "authorized_ip_ranges": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "enable_private_cluster": {
                     "type": "boolean"
                 }
             }
         },
-        "aks.ManagedClusterAPIServerAccessProfileTemplate": {
-            "title": "ManagedClusterAPIServerAccessProfileTemplate",
+        "aks.ManagedClusterAPIServerAccessProfileT": {
+            "title": "ManagedClusterAPIServerAccessProfileT",
             "type": "object",
             "properties": {
+                "authorized_ip_ranges": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "enable_private_cluster": {
                     "type": "boolean"
                 }
@@ -8399,8 +8770,8 @@
                 }
             }
         },
-        "aks.ManagedClusterAgentPoolProfileTemplate": {
-            "title": "ManagedClusterAgentPoolProfileTemplate",
+        "aks.ManagedClusterAgentPoolProfileT": {
+            "title": "ManagedClusterAgentPoolProfileT",
             "type": "object",
             "properties": {
                 "count": {
@@ -8411,6 +8782,10 @@
                     "type": "boolean"
                 },
                 "max_count": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "max_pods": {
                     "type": "integer",
                     "format": "int32"
                 },
@@ -8452,6 +8827,9 @@
                 "dns_prefix": {
                     "type": "string"
                 },
+                "enable_rbac": {
+                    "type": "boolean"
+                },
                 "fqdn": {
                     "type": "string"
                 },
@@ -8466,18 +8844,21 @@
                 }
             }
         },
-        "aks.ManagedClusterPropertiesTemplate": {
-            "title": "ManagedClusterPropertiesTemplate",
+        "aks.ManagedClusterPropertiesT": {
+            "title": "ManagedClusterPropertiesT",
             "type": "object",
             "properties": {
                 "agent_pool": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/aks.ManagedClusterAgentPoolProfileTemplate"
+                        "$ref": "#/definitions/aks.ManagedClusterAgentPoolProfileT"
                     }
                 },
                 "api_server_access_profile": {
-                    "$ref": "#/definitions/aks.ManagedClusterAPIServerAccessProfileTemplate"
+                    "$ref": "#/definitions/aks.ManagedClusterAPIServerAccessProfileT"
+                },
+                "enable_rbac": {
+                    "type": "boolean"
                 }
             }
         },
@@ -8549,7 +8930,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000ea6e40.false"
+                    "$ref": "#/definitions/13385.0xc000f3ec60.false"
                 },
                 "name": {
                     "type": "string"
@@ -9114,7 +9495,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/667.0xc00118e960.false"
+                    "$ref": "#/definitions/13431.0xc00123a780.false"
                 },
                 "name": {
                     "type": "string"
@@ -10611,232 +10992,31 @@
         },
         "ibm.AllInstancesResponse": {
             "title": "AllInstancesResponse",
-            "type": "object",
-            "properties": {
-                "profiles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ibm.InstanceProfile"
-                    }
-                }
-            }
+            "type": "object"
         },
         "ibm.Cluster_Def": {
             "title": "Cluster_Def",
-            "type": "object",
-            "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "company_id": {
-                    "type": "string"
-                },
-                "disablePublicServiceEndpoint": {
-                    "type": "boolean"
-                },
-                "kubeVersion": {
-                    "type": "string"
-                },
-                "kube_credentials": {
-                    "$ref": "#/definitions/501.0xc0014796b0.false"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "network_name": {
-                    "type": "string"
-                },
-                "node_pools": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ibm.NodePool"
-                    }
-                },
-                "project_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "token_name": {
-                    "type": "string"
-                },
-                "vpcID": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
-        "ibm.InstanceProfile": {
-            "title": "InstanceProfile",
-            "type": "object",
-            "properties": {
-                "family": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "ibm.Node": {
-            "title": "Node",
-            "type": "object",
-            "properties": {
-                "cloud_id": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "node_state": {
-                    "type": "string"
-                },
-                "private_dns": {
-                    "type": "string"
-                },
-                "private_ip": {
-                    "type": "string"
-                },
-                "public_dns": {
-                    "type": "string"
-                },
-                "public_ip": {
-                    "type": "string"
-                },
-                "user_name": {
-                    "type": "string"
-                },
-                "volume_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "ibm.NodePool": {
-            "title": "NodePool",
-            "type": "object",
-            "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "machine_type": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "node_count": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
-                }
-            }
-        },
-        "ibm.NodePoolT": {
-            "title": "NodePoolT",
-            "type": "object",
-            "properties": {
-                "enable_public_ip": {
-                    "type": "boolean"
-                },
-                "enable_scaling": {
-                    "type": "boolean"
-                },
-                "is_external": {
-                    "type": "boolean"
-                },
-                "machine_type": {
-                    "type": "string"
-                },
-                "node_count": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ibm.Node"
-                    }
-                },
-                "pool_id": {
-                    "type": "string"
-                },
-                "pool_role": {
-                    "type": "string"
-                },
-                "subnet_id": {
-                    "type": "string"
-                }
-            }
+        "ibm.KubeClusterStatus": {
+            "title": "KubeClusterStatus",
+            "type": "object"
         },
         "ibm.Regions": {
             "title": "Regions",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "ibm.Template": {
             "title": "Template",
-            "type": "object",
-            "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "company_id": {
-                    "type": "string"
-                },
-                "is_cloudplex": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "network_name": {
-                    "type": "string"
-                },
-                "node_pools": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ibm.NodePoolT"
-                    }
-                },
-                "template_id": {
-                    "type": "string"
-                },
-                "vpc_name": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "ibm.TemplateMetadata": {
             "title": "TemplateMetadata",
-            "type": "object",
-            "properties": {
-                "is_cloudplex": {
-                    "type": "boolean"
-                },
-                "pool_count": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "template_id": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
+        },
+        "ibm.Versions": {
+            "title": "Versions",
+            "type": "object"
         },
         "key_utils.AWSKey": {
             "title": "AWSKey",
@@ -10998,7 +11178,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc001528390.false"
+                    "$ref": "#/definitions/5960.0xc0015b43f0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11126,7 +11306,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13266.0xc00155c0f0.false"
+                    "$ref": "#/definitions/434.0xc001586ed0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11255,11 +11435,11 @@
             "description": "Operations about DO cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         },
         {
-            "name": "template/ibm",
+            "name": "template/iks",
             "description": "Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
         },
         {
-            "name": "cluster/ibm",
+            "name": "cluster/iks",
             "description": "Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         },
         {
@@ -11277,10 +11457,6 @@
         {
             "name": "cluster/aks",
             "description": "Operations about AKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
-        },
-        {
-            "name": "cluster/ibm",
-            "description": "Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         }
     ]
 }
