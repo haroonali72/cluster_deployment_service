@@ -1,4 +1,4 @@
-package ibm
+package iks
 
 import (
 	"antelope/models"
@@ -52,8 +52,9 @@ type Data struct {
 }
 
 type Regions struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  string   `json:"name"`
+	Value string   `json:"value"`
+	Zones []string `json:"zones"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -431,8 +432,7 @@ func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesRe
 	return machineTypes, nil
 }
 func GetRegions(ctx utils.Context) ([]Regions, error) {
-	regionsDetails := []byte(`{
-  "regions": [
+	regionsDetails := []byte(`[
     {
       "name": "Dallas",
       "value": "us-south",
@@ -487,7 +487,7 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
         "au-syd-3"
       ]
     }
-  ]}`)
+  ]`)
 	var regions []Regions
 	err := json.Unmarshal(regionsDetails, &regions)
 	if err != nil {

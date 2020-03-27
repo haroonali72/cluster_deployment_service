@@ -7,7 +7,7 @@ import (
 	"antelope/models/db"
 	"antelope/models/do"
 	"antelope/models/gcp"
-	"antelope/models/ibm"
+	"antelope/models/iks"
 	rbac "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"errors"
@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, ibmTemplates []ibm.Template, companyId string, ctx utils.Context) error {
+func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, ibmTemplates []iks.Template, companyId string, ctx utils.Context) error {
 
 	for index, template := range awsTemplates {
 		awsTemplates[index].CompanyId = companyId
@@ -142,7 +142,7 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 	}
 	return nil
 }
-func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, []gcp.Template, []do.Template, []ibm.Template, error) {
+func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, []gcp.Template, []do.Template, []iks.Template, error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -184,7 +184,7 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 		return nil, nil, nil, nil, nil, err1
 	}
 
-	var ibmTemplates []ibm.Template
+	var ibmTemplates []iks.Template
 	c = session.DB(s.MongoDb).C(s.MongoIBMCustomerTemplateCollection)
 	err = c.Find(bson.M{}).All(&ibmTemplates)
 	if err != nil {
@@ -194,7 +194,7 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 
 	return awsTemplates, azureTemplates, gcpTemplates, doTemplates, ibmTemplates, nil
 }
-func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, ibmTemplates []ibm.Template, token string, ctx utils.Context) error {
+func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, gcpTemplates []gcp.Template, doTemplates []do.Template, ibmTemplates []iks.Template, token string, ctx utils.Context) error {
 
 	for _, template := range awsTemplates {
 		statusCode, err := rbac.CreatePolicy(template.TemplateId, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.AWS, ctx)

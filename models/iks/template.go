@@ -1,4 +1,4 @@
-package ibm
+package iks
 
 import (
 	"antelope/models"

@@ -1,8 +1,8 @@
-package ibm
+package iks
 
 import (
 	"antelope/models"
-	"antelope/models/ibm"
+	"antelope/models/iks"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 )
 
 // Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
-type IBMTemplateController struct {
+type IKSTemplateController struct {
 	beego.Controller
 }
 
@@ -23,9 +23,9 @@ type IBMTemplateController struct {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @router /:templateId [get]
-func (c *IBMTemplateController) Get() {
+func (c *IKSTemplateController) Get() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("IbmTemplateController: Get template", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Get template", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	id := c.GetString(":templateId")
 	if id == "" {
@@ -35,7 +35,7 @@ func (c *IBMTemplateController) Get() {
 		return
 	}
 
-	ctx.SendLogs("IbmTemplateController: Get template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Get template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -55,7 +55,7 @@ func (c *IBMTemplateController) Get() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IbmTemplateController: Get template  id : "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Get template  id : "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
@@ -76,9 +76,9 @@ func (c *IBMTemplateController) Get() {
 
 	//==================================================================================//
 
-	template, err := ibm.GetTemplate(id, userInfo.CompanyId, *ctx)
+	template, err := iks.GetTemplate(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("IbmTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
@@ -96,10 +96,10 @@ func (c *IBMTemplateController) Get() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
-func (c *IBMTemplateController) GetAll() {
+func (c *IKSTemplateController) GetAll() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("IbmTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -119,7 +119,7 @@ func (c *IBMTemplateController) GetAll() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IbmTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
@@ -134,9 +134,9 @@ func (c *IBMTemplateController) GetAll() {
 
 	//==================================================================================
 
-	templates, err := ibm.GetTemplates(*ctx, data, userInfo.CompanyId)
+	templates, err := iks.GetTemplates(*ctx, data, userInfo.CompanyId)
 	if err != nil {
-		ctx.SendLogs("IbmTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -158,13 +158,13 @@ func (c *IBMTemplateController) GetAll() {
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
-func (c *IBMTemplateController) Post() {
+func (c *IKSTemplateController) Post() {
 
-	var template ibm.Template
+	var template iks.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("IbmTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -191,7 +191,7 @@ func (c *IBMTemplateController) Post() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IbmTemplateController: Posting  new template .", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Posting  new template .", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Evaluate("Create", token, utils.Context{})
@@ -212,9 +212,9 @@ func (c *IBMTemplateController) Post() {
 	template.CompanyId = userInfo.CompanyId
 	template.IsCloudplex = false
 
-	err, id := ibm.CreateTemplate(template, *ctx)
+	err, id := iks.CreateTemplate(template, *ctx)
 	if err != nil {
-		ctx.SendLogs("IbmTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -268,9 +268,9 @@ func (c *IBMTemplateController) Post() {
 // @Failure 404 {"error": "no template exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
-func (c *IBMTemplateController) Patch() {
+func (c *IKSTemplateController) Patch() {
 
-	var template ibm.Template
+	var template iks.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	token := c.Ctx.Input.Header("token")
@@ -300,7 +300,7 @@ func (c *IBMTemplateController) Patch() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IbmTemplateController: Patch template with templateId "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Patch template with templateId "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	//==========================RBAC Authentication==============================//
 
@@ -320,12 +320,12 @@ func (c *IBMTemplateController) Patch() {
 	}
 
 	//==================================================================================
-	ctx.SendLogs("IbmTemplateController: Patch template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	beego.Info("IbmTemplateController: JSON Payload: ", template)
+	ctx.SendLogs("IKSTemplateController: Patch template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("IKSTemplateController: JSON Payload: ", template)
 
-	err = ibm.UpdateTemplate(template, *ctx)
+	err = iks.UpdateTemplate(template, *ctx)
 	if err != nil {
-		ctx.SendLogs("IbmTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no template exists with this id"}
@@ -375,7 +375,7 @@ func (c *IBMTemplateController) Patch() {
 // @Failure 404 {"error": "name is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:templateId [delete]
-func (c *IBMTemplateController) Delete() {
+func (c *IKSTemplateController) Delete() {
 
 	id := c.GetString(":templateId")
 	if id == "" {
@@ -385,7 +385,7 @@ func (c *IBMTemplateController) Delete() {
 		return
 	}
 	ctx := new(utils.Context)
-	ctx.SendLogs("IbmTemplateController: Delete template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Delete template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -424,15 +424,15 @@ func (c *IBMTemplateController) Delete() {
 
 	//==================================================================================
 
-	err = ibm.DeleteTemplate(id, userInfo.CompanyId, *ctx)
+	err = iks.DeleteTemplate(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("IbmTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("IbmTemplateController: Deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	//==========================RBAC Authentication==============================//
 
 	status_code, err := rbac_athentication.DeletePolicy(models.IBM, id, token, utils.Context{})
@@ -463,9 +463,9 @@ func (c *IBMTemplateController) Delete() {
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router /customerTemplate [post]
-func (c *IBMTemplateController) PostCustomerTemplate() {
+func (c *IKSTemplateController) PostCustomerTemplate() {
 
-	var template ibm.Template
+	var template iks.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	token := c.Ctx.Input.Header("token")
@@ -491,7 +491,7 @@ func (c *IBMTemplateController) PostCustomerTemplate() {
 		c.ServeJSON()
 		return
 	}
-	if !ibm.CheckRole(roleInfo) {
+	if !iks.CheckRole(roleInfo) {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -500,9 +500,9 @@ func (c *IBMTemplateController) PostCustomerTemplate() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
 
-	ctx.SendLogs("IbmTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController: Post new customer template with name: "+template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, id := ibm.CreateCustomerTemplate(template, *ctx)
+	err, id := iks.CreateCustomerTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
@@ -528,7 +528,7 @@ func (c *IBMTemplateController) PostCustomerTemplate() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @router /customerTemplate/:templateId [get]
-func (c *IBMTemplateController) GetCustomerTemplate() {
+func (c *IKSTemplateController) GetCustomerTemplate() {
 
 	tempId := c.GetString(":templateId")
 	if tempId == "" {
@@ -573,7 +573,7 @@ func (c *IBMTemplateController) GetCustomerTemplate() {
 
 	ctx.SendLogs("IbmCustomerTemplateController: Get customer template  id : "+tempId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	template, err := ibm.GetCustomerTemplate(tempId, *ctx)
+	template, err := iks.GetCustomerTemplate(tempId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no customer template exists for this id"}
@@ -596,9 +596,9 @@ func (c *IBMTemplateController) GetCustomerTemplate() {
 // @Failure 404 {"error": "no template exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router /customerTemplate [put]
-func (c *IBMTemplateController) PatchCustomerTemplate() {
+func (c *IKSTemplateController) PatchCustomerTemplate() {
 
-	var template ibm.Template
+	var template iks.Template
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	token := c.Ctx.Input.Header("token")
@@ -639,7 +639,7 @@ func (c *IBMTemplateController) PatchCustomerTemplate() {
 		return
 	}
 
-	if !ibm.CheckRole(roleInfo) {
+	if !iks.CheckRole(roleInfo) {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -650,7 +650,7 @@ func (c *IBMTemplateController) PatchCustomerTemplate() {
 
 	ctx.SendLogs("ibmCustomerTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = ibm.UpdateCustomerTemplate(template, *ctx)
+	err = iks.UpdateCustomerTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -679,7 +679,7 @@ func (c *IBMTemplateController) PatchCustomerTemplate() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /customerTemplate/:templateId [delete]
-func (c *IBMTemplateController) DeleteCustomerTemplate() {
+func (c *IKSTemplateController) DeleteCustomerTemplate() {
 
 	templateId := c.GetString(":templateId")
 	if templateId == "" {
@@ -720,7 +720,7 @@ func (c *IBMTemplateController) DeleteCustomerTemplate() {
 		return
 	}
 
-	if !ibm.CheckRole(roleInfo) {
+	if !iks.CheckRole(roleInfo) {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -730,7 +730,7 @@ func (c *IBMTemplateController) DeleteCustomerTemplate() {
 	//=============================================================================//
 	ctx.SendLogs("IbmCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = ibm.DeleteCustomerTemplate(templateId, *ctx)
+	err = iks.DeleteCustomerTemplate(templateId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -750,7 +750,7 @@ func (c *IBMTemplateController) DeleteCustomerTemplate() {
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplates [get]
-func (c *IBMTemplateController) AllCustomerTemplates() {
+func (c *IKSTemplateController) AllCustomerTemplates() {
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -785,8 +785,8 @@ func (c *IBMTemplateController) AllCustomerTemplates() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("IbmTemplateController: GetAllCustomerTemplate.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	templates, err := ibm.GetAllCustomerTemplates(*ctx)
+	ctx.SendLogs("IKSTemplateController: GetAllCustomerTemplate.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	templates, err := iks.GetAllCustomerTemplates(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -805,10 +805,10 @@ func (c *IBMTemplateController) AllCustomerTemplates() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allTemplatesInfo [get]
-func (c *IBMTemplateController) GetAllTemplateInfo() {
+func (c *IKSTemplateController) GetAllTemplateInfo() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("IbmTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -841,9 +841,9 @@ func (c *IBMTemplateController) GetAllTemplateInfo() {
 	}
 
 	//==================================================================================
-	templates, err := ibm.GetTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	templates, err := iks.GetTemplatesMetadata(*ctx, data, userInfo.CompanyId)
 	if err != nil {
-		ctx.SendLogs("IbmTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -861,10 +861,10 @@ func (c *IBMTemplateController) GetAllTemplateInfo() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplatesInfo [get]
-func (c *IBMTemplateController) GetAllCustomerTemplateInfo() {
+func (c *IKSTemplateController) GetAllCustomerTemplateInfo() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("IbmTemplateController:  Get all customer Templates Info.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSTemplateController:  Get all customer Templates Info.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -897,9 +897,9 @@ func (c *IBMTemplateController) GetAllCustomerTemplateInfo() {
 	}
 
 	//==================================================================================
-	templates, err := ibm.GetCustomerTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	templates, err := iks.GetCustomerTemplatesMetadata(*ctx, data, userInfo.CompanyId)
 	if err != nil {
-		ctx.SendLogs("IbmTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
