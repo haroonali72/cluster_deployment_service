@@ -4185,7 +4185,7 @@
                         "description": "body for cluster content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ibm.Cluster_Def"
+                            "$ref": "#/definitions/iks.Cluster_Def"
                         }
                     }
                 ],
@@ -4226,7 +4226,7 @@
                         "description": "body for cluster content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ibm.Cluster_Def"
+                            "$ref": "#/definitions/iks.Cluster_Def"
                         }
                     },
                     {
@@ -4282,7 +4282,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.Cluster_Def"
+                                "$ref": "#/definitions/iks.Cluster_Def"
                             }
                         }
                     },
@@ -4383,7 +4383,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.Versions"
+                                "$ref": "#/definitions/iks.Versions"
                             }
                         }
                     },
@@ -4433,7 +4433,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/ibm.AllInstancesResponse"
+                            "$ref": "#/definitions/iks.AllInstancesResponse"
                         }
                     },
                     "401": {
@@ -4469,7 +4469,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.Regions"
+                                "$ref": "#/definitions/iks.Regions"
                             }
                         }
                     },
@@ -4513,7 +4513,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.Zone"
+                                "$ref": "#/definitions/iks.Zone"
                             }
                         }
                     },
@@ -4608,7 +4608,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/ibm.KubeClusterStatus"
+                            "$ref": "#/definitions/iks.KubeClusterStatus"
                         }
                     },
                     "400": {
@@ -4698,7 +4698,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/ibm.Cluster_Def"
+                            "$ref": "#/definitions/iks.Cluster_Def"
                         }
                     },
                     "400": {
@@ -8448,7 +8448,7 @@
                         "description": "body for template content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ibm.Template"
+                            "$ref": "#/definitions/iks.Template"
                         }
                     }
                 ],
@@ -8483,7 +8483,7 @@
                         "description": "body for template content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ibm.Template"
+                            "$ref": "#/definitions/iks.Template"
                         }
                     },
                     {
@@ -8539,7 +8539,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.Template"
+                                "$ref": "#/definitions/iks.Template"
                             }
                         }
                     },
@@ -8573,7 +8573,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.Template"
+                                "$ref": "#/definitions/iks.Template"
                             }
                         }
                     },
@@ -8610,7 +8610,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.TemplateMetadata"
+                                "$ref": "#/definitions/iks.TemplateMetadata"
                             }
                         }
                     },
@@ -8644,7 +8644,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ibm.TemplateMetadata"
+                                "$ref": "#/definitions/iks.TemplateMetadata"
                             }
                         }
                     },
@@ -8683,7 +8683,7 @@
                         "description": "body for template content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ibm.Template"
+                            "$ref": "#/definitions/iks.Template"
                         }
                     }
                 ],
@@ -8724,7 +8724,7 @@
                         "description": "body for template content",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ibm.Template"
+                            "$ref": "#/definitions/iks.Template"
                         }
                     }
                 ],
@@ -8767,7 +8767,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/ibm.Template"
+                            "$ref": "#/definitions/iks.Template"
                         }
                     },
                     "400": {
@@ -8847,7 +8847,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/ibm.Template"
+                            "$ref": "#/definitions/iks.Template"
                         }
                     },
                     "401": {
@@ -9119,23 +9119,31 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13385.0xc000f53020.false": {
+        "13363.0xc0016390b0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc00124ab40.false": {
+        "36185.0xc0015d09f0.false": {
             "title": "false",
             "type": "object"
         },
-        "1559.string": {
+        "36190.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc00158f890.false": {
+        "442.0xc0015ff260.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc0015c0db0.false": {
+        "605.0xc000f5d740.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "611.0xc001560bd0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "637.0xc001265230.false": {
             "title": "false",
             "type": "object"
         },
@@ -9461,7 +9469,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000f53020.false"
+                    "$ref": "#/definitions/605.0xc000f5d740.false"
                 },
                 "name": {
                     "type": "string"
@@ -10026,7 +10034,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc00124ab40.false"
+                    "$ref": "#/definitions/637.0xc001265230.false"
                 },
                 "name": {
                     "type": "string"
@@ -11579,35 +11587,240 @@
             "title": "Region",
             "type": "object"
         },
-        "ibm.AllInstancesResponse": {
+        "iks.AllInstancesResponse": {
             "title": "AllInstancesResponse",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "profiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/iks.InstanceProfile"
+                    }
+                }
+            }
         },
-        "ibm.Cluster_Def": {
+        "iks.Cluster_Def": {
             "title": "Cluster_Def",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "cluster_id": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "disable_public_service_endpoint": {
+                    "type": "boolean"
+                },
+                "kube_credentials": {
+                    "$ref": "#/definitions/611.0xc001560bd0.false"
+                },
+                "kube_version": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network_name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/iks.NodePool"
+                    }
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "resource_group": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "token_name": {
+                    "type": "string"
+                },
+                "vpc_id": {
+                    "type": "string"
+                }
+            }
         },
-        "ibm.KubeClusterStatus": {
+        "iks.InstanceProfile": {
+            "title": "InstanceProfile",
+            "type": "object",
+            "properties": {
+                "family": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "iks.KubeClusterStatus": {
             "title": "KubeClusterStatus",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "resourceGroupName": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "workerCount": {
+                    "type": "string"
+                }
+            }
         },
-        "ibm.Regions": {
+        "iks.NodePool": {
+            "title": "NodePool",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "machine_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "pool_role": {
+                    "$ref": "#/definitions/models.PoolRole"
+                },
+                "subnet_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "iks.Regions": {
             "title": "Regions",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "zones": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
         },
-        "ibm.Template": {
+        "iks.Template": {
             "title": "Template",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "$ref": "#/definitions/bson.ObjectId"
+                },
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "disable_public_service_endpoint": {
+                    "type": "boolean"
+                },
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "kube_credentials": {
+                    "$ref": "#/definitions/36185.0xc0015d09f0.false"
+                },
+                "kube_version": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network_name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/iks.NodePool"
+                    }
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "resource_group": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "token_name": {
+                    "type": "string"
+                },
+                "vpc_id": {
+                    "type": "string"
+                }
+            }
         },
-        "ibm.TemplateMetadata": {
+        "iks.TemplateMetadata": {
             "title": "TemplateMetadata",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
         },
-        "ibm.Versions": {
+        "iks.Versions": {
             "title": "Versions",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "major": {
+                    "type": "string"
+                },
+                "minor": {
+                    "type": "string"
+                },
+                "patch": {
+                    "type": "string"
+                }
+            }
         },
-        "ibm.Zone": {
+        "iks.Zone": {
             "title": "Zone",
             "type": "object"
         },
@@ -11771,7 +11984,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0015fae70.false"
+                    "$ref": "#/definitions/442.0xc0015ff260.false"
                 },
                 "name": {
                     "type": "string"
@@ -11899,7 +12112,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13266.0xc001628bd0.false"
+                    "$ref": "#/definitions/13363.0xc0016390b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12033,7 +12246,7 @@
         },
         {
             "name": "cluster/iks",
-            "description": "Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
+            "description": "Operations about ikscluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
         },
         {
             "name": "template/doks",
