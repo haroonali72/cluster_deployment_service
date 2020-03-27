@@ -111,6 +111,8 @@ func GetMongoConf() mongConf {
 	conf.MongoSshKeyCollection = beego.AppConfig.String("mongo_ssh_keys_collection")
 	conf.MongoAwsTemplateCollection = beego.AppConfig.String("mongo_aws_template_collection")
 	conf.MongoAwsClusterCollection = beego.AppConfig.String("mongo_aws_cluster_collection")
+	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
+	conf.MongoDOKSTemplateCollection = beego.AppConfig.String("mongo_doks_template_collection")
 	conf.MongoAzureClusterCollection = beego.AppConfig.String("mongo_azure_cluster_collection")
 	conf.MongoAzureTemplateCollection = beego.AppConfig.String("mongo_azure_template_collection")
 	conf.MongoGcpClusterCollection = beego.AppConfig.String("mongo_gcp_cluster_collection")
@@ -122,8 +124,8 @@ func GetMongoConf() mongConf {
 	conf.MongoDOClusterCollection = beego.AppConfig.String("mongo_do_cluster_collection")
 	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
 	conf.MongoDOTemplateCollection = beego.AppConfig.String("mongo_do_template_collection")
-	conf.MongoIBMClusterCollection = beego.AppConfig.String("mongo_ibm_cluster_collection")
-	conf.MongoIBMTemplateCollection = beego.AppConfig.String("mongo_ibm_template_collection")
+	conf.MongoIKSClusterCollection = beego.AppConfig.String("mongo_iks_cluster_collection")
+	conf.MongoIKSTemplateCollection = beego.AppConfig.String("mongo_iks_template_collection")
 	conf.MongoOPClusterCollection = beego.AppConfig.String("mongo_op_cluster_collection")
 	conf.MongoOPTemplateCollection = beego.AppConfig.String("mongo_op_template_collection")
 	conf.MongoAwsCustomerTemplateCollection = "mongo_aws_customer_template_collection"
@@ -132,7 +134,9 @@ func GetMongoConf() mongConf {
 	conf.MongoGKECustomerTemplateCollection = "mongo_gke_customer_template_collection"
 	conf.MongoAKSCustomerTemplateCollection = "mongo_aks_customer_template_collection"
 	conf.MongoDOCustomerTemplateCollection = "mongo_do_customer_template_collection"
-	conf.MongoIBMCustomerTemplateCollection = "mongo_ibm_customer_template_collection"
+	conf.MongoIKSCustomerTemplateCollection = "mongo_iks_customer_template_collection"
+	conf.MongoDOKSCustomerTemplateCollection = "mongo_doks_customer_template_collection"
+
 	return conf
 
 }
@@ -162,12 +166,14 @@ type mongConf struct {
 	MongoDOClusterCollection             string
 	MongoDOTemplateCollection            string
 	MongoDOCustomerTemplateCollection    string
-	MongoIBMClusterCollection            string
-	MongoIBMTemplateCollection           string
-	MongoIBMCustomerTemplateCollection   string
+	MongoIKSClusterCollection            string
+	MongoIKSTemplateCollection           string
+	MongoIKSCustomerTemplateCollection   string
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
 	MongoDOKSClusterCollection           string
+	MongoDOKSTemplateCollection          string
+	MongoDOKSCustomerTemplateCollection  string
 }
 type tlsConfig struct {
 	ClientCert string

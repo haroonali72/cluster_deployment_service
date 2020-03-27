@@ -65,7 +65,7 @@ func GetCustomerTemplate(templateId string, ctx utils.Context) (template Templat
 	}
 	defer session.Close()
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoIBMCustomerTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoIKSCustomerTemplateCollection)
 	err = c.Find(bson.M{"template_id": templateId}).One(&template)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -86,7 +86,7 @@ func CreateCustomerTemplate(template Template, ctx utils.Context) (error, string
 	template.CreationDate = time.Now()
 
 	s := db.GetMongoConf()
-	err = db.InsertInMongo(s.MongoIBMCustomerTemplateCollection, template)
+	err = db.InsertInMongo(s.MongoIKSCustomerTemplateCollection, template)
 	if err != nil {
 		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err, ""
@@ -127,7 +127,7 @@ func DeleteCustomerTemplate(templateId string, ctx utils.Context) error {
 	}
 	defer session.Close()
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoIBMCustomerTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoIKSCustomerTemplateCollection)
 	err = c.Remove(bson.M{"template_id": templateId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -144,7 +144,7 @@ func GetAllCustomerTemplates(ctx utils.Context) (templates []Template, err error
 	}
 	defer session.Close()
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoIBMCustomerTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoIKSCustomerTemplateCollection)
 	err = c.Find(bson.M{}).All(&templates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -164,7 +164,7 @@ func CreateTemplate(template Template, ctx utils.Context) (error, string) {
 
 	template.CreationDate = time.Now()
 	mc := db.GetMongoConf()
-	err = db.InsertInMongo(mc.MongoIBMTemplateCollection, template)
+	err = db.InsertInMongo(mc.MongoIKSTemplateCollection, template)
 	if err != nil {
 		beego.Error("Template model: Create - Got error inserting template to the database: ", err)
 		return err, ""
@@ -180,7 +180,7 @@ func GetTemplate(templateId, companyId string, ctx utils.Context) (template Temp
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoIBMTemplateCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSTemplateCollection)
 	err = c.Find(bson.M{"template_id": templateId, "company_id": companyId}).One(&template)
 	if err != nil {
 		ctx.SendLogs("GcpTemplateModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -201,7 +201,7 @@ func GetTemplates(ctx utils.Context, data rbac_athentication.List, companyId str
 	}
 	defer session.Close()
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoIBMTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoIKSTemplateCollection)
 	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}, "company_id": companyId}).All(&templates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -219,7 +219,7 @@ func GetAllTemplate(ctx utils.Context) (templates []Template, err error) {
 
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoIBMTemplateCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSTemplateCollection)
 	err = c.Find(bson.M{}).All(&templates)
 	if err != nil {
 		beego.Error(err.Error())
@@ -260,7 +260,7 @@ func DeleteTemplate(templateId, companyId string, ctx utils.Context) error {
 
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoIBMTemplateCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSTemplateCollection)
 	err = c.Remove(bson.M{"template_id": templateId, "company_id": companyId})
 	if err != nil {
 		beego.Error(err.Error())
@@ -286,7 +286,7 @@ func GetTemplatesMetadata(ctx utils.Context, data rbac_athentication.List, compa
 	var templates []Template
 
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoIBMTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoIKSTemplateCollection)
 	err = c.Find(bson.M{"template_id": bson.M{"$in": copyData}, "company_id": companyId}).All(&templates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -331,7 +331,7 @@ func GetCustomerTemplatesMetadata(ctx utils.Context, data rbac_athentication.Lis
 	var customerTemplates []Template
 
 	s := db.GetMongoConf()
-	c := session.DB(s.MongoDb).C(s.MongoIBMCustomerTemplateCollection)
+	c := session.DB(s.MongoDb).C(s.MongoIKSCustomerTemplateCollection)
 	err = c.Find(bson.M{}).All(&customerTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
