@@ -7,7 +7,7 @@ import (
 
 func init() {
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "Post",
 			Router:           `/`,
@@ -16,7 +16,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "Patch",
 			Router:           `/`,
@@ -25,7 +25,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "Get",
 			Router:           `/:projectId/`,
@@ -34,7 +34,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "Delete",
 			Router:           `/:projectId/:forceDelete`,
@@ -43,7 +43,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "GetAll",
 			Router:           `/all`,
@@ -52,7 +52,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "ApplyAgent",
 			Router:           `/applyagent/:projectId`,
@@ -61,25 +61,43 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
-			Method:           "GetServerConfig",
-			Router:           `/config/:projectId`,
+			Method:           "FetchKubeVersions",
+			Router:           `/getallkubeversions/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
-			Method:           "GetKubeConfig",
-			Router:           `/kubeconfig/:projectId`,
+			Method:           "GetAllMachineTypes",
+			Router:           `/getallmachines/:projectId/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
+		beego.ControllerComments{
+			Method:           "FetchRegions",
+			Router:           `/getallregions/`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
+		beego.ControllerComments{
+			Method:           "FetchZones",
+			Router:           `/getzone/:region/`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "StartCluster",
 			Router:           `/start/:projectId`,
@@ -88,7 +106,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "GetStatus",
 			Router:           `/status/:projectId/`,
@@ -97,7 +115,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "TerminateCluster",
 			Router:           `/terminate/:projectId/`,
@@ -106,7 +124,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "Post",
 			Router:           `/`,
@@ -115,7 +133,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "Patch",
 			Router:           `/`,
@@ -124,7 +142,16 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
+		beego.ControllerComments{
+			Method:           "Get",
+			Router:           `/:templateId`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "Delete",
 			Router:           `/:templateId`,
@@ -133,16 +160,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
-		beego.ControllerComments{
-			Method:           "Get",
-			Router:           `/:templateId/`,
-			AllowHTTPMethods: []string{"get"},
-			MethodParams:     param.Make(),
-			Filters:          nil,
-			Params:           nil})
-
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "GetAll",
 			Router:           `/all`,
@@ -151,7 +169,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "AllCustomerTemplates",
 			Router:           `/allCustomerTemplates`,
@@ -160,7 +178,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "GetAllCustomerTemplateInfo",
 			Router:           `/allCustomerTemplatesInfo`,
@@ -169,7 +187,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "GetAllTemplateInfo",
 			Router:           `/allTemplatesInfo`,
@@ -178,7 +196,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "PatchCustomerTemplate",
 			Router:           `/customerTemplate`,
@@ -187,7 +205,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "PostCustomerTemplate",
 			Router:           `/customerTemplate`,
@@ -196,7 +214,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "GetCustomerTemplate",
 			Router:           `/customerTemplate/:templateId`,
@@ -205,7 +223,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
+	beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
 		beego.ControllerComments{
 			Method:           "DeleteCustomerTemplate",
 			Router:           `/customerTemplate/:templateId`,

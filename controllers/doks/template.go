@@ -1,42 +1,39 @@
-package aks
+package doks
 
 import (
 	"antelope/models"
-	"antelope/models/aks"
-	"antelope/models/gcp"
-	rbacAuthentication "antelope/models/rbac_authentication"
+	"antelope/models/doks"
+	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
 )
 
-// Operations about AKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
-type AKSTemplateController struct {
+// Operations about DOKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+type DOKSTemplateController struct {
 	beego.Controller
 }
 
 // @Title Get
-// @Description get template
+// @Description get kubernetes cluster template
+// @Param	templateId	path	string	true	"Template Id of the template"
 // @Param	token	header	string	token ""
-// @Param	templateId	path	string	true	"Id of the template"
-// @Success 200 {object} aks.AKSClusterTemplate
+// @Success 200 {object} doks.KubernetesTemplate
+// @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @router /:templateId [get]
-func (c *AKSTemplateController) Get() {
-	ctx := new(utils.Context)
-	ctx.SendLogs("AKSTemplateController: Get template", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+// @Failure 500 {"error": "error msg"}
+// @router /:templateId/ [get]
+func (c *DOKSTemplateController) Get() {
 
-	id := c.GetString(":templateId")
-	if id == "" {
+	templateId := c.GetString(":templateId")
+	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "template Id is empty"}
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
 		c.ServeJSON()
 		return
 	}
-
-	ctx.SendLogs("AKSTemplateController: Get template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -46,7 +43,7 @@ func (c *AKSTemplateController) Get() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -55,10 +52,11 @@ func (c *AKSTemplateController) Get() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AKSTemplateController: Get template  id : "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", id, "View", token, utils.Context{})
+	//==========================RBAC Authentication==============================//
+	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -66,37 +64,36 @@ func (c *AKSTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
+	/*if !allowed {
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
+	*/
+	//=============================================================================//
+	ctx.SendLogs("DOKSTemplateController: Get template with id : "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	template, err := aks.GetAKSClusterTemplate(id, userInfo.CompanyId, *ctx)
+	template, err := doks.GetTemplate(templateId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("AKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no template exists for this id"}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKS template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKS template of template id "+template.TemplateId+"fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
 
 // @Title Get All
-// @Description get all the templates
+// @Description get all kubernetes cluster templates
 // @Param	token	header	string	token ""
-// @Success 200 {object} []aks.AKSClusterTemplate
+// @Success 200 {object} []doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
-func (c *AKSTemplateController) GetAll() {
-
-	ctx := new(utils.Context)
-	ctx.SendLogs("AKSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+func (c *DOKSTemplateController) GetAll() {
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -106,7 +103,7 @@ func (c *AKSTemplateController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -115,10 +112,12 @@ func (c *AKSTemplateController) GetAll() {
 		return
 	}
 
+	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AKSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, _ = rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
+	//==========================RBAC Authentication==============================//
+
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DOKS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -127,36 +126,41 @@ func (c *AKSTemplateController) GetAll() {
 		return
 	}
 
-	templates, err := aks.GetAllAKSClusterTemplate(*ctx)
+	//=============================================================================//
+	ctx.SendLogs("DOKSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	templates, err := doks.GetTemplates(*ctx, data, userInfo.CompanyId)
 	if err != nil {
-		ctx.SendLogs("AKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKS templates fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("All DOKS Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
 
 // @Title Create
-// @Description create a new template
-// @Param	body	body	aks.AKSClusterTemplate	true	"body for template content"
+// @Description create a new kubernetes cluster template
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
-func (c *AKSTemplateController) Post() {
-	var template aks.AKSClusterTemplate
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &template)
-
-	ctx := new(utils.Context)
-	ctx.SendLogs("AKSTemplateController: Post new template with name: "+*template.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+func (c *DOKSTemplateController) Post() {
+	var template doks.KubernetesTemplate
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -173,7 +177,7 @@ func (c *AKSTemplateController) Post() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -182,10 +186,12 @@ func (c *AKSTemplateController) Post() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AKSTemplateController: Posting  new template .", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Evaluate("Create", token, utils.Context{})
+	//==========================RBAC Authentication==============================//
+
+	_, err = rbac_athentication.Evaluate("Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -193,22 +199,23 @@ func (c *AKSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
+	/*if !allowed {
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
+	*/
+	ctx.SendLogs("DOKSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	template.CompanyId = userInfo.CompanyId
+	template.IsCloudplex = false
 
-	id, err := aks.AddAKSClusterTemplate(template, *ctx)
+	err, id := doks.CreateTemplate(template, *ctx)
 	if err != nil {
-		ctx.SendLogs("AKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
+			c.Data["json"] = map[string]string{"error": "template with same id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -217,6 +224,7 @@ func (c *AKSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
+	//==========================RBAC Policy Creation==============================//
 
 	team := c.Ctx.Input.Header("teams")
 
@@ -225,110 +233,7 @@ func (c *AKSTemplateController) Post() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbacAuthentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.AKS, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
-		c.ServeJSON()
-		return
-	}
-	if statusCode != 200 {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("AKS template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
-	c.ServeJSON()
-}
-
-// @Title Update
-// @Description update an existing template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	teams ""
-// @Param	body	body	aks.AKSClusterTemplate	true	"body for template content"
-// @Success 200 {"msg": "template updated successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "no template exists with this name"}
-// @Failure 500 {"error": "error msg"}
-// @router / [put]
-func (c *AKSTemplateController) Patch() {
-	var template aks.AKSClusterTemplate
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &template)
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	if template.TemplateId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "templateId is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	ctx := new(utils.Context)
-
-	userInfo, err := rbacAuthentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("AKSTemplateController: Patch template with templateId "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-
-	//==================================================================================
-	ctx.SendLogs("AKSTemplateController: Patch template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	beego.Info("AKSTemplateController: JSON Payload: ", template)
-
-	err = aks.UpdateAKSClusterTemplate(template, *ctx)
-	if err != nil {
-		ctx.SendLogs("AKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		if strings.Contains(err.Error(), "does not exist") {
-			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no template exists with this id"}
-			c.ServeJSON()
-			return
-		}
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	team := c.Ctx.Input.Header("teams")
-
-	var teams []string
-	if team != "" {
-		teams = strings.Split(team, ";")
-	}
-
-	statusCode, err := rbacAuthentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AKS, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.DOKS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -343,106 +248,24 @@ func (c *AKSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKS template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
+	ctx.SendLogs("DOKS template of template id "+template.TemplateId+" created", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = map[string]string{"msg": "template generated successfully with id " + id}
 	c.ServeJSON()
 }
 
-// @Title Delete
-// @Description delete a templates
+// @Title Update
+// @Description update an existing kubernetes template
 // @Param	token	header	string	token ""
-// @Param	templateId	path	string	true	"Name of the template"
-// @Success 200 {"msg": "template deleted successfully"}
+// @Param	teams	header	string	token ""
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
+// @Success 200 {"msg": "template updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "name is empty"}
+// @Failure 404 {"error": "no template exists with this name"}
 // @Failure 500 {"error": "error msg"}
-// @router /:templateId [delete]
-func (c *AKSTemplateController) Delete() {
-	id := c.GetString(":templateId")
-	if id == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "template id is empty"}
-		c.ServeJSON()
-		return
-	}
-	ctx := new(utils.Context)
-	ctx.SendLogs("AKSTemplateController: Delete template with id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	userInfo, err := rbacAuthentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
-
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", id, "Delete", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-
-	err = aks.DeleteAKSClusterTemplate(id, userInfo.CompanyId, *ctx)
-	if err != nil {
-		ctx.SendLogs("AKSTemplateController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("AKSTemplateController: Deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	statusCode, err := rbacAuthentication.DeletePolicy(models.GKE, id, token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if statusCode != 200 {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "RBAC Policy Deletion Failed"}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("GKE template of template id "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
-	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
-	c.ServeJSON()
-}
-
-// @Title Create Customer Template
-// @Description create a new customer template
-// @Param	token	header	string	token ""
-// @Param	body	body	aks.AKSClusterTemplate	true	"body for template content"
-// @Success 200 {"msg": "template created successfully"}
-// @Failure 409 {"error": "template with same name already exists"}
-// @Failure 500 {"error": "error msg"}
-// @router /customerTemplate [post]
-func (c *AKSTemplateController) PostCustomerTemplate() {
-	var template aks.AKSClusterTemplate
+// @router / [put]
+func (c *DOKSTemplateController) Patch() {
+	var template doks.KubernetesTemplate
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	token := c.Ctx.Input.Header("token")
@@ -460,7 +283,7 @@ func (c *AKSTemplateController) PostCustomerTemplate() {
 		return
 	}
 
-	roleInfo, err := rbacAuthentication.GetRole(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -468,22 +291,217 @@ func (c *AKSTemplateController) PostCustomerTemplate() {
 		c.ServeJSON()
 		return
 	}
-	if !gcp.CheckRole(roleInfo) {
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	/*	if !allowed {
+			c.Ctx.Output.SetStatus(403)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
+	*/
+	//=============================================================================//
+	ctx.SendLogs("DOKSTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+	err = doks.UpdateTemplate(template, *ctx)
+	if err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": "no template exists with this project id"}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	team := c.Ctx.Input.Header("teams")
+
+	var teams []string
+	if team != "" {
+		teams = strings.Split(team, ";")
+	}
+
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.DOKS, *ctx)
+	if err != nil {
+		beego.Error("error" + err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.ServeJSON()
+		return
+	}
+	if statusCode != 200 {
+		beego.Error(statusCode)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Policy creation failed!"}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("DOKS template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = map[string]string{"msg": "template updated successfully"}
+	c.ServeJSON()
+}
+
+// @Title Delete
+// @Description delete kubernetes template
+// @Param	token	header	string	token ""
+// @Param	templateId	path	string	true	"template id of the template"
+// @Success 200 {"msg": "template deleted successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "project id is empty"}
+// @Failure 500 {"error": "error msg"}
+// @router /:templateId [delete]
+func (c *DOKSTemplateController) Delete() {
+
+	templateId := c.GetString(":templateId")
+	if templateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "template id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
+
+	//==========================RBAC Authentication==============================//
+	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "Delete", token, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	/*	if !allowed {
+			c.Ctx.Output.SetStatus(403)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
+	*/
+	//=============================================================================//
+	ctx.SendLogs("DOKSTemplateController: Delete template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	err = doks.DeleteTemplate(templateId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	//==========================RBAC Authentication==============================//
+
+	status_code, err := rbac_athentication.DeletePolicy(models.DOKS, templateId, token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if status_code != 200 {
 		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "RBAC Policy Deletion Failed"}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("DOKS template of template id "+templateId+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	//==================================================================================
+	c.Data["json"] = map[string]string{"msg": "template deleted successfully"}
+	c.ServeJSON()
+}
+
+// @Title Create Customer Template
+// @Description create a new customer template
+// @Param	token	header	string	token ""
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
+// @Success 200 {"msg": "customer template created successfully"}
+// @Failure 400 {"error": "error message"}
+// @Failure 401 {"error": "error message"}
+// @Failure 404 {"error": "error message"}
+// @Failure 409 {"error": "template with same name already exists"}
+// @Failure 500 {"error": "error msg"}
+// @router /customerTemplate [post]
+func (c *DOKSTemplateController) PostCustomerTemplate() {
+
+	var template doks.KubernetesTemplate
+	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	if template.TemplateId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "templateId is empty"}
+		c.ServeJSON()
+		return
+	}
+	//==============================RBAC Role Authentication====================================//
+
+	roleInfo, err := rbac_athentication.GetRole(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !doks.CheckRole(roleInfo) {
+		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
+
+	//===========================================================================================//
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", "", "")
 
-	ctx.SendLogs("AKSTemplateController: Post new customer template with name: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSTemplateController: Post new customer template with id: "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, id := aks.CreateAKSCustomerTemplate(template, *ctx)
+	err, id := doks.CreateCustomerTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "template with same name already exists"}
+			c.Data["json"] = map[string]string{"error": "template with same id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -500,12 +518,13 @@ func (c *AKSTemplateController) PostCustomerTemplate() {
 // @Description get customer template
 // @Param	templateId	path	string	true	"Template Id of the template"
 // @Param	token	header	string	token ""
-// @Success 200 {object} aks.AKSClusterTemplate
+// @Success 200 {object} doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @router /customerTemplate/:templateId [get]
-func (c *AKSTemplateController) GetCustomerTemplate() {
+func (c *DOKSTemplateController) GetCustomerTemplate() {
+
 	tempId := c.GetString(":templateId")
 	if tempId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -522,7 +541,7 @@ func (c *AKSTemplateController) GetCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -547,33 +566,33 @@ func (c *AKSTemplateController) GetCustomerTemplate() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("AKSCustomerTemplateController: Get customer template  id : "+tempId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSCustomerTemplateController: Get customer template  id : "+tempId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	template, err := aks.GetAKSCustomerTemplate(tempId, *ctx)
+	template, err := doks.GetCustomerTemplate(tempId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "no customer template exists for this id"}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKS customer template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKS customer template of template id "+template.TemplateId+" fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = template
 	c.ServeJSON()
 }
 
-// @Title Update customer templates
-// @Description update an existing customer template
+// @Title Update customer kubernetes template
+// @Description update an existing kubernetes customer template
 // @Param	token	header	string	token ""
-// @Param	teams	header	string	token ""
-// @Param	body	body	aks.AKSClusterTemplate	true	"body for template content"
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "customer template updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "no template exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router /customerTemplate [put]
-func (c *AKSTemplateController) PatchCustomerTemplate() {
-	var template aks.AKSClusterTemplate
+func (c *DOKSTemplateController) PatchCustomerTemplate() {
+
+	var template doks.KubernetesTemplate
 	json.Unmarshal(c.Ctx.Input.RequestBody, &template)
 
 	token := c.Ctx.Input.Header("token")
@@ -591,7 +610,7 @@ func (c *AKSTemplateController) PatchCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -601,11 +620,11 @@ func (c *AKSTemplateController) PatchCustomerTemplate() {
 	}
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Role Authentication=============================//
 
-	roleInfo, err := rbacAuthentication.GetRole(token)
+	roleInfo, err := rbac_athentication.GetRole(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -614,7 +633,7 @@ func (c *AKSTemplateController) PatchCustomerTemplate() {
 		return
 	}
 
-	if !gcp.CheckRole(roleInfo) {
+	if !doks.CheckRole(roleInfo) {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -623,9 +642,9 @@ func (c *AKSTemplateController) PatchCustomerTemplate() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("AKSCustomerTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSCustomerTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = aks.UpdateAKSCustomerTemplate(template, *ctx)
+	err = doks.UpdateCustomerTemplate(template, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
@@ -639,7 +658,7 @@ func (c *AKSTemplateController) PatchCustomerTemplate() {
 		return
 	}
 
-	ctx.SendLogs("AKS customer template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKS customer template of template id "+template.TemplateId+" updated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": " customer template updated successfully"}
 	c.ServeJSON()
 }
@@ -654,7 +673,8 @@ func (c *AKSTemplateController) PatchCustomerTemplate() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /customerTemplate/:templateId [delete]
-func (c *AKSTemplateController) DeleteCustomerTemplate() {
+func (c *DOKSTemplateController) DeleteCustomerTemplate() {
+
 	templateId := c.GetString(":templateId")
 	if templateId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -671,7 +691,7 @@ func (c *AKSTemplateController) DeleteCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -681,11 +701,11 @@ func (c *AKSTemplateController) DeleteCustomerTemplate() {
 	}
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Role Authentication=============================//
 
-	roleInfo, err := rbacAuthentication.GetRole(token)
+	_, err = rbac_athentication.GetRole(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -694,17 +714,18 @@ func (c *AKSTemplateController) DeleteCustomerTemplate() {
 		return
 	}
 
-	if !gcp.CheckRole(roleInfo) {
+	/*if !doks.CheckRole(roleInfo) {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+	*/
 	//=============================================================================//
-	ctx.SendLogs("AKSCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = aks.DeleteAKSCustomerTemplate(templateId, *ctx)
+	ctx.SendLogs("DOKSCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	err = doks.DeleteCustomerTemplate(templateId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -719,12 +740,13 @@ func (c *AKSTemplateController) DeleteCustomerTemplate() {
 // @Title Get All Customer Template
 // @Description get all the customer templates
 // @Param	token	header	string	token ""
-// @Success 200 {object} []aks.AKSClusterTemplate
+// @Success 200 {object} []doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplates [get]
-func (c *AKSTemplateController) AllCustomerTemplates() {
+func (c *DOKSTemplateController) AllCustomerTemplates() {
+
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -733,7 +755,7 @@ func (c *AKSTemplateController) AllCustomerTemplates() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -758,29 +780,30 @@ func (c *AKSTemplateController) AllCustomerTemplates() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("AKSTemplateController: GetAllCustomerTemplate.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	templates, err := aks.GetAllAKSCustomerTemplates(*ctx)
+	ctx.SendLogs("DOKSTemplateController: GetAllCustomerTemplate.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	templates, err := doks.GetAllCustomerTemplates(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("All AKS Customer Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("All DOKS Customer Template fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
 
-// @Title   GetAllTemplateInfo
-// @Description get all the templates info
+// @Title   GetAllKubernetesTemplateInfo
+// @Description get all kubernetes templates info
 // @Param	token	header	string	token ""
-// @Success 200 {object} []aks.AKSClusterTemplateMetadata
+// @Success 200 {object} []doks.KubernetesTemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allTemplatesInfo [get]
-func (c *AKSTemplateController) GetAllTemplateInfo() {
+func (c *DOKSTemplateController) GetAllTemplateInfo() {
+
 	ctx := new(utils.Context)
-	ctx.SendLogs("AKSTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -790,7 +813,7 @@ func (c *AKSTemplateController) GetAllTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -803,7 +826,7 @@ func (c *AKSTemplateController) GetAllTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DOKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -813,15 +836,15 @@ func (c *AKSTemplateController) GetAllTemplateInfo() {
 	}
 
 	//==================================================================================
-	templates, err := aks.GetAKSTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	templates, err := doks.GetTemplatesMetadata(*ctx, data, userInfo.CompanyId)
 	if err != nil {
-		ctx.SendLogs("AKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("DOKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKS templates meta data fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKS templates meta data fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
@@ -829,13 +852,14 @@ func (c *AKSTemplateController) GetAllTemplateInfo() {
 // @Title   GetAllCustomerTemplateInfo
 // @Description get all the customer templates info
 // @Param	token	header	string	token ""
-// @Success 200 {object} []aks.AKSClusterTemplateMetadata
+// @Success 200 {object} []doks.KubernetesTemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplatesInfo [get]
-func (c *AKSTemplateController) GetAllCustomerTemplateInfo() {
+func (c *DOKSTemplateController) GetAllCustomerTemplateInfo() {
+
 	ctx := new(utils.Context)
-	ctx.SendLogs("AKSTemplateController:  Get all customer Templates Info.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSTemplateController:  Get all customer Templates Info.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -845,7 +869,7 @@ func (c *AKSTemplateController) GetAllCustomerTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -858,7 +882,7 @@ func (c *AKSTemplateController) GetAllCustomerTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -868,15 +892,15 @@ func (c *AKSTemplateController) GetAllCustomerTemplateInfo() {
 	}
 
 	//==================================================================================
-	templates, err := aks.GetAKSCustomerTemplatesMetadata(*ctx, data, userInfo.CompanyId)
+	templates, err := doks.GetCustomerTemplatesMetadata(*ctx, data, userInfo.CompanyId)
 	if err != nil {
-		ctx.SendLogs("AKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("DOKSTemplateController: Internal server error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("AKS customer templates info fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKS customer templates info fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = templates
 	c.ServeJSON()
 }
