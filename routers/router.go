@@ -94,14 +94,14 @@ func init() {
 				&do.DOClusterController{},
 			),
 		),
-		beego.NSNamespace("/template/ibm",
+		beego.NSNamespace("/template/iks",
 			beego.NSInclude(
-				&ibm.IBMTemplateController{},
+				&ibm.IKSTemplateController{},
 			),
 		),
-		beego.NSNamespace("/cluster/ibm",
+		beego.NSNamespace("/cluster/iks",
 			beego.NSInclude(
-				&ibm.IBMClusterController{},
+				&ibm.IKSClusterController{},
 			),
 		),
 		beego.NSNamespace("/cluster/doks",

@@ -13,7 +13,7 @@ import (
 )
 
 // Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
-type IBMClusterController struct {
+type IKSClusterController struct {
 	beego.Controller
 }
 
@@ -26,7 +26,7 @@ type IBMClusterController struct {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @router /:projectId/ [get]
-func (c *IBMClusterController) Get() {
+func (c *IKSClusterController) Get() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -75,7 +75,7 @@ func (c *IBMClusterController) Get() {
 
 	//====================================================================================//
 
-	ctx.SendLogs("IBMClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -104,7 +104,7 @@ func (c *IBMClusterController) Get() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
-func (c *IBMClusterController) GetAll() {
+func (c *IKSClusterController) GetAll() {
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -136,7 +136,7 @@ func (c *IBMClusterController) GetAll() {
 		return
 	}
 	//====================================================================================//
-	ctx.SendLogs("IBMClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	clusters, err := ibm.GetAllCluster(*ctx, data)
 	if err != nil {
@@ -162,7 +162,7 @@ func (c *IBMClusterController) GetAll() {
 // @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
-func (c *IBMClusterController) Post() {
+func (c *IKSClusterController) Post() {
 
 	var cluster ibm.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
@@ -206,7 +206,7 @@ func (c *IBMClusterController) Post() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("IBMClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	res, err := govalidator.ValidateStruct(cluster)
 	if !res || err != nil {
@@ -259,7 +259,7 @@ func (c *IBMClusterController) Post() {
 // @Failure 405 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
-func (c *IBMClusterController) Patch() {
+func (c *IKSClusterController) Patch() {
 	var cluster ibm.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
@@ -300,7 +300,7 @@ func (c *IBMClusterController) Patch() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("IBMClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = ibm.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
@@ -349,7 +349,7 @@ func (c *IBMClusterController) Patch() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId/:forceDelete  [delete]
-func (c *IBMClusterController) Delete() {
+func (c *IKSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -401,7 +401,7 @@ func (c *IBMClusterController) Delete() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("IBMClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if id == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -463,7 +463,7 @@ func (c *IBMClusterController) Delete() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
-func (c *IBMClusterController) StartCluster() {
+func (c *IKSClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -522,7 +522,7 @@ func (c *IBMClusterController) StartCluster() {
 
 	var cluster ibm.Cluster_Def
 
-	ctx.SendLogs("IBMClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = ibm.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
@@ -583,7 +583,7 @@ func (c *IBMClusterController) StartCluster() {
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go ibm.DeployCluster(cluster, ibmProfile.Profile, *ctx, userInfo.CompanyId, token)
 
@@ -603,7 +603,7 @@ func (c *IBMClusterController) StartCluster() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
-func (c *IBMClusterController) GetStatus() {
+func (c *IKSClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -650,7 +650,7 @@ func (c *IBMClusterController) GetStatus() {
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("IBMClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -660,7 +660,7 @@ func (c *IBMClusterController) GetStatus() {
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	region, err := ibm.GetRegion(token, projectId, *ctx)
 	if err != nil {
@@ -700,7 +700,7 @@ func (c *IBMClusterController) GetStatus() {
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
-func (c *IBMClusterController) TerminateCluster() {
+func (c *IKSClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -747,7 +747,7 @@ func (c *IBMClusterController) TerminateCluster() {
 	}
 
 	//=============================================================================//
-	ctx.SendLogs("IBMClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -775,7 +775,7 @@ func (c *IBMClusterController) TerminateCluster() {
 
 	var cluster ibm.Cluster_Def
 
-	ctx.SendLogs("IBMClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = ibm.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
@@ -786,7 +786,7 @@ func (c *IBMClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("IBMClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
@@ -794,14 +794,14 @@ func (c *IBMClusterController) TerminateCluster() {
 	}
 
 	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("IBMClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go ibm.TerminateCluster(cluster, ibmProfile, *ctx, userInfo.CompanyId, token)
 
@@ -827,7 +827,7 @@ func (c *IBMClusterController) TerminateCluster() {
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /getallmachines/:projectId/ [get]
-func (c *IBMClusterController) GetAllMachineTypes() {
+func (c *IKSClusterController) GetAllMachineTypes() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -856,7 +856,7 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IBMClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -882,7 +882,7 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	machineTypes, err := ibm.GetAllMachines(ibmProfile, *ctx)
 	if err != nil {
@@ -903,7 +903,7 @@ func (c *IBMClusterController) GetAllMachineTypes() {
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /getallregions/ [get]
-func (c *IBMClusterController) FetchRegions() {
+func (c *IKSClusterController) FetchRegions() {
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -946,7 +946,7 @@ func (c *IBMClusterController) FetchRegions() {
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /getallkubeversions/ [get]
-func (c *IBMClusterController) FetchKubeVersions() {
+func (c *IKSClusterController) FetchKubeVersions() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -975,7 +975,7 @@ func (c *IBMClusterController) FetchKubeVersions() {
 
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IBMClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -1001,7 +1001,7 @@ func (c *IBMClusterController) FetchKubeVersions() {
 		return
 	}
 
-	ctx.SendLogs("IBMClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	machineTypes, err := ibm.GetAllVersions(ibmProfile, *ctx)
 	if err != nil {
@@ -1027,7 +1027,7 @@ func (c *IBMClusterController) FetchKubeVersions() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /applyagent/:projectId [post]
-func (c *IBMClusterController) ApplyAgent() {
+func (c *IKSClusterController) ApplyAgent() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("IBMKubernetesClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
