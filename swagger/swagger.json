@@ -4485,6 +4485,50 @@
                 }
             }
         },
+        "/cluster/iks/getzone/{region}/": {
+            "get": {
+                "tags": [
+                    "cluster/iks"
+                ],
+                "description": "get zone",
+                "operationId": "IKSClusterController.Get Zone",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "Id of region",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ibm.Zone"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/iks/start/{projectId}": {
             "post": {
                 "tags": [
@@ -8588,11 +8632,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13385.0xc000f3ec60.false": {
+        "13385.0xc000f53020.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc00123a780.false": {
+        "13431.0xc00124ab40.false": {
             "title": "false",
             "type": "object"
         },
@@ -8600,11 +8644,11 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc001586ed0.false": {
+        "434.0xc00158f890.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc0015b43f0.false": {
+        "5960.0xc0015c0db0.false": {
             "title": "false",
             "type": "object"
         },
@@ -8930,7 +8974,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000f3ec60.false"
+                    "$ref": "#/definitions/13385.0xc000f53020.false"
                 },
                 "name": {
                     "type": "string"
@@ -9495,7 +9539,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc00123a780.false"
+                    "$ref": "#/definitions/13431.0xc00124ab40.false"
                 },
                 "name": {
                     "type": "string"
@@ -11018,6 +11062,10 @@
             "title": "Versions",
             "type": "object"
         },
+        "ibm.Zone": {
+            "title": "Zone",
+            "type": "object"
+        },
         "key_utils.AWSKey": {
             "title": "AWSKey",
             "type": "object",
@@ -11178,7 +11226,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc0015b43f0.false"
+                    "$ref": "#/definitions/5960.0xc0015c0db0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11306,7 +11354,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001586ed0.false"
+                    "$ref": "#/definitions/434.0xc00158f890.false"
                 },
                 "name": {
                     "type": "string"
