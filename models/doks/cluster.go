@@ -291,7 +291,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
-	/*confError = ApplyAgent(credentials, token, ctx, cluster.Name)
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
@@ -307,7 +307,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return nil
 	}
 
-	 */
+
 	cluster.CloudplexStatus = "Cluster Created"
 
 	confError = UpdateKubernetesCluster(cluster, ctx)
@@ -322,32 +322,32 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func FetchStatus(credentials vault.DOCredentials, clusterId, projectId, companyId string, ctx utils.Context) (KubernetesCluster, error) {
+func FetchStatus(credentials vault.DOCredentials, projectId, companyId string, ctx utils.Context) (*godo.KubernetesCluster, error) {
 	cluster, err := GetKubernetesCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return &godo.KubernetesCluster{}, err
 	}
 
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubernetesCluster{}, err
+		return &godo.KubernetesCluster{}, err
 	}
 
 	err = doksOps.init(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubernetesCluster{}, err
+		return &godo.KubernetesCluster{}, err
 	}
 
-	cluster, err = doksOps.fetchStatus(ctx, clusterId, companyId, projectId)
+	status, err := doksOps.fetchStatus(ctx, cluster.ID, companyId, projectId)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return &godo.KubernetesCluster{}, err
 	}
 
-	return cluster, nil
+	return status, nil
 }
 func TerminateCluster(credentials vault.DOCredentials, projectId, companyId string, ctx utils.Context) error {
 	publisher := utils.Notifier{}
