@@ -5998,16 +5998,19 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0015fae70.false:
+  434.0xc00158f890.false:
     title: "false"
     type: object
-  605.0xc000f51500.false:
+  1559.string:
+    title: string
+    type: object
+  5960.0xc0015c0db0.false:
     title: "false"
     type: object
-  637.0xc001256ff0.false:
+  13385.0xc000f53020.false:
     title: "false"
     type: object
-  13266.0xc001628bd0.false:
+  13431.0xc00124ab40.false:
     title: "false"
     type: object
   36190.string:

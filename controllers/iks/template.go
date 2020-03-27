@@ -19,7 +19,7 @@ type IKSTemplateController struct {
 // @Description get template
 // @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"Id of the template"
-// @Success 200 {object} ibm.Template
+// @Success 200 {object} iks.Template
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @router /:templateId [get]
@@ -92,7 +92,7 @@ func (c *IKSTemplateController) Get() {
 // @Title Get All
 // @Description get all the templates
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.Template
+// @Success 200 {object} []iks.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
@@ -149,7 +149,7 @@ func (c *IKSTemplateController) GetAll() {
 
 // @Title Create
 // @Description create a new template
-// @Param	body	body	ibm.Template	true	"body for template content"
+// @Param	body	body	iks.Template	true	"body for template content"
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Success 200 {"msg": "template created successfully"}
@@ -261,7 +261,7 @@ func (c *IKSTemplateController) Post() {
 // @Description update an existing template
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
-// @Param	body	body	ibm.Template	true	"body for template content"
+// @Param	body	body	iks.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -458,7 +458,7 @@ func (c *IKSTemplateController) Delete() {
 // @Title Create Customer Template
 // @Description create a new customer template
 // @Param	token	header	string	token ""
-// @Param	body	body	ibm.Template	true	"body for template content"
+// @Param	body	body	iks.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 409 {"error": "template with same name already exists"}
 // @Failure 500 {"error": "error msg"}
@@ -523,7 +523,7 @@ func (c *IKSTemplateController) PostCustomerTemplate() {
 // @Description get customer template
 // @Param	templateId	path	string	true	"Template Id of the template"
 // @Param	token	header	string	token ""
-// @Success 200 {object} ibm.Template
+// @Success 200 {object} iks.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -589,7 +589,7 @@ func (c *IKSTemplateController) GetCustomerTemplate() {
 // @Description update an existing customer template
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	token ""
-// @Param	body	body	ibm.Template	true	"body for template content"
+// @Param	body	body	iks.Template	true	"body for template content"
 // @Success 200 {"msg": "customer template updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -745,7 +745,7 @@ func (c *IKSTemplateController) DeleteCustomerTemplate() {
 // @Title Get All Customer Template
 // @Description get all the customer templates
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.Template
+// @Success 200 {object} []iks.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -801,7 +801,7 @@ func (c *IKSTemplateController) AllCustomerTemplates() {
 // @Title   GetAllTemplateInfo
 // @Description get all the templates info
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.TemplateMetadata
+// @Success 200 {object} []iks.TemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allTemplatesInfo [get]
@@ -857,7 +857,7 @@ func (c *IKSTemplateController) GetAllTemplateInfo() {
 // @Title   GetAllCustomerTemplateInfo
 // @Description get all the customer templates info
 // @Param	token	header	string	token ""
-// @Success 200 {object} []ibm.TemplateMetadata
+// @Success 200 {object} []iks.TemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplatesInfo [get]

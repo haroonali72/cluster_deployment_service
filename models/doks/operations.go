@@ -2,7 +2,6 @@ package doks
 
 import (
 	"antelope/models"
-	"fmt"
 	"strings"
 
 	"antelope/models/utils"
@@ -220,23 +219,22 @@ func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Contex
 func (cloud *DOKS) getVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId,companyId,projectId string) (KubernetesCluster, error) {
+func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId,companyId,projectId string) (*godo.KubernetesCluster, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return KubernetesCluster{}, err
+			return &godo.KubernetesCluster{}, err
 		}
 	}
-	clusterId ="fb29ad6f-085e-4328-b1cf-39f71d26de84"
+	//clusterId ="b01f9429-459b-4fc6-9726-ba9c21e88272"
 	status,_,err := cloud.Client.Kubernetes.Get(context.Background(),clusterId)
 
-	fmt.Println(status)
 	if err != nil{
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", projectId)
-		return KubernetesCluster{}, err
+		return &godo.KubernetesCluster{}, err
 	}
-	return KubernetesCluster{}, nil
+	return status, nil
 }
 func (cloud *DOKS) GetServerConfig(ctx utils.Context,cluster KubernetesCluster)  (*godo.KubernetesOptions, error) {
 
