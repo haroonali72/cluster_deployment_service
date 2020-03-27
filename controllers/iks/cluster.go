@@ -58,7 +58,7 @@ func (c *IKSClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "cluster", projectId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -127,7 +127,7 @@ func (c *IKSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.IBM, *ctx)
+	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.IKS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -189,7 +189,7 @@ func (c *IKSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -283,7 +283,7 @@ func (c *IKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -384,7 +384,7 @@ func (c *IKSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "cluster", id, "Delete", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -493,7 +493,7 @@ func (c *IKSClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "cluster", projectId, "Start", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -633,7 +633,7 @@ func (c *IKSClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "cluster", projectId, "View", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -731,7 +731,7 @@ func (c *IKSClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "cluster", projectId, "Terminate", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -896,7 +896,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 }
 
 // @Title Get Regions
-// @Description fetch regions of ibm
+// @Description fetch regions of iks
 // @Param	token	header	string	token ""
 // @Success 200 {object} []iks.Regions
 // @Failure 400 {"error": "error msg"}
@@ -1029,11 +1029,11 @@ func (c *IKSClusterController) FetchKubeVersions() {
 // @router /applyagent/:projectId [post]
 func (c *IKSClusterController) ApplyAgent() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("IBMKubernetesClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSubernetesClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("IBMKubernetesClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSubernetesClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -1042,7 +1042,7 @@ func (c *IKSClusterController) ApplyAgent() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("IBMKubernetesClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSubernetesClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -1081,7 +1081,7 @@ func (c *IKSClusterController) ApplyAgent() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("IBMKubernetesClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSubernetesClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
@@ -1114,7 +1114,7 @@ func (c *IKSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("IBMKubernetesClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSubernetesClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go iks.ApplyAgent(ibmProfile, token, *ctx, clusterName, resourceGroup)
 

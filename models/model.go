@@ -47,7 +47,7 @@ const (
 	GKE   Cloud = "gke"
 	DO    Cloud = "do"
 	DOKS  Cloud = "doks"
-	IBM   Cloud = "ibm"
+	IKS   Cloud = "iks"
 	OP    Cloud = "op"
 	AKS   Cloud = "aks"
 )
