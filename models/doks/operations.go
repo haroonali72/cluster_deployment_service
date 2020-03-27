@@ -30,6 +30,7 @@ type KubernetesClusterCredentials struct {
 	Token                    string    `json:"token"`
 	ExpiresAt                time.Time `json:"expires_at"`
 }
+
 func (t *TokenSource) Token() (*oauth2.Token, error) {
 	token := &oauth2.Token{
 		AccessToken: t.AccessToken,
@@ -85,141 +86,138 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		}
 	}
 
-/*	var doksNetwork types.DONetwork
-	url := getNetworkHost("do", cluster.ProjectId)
+	/*	var doksNetwork types.DONetwork
+		url := getNetworkHost("do", cluster.ProjectId)
 
-	network, err := api_handler.GetAPIStatus(token, url, ctx)
-	if err != nil || network == nil {
-		return cluster, errors.New("error in fetching network")
-	}
-	err = json.Unmarshal(network.([]byte), &doksNetwork)
-	if err != nil {
-		beego.Error(err.Error())
-		return cluster, err
-	}
-*/
+		network, err := api_handler.GetAPIStatus(token, url, ctx)
+		if err != nil || network == nil {
+			return cluster, errors.New("error in fetching network")
+		}
+		err = json.Unmarshal(network.([]byte), &doksNetwork)
+		if err != nil {
+			beego.Error(err.Error())
+			return cluster, err
+		}
+	*/
 	utils.SendLog(companyId, "Creating DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-/*	list := godo.ListOptions{}
-	re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
-	fmt.Println(re)
-*/
- 	var nodepool []*godo.KubernetesNodePoolCreateRequest
-	for _,node := range cluster.NodePools{
-		pool:= godo.KubernetesNodePoolCreateRequest{
+	/*	list := godo.ListOptions{}
+		re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
+		fmt.Println(re)
+	*/
+	var nodepool []*godo.KubernetesNodePoolCreateRequest
+	for _, node := range cluster.NodePools {
+		pool := godo.KubernetesNodePoolCreateRequest{
 
-		Name:      node.Name,
-		Size:      node.Size,
-		Count:     node.Count,
-		Tags:      node.Tags,
-		Labels:    node.Labels,
-		AutoScale: node.AutoScale,
-		MinNodes:  node.MinNodes,
-		MaxNodes:  node.MaxNodes,
+			Name:      node.Name,
+			Size:      node.Size,
+			Count:     node.Count,
+			Tags:      node.Tags,
+			Labels:    node.Labels,
+			AutoScale: node.AutoScale,
+			MinNodes:  node.MinNodes,
+			MaxNodes:  node.MaxNodes,
+		}
+		nodepool = append(nodepool, &pool)
 	}
-	nodepool =append(nodepool,&pool)
-	}
 
-
-	input :=godo.KubernetesClusterCreateRequest{
-		Name:              cluster.Name,
-		RegionSlug:        cluster.Region,
-		VersionSlug:       cluster.KubeVersion,
-		Tags:              cluster.Tags,
+	input := godo.KubernetesClusterCreateRequest{
+		Name:        cluster.Name,
+		RegionSlug:  cluster.Region,
+		VersionSlug: cluster.KubeVersion,
+		Tags:        cluster.Tags,
 		//VPCUUID:           cluster.VPCUUID,
-		NodePools:         nodepool,
+		NodePools: nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
-		AutoUpgrade:       cluster.AutoUpgrade,
+		AutoUpgrade: cluster.AutoUpgrade,
 	}
 
-
-	clus,_,err :=cloud.Client.Kubernetes.Create(context.Background(),&input)
-	if err != nil{
+	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
+	if err != nil {
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
 		return cluster, err
 	}
-	cluster.ID=clus.ID
-
+	cluster.ID = clus.ID
 
 	utils.SendLog(companyId, "DOKS cluster created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 	return cluster, nil
 }
 
-func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context,projectId,companyId string)  error {
+func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context, projectId, companyId string) error {
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return  err
+			return err
 		}
 	}
 
 	utils.SendLog(companyId, "Deleting DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-/*		list := godo.ListOptions{}
-		re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
-		fmt.Println(re)
-*/
-	_,err :=cloud.Client.Kubernetes.Delete(context.Background(),cluster.ID)
-	if err != nil{
+	/*		list := godo.ListOptions{}
+			re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
+			fmt.Println(re)
+	*/
+	_, err := cloud.Client.Kubernetes.Delete(context.Background(), cluster.ID)
+	if err != nil {
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
-		return  err
+		return err
 	}
 
 	utils.SendLog(companyId, "DOKS cluster deleted successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 	return nil
 }
-func (cloud *DOKS) deleteNodepool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) deleteNodepool(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) deleteNode(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) deleteNode(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) GetCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) GetCluster(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) GetNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) GetNodePool(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) GetKubeConfig(ctx utils.Context,cluster KubernetesCluster)  (KubernetesClusterConfig, error) {
+func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (KubernetesClusterConfig, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return  KubernetesClusterConfig{},err
+			return KubernetesClusterConfig{}, err
 		}
 	}
-   //"b01f9429-459b-4fc6-9726-ba9c21e88272"
-	config, _,err :=cloud.Client.Kubernetes.GetKubeConfig(context.Background(),cluster.ID)
-	if err != nil{
+	//"b01f9429-459b-4fc6-9726-ba9c21e88272"
+	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(), cluster.ID)
+	if err != nil {
 		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
-		return KubernetesClusterConfig{},err
+		return KubernetesClusterConfig{}, err
 	}
 	var con KubernetesClusterConfig
 	con.KubeconfigYAML = config.KubeconfigYAML
 
 	utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-	return con,nil
+	return con, nil
 }
-func (cloud *DOKS) ListCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) ListCluster(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) ListNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) ListNodePool(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) getVersion(nodepool *KubernetesNodePool, ctx utils.Context,projectId,companyId, clusterId, token string) (KubernetesNodePool, error) {
+func (cloud *DOKS) getVersion(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId,companyId,projectId string) (*godo.KubernetesCluster, error) {
+func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId, companyId, projectId string) (*godo.KubernetesCluster, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -228,29 +226,29 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId,companyId,projectId 
 		}
 	}
 	//clusterId ="b01f9429-459b-4fc6-9726-ba9c21e88272"
-	status,_,err := cloud.Client.Kubernetes.Get(context.Background(),clusterId)
+	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clusterId)
 
-	if err != nil{
+	if err != nil {
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", projectId)
 		return &godo.KubernetesCluster{}, err
 	}
 	return status, nil
 }
-func (cloud *DOKS) GetServerConfig(ctx utils.Context,cluster KubernetesCluster)  (*godo.KubernetesOptions, error) {
+func (cloud *DOKS) GetServerConfig(ctx utils.Context, cluster KubernetesCluster) (*godo.KubernetesOptions, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return  &godo.KubernetesOptions{},err
+			return &godo.KubernetesOptions{}, err
 		}
 	}
-	options, _,err :=cloud.Client.Kubernetes.GetOptions(context.Background())
-	if err != nil{
+	options, _, err := cloud.Client.Kubernetes.GetOptions(context.Background())
+	if err != nil {
 		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
-		return &godo.KubernetesOptions{},err
+		return &godo.KubernetesOptions{}, err
 	}
 
 	utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-	return options,nil
+	return options, nil
 }

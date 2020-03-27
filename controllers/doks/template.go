@@ -70,7 +70,7 @@ func (c *DOKSTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-*/
+	*/
 	//=============================================================================//
 	ctx.SendLogs("DOKSTemplateController: Get template with id : "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -205,7 +205,7 @@ func (c *DOKSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-*/
+	*/
 	ctx.SendLogs("DOKSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	template.CompanyId = userInfo.CompanyId
@@ -304,13 +304,13 @@ func (c *DOKSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-/*	if !allowed {
-		c.Ctx.Output.SetStatus(403)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-*/
+	/*	if !allowed {
+			c.Ctx.Output.SetStatus(403)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
+	*/
 	//=============================================================================//
 	ctx.SendLogs("DOKSTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -404,13 +404,13 @@ func (c *DOKSTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-/*	if !allowed {
-		c.Ctx.Output.SetStatus(403)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-*/
+	/*	if !allowed {
+			c.Ctx.Output.SetStatus(403)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
+	*/
 	//=============================================================================//
 	ctx.SendLogs("DOKSTemplateController: Delete template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -720,7 +720,7 @@ func (c *DOKSTemplateController) DeleteCustomerTemplate() {
 		c.ServeJSON()
 		return
 	}
-*/
+	*/
 	//=============================================================================//
 
 	ctx.SendLogs("DOKSCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -801,7 +801,6 @@ func (c *DOKSTemplateController) AllCustomerTemplates() {
 // @Failure 500 {"error": "error msg"}
 // @router /allTemplatesInfo [get]
 func (c *DOKSTemplateController) GetAllTemplateInfo() {
-
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOKSTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)

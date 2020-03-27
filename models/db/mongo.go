@@ -124,8 +124,8 @@ func GetMongoConf() mongConf {
 	conf.MongoDOClusterCollection = beego.AppConfig.String("mongo_do_cluster_collection")
 	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
 	conf.MongoDOTemplateCollection = beego.AppConfig.String("mongo_do_template_collection")
-	conf.MongoIBMClusterCollection = beego.AppConfig.String("mongo_ibm_cluster_collection")
-	conf.MongoIBMTemplateCollection = beego.AppConfig.String("mongo_ibm_template_collection")
+	conf.MongoIKSClusterCollection = beego.AppConfig.String("mongo_iks_cluster_collection")
+	conf.MongoIKSTemplateCollection = beego.AppConfig.String("mongo_iks_template_collection")
 	conf.MongoOPClusterCollection = beego.AppConfig.String("mongo_op_cluster_collection")
 	conf.MongoOPTemplateCollection = beego.AppConfig.String("mongo_op_template_collection")
 	conf.MongoAwsCustomerTemplateCollection = "mongo_aws_customer_template_collection"
@@ -134,8 +134,8 @@ func GetMongoConf() mongConf {
 	conf.MongoGKECustomerTemplateCollection = "mongo_gke_customer_template_collection"
 	conf.MongoAKSCustomerTemplateCollection = "mongo_aks_customer_template_collection"
 	conf.MongoDOCustomerTemplateCollection = "mongo_do_customer_template_collection"
+	conf.MongoIKSCustomerTemplateCollection = "mongo_iks_customer_template_collection"
 	conf.MongoDOKSCustomerTemplateCollection = "mongo_doks_customer_template_collection"
-	conf.MongoIBMCustomerTemplateCollection = "mongo_ibm_customer_template_collection"
 
 	return conf
 
@@ -166,9 +166,9 @@ type mongConf struct {
 	MongoDOClusterCollection             string
 	MongoDOTemplateCollection            string
 	MongoDOCustomerTemplateCollection    string
-	MongoIBMClusterCollection            string
-	MongoIBMTemplateCollection           string
-	MongoIBMCustomerTemplateCollection   string
+	MongoIKSClusterCollection            string
+	MongoIKSTemplateCollection           string
+	MongoIKSCustomerTemplateCollection   string
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
 	MongoDOKSClusterCollection           string
