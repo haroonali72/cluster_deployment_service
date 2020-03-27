@@ -28,11 +28,11 @@ type Cluster_Def struct {
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
-	PublicEndpoint   bool          `json:"disablePublicServiceEndpoint"`
-	KubeVersion      string        `json:"kubeVersion"`
+	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
-	VPCId            string        `json:"vpcID"`
+	VPCId            string        `json:"vpc_id" bson:"vpc_id"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
@@ -41,7 +41,7 @@ type NodePool struct {
 	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
 	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
 	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
-	SubnetID    string          `json:"subnetID"`
+	SubnetID    string          `json:"subnet_id" bson:"subnet_id"`
 }
 
 type Project struct {
@@ -542,4 +542,34 @@ func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, c
 		return err
 	}
 	return nil
+}
+func GeZones(region string, ctx utils.Context) ([]string, error) {
+	var zones []string
+	if region == "us-south" {
+		zones = append(zones, "us-south-1")
+		zones = append(zones, "us-south-2")
+		zones = append(zones, "us-south-3")
+	} else if region == "us-east" {
+		zones = append(zones, "us-east-1")
+		zones = append(zones, "us-east-2")
+		zones = append(zones, "us-east-3")
+	} else if region == "eu-de" {
+		zones = append(zones, "eu-de-1")
+		zones = append(zones, "eu-de-2")
+		zones = append(zones, "eu-de-3")
+	} else if region == "jp-tok" {
+		zones = append(zones, "jp-tok-1")
+		zones = append(zones, "jp-tok-2")
+		zones = append(zones, "jp-tok-3")
+	} else if region == "eu-gb" {
+		zones = append(zones, "eu-gb-1")
+		zones = append(zones, "eu-gb-2")
+		zones = append(zones, "eu-gb-3")
+	} else if region == "au-syd" {
+		zones = append(zones, "au-syd-1")
+		zones = append(zones, "au-syd-2")
+		zones = append(zones, "au-syd-3")
+	}
+
+	return zones, nil
 }
