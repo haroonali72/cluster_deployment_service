@@ -27,11 +27,18 @@ type AKSCluster struct {
 	Status            string                   `json:"status,omitempty" bson:"status,omitempty"`
 	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" validate:"required"`
 	ClusterProperties ManagedClusterProperties `json:"properties" bson:"properties" validate:"required"`
+	Identity          *ManagedClusterIdentity  `json:"identity,omitempty" bson:"identity,omitempty"`
 	ResourceID        string                   `json:"cluster_id,omitempty" bson:"cluster_id,omitempty"`
 	Name              string                   `json:"name,omitempty" bson:"name,omitempty"`
 	Type              string                   `json:"type,omitempty" bson:"type,omitempty"`
 	Location          string                   `json:"location,omitempty" bson:"location,omitempty"`
 	Tags              map[string]string        `json:"tags" bson:"tags"`
+}
+
+// ManagedClusterIdentity identity for the managed cluster.
+type ManagedClusterIdentity struct {
+	// Type - The type of identity used for the managed cluster. Type 'SystemAssigned' will use an implicitly created identity in master components and an auto-created user assigned identity in MC_ resource group in agent nodes. Type 'None' will not use MSI for the managed cluster, service principal will be used instead. Possible values include: 'SystemAssigned', 'None'
+	Type aks.ResourceIdentityType `json:"type,omitempty"`
 }
 
 type ManagedClusterProperties struct {
@@ -72,6 +79,7 @@ type ManagedClusterAgentPoolProfile struct {
 	MinCount          int32             `json:"min_count,omitempty" bson:"min_count,omitempty"`
 	EnableAutoScaling bool              `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
 	Type              aks.AgentPoolType `json:"type,omitempty" bson:"type,omitempty"`
+	NodeLabels        map[string]string `json:"node_labels,omitempty" bson:"node_labels,omitempty"`
 }
 
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
