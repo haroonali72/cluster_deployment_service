@@ -52,8 +52,8 @@ type Data struct {
 }
 
 type Regions struct {
-	Name  string   `json:"name"`
-	Value string   `json:"value"`
+	Name  string   `json:"Name"`
+	Location string   `json:"Location"`
 	Zones []string `json:"zones"`
 }
 
@@ -434,8 +434,8 @@ func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesRe
 func GetRegions(ctx utils.Context) ([]Regions, error) {
 	regionsDetails := []byte(`[
     {
-      "name": "Dallas",
-      "value": "us-south",
+      "Name": "Dallas",
+      "Location": "us-south",
       "zones": [
         "us-south-1",
         "us-south-2",
@@ -443,8 +443,8 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
       ]
     },
     {
-      "name": "Washington DC",
-      "value": "us-east",
+      "Name": "Washington DC",
+      "Location": "us-east",
       "zones": [
         "us-east-1",
         "us-east-2",
@@ -452,8 +452,8 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
       ]
     },
     {
-      "name": "Frankfurt",
-      "value": "eu-de",
+      "Name": "Frankfurt",
+      "Location": "eu-de",
       "zones": [
         "eu-de-1",
         "eu-de-2",
@@ -461,8 +461,8 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
       ]
     },
     {
-      "name": "Tokyo",
-      "value": "jp-tok",
+      "Name": "Tokyo",
+      "Location": "jp-tok",
       "zones": [
         "jp-tok-1",
         "jp-tok-2",
@@ -470,8 +470,8 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
       ]
     },
     {
-      "name": "London",
-      "value": "eu-gb",
+      "Name": "London",
+      "Location": "eu-gb",
       "zones": [
         "eu-gb-1",
         "eu-gb-2",
@@ -479,8 +479,8 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
       ]
     },
     {
-      "name": "Sydney",
-      "value": "au-syd",
+      "Name": "Sydney",
+      "Location": "au-syd",
       "zones": [
         "au-syd-1",
         "au-syd-2",
