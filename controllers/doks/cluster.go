@@ -710,7 +710,7 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 	 */
-	region, err := do.GetRegion(token, projectId, *ctx)
+/*	region, err := do.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -718,6 +718,8 @@ func (c *DOKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+*/
+	region :="nyc1"
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", projectId)
@@ -728,7 +730,7 @@ func (c *DOKSClusterController) GetStatus() {
 	}
 	ctx.SendLogs("DOKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := doks.FetchStatus(doProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
+	cluster, err := doks.FetchStatus(doProfile.Profile, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
