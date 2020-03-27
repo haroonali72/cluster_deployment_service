@@ -59,7 +59,7 @@ func (c *IKSTemplateController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "clusterTemplate", id, "View", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "clusterTemplate", id, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -123,7 +123,7 @@ func (c *IKSTemplateController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.IBM, utils.Context{})
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.IKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -237,7 +237,7 @@ func (c *IKSTemplateController) Post() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.IBM, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.IKS, *ctx)
 	if err != nil {
 		//beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -304,7 +304,7 @@ func (c *IKSTemplateController) Patch() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -345,7 +345,7 @@ func (c *IKSTemplateController) Patch() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.IBM, *ctx)
+	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.IKS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -407,7 +407,7 @@ func (c *IKSTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IBM, "clusterTemplate", id, "Delete", token, utils.Context{})
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "clusterTemplate", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -435,7 +435,7 @@ func (c *IKSTemplateController) Delete() {
 	ctx.SendLogs("IKSTemplateController: Deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	//==========================RBAC Authentication==============================//
 
-	status_code, err := rbac_athentication.DeletePolicy(models.IBM, id, token, utils.Context{})
+	status_code, err := rbac_athentication.DeletePolicy(models.IKS, id, token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -831,7 +831,7 @@ func (c *IKSTemplateController) GetAllTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.IBM, utils.Context{})
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.IKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -887,7 +887,7 @@ func (c *IKSTemplateController) GetAllCustomerTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.IBM, utils.Context{})
+	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.IKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
