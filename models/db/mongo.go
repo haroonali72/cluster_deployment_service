@@ -134,7 +134,9 @@ func GetMongoConf() mongConf {
 	conf.MongoGKECustomerTemplateCollection = "mongo_gke_customer_template_collection"
 	conf.MongoAKSCustomerTemplateCollection = "mongo_aks_customer_template_collection"
 	conf.MongoDOCustomerTemplateCollection = "mongo_do_customer_template_collection"
+	conf.MongoDOKSCustomerTemplateCollection = "mongo_doks_customer_template_collection"
 	conf.MongoIBMCustomerTemplateCollection = "mongo_ibm_customer_template_collection"
+
 	return conf
 
 }
@@ -170,7 +172,8 @@ type mongConf struct {
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
 	MongoDOKSClusterCollection           string
-
+	MongoDOKSTemplateCollection          string
+	MongoDOKSCustomerTemplateCollection  string
 }
 type tlsConfig struct {
 	ClientCert string

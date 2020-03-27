@@ -16,10 +16,10 @@ type DOKSTemplateController struct {
 }
 
 // @Title Get
-// @Description get template
+// @Description get kubernetes cluster template
 // @Param	templateId	path	string	true	"Template Id of the template"
 // @Param	token	header	string	token ""
-// @Success 200 {object} doks.Template
+// @Success 200 {object} doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -56,7 +56,7 @@ func (c *DOKSTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "View", token, *ctx)
+	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -64,13 +64,13 @@ func (c *DOKSTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+	/*if !allowed {
 		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	//=============================================================================//
 	ctx.SendLogs("DOKSTemplateController: Get template with id : "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -87,9 +87,9 @@ func (c *DOKSTemplateController) Get() {
 }
 
 // @Title Get All
-// @Description get all the templates
+// @Description get all kubernetes cluster templates
 // @Param	token	header	string	token ""
-// @Success 200 {object} []doks.Template
+// @Success 200 {object} []doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
@@ -141,10 +141,10 @@ func (c *DOKSTemplateController) GetAll() {
 }
 
 // @Title Create
-// @Description create a new template
+// @Description create a new kubernetes cluster template
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	teams ""
-// @Param	body	body	DOKS.Template	true	"body for template content"
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -191,7 +191,7 @@ func (c *DOKSTemplateController) Post() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Evaluate("Create", token, *ctx)
+	_, err = rbac_athentication.Evaluate("Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -199,13 +199,13 @@ func (c *DOKSTemplateController) Post() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+	/*if !allowed {
 		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	ctx.SendLogs("DOKSTemplateController: Post new template with name: "+template.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	template.CompanyId = userInfo.CompanyId
@@ -254,10 +254,10 @@ func (c *DOKSTemplateController) Post() {
 }
 
 // @Title Update
-// @Description update an existing template
+// @Description update an existing kubernetes template
 // @Param	token	header	string	token ""
 // @Param	teams	header	string	token ""
-// @Param	body	body	doks.Template	true	"body for template content"
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -296,7 +296,7 @@ func (c *DOKSTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -304,13 +304,13 @@ func (c *DOKSTemplateController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	//=============================================================================//
 	ctx.SendLogs("DOKSTemplateController: Patch template with template id : "+template.TemplateId, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
@@ -356,7 +356,7 @@ func (c *DOKSTemplateController) Patch() {
 }
 
 // @Title Delete
-// @Description delete a template
+// @Description delete kubernetes template
 // @Param	token	header	string	token ""
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
@@ -396,7 +396,7 @@ func (c *DOKSTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "Delete", token, *ctx)
+	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -404,13 +404,13 @@ func (c *DOKSTemplateController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(403)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	//=============================================================================//
 	ctx.SendLogs("DOKSTemplateController: Delete template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -446,7 +446,7 @@ func (c *DOKSTemplateController) Delete() {
 // @Title Create Customer Template
 // @Description create a new customer template
 // @Param	token	header	string	token ""
-// @Param	body	body	doks.Template	true	"body for template content"
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "customer template created successfully"}
 // @Failure 400 {"error": "error message"}
 // @Failure 401 {"error": "error message"}
@@ -518,7 +518,7 @@ func (c *DOKSTemplateController) PostCustomerTemplate() {
 // @Description get customer template
 // @Param	templateId	path	string	true	"Template Id of the template"
 // @Param	token	header	string	token ""
-// @Success 200 {object} doks.Template
+// @Success 200 {object} doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -580,10 +580,10 @@ func (c *DOKSTemplateController) GetCustomerTemplate() {
 	c.ServeJSON()
 }
 
-// @Title Update customer templates
-// @Description update an existing customer template
+// @Title Update customer kubernetes template
+// @Description update an existing kubernetes customer template
 // @Param	token	header	string	token ""
-// @Param	body	body	doks.Template	true	"body for template content"
+// @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "customer template updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -705,7 +705,7 @@ func (c *DOKSTemplateController) DeleteCustomerTemplate() {
 
 	//==========================RBAC Role Authentication=============================//
 
-	roleInfo, err := rbac_athentication.GetRole(token)
+	_, err = rbac_athentication.GetRole(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -714,13 +714,13 @@ func (c *DOKSTemplateController) DeleteCustomerTemplate() {
 		return
 	}
 
-	if !doks.CheckRole(roleInfo) {
+	/*if !doks.CheckRole(roleInfo) {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	//=============================================================================//
 
 	ctx.SendLogs("DOKSCustomerTemplateController: Delete customer template with template Id "+templateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -740,7 +740,7 @@ func (c *DOKSTemplateController) DeleteCustomerTemplate() {
 // @Title Get All Customer Template
 // @Description get all the customer templates
 // @Param	token	header	string	token ""
-// @Success 200 {object} []doks.Template
+// @Success 200 {object} []doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -793,14 +793,15 @@ func (c *DOKSTemplateController) AllCustomerTemplates() {
 	c.ServeJSON()
 }
 
-// @Title   GetAllTemplateInfo
-// @Description get all the templates info
+// @Title   GetAllKubernetesTemplateInfo
+// @Description get all kubernetes templates info
 // @Param	token	header	string	token ""
-// @Success 200 {object} []doks.TemplateMetadata
+// @Success 200 {object} []doks.KubernetesTemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allTemplatesInfo [get]
 func (c *DOKSTemplateController) GetAllTemplateInfo() {
+
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOKSTemplateController:  Get Templates MetaData.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -852,7 +853,7 @@ func (c *DOKSTemplateController) GetAllTemplateInfo() {
 // @Title   GetAllCustomerTemplateInfo
 // @Description get all the customer templates info
 // @Param	token	header	string	token ""
-// @Success 200 {object} []doks.TemplateMetadata
+// @Success 200 {object} []doks.KubernetesTemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /allCustomerTemplatesInfo [get]

@@ -21,7 +21,7 @@ type KubernetesTemplate struct {
 	CreationDate     time.Time     				`json:"-" bson:"creation_date"`
 	ModificationDate time.Time     				`json:"-" bson:"modification_date"`
 	NodePools        []*KubernetesNodePoolT  	`json:"node_pools" bson:"node_pools"`
-	NetworkName      string        				`json:"network_name" bson:"network_name"`
+	//NetworkName      string        				`json:"network_name" bson:"network_name"`
 	CompanyId        string        				`json:"company_id" bson:"company_id"`
 	IsCloudplex      bool          				`json:"is_cloudplex" bson:"is_cloudplex"`
 }
@@ -30,7 +30,7 @@ type KubernetesNodePoolT struct {
 	ID                bson.ObjectId  			`json:"-" bson:"_id,omitempty"`
 	NodeCount         int32          			`json:"node_count" bson:"node_count"`
 	Size      		  string            `json:"size,omitempty"  bson:"size"` //machine size
-	Count     int               `json:"count,omitempty"  bson:"count"`
+//	Count     int               `json:"count,omitempty"  bson:"count"`
 //	SecurityGroupId   []string       			`json:"security_group_id" bson:"security_group_id"`
 	AutoScale bool              `json:"auto_scale,omitempty"  bson:"auto_scale"`
 	MinNodes  int               `json:"min_nodes,omitempty"  bson:"min_nodes"`
@@ -144,10 +144,6 @@ func CheckRole(roles types.UserRole) bool {
 }
 func CreateTemplate(template KubernetesTemplate, ctx utils.Context) (error, string) {
 
-	//if template.TemplateId == "" {
-	//	i := rand.Int()
-	//	template.TemplateId = template.Name + strconv.Itoa(i)
-	//}
 
 	_, err := GetTemplate(template.TemplateId, template.CompanyId, ctx)
 	if err == nil { //template found

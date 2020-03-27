@@ -4485,6 +4485,50 @@
                 }
             }
         },
+        "/cluster/iks/getzone/{region}/": {
+            "get": {
+                "tags": [
+                    "cluster/iks"
+                ],
+                "description": "get zone",
+                "operationId": "IKSClusterController.Get Zone",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "Id of region",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ibm.Zone"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/iks/start/{projectId}": {
             "post": {
                 "tags": [
@@ -6939,6 +6983,493 @@
                 }
             }
         },
+        "/template/doks/": {
+            "put": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "update an existing kubernetes template",
+                "operationId": "DOKSTemplateController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "create a new kubernetes cluster template",
+                "operationId": "DOKSTemplateController.Create",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/all": {
+            "get": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "get all kubernetes cluster templates",
+                "operationId": "DOKSTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/doks.KubernetesTemplate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/allCustomerTemplates": {
+            "get": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "get all the customer templates",
+                "operationId": "DOKSTemplateController.Get All Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/doks.KubernetesTemplate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/allCustomerTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "get all the customer templates info",
+                "operationId": "DOKSTemplateController.GetAllCustomerTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/doks.KubernetesTemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "get all kubernetes templates info",
+                "operationId": "DOKSTemplateController.GetAllKubernetesTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/doks.KubernetesTemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/customerTemplate": {
+            "put": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "update an existing kubernetes customer template",
+                "operationId": "DOKSTemplateController.Update customer kubernetes template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "create a new customer template",
+                "operationId": "DOKSTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error message\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/customerTemplate/{templateId}": {
+            "get": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "get customer template",
+                "operationId": "DOKSTemplateController.Get customer template",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesTemplate"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "delete a customer template",
+                "operationId": "DOKSTemplateController.Delete customer template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/{templateId}": {
+            "delete": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "delete kubernetes template",
+                "operationId": "DOKSTemplateController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/doks/{templateId}/": {
+            "get": {
+                "tags": [
+                    "template/doks"
+                ],
+                "description": "get kubernetes cluster template",
+                "operationId": "DOKSTemplateController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesTemplate"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/": {
             "put": {
                 "tags": [
@@ -8588,23 +9119,23 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13385.0xc000f3ec60.false": {
+        "13266.0xc001628bd0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc00123a780.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "1559.string": {
+        "36190.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc001586ed0.false": {
+        "442.0xc0015fae70.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc0015b43f0.false": {
+        "605.0xc000f51500.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "637.0xc001256ff0.false": {
             "title": "false",
             "type": "object"
         },
@@ -8688,7 +9219,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/36190.string"
                 },
                 "type": {
                     "type": "string"
@@ -8930,7 +9461,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000f3ec60.false"
+                    "$ref": "#/definitions/605.0xc000f51500.false"
                 },
                 "name": {
                     "type": "string"
@@ -9495,7 +10026,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc00123a780.false"
+                    "$ref": "#/definitions/637.0xc001256ff0.false"
                 },
                 "name": {
                     "type": "string"
@@ -9806,9 +10337,6 @@
                 "name": {
                     "type": "string"
                 },
-                "status": {
-                    "$ref": "#/definitions/doks.KubernetesNodeStatus"
-                },
                 "updated_at": {
                     "type": "string",
                     "format": "datetime"
@@ -9862,14 +10390,75 @@
                 }
             }
         },
-        "doks.KubernetesNodeStatus": {
-            "title": "KubernetesNodeStatus",
+        "doks.KubernetesNodePoolT": {
+            "title": "KubernetesNodePoolT",
             "type": "object",
             "properties": {
-                "message": {
+                "auto_scale": {
+                    "type": "boolean"
+                },
+                "max_nodes": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "min_nodes": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.KubernetesNode"
+                    }
+                },
+                "size": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.KubernetesTemplate": {
+            "title": "KubernetesTemplate",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
                     "type": "string"
                 },
-                "state": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.KubernetesNodePoolT"
+                    }
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.KubernetesTemplateMetadata": {
+            "title": "KubernetesTemplateMetadata",
+            "type": "object",
+            "properties": {
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "pool_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "template_id": {
                     "type": "string"
                 }
             }
@@ -11018,6 +11607,10 @@
             "title": "Versions",
             "type": "object"
         },
+        "ibm.Zone": {
+            "title": "Zone",
+            "type": "object"
+        },
         "key_utils.AWSKey": {
             "title": "AWSKey",
             "type": "object",
@@ -11178,7 +11771,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc0015b43f0.false"
+                    "$ref": "#/definitions/442.0xc0015fae70.false"
                 },
                 "name": {
                     "type": "string"
@@ -11306,7 +11899,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001586ed0.false"
+                    "$ref": "#/definitions/13266.0xc001628bd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11441,6 +12034,10 @@
         {
             "name": "cluster/iks",
             "description": "Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
+        },
+        {
+            "name": "template/doks",
+            "description": "Operations about DOKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
         },
         {
             "name": "template/op",
