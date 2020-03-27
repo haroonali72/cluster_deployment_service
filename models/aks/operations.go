@@ -420,6 +420,7 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 		Location: &c.Location,
 		ManagedClusterProperties: &containerservice.ManagedClusterProperties{
 			DNSPrefix:               to.StringPtr(c.Name + "-dns"),
+			KubernetesVersion:       &c.ClusterProperties.KubernetesVersion,
 			AgentPoolProfiles:       cloud.generateClusterNodePools(c),
 			ServicePrincipalProfile: cloud.generateServicePrincipal(),
 			APIServerAccessProfile:  cloud.generateApiServerAccessProfile(c),
