@@ -179,6 +179,7 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	}
 
 	request := cloud.generateClusterCreateRequest(aksCluster)
+	cloud.ProjectId = aksCluster.ProjectId
 	networkInformation := cloud.getAzureNetwork(token, ctx)
 
 	if len(networkInformation.Definition) > 0 {
@@ -374,10 +375,8 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 	}
 }
 
-func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.ManagedCluster {
+func (cloud *AKS) generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAgentPoolProfile {
 	var AKSNodePools []containerservice.ManagedClusterAgentPoolProfile
-	var AKSapiServerAccessProfile containerservice.ManagedClusterAPIServerAccessProfile
-
 	for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
 		var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
 		AKSnodepool.Name = &nodepool.Name
@@ -388,27 +387,43 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			AKSnodepool.EnableAutoScaling = &nodepool.EnableAutoScaling
 			AKSnodepool.MinCount = &nodepool.MinCount
 			AKSnodepool.MaxCount = &nodepool.MaxCount
+			AKSnodepool.Type = "VirtualMachineScaleSets"
 		}
 		AKSNodePools = append(AKSNodePools, AKSnodepool)
 	}
 
+	return &AKSNodePools
+}
+
+func (cloud *AKS) generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClusterAPIServerAccessProfile {
+	var AKSapiServerAccessProfile containerservice.ManagedClusterAPIServerAccessProfile
+
 	if c.ClusterProperties.APIServerAccessProfile.EnablePrivateCluster {
 		AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
 	} else {
-		AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
+		AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(false)
 	}
 
+	return &AKSapiServerAccessProfile
+}
+
+func (cloud *AKS) generateServicePrincipal() *containerservice.ManagedClusterServicePrincipalProfile {
 	var AKSservicePrincipal containerservice.ManagedClusterServicePrincipalProfile
 	AKSservicePrincipal.ClientID = &cloud.ID
 	AKSservicePrincipal.Secret = &cloud.Key
+	return &AKSservicePrincipal
+}
+
+func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.ManagedCluster {
 	request := containerservice.ManagedCluster{
 		Name:     &c.Name,
 		Location: &c.Location,
 		ManagedClusterProperties: &containerservice.ManagedClusterProperties{
 			DNSPrefix:               to.StringPtr(c.Name + "-dns"),
-			AgentPoolProfiles:       &AKSNodePools,
-			ServicePrincipalProfile: &AKSservicePrincipal,
-			APIServerAccessProfile:  &AKSapiServerAccessProfile,
+			KubernetesVersion:       &c.ClusterProperties.KubernetesVersion,
+			AgentPoolProfiles:       cloud.generateClusterNodePools(c),
+			ServicePrincipalProfile: cloud.generateServicePrincipal(),
+			APIServerAccessProfile:  cloud.generateApiServerAccessProfile(c),
 			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
 		},
 	}

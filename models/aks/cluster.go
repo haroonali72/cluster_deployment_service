@@ -61,16 +61,17 @@ type NetworkProfileType struct {
 
 // ManagedClusterAgentPoolProfile profile for the container service agent pool.
 type ManagedClusterAgentPoolProfile struct {
-	Name              string          `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
-	Count             int32           `json:"count,omitempty" bson:"count,omitempty" validate:"required"`
-	VMSize            aks.VMSizeTypes `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
-	OsDiskSizeGB      int32           `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
-	VnetSubnetID      string          `json:"subnet_id" bson:"subnet_id"`
-	MaxPods           int32           `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
-	OsType            aks.OSType      `json:"os_type,omitempty" bson:"os_type,omitempty"`
-	MaxCount          int32           `json:"max_count,omitempty" bson:"max_count,omitempty"`
-	MinCount          int32           `json:"min_count,omitempty" bson:"min_count,omitempty"`
-	EnableAutoScaling bool            `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
+	Name              string            `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
+	Count             int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required"`
+	VMSize            aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
+	OsDiskSizeGB      int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
+	VnetSubnetID      string            `json:"subnet_id" bson:"subnet_id"`
+	MaxPods           int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
+	OsType            aks.OSType        `json:"os_type,omitempty" bson:"os_type,omitempty"`
+	MaxCount          int32             `json:"max_count,omitempty" bson:"max_count,omitempty"`
+	MinCount          int32             `json:"min_count,omitempty" bson:"min_count,omitempty"`
+	EnableAutoScaling bool              `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
+	Type              aks.AgentPoolType `json:"type,omitempty" bson:"type,omitempty"`
 }
 
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
