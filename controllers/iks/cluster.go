@@ -1140,7 +1140,7 @@ func (c *IKSClusterController) FetchZones() {
 		c.ServeJSON()
 		return
 	}
-	region := c.Ctx.Input.Header("region")
+	region := c.Ctx.Input.Header(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region must not be empty"}
