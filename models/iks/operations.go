@@ -6,10 +6,13 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 func GetIBM(credentials vault.IBMCredentials) (IBM, error) {
@@ -92,41 +95,18 @@ type Versions struct {
 }
 
 func (cloud *IBM) init(region string, ctx utils.Context) error {
-
-	client := utils.InitReq()
-
-	m := make(map[string]string)
-	m["Content-Type"] = "application/x-www-form-urlencoded"
-	m["Accept"] = "application/json"
-
-	payloadSlice := []string{"grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=", cloud.APIKey}
-	bytes_, err := json.Marshal(payloadSlice)
-
+	payloadSlice := "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=" + cloud.APIKey
+	res, err := http.Post(models.IBM_IAM_Endpoint, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(payloadSlice)))
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		log.Fatalln(err)
 	}
 
-	// Create a new request given a method, URL, and optional body.
-	req, err := utils.CreatePostRequest(bytes_, models.IBM_IAM_Endpoint)
-
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	// Adding headers to the request
-	utils.SetHeaders(req, m)
-
-	// Requesting server
-	res, err := client.SendRequest(req)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if res.StatusCode != 200 {
+		ctx.SendLogs("Error while getting IBM auth token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Error while getting IBM auth token")
 	}
 	defer res.Body.Close()
 
-	// Reading response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -136,7 +116,7 @@ func (cloud *IBM) init(region string, ctx utils.Context) error {
 	// body is []byte format
 	// parse the JSON-encoded body and stores the result in the struct object for the res
 	var token Token
-	json.Unmarshal([]byte(body), &token)
+	json.Unmarshal(body, &token)
 
 	// saving the token
 	cloud.IAMToken = token.TokenType + " " + token.AccessToken

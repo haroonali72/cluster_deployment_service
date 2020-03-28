@@ -858,7 +858,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	region := c.GetString("region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
