@@ -922,7 +922,7 @@ func (c *IKSClusterController) FetchRegions() {
 
 // @Title Get Kube Versions
 // @Description fetch version of kubernetes cluster
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	region	path	string	true	"selected region value"
 // @Param	token	header	string	token ""
 // @Success 200 {object} []iks.Versions
 // @Failure 400 {"error": "error msg"}
@@ -931,10 +931,10 @@ func (c *IKSClusterController) FetchRegions() {
 // @router /getallkubeversions/ [get]
 func (c *IKSClusterController) FetchKubeVersions() {
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	region := c.GetString(":region")
+	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -957,21 +957,13 @@ func (c *IKSClusterController) FetchKubeVersions() {
 	}
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("IKSClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	region, err := iks.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -984,7 +976,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 		return
 	}
 
-	ctx.SendLogs("IKSClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting All Machines. "+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	machineTypes, err := iks.GetAllVersions(ibmProfile, *ctx)
 	if err != nil {
