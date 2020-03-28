@@ -64,7 +64,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "FetchKubeVersions",
-			Router:           `/getallkubeversions/`,
+			Router:           `/getallkubeversions/:region`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

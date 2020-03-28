@@ -88,10 +88,14 @@ type InstanceProfile struct {
 	Family string `json:"family"`
 	Name   string `json:"name"`
 }
+
 type Versions struct {
-	Major string `json:"major"`
-	Minor string `json:"minor"`
-	Patch string `json:"patch"`
+	Kubernetes []Kubernetes `json:"kubernetes"`
+}
+type Kubernetes struct {
+	Major int `json:"major"`
+	Minor int `json:"minor"`
+	Patch int `json:"patch"`
 }
 
 func (cloud *IBM) init(region string, ctx utils.Context) error {
@@ -348,7 +352,7 @@ func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx ut
 	return nil
 }
 func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, error) {
-	url := "https://" + cloud.Region + models.IBM_ALL_Kube_Version_Endpoint + models.IBM_Version
+	url := "https://" + cloud.Region + ".containers.cloud.ibm.com/global/v2/getVersions" + models.IBM_Version
 
 	req, _ := utils.CreateGetRequest(url)
 
@@ -372,15 +376,15 @@ func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, error) {
 
 	// body is []byte format
 	// parse the JSON-encoded body and stores the result in the struct object for the res
-	var versions Versions
-	err = json.Unmarshal(body, &versions)
+	var kube Versions
+	err = json.Unmarshal(body, &kube)
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	return versions, nil
+	return kube, nil
 }
 func (cloud *IBM) GetSubnets(pool *NodePool, network types.IBMNetwork) string {
 	for _, definition := range network.Definition {

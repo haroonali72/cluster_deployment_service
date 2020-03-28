@@ -49,8 +49,8 @@ type ManagedClusterProperties struct {
 	AgentPoolProfiles      []ManagedClusterAgentPoolProfile     `json:"agent_pool,omitempty" bson:"agent_pool,omitempty"`
 	APIServerAccessProfile ManagedClusterAPIServerAccessProfile `json:"api_server_access_profile,omitempty" bson:"api_server_access_profile,omitempty"`
 	EnableRBAC             bool                                 `json:"enable_rbac,omitempty" bson:"enable_rbac,omitempty"`
-	HttpApplicationRouting bool                                 `json:"http_application_routing,omitempty" bson:"http_application_routing,omitempty"`
-	ServicePrincipal       bool                                 `json:"service_principal,omitempty" bson:"service_principal,omitempty"`
+	IsHttpRouting          bool                                 `json:"is_http_routing,omitempty" bson:"is_http_routing,omitempty"`
+	IsServicePrincipal     bool                                 `json:"is_service_principal,omitempty" bson:"is_service_principal,omitempty"`
 	ClientID               string                               `json:"client_id,omitempty" bson:"client_id,omitempty"`
 	Secret                 string                               `json:"secret,omitempty" bson:"secret,omitempty"`
 	ClusterTags            map[string]string                    `json:"cluster_tags" bson:"cluster_tags"`
