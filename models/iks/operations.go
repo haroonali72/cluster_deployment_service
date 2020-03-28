@@ -484,6 +484,14 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) erro
 		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+	for {
+		response, err := cloud.fetchStatus(cluster, ctx, "")
+		if err == nil && response.State == "deleting" {
+			beego.Error(err.Error())
+			return err
+		}
+		break
+	}
 	return nil
 }
 func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, error) {
