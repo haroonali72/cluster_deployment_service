@@ -52,9 +52,9 @@ type Data struct {
 }
 
 type Regions struct {
-	Name  string   `json:"name"`
-	Value string   `json:"value"`
-	Zones []string `json:"zones"`
+	Name     string   `json:"Name"`
+	Location string   `json:"Location"`
+	Zones    []string `json:"Zones"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -434,54 +434,54 @@ func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesRe
 func GetRegions(ctx utils.Context) ([]Regions, error) {
 	regionsDetails := []byte(`[
     {
-      "name": "Dallas",
-      "value": "us-south",
-      "zones": [
+      "Name": "Dallas",
+      "Location": "us-south",
+      "Zones": [
         "us-south-1",
         "us-south-2",
         "us-south-3"
       ]
     },
     {
-      "name": "Washington DC",
-      "value": "us-east",
-      "zones": [
+      "Name": "Washington DC",
+      "Location": "us-east",
+      "Zones": [
         "us-east-1",
         "us-east-2",
         "us-east-3"
       ]
     },
     {
-      "name": "Frankfurt",
-      "value": "eu-de",
-      "zones": [
+      "Name": "Frankfurt",
+      "Location": "eu-de",
+      "Zones": [
         "eu-de-1",
         "eu-de-2",
         "eu-de-3"
       ]
     },
     {
-      "name": "Tokyo",
-      "value": "jp-tok",
-      "zones": [
+      "Name": "Tokyo",
+      "Location": "jp-tok",
+      "Zones": [
         "jp-tok-1",
         "jp-tok-2",
         "jp-tok-3"
       ]
     },
     {
-      "name": "London",
-      "value": "eu-gb",
-      "zones": [
+      "Name": "London",
+      "Location": "eu-gb",
+      "Zones": [
         "eu-gb-1",
         "eu-gb-2",
         "eu-gb-3"
       ]
     },
     {
-      "name": "Sydney",
-      "value": "au-syd",
-      "zones": [
+      "Name": "Sydney",
+      "Location": "au-syd",
+      "Zones": [
         "au-syd-1",
         "au-syd-2",
         "au-syd-3"
@@ -509,13 +509,13 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, erro
 		return Versions{}, err
 	}
 
-	machineTypes, err := iks.GetAllVersions(ctx)
+	versions, err := iks.GetAllVersions(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	return machineTypes, nil
+	return versions, nil
 }
 func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
