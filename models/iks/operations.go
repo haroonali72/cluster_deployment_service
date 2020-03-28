@@ -341,40 +341,20 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		}
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	// body is []byte format
-	// parse the JSON-encoded body and stores the result in the struct object for the res
-	var response WorkerPoolResponse
-	err = json.Unmarshal([]byte(body), &response)
-
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	subentId := cloud.GetSubnets(pool, network)
-	if subentId == "" {
-		return errors.New("error in gettinh subnet id")
-	}
-	err = cloud.AddZonesToPools(rg, response.ID, pool.SubnetID, clusterID, ctx)
+	err = cloud.AddZonesToPools(rg, pool.Name, pool.SubnetID, clusterID, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
 }
-func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx utils.Context) error {
+func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, clusterID string, ctx utils.Context) error {
 
 	zoneInput := ZoneInput{
 		Cluster:    clusterID,
 		Id:         cloud.Region,
 		Subnet:     subnetID,
-		WorkerPool: poolID,
+		WorkerPool: poolName,
 	}
 
 	bytes, err := json.Marshal(zoneInput)
@@ -400,8 +380,26 @@ func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx ut
 	}
 
 	if res.StatusCode != 201 {
-		ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		if res.StatusCode == 409 {
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			var ibmResponse IBMResponse
+			err = json.Unmarshal(body, &ibmResponse)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			if !strings.Contains(ibmResponse.Description, "The zone is already part of the worker pool") {
+				ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+		} else {
+			ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 	return nil
 }
