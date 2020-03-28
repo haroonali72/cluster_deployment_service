@@ -134,7 +134,7 @@ func RegisterCustomerTemplate(awsTemplates []aws.Template, azureTemplates []azur
 	}
 
 	if len(ibmInterface) > 0 {
-		err := db.InsertManyInMongo(s.MongoIBMTemplateCollection, ibmInterface)
+		err := db.InsertManyInMongo(s.MongoIKSTemplateCollection, ibmInterface)
 		if err != nil {
 			ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -185,7 +185,7 @@ func GetCustomerTemplate(ctx utils.Context) ([]aws.Template, []azure.Template, [
 	}
 
 	var ibmTemplates []iks.Template
-	c = session.DB(s.MongoDb).C(s.MongoIBMCustomerTemplateCollection)
+	c = session.DB(s.MongoDb).C(s.MongoIKSCustomerTemplateCollection)
 	err = c.Find(bson.M{}).All(&ibmTemplates)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -225,7 +225,7 @@ func CreatePolicy(awsTemplates []aws.Template, azureTemplates []azure.Template, 
 	}
 
 	for _, template := range ibmTemplates {
-		statusCode, err := rbac.CreatePolicy(template.TemplateId, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.IBM, ctx)
+		statusCode, err := rbac.CreatePolicy(template.TemplateId, token, ctx.Data.UserId, ctx.Data.Company, models.POST, nil, models.IKS, ctx)
 		if err != nil || statusCode != 200 {
 			return errors.New("error occured in creation policy")
 		}

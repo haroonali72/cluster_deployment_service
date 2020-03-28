@@ -10,6 +10,8 @@ import (
 	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
+	"strings"
+	"time"
 )
 
 func GetIBM(credentials vault.IBMCredentials) (IBM, error) {
@@ -18,6 +20,11 @@ func GetIBM(credentials vault.IBMCredentials) (IBM, error) {
 	}, nil
 }
 
+type IBMResponse struct {
+	IncidentId  string `json:"incidentID"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+}
 type IBM struct {
 	APIKey       string
 	IAMToken     string
@@ -76,7 +83,7 @@ type KubeClusterStatus struct {
 	Region            string `json:"region"`
 	ResourceGroupName string `json:"resourceGroupName"`
 	State             string `json:"state"`
-	WorkerCount       string `json:"workerCount"`
+	WorkerCount       int    `json:"workerCount"`
 }
 type AllInstancesResponse struct {
 	Profile []InstanceProfile `json:"profiles"`
@@ -144,7 +151,6 @@ func (cloud *IBM) init(region string, ctx utils.Context) error {
 	cloud.RefreshToken = token.RefreshToken
 	return nil
 }
-
 func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	var ibmNetwork types.IBMNetwork
@@ -171,6 +177,20 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		return cluster, err
 	}
 	cluster.ClusterId = clusterId
+
+	for {
+		response, err := cloud.fetchStatus(&cluster, ctx, companyId)
+		if err != nil {
+			beego.Error(err.Error())
+			return cluster, err
+		}
+		if response.State == "normal" {
+			break
+		} else {
+			time.Sleep(60 * time.Second)
+		}
+	}
+
 	for index, pool := range cluster.NodePools {
 		if index == 0 {
 			continue
@@ -299,8 +319,26 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	}
 
 	if res.StatusCode != 201 {
-		ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		if res.StatusCode == 409 {
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			var ibmResponse IBMResponse
+			err = json.Unmarshal(body, &ibmResponse)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			if !strings.Contains(ibmResponse.Description, "already exits") {
+				ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+		} else {
+			ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
@@ -452,7 +490,7 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) erro
 }
 func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, error) {
 
-	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?" + cluster.ClusterId)
+	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?cluster=" + cluster.ClusterId)
 
 	m := make(map[string]string)
 
