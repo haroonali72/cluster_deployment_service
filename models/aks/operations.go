@@ -426,13 +426,16 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 	return &AKSNodePools
 }
 
-func (cloud *AKS) generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClusterAPIServerAccessProfile {
+func generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClusterAPIServerAccessProfile {
 	var AKSapiServerAccessProfile containerservice.ManagedClusterAPIServerAccessProfile
 
-	if c.ClusterProperties.APIServerAccessProfile.EnablePrivateCluster {
-		AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
-	} else {
-		AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(false)
+	if c.ClusterProperties.IsAdvanced {
+		if c.ClusterProperties.APIServerAccessProfile.EnablePrivateCluster {
+			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
+		} else {
+			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(false)
+		}
+		//AKSapiServerAccessProfile.AuthorizedIPRanges =
 	}
 
 	return &AKSapiServerAccessProfile
@@ -454,8 +457,8 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			KubernetesVersion:       generateKubernetesVersion(c),
 			AgentPoolProfiles:       generateClusterNodePools(c),
 			ServicePrincipalProfile: cloud.generateServicePrincipal(),
-			APIServerAccessProfile:  cloud.generateApiServerAccessProfile(c),
-			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
+			//APIServerAccessProfile:  cloud.generateApiServerAccessProfile(c),
+			EnableRBAC: &c.ClusterProperties.EnableRBAC,
 		},
 	}
 	return &request
