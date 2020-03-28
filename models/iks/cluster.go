@@ -52,9 +52,9 @@ type Data struct {
 }
 
 type Regions struct {
-	Name  string   `json:"Name"`
+	Name     string   `json:"Name"`
 	Location string   `json:"Location"`
-	Zones []string `json:"Zones"`
+	Zones    []string `json:"Zones"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -509,13 +509,13 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, erro
 		return Versions{}, err
 	}
 
-	machineTypes, err := iks.GetAllVersions(ctx)
+	versions, err := iks.GetAllVersions(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	return machineTypes, nil
+	return versions, nil
 }
 func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company

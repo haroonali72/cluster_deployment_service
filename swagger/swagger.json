@@ -4355,7 +4355,7 @@
                 }
             }
         },
-        "/cluster/iks/getallkubeversions/": {
+        "/cluster/iks/getallkubeversions/{region}": {
             "get": {
                 "tags": [
                     "cluster/iks"
@@ -4367,6 +4367,13 @@
                         "in": "path",
                         "name": "region",
                         "description": "selected region value",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
@@ -9119,15 +9126,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13279.0xc001579f50.false": {
+        "13279.0xc00158a810.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000f80a20.false": {
+        "13385.0xc000f8d2c0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc00128a540.false": {
+        "13431.0xc001292de0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9135,15 +9142,15 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc001606cc0.false": {
+        "434.0xc0015f5500.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc00155e570.false": {
+        "518.0xc00155ae10.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00162a1e0.false": {
+        "5960.0xc001622a20.false": {
             "title": "false",
             "type": "object"
         },
@@ -9397,13 +9404,16 @@
                 "fqdn": {
                     "type": "string"
                 },
-                "http_application_routing": {
-                    "type": "boolean"
-                },
                 "is_advanced": {
                     "type": "boolean"
                 },
                 "is_expert": {
+                    "type": "boolean"
+                },
+                "is_http_routing": {
+                    "type": "boolean"
+                },
+                "is_service_principal": {
                     "type": "boolean"
                 },
                 "kubernetes_version": {
@@ -9417,9 +9427,6 @@
                 },
                 "secret": {
                     "type": "string"
-                },
-                "service_principal": {
-                    "type": "boolean"
                 }
             }
         },
@@ -9513,7 +9520,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000f80a20.false"
+                    "$ref": "#/definitions/13385.0xc000f8d2c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10078,7 +10085,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc00128a540.false"
+                    "$ref": "#/definitions/13431.0xc001292de0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11663,7 +11670,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13279.0xc001579f50.false"
+                    "$ref": "#/definitions/13279.0xc00158a810.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11733,6 +11740,21 @@
                 }
             }
         },
+        "iks.Kubernetes": {
+            "title": "Kubernetes",
+            "type": "object",
+            "properties": {
+                "major": {
+                    "type": "string"
+                },
+                "minor": {
+                    "type": "string"
+                },
+                "patch": {
+                    "type": "string"
+                }
+            }
+        },
         "iks.NodePool": {
             "title": "NodePool",
             "type": "object",
@@ -11796,7 +11818,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc00155e570.false"
+                    "$ref": "#/definitions/518.0xc00155ae10.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11853,14 +11875,8 @@
             "title": "Versions",
             "type": "object",
             "properties": {
-                "major": {
-                    "type": "string"
-                },
-                "minor": {
-                    "type": "string"
-                },
-                "patch": {
-                    "type": "string"
+                "kubernetes": {
+                    "$ref": "#/definitions/iks.Kubernetes"
                 }
             }
         },
@@ -12028,7 +12044,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00162a1e0.false"
+                    "$ref": "#/definitions/5960.0xc001622a20.false"
                 },
                 "name": {
                     "type": "string"
@@ -12156,7 +12172,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001606cc0.false"
+                    "$ref": "#/definitions/434.0xc0015f5500.false"
                 },
                 "name": {
                     "type": "string"

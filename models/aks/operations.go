@@ -435,16 +435,29 @@ func generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClust
 		} else {
 			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(false)
 		}
-		//AKSapiServerAccessProfile.AuthorizedIPRanges =
+
+		var authIpRanges []string
+		for _, val := range c.ClusterProperties.APIServerAccessProfile.AuthorizedIPRanges {
+			authIpRanges = append(authIpRanges, val)
+		}
+
+		AKSapiServerAccessProfile.AuthorizedIPRanges = &authIpRanges
+	} else {
+		AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(false)
 	}
 
 	return &AKSapiServerAccessProfile
 }
 
-func (cloud *AKS) generateServicePrincipal() *containerservice.ManagedClusterServicePrincipalProfile {
+func (cloud *AKS) generateServicePrincipal(c AKSCluster) *containerservice.ManagedClusterServicePrincipalProfile {
 	var AKSservicePrincipal containerservice.ManagedClusterServicePrincipalProfile
-	AKSservicePrincipal.ClientID = &cloud.ID
-	AKSservicePrincipal.Secret = &cloud.Key
+	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsServicePrincipal {
+		AKSservicePrincipal.ClientID = &c.ClusterProperties.ClientID
+		AKSservicePrincipal.Secret = &c.ClusterProperties.Secret
+	} else {
+		AKSservicePrincipal.ClientID = &cloud.ID
+		AKSservicePrincipal.Secret = &cloud.Key
+	}
 	return &AKSservicePrincipal
 }
 
@@ -456,12 +469,28 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			DNSPrefix:               generateDnsPrefix(c),
 			KubernetesVersion:       generateKubernetesVersion(c),
 			AgentPoolProfiles:       generateClusterNodePools(c),
-			ServicePrincipalProfile: cloud.generateServicePrincipal(),
-			//APIServerAccessProfile:  cloud.generateApiServerAccessProfile(c),
-			EnableRBAC: &c.ClusterProperties.EnableRBAC,
+			ServicePrincipalProfile: cloud.generateServicePrincipal(c),
+			APIServerAccessProfile:  generateApiServerAccessProfile(c),
+			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
+			AddonProfiles:           generateAddonProfiles(c),
 		},
 	}
 	return &request
+}
+
+func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClusterAddonProfile {
+	AKSaddon := make(map[string]*containerservice.ManagedClusterAddonProfile)
+	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsHttpRouting {
+		var httpAddOn containerservice.ManagedClusterAddonProfile
+		httpAddOn.Enabled = to.BoolPtr(true)
+		AKSaddon["httpApplicationRouting"] = &httpAddOn
+	} else {
+		var httpAddOn containerservice.ManagedClusterAddonProfile
+		httpAddOn.Enabled = to.BoolPtr(false)
+		AKSaddon["httpApplicationRouting"] = &httpAddOn
+	}
+
+	return AKSaddon
 }
 
 func generateKubernetesVersion(c AKSCluster) *string {
