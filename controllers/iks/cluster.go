@@ -820,12 +820,13 @@ func (c *IKSClusterController) TerminateCluster() {
 // @Title Get All Instance List
 // @Description get all instance list
 // @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
+// @Param	region	path	string	true	"region of the cloud"
 // @Param	token	header	string	token ""
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getallmachines/:projectId/ [get]
+// @router /getallmachines/:region/ [get]
 func (c *IKSClusterController) GetAllMachineTypes() {
 
 	token := c.Ctx.Input.Header("token")
@@ -857,10 +858,10 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	region, err := iks.GetRegion(token, "", *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	region := c.GetString("region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1123,7 +1124,7 @@ func (c *IKSClusterController) FetchZones() {
 		c.ServeJSON()
 		return
 	}
-	region := c.Ctx.Input.Header(":region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region must not be empty"}
