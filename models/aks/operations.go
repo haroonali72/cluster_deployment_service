@@ -371,25 +371,56 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 		Name:       *v.Name,
 		Type:       *v.Type,
 		Location:   *v.Location,
-		Tags:       tags,
+		//Tags:       tags,
 	}
 }
 
-func (cloud *AKS) generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAgentPoolProfile {
+func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAgentPoolProfile {
 	var AKSNodePools []containerservice.ManagedClusterAgentPoolProfile
-	for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
-		var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
-		AKSnodepool.Name = &nodepool.Name
-		AKSnodepool.Count = &nodepool.Count
-		AKSnodepool.VnetSubnetID = &nodepool.VnetSubnetID
-		AKSnodepool.VMSize = nodepool.VMSize
-		if nodepool.EnableAutoScaling {
-			AKSnodepool.EnableAutoScaling = &nodepool.EnableAutoScaling
-			AKSnodepool.MinCount = &nodepool.MinCount
-			AKSnodepool.MaxCount = &nodepool.MaxCount
-			AKSnodepool.Type = "VirtualMachineScaleSets"
+	if c.ClusterProperties.IsAdvanced {
+		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
+			AKSnodepool.Name = &nodepool.Name
+			AKSnodepool.Count = &nodepool.Count
+			AKSnodepool.OsType = nodepool.OsType
+			AKSnodepool.VMSize = nodepool.VMSize
+			AKSnodepool.OsDiskSizeGB = &nodepool.OsDiskSizeGB
+			AKSnodepool.MaxPods = &nodepool.MaxPods
+
+			nodelabels := make(map[string]*string)
+			for key, value := range nodepool.NodeLabels {
+				nodelabels[key] = &value
+			}
+			AKSnodepool.NodeLabels = nodelabels
+
+			var nodeTaints []string
+			for key, value := range nodepool.NodeTaints {
+				nodeTaints = append(nodeTaints, key+"="+value)
+			}
+			AKSnodepool.NodeTaints = &nodeTaints
+
+			if nodepool.EnableAutoScaling {
+				AKSnodepool.EnableAutoScaling = &nodepool.EnableAutoScaling
+				AKSnodepool.MinCount = &nodepool.MinCount
+				AKSnodepool.MaxCount = &nodepool.MaxCount
+				AKSnodepool.Type = "VirtualMachineScaleSets"
+			}
+			AKSNodePools = append(AKSNodePools, AKSnodepool)
 		}
-		AKSNodePools = append(AKSNodePools, AKSnodepool)
+	} else {
+		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
+			AKSnodepool.Name = &nodepool.Name
+			AKSnodepool.Count = &nodepool.Count
+			AKSnodepool.OsType = "Linux"
+			AKSnodepool.VMSize = nodepool.VMSize
+
+			nodelabels := make(map[string]*string)
+			nodelabels["AKS-Custer"] = to.StringPtr(c.ProjectId)
+			AKSnodepool.NodeLabels = nodelabels
+
+			AKSNodePools = append(AKSNodePools, AKSnodepool)
+		}
 	}
 
 	return &AKSNodePools
@@ -419,15 +450,31 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 		Name:     &c.Name,
 		Location: &c.Location,
 		ManagedClusterProperties: &containerservice.ManagedClusterProperties{
-			DNSPrefix:               to.StringPtr(c.Name + "-dns"),
-			KubernetesVersion:       &c.ClusterProperties.KubernetesVersion,
-			AgentPoolProfiles:       cloud.generateClusterNodePools(c),
+			DNSPrefix:               generateDnsPrefix(c),
+			KubernetesVersion:       generateKubernetesVersion(c),
+			AgentPoolProfiles:       generateClusterNodePools(c),
 			ServicePrincipalProfile: cloud.generateServicePrincipal(),
 			APIServerAccessProfile:  cloud.generateApiServerAccessProfile(c),
 			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
 		},
 	}
 	return &request
+}
+
+func generateKubernetesVersion(c AKSCluster) *string {
+	if c.ClusterProperties.IsAdvanced {
+		return to.StringPtr(c.ClusterProperties.KubernetesVersion)
+	} else {
+		return to.StringPtr("1.15.10")
+	}
+}
+
+func generateDnsPrefix(c AKSCluster) *string {
+	if c.ClusterProperties.IsAdvanced {
+		return to.StringPtr(c.ClusterProperties.DNSPrefix + "-dns")
+	} else {
+		return to.StringPtr(c.Name + "-dns")
+	}
 }
 
 func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) error {
