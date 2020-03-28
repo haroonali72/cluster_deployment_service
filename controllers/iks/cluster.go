@@ -820,6 +820,7 @@ func (c *IKSClusterController) TerminateCluster() {
 // @Title Get All Instance List
 // @Description get all instance list
 // @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
+// @Param	region	path	string	true	"region of the cloud"
 // @Param	token	header	string	token ""
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 401 {"error": "error msg"}
@@ -857,25 +858,33 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	//ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
-	//if err != nil {
-	//	c.Ctx.Output.SetStatus(500)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
+	region := c.GetString("region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	ctx.SendLogs("IKSClusterController: Getting All Machines. "+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	//machineTypes, err := iks.GetAllMachines(ibmProfile, *ctx)
-	//if err != nil {
-	//	c.Ctx.Output.SetStatus(500)
-	//	c.Data["json"] = map[string]string{"error": err.Error()}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//c.Data["json"] = machineTypes
-	//c.ServeJSON()
+	machineTypes, err := iks.GetAllMachines(ibmProfile, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = machineTypes
+	c.ServeJSON()
 }
 
 // @Title Get Regions
