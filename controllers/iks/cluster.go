@@ -825,7 +825,7 @@ func (c *IKSClusterController) TerminateCluster() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getallmachines/:projectId/ [get]
+// @router /getallmachines/:region/ [get]
 func (c *IKSClusterController) GetAllMachineTypes() {
 
 	token := c.Ctx.Input.Header("token")
@@ -857,33 +857,25 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	region, err := iks.GetRegion(token, "", *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	//ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	//if err != nil {
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
 
 	ctx.SendLogs("IKSClusterController: Getting All Machines. "+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	machineTypes, err := iks.GetAllMachines(ibmProfile, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	c.Data["json"] = machineTypes
-	c.ServeJSON()
+	//machineTypes, err := iks.GetAllMachines(ibmProfile, *ctx)
+	//if err != nil {
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//c.Data["json"] = machineTypes
+	//c.ServeJSON()
 }
 
 // @Title Get Regions
@@ -1131,7 +1123,7 @@ func (c *IKSClusterController) FetchZones() {
 		c.ServeJSON()
 		return
 	}
-	region := c.Ctx.Input.Header(":region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region must not be empty"}
