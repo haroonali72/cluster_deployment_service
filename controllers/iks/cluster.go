@@ -936,7 +936,7 @@ func (c *IKSClusterController) FetchRegions() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getallkubeversions/ [get]
+// @router /getallkubeversions/:region/ [get]
 func (c *IKSClusterController) FetchKubeVersions() {
 
 	region := c.GetString(":region")
