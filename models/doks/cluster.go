@@ -32,6 +32,8 @@ type KubernetesCluster struct {
 	Tags      		 []string     			`json:"tags,omitempty" bson:"tags"`
 	NodePools 		 []*KubernetesNodePool  `json:"node_pools,omitempty" bson:"node_pools"`
 	AutoUpgrade 	 bool                   `json:"auto_upgrade,omitempty" bson:"auto_upgrade"`
+	IsAdvance		bool					 `json:"is_advance" bson:"is_advance"`
+	IsExpert 		bool					 `json:"is_expert" bson:"is_expert"`
 	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
 	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`

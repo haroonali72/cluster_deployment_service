@@ -6008,26 +6008,26 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc00164ae10.false:
+  442.0xc0016b0810.false:
     title: "false"
     type: object
-  518.0xc00157bdd0.false:
+  605.0xc000ff4450.false:
     title: "false"
     type: object
-  1559.string:
+  611.0xc0015e1890.false:
+    title: "false"
+    type: object
+  637.0xc0012c7f20.false:
+    title: "false"
+    type: object
+  13363.0xc0016dc660.false:
+    title: "false"
+    type: object
+  37049.0xc00166df80.false:
+    title: "false"
+    type: object
+  43286.string:
     title: string
-    type: object
-  5960.0xc001672330.false:
-    title: "false"
-    type: object
-  13279.0xc0015a17d0.false:
-    title: "false"
-    type: object
-  13385.0xc000fc62d0.false:
-    title: "false"
-    type: object
-  13431.0xc0012afdd0.false:
-    title: "false"
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -6081,7 +6081,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/43286.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6262,7 +6262,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000fc62d0.false'
+        $ref: '#/definitions/605.0xc000ff4450.false'
       name:
         type: string
       network_name:
@@ -6643,7 +6643,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc0012afdd0.false'
+        $ref: '#/definitions/637.0xc0012c7f20.false'
       name:
         type: string
       network_name:
@@ -6808,6 +6808,10 @@ definitions:
         type: string
       id:
         type: string
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       name:
         type: string
       node_pools:
@@ -7245,6 +7249,10 @@ definitions:
         type: string
       ip_allocation_policy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       label_fingerprint:
         type: string
       legacy_abac:
@@ -7696,7 +7704,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13279.0xc0015a17d0.false'
+        $ref: '#/definitions/611.0xc0015e1890.false'
       kube_version:
         type: string
       name:
@@ -7799,7 +7807,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc00157bdd0.false'
+        $ref: '#/definitions/37049.0xc00166df80.false'
       kube_version:
         type: string
       name:
@@ -7965,7 +7973,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001672330.false'
+        $ref: '#/definitions/442.0xc0016b0810.false'
       name:
         type: string
       node_pools:
@@ -8051,7 +8059,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc00164ae10.false'
+        $ref: '#/definitions/13363.0xc0016dc660.false'
       name:
         type: string
       node_pools:
