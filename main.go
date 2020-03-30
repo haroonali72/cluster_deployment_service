@@ -15,7 +15,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	//	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -43,16 +43,15 @@ func main() {
 
 	beego.Run()
 }
-
 func setEnv() {
 
 	os.Setenv("kill_bill_user", "admin")
 	os.Setenv("kill_bill_password", "password")
 	os.Setenv("kill_bill_secret_key", "cloudplex")
 	os.Setenv("kill_bill_api_key", "cloudplex")
-	os.Setenv("ca_cert", "/home/haroon/CloudPlex/cloudFiles/mongoCA.crt")
-	os.Setenv("client_cert", "/home/haroon/CloudPlex/cloudFiles/weasel.crt")
-	os.Setenv("client_pem", "/home/haroon/CloudPlex/cloudFiles/weasel.pem")
+	os.Setenv("ca_cert", "C:\\Users\\sadaf\\Downloads\\mongoCA.crt")
+	os.Setenv("client_cert", "C:\\Users\\sadaf\\Downloads\\antelope.crt")
+	os.Setenv("client_pem", "C:\\Users\\sadaf\\Downloads\\antelope.pem")
 	os.Setenv("subscription_host", "35.246.150.221:30906")
 	os.Setenv("rbac_url", "https://dapis.cloudplex.io")
 	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
