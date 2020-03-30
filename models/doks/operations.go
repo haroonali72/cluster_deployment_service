@@ -110,8 +110,8 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		pool := godo.KubernetesNodePoolCreateRequest{
 
 			Name:      node.Name,
-			Size:      node.Size,
-			Count:     node.Count,
+			Size:      node.MachineType,
+			Count:     node.NodeCount,
 			Tags:      node.Tags,
 			Labels:    node.Labels,
 			AutoScale: node.AutoScale,
@@ -234,7 +234,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId, companyId, projectI
 	}
 	return status, nil
 }
-func (cloud *DOKS) GetServerConfig(ctx utils.Context, cluster KubernetesCluster) (*godo.KubernetesOptions, error) {
+func (cloud *DOKS) GetServerConfig(ctx utils.Context, companyId string) (*godo.KubernetesOptions, error) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -244,11 +244,11 @@ func (cloud *DOKS) GetServerConfig(ctx utils.Context, cluster KubernetesCluster)
 	}
 	options, _, err := cloud.Client.Kubernetes.GetOptions(context.Background())
 	if err != nil {
-		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Error in gettin kubernetes config file: "+err.Error(), "error", "")
 		return &godo.KubernetesOptions{}, err
 	}
 
-	utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "DOKS kubernetes config file fetched successfully : ", "info", "")
 
 	return options, nil
 }

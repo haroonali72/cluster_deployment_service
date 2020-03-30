@@ -55,7 +55,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"],
 		beego.ControllerComments{
 			Method:           "FetchKubeVersions",
-			Router:           `/getallkubeversions/`,
+			Router:           `/getallkubeversions/:region`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

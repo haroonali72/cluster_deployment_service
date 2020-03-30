@@ -18,7 +18,6 @@ type DOKSClusterController struct {
 // @Title Get
 // @Description get kubernetes version,machine types and regions
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
 // @Success 200 {object} doks.ServerConfig
 // @Failure 400 {"error": "error msg"}
@@ -38,14 +37,6 @@ func (c *DOKSClusterController) GetServerConfig() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("DOKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -76,23 +67,14 @@ func (c *DOKSClusterController) GetServerConfig() {
 
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		utils.SendLog(userInfo.CompanyId, "Can not fetch config file"+err.Error(), "error", projectId)
+		utils.SendLog(userInfo.CompanyId, "Can not fetch config file"+err.Error(), "error", "")
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
-	if err != nil {
-		ctx.SendLogs("DOKSGetClusterController: error getting DOKS cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
-		c.ServeJSON()
-		return
-	}
-
-	config, err := doks.GetServerConfig(doProfile.Profile, *ctx, cluster)
+	config, err := doks.GetServerConfig(doProfile.Profile, *ctx, userInfo.CompanyId)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController: error getting DOKS server config "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
