@@ -17,14 +17,15 @@ import (
 )
 
 type GKECluster struct {
-	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	CloudplexStatus  string        `json:"status" bson:"status"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-
+	ID                             bson.ObjectId                   `json:"-" bson:"_id,omitempty"`
+	ProjectId                      string                          `json:"project_id" bson:"project_id"`
+	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
+	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
+	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
+	CloudplexStatus                string                          `json:"status" bson:"status"`
+	CompanyId                      string                          `json:"company_id" bson:"company_id"`
+	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
+	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
 	AddonsConfig                   *AddonsConfig                   `json:"addons_config,omitempty" bson:"addons_config,omitempty"`
 	ClusterIpv4Cidr                string                          `json:"cluster_ipv_4_cidr,omitempty" bson:"cluster_ipv_4_cidr,omitempty"`
 	Conditions                     []*StatusCondition              `json:"conditions,omitempty" bson:"conditions,omitempty"`

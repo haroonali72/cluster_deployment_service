@@ -202,7 +202,7 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Cluster is in running state.", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in running state")
 	}
-	 */
+	*/
 	err = DeleteKubernetesCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Got error deleting cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -291,7 +291,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
-	/*confError = ApplyAgent(credentials, token, ctx, cluster.Name)
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
@@ -307,7 +307,6 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return nil
 	}
 
-	 */
 	cluster.CloudplexStatus = "Cluster Created"
 
 	confError = UpdateKubernetesCluster(cluster, ctx)
@@ -410,7 +409,7 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
-	cluster.ID=""
+	cluster.ID = ""
 	cluster.CloudplexStatus = "Cluster Terminated"
 
 	err = UpdateKubernetesCluster(cluster, ctx)
@@ -425,34 +424,34 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context,cluster KubernetesCluster) (config KubernetesClusterConfig, confError error) {
+func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster KubernetesCluster) (config KubernetesClusterConfig, confError error) {
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return config,confError
+		return config, confError
 	}
 
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return config,confError
+		return config, confError
 	}
 
 	err = doksOps.init(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return config,err
+		return config, err
 	}
 
-	config,confError = doksOps.GetKubeConfig(ctx,cluster)
+	config, confError = doksOps.GetKubeConfig(ctx, cluster)
 	if confError != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return config,nil
+		return config, nil
 	}
 
-	return config,confError
+	return config, confError
 }
 
 func GetDOKS(credentials vault.DOCredentials) (DOKS, error) {
@@ -487,33 +486,32 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	}
 	return nil
 }
-func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context,cluster KubernetesCluster) (options *godo.KubernetesOptions,confError error) {
-		publisher := utils.Notifier{}
-		confError = publisher.Init_notifier()
+func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context, cluster KubernetesCluster) (options *godo.KubernetesOptions, confError error) {
+	publisher := utils.Notifier{}
+	confError = publisher.Init_notifier()
 
-		if confError != nil {
-			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return &godo.KubernetesOptions{},confError
-		}
+	if confError != nil {
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &godo.KubernetesOptions{}, confError
+	}
 
-		doksOps, err := GetDOKS(credentials)
-		if err != nil {
-			ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return &godo.KubernetesOptions{},confError
-		}
+	doksOps, err := GetDOKS(credentials)
+	if err != nil {
+		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &godo.KubernetesOptions{}, confError
+	}
 
-		err = doksOps.init(ctx)
-		if err != nil {
-			ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return &godo.KubernetesOptions{},err
-		}
+	err = doksOps.init(ctx)
+	if err != nil {
+		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &godo.KubernetesOptions{}, err
+	}
 
-		options,confError = doksOps.GetServerConfig(ctx,cluster)
-		if confError != nil {
-			ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return &godo.KubernetesOptions{},nil
-			}
+	options, confError = doksOps.GetServerConfig(ctx, cluster)
+	if confError != nil {
+		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &godo.KubernetesOptions{}, nil
+	}
 
-		return options,nil
+	return options, nil
 }
-
