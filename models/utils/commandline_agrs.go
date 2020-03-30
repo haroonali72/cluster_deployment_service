@@ -30,8 +30,8 @@ var (
 	mongo_op_cluster_collection     = ""
 	mongo_aks_template_collection   = ""
 	mongo_aks_cluster_collection    = ""
-	mongo_ibm_template_collection   = ""
-	mongo_ibm_cluster_collection    = ""
+	mongo_iks_template_collection   = ""
+	mongo_iks_cluster_collection    = ""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
@@ -291,16 +291,16 @@ func InitFlags() error {
 			EnvVar:      "mongo_aks_cluster_collection",
 		},
 		cli.StringFlag{
-			Name:        "mongo_ibm_template_collection",
-			Usage:       "ibm template collection name ",
-			Destination: &mongo_ibm_template_collection,
-			EnvVar:      "mongo_ibm_template_collection",
+			Name:        "mongo_iks_template_collection",
+			Usage:       "iks template collection name ",
+			Destination: &mongo_iks_template_collection,
+			EnvVar:      "mongo_iks_template_collection",
 		},
 		cli.StringFlag{
-			Name:        "mongo_ibm_cluster_collection",
-			Usage:       "ibm cluster collection name ",
-			Destination: &mongo_ibm_cluster_collection,
-			EnvVar:      "mongo_ibm_cluster_collection",
+			Name:        "mongo_iks_cluster_collection",
+			Usage:       "iks cluster collection name ",
+			Destination: &mongo_iks_cluster_collection,
+			EnvVar:      "mongo_iks_cluster_collection",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
@@ -341,8 +341,8 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_op_cluster_collection", mongo_op_cluster_collection)
 	beego.AppConfig.Set("mongo_aks_cluster_collection", mongo_aks_cluster_collection)
 	beego.AppConfig.Set("mongo_aks_template_collection", mongo_aks_template_collection)
-	beego.AppConfig.Set("mongo_ibm_template_collection", mongo_ibm_template_collection)
-	beego.AppConfig.Set("mongo_ibm_cluster_collection", mongo_ibm_cluster_collection)
+	beego.AppConfig.Set("mongo_iks_template_collection", mongo_iks_template_collection)
+	beego.AppConfig.Set("mongo_iks_cluster_collection", mongo_iks_cluster_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)
 	beego.AppConfig.Set("network_url", network_url)

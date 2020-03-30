@@ -214,8 +214,8 @@ func (c *IKSClusterController) Post() {
 
 	ctx.SendLogs("IKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	res, err := govalidator.ValidateStruct(cluster)
-	if !res || err != nil {
+	_, err = govalidator.ValidateStruct(cluster)
+	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
