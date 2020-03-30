@@ -5998,22 +5998,22 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc00167c090.false:
+  442.0xc00169dbf0.false:
     title: "false"
     type: object
-  605.0xc000fa9cb0.false:
+  605.0xc000feb830.false:
     title: "false"
     type: object
-  611.0xc0015b1110.false:
+  611.0xc0015f2c90.false:
     title: "false"
     type: object
-  637.0xc0012ad7a0.false:
+  637.0xc0012f5320.false:
     title: "false"
     type: object
-  13363.0xc001691ec0.false:
+  13363.0xc0016d9a40.false:
     title: "false"
     type: object
-  37047.0xc001631800.false:
+  37047.0xc001671380.false:
     title: "false"
     type: object
   40961.string:
@@ -6269,7 +6269,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000fa9cb0.false'
+        $ref: '#/definitions/605.0xc000feb830.false'
       name:
         type: string
       network_name:
@@ -6650,7 +6650,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc0012ad7a0.false'
+        $ref: '#/definitions/637.0xc0012f5320.false'
       name:
         type: string
       network_name:
@@ -7703,7 +7703,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc0015b1110.false'
+        $ref: '#/definitions/611.0xc0015f2c90.false'
       kube_version:
         type: string
       name:
@@ -7806,7 +7806,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/37047.0xc001631800.false'
+        $ref: '#/definitions/37047.0xc001671380.false'
       kube_version:
         type: string
       name:
@@ -7972,7 +7972,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc00167c090.false'
+        $ref: '#/definitions/442.0xc00169dbf0.false'
       name:
         type: string
       node_pools:
@@ -8058,82 +8058,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc001691ec0.false'
-  /cluster/iks/getallkubeversions/{region}:
-        name: region
-        description: selected region value
-        required: true
-        type: string
-      - in: header
-        name: X-Profile-Id
-        description: vault credentials profile id
-  /cluster/iks/getallmachines/{region}/:
-        name: region
-        description: region of the cloud
-  /cluster/iks/getzones/{region}/:
-  434.0xc0015f5500.false:
-  518.0xc00155ae10.false:
-  1559.string:
-    title: string
-    type: object
-  5960.0xc001622a20.false:
-  13279.0xc00158a810.false:
-  13385.0xc000f8d2c0.false:
-  13431.0xc001292de0.false:
-      identity:
-        $ref: '#/definitions/aks.ManagedClusterIdentity'
-        $ref: '#/definitions/1559.string'
-      node_labels:
-        additionalProperties:
-          type: string
-      node_taints:
-        additionalProperties:
-          type: string
-  aks.ManagedClusterIdentity:
-    title: ManagedClusterIdentity
-    type: object
-    properties:
-      type:
-        $ref: '#/definitions/aks.ResourceIdentityType'
-      client_id:
-        type: string
-      cluster_tags:
-        additionalProperties:
-          type: string
-      is_advanced:
-        type: boolean
-      is_expert:
-        type: boolean
-      is_http_routing:
-        type: boolean
-      is_service_principal:
-        type: boolean
-        type: string
-      secret:
-    type: object
-  aks.ResourceIdentityType:
-    title: ResourceIdentityType
-        $ref: '#/definitions/13385.0xc000f8d2c0.false'
-        $ref: '#/definitions/13431.0xc001292de0.false'
-      machine_type:
-        type: string
-      node_count:
-        type: integer
-        format: int64
-        $ref: '#/definitions/13279.0xc00158a810.false'
-  iks.Kubernetes:
-    title: Kubernetes
-    type: object
-    properties:
-      major:
-        type: string
-      minor:
-        type: string
-      patch:
-        type: string
-        $ref: '#/definitions/518.0xc00155ae10.false'
-        $ref: '#/definitions/5960.0xc001622a20.false'
-        $ref: '#/definitions/434.0xc0015f5500.false'
+        $ref: '#/definitions/13363.0xc0016d9a40.false'
       name:
         type: string
       node_pools:
