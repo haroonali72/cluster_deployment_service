@@ -155,6 +155,8 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		return cluster, errors.New("error in fetching network")
 	}
 
+	utils.SendLog(companyId, "Creating Worker Pool : "+cluster.NodePools[0].Name, "info", cluster.ProjectId)
+
 	clusterId, err := cloud.createCluster(vpcID, cluster, ibmNetwork, ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -174,6 +176,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 			time.Sleep(60 * time.Second)
 		}
 	}
+	utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.NodePools[0].Name, "info", cluster.ProjectId)
 
 	for index, pool := range cluster.NodePools {
 		if index == 0 {
