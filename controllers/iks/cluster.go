@@ -820,22 +820,14 @@ func (c *IKSClusterController) TerminateCluster() {
 // @Title Get All Instance List
 // @Description get all instance list
 // @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
-// @Param	projectId	path	string	true	"Id of the project"
+// @Param	region	path	string	true	"region of the cloud"
 // @Param	token	header	string	token ""
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getallmachines/:projectId/ [get]
+// @router /getallmachines/:region/ [get]
 func (c *IKSClusterController) GetAllMachineTypes() {
-
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -855,7 +847,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 	}
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("IKSClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
@@ -866,10 +858,10 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	region, err := iks.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	region := c.GetString(":region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -882,7 +874,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	ctx.SendLogs("IKSClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting All Machines. "+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	machineTypes, err := iks.GetAllMachines(ibmProfile, *ctx)
 	if err != nil {
@@ -939,19 +931,20 @@ func (c *IKSClusterController) FetchRegions() {
 
 // @Title Get Kube Versions
 // @Description fetch version of kubernetes cluster
-// @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param region path string true "selected region value"
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param token	header string token ""
 // @Success 200 {object} []iks.Versions
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getallkubeversions/ [get]
+// @router /getallkubeversions/:region [get]
 func (c *IKSClusterController) FetchKubeVersions() {
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
+	region := c.GetString(":region")
+	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -974,21 +967,13 @@ func (c *IKSClusterController) FetchKubeVersions() {
 	}
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("IKSClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	region, err := iks.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -1001,16 +986,16 @@ func (c *IKSClusterController) FetchKubeVersions() {
 		return
 	}
 
-	ctx.SendLogs("IKSClusterController: Getting All Machines. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Getting All Machines. "+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	machineTypes, err := iks.GetAllVersions(ibmProfile, *ctx)
+	versions, err := iks.GetAllVersions(ibmProfile, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	c.Data["json"] = machineTypes
+	c.Data["json"] = versions.Kubernetes
 	c.ServeJSON()
 }
 
@@ -1130,7 +1115,7 @@ func (c *IKSClusterController) ApplyAgent() {
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getzone/:region/ [get]
+// @router /getzones/:region/ [get]
 func (c *IKSClusterController) FetchZones() {
 
 	token := c.Ctx.Input.Header("token")
@@ -1140,7 +1125,7 @@ func (c *IKSClusterController) FetchZones() {
 		c.ServeJSON()
 		return
 	}
-	region := c.Ctx.Input.Header(":region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region must not be empty"}

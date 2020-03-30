@@ -2898,7 +2898,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/iks/getallkubeversions/:
+  /cluster/iks/getallkubeversions/{region}:
     get:
       tags:
       - cluster/iks
@@ -2906,8 +2906,13 @@ paths:
       operationId: IKSClusterController.Get Kube Versions
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: region
+        description: selected region value
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
         required: true
         type: string
       - in: header
@@ -2927,7 +2932,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/iks/getallmachines/{projectId}/:
+  /cluster/iks/getallmachines/{region}/:
     get:
       tags:
       - cluster/iks
@@ -2940,8 +2945,8 @@ paths:
         schema:
           $ref: '#/definitions/X-Profile-Id'
       - in: path
-        name: projectId
-        description: Id of the project
+        name: region
+        description: region of the cloud
         required: true
         type: string
       - in: header
@@ -2983,7 +2988,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/iks/getzone/{region}/:
+  /cluster/iks/getzones/{region}/:
     get:
       tags:
       - cluster/iks
@@ -5993,25 +5998,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001645230.false:
+  442.0xc00167c090.false:
     title: "false"
     type: object
-  605.0xc000f8b740.false:
+  605.0xc000fa9cb0.false:
     title: "false"
     type: object
-  611.0xc0015a6ba0.false:
+  611.0xc0015b1110.false:
     title: "false"
     type: object
-  637.0xc001293230.false:
+  637.0xc0012ad7a0.false:
     title: "false"
     type: object
-  13363.0xc001677080.false:
+  13363.0xc001691ec0.false:
     title: "false"
     type: object
-  36212.0xc0016169c0.false:
+  37047.0xc001631800.false:
     title: "false"
     type: object
-  36923.string:
+  40961.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6027,6 +6032,8 @@ definitions:
         type: string
       company_id:
         type: string
+      identity:
+        $ref: '#/definitions/aks.ManagedClusterIdentity'
       location:
         type: string
       name:
@@ -6039,9 +6046,6 @@ definitions:
         type: string
       status:
         type: string
-      tags:
-        additionalProperties:
-          type: string
       type:
         type: string
   aks.AKSClusterTemplate:
@@ -6069,14 +6073,11 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/36923.string'
+        $ref: '#/definitions/40961.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
     title: AKSClusterTemplateMetadata
-    type: object
-  aks.AgentPoolType:
-    title: AgentPoolType
     type: object
   aks.ManagedClusterAPIServerAccessProfile:
     title: ManagedClusterAPIServerAccessProfile
@@ -6118,6 +6119,12 @@ definitions:
         format: int32
       name:
         type: string
+      node_labels:
+        additionalProperties:
+          type: string
+      node_taints:
+        additionalProperties:
+          type: string
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6125,8 +6132,6 @@ definitions:
         $ref: '#/definitions/aks.OSType'
       subnet_id:
         type: string
-      type:
-        $ref: '#/definitions/aks.AgentPoolType'
       vm_size:
         $ref: '#/definitions/aks.VMSizeTypes'
   aks.ManagedClusterAgentPoolProfileT:
@@ -6158,6 +6163,12 @@ definitions:
         type: string
       vm_size:
         $ref: '#/definitions/aks.VMSizeTypes'
+  aks.ManagedClusterIdentity:
+    title: ManagedClusterIdentity
+    type: object
+    properties:
+      type:
+        $ref: '#/definitions/aks.ResourceIdentityType'
   aks.ManagedClusterProperties:
     title: ManagedClusterProperties
     type: object
@@ -6168,17 +6179,32 @@ definitions:
           $ref: '#/definitions/aks.ManagedClusterAgentPoolProfile'
       api_server_access_profile:
         $ref: '#/definitions/aks.ManagedClusterAPIServerAccessProfile'
+      client_id:
+        type: string
+      cluster_tags:
+        additionalProperties:
+          type: string
       dns_prefix:
         type: string
       enable_rbac:
         type: boolean
       fqdn:
         type: string
+      is_advanced:
+        type: boolean
+      is_expert:
+        type: boolean
+      is_http_routing:
+        type: boolean
+      is_service_principal:
+        type: boolean
       kubernetes_version:
         type: string
       network_profile:
         $ref: '#/definitions/aks.NetworkProfileType'
       provisioning_state:
+        type: string
+      secret:
         type: string
   aks.ManagedClusterPropertiesT:
     title: ManagedClusterPropertiesT
@@ -6206,6 +6232,9 @@ definitions:
         type: string
   aks.OSType:
     title: OSType
+    type: object
+  aks.ResourceIdentityType:
+    title: ResourceIdentityType
     type: object
   aks.VMSizeTypes:
     title: VMSizeTypes
@@ -6240,7 +6269,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000f8b740.false'
+        $ref: '#/definitions/605.0xc000fa9cb0.false'
       name:
         type: string
       network_name:
@@ -6621,7 +6650,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc001293230.false'
+        $ref: '#/definitions/637.0xc0012ad7a0.false'
       name:
         type: string
       network_name:
@@ -7674,7 +7703,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc0015a6ba0.false'
+        $ref: '#/definitions/611.0xc0015b1110.false'
       kube_version:
         type: string
       name:
@@ -7718,7 +7747,21 @@ definitions:
       state:
         type: string
       workerCount:
-        type: string
+        type: integer
+        format: int64
+  iks.Kubernetes:
+    title: Kubernetes
+    type: object
+    properties:
+      major:
+        type: integer
+        format: int64
+      minor:
+        type: integer
+        format: int64
+      patch:
+        type: integer
+        format: int64
   iks.NodePool:
     title: NodePool
     type: object
@@ -7763,7 +7806,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/36212.0xc0016169c0.false'
+        $ref: '#/definitions/37047.0xc001631800.false'
       kube_version:
         type: string
       name:
@@ -7801,12 +7844,10 @@ definitions:
     title: Versions
     type: object
     properties:
-      major:
-        type: string
-      minor:
-        type: string
-      patch:
-        type: string
+      kubernetes:
+        type: array
+        items:
+          $ref: '#/definitions/iks.Kubernetes'
   iks.Zone:
     title: Zone
     type: object
@@ -7931,7 +7972,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001645230.false'
+        $ref: '#/definitions/442.0xc00167c090.false'
       name:
         type: string
       node_pools:
@@ -8017,7 +8058,82 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc001677080.false'
+        $ref: '#/definitions/13363.0xc001691ec0.false'
+  /cluster/iks/getallkubeversions/{region}:
+        name: region
+        description: selected region value
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+  /cluster/iks/getallmachines/{region}/:
+        name: region
+        description: region of the cloud
+  /cluster/iks/getzones/{region}/:
+  434.0xc0015f5500.false:
+  518.0xc00155ae10.false:
+  1559.string:
+    title: string
+    type: object
+  5960.0xc001622a20.false:
+  13279.0xc00158a810.false:
+  13385.0xc000f8d2c0.false:
+  13431.0xc001292de0.false:
+      identity:
+        $ref: '#/definitions/aks.ManagedClusterIdentity'
+        $ref: '#/definitions/1559.string'
+      node_labels:
+        additionalProperties:
+          type: string
+      node_taints:
+        additionalProperties:
+          type: string
+  aks.ManagedClusterIdentity:
+    title: ManagedClusterIdentity
+    type: object
+    properties:
+      type:
+        $ref: '#/definitions/aks.ResourceIdentityType'
+      client_id:
+        type: string
+      cluster_tags:
+        additionalProperties:
+          type: string
+      is_advanced:
+        type: boolean
+      is_expert:
+        type: boolean
+      is_http_routing:
+        type: boolean
+      is_service_principal:
+        type: boolean
+        type: string
+      secret:
+    type: object
+  aks.ResourceIdentityType:
+    title: ResourceIdentityType
+        $ref: '#/definitions/13385.0xc000f8d2c0.false'
+        $ref: '#/definitions/13431.0xc001292de0.false'
+      machine_type:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+        $ref: '#/definitions/13279.0xc00158a810.false'
+  iks.Kubernetes:
+    title: Kubernetes
+    type: object
+    properties:
+      major:
+        type: string
+      minor:
+        type: string
+      patch:
+        type: string
+        $ref: '#/definitions/518.0xc00155ae10.false'
+        $ref: '#/definitions/5960.0xc001622a20.false'
+        $ref: '#/definitions/434.0xc0015f5500.false'
       name:
         type: string
       node_pools:
