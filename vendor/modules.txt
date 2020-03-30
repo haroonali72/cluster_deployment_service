@@ -5,6 +5,7 @@ cloud.google.com/go/compute/metadata
 # github.com/Azure/azure-sdk-for-go v40.4.0+incompatible
 github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/compute/mgmt/compute
 github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2016-03-30/compute
+github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-09-01/skus
 github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute
 github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice
 github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network

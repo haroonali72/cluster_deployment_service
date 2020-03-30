@@ -6,10 +6,15 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"strings"
+	"time"
 )
 
 func GetIBM(credentials vault.IBMCredentials) (IBM, error) {
@@ -18,6 +23,11 @@ func GetIBM(credentials vault.IBMCredentials) (IBM, error) {
 	}, nil
 }
 
+type IBMResponse struct {
+	IncidentId  string `json:"incidentID"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+}
 type IBM struct {
 	APIKey       string
 	IAMToken     string
@@ -76,7 +86,7 @@ type KubeClusterStatus struct {
 	Region            string `json:"region"`
 	ResourceGroupName string `json:"resourceGroupName"`
 	State             string `json:"state"`
-	WorkerCount       string `json:"workerCount"`
+	WorkerCount       int    `json:"workerCount"`
 }
 type AllInstancesResponse struct {
 	Profile []InstanceProfile `json:"profiles"`
@@ -85,48 +95,29 @@ type InstanceProfile struct {
 	Family string `json:"family"`
 	Name   string `json:"name"`
 }
+
 type Versions struct {
-	Major string `json:"major"`
-	Minor string `json:"minor"`
-	Patch string `json:"patch"`
+	Kubernetes []Kubernetes `json:"kubernetes"`
+}
+type Kubernetes struct {
+	Major int `json:"major"`
+	Minor int `json:"minor"`
+	Patch int `json:"patch"`
 }
 
 func (cloud *IBM) init(region string, ctx utils.Context) error {
-
-	client := utils.InitReq()
-
-	m := make(map[string]string)
-	m["Content-Type"] = "application/x-www-form-urlencoded"
-	m["Accept"] = "application/json"
-
-	payloadSlice := []string{"grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=", cloud.APIKey}
-	bytes_, err := json.Marshal(payloadSlice)
-
+	payloadSlice := "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=" + cloud.APIKey
+	res, err := http.Post(models.IBM_IAM_Endpoint, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(payloadSlice)))
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		log.Fatalln(err)
 	}
 
-	// Create a new request given a method, URL, and optional body.
-	req, err := utils.CreatePostRequest(bytes_, models.IBM_IAM_Endpoint)
-
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	// Adding headers to the request
-	utils.SetHeaders(req, m)
-
-	// Requesting server
-	res, err := client.SendRequest(req)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	if res.StatusCode != 200 {
+		ctx.SendLogs("Error while getting IBM auth token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Error while getting IBM auth token")
 	}
 	defer res.Body.Close()
 
-	// Reading response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -136,7 +127,7 @@ func (cloud *IBM) init(region string, ctx utils.Context) error {
 	// body is []byte format
 	// parse the JSON-encoded body and stores the result in the struct object for the res
 	var token Token
-	json.Unmarshal([]byte(body), &token)
+	json.Unmarshal(body, &token)
 
 	// saving the token
 	cloud.IAMToken = token.TokenType + " " + token.AccessToken
@@ -144,7 +135,6 @@ func (cloud *IBM) init(region string, ctx utils.Context) error {
 	cloud.RefreshToken = token.RefreshToken
 	return nil
 }
-
 func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	var ibmNetwork types.IBMNetwork
@@ -171,6 +161,20 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		return cluster, err
 	}
 	cluster.ClusterId = clusterId
+
+	for {
+		response, err := cloud.fetchStatus(&cluster, ctx, companyId)
+		if err != nil {
+			beego.Error(err.Error())
+			return cluster, err
+		}
+		if response.State == "normal" {
+			break
+		} else {
+			time.Sleep(60 * time.Second)
+		}
+	}
+
 	for index, pool := range cluster.NodePools {
 		if index == 0 {
 			continue
@@ -299,44 +303,42 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	}
 
 	if res.StatusCode != 201 {
-		ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		if res.StatusCode == 409 {
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			var ibmResponse IBMResponse
+			err = json.Unmarshal(body, &ibmResponse)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			if !strings.Contains(ibmResponse.Description, "already exits") {
+				ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+		} else {
+			ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	// body is []byte format
-	// parse the JSON-encoded body and stores the result in the struct object for the res
-	var response WorkerPoolResponse
-	err = json.Unmarshal([]byte(body), &response)
-
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	subentId := cloud.GetSubnets(pool, network)
-	if subentId == "" {
-		return errors.New("error in gettinh subnet id")
-	}
-	err = cloud.AddZonesToPools(rg, response.ID, pool.SubnetID, clusterID, ctx)
+	err = cloud.AddZonesToPools(rg, pool.Name, pool.SubnetID, clusterID, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
 }
-func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx utils.Context) error {
+func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, clusterID string, ctx utils.Context) error {
 
 	zoneInput := ZoneInput{
 		Cluster:    clusterID,
 		Id:         cloud.Region,
 		Subnet:     subnetID,
-		WorkerPool: poolID,
+		WorkerPool: poolName,
 	}
 
 	bytes, err := json.Marshal(zoneInput)
@@ -362,13 +364,31 @@ func (cloud *IBM) AddZonesToPools(rg, poolID, subnetID, clusterID string, ctx ut
 	}
 
 	if res.StatusCode != 201 {
-		ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		if res.StatusCode == 409 {
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			var ibmResponse IBMResponse
+			err = json.Unmarshal(body, &ibmResponse)
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+			if !strings.Contains(ibmResponse.Description, "The zone is already part of the worker pool") {
+				ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return err
+			}
+		} else {
+			ctx.SendLogs("error in worker pool creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
 	}
 	return nil
 }
 func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, error) {
-	url := "https://" + cloud.Region + models.IBM_ALL_Kube_Version_Endpoint + models.IBM_Version
+	url := "https://" + cloud.Region + ".containers.cloud.ibm.com/global/v2/getVersions" + models.IBM_Version
 
 	req, _ := utils.CreateGetRequest(url)
 
@@ -392,15 +412,15 @@ func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, error) {
 
 	// body is []byte format
 	// parse the JSON-encoded body and stores the result in the struct object for the res
-	var versions Versions
-	err = json.Unmarshal(body, &versions)
+	var kube Versions
+	err = json.Unmarshal(body, &kube)
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	return versions, nil
+	return kube, nil
 }
 func (cloud *IBM) GetSubnets(pool *NodePool, network types.IBMNetwork) string {
 	for _, definition := range network.Definition {
@@ -448,11 +468,19 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) erro
 		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
+	for {
+		response, err := cloud.fetchStatus(cluster, ctx, "")
+		if err == nil && response.State == "deleting" {
+			beego.Error(err.Error())
+			return err
+		}
+		break
+	}
 	return nil
 }
 func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, error) {
 
-	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?" + cluster.ClusterId)
+	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?cluster=" + cluster.ClusterId)
 
 	m := make(map[string]string)
 

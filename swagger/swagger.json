@@ -139,7 +139,7 @@
                 }
             }
         },
-        "/cluster/aks/getallkubeversions/": {
+        "/cluster/aks/getallkubeversions/{region}": {
             "get": {
                 "tags": [
                     "cluster/aks"
@@ -147,6 +147,20 @@
                 "description": "fetch version of kubernetes cluster",
                 "operationId": "AKSClusterController.Get Kube Versions",
                 "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of the cloud",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "in": "header",
                         "name": "token",
@@ -2742,13 +2756,6 @@
                         "type": "string"
                     },
                     {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "in": "header",
                         "name": "token",
                         "description": "token",
@@ -4355,7 +4362,7 @@
                 }
             }
         },
-        "/cluster/iks/getallkubeversions/": {
+        "/cluster/iks/getallkubeversions/{region}": {
             "get": {
                 "tags": [
                     "cluster/iks"
@@ -4365,8 +4372,15 @@
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
+                        "name": "region",
+                        "description": "selected region value",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
@@ -4399,7 +4413,7 @@
                 }
             }
         },
-        "/cluster/iks/getallmachines/{projectId}/": {
+        "/cluster/iks/getallmachines/{region}/": {
             "get": {
                 "tags": [
                     "cluster/iks"
@@ -4417,8 +4431,8 @@
                     },
                     {
                         "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
+                        "name": "region",
+                        "description": "region of the cloud",
                         "required": true,
                         "type": "string"
                     },
@@ -4485,7 +4499,7 @@
                 }
             }
         },
-        "/cluster/iks/getzone/{region}/": {
+        "/cluster/iks/getzones/{region}/": {
             "get": {
                 "tags": [
                     "cluster/iks"
@@ -9119,31 +9133,31 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc00165e780.false": {
+        "13363.0xc0016dc660.false": {
             "title": "false",
             "type": "object"
         },
-        "36212.0xc0015fe0c0.false": {
+        "37049.0xc00166df80.false": {
             "title": "false",
             "type": "object"
         },
-        "36923.string": {
+        "43286.string": {
             "title": "string",
             "type": "object"
         },
-        "442.0xc00162c930.false": {
+        "442.0xc0016b0810.false": {
             "title": "false",
             "type": "object"
         },
-        "605.0xc000f8ce10.false": {
+        "605.0xc000ff4450.false": {
             "title": "false",
             "type": "object"
         },
-        "611.0xc00158e2a0.false": {
+        "611.0xc0015e1890.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc001280900.false": {
+        "637.0xc0012c7f20.false": {
             "title": "false",
             "type": "object"
         },
@@ -9181,11 +9195,6 @@
                 },
                 "status": {
                     "type": "string"
-                },
-                "tags": {
-                    "additionalProperties": {
-                        "type": "string"
-                    }
                 },
                 "type": {
                     "type": "string"
@@ -9227,7 +9236,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/36923.string"
+                    "$ref": "#/definitions/43286.string"
                 },
                 "type": {
                     "type": "string"
@@ -9236,10 +9245,6 @@
         },
         "aks.AKSClusterTemplateMetadata": {
             "title": "AKSClusterTemplateMetadata",
-            "type": "object"
-        },
-        "aks.AgentPoolType": {
-            "title": "AgentPoolType",
             "type": "object"
         },
         "aks.ManagedClusterAPIServerAccessProfile": {
@@ -9298,6 +9303,16 @@
                 "name": {
                     "type": "string"
                 },
+                "node_labels": {
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "node_taints": {
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "os_disk_size_gb": {
                     "type": "integer",
                     "format": "int32"
@@ -9307,9 +9322,6 @@
                 },
                 "subnet_id": {
                     "type": "string"
-                },
-                "type": {
-                    "$ref": "#/definitions/aks.AgentPoolType"
                 },
                 "vm_size": {
                     "$ref": "#/definitions/aks.VMSizeTypes"
@@ -9370,22 +9382,54 @@
                 "api_server_access_profile": {
                     "$ref": "#/definitions/aks.ManagedClusterAPIServerAccessProfile"
                 },
+                "client_id": {
+                    "type": "string"
+                },
+                "cluster_tags": {
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "dns_prefix": {
                     "type": "string"
                 },
+                "dns_service_ip": {
+                    "type": "string"
+                },
+                "docker_bridge_cidr": {
+                    "type": "string"
+                },
+                "enable_http_routing": {
+                    "type": "boolean"
+                },
                 "enable_rbac": {
+                    "type": "boolean"
+                },
+                "enable_service_principal": {
                     "type": "boolean"
                 },
                 "fqdn": {
                     "type": "string"
                 },
+                "is_advance": {
+                    "type": "boolean"
+                },
+                "is_expert": {
+                    "type": "boolean"
+                },
                 "kubernetes_version": {
                     "type": "string"
                 },
-                "network_profile": {
-                    "$ref": "#/definitions/aks.NetworkProfileType"
+                "pod_cidr": {
+                    "type": "string"
                 },
                 "provisioning_state": {
+                    "type": "string"
+                },
+                "secret": {
+                    "type": "string"
+                },
+                "service_cidr": {
                     "type": "string"
                 }
             }
@@ -9405,24 +9449,6 @@
                 },
                 "enable_rbac": {
                     "type": "boolean"
-                }
-            }
-        },
-        "aks.NetworkProfileType": {
-            "title": "NetworkProfileType",
-            "type": "object",
-            "properties": {
-                "dns_service_ip": {
-                    "type": "string"
-                },
-                "docker_bridge_cidr": {
-                    "type": "string"
-                },
-                "pod_cidr": {
-                    "type": "string"
-                },
-                "service_cidr": {
-                    "type": "string"
                 }
             }
         },
@@ -9476,7 +9502,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f8ce10.false"
+                    "$ref": "#/definitions/605.0xc000ff4450.false"
                 },
                 "name": {
                     "type": "string"
@@ -10041,7 +10067,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc001280900.false"
+                    "$ref": "#/definitions/637.0xc0012c7f20.false"
                 },
                 "name": {
                     "type": "string"
@@ -10285,13 +10311,13 @@
                 "id": {
                     "type": "string"
                 },
-                "kube_status": {
-                    "$ref": "#/definitions/doks.KubernetesClusterStatus"
+                "is_advance": {
+                    "type": "boolean"
+                },
+                "is_expert": {
+                    "type": "boolean"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "network_name": {
                     "type": "string"
                 },
                 "node_pools": {
@@ -10316,21 +10342,6 @@
                     }
                 },
                 "version": {
-                    "type": "string"
-                },
-                "vpc_uuid": {
-                    "type": "string"
-                }
-            }
-        },
-        "doks.KubernetesClusterStatus": {
-            "title": "KubernetesClusterStatus",
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "state": {
                     "type": "string"
                 }
             }
@@ -10365,10 +10376,6 @@
                 "auto_scale": {
                     "type": "boolean"
                 },
-                "count": {
-                    "type": "integer",
-                    "format": "int64"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -10376,6 +10383,9 @@
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "machine_type": {
+                    "type": "string"
                 },
                 "max_nodes": {
                     "type": "integer",
@@ -10388,14 +10398,15 @@
                 "name": {
                     "type": "string"
                 },
+                "node_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "nodes": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/doks.KubernetesNode"
                     }
-                },
-                "size": {
-                    "type": "string"
                 },
                 "tags": {
                     "type": "array",
@@ -10953,6 +10964,12 @@
                 },
                 "ip_allocation_policy": {
                     "$ref": "#/definitions/gke.IPAllocationPolicy"
+                },
+                "is_advance": {
+                    "type": "boolean"
+                },
+                "is_expert": {
+                    "type": "boolean"
                 },
                 "label_fingerprint": {
                     "type": "string"
@@ -11626,7 +11643,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/611.0xc00158e2a0.false"
+                    "$ref": "#/definitions/611.0xc0015e1890.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11692,7 +11709,26 @@
                     "type": "string"
                 },
                 "workerCount": {
-                    "type": "string"
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "iks.Kubernetes": {
+            "title": "Kubernetes",
+            "type": "object",
+            "properties": {
+                "major": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "minor": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "patch": {
+                    "type": "integer",
+                    "format": "int64"
                 }
             }
         },
@@ -11731,7 +11767,7 @@
                 "Name": {
                     "type": "string"
                 },
-                "zones": {
+                "Zones": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -11759,7 +11795,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/36212.0xc0015fe0c0.false"
+                    "$ref": "#/definitions/37049.0xc00166df80.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11816,14 +11852,11 @@
             "title": "Versions",
             "type": "object",
             "properties": {
-                "major": {
-                    "type": "string"
-                },
-                "minor": {
-                    "type": "string"
-                },
-                "patch": {
-                    "type": "string"
+                "kubernetes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/iks.Kubernetes"
+                    }
                 }
             }
         },
@@ -11991,7 +12024,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc00162c930.false"
+                    "$ref": "#/definitions/442.0xc0016b0810.false"
                 },
                 "name": {
                     "type": "string"
@@ -12119,7 +12152,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc00165e780.false"
+                    "$ref": "#/definitions/13363.0xc0016dc660.false"
                 },
                 "name": {
                     "type": "string"

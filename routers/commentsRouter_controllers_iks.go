@@ -64,7 +64,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "FetchKubeVersions",
-			Router:           `/getallkubeversions/`,
+			Router:           `/getallkubeversions/:region`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -73,7 +73,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "GetAllMachineTypes",
-			Router:           `/getallmachines/:projectId/`,
+			Router:           `/getallmachines/:region/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
@@ -91,7 +91,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
 		beego.ControllerComments{
 			Method:           "FetchZones",
-			Router:           `/getzone/:region/`,
+			Router:           `/getzones/:region/`,
 			AllowHTTPMethods: []string{"get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

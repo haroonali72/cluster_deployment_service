@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(IKS|iks)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
@@ -52,9 +52,9 @@ type Data struct {
 }
 
 type Regions struct {
-	Name  string   `json:"Name"`
+	Name     string   `json:"Name"`
 	Location string   `json:"Location"`
-	Zones []string `json:"zones"`
+	Zones    []string `json:"Zones"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -436,7 +436,7 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
     {
       "Name": "Dallas",
       "Location": "us-south",
-      "zones": [
+      "Zones": [
         "us-south-1",
         "us-south-2",
         "us-south-3"
@@ -445,7 +445,7 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
     {
       "Name": "Washington DC",
       "Location": "us-east",
-      "zones": [
+      "Zones": [
         "us-east-1",
         "us-east-2",
         "us-east-3"
@@ -454,7 +454,7 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
     {
       "Name": "Frankfurt",
       "Location": "eu-de",
-      "zones": [
+      "Zones": [
         "eu-de-1",
         "eu-de-2",
         "eu-de-3"
@@ -463,7 +463,7 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
     {
       "Name": "Tokyo",
       "Location": "jp-tok",
-      "zones": [
+      "Zones": [
         "jp-tok-1",
         "jp-tok-2",
         "jp-tok-3"
@@ -472,7 +472,7 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
     {
       "Name": "London",
       "Location": "eu-gb",
-      "zones": [
+      "Zones": [
         "eu-gb-1",
         "eu-gb-2",
         "eu-gb-3"
@@ -481,7 +481,7 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
     {
       "Name": "Sydney",
       "Location": "au-syd",
-      "zones": [
+      "Zones": [
         "au-syd-1",
         "au-syd-2",
         "au-syd-3"
@@ -509,13 +509,13 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, erro
 		return Versions{}, err
 	}
 
-	machineTypes, err := iks.GetAllVersions(ctx)
+	versions, err := iks.GetAllVersions(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	return machineTypes, nil
+	return versions, nil
 }
 func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company

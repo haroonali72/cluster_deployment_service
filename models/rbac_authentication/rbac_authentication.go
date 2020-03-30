@@ -133,6 +133,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+
 }
 
 func GetInfo(token string) (types.Response, error) {
