@@ -445,7 +445,6 @@ func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 	return ""
 }
 func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) error {
-
 	req, _ := utils.CreateDeleteRequest(models.IBM_Kube_Delete_Cluster_Endpoint + cluster.ClusterId + "?yes")
 
 	m := make(map[string]string)
@@ -468,16 +467,18 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) erro
 	}
 
 	if res.StatusCode != 204 {
-		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("error in cluster termination", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	for {
 		response, err := cloud.fetchStatus(cluster, ctx, "")
-		if err == nil && response.State == "deleting" {
-			beego.Error(err.Error())
-			return err
+		if err != nil {
+			break
 		}
-		break
+		if err == nil && response.State == "deleting" {
+			break
+		}
+
 	}
 	return nil
 }
