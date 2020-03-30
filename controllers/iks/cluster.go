@@ -189,7 +189,7 @@ func (c *IKSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
