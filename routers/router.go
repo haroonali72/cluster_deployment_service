@@ -109,6 +109,11 @@ func init() {
 				&doks.DOKSClusterController{},
 			),
 		),
+		beego.NSNamespace("/template/doks",
+			beego.NSInclude(
+				&doks.DOKSTemplateController{},
+			),
+		),
 		beego.NSNamespace("/template/op",
 			beego.NSInclude(
 				&op.OPTemplateController{},

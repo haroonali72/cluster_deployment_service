@@ -18,7 +18,6 @@ type DOKSClusterController struct {
 // @Title Get
 // @Description get kubernetes version,machine types and regions
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
 // @Success 200 {object} doks.ServerConfig
 // @Failure 400 {"error": "error msg"}
@@ -38,14 +37,6 @@ func (c *DOKSClusterController) GetServerConfig() {
 		return
 	}
 
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("DOKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -63,8 +54,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 		c.ServeJSON()
 		return
 	}
-*/
-	region :="nyc1"
+	*/
+	region := "nyc1"
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -76,23 +67,14 @@ func (c *DOKSClusterController) GetServerConfig() {
 
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		utils.SendLog(userInfo.CompanyId, "Can not fetch config file"+err.Error(), "error", projectId)
+		utils.SendLog(userInfo.CompanyId, "Can not fetch config file"+err.Error(), "error", "")
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
-	if err != nil {
-		ctx.SendLogs("DOKSGetClusterController: error getting DOKS cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
-		c.ServeJSON()
-		return
-	}
-
-	config, err := doks.GetServerConfig(doProfile.Profile, *ctx,cluster)
+	config, err := doks.GetServerConfig(doProfile.Profile, *ctx, userInfo.CompanyId)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController: error getting DOKS server config "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -154,7 +136,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 			return
 		}
 	*/
-	region :="nyc1"
+	region := "nyc1"
 
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -164,7 +146,6 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		c.ServeJSON()
 		return
 	}
-
 
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
@@ -184,7 +165,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	config, err := doks.GetKubeConfig(doProfile.Profile,*ctx, cluster)
+	config, err := doks.GetKubeConfig(doProfile.Profile, *ctx, cluster)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController: error getting DOKS server config "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -196,7 +177,6 @@ func (c *DOKSClusterController) GetKubeConfig() {
 	c.Data["json"] = config
 	c.ServeJSON()
 }
-
 
 // @Title Get
 // @Description get kubernetes cluster
@@ -254,7 +234,7 @@ func (c *DOKSClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-*/
+	*/
 	ctx.SendLogs("DOKSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
@@ -379,7 +359,7 @@ func (c *DOKSClusterController) Post() {
 			c.ServeJSON()
 			return
 		}
-*/
+	*/
 	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
@@ -455,13 +435,13 @@ func (c *DOKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-/*	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-*/	ctx.SendLogs("DOKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	/*	if !allowed {
+			c.Ctx.Output.SetStatus(401)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
+	*/ctx.SendLogs("DOKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
@@ -569,17 +549,17 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-*/
-/*	region, err := do.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-*/
-		region:="nyc1"
+	*/
+	/*	region, err := do.GetRegion(token, projectId, *ctx)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+	*/
+	region := "nyc1"
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
@@ -709,15 +689,17 @@ func (c *DOKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	 */
-	region, err := do.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	*/
+	/*	region, err := do.GetRegion(token, projectId, *ctx)
+		if err != nil {
+			ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+	*/
+	region := "nyc1"
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", projectId)
@@ -728,7 +710,7 @@ func (c *DOKSClusterController) GetStatus() {
 	}
 	ctx.SendLogs("DOKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := doks.FetchStatus(doProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
+	cluster, err := doks.FetchStatus(doProfile.Profile, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
@@ -805,7 +787,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-*/
+	*/
 	/*region, err := do.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -814,8 +796,8 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-*/
-	region :="nyc1"
+	*/
+	region := "nyc1"
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(projectId, userInfo.CompanyId, *ctx)
@@ -1047,13 +1029,13 @@ func (c *DOKSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-/*if !allowed {
+	/*if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
- */
+	*/
 	region, err := do.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

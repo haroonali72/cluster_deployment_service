@@ -152,13 +152,23 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aks/getallkubeversions/:
+  /cluster/aks/getallkubeversions/{region}:
     get:
       tags:
       - cluster/aks
       description: fetch version of kubernetes cluster
       operationId: AKSClusterController.Get Kube Versions
       parameters:
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: region
+        description: region of the cloud
+        required: true
+        type: string
       - in: header
         name: token
         description: token
@@ -1867,11 +1877,6 @@ paths:
         description: vault credentials profile id
         required: true
         type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
       - in: header
         name: token
         description: token
@@ -2766,7 +2771,7 @@ paths:
         description: body for cluster content
         required: true
         schema:
-          $ref: '#/definitions/ibm.Cluster_Def'
+          $ref: '#/definitions/iks.Cluster_Def'
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
@@ -2793,7 +2798,7 @@ paths:
         description: body for cluster content
         required: true
         schema:
-          $ref: '#/definitions/ibm.Cluster_Def'
+          $ref: '#/definitions/iks.Cluster_Def'
       - in: header
         name: token
         description: token
@@ -2833,7 +2838,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/ibm.Cluster_Def'
+            $ref: '#/definitions/iks.Cluster_Def'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -2858,7 +2863,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/ibm.Cluster_Def'
+              $ref: '#/definitions/iks.Cluster_Def'
         "400":
           description: '{"error": "error msg"}'
         "500":
@@ -2903,7 +2908,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/iks/getallkubeversions/:
+  /cluster/iks/getallkubeversions/{region}:
     get:
       tags:
       - cluster/iks
@@ -2911,8 +2916,13 @@ paths:
       operationId: IKSClusterController.Get Kube Versions
       parameters:
       - in: path
-        name: projectId
-        description: Id of the project
+        name: region
+        description: selected region value
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
         required: true
         type: string
       - in: header
@@ -2925,14 +2935,14 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/ibm.Versions'
+              $ref: '#/definitions/iks.Versions'
         "400":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/iks/getallmachines/{projectId}/:
+  /cluster/iks/getallmachines/{region}/:
     get:
       tags:
       - cluster/iks
@@ -2945,8 +2955,8 @@ paths:
         schema:
           $ref: '#/definitions/X-Profile-Id'
       - in: path
-        name: projectId
-        description: Id of the project
+        name: region
+        description: region of the cloud
         required: true
         type: string
       - in: header
@@ -2957,7 +2967,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/ibm.AllInstancesResponse'
+            $ref: '#/definitions/iks.AllInstancesResponse'
         "401":
           description: '{"error": "error msg"}'
         "404":
@@ -2968,7 +2978,7 @@ paths:
     get:
       tags:
       - cluster/iks
-      description: fetch regions of ibm
+      description: fetch regions of iks
       operationId: IKSClusterController.Get Regions
       parameters:
       - in: header
@@ -2981,7 +2991,36 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/ibm.Regions'
+              $ref: '#/definitions/iks.Regions'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/iks/getzones/{region}/:
+    get:
+      tags:
+      - cluster/iks
+      description: get zone
+      operationId: IKSClusterController.Get Zone
+      parameters:
+      - in: path
+        name: region
+        description: Id of region
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/iks.Zone'
         "400":
           description: '{"error": "error msg"}'
         "404":
@@ -3043,7 +3082,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/ibm.KubeClusterStatus'
+            $ref: '#/definitions/iks.KubeClusterStatus'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -4569,6 +4608,325 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/doks/:
+    put:
+      tags:
+      - template/doks
+      description: update an existing kubernetes template
+      operationId: DOKSTemplateController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/doks.KubernetesTemplate'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/doks
+      description: create a new kubernetes cluster template
+      operationId: DOKSTemplateController.Create
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/doks.KubernetesTemplate'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/{templateId}:
+    delete:
+      tags:
+      - template/doks
+      description: delete kubernetes template
+      operationId: DOKSTemplateController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/{templateId}/:
+    get:
+      tags:
+      - template/doks
+      description: get kubernetes cluster template
+      operationId: DOKSTemplateController.Get
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/doks.KubernetesTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/all:
+    get:
+      tags:
+      - template/doks
+      description: get all kubernetes cluster templates
+      operationId: DOKSTemplateController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/doks.KubernetesTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/allCustomerTemplates:
+    get:
+      tags:
+      - template/doks
+      description: get all the customer templates
+      operationId: DOKSTemplateController.Get All Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/doks.KubernetesTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/doks
+      description: get all the customer templates info
+      operationId: DOKSTemplateController.GetAllCustomerTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/doks.KubernetesTemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/allTemplatesInfo:
+    get:
+      tags:
+      - template/doks
+      description: get all kubernetes templates info
+      operationId: DOKSTemplateController.GetAllKubernetesTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/doks.KubernetesTemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/customerTemplate:
+    put:
+      tags:
+      - template/doks
+      description: update an existing kubernetes customer template
+      operationId: DOKSTemplateController.Update customer kubernetes template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/doks.KubernetesTemplate'
+      responses:
+        "200":
+          description: '{"msg": "customer template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/doks
+      description: create a new customer template
+      operationId: DOKSTemplateController.Create Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/doks.KubernetesTemplate'
+      responses:
+        "200":
+          description: '{"msg": "customer template created successfully"}'
+        "400":
+          description: '{"error": "error message"}'
+        "401":
+          description: '{"error": "error message"}'
+        "404":
+          description: '{"error": "error message"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/doks/customerTemplate/{templateId}:
+    get:
+      tags:
+      - template/doks
+      description: get customer template
+      operationId: DOKSTemplateController.Get customer template
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/doks.KubernetesTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+    delete:
+      tags:
+      - template/doks
+      description: delete a customer template
+      operationId: DOKSTemplateController.Delete customer template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "customer template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/gcp/:
     put:
       tags:
@@ -5213,7 +5571,7 @@ paths:
         description: body for template content
         required: true
         schema:
-          $ref: '#/definitions/ibm.Template'
+          $ref: '#/definitions/iks.Template'
       responses:
         "200":
           description: '{"msg": "template updated successfully"}'
@@ -5236,7 +5594,7 @@ paths:
         description: body for template content
         required: true
         schema:
-          $ref: '#/definitions/ibm.Template'
+          $ref: '#/definitions/iks.Template'
       - in: header
         name: token
         description: token
@@ -5276,7 +5634,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/ibm.Template'
+            $ref: '#/definitions/iks.Template'
         "401":
           description: '{"error": "error msg"}'
         "404":
@@ -5324,7 +5682,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/ibm.Template'
+              $ref: '#/definitions/iks.Template'
         "400":
           description: '{"error": "error msg"}'
         "500":
@@ -5346,7 +5704,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/ibm.Template'
+              $ref: '#/definitions/iks.Template'
         "400":
           description: '{"error": "error msg"}'
         "404":
@@ -5370,7 +5728,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/ibm.TemplateMetadata'
+              $ref: '#/definitions/iks.TemplateMetadata'
         "400":
           description: '{"error": "error msg"}'
         "500":
@@ -5392,7 +5750,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/ibm.TemplateMetadata'
+              $ref: '#/definitions/iks.TemplateMetadata'
         "400":
           description: '{"error": "error msg"}'
         "500":
@@ -5417,7 +5775,7 @@ paths:
         description: body for template content
         required: true
         schema:
-          $ref: '#/definitions/ibm.Template'
+          $ref: '#/definitions/iks.Template'
       responses:
         "200":
           description: '{"msg": "customer template updated successfully"}'
@@ -5444,7 +5802,7 @@ paths:
         description: body for template content
         required: true
         schema:
-          $ref: '#/definitions/ibm.Template'
+          $ref: '#/definitions/iks.Template'
       responses:
         "200":
           description: '{"msg": "template created successfully"}'
@@ -5472,7 +5830,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/ibm.Template'
+            $ref: '#/definitions/iks.Template'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -5650,19 +6008,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001586ed0.false:
+  434.0xc00164ae10.false:
+    title: "false"
+    type: object
+  518.0xc00157bdd0.false:
     title: "false"
     type: object
   1559.string:
     title: string
     type: object
-  5960.0xc0015b43f0.false:
+  5960.0xc001672330.false:
     title: "false"
     type: object
-  13385.0xc000f3ec60.false:
+  13279.0xc0015a17d0.false:
     title: "false"
     type: object
-  13431.0xc00123a780.false:
+  13385.0xc000fc62d0.false:
+    title: "false"
+    type: object
+  13431.0xc0012afdd0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -5690,9 +6054,6 @@ definitions:
         type: string
       status:
         type: string
-      tags:
-        additionalProperties:
-          type: string
       type:
         type: string
   aks.AKSClusterTemplate:
@@ -5766,6 +6127,12 @@ definitions:
         format: int32
       name:
         type: string
+      node_labels:
+        additionalProperties:
+          type: string
+      node_taints:
+        additionalProperties:
+          type: string
       os_disk_size_gb:
         type: integer
         format: int32
@@ -5814,17 +6181,38 @@ definitions:
           $ref: '#/definitions/aks.ManagedClusterAgentPoolProfile'
       api_server_access_profile:
         $ref: '#/definitions/aks.ManagedClusterAPIServerAccessProfile'
+      client_id:
+        type: string
+      cluster_tags:
+        additionalProperties:
+          type: string
       dns_prefix:
         type: string
+      dns_service_ip:
+        type: string
+      docker_bridge_cidr:
+        type: string
+      enable_http_routing:
+        type: boolean
       enable_rbac:
+        type: boolean
+      enable_service_principal:
         type: boolean
       fqdn:
         type: string
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       kubernetes_version:
         type: string
-      network_profile:
-        $ref: '#/definitions/aks.NetworkProfileType'
+      pod_cidr:
+        type: string
       provisioning_state:
+        type: string
+      secret:
+        type: string
+      service_cidr:
         type: string
   aks.ManagedClusterPropertiesT:
     title: ManagedClusterPropertiesT
@@ -5838,18 +6226,6 @@ definitions:
         $ref: '#/definitions/aks.ManagedClusterAPIServerAccessProfileT'
       enable_rbac:
         type: boolean
-  aks.NetworkProfileType:
-    title: NetworkProfileType
-    type: object
-    properties:
-      dns_service_ip:
-        type: string
-      docker_bridge_cidr:
-        type: string
-      pod_cidr:
-        type: string
-      service_cidr:
-        type: string
   aks.OSType:
     title: OSType
     type: object
@@ -5886,7 +6262,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000f3ec60.false'
+        $ref: '#/definitions/13385.0xc000fc62d0.false'
       name:
         type: string
       network_name:
@@ -6267,7 +6643,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc00123a780.false'
+        $ref: '#/definitions/13431.0xc0012afdd0.false'
       name:
         type: string
       network_name:
@@ -6432,11 +6808,7 @@ definitions:
         type: string
       id:
         type: string
-      kube_status:
-        $ref: '#/definitions/doks.KubernetesClusterStatus'
       name:
-        type: string
-      network_name:
         type: string
       node_pools:
         type: array
@@ -6454,16 +6826,6 @@ definitions:
           type: string
       version:
         type: string
-      vpc_uuid:
-        type: string
-  doks.KubernetesClusterStatus:
-    title: KubernetesClusterStatus
-    type: object
-    properties:
-      message:
-        type: string
-      state:
-        type: string
   doks.KubernetesNode:
     title: KubernetesNode
     type: object
@@ -6477,8 +6839,6 @@ definitions:
         type: string
       name:
         type: string
-      status:
-        $ref: '#/definitions/doks.KubernetesNodeStatus'
       updated_at:
         type: string
         format: datetime
@@ -6488,14 +6848,13 @@ definitions:
     properties:
       auto_scale:
         type: boolean
-      count:
-        type: integer
-        format: int64
       id:
         type: string
       labels:
         additionalProperties:
           type: string
+      machine_type:
+        type: string
       max_nodes:
         type: integer
         format: int64
@@ -6504,23 +6863,66 @@ definitions:
         format: int64
       name:
         type: string
+      node_count:
+        type: integer
+        format: int64
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/doks.KubernetesNode'
+      tags:
+        type: array
+        items:
+          type: string
+  doks.KubernetesNodePoolT:
+    title: KubernetesNodePoolT
+    type: object
+    properties:
+      auto_scale:
+        type: boolean
+      max_nodes:
+        type: integer
+        format: int64
+      min_nodes:
+        type: integer
+        format: int64
+      node_count:
+        type: integer
+        format: int32
       nodes:
         type: array
         items:
           $ref: '#/definitions/doks.KubernetesNode'
       size:
         type: string
-      tags:
-        type: array
-        items:
-          type: string
-  doks.KubernetesNodeStatus:
-    title: KubernetesNodeStatus
+  doks.KubernetesTemplate:
+    title: KubernetesTemplate
     type: object
     properties:
-      message:
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
         type: string
-      state:
+      is_cloudplex:
+        type: boolean
+      name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/doks.KubernetesNodePoolT'
+      template_id:
+        type: string
+  doks.KubernetesTemplateMetadata:
+    title: KubernetesTemplateMetadata
+    type: object
+    properties:
+      is_cloudplex:
+        type: boolean
+      pool_count:
+        type: integer
+        format: int64
+      template_id:
         type: string
   doks.ServerConfig:
     title: ServerConfig
@@ -7271,26 +7673,176 @@ definitions:
   godo.Region:
     title: Region
     type: object
-  ibm.AllInstancesResponse:
+  iks.AllInstancesResponse:
     title: AllInstancesResponse
     type: object
-  ibm.Cluster_Def:
+    properties:
+      profiles:
+        type: array
+        items:
+          $ref: '#/definitions/iks.InstanceProfile'
+  iks.Cluster_Def:
     title: Cluster_Def
     type: object
-  ibm.KubeClusterStatus:
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      cluster_id:
+        type: string
+      company_id:
+        type: string
+      disable_public_service_endpoint:
+        type: boolean
+      kube_credentials:
+        $ref: '#/definitions/13279.0xc0015a17d0.false'
+      kube_version:
+        type: string
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/iks.NodePool'
+      project_id:
+        type: string
+      resource_group:
+        type: string
+      status:
+        type: string
+      token_name:
+        type: string
+      vpc_id:
+        type: string
+  iks.InstanceProfile:
+    title: InstanceProfile
+    type: object
+    properties:
+      family:
+        type: string
+      name:
+        type: string
+  iks.KubeClusterStatus:
     title: KubeClusterStatus
     type: object
-  ibm.Regions:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      region:
+        type: string
+      resourceGroupName:
+        type: string
+      state:
+        type: string
+      workerCount:
+        type: integer
+        format: int64
+  iks.Kubernetes:
+    title: Kubernetes
+    type: object
+    properties:
+      major:
+        type: integer
+        format: int64
+      minor:
+        type: integer
+        format: int64
+      patch:
+        type: integer
+        format: int64
+  iks.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
+      pool_role:
+        $ref: '#/definitions/models.PoolRole'
+      subnet_id:
+        type: string
+  iks.Regions:
     title: Regions
     type: object
-  ibm.Template:
+    properties:
+      Location:
+        type: string
+      Name:
+        type: string
+      Zones:
+        type: array
+        items:
+          type: string
+  iks.Template:
     title: Template
     type: object
-  ibm.TemplateMetadata:
+    properties:
+      _id:
+        $ref: '#/definitions/bson.ObjectId'
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      disable_public_service_endpoint:
+        type: boolean
+      is_cloudplex:
+        type: boolean
+      kube_credentials:
+        $ref: '#/definitions/518.0xc00157bdd0.false'
+      kube_version:
+        type: string
+      name:
+        type: string
+      network_name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/iks.NodePool'
+      project_id:
+        type: string
+      resource_group:
+        type: string
+      status:
+        type: string
+      template_id:
+        type: string
+      token_name:
+        type: string
+      vpc_id:
+        type: string
+  iks.TemplateMetadata:
     title: TemplateMetadata
     type: object
-  ibm.Versions:
+    properties:
+      is_cloudplex:
+        type: boolean
+      pool_count:
+        type: integer
+        format: int64
+      template_id:
+        type: string
+  iks.Versions:
     title: Versions
+    type: object
+    properties:
+      kubernetes:
+        type: array
+        items:
+          $ref: '#/definitions/iks.Kubernetes'
+  iks.Zone:
+    title: Zone
     type: object
   key_utils.AWSKey:
     title: AWSKey
@@ -7339,7 +7891,7 @@ definitions:
     - GKE = "gke"
     - DO = "do"
     - DOKS = "doks"
-    - IBM = "ibm"
+    - IKS = "iks"
     - OP = "op"
     - AKS = "aks"
     example: aws
@@ -7413,7 +7965,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc0015b43f0.false'
+        $ref: '#/definitions/5960.0xc001672330.false'
       name:
         type: string
       node_pools:
@@ -7499,7 +8051,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001586ed0.false'
+        $ref: '#/definitions/434.0xc00164ae10.false'
       name:
         type: string
       node_pools:
@@ -7592,7 +8144,10 @@ tags:
     Operations about Gcp template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
 - name: cluster/iks
   description: |
-    Operations about IBM cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+    Operations about ikscluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: template/doks
+  description: |
+    Operations about DOKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
 - name: template/op
   description: |
     Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]

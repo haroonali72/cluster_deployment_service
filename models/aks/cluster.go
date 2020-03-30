@@ -31,7 +31,6 @@ type AKSCluster struct {
 	Name              string                   `json:"name,omitempty" bson:"name,omitempty"`
 	Type              string                   `json:"type,omitempty" bson:"type,omitempty"`
 	Location          string                   `json:"location,omitempty" bson:"location,omitempty"`
-	Tags              map[string]string        `json:"tags" bson:"tags"`
 }
 
 type ManagedClusterProperties struct {
@@ -39,10 +38,20 @@ type ManagedClusterProperties struct {
 	KubernetesVersion      string                               `json:"kubernetes_version,omitempty" bson:"kubernetes_version,omitempty"`
 	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty"`
 	Fqdn                   string                               `json:"fqdn,omitempty" bson:"fqdn,omitempty"`
-	NetworkProfile         NetworkProfileType                   `json:"network_profile,omitempty" bson:"network_profile,omitempty"`
 	AgentPoolProfiles      []ManagedClusterAgentPoolProfile     `json:"agent_pool,omitempty" bson:"agent_pool,omitempty"`
 	APIServerAccessProfile ManagedClusterAPIServerAccessProfile `json:"api_server_access_profile,omitempty" bson:"api_server_access_profile,omitempty"`
 	EnableRBAC             bool                                 `json:"enable_rbac,omitempty" bson:"enable_rbac,omitempty"`
+	IsHttpRouting          bool                                 `json:"enable_http_routing,omitempty" bson:"enable_http_routing,omitempty"`
+	IsServicePrincipal     bool                                 `json:"enable_service_principal,omitempty" bson:"enable_service_principal,omitempty"`
+	ClientID               string                               `json:"client_id,omitempty" bson:"client_id,omitempty"`
+	Secret                 string                               `json:"secret,omitempty" bson:"secret,omitempty"`
+	ClusterTags            map[string]string                    `json:"cluster_tags" bson:"cluster_tags"`
+	IsAdvanced             bool                                 `json:"is_advance" bson:"is_advance"`
+	IsExpert               bool                                 `json:"is_expert" bson:"is_expert"`
+	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty"`
+	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty"`
+	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty"`
+	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty"`
 }
 
 // ManagedClusterAPIServerAccessProfile access profile for managed cluster API server.
@@ -51,26 +60,20 @@ type ManagedClusterAPIServerAccessProfile struct {
 	EnablePrivateCluster bool     `json:"enable_private_cluster,omitempty" bson:"enable_private_cluster,omitempty"`
 }
 
-// NetworkProfileType profile of network configuration.
-type NetworkProfileType struct {
-	PodCidr          string `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty"`
-	ServiceCidr      string `json:"service_cidr,omitempty" bson:"service_cidr,omitempty"`
-	DNSServiceIP     string `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty"`
-	DockerBridgeCidr string `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty"`
-}
-
 // ManagedClusterAgentPoolProfile profile for the container service agent pool.
 type ManagedClusterAgentPoolProfile struct {
-	Name              string          `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
-	Count             int32           `json:"count,omitempty" bson:"count,omitempty" validate:"required"`
-	VMSize            aks.VMSizeTypes `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
-	OsDiskSizeGB      int32           `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
-	VnetSubnetID      string          `json:"subnet_id" bson:"subnet_id"`
-	MaxPods           int32           `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
-	OsType            aks.OSType      `json:"os_type,omitempty" bson:"os_type,omitempty"`
-	MaxCount          int32           `json:"max_count,omitempty" bson:"max_count,omitempty"`
-	MinCount          int32           `json:"min_count,omitempty" bson:"min_count,omitempty"`
-	EnableAutoScaling bool            `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
+	Name              string            `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
+	Count             int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required"`
+	VMSize            aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
+	OsDiskSizeGB      int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
+	VnetSubnetID      string            `json:"subnet_id" bson:"subnet_id"`
+	MaxPods           int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
+	OsType            aks.OSType        `json:"os_type,omitempty" bson:"os_type,omitempty"`
+	MaxCount          int32             `json:"max_count,omitempty" bson:"max_count,omitempty"`
+	MinCount          int32             `json:"min_count,omitempty" bson:"min_count,omitempty"`
+	EnableAutoScaling bool              `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
+	NodeLabels        map[string]string `json:"node_labels,omitempty" bson:"node_labels,omitempty"`
+	NodeTaints        map[string]string `json:"node_taints,omitempty" bson:"node_taints,omitempty"`
 }
 
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
@@ -489,7 +492,35 @@ func GetAKSVms(ctx utils.Context) []string {
 	return vms
 }
 
-func GetKubeVersions(ctx utils.Context) []string {
-	kubeVersions := []string{"1.17.3 (preview)", "1.16.7", "1.15.10", "1.15.7", "1.14.8", "1.14.7"}
-	return kubeVersions
+func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]string, error) {
+	aksOps, err := GetAKS(credentials.Profile)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+
+	err = aksOps.init()
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+
+	result, err := aksOps.GetKubernetesVersions(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+
+	var versions []string
+	for _, versionProfile := range *result.Orchestrators {
+		if *versionProfile.OrchestratorVersion == "1.6.9" {
+			continue
+		}
+		if *versionProfile.OrchestratorType == "Kubernetes" {
+			versions = append(versions, *versionProfile.OrchestratorVersion)
+		}
+	}
+
+	return versions, nil
+
 }

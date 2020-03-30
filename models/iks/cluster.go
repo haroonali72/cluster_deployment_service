@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
 	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(IKS|iks)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
@@ -52,9 +52,9 @@ type Data struct {
 }
 
 type Regions struct {
-	Name  string   `json:"name"`
-	Value string   `json:"value"`
-	Zones []string `json:"zones"`
+	Name     string   `json:"Name"`
+	Location string   `json:"Location"`
+	Zones    []string `json:"Zones"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -98,7 +98,7 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoIBMClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
 	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -116,7 +116,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoIBMClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
 	err = c.Find(bson.M{}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -163,7 +163,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	}
 
 	mc := db.GetMongoConf()
-	err = db.InsertInMongo(mc.MongoIBMClusterCollection, cluster)
+	err = db.InsertInMongo(mc.MongoIKSClusterCollection, cluster)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Create - Got error inserting cluster to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -221,7 +221,7 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoIBMClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
 	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -264,11 +264,11 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		return confError
 	}
-	ibm, err := GetIBM(credentials)
+	iks, err := GetIBM(credentials)
 	if err != nil {
 		return err
 	}
-	confError = ibm.init(credentials.Region, ctx)
+	confError = iks.init(credentials.Region, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = "Cluster Creation Failed"
@@ -281,10 +281,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = ibm.create(cluster, ctx, companyId, token)
+	cluster, confError = iks.create(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		confError = ibm.terminateCluster(&cluster, ctx)
+		confError = iks.terminateCluster(&cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
@@ -317,17 +317,17 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
 	}
-	ibm, err := GetIBM(credentials.Profile)
+	iks, err := GetIBM(credentials.Profile)
 	if err != nil {
 		return KubeClusterStatus{}, err
 	}
-	err = ibm.init(credentials.Profile.Region, ctx)
+	err = iks.init(credentials.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
 	}
 
-	response, e := ibm.fetchStatus(&cluster, ctx, companyId)
+	response, e := iks.fetchStatus(&cluster, ctx, companyId)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -358,7 +358,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		return errors.New(text)
 	}
 
-	ibm, err := GetIBM(profile.Profile)
+	iks, err := GetIBM(profile.Profile)
 	if err != nil {
 		return err
 	}
@@ -366,7 +366,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	cluster.Status = string(models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = ibm.init(profile.Profile.Region, ctx)
+	err = iks.init(profile.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
@@ -380,7 +380,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		return err
 	}
 
-	err = ibm.terminateCluster(&cluster, ctx)
+	err = iks.terminateCluster(&cluster, ctx)
 	if err != nil {
 		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
 
@@ -411,19 +411,19 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	return nil
 }
 func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesResponse, error) {
-	ibm, err := GetIBM(profile.Profile)
+	iks, err := GetIBM(profile.Profile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return AllInstancesResponse{}, err
 	}
 
-	err = ibm.init(profile.Profile.Region, ctx)
+	err = iks.init(profile.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return AllInstancesResponse{}, err
 	}
 
-	machineTypes, err := ibm.GetAllInstances(ctx)
+	machineTypes, err := iks.GetAllInstances(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return AllInstancesResponse{}, err
@@ -434,54 +434,54 @@ func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesRe
 func GetRegions(ctx utils.Context) ([]Regions, error) {
 	regionsDetails := []byte(`[
     {
-      "name": "Dallas",
-      "value": "us-south",
-      "zones": [
+      "Name": "Dallas",
+      "Location": "us-south",
+      "Zones": [
         "us-south-1",
         "us-south-2",
         "us-south-3"
       ]
     },
     {
-      "name": "Washington DC",
-      "value": "us-east",
-      "zones": [
+      "Name": "Washington DC",
+      "Location": "us-east",
+      "Zones": [
         "us-east-1",
         "us-east-2",
         "us-east-3"
       ]
     },
     {
-      "name": "Frankfurt",
-      "value": "eu-de",
-      "zones": [
+      "Name": "Frankfurt",
+      "Location": "eu-de",
+      "Zones": [
         "eu-de-1",
         "eu-de-2",
         "eu-de-3"
       ]
     },
     {
-      "name": "Tokyo",
-      "value": "jp-tok",
-      "zones": [
+      "Name": "Tokyo",
+      "Location": "jp-tok",
+      "Zones": [
         "jp-tok-1",
         "jp-tok-2",
         "jp-tok-3"
       ]
     },
     {
-      "name": "London",
-      "value": "eu-gb",
-      "zones": [
+      "Name": "London",
+      "Location": "eu-gb",
+      "Zones": [
         "eu-gb-1",
         "eu-gb-2",
         "eu-gb-3"
       ]
     },
     {
-      "name": "Sydney",
-      "value": "au-syd",
-      "zones": [
+      "Name": "Sydney",
+      "Location": "au-syd",
+      "Zones": [
         "au-syd-1",
         "au-syd-2",
         "au-syd-3"
@@ -497,32 +497,32 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
 	return regions, nil
 }
 func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, error) {
-	ibm, err := GetIBM(profile.Profile)
+	iks, err := GetIBM(profile.Profile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	err = ibm.init(profile.Profile.Region, ctx)
+	err = iks.init(profile.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	machineTypes, err := ibm.GetAllVersions(ctx)
+	versions, err := iks.GetAllVersions(ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	return machineTypes, nil
+	return versions, nil
 }
 func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
 	if err != nil {
-		ctx.SendLogs("IBMKubernetesClusterController : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSKubernetesClusterController. : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -530,7 +530,7 @@ func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, c
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
-		ctx.SendLogs("IBMKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSKubernetesClusterController. : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -538,7 +538,7 @@ func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, c
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
-		ctx.SendLogs("IBMKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSKubernetesClusterController. : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
