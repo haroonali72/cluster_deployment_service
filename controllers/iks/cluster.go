@@ -165,7 +165,13 @@ func (c *IKSClusterController) GetAll() {
 func (c *IKSClusterController) Post() {
 
 	var cluster iks.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	cluster.CreationDate = time.Now()
 
@@ -186,7 +192,7 @@ func (c *IKSClusterController) Post() {
 		return
 	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Create", token, *ctx)
