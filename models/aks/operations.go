@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-09-01/skus"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
@@ -28,6 +29,7 @@ type AKS struct {
 	Location          subscriptions.Client
 	MCClient          containerservice.ManagedClustersClient
 	KubeVersionClient containerservice.ContainerServicesClient
+	ResourceSkuClient skus.ResourceSkusClient
 	Context           context.Context
 	ProjectId         string
 	ID                string
@@ -68,6 +70,9 @@ func (cloud *AKS) init() error {
 
 	cloud.KubeVersionClient = containerservice.NewContainerServicesClient(cloud.Subscription)
 	cloud.KubeVersionClient.Authorizer = cloud.Authorizer
+
+	cloud.ResourceSkuClient = skus.NewResourceSkusClient(cloud.Subscription)
+	cloud.ResourceSkuClient.Authorizer = cloud.Authorizer
 
 	cloud.RoleAssignment = authorization.NewRoleAssignmentsClient(cloud.Subscription)
 	cloud.RoleAssignment.Authorizer = cloud.Authorizer
@@ -180,18 +185,18 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 
 	request := cloud.generateClusterCreateRequest(aksCluster)
 	cloud.ProjectId = aksCluster.ProjectId
-	networkInformation := cloud.getAzureNetwork(token, ctx)
+	//networkInformation := cloud.getAzureNetwork(token, ctx)
 
-	if len(networkInformation.Definition) > 0 {
-		for _, AKSnodePool := range *request.ManagedClusterProperties.AgentPoolProfiles {
-			for _, subnet := range networkInformation.Definition[0].Subnets {
-				if subnet.Name == *AKSnodePool.VnetSubnetID {
-					*AKSnodePool.VnetSubnetID = subnet.SubnetId
-					break
-				}
-			}
-		}
-	}
+	//if len(networkInformation.Definition) > 0 {
+	//	for _, AKSnodePool := range *request.ManagedClusterProperties.AgentPoolProfiles {
+	//		for _, subnet := range networkInformation.Definition[0].Subnets {
+	//			if subnet.Name == *AKSnodePool.VnetSubnetID {
+	//				*AKSnodePool.VnetSubnetID = subnet.SubnetId
+	//				break
+	//			}
+	//		}
+	//	}
+	//}
 	cloud.Context = context.Background()
 	future, err := cloud.MCClient.CreateOrUpdate(cloud.Context, aksCluster.ResourceGoup, *request.Name, *request)
 	if err != nil {
@@ -371,7 +376,6 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 		Name:       *v.Name,
 		Type:       *v.Type,
 		Location:   *v.Location,
-		//Tags:       tags,
 	}
 }
 
@@ -382,7 +386,8 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
 			AKSnodepool.Name = &nodepool.Name
 			AKSnodepool.Count = &nodepool.Count
-			AKSnodepool.OsType = nodepool.OsType
+			//AKSnodepool.OsType = nodepool.OsType
+			AKSnodepool.OsType = "Linux"
 			AKSnodepool.VMSize = nodepool.VMSize
 			AKSnodepool.OsDiskSizeGB = &nodepool.OsDiskSizeGB
 			AKSnodepool.MaxPods = &nodepool.MaxPods
@@ -416,7 +421,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSnodepool.VMSize = nodepool.VMSize
 
 			nodelabels := make(map[string]*string)
-			nodelabels["AKS-Custer"] = to.StringPtr(c.ProjectId)
+			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.ProjectId)
 			AKSnodepool.NodeLabels = nodelabels
 
 			AKSNodePools = append(AKSNodePools, AKSnodepool)
@@ -473,9 +478,71 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			APIServerAccessProfile:  generateApiServerAccessProfile(c),
 			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
 			AddonProfiles:           generateAddonProfiles(c),
+			NetworkProfile:          generateNetworkProfile(c),
+			//WindowsProfile:          generateWindowsProfile(),
 		},
+		Identity: generateClusterIdentity(),
+		Tags:     generateClusterTags(c),
 	}
 	return &request
+}
+
+func generateWindowsProfile() *containerservice.ManagedClusterWindowsProfile {
+	var AKSwindowProfile containerservice.ManagedClusterWindowsProfile
+	AKSwindowProfile.AdminPassword = to.StringPtr("cloudplex")
+	AKSwindowProfile.AdminUsername = to.StringPtr("cloudplex")
+	return &AKSwindowProfile
+}
+
+func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.OrchestratorVersionProfileListResult, error) {
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return nil, err
+		}
+	}
+
+	cloud.Context = context.Background()
+	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "Microsoft.ContainerService")
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
+
+	if c.ClusterProperties.IsExpert {
+		var AKSnetworkProfile containerservice.NetworkProfileType
+		AKSnetworkProfile.PodCidr = &c.ClusterProperties.PodCidr
+		AKSnetworkProfile.DNSServiceIP = &c.ClusterProperties.DNSServiceIP
+		AKSnetworkProfile.ServiceCidr = &c.ClusterProperties.ServiceCidr
+		AKSnetworkProfile.DockerBridgeCidr = &c.ClusterProperties.DockerBridgeCidr
+		return &AKSnetworkProfile
+	}
+	return nil
+}
+
+func generateClusterTags(c AKSCluster) map[string]*string {
+	AKSclusterTags := make(map[string]*string)
+	if c.ClusterProperties.IsAdvanced {
+		for key, value := range c.ClusterProperties.ClusterTags {
+			AKSclusterTags[key] = &value
+		}
+	} else {
+		AKSclusterTags["AKS-Cluster"] = &c.ProjectId
+	}
+
+	return AKSclusterTags
+}
+
+func generateClusterIdentity() *containerservice.ManagedClusterIdentity {
+	var AKSclusterIdentity containerservice.ManagedClusterIdentity
+	AKSclusterIdentity.Type = "SystemAssigned"
+	return &AKSclusterIdentity
 }
 
 func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClusterAddonProfile {
@@ -545,13 +612,11 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 	cluster.ClusterProperties.Fqdn = *AKScluster.Fqdn
 	cluster.ClusterProperties.EnableRBAC = *AKScluster.EnableRBAC
 
-	var networkProfile NetworkProfileType
-	networkProfile.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
-	networkProfile.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
-	networkProfile.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
-	networkProfile.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
+	cluster.ClusterProperties.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
+	cluster.ClusterProperties.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
+	cluster.ClusterProperties.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
+	cluster.ClusterProperties.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
 
-	cluster.ClusterProperties.NetworkProfile = networkProfile
 	return nil
 }
 

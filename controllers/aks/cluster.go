@@ -951,18 +951,36 @@ func (c *AKSClusterController) GetKubeConfig() {
 
 // @Title Get Kube Versions
 // @Description fetch version of kubernetes cluster
+// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	region	path	string	true	"region of the cloud"
 // @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getallkubeversions/ [get]
+// @router /getallkubeversions/:region [get]
 func (c *AKSClusterController) FetchKubeVersions() {
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region := c.GetString(":region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -980,7 +998,16 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: GetAllKubernetesVersions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	kubeVersions := aks.GetKubeVersions(*ctx)
+	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.ServeJSON()
+		return
+	}
+
+	kubeVersions, err := aks.GetKubeVersions(azureProfile, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
