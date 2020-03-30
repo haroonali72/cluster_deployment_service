@@ -289,7 +289,7 @@ func (c *IKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	_, err = rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -297,13 +297,13 @@ func (c *IKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+	/*if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	//=============================================================================//
 
 	ctx.SendLogs("IKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -347,14 +347,14 @@ func (c *IKSClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	token	header	string	token ""
-// @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId/:forceDelete  [delete]
+// @router delete/:projectId/:forceDelete [delete]
 func (c *IKSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
@@ -390,7 +390,7 @@ func (c *IKSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", id, "Delete", token, *ctx)
+	_, err = rbac_athentication.Authenticate(models.IKS, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -398,13 +398,13 @@ func (c *IKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	//=============================================================================//
 
 	ctx.SendLogs("IKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
