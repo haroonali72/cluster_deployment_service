@@ -18,6 +18,40 @@ import (
 type KubernetesClusterConfig struct {
 	KubeconfigYAML []byte
 }
+type KubernetesConfig struct {
+	ApiVersion		string		  	`yaml:"apiVersion"`
+	Clusters		[]Clusters  	  	`yaml:"clusters"`
+	Contexts 		[]Contexts         	`yaml:"contexts"`
+	CurrentContext	string			`yaml:"current-context"`
+	Kind			string			`yaml:"kind"`
+	Preferences		Preference		`yaml:"preference"`
+	Users			[]Users			`yaml:"users"`
+}
+
+type Clusters struct {
+	Cluster			Cluster  	  	`yaml:"cluster"`
+	Name			string			`yaml:"name"`
+}
+type Cluster struct {
+	Certificate		string			`yaml:"certificate-authority-data"`
+	Server			string			`yaml:"server"`
+}
+type Contexts struct{
+	Context    		Context      		`yaml:"context"`
+	Name			string			`yaml:"name"`
+}
+type Context struct{
+	Cluster			string			`yaml:"cluster"`
+	User			string			`yaml:"user"`
+}
+type Preference struct {}
+type Users struct {
+	Name			string			`yaml:"name"`
+	User			User			`yaml:"user"`
+}
+type User struct {
+	Token			string			`yaml:"token"`
+}
 type KubernetesCluster struct {
 	ID               string       			`json:"id" bson:"id"`
 	ProjectId        string       			`json:"project_id" bson:"project_id" valid:"required"`
@@ -423,7 +457,7 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return nil
 }
-func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster KubernetesCluster) (config KubernetesClusterConfig, confError error) {
+func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster KubernetesCluster) (config KubernetesConfig, confError error) {
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 
@@ -449,6 +483,8 @@ func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster K
 		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return config, nil
 	}
+
+
 
 	return config, confError
 }

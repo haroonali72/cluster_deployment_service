@@ -2800,7 +2800,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/doks.ServerConfig"
+                            "$ref": "#/definitions/doks.KubernetesConfig"
                         }
                     },
                     "400": {
@@ -9119,11 +9119,11 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc0016269c0.false": {
+        "13363.0xc001624ed0.false": {
             "title": "false",
             "type": "object"
         },
-        "37047.0xc0015c4300.false": {
+        "37047.0xc0015c4810.false": {
             "title": "false",
             "type": "object"
         },
@@ -9131,19 +9131,19 @@
             "title": "string",
             "type": "object"
         },
-        "442.0xc0015f8b70.false": {
+        "442.0xc0015f9080.false": {
             "title": "false",
             "type": "object"
         },
-        "605.0xc000f4c7b0.false": {
+        "605.0xc000f4e720.false": {
             "title": "false",
             "type": "object"
         },
-        "611.0xc001521bf0.false": {
+        "611.0xc001548120.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc0012502a0.false": {
+        "637.0xc001250210.false": {
             "title": "false",
             "type": "object"
         },
@@ -9513,7 +9513,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f4c7b0.false"
+                    "$ref": "#/definitions/605.0xc000f4e720.false"
                 },
                 "name": {
                     "type": "string"
@@ -10078,7 +10078,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc0012502a0.false"
+                    "$ref": "#/definitions/637.0xc001250210.false"
                 },
                 "name": {
                     "type": "string"
@@ -10302,6 +10302,54 @@
             "title": "string",
             "type": "object"
         },
+        "doks.Cluster": {
+            "title": "Cluster",
+            "type": "object",
+            "properties": {
+                "Certificate": {
+                    "type": "string"
+                },
+                "Server": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.Clusters": {
+            "title": "Clusters",
+            "type": "object",
+            "properties": {
+                "Cluster": {
+                    "$ref": "#/definitions/doks.Cluster"
+                },
+                "Name": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.Context": {
+            "title": "Context",
+            "type": "object",
+            "properties": {
+                "Cluster": {
+                    "type": "string"
+                },
+                "User": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.Contexts": {
+            "title": "Contexts",
+            "type": "object",
+            "properties": {
+                "Context": {
+                    "$ref": "#/definitions/doks.Context"
+                },
+                "Name": {
+                    "type": "string"
+                }
+            }
+        },
         "doks.DOKSCluster": {
             "title": "DOKSCluster",
             "type": "object"
@@ -10348,6 +10396,42 @@
                 },
                 "version": {
                     "type": "string"
+                }
+            }
+        },
+        "doks.KubernetesConfig": {
+            "title": "KubernetesConfig",
+            "type": "object",
+            "properties": {
+                "ApiVersion": {
+                    "type": "string"
+                },
+                "Clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.Clusters"
+                    }
+                },
+                "Contexts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.Contexts"
+                    }
+                },
+                "CurrentContext": {
+                    "type": "string"
+                },
+                "Kind": {
+                    "type": "string"
+                },
+                "Preferences": {
+                    "$ref": "#/definitions/doks.Preference"
+                },
+                "Users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.Users"
+                    }
                 }
             }
         },
@@ -10494,9 +10578,34 @@
                 }
             }
         },
+        "doks.Preference": {
+            "title": "Preference",
+            "type": "object"
+        },
         "doks.ServerConfig": {
             "title": "ServerConfig",
             "type": "object"
+        },
+        "doks.User": {
+            "title": "User",
+            "type": "object",
+            "properties": {
+                "Token": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.Users": {
+            "title": "Users",
+            "type": "object",
+            "properties": {
+                "Name": {
+                    "type": "string"
+                },
+                "User": {
+                    "$ref": "#/definitions/doks.User"
+                }
+            }
         },
         "gcp.AccountData": {
             "title": "AccountData",
@@ -11642,7 +11751,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/611.0xc001521bf0.false"
+                    "$ref": "#/definitions/611.0xc001548120.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11794,7 +11903,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/37047.0xc0015c4300.false"
+                    "$ref": "#/definitions/37047.0xc0015c4810.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12023,7 +12132,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0015f8b70.false"
+                    "$ref": "#/definitions/442.0xc0015f9080.false"
                 },
                 "name": {
                     "type": "string"
@@ -12151,7 +12260,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc0016269c0.false"
+                    "$ref": "#/definitions/13363.0xc001624ed0.false"
                 },
                 "name": {
                     "type": "string"

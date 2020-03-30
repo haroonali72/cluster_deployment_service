@@ -92,7 +92,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} doks.ServerConfig
+// @Success 200 {object} doks.KubernetesConfig
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
