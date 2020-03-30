@@ -19,49 +19,48 @@ type KubernetesClusterConfig struct {
 	KubeconfigYAML []byte
 }
 type KubernetesCluster struct {
-	ID               string       `json:"id" bson:"id"`
-	ProjectId        string       `json:"project_id" bson:"project_id" valid:"required"`
-	CompanyId        string       `json:"company_id" bson:"company_id" valid:"required"`
-	NetworkName      string       `json:"network_name" bson:"network_name" valid:"required"`
-	Cloud            models.Cloud `json:"cloud" bson:"cloud" valid:"required"`
-	CreationDate     time.Time    `json:"-" bson:"creation_date"`
-	ModificationDate time.Time    `json:"-" bson:"modification_date"`
-	CloudplexStatus  string       `json:"status" bson:"status"`
-
-	Name        string `json:"name,omitempty" bson:"name" valid:"required"`
-	Region      string `json:"region,omitempty" bson:"region"`
-	KubeVersion string `json:"version,omitempty" bson:"version"`
-	//ClusterSubnet 		string   							`json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
-	//ServiceSubnet 		string   							`json:"service_subnet,omitempty" bson:"service_subnet"`
-	//IPv4          		string   							`json:"ipv4,omitempty" bson:"ivp4"`
-	//Endpoint      		string   							`json:"endpoint,omitempty" bson:"endpoint"`
-	Tags      []string              `json:"tags,omitempty" bson:"tags"`
-	VPCUUID   string                `json:"vpc_uuid" bson:"vpc_uuid"`
-	NodePools []*KubernetesNodePool `json:"node_pools,omitempty" bson:"node_pools"`
-	//MaintenancePolicy 	*KubernetesMaintenancePolicy 		`json:"maintenance_policy,omitempty" bson:"maintenance_policy"`
-	AutoUpgrade bool                     `json:"auto_upgrade,omitempty" bson:"auto_upgrade"`
-	Status      *KubernetesClusterStatus `json:"kube_status,omitempty" bson:"kube_status"`
+	ID               string       			`json:"id" bson:"id"`
+	ProjectId        string       			`json:"project_id" bson:"project_id" valid:"required"`
+	CompanyId        string       			`json:"company_id" bson:"company_id" valid:"required"`
+	Cloud            models.Cloud 			`json:"cloud" bson:"cloud" valid:"required"`
+	CreationDate     time.Time    			`json:"-" bson:"creation_date"`
+	ModificationDate time.Time    			`json:"-" bson:"modification_date"`
+	CloudplexStatus  string       			`json:"status" bson:"status"`
+	Name        	 string 	  			`json:"name,omitempty" bson:"name" valid:"required"`
+	Region      	 string 	  			`json:"region,omitempty" bson:"region"`
+	KubeVersion 	 string       			`json:"version,omitempty" bson:"version"`
+	Tags      		 []string     			`json:"tags,omitempty" bson:"tags"`
+	NodePools 		 []*KubernetesNodePool  `json:"node_pools,omitempty" bson:"node_pools"`
+	AutoUpgrade 	 bool                   `json:"auto_upgrade,omitempty" bson:"auto_upgrade"`
+	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
+	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
+	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`
+	//IPv4          		string   	 `json:"ipv4,omitempty" bson:"ivp4"`
+	//Endpoint      		string   	 `json:"endpoint,omitempty" bson:"endpoint"`
+	//VPCUUID   			string       `json:"vpc_uuid" bson:"vpc_uuid"`
+	//MaintenancePolicy     *KubernetesMaintenancePolicy 		`json:"maintenance_policy,omitempty" bson:"maintenance_policy"`
+	//Status      *KubernetesClusterStatus `json:"kube_status,omitempty" bson:"kube_status"`
 }
 type KubernetesNodePool struct {
-	ID        string            `json:"id,omitempty"  bson:"id"`
-	Name      string            `json:"name,omitempty"  bson:"name"`
-	Size      string            `json:"size,omitempty"  bson:"size"` //machine size
-	Count     int               `json:"count,omitempty"  bson:"count"`
-	Tags      []string          `json:"tags,omitempty"  bson:"tags"`
-	Labels    map[string]string `json:"labels,omitempty"  bson:"labels"`
-	AutoScale bool              `json:"auto_scale,omitempty"  bson:"auto_scale"`
-	MinNodes  int               `json:"min_nodes,omitempty"  bson:"min_nodes"`
-	MaxNodes  int               `json:"max_nodes,omitempty"  bson:"max_nodes"`
-	Nodes     []*KubernetesNode `json:"nodes,omitempty"  bson:"nodes"`
+	ID        		string            `json:"id,omitempty"  bson:"id"`
+	Name      		string            `json:"name,omitempty"  bson:"name"`
+	MachineType     string            `json:"machine_type,omitempty"  bson:"machine_type"` //machine size
+	NodeCount     	int               `json:"node_count,omitempty"  bson:"node_count"`
+	Tags      		[]string          `json:"tags,omitempty"  bson:"tags"`
+	Labels    		map[string]string `json:"labels,omitempty"  bson:"labels"`
+	AutoScale 		bool              `json:"auto_scale,omitempty"  bson:"auto_scale"`
+	MinNodes  		int               `json:"min_nodes,omitempty"  bson:"min_nodes"`
+	MaxNodes  		int               `json:"max_nodes,omitempty"  bson:"max_nodes"`
+	Nodes     		[]*KubernetesNode `json:"nodes,omitempty"  bson:"nodes"`
 }
 
 type KubernetesNode struct {
-	ID   string `json:"id,omitempty" bson:"id"`
-	Name string `json:"name,omitempty" bson:"name"`
+	ID   		string 		`json:"id,omitempty" bson:"id"`
+	Name 		string 		`json:"name,omitempty" bson:"name"`
+	DropletID 	string    	`json:"droplet_id,omitempty" bson:"droplet_id"`
+	CreatedAt 	time.Time `json:"created_at,omitempty" bson:"created_at"`
+	UpdatedAt 	time.Time 	`json:"updated_at,omitempty" bson:"updated_at"`
 	//	Status    *KubernetesNodeStatus `json:"status,omitempty" bson:"status"`
-	DropletID string    `json:"droplet_id,omitempty" bson:"droplet_id"`
-	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
-	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }
 
 /*
@@ -486,7 +485,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	}
 	return nil
 }
-func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context, cluster KubernetesCluster) (options *godo.KubernetesOptions, confError error) {
+func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context, companyId string) (options *godo.KubernetesOptions, confError error) {
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 
@@ -507,7 +506,7 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context, cluster
 		return &godo.KubernetesOptions{}, err
 	}
 
-	options, confError = doksOps.GetServerConfig(ctx, cluster)
+	options, confError = doksOps.GetServerConfig(ctx, companyId)
 	if confError != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return &godo.KubernetesOptions{}, nil

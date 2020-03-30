@@ -1867,11 +1867,6 @@ paths:
         description: vault credentials profile id
         required: true
         type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
       - in: header
         name: token
         description: token
@@ -5998,22 +5993,22 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0016346f0.false:
+  442.0xc001645230.false:
     title: "false"
     type: object
-  605.0xc000f82bd0.false:
+  605.0xc000f8b740.false:
     title: "false"
     type: object
-  611.0xc001590060.false:
+  611.0xc0015a6ba0.false:
     title: "false"
     type: object
-  637.0xc0012886c0.false:
+  637.0xc001293230.false:
     title: "false"
     type: object
-  13363.0xc001660540.false:
+  13363.0xc001677080.false:
     title: "false"
     type: object
-  36212.0xc0015ede60.false:
+  36212.0xc0016169c0.false:
     title: "false"
     type: object
   36923.string:
@@ -6245,7 +6240,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000f82bd0.false'
+        $ref: '#/definitions/605.0xc000f8b740.false'
       name:
         type: string
       network_name:
@@ -6626,7 +6621,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc0012886c0.false'
+        $ref: '#/definitions/637.0xc001293230.false'
       name:
         type: string
       network_name:
@@ -6791,11 +6786,7 @@ definitions:
         type: string
       id:
         type: string
-      kube_status:
-        $ref: '#/definitions/doks.KubernetesClusterStatus'
       name:
-        type: string
-      network_name:
         type: string
       node_pools:
         type: array
@@ -6812,16 +6803,6 @@ definitions:
         items:
           type: string
       version:
-        type: string
-      vpc_uuid:
-        type: string
-  doks.KubernetesClusterStatus:
-    title: KubernetesClusterStatus
-    type: object
-    properties:
-      message:
-        type: string
-      state:
         type: string
   doks.KubernetesNode:
     title: KubernetesNode
@@ -6845,14 +6826,13 @@ definitions:
     properties:
       auto_scale:
         type: boolean
-      count:
-        type: integer
-        format: int64
       id:
         type: string
       labels:
         additionalProperties:
           type: string
+      machine_type:
+        type: string
       max_nodes:
         type: integer
         format: int64
@@ -6861,12 +6841,13 @@ definitions:
         format: int64
       name:
         type: string
+      node_count:
+        type: integer
+        format: int64
       nodes:
         type: array
         items:
           $ref: '#/definitions/doks.KubernetesNode'
-      size:
-        type: string
       tags:
         type: array
         items:
@@ -7693,7 +7674,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc001590060.false'
+        $ref: '#/definitions/611.0xc0015a6ba0.false'
       kube_version:
         type: string
       name:
@@ -7782,7 +7763,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/36212.0xc0015ede60.false'
+        $ref: '#/definitions/36212.0xc0016169c0.false'
       kube_version:
         type: string
       name:
@@ -7950,7 +7931,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0016346f0.false'
+        $ref: '#/definitions/442.0xc001645230.false'
       name:
         type: string
       node_pools:
@@ -8036,7 +8017,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc001660540.false'
+        $ref: '#/definitions/13363.0xc001677080.false'
       name:
         type: string
       node_pools:
