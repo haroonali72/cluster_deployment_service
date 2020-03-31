@@ -66,6 +66,8 @@ type KubernetesCluster struct {
 	Tags      		 []string     			`json:"tags,omitempty" bson:"tags"`
 	NodePools 		 []*KubernetesNodePool  `json:"node_pools,omitempty" bson:"node_pools"`
 	AutoUpgrade 	 bool                   `json:"auto_upgrade,omitempty" bson:"auto_upgrade"`
+	IsAdvance		bool					 `json:"is_advance" bson:"is_advance"`
+	IsExpert 		bool					 `json:"is_expert" bson:"is_expert"`
 	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
 	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`
@@ -320,13 +322,12 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
-		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("DOKSDeployClusterModel:  Deploy Agent- "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
 		cluster.CloudplexStatus = "Cluster creation failed"
@@ -339,7 +340,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
-
+	utils.SendLog(companyId, "DOKS cluster created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 	cluster.CloudplexStatus = "Cluster Created"
 
 	confError = UpdateKubernetesCluster(cluster, ctx)
@@ -496,12 +497,15 @@ func GetDOKS(credentials vault.DOCredentials) (DOKS, error) {
 	}, nil
 }
 func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context, clusterName string) (confError error) {
+
+	ctx.SendLogs("DOKubernetesClusterController : Applying  Agent ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return errors.New("Agent Deployment failed "+err.Error())
 	}
 
 	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
@@ -509,7 +513,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return errors.New("Agent Deployment failed "+err.Error())
 	}
 
 	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e DIGITALOCEAN_ACCESS_TOKEN=" + credentials.AccessKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.DOAuthContainerName
@@ -517,7 +521,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return errors.New("Agent Deployment failed "+err.Error())
 	}
 	return nil
 }

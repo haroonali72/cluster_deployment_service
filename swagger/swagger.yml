@@ -152,13 +152,23 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aks/getallkubeversions/:
+  /cluster/aks/getallkubeversions/{region}:
     get:
       tags:
       - cluster/aks
       description: fetch version of kubernetes cluster
       operationId: AKSClusterController.Get Kube Versions
       parameters:
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: region
+        description: region of the cloud
+        required: true
+        type: string
       - in: header
         name: token
         description: token
@@ -423,37 +433,6 @@ paths:
         "401":
           description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
-  /cluster/aws/{projectId}/{forceDelete}:
-    delete:
-      tags:
-      - cluster/aws
-      description: delete a cluster
-      operationId: AWSClusterController.Delete
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      - in: path
-        name: forceDelete
-        description: "true"
-        type: boolean
-      responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
-        "500":
           description: '{"error": "error msg"}'
   /cluster/aws/all:
     get:
@@ -881,6 +860,37 @@ paths:
           description: '{"error": "error msg"}'
         "409":
           description: '{"error": "profile is invalid"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/awsdelete/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/aws
+      description: delete a cluster
+      operationId: AWSClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/azure/:
@@ -1855,7 +1865,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/doks/config/{projectId}:
+  /cluster/doks/config:
     get:
       tags:
       - cluster/doks
@@ -2835,7 +2845,37 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/iks/{projectId}/{forceDelete}: {}
+  /cluster/iks/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/iks
+      description: delete a cluster
+      operationId: IKSClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/iks/all:
     get:
       tags:
@@ -5998,25 +6038,31 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0015f9080.false:
+  442.0xc001637170.false:
     title: "false"
     type: object
-  605.0xc000f4e720.false:
+  605.0xc000f8ea50.false:
     title: "false"
     type: object
-  611.0xc001548120.false:
+  611.0xc00158a090.false:
     title: "false"
     type: object
-  637.0xc001250210.false:
+  637.0xc001282540.false:
     title: "false"
     type: object
-  13363.0xc001624ed0.false:
+  5304.string:
+    title: string
+    type: object
+  5402.string:
+    title: string
+    type: object
+  13363.0xc00166afc0.false:
     title: "false"
     type: object
-  37047.0xc0015c4810.false:
+  37273.0xc001608900.false:
     title: "false"
     type: object
-  40961.string:
+  45453.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6032,8 +6078,6 @@ definitions:
         type: string
       company_id:
         type: string
-      identity:
-        $ref: '#/definitions/aks.ManagedClusterIdentity'
       location:
         type: string
       name:
@@ -6073,7 +6117,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/40961.string'
+        $ref: '#/definitions/45453.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6120,11 +6164,9 @@ definitions:
       name:
         type: string
       node_labels:
-        additionalProperties:
-          type: string
+        $ref: '#/definitions/5304.string'
       node_taints:
-        additionalProperties:
-          type: string
+        $ref: '#/definitions/5402.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6163,12 +6205,6 @@ definitions:
         type: string
       vm_size:
         $ref: '#/definitions/aks.VMSizeTypes'
-  aks.ManagedClusterIdentity:
-    title: ManagedClusterIdentity
-    type: object
-    properties:
-      type:
-        $ref: '#/definitions/aks.ResourceIdentityType'
   aks.ManagedClusterProperties:
     title: ManagedClusterProperties
     type: object
@@ -6186,25 +6222,31 @@ definitions:
           type: string
       dns_prefix:
         type: string
+      dns_service_ip:
+        type: string
+      docker_bridge_cidr:
+        type: string
+      enable_http_routing:
+        type: boolean
       enable_rbac:
+        type: boolean
+      enable_service_principal:
         type: boolean
       fqdn:
         type: string
-      is_advanced:
+      is_advance:
         type: boolean
       is_expert:
         type: boolean
-      is_http_routing:
-        type: boolean
-      is_service_principal:
-        type: boolean
       kubernetes_version:
         type: string
-      network_profile:
-        $ref: '#/definitions/aks.NetworkProfileType'
+      pod_cidr:
+        type: string
       provisioning_state:
         type: string
       secret:
+        type: string
+      service_cidr:
         type: string
   aks.ManagedClusterPropertiesT:
     title: ManagedClusterPropertiesT
@@ -6218,23 +6260,8 @@ definitions:
         $ref: '#/definitions/aks.ManagedClusterAPIServerAccessProfileT'
       enable_rbac:
         type: boolean
-  aks.NetworkProfileType:
-    title: NetworkProfileType
-    type: object
-    properties:
-      dns_service_ip:
-        type: string
-      docker_bridge_cidr:
-        type: string
-      pod_cidr:
-        type: string
-      service_cidr:
-        type: string
   aks.OSType:
     title: OSType
-    type: object
-  aks.ResourceIdentityType:
-    title: ResourceIdentityType
     type: object
   aks.VMSizeTypes:
     title: VMSizeTypes
@@ -6269,7 +6296,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000f4e720.false'
+        $ref: '#/definitions/605.0xc000f8ea50.false'
       name:
         type: string
       network_name:
@@ -6650,7 +6677,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc001250210.false'
+        $ref: '#/definitions/637.0xc001282540.false'
       name:
         type: string
       network_name:
@@ -6847,6 +6874,10 @@ definitions:
         type: string
       id:
         type: string
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       name:
         type: string
       node_pools:
@@ -7325,6 +7356,10 @@ definitions:
         type: string
       ip_allocation_policy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       label_fingerprint:
         type: string
       legacy_abac:
@@ -7776,7 +7811,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc001548120.false'
+        $ref: '#/definitions/611.0xc00158a090.false'
       kube_version:
         type: string
       name:
@@ -7879,7 +7914,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/37047.0xc0015c4810.false'
+        $ref: '#/definitions/37273.0xc001608900.false'
       kube_version:
         type: string
       name:
@@ -8045,7 +8080,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0015f9080.false'
+        $ref: '#/definitions/442.0xc001637170.false'
       name:
         type: string
       node_pools:
@@ -8131,7 +8166,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc001624ed0.false'
+        $ref: '#/definitions/13363.0xc00166afc0.false'
       name:
         type: string
       node_pools:

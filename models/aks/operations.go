@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-09-01/skus"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
@@ -28,6 +29,7 @@ type AKS struct {
 	Location          subscriptions.Client
 	MCClient          containerservice.ManagedClustersClient
 	KubeVersionClient containerservice.ContainerServicesClient
+	ResourceSkuClient skus.ResourceSkusClient
 	Context           context.Context
 	ProjectId         string
 	ID                string
@@ -68,6 +70,9 @@ func (cloud *AKS) init() error {
 
 	cloud.KubeVersionClient = containerservice.NewContainerServicesClient(cloud.Subscription)
 	cloud.KubeVersionClient.Authorizer = cloud.Authorizer
+
+	cloud.ResourceSkuClient = skus.NewResourceSkusClient(cloud.Subscription)
+	cloud.ResourceSkuClient.Authorizer = cloud.Authorizer
 
 	cloud.RoleAssignment = authorization.NewRoleAssignmentsClient(cloud.Subscription)
 	cloud.RoleAssignment.Authorizer = cloud.Authorizer
@@ -180,18 +185,18 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 
 	request := cloud.generateClusterCreateRequest(aksCluster)
 	cloud.ProjectId = aksCluster.ProjectId
-	networkInformation := cloud.getAzureNetwork(token, ctx)
+	//networkInformation := cloud.getAzureNetwork(token, ctx)
 
-	if len(networkInformation.Definition) > 0 {
-		for _, AKSnodePool := range *request.ManagedClusterProperties.AgentPoolProfiles {
-			for _, subnet := range networkInformation.Definition[0].Subnets {
-				if subnet.Name == *AKSnodePool.VnetSubnetID {
-					*AKSnodePool.VnetSubnetID = subnet.SubnetId
-					break
-				}
-			}
-		}
-	}
+	//if len(networkInformation.Definition) > 0 {
+	//	for _, AKSnodePool := range *request.ManagedClusterProperties.AgentPoolProfiles {
+	//		for _, subnet := range networkInformation.Definition[0].Subnets {
+	//			if subnet.Name == *AKSnodePool.VnetSubnetID {
+	//				*AKSnodePool.VnetSubnetID = subnet.SubnetId
+	//				break
+	//			}
+	//		}
+	//	}
+	//}
 	cloud.Context = context.Background()
 	future, err := cloud.MCClient.CreateOrUpdate(cloud.Context, aksCluster.ResourceGoup, *request.Name, *request)
 	if err != nil {
@@ -346,10 +351,10 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 	var agentPoolArr []ManagedClusterAgentPoolProfile
 	for _, aksAgentPool := range *v.AgentPoolProfiles {
 		var pool ManagedClusterAgentPoolProfile
-		pool.Name = *aksAgentPool.Name
-		pool.VnetSubnetID = *aksAgentPool.VnetSubnetID
-		pool.Count = *aksAgentPool.Count
-		pool.MaxPods = *aksAgentPool.MaxPods
+		pool.Name = aksAgentPool.Name
+		pool.VnetSubnetID = aksAgentPool.VnetSubnetID
+		pool.Count = aksAgentPool.Count
+		pool.MaxPods = aksAgentPool.MaxPods
 		agentPoolArr = append(agentPoolArr, pool)
 	}
 
@@ -371,55 +376,51 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 		Name:       *v.Name,
 		Type:       *v.Type,
 		Location:   *v.Location,
-		//Tags:       tags,
 	}
 }
 
 func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAgentPoolProfile {
-	var AKSNodePools []containerservice.ManagedClusterAgentPoolProfile
+	AKSNodePools := make([]containerservice.ManagedClusterAgentPoolProfile, len(c.ClusterProperties.AgentPoolProfiles))
 	if c.ClusterProperties.IsAdvanced {
-		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
-			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
-			AKSnodepool.Name = &nodepool.Name
-			AKSnodepool.Count = &nodepool.Count
-			AKSnodepool.OsType = nodepool.OsType
-			AKSnodepool.VMSize = nodepool.VMSize
-			AKSnodepool.OsDiskSizeGB = &nodepool.OsDiskSizeGB
-			AKSnodepool.MaxPods = &nodepool.MaxPods
+		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+			AKSNodePools[i].Name = nodepool.Name
+			AKSNodePools[i].Count = nodepool.Count
+			AKSNodePools[i].OsType = "Linux"
+			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].OsDiskSizeGB = nodepool.OsDiskSizeGB
+			AKSNodePools[i].MaxPods = nodepool.MaxPods
+			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
 			for key, value := range nodepool.NodeLabels {
-				nodelabels[key] = &value
+				nodelabels[key] = value
 			}
-			AKSnodepool.NodeLabels = nodelabels
+			AKSNodePools[i].NodeLabels = nodelabels
 
 			var nodeTaints []string
 			for key, value := range nodepool.NodeTaints {
-				nodeTaints = append(nodeTaints, key+"="+value)
+				nodeTaints = append(nodeTaints, key+"="+*value)
 			}
-			AKSnodepool.NodeTaints = &nodeTaints
+			AKSNodePools[i].NodeTaints = &nodeTaints
 
-			if nodepool.EnableAutoScaling {
-				AKSnodepool.EnableAutoScaling = &nodepool.EnableAutoScaling
-				AKSnodepool.MinCount = &nodepool.MinCount
-				AKSnodepool.MaxCount = &nodepool.MaxCount
-				AKSnodepool.Type = "VirtualMachineScaleSets"
+			if *nodepool.EnableAutoScaling {
+				AKSNodePools[i].EnableAutoScaling = nodepool.EnableAutoScaling
+				AKSNodePools[i].MinCount = nodepool.MinCount
+				AKSNodePools[i].MaxCount = nodepool.MaxCount
 			}
-			AKSNodePools = append(AKSNodePools, AKSnodepool)
+
 		}
 	} else {
-		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
-			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
-			AKSnodepool.Name = &nodepool.Name
-			AKSnodepool.Count = &nodepool.Count
-			AKSnodepool.OsType = "Linux"
-			AKSnodepool.VMSize = nodepool.VMSize
+		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+			AKSNodePools[i].Name = nodepool.Name
+			AKSNodePools[i].Count = nodepool.Count
+			AKSNodePools[i].OsType = "Linux"
+			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
-			nodelabels["AKS-Custer"] = to.StringPtr(c.ProjectId)
-			AKSnodepool.NodeLabels = nodelabels
-
-			AKSNodePools = append(AKSNodePools, AKSnodepool)
+			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.ProjectId)
+			AKSNodePools[i].NodeLabels = nodelabels
 		}
 	}
 
@@ -473,9 +474,71 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			APIServerAccessProfile:  generateApiServerAccessProfile(c),
 			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
 			AddonProfiles:           generateAddonProfiles(c),
+			NetworkProfile:          generateNetworkProfile(c),
+			//WindowsProfile:          generateWindowsProfile(),
 		},
+		Identity: generateClusterIdentity(),
+		Tags:     generateClusterTags(c),
 	}
 	return &request
+}
+
+func generateWindowsProfile() *containerservice.ManagedClusterWindowsProfile {
+	var AKSwindowProfile containerservice.ManagedClusterWindowsProfile
+	AKSwindowProfile.AdminPassword = to.StringPtr("cloudplex")
+	AKSwindowProfile.AdminUsername = to.StringPtr("cloudplex")
+	return &AKSwindowProfile
+}
+
+func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.OrchestratorVersionProfileListResult, error) {
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return nil, err
+		}
+	}
+
+	cloud.Context = context.Background()
+	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "Microsoft.ContainerService")
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
+
+	if c.ClusterProperties.IsExpert {
+		var AKSnetworkProfile containerservice.NetworkProfileType
+		AKSnetworkProfile.PodCidr = &c.ClusterProperties.PodCidr
+		AKSnetworkProfile.DNSServiceIP = &c.ClusterProperties.DNSServiceIP
+		AKSnetworkProfile.ServiceCidr = &c.ClusterProperties.ServiceCidr
+		AKSnetworkProfile.DockerBridgeCidr = &c.ClusterProperties.DockerBridgeCidr
+		return &AKSnetworkProfile
+	}
+	return nil
+}
+
+func generateClusterTags(c AKSCluster) map[string]*string {
+	AKSclusterTags := make(map[string]*string)
+	if c.ClusterProperties.IsAdvanced {
+		for key, value := range c.ClusterProperties.ClusterTags {
+			AKSclusterTags[key] = &value
+		}
+	} else {
+		AKSclusterTags["AKS-Cluster"] = &c.ProjectId
+	}
+
+	return AKSclusterTags
+}
+
+func generateClusterIdentity() *containerservice.ManagedClusterIdentity {
+	var AKSclusterIdentity containerservice.ManagedClusterIdentity
+	AKSclusterIdentity.Type = "SystemAssigned"
+	return &AKSclusterIdentity
 }
 
 func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClusterAddonProfile {
@@ -530,12 +593,12 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 	}
 
 	for index, agentPool := range *AKScluster.AgentPoolProfiles {
-		cluster.ClusterProperties.AgentPoolProfiles[index].Name = *agentPool.Name
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsDiskSizeGB = *agentPool.OsDiskSizeGB
-		cluster.ClusterProperties.AgentPoolProfiles[index].VnetSubnetID = *agentPool.VnetSubnetID
-		cluster.ClusterProperties.AgentPoolProfiles[index].VMSize = agentPool.VMSize
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsType = agentPool.OsType
-		cluster.ClusterProperties.AgentPoolProfiles[index].Count = *agentPool.Count
+		cluster.ClusterProperties.AgentPoolProfiles[index].Name = agentPool.Name
+		cluster.ClusterProperties.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
+		cluster.ClusterProperties.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
+		cluster.ClusterProperties.AgentPoolProfiles[index].VMSize = &agentPool.VMSize
+		cluster.ClusterProperties.AgentPoolProfiles[index].OsType = &agentPool.OsType
+		cluster.ClusterProperties.AgentPoolProfiles[index].Count = agentPool.Count
 	}
 	cluster.ResourceID = *AKScluster.ID
 	cluster.Type = *AKScluster.Type
@@ -545,13 +608,11 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 	cluster.ClusterProperties.Fqdn = *AKScluster.Fqdn
 	cluster.ClusterProperties.EnableRBAC = *AKScluster.EnableRBAC
 
-	var networkProfile NetworkProfileType
-	networkProfile.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
-	networkProfile.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
-	networkProfile.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
-	networkProfile.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
+	cluster.ClusterProperties.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
+	cluster.ClusterProperties.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
+	cluster.ClusterProperties.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
+	cluster.ClusterProperties.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
 
-	cluster.ClusterProperties.NetworkProfile = networkProfile
 	return nil
 }
 

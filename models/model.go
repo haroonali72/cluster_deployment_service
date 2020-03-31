@@ -536,7 +536,7 @@ type GcpRegion struct {
 func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
 	//clientPem, err := ioutil.ReadFile(privateKey)
 	//if err != nil {
-	//	return "", err
+	// return "", err
 	//}
 	clientPem := []byte(privateKey)
 	key, err := ssh.ParsePrivateKey(clientPem)

@@ -122,7 +122,6 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		}
 		nodepool = append(nodepool, &pool)
 	}
-
 	input := godo.KubernetesClusterCreateRequest{
 		Name:        cluster.Name,
 		RegionSlug:  cluster.Region,
@@ -140,8 +139,14 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		return cluster, err
 	}
 	cluster.ID = clus.ID
+	time.Sleep(2 *30 * time.Second)
+	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+	for  status.Status.State != "running"{
+		time.Sleep(30 * time.Second)
+		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+	}
 
-	utils.SendLog(companyId, "DOKS cluster created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+
 	return cluster, nil
 }
 
