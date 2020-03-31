@@ -9179,31 +9179,39 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc00169ac60.false": {
+        "13363.0xc00166afc0.false": {
             "title": "false",
             "type": "object"
         },
-        "37273.0xc0016365a0.false": {
+        "37273.0xc001608900.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc00166ae10.false": {
+        "442.0xc001637170.false": {
             "title": "false",
             "type": "object"
         },
-        "45557.string": {
+        "45453.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc000fae8d0.false": {
+        "5304.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "5402.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "605.0xc000f8ea50.false": {
             "title": "false",
             "type": "object"
         },
-        "611.0xc001595d10.false": {
+        "611.0xc00158a090.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc0012b83c0.false": {
+        "637.0xc001282540.false": {
             "title": "false",
             "type": "object"
         },
@@ -9282,7 +9290,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/45557.string"
+                    "$ref": "#/definitions/45453.string"
                 },
                 "type": {
                     "type": "string"
@@ -9350,14 +9358,10 @@
                     "type": "string"
                 },
                 "node_labels": {
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/5304.string"
                 },
                 "node_taints": {
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/5402.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9548,7 +9552,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000fae8d0.false"
+                    "$ref": "#/definitions/605.0xc000f8ea50.false"
                 },
                 "name": {
                     "type": "string"
@@ -10113,7 +10117,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc0012b83c0.false"
+                    "$ref": "#/definitions/637.0xc001282540.false"
                 },
                 "name": {
                     "type": "string"
@@ -11689,7 +11693,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/611.0xc001595d10.false"
+                    "$ref": "#/definitions/611.0xc00158a090.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11841,7 +11845,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/37273.0xc0016365a0.false"
+                    "$ref": "#/definitions/37273.0xc001608900.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12070,7 +12074,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc00166ae10.false"
+                    "$ref": "#/definitions/442.0xc001637170.false"
                 },
                 "name": {
                     "type": "string"
@@ -12198,7 +12202,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc00169ac60.false"
+                    "$ref": "#/definitions/13363.0xc00166afc0.false"
                 },
                 "name": {
                     "type": "string"
