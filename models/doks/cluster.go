@@ -288,13 +288,12 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
-		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("DOKSDeployClusterModel:  Deploy Agent- "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
 		cluster.CloudplexStatus = "Cluster creation failed"
