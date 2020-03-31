@@ -306,90 +306,6 @@ func (c *DOKSClusterController) GetAll() {
 	c.ServeJSON()
 }
 
-// @Title Add
-// @Description add a new cluster
-// @Param	token	header	string	token ""
-// @Param	body	body 	doks.KubernetesCluster		true	"body for cluster content"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 409 {"error": "cluster against same project id already exists"}
-// @Failure 410 {"error": "Core limit exceeded"}
-// @Failure 500 {"error": "error msg"}
-// @router / [post]
-func (c *DOKSClusterController) Post() {
-
-	var cluster doks.KubernetesCluster
-
-	ctx := new(utils.Context)
-
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	userInfo, err := rbacAuthentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	/*	if !allowed {
-			c.Ctx.Output.SetStatus(401)
-			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-			c.ServeJSON()
-			return
-		}
-	*/
-	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
-
-	cluster.CompanyId = userInfo.CompanyId
-
-	err = doks.AddKubernetesCluster(cluster, *ctx)
-	if err != nil {
-		ctx.SendLogs("DOKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		if strings.Contains(err.Error(), "already exists") {
-			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
-			c.ServeJSON()
-			return
-		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
-			c.Ctx.Output.SetStatus(410)
-			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
-			c.ServeJSON()
-			return
-		}
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
-	c.ServeJSON()
-}
-
 // @Title Update
 // @Description update an existing cluster
 // @Param	token	header	string	token ""
@@ -481,6 +397,91 @@ func (c *DOKSClusterController) Patch() {
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
+
+// @Title Add
+// @Description add a new cluster
+// @Param	token	header	string	token ""
+// @Param	body	body 	doks.KubernetesCluster		true	"body for cluster content"
+// @Success 200 {"msg": "cluster created successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 409 {"error": "cluster against same project id already exists"}
+// @Failure 410 {"error": "Core limit exceeded"}
+// @Failure 500 {"error": "error msg"}
+// @router / [post]
+func (c *DOKSClusterController) Post() {
+
+	var cluster doks.KubernetesCluster
+
+	ctx := new(utils.Context)
+
+	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	/*	if !allowed {
+			c.Ctx.Output.SetStatus(401)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
+	*/
+	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
+
+	cluster.CompanyId = userInfo.CompanyId
+
+	err = doks.AddKubernetesCluster(cluster, *ctx)
+	if err != nil {
+		ctx.SendLogs("DOKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if strings.Contains(err.Error(), "already exists") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
+			c.ServeJSON()
+			return
+		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
+			c.Ctx.Output.SetStatus(410)
+			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
+	c.ServeJSON()
+}
+
 
 // @Title Start
 // @Description starts a  cluster
