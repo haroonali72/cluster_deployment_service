@@ -306,7 +306,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return nil
 	}
-
+	utils.SendLog(companyId, "DOKS cluster created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 	cluster.CloudplexStatus = "Cluster Created"
 
 	confError = UpdateKubernetesCluster(cluster, ctx)
@@ -461,12 +461,15 @@ func GetDOKS(credentials vault.DOCredentials) (DOKS, error) {
 	}, nil
 }
 func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context, clusterName string) (confError error) {
+
+	ctx.SendLogs("DOKubernetesClusterController : Applying  Agent ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return errors.New("Agent Deployment failed "+err.Error())
 	}
 
 	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
@@ -474,7 +477,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return errors.New("Agent Deployment failed "+err.Error())
 	}
 
 	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e DIGITALOCEAN_ACCESS_TOKEN=" + credentials.AccessKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.DOAuthContainerName
@@ -482,7 +485,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return errors.New("Agent Deployment failed "+err.Error())
 	}
 	return nil
 }
