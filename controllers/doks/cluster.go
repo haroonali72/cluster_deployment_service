@@ -23,8 +23,8 @@ type DOKSClusterController struct {
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /config/:projectId [get]
-func (c *DOKSClusterController) GetServerConfig() {
+// @router /config [get]
+func (c *DOKSClusterController) GetServerConfig(){
 
 	ctx := new(utils.Context)
 
