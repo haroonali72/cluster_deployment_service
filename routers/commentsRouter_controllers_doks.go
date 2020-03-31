@@ -64,7 +64,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
         beego.ControllerComments{
             Method: "GetServerConfig",
-            Router: `/config/:projectId`,
+            Router: `/config`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

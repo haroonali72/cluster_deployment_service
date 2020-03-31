@@ -162,7 +162,14 @@ func (c *AKSClusterController) Post() {
 
 	ctx := new(utils.Context)
 
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -174,9 +181,9 @@ func (c *AKSClusterController) Post() {
 
 	res, err := govalidator.ValidateStruct(cluster)
 	if !res || err != nil {
-		beego.Error(err.Error())
+		beego.Error("data is not valid")
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": "data is not valid"}
 		c.ServeJSON()
 		return
 	}
@@ -211,8 +218,15 @@ func (c *AKSClusterController) Post() {
 	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
-	cluster.CompanyId = userInfo.CompanyId
+	err = aks.ValidateAKSData(cluster, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
+	cluster.CompanyId = userInfo.CompanyId
 	err = aks.AddAKSCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
