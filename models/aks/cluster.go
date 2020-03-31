@@ -45,13 +45,18 @@ type ManagedClusterProperties struct {
 	IsServicePrincipal     bool                                 `json:"enable_service_principal,omitempty" bson:"enable_service_principal,omitempty"`
 	ClientID               string                               `json:"client_id,omitempty" bson:"client_id,omitempty"`
 	Secret                 string                               `json:"secret,omitempty" bson:"secret,omitempty"`
-	ClusterTags            map[string]string                    `json:"cluster_tags" bson:"cluster_tags"`
+	ClusterTags            []Tag                                `json:"cluster_tags" bson:"cluster_tags"`
 	IsAdvanced             bool                                 `json:"is_advance" bson:"is_advance"`
 	IsExpert               bool                                 `json:"is_expert" bson:"is_expert"`
 	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty"`
 	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty"`
 	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty"`
 	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty"`
+}
+
+type Tag struct {
+	Key   string `json:"key" bson:"key"`
+	Value string `json:"value" bson:"value"`
 }
 
 // ManagedClusterAPIServerAccessProfile access profile for managed cluster API server.
@@ -72,7 +77,7 @@ type ManagedClusterAgentPoolProfile struct {
 	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty"`
 	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty"`
 	EnableAutoScaling *bool              `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
-	NodeLabels        map[string]*string `json:"node_labels,omitempty" bson:"node_labels,omitempty"`
+	NodeLabels        []Tag              `json:"node_labels,omitempty" bson:"node_labels,omitempty"`
 	NodeTaints        map[string]*string `json:"node_taints,omitempty" bson:"node_taints,omitempty"`
 }
 
