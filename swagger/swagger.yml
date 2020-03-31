@@ -434,37 +434,6 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/aws/{projectId}/{forceDelete}:
-    delete:
-      tags:
-      - cluster/aws
-      description: delete a cluster
-      operationId: AWSClusterController.Delete
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      - in: path
-        name: forceDelete
-        description: "true"
-        type: boolean
-      responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/aws/all:
     get:
       tags:
@@ -891,6 +860,37 @@ paths:
           description: '{"error": "error msg"}'
         "409":
           description: '{"error": "profile is invalid"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/awsdelete/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/aws
+      description: delete a cluster
+      operationId: AWSClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/azure/:
@@ -2845,7 +2845,37 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/iks/{projectId}/{forceDelete}: {}
+  /cluster/iks/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/iks
+      description: delete a cluster
+      operationId: IKSClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/iks/all:
     get:
       tags:
@@ -6008,25 +6038,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001619c50.false:
+  434.0xc0015e1530.false:
     title: "false"
     type: object
-  518.0xc001574c30.false:
+  518.0xc001538390.false:
     title: "false"
     type: object
   1559.string:
     title: string
     type: object
-  5960.0xc001641170.false:
+  5960.0xc00160ea50.false:
     title: "false"
     type: object
-  13279.0xc00159e630.false:
+  13279.0xc001555d70.false:
     title: "false"
     type: object
-  13385.0xc000fb3110.false:
+  13385.0xc000f70870.false:
     title: "false"
     type: object
-  13431.0xc0012a8c30.false:
+  13431.0xc00126e390.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -6262,7 +6292,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000fb3110.false'
+        $ref: '#/definitions/13385.0xc000f70870.false'
       name:
         type: string
       network_name:
@@ -6643,7 +6673,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc0012a8c30.false'
+        $ref: '#/definitions/13431.0xc00126e390.false'
       name:
         type: string
       network_name:
@@ -6808,6 +6838,10 @@ definitions:
         type: string
       id:
         type: string
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       name:
         type: string
       node_pools:
@@ -7245,6 +7279,10 @@ definitions:
         type: string
       ip_allocation_policy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       label_fingerprint:
         type: string
       legacy_abac:
@@ -7696,7 +7734,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13279.0xc00159e630.false'
+        $ref: '#/definitions/13279.0xc001555d70.false'
       kube_version:
         type: string
       name:
@@ -7799,7 +7837,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc001574c30.false'
+        $ref: '#/definitions/518.0xc001538390.false'
       kube_version:
         type: string
       name:
@@ -7965,7 +8003,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001641170.false'
+        $ref: '#/definitions/5960.0xc00160ea50.false'
       name:
         type: string
       node_pools:
@@ -8051,7 +8089,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001619c50.false'
+        $ref: '#/definitions/434.0xc0015e1530.false'
       name:
         type: string
       node_pools:
