@@ -2740,7 +2740,7 @@
                 }
             }
         },
-        "/cluster/doks/config/{projectId}": {
+        "/cluster/doks/config": {
             "get": {
                 "tags": [
                     "cluster/doks"
@@ -9179,31 +9179,31 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13279.0xc001555d70.false": {
+        "13363.0xc00169ac60.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000f70870.false": {
+        "37273.0xc0016365a0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc00126e390.false": {
+        "442.0xc00166ae10.false": {
             "title": "false",
             "type": "object"
         },
-        "1559.string": {
+        "45557.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc0015e1530.false": {
+        "605.0xc000fae8d0.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc001538390.false": {
+        "611.0xc001595d10.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00160ea50.false": {
+        "637.0xc0012b83c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9282,7 +9282,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/45557.string"
                 },
                 "type": {
                     "type": "string"
@@ -9548,7 +9548,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000f70870.false"
+                    "$ref": "#/definitions/605.0xc000fae8d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10113,7 +10113,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc00126e390.false"
+                    "$ref": "#/definitions/637.0xc0012b83c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11689,7 +11689,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13279.0xc001555d70.false"
+                    "$ref": "#/definitions/611.0xc001595d10.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11841,7 +11841,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc001538390.false"
+                    "$ref": "#/definitions/37273.0xc0016365a0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12070,7 +12070,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00160ea50.false"
+                    "$ref": "#/definitions/442.0xc00166ae10.false"
                 },
                 "name": {
                     "type": "string"
@@ -12198,7 +12198,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0015e1530.false"
+                    "$ref": "#/definitions/13363.0xc00169ac60.false"
                 },
                 "name": {
                     "type": "string"
