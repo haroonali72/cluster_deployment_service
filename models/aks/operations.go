@@ -392,8 +392,8 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
-			for key, value := range nodepool.NodeLabels {
-				nodelabels[key] = value
+			for _, label := range nodepool.NodeLabels {
+				nodelabels[label.Key] = &label.Value
 			}
 			AKSNodePools[i].NodeLabels = nodelabels
 
@@ -525,8 +525,8 @@ func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
 func generateClusterTags(c AKSCluster) map[string]*string {
 	AKSclusterTags := make(map[string]*string)
 	if c.ClusterProperties.IsAdvanced {
-		for key, value := range c.ClusterProperties.ClusterTags {
-			AKSclusterTags[key] = &value
+		for _, tag := range c.ClusterProperties.ClusterTags {
+			AKSclusterTags[tag.Key] = &tag.Value
 		}
 	} else {
 		AKSclusterTags["AKS-Cluster"] = &c.ProjectId
