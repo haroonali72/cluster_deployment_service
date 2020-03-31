@@ -284,11 +284,12 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	cluster, confError = iks.create(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		confError = iks.terminateCluster(&cluster, ctx)
-		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		if cluster.ClusterId != "" {
+			confError = iks.terminateCluster(&cluster, ctx)
+			if confError != nil {
+				PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			}
 		}
-
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
