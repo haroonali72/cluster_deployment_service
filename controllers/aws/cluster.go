@@ -369,7 +369,7 @@ func (c *AWSClusterController) Patch() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId/:forceDelete [delete]
+// @router delete/:projectId/:forceDelete [delete]
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {

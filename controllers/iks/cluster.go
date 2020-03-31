@@ -347,14 +347,14 @@ func (c *IKSClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	token	header	string	token ""
-// @Param	projectId	path	string	true	"project id of the cluster"
+// @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
-// @router /:projectId/:forceDelete  [delete]
+// @router /:projectId/:forceDelete [delete]
 func (c *IKSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
@@ -398,12 +398,12 @@ func (c *IKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
+		if !allowed {
+			c.Ctx.Output.SetStatus(401)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
 
 	//=============================================================================//
 
