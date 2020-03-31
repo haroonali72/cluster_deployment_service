@@ -62,18 +62,18 @@ type ManagedClusterAPIServerAccessProfile struct {
 
 // ManagedClusterAgentPoolProfile profile for the container service agent pool.
 type ManagedClusterAgentPoolProfile struct {
-	Name              string            `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
-	Count             int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required"`
-	VMSize            aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
-	OsDiskSizeGB      int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
-	VnetSubnetID      string            `json:"subnet_id" bson:"subnet_id"`
-	MaxPods           int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
-	OsType            aks.OSType        `json:"os_type,omitempty" bson:"os_type,omitempty"`
-	MaxCount          int32             `json:"max_count,omitempty" bson:"max_count,omitempty"`
-	MinCount          int32             `json:"min_count,omitempty" bson:"min_count,omitempty"`
-	EnableAutoScaling bool              `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
-	NodeLabels        map[string]string `json:"node_labels,omitempty" bson:"node_labels,omitempty"`
-	NodeTaints        map[string]string `json:"node_taints,omitempty" bson:"node_taints,omitempty"`
+	Name              *string            `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
+	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required"`
+	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
+	OsDiskSizeGB      *int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
+	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id"`
+	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
+	OsType            *aks.OSType        `json:"os_type,omitempty" bson:"os_type,omitempty"`
+	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty"`
+	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty"`
+	EnableAutoScaling *bool              `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty"`
+	NodeLabels        map[string]*string `json:"node_labels,omitempty" bson:"node_labels,omitempty"`
+	NodeTaints        map[string]*string `json:"node_taints,omitempty" bson:"node_taints,omitempty"`
 }
 
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
@@ -547,19 +547,19 @@ func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 		}
 
 		for _, pool := range cluster.ClusterProperties.AgentPoolProfiles {
-			if pool.Name == "" {
+			if *pool.Name == "" {
 				return errors.New("Node Pool name must not be empty")
-			} else if pool.VMSize == "" {
-				return errors.New("machine type with pool " + pool.Name + " is empty")
-			} else if pool.Count == 0 {
-				return errors.New("node count value is zero within pool " + pool.Name)
-			} else if pool.OsDiskSizeGB == 0 {
-				return errors.New("Disk size is zero within pool " + pool.Name)
-			} else if pool.MaxPods == 0 {
-				return errors.New("max pods should not be zero within pool " + pool.Name)
-			} else if pool.EnableAutoScaling {
-				if pool.MinCount > pool.MaxCount {
-					return errors.New("min count should be less than or equal to max count within pool " + pool.Name)
+			} else if *pool.VMSize == "" {
+				return errors.New("machine type with pool " + *pool.Name + " is empty")
+			} else if *pool.Count == 0 {
+				return errors.New("node count value is zero within pool " + *pool.Name)
+			} else if *pool.OsDiskSizeGB == 0 {
+				return errors.New("Disk size is zero within pool " + *pool.Name)
+			} else if *pool.MaxPods == 0 {
+				return errors.New("max pods should not be zero within pool " + *pool.Name)
+			} else if *pool.EnableAutoScaling {
+				if *pool.MinCount > *pool.MaxCount {
+					return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
 				}
 			}
 		}

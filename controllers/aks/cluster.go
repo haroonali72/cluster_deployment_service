@@ -162,7 +162,7 @@ func (c *AKSClusterController) Post() {
 
 	ctx := new(utils.Context)
 
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
