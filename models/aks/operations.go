@@ -351,10 +351,10 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 	var agentPoolArr []ManagedClusterAgentPoolProfile
 	for _, aksAgentPool := range *v.AgentPoolProfiles {
 		var pool ManagedClusterAgentPoolProfile
-		pool.Name = *aksAgentPool.Name
-		pool.VnetSubnetID = *aksAgentPool.VnetSubnetID
-		pool.Count = *aksAgentPool.Count
-		pool.MaxPods = *aksAgentPool.MaxPods
+		pool.Name = aksAgentPool.Name
+		pool.VnetSubnetID = aksAgentPool.VnetSubnetID
+		pool.Count = aksAgentPool.Count
+		pool.MaxPods = aksAgentPool.MaxPods
 		agentPoolArr = append(agentPoolArr, pool)
 	}
 
@@ -380,51 +380,47 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 }
 
 func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAgentPoolProfile {
-	var AKSNodePools []containerservice.ManagedClusterAgentPoolProfile
+	AKSNodePools := make([]containerservice.ManagedClusterAgentPoolProfile, len(c.ClusterProperties.AgentPoolProfiles))
 	if c.ClusterProperties.IsAdvanced {
-		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
-			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
-			AKSnodepool.Name = &nodepool.Name
-			AKSnodepool.Count = &nodepool.Count
-			AKSnodepool.OsType = "Linux"
-			AKSnodepool.VMSize = nodepool.VMSize
-			AKSnodepool.OsDiskSizeGB = &nodepool.OsDiskSizeGB
-			AKSnodepool.MaxPods = &nodepool.MaxPods
-			AKSnodepool.Type = "VirtualMachineScaleSets"
+		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+			AKSNodePools[i].Name = nodepool.Name
+			AKSNodePools[i].Count = nodepool.Count
+			AKSNodePools[i].OsType = "Linux"
+			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].OsDiskSizeGB = nodepool.OsDiskSizeGB
+			AKSNodePools[i].MaxPods = nodepool.MaxPods
+			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
 			for key, value := range nodepool.NodeLabels {
-				nodelabels[key] = &value
+				nodelabels[key] = value
 			}
-			AKSnodepool.NodeLabels = nodelabels
+			AKSNodePools[i].NodeLabels = nodelabels
 
 			var nodeTaints []string
 			for key, value := range nodepool.NodeTaints {
-				nodeTaints = append(nodeTaints, key+"="+value)
+				nodeTaints = append(nodeTaints, key+"="+*value)
 			}
-			AKSnodepool.NodeTaints = &nodeTaints
+			AKSNodePools[i].NodeTaints = &nodeTaints
 
-			if nodepool.EnableAutoScaling {
-				AKSnodepool.EnableAutoScaling = &nodepool.EnableAutoScaling
-				AKSnodepool.MinCount = &nodepool.MinCount
-				AKSnodepool.MaxCount = &nodepool.MaxCount
+			if *nodepool.EnableAutoScaling {
+				AKSNodePools[i].EnableAutoScaling = nodepool.EnableAutoScaling
+				AKSNodePools[i].MinCount = nodepool.MinCount
+				AKSNodePools[i].MaxCount = nodepool.MaxCount
 			}
-			AKSNodePools = append(AKSNodePools, AKSnodepool)
+
 		}
 	} else {
-		for _, nodepool := range c.ClusterProperties.AgentPoolProfiles {
-			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
-			AKSnodepool.Name = &nodepool.Name
-			AKSnodepool.Count = &nodepool.Count
-			AKSnodepool.OsType = "Linux"
-			AKSnodepool.VMSize = nodepool.VMSize
-			AKSnodepool.Type = "VirtualMachineScaleSets"
+		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+			AKSNodePools[i].Name = nodepool.Name
+			AKSNodePools[i].Count = nodepool.Count
+			AKSNodePools[i].OsType = "Linux"
+			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
 			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.ProjectId)
-			AKSnodepool.NodeLabels = nodelabels
-
-			AKSNodePools = append(AKSNodePools, AKSnodepool)
+			AKSNodePools[i].NodeLabels = nodelabels
 		}
 	}
 
@@ -597,12 +593,12 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 	}
 
 	for index, agentPool := range *AKScluster.AgentPoolProfiles {
-		cluster.ClusterProperties.AgentPoolProfiles[index].Name = *agentPool.Name
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsDiskSizeGB = *agentPool.OsDiskSizeGB
-		cluster.ClusterProperties.AgentPoolProfiles[index].VnetSubnetID = *agentPool.VnetSubnetID
-		cluster.ClusterProperties.AgentPoolProfiles[index].VMSize = agentPool.VMSize
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsType = agentPool.OsType
-		cluster.ClusterProperties.AgentPoolProfiles[index].Count = *agentPool.Count
+		cluster.ClusterProperties.AgentPoolProfiles[index].Name = agentPool.Name
+		cluster.ClusterProperties.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
+		cluster.ClusterProperties.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
+		cluster.ClusterProperties.AgentPoolProfiles[index].VMSize = &agentPool.VMSize
+		cluster.ClusterProperties.AgentPoolProfiles[index].OsType = &agentPool.OsType
+		cluster.ClusterProperties.AgentPoolProfiles[index].Count = agentPool.Count
 	}
 	cluster.ResourceID = *AKScluster.ID
 	cluster.Type = *AKScluster.Type
