@@ -386,11 +386,11 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			var AKSnodepool containerservice.ManagedClusterAgentPoolProfile
 			AKSnodepool.Name = &nodepool.Name
 			AKSnodepool.Count = &nodepool.Count
-			//AKSnodepool.OsType = nodepool.OsType
 			AKSnodepool.OsType = "Linux"
 			AKSnodepool.VMSize = nodepool.VMSize
 			AKSnodepool.OsDiskSizeGB = &nodepool.OsDiskSizeGB
 			AKSnodepool.MaxPods = &nodepool.MaxPods
+			AKSnodepool.Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
 			for key, value := range nodepool.NodeLabels {
@@ -408,7 +408,6 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 				AKSnodepool.EnableAutoScaling = &nodepool.EnableAutoScaling
 				AKSnodepool.MinCount = &nodepool.MinCount
 				AKSnodepool.MaxCount = &nodepool.MaxCount
-				AKSnodepool.Type = "VirtualMachineScaleSets"
 			}
 			AKSNodePools = append(AKSNodePools, AKSnodepool)
 		}
@@ -419,6 +418,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSnodepool.Count = &nodepool.Count
 			AKSnodepool.OsType = "Linux"
 			AKSnodepool.VMSize = nodepool.VMSize
+			AKSnodepool.Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
 			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.ProjectId)
