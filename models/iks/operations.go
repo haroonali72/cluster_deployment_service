@@ -139,8 +139,10 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 	var ibmNetwork types.IBMNetwork
 	url := getNetworkHost("ibm", cluster.ProjectId)
+	beego.Info("ibm network url is ====== " + url)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil || network == nil {
+		beego.Error(err.Error())
 		return cluster, errors.New("error in fetching network")
 	}
 	err = json.Unmarshal(network.([]byte), &ibmNetwork)
