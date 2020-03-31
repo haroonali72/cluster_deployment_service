@@ -403,7 +403,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			}
 			AKSNodePools[i].NodeTaints = &nodeTaints
 
-			if *nodepool.EnableAutoScaling {
+			if nodepool.EnableAutoScaling != nil && *nodepool.EnableAutoScaling {
 				AKSNodePools[i].EnableAutoScaling = nodepool.EnableAutoScaling
 				AKSNodePools[i].MinCount = nodepool.MinCount
 				AKSNodePools[i].MaxCount = nodepool.MaxCount

@@ -45,7 +45,7 @@ type ManagedClusterProperties struct {
 	IsServicePrincipal     bool                                 `json:"enable_service_principal,omitempty" bson:"enable_service_principal,omitempty"`
 	ClientID               string                               `json:"client_id,omitempty" bson:"client_id,omitempty"`
 	Secret                 string                               `json:"secret,omitempty" bson:"secret,omitempty"`
-	ClusterTags            []Tag                                `json:"cluster_tags" bson:"cluster_tags"`
+	ClusterTags            []Tag                                `json:"tags" bson:"tags"`
 	IsAdvanced             bool                                 `json:"is_advance" bson:"is_advance"`
 	IsExpert               bool                                 `json:"is_expert" bson:"is_expert"`
 	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty"`
@@ -165,7 +165,7 @@ func AddAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		if cluster.Status == "" {
 			cluster.Status = "new"
 		}
-		cluster.Cloud = models.GKE
+		cluster.Cloud = models.AKS
 	}
 
 	mc := db.GetMongoConf()
@@ -552,17 +552,17 @@ func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 		}
 
 		for _, pool := range cluster.ClusterProperties.AgentPoolProfiles {
-			if *pool.Name == "" {
+			if pool.Name != nil && *pool.Name == "" {
 				return errors.New("Node Pool name must not be empty")
-			} else if *pool.VMSize == "" {
+			} else if pool.VMSize != nil && *pool.VMSize == "" {
 				return errors.New("machine type with pool " + *pool.Name + " is empty")
-			} else if *pool.Count == 0 {
+			} else if pool.Count != nil && *pool.Count == 0 {
 				return errors.New("node count value is zero within pool " + *pool.Name)
-			} else if *pool.OsDiskSizeGB == 0 {
+			} else if pool.OsDiskSizeGB != nil && *pool.OsDiskSizeGB == 0 {
 				return errors.New("Disk size is zero within pool " + *pool.Name)
-			} else if *pool.MaxPods == 0 {
+			} else if pool.MaxPods != nil && *pool.MaxPods == 0 {
 				return errors.New("max pods should not be zero within pool " + *pool.Name)
-			} else if *pool.EnableAutoScaling {
+			} else if pool.EnableAutoScaling != nil && *pool.EnableAutoScaling {
 				if *pool.MinCount > *pool.MaxCount {
 					return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
 				}
