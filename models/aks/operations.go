@@ -392,8 +392,8 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
-			for key, value := range nodepool.NodeLabels {
-				nodelabels[key] = value
+			for _, label := range nodepool.NodeLabels {
+				nodelabels[label.Key] = &label.Value
 			}
 			AKSNodePools[i].NodeLabels = nodelabels
 
@@ -403,7 +403,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			}
 			AKSNodePools[i].NodeTaints = &nodeTaints
 
-			if *nodepool.EnableAutoScaling {
+			if nodepool.EnableAutoScaling != nil && *nodepool.EnableAutoScaling {
 				AKSNodePools[i].EnableAutoScaling = nodepool.EnableAutoScaling
 				AKSNodePools[i].MinCount = nodepool.MinCount
 				AKSNodePools[i].MaxCount = nodepool.MaxCount
@@ -475,6 +475,7 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
 			AddonProfiles:           generateAddonProfiles(c),
 			NetworkProfile:          generateNetworkProfile(c),
+
 			//WindowsProfile:          generateWindowsProfile(),
 		},
 		Identity: generateClusterIdentity(),
@@ -511,22 +512,26 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 
 func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
 
+	var AKSnetworkProfile containerservice.NetworkProfileType
 	if c.ClusterProperties.IsExpert {
-		var AKSnetworkProfile containerservice.NetworkProfileType
 		AKSnetworkProfile.PodCidr = &c.ClusterProperties.PodCidr
 		AKSnetworkProfile.DNSServiceIP = &c.ClusterProperties.DNSServiceIP
 		AKSnetworkProfile.ServiceCidr = &c.ClusterProperties.ServiceCidr
 		AKSnetworkProfile.DockerBridgeCidr = &c.ClusterProperties.DockerBridgeCidr
-		return &AKSnetworkProfile
 	}
-	return nil
+
+	if c.ClusterProperties.IsAdvanced && len(c.ClusterProperties.APIServerAccessProfile.AuthorizedIPRanges) > 0 {
+		AKSnetworkProfile.LoadBalancerSku = "standard"
+	}
+	return &AKSnetworkProfile
+
 }
 
 func generateClusterTags(c AKSCluster) map[string]*string {
 	AKSclusterTags := make(map[string]*string)
 	if c.ClusterProperties.IsAdvanced {
-		for key, value := range c.ClusterProperties.ClusterTags {
-			AKSclusterTags[key] = &value
+		for _, tag := range c.ClusterProperties.ClusterTags {
+			AKSclusterTags[tag.Key] = &tag.Value
 		}
 	} else {
 		AKSclusterTags["AKS-Cluster"] = &c.ProjectId

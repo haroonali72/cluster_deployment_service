@@ -139,8 +139,16 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 	var ibmNetwork types.IBMNetwork
 	url := getNetworkHost("ibm", cluster.ProjectId)
+	beego.Info("ibm network url is ====== " + url)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
-	if err != nil || network == nil {
+	if err != nil {
+		beego.Error("network error ===" + err.Error())
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, err
+	}
+	if network == nil {
+		beego.Error("network is empty=====")
+		ctx.SendLogs(errors.New("error in fetching network").Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, errors.New("error in fetching network")
 	}
 	err = json.Unmarshal(network.([]byte), &ibmNetwork)
@@ -206,7 +214,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	}
 
 	workerpool := ClusterWorkerPoolInput{
-		DiskEncryption: false,
+		DiskEncryption: true,
 		MachineType:    cluster.NodePools[0].MachineType,
 		WorkerName:     cluster.NodePools[0].Name,
 		VPCId:          vpcId,
@@ -218,7 +226,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 		return "", errors.New("error in gettinh subnet id")
 	}
 	zone := ClusterZone{
-		Id:     cloud.Region,
+		Id:     cluster.NodePools[0].AvailabilityZone,
 		Subnet: cluster.NodePools[0].SubnetID,
 	}
 	var zones []ClusterZone
@@ -256,6 +264,8 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
+
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
@@ -328,18 +338,18 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		}
 	}
 
-	err = cloud.AddZonesToPools(rg, pool.Name, pool.SubnetID, clusterID, ctx)
+	err = cloud.AddZonesToPools(rg, pool.Name, pool.SubnetID, pool.AvailabilityZone, clusterID, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
 }
-func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, clusterID string, ctx utils.Context) error {
+func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string, ctx utils.Context) error {
 
 	zoneInput := ZoneInput{
 		Cluster:    clusterID,
-		Id:         cloud.Region,
+		Id:         zone,
 		Subnet:     subnetID,
 		WorkerPool: poolName,
 	}
@@ -437,7 +447,7 @@ func (cloud *IBM) GetSubnets(pool *NodePool, network types.IBMNetwork) string {
 }
 func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 	for _, definition := range network.Definition {
-		if vpcID == definition.Vpc.Name {
+		if strings.ToLower(vpcID) == definition.Vpc.Name {
 			return definition.Vpc.VpcId
 
 		}
