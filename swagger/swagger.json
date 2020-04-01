@@ -2563,50 +2563,6 @@
         },
         "/cluster/do/{projectId}/{forceDelete}": {},
         "/cluster/doks/": {
-            "put": {
-                "tags": [
-                    "cluster/doks"
-                ],
-                "description": "update an existing kubernetes cluster",
-                "operationId": "DOKSClusterController.Update",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "body for cluster content",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/doks.KubernetesCluster"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "402": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            },
             "post": {
                 "tags": [
                     "cluster/doks"
@@ -9225,15 +9181,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc00169f3e0.false": {
+        "13363.0xc0016f8180.false": {
             "title": "false",
             "type": "object"
         },
-        "37951.0xc001644d20.false": {
+        "37951.0xc001679aa0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc001671590.false": {
+        "442.0xc0016c4330.false": {
             "title": "false",
             "type": "object"
         },
@@ -9245,15 +9201,15 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000fba900.false": {
+        "605.0xc000fff680.false": {
             "title": "false",
             "type": "object"
         },
-        "611.0xc0015c82d0.false": {
+        "611.0xc001603050.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc0012b23f0.false": {
+        "637.0xc0012ef170.false": {
             "title": "false",
             "type": "object"
         },
@@ -9610,7 +9566,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000fba900.false"
+                    "$ref": "#/definitions/605.0xc000fff680.false"
                 },
                 "name": {
                     "type": "string"
@@ -10175,7 +10131,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc0012b23f0.false"
+                    "$ref": "#/definitions/637.0xc0012ef170.false"
                 },
                 "name": {
                     "type": "string"
@@ -11860,7 +11816,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/611.0xc0015c82d0.false"
+                    "$ref": "#/definitions/611.0xc001603050.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12015,7 +11971,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/37951.0xc001644d20.false"
+                    "$ref": "#/definitions/37951.0xc001679aa0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12244,7 +12200,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc001671590.false"
+                    "$ref": "#/definitions/442.0xc0016c4330.false"
                 },
                 "name": {
                     "type": "string"
@@ -12372,7 +12328,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc00169f3e0.false"
+                    "$ref": "#/definitions/13363.0xc0016f8180.false"
                 },
                 "name": {
                     "type": "string"
