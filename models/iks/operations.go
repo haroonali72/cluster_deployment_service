@@ -178,6 +178,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 			beego.Error(err.Error())
 			return cluster, err
 		}
+		beego.Info(response.State)
 		if response.State == "normal" {
 			break
 		} else {
