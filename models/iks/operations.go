@@ -514,12 +514,14 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
 	}
-
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
 	if res.StatusCode != 200 {
 		ctx.SendLogs("error in fetching cluster ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err
+		return KubeClusterStatus{}, errors.New("error in fetching cluster: " + res.Status)
 	}
-	body, err := ioutil.ReadAll(res.Body)
+
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
