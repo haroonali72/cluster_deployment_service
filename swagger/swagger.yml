@@ -434,37 +434,6 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/aws/{projectId}/{forceDelete}:
-    delete:
-      tags:
-      - cluster/aws
-      description: delete a cluster
-      operationId: AWSClusterController.Delete
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      - in: path
-        name: forceDelete
-        description: "true"
-        type: boolean
-      responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "project id is empty"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/aws/all:
     get:
       tags:
@@ -891,6 +860,37 @@ paths:
           description: '{"error": "error msg"}'
         "409":
           description: '{"error": "profile is invalid"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/awsdelete/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/aws
+      description: delete a cluster
+      operationId: AWSClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/azure/:
@@ -1865,7 +1865,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/doks/config/{projectId}:
+  /cluster/doks/config:
     get:
       tags:
       - cluster/doks
@@ -1917,7 +1917,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/doks.ServerConfig'
+            $ref: '#/definitions/doks.KubernetesConfig'
         "400":
           description: '{"error": "error msg"}'
         "401":
@@ -2845,7 +2845,37 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/iks/{projectId}/{forceDelete}: {}
+  /cluster/iks/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/iks
+      description: delete a cluster
+      operationId: IKSClusterController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "200":
+          description: '{"msg": "cluster deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /cluster/iks/all:
     get:
       tags:
@@ -6008,26 +6038,29 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc00164ae10.false:
+  434.0xc001649b00.false:
     title: "false"
     type: object
-  518.0xc00157bdd0.false:
+  518.0xc0015a4870.false:
     title: "false"
     type: object
   1559.string:
     title: string
     type: object
-  5960.0xc001672330.false:
+  5960.0xc001673020.false:
     title: "false"
     type: object
-  13279.0xc0015a17d0.false:
+  13279.0xc0015d2270.false:
     title: "false"
     type: object
-  13385.0xc000fc62d0.false:
+  13385.0xc000fd05a0.false:
     title: "false"
     type: object
-  13431.0xc0012afdd0.false:
+  13431.0xc0012d20c0.false:
     title: "false"
+    type: object
+  19810.string:
+    title: string
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -6128,11 +6161,11 @@ definitions:
       name:
         type: string
       node_labels:
-        additionalProperties:
-          type: string
+        type: array
+        items:
+          $ref: '#/definitions/aks.Tag'
       node_taints:
-        additionalProperties:
-          type: string
+        $ref: '#/definitions/19810.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6184,8 +6217,9 @@ definitions:
       client_id:
         type: string
       cluster_tags:
-        additionalProperties:
-          type: string
+        type: array
+        items:
+          $ref: '#/definitions/aks.Tag'
       dns_prefix:
         type: string
       dns_service_ip:
@@ -6229,6 +6263,14 @@ definitions:
   aks.OSType:
     title: OSType
     type: object
+  aks.Tag:
+    title: Tag
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
   aks.VMSizeTypes:
     title: VMSizeTypes
     type: object
@@ -6262,7 +6304,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000fc62d0.false'
+        $ref: '#/definitions/13385.0xc000fd05a0.false'
       name:
         type: string
       network_name:
@@ -6643,7 +6685,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc0012afdd0.false'
+        $ref: '#/definitions/13431.0xc0012d20c0.false'
       name:
         type: string
       network_name:
@@ -6793,6 +6835,38 @@ definitions:
   do.string:
     title: string
     type: object
+  doks.Cluster:
+    title: Cluster
+    type: object
+    properties:
+      Certificate:
+        type: string
+      Server:
+        type: string
+  doks.Clusters:
+    title: Clusters
+    type: object
+    properties:
+      Cluster:
+        $ref: '#/definitions/doks.Cluster'
+      Name:
+        type: string
+  doks.Context:
+    title: Context
+    type: object
+    properties:
+      Cluster:
+        type: string
+      User:
+        type: string
+  doks.Contexts:
+    title: Contexts
+    type: object
+    properties:
+      Context:
+        $ref: '#/definitions/doks.Context'
+      Name:
+        type: string
   doks.DOKSCluster:
     title: DOKSCluster
     type: object
@@ -6808,6 +6882,10 @@ definitions:
         type: string
       id:
         type: string
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       name:
         type: string
       node_pools:
@@ -6826,6 +6904,30 @@ definitions:
           type: string
       version:
         type: string
+  doks.KubernetesConfig:
+    title: KubernetesConfig
+    type: object
+    properties:
+      ApiVersion:
+        type: string
+      Clusters:
+        type: array
+        items:
+          $ref: '#/definitions/doks.Clusters'
+      Contexts:
+        type: array
+        items:
+          $ref: '#/definitions/doks.Contexts'
+      CurrentContext:
+        type: string
+      Kind:
+        type: string
+      Preferences:
+        $ref: '#/definitions/doks.Preference'
+      Users:
+        type: array
+        items:
+          $ref: '#/definitions/doks.Users'
   doks.KubernetesNode:
     title: KubernetesNode
     type: object
@@ -6924,9 +7026,26 @@ definitions:
         format: int64
       template_id:
         type: string
+  doks.Preference:
+    title: Preference
+    type: object
   doks.ServerConfig:
     title: ServerConfig
     type: object
+  doks.User:
+    title: User
+    type: object
+    properties:
+      Token:
+        type: string
+  doks.Users:
+    title: Users
+    type: object
+    properties:
+      Name:
+        type: string
+      User:
+        $ref: '#/definitions/doks.User'
   gcp.AccountData:
     title: AccountData
     type: object
@@ -7245,6 +7364,10 @@ definitions:
         type: string
       ip_allocation_policy:
         $ref: '#/definitions/gke.IPAllocationPolicy'
+      is_advance:
+        type: boolean
+      is_expert:
+        type: boolean
       label_fingerprint:
         type: string
       legacy_abac:
@@ -7696,7 +7819,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13279.0xc0015a17d0.false'
+        $ref: '#/definitions/13279.0xc0015d2270.false'
       kube_version:
         type: string
       name:
@@ -7799,7 +7922,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc00157bdd0.false'
+        $ref: '#/definitions/518.0xc0015a4870.false'
       kube_version:
         type: string
       name:
@@ -7965,7 +8088,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001672330.false'
+        $ref: '#/definitions/5960.0xc001673020.false'
       name:
         type: string
       node_pools:
@@ -8051,7 +8174,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc00164ae10.false'
+        $ref: '#/definitions/434.0xc001649b00.false'
       name:
         type: string
       node_pools:

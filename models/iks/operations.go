@@ -447,7 +447,7 @@ func (cloud *IBM) GetSubnets(pool *NodePool, network types.IBMNetwork) string {
 }
 func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 	for _, definition := range network.Definition {
-		if vpcID == definition.Vpc.Name {
+		if strings.ToLower(vpcID) == definition.Vpc.Name {
 			return definition.Vpc.VpcId
 
 		}
