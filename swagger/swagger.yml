@@ -1689,35 +1689,6 @@ paths:
         "404":
           description: '{"error": "error msg"}'
   /cluster/doks/:
-    put:
-      tags:
-      - cluster/doks
-      description: update an existing cluster
-      operationId: DOKSClusterController.Update
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: body
-        name: body
-        description: body for cluster content
-        required: true
-        schema:
-          $ref: '#/definitions/doks.KubernetesCluster'
-      responses:
-        "200":
-          description: '{"msg": "cluster updated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "no cluster exists with this name"}'
-        "500":
-          description: '{"error": "error msg"}'
     post:
       tags:
       - cluster/doks
@@ -1805,6 +1776,36 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/doks/a:
+    put:
+      tags:
+      - cluster/doks
+      description: update an existing kubernetes cluster
+      operationId: DOKSClusterController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/doks.KubernetesCluster'
+      responses:
+        "200":
+          description: '{"msg": "cluster updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "402":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no cluster exists with this name"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/doks/all:
@@ -6038,28 +6039,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0016720c0.false:
+  442.0xc0017262a0.false:
     title: "false"
     type: object
-  518.0xc0015a6d20.false:
+  605.0xc0010472f0.false:
     title: "false"
     type: object
-  1559.string:
+  611.0xc001660cc0.false:
+    title: "false"
+    type: object
+  637.0xc00134ade0.false:
+    title: "false"
+    type: object
+  5487.string:
     title: string
     type: object
-  5960.0xc0016735c0.false:
+  13363.0xc0017560f0.false:
     title: "false"
     type: object
-  13279.0xc0015d4720.false:
+  38601.0xc0016dda10.false:
     title: "false"
     type: object
-  13385.0xc000fcac90.false:
-    title: "false"
-    type: object
-  13431.0xc0012c87b0.false:
-    title: "false"
-    type: object
-  19794.string:
+  46086.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6114,7 +6115,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/46086.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6165,7 +6166,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/19794.string'
+        $ref: '#/definitions/5487.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6304,7 +6305,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000fcac90.false'
+        $ref: '#/definitions/605.0xc0010472f0.false'
       name:
         type: string
       network_name:
@@ -6685,7 +6686,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc0012c87b0.false'
+        $ref: '#/definitions/637.0xc00134ade0.false'
       name:
         type: string
       network_name:
@@ -7819,7 +7820,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13279.0xc0015d4720.false'
+        $ref: '#/definitions/611.0xc001660cc0.false'
       kube_version:
         type: string
       name:
@@ -7924,7 +7925,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0015a6d20.false'
+        $ref: '#/definitions/38601.0xc0016dda10.false'
       kube_version:
         type: string
       name:
@@ -8090,7 +8091,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc0016735c0.false'
+        $ref: '#/definitions/442.0xc0017262a0.false'
       name:
         type: string
       node_pools:
@@ -8176,7 +8177,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0016720c0.false'
+        $ref: '#/definitions/13363.0xc0017560f0.false'
       name:
         type: string
       node_pools:
