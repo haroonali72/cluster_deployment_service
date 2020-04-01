@@ -281,7 +281,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return confError
 	}
 
-	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	cluster, confError = iks.create(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
