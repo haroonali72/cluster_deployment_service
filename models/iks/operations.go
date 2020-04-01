@@ -257,14 +257,14 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
 
 	if res.StatusCode != 201 {
 		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+		return "", errors.New("error in cluster creation : " + res.Status)
 	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	beego.Info(string(body))
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
