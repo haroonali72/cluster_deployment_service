@@ -12,7 +12,6 @@ import (
 	"github.com/astaxie/beego"
 	gke "google.golang.org/api/container/v1"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"time"
 )
 
@@ -355,7 +354,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	if oldCluster.CloudplexStatus == string(models.Deploying) {
+	/*if oldCluster.CloudplexStatus == string(models.Deploying) {
 		ctx.SendLogs(
 			"GKEUpdateClusterModel:  Update - Cluster is in deploying state.",
 			models.LOGGING_LEVEL_ERROR,
@@ -379,7 +378,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 		)
 		return errors.New("cluster is in running state")
 	}
-
+*/
 	err = DeleteGKECluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs(

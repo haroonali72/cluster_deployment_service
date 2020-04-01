@@ -75,7 +75,7 @@ type ZoneInput struct {
 	WorkerPool string `json:"workerpool"`
 }
 type KubeClusterResponse struct {
-	ID string `json:"id"`
+	ID string `json:"clusterID"`
 }
 type WorkerPoolResponse struct {
 	ID string `json:"workerPoolID"`
@@ -178,6 +178,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 			beego.Error(err.Error())
 			return cluster, err
 		}
+		beego.Info(response.State)
 		if response.State == "normal" {
 			break
 		} else {
@@ -223,11 +224,11 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 
 	subentId := cloud.GetSubnets(cluster.NodePools[0], network)
 	if subentId == "" {
-		return "", errors.New("error in gettinh subnet id")
+		return "", errors.New("error in getting subnet id")
 	}
 	zone := ClusterZone{
 		Id:     cluster.NodePools[0].AvailabilityZone,
-		Subnet: cluster.NodePools[0].SubnetID,
+		Subnet: subentId,
 	}
 	var zones []ClusterZone
 	zones = append(zones, zone)
@@ -257,14 +258,14 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
 
 	if res.StatusCode != 201 {
 		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+		return "", errors.New("error in cluster creation : " + res.Status)
 	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	beego.Info(string(body))
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -514,12 +515,14 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
 	}
-
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
 	if res.StatusCode != 200 {
 		ctx.SendLogs("error in fetching cluster ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err
+		return KubeClusterStatus{}, errors.New("error in fetching cluster: " + res.Status)
 	}
-	body, err := ioutil.ReadAll(res.Body)
+
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
