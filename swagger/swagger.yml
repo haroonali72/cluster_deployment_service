@@ -6038,28 +6038,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0016d20c0.false:
+  434.0xc0016720c0.false:
     title: "false"
     type: object
-  605.0xc000fed440.false:
+  518.0xc0015a6d20.false:
     title: "false"
     type: object
-  611.0xc0015fade0.false:
-    title: "false"
-    type: object
-  637.0xc0012f0f30.false:
-    title: "false"
-    type: object
-  5487.string:
+  1559.string:
     title: string
     type: object
-  13363.0xc0016edef0.false:
+  5960.0xc0016735c0.false:
     title: "false"
     type: object
-  37876.0xc001685830.false:
+  13279.0xc0015d4720.false:
     title: "false"
     type: object
-  45889.string:
+  13385.0xc000fcac90.false:
+    title: "false"
+    type: object
+  13431.0xc0012c87b0.false:
+    title: "false"
+    type: object
+  19794.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6114,7 +6114,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/45889.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6165,7 +6165,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5487.string'
+        $ref: '#/definitions/19794.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6304,7 +6304,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000fed440.false'
+        $ref: '#/definitions/13385.0xc000fcac90.false'
       name:
         type: string
       network_name:
@@ -6685,7 +6685,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc0012f0f30.false'
+        $ref: '#/definitions/13431.0xc0012c87b0.false'
       name:
         type: string
       network_name:
@@ -7800,7 +7800,7 @@ definitions:
     title: AllInstancesResponse
     type: object
     properties:
-      profiles:
+      Profile:
         type: array
         items:
           $ref: '#/definitions/iks.InstanceProfile'
@@ -7819,7 +7819,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc0015fade0.false'
+        $ref: '#/definitions/13279.0xc0015d4720.false'
       kube_version:
         type: string
       name:
@@ -7844,9 +7844,9 @@ definitions:
     title: InstanceProfile
     type: object
     properties:
-      family:
+      Id:
         type: string
-      name:
+      Name:
         type: string
   iks.KubeClusterStatus:
     title: KubeClusterStatus
@@ -7924,7 +7924,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/37876.0xc001685830.false'
+        $ref: '#/definitions/518.0xc0015a6d20.false'
       kube_version:
         type: string
       name:
@@ -8090,7 +8090,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0016d20c0.false'
+        $ref: '#/definitions/5960.0xc0016735c0.false'
       name:
         type: string
       node_pools:
@@ -8176,7 +8176,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc0016edef0.false'
+        $ref: '#/definitions/434.0xc0016720c0.false'
       name:
         type: string
       node_pools:
