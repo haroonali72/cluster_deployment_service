@@ -529,8 +529,6 @@ func (c *DOKSClusterController) StartCluster() {
 	c.ServeJSON()
 }
 
-
-
 // @Title Status
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
@@ -983,7 +981,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 // @Failure 404 {"error": "no cluster exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router /a [put]
-func (c *DOKSClusterController) PatchA() {
+func (c *DOKSClusterController) Patch() {
 	ctx := new(utils.Context)
 
 	var cluster doks.KubernetesCluster
