@@ -300,6 +300,23 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return confError
 	}
 
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
+	if confError != nil {
+		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		if cluster.ClusterId != "" {
+			confError = iks.terminateCluster(&cluster, ctx)
+			if confError != nil {
+				PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			}
+		}
+		cluster.Status = "Cluster Creation Failed"
+		confError = UpdateCluster(cluster, false, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return confError
+	}
 	cluster.Status = "Cluster Created"
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
@@ -519,7 +536,7 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, erro
 
 	return versions, nil
 }
-func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
+func ApplyAgent(credentials vault.IBMCredentials, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
@@ -536,7 +553,7 @@ func ApplyAgent(credentials vault.IBMProfile, token string, ctx utils.Context, c
 		return err
 	}
 
-	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e resourceGroup=" + resourceGroup + " -e apikey=" + credentials.Profile.IAMKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.IBMKSAuthContainerName
+	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e resourceGroup=" + resourceGroup + " -e apikey=" + credentials.IAMKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.IBMKSAuthContainerName
 
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
