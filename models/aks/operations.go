@@ -475,6 +475,7 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
 			AddonProfiles:           generateAddonProfiles(c),
 			NetworkProfile:          generateNetworkProfile(c),
+
 			//WindowsProfile:          generateWindowsProfile(),
 		},
 		Identity: generateClusterIdentity(),
@@ -511,15 +512,19 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 
 func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
 
+	var AKSnetworkProfile containerservice.NetworkProfileType
 	if c.ClusterProperties.IsExpert {
-		var AKSnetworkProfile containerservice.NetworkProfileType
 		AKSnetworkProfile.PodCidr = &c.ClusterProperties.PodCidr
 		AKSnetworkProfile.DNSServiceIP = &c.ClusterProperties.DNSServiceIP
 		AKSnetworkProfile.ServiceCidr = &c.ClusterProperties.ServiceCidr
 		AKSnetworkProfile.DockerBridgeCidr = &c.ClusterProperties.DockerBridgeCidr
-		return &AKSnetworkProfile
 	}
-	return nil
+
+	if c.ClusterProperties.IsAdvanced && len(c.ClusterProperties.APIServerAccessProfile.AuthorizedIPRanges) > 0 {
+		AKSnetworkProfile.LoadBalancerSku = "standard"
+	}
+	return &AKSnetworkProfile
+
 }
 
 func generateClusterTags(c AKSCluster) map[string]*string {
