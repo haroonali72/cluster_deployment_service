@@ -284,7 +284,10 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	return kubeResponse.ID, nil
 }
 func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, network types.IBMNetwork, ctx utils.Context) error {
-
+	subnetId := cloud.GetSubnets(pool, network)
+	if subnetId == "" {
+		return errors.New("error in getting subnet id")
+	}
 	workerpool := WorkerPoolInput{
 		Cluster:     clusterID,
 		MachineType: pool.MachineType,
@@ -339,7 +342,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		}
 	}
 
-	err = cloud.AddZonesToPools(rg, pool.Name, pool.SubnetID, pool.AvailabilityZone, clusterID, ctx)
+	err = cloud.AddZonesToPools(rg, pool.Name, subnetId, pool.AvailabilityZone, clusterID, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
