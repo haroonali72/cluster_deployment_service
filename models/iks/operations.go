@@ -214,7 +214,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	}
 
 	workerpool := ClusterWorkerPoolInput{
-		DiskEncryption: false,
+		DiskEncryption: true,
 		MachineType:    cluster.NodePools[0].MachineType,
 		WorkerName:     cluster.NodePools[0].Name,
 		VPCId:          vpcId,
