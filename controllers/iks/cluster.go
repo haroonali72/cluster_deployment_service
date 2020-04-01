@@ -398,12 +398,12 @@ func (c *IKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-		if !allowed {
-			c.Ctx.Output.SetStatus(401)
-			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-			c.ServeJSON()
-			return
-		}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	//=============================================================================//
 
@@ -1107,7 +1107,7 @@ func (c *IKSClusterController) ApplyAgent() {
 	}
 	ctx.SendLogs("IKSubernetesClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go iks.ApplyAgent(ibmProfile, token, *ctx, clusterName, resourceGroup)
+	go iks.ApplyAgent(ibmProfile.Profile, token, *ctx, clusterName, resourceGroup)
 
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()
