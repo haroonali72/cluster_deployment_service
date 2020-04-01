@@ -459,7 +459,7 @@ const (
 	IBM_Kube_Delete_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v1/clusters/"
 	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
 	IBM_Zone                         = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
-	IBM_All_Instances_Endpoint       = ".iaas.cloud.ibm.com/v1/instance/profiles"
+	IBM_All_Instances_Endpoint       = "https://containers.cloud.ibm.com/global/v2/getFlavors?zone="
 	IBM_ALL_Kube_Version_Endpoint    = "https://containers.cloud.ibm.com/global/v2/getVersions"
 	IBM_Version                      = "?version=2020-01-28&generation=1"
 )
