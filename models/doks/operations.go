@@ -146,7 +146,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
 	}
 
-
+	time.Sleep(15 * time.Second)
 	return cluster, nil
 }
 
