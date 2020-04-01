@@ -89,11 +89,11 @@ type KubeClusterStatus struct {
 	WorkerCount       int    `json:"workerCount"`
 }
 type AllInstancesResponse struct {
-	Profile []InstanceProfile `json:"profiles"`
+	Profile []InstanceProfile
 }
 type InstanceProfile struct {
-	Family string `json:"family"`
-	Name   string `json:"name"`
+	Id   string
+	Name string
 }
 
 type Versions struct {
@@ -543,17 +543,9 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	return response, nil
 }
 func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, error) {
-	url := "https://" + cloud.Region + models.IBM_All_Instances_Endpoint + models.IBM_Version
+	url := models.IBM_All_Instances_Endpoint + cloud.Region + "&provider=vpc-classic"
 
 	req, _ := utils.CreateGetRequest(url)
-
-	m := make(map[string]string)
-
-	m["Content-Type"] = "application/json"
-	m["Accept"] = "application/json"
-	m["Authorization"] = cloud.IAMToken
-
-	utils.SetHeaders(req, m)
 
 	client := utils.InitReq()
 	res, err := client.SendRequest(req)
@@ -574,7 +566,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, erro
 	// body is []byte format
 	// parse the JSON-encoded body and stores the result in the struct object for the res
 	var InstanceList AllInstancesResponse
-	err = json.Unmarshal(body, &InstanceList)
+	err = json.Unmarshal(body, &InstanceList.Profile)
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
