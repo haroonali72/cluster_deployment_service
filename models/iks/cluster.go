@@ -36,12 +36,13 @@ type Cluster_Def struct {
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
-	ID          bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
-	Name        string          `json:"name" bson:"name" valid:"required"`
-	NodeCount   int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType string          `json:"machine_type" bson:"machine_type" valid:"required"`
-	PoolRole    models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
-	SubnetID    string          `json:"subnet_id" bson:"subnet_id"`
+	ID               bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
+	Name             string          `json:"name" bson:"name" valid:"required"`
+	NodeCount        int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType      string          `json:"machine_type" bson:"machine_type" valid:"required"`
+	PoolRole         models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
+	SubnetID         string          `json:"subnet_id" bson:"subnet_id"`
+	AvailabilityZone string          `json:"availability_zone" bson:"availability_zone"`
 }
 
 type Project struct {
@@ -280,15 +281,16 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return confError
 	}
 
-	utils.SendLog(companyId, "Terminating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	cluster, confError = iks.create(cluster, ctx, companyId, token)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		confError = iks.terminateCluster(&cluster, ctx)
-		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		if cluster.ClusterId != "" {
+			confError = iks.terminateCluster(&cluster, ctx)
+			if confError != nil {
+				PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			}
 		}
-
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
@@ -305,7 +307,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
-	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return nil

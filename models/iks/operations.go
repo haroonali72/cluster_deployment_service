@@ -75,7 +75,7 @@ type ZoneInput struct {
 	WorkerPool string `json:"workerpool"`
 }
 type KubeClusterResponse struct {
-	ID string `json:"id"`
+	ID string `json:"clusterID"`
 }
 type WorkerPoolResponse struct {
 	ID string `json:"workerPoolID"`
@@ -139,8 +139,16 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 	var ibmNetwork types.IBMNetwork
 	url := getNetworkHost("ibm", cluster.ProjectId)
+	beego.Info("ibm network url is ====== " + url)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
-	if err != nil || network == nil {
+	if err != nil {
+		beego.Error("network error ===" + err.Error())
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, err
+	}
+	if network == nil {
+		beego.Error("network is empty=====")
+		ctx.SendLogs(errors.New("error in fetching network").Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, errors.New("error in fetching network")
 	}
 	err = json.Unmarshal(network.([]byte), &ibmNetwork)
@@ -170,6 +178,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 			beego.Error(err.Error())
 			return cluster, err
 		}
+		beego.Info(response.State)
 		if response.State == "normal" {
 			break
 		} else {
@@ -206,7 +215,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	}
 
 	workerpool := ClusterWorkerPoolInput{
-		DiskEncryption: false,
+		DiskEncryption: true,
 		MachineType:    cluster.NodePools[0].MachineType,
 		WorkerName:     cluster.NodePools[0].Name,
 		VPCId:          vpcId,
@@ -215,11 +224,11 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 
 	subentId := cloud.GetSubnets(cluster.NodePools[0], network)
 	if subentId == "" {
-		return "", errors.New("error in gettinh subnet id")
+		return "", errors.New("error in getting subnet id")
 	}
 	zone := ClusterZone{
-		Id:     cloud.Region,
-		Subnet: cluster.NodePools[0].SubnetID,
+		Id:     cluster.NodePools[0].AvailabilityZone,
+		Subnet: subentId,
 	}
 	var zones []ClusterZone
 	zones = append(zones, zone)
@@ -249,13 +258,15 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
 
 	if res.StatusCode != 201 {
 		ctx.SendLogs("error in cluster creation", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+		return "", errors.New("error in cluster creation : " + res.Status)
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
@@ -273,7 +284,10 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	return kubeResponse.ID, nil
 }
 func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, network types.IBMNetwork, ctx utils.Context) error {
-
+	subnetId := cloud.GetSubnets(pool, network)
+	if subnetId == "" {
+		return errors.New("error in getting subnet id")
+	}
 	workerpool := WorkerPoolInput{
 		Cluster:     clusterID,
 		MachineType: pool.MachineType,
@@ -328,18 +342,18 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		}
 	}
 
-	err = cloud.AddZonesToPools(rg, pool.Name, pool.SubnetID, clusterID, ctx)
+	err = cloud.AddZonesToPools(rg, pool.Name, subnetId, pool.AvailabilityZone, clusterID, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	return nil
 }
-func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, clusterID string, ctx utils.Context) error {
+func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string, ctx utils.Context) error {
 
 	zoneInput := ZoneInput{
 		Cluster:    clusterID,
-		Id:         cloud.Region,
+		Id:         zone,
 		Subnet:     subnetID,
 		WorkerPool: poolName,
 	}
@@ -437,7 +451,7 @@ func (cloud *IBM) GetSubnets(pool *NodePool, network types.IBMNetwork) string {
 }
 func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 	for _, definition := range network.Definition {
-		if vpcID == definition.Vpc.Name {
+		if strings.ToLower(vpcID) == definition.Vpc.Name {
 			return definition.Vpc.VpcId
 
 		}
@@ -504,12 +518,14 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
 	}
-
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
 	if res.StatusCode != 200 {
 		ctx.SendLogs("error in fetching cluster ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err
+		return KubeClusterStatus{}, errors.New("error in fetching cluster: " + res.Status)
 	}
-	body, err := ioutil.ReadAll(res.Body)
+
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
