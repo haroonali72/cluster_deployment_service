@@ -6038,28 +6038,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001649b00.false:
+  442.0xc0016d20c0.false:
     title: "false"
     type: object
-  518.0xc0015a4870.false:
+  605.0xc000fed440.false:
     title: "false"
     type: object
-  1559.string:
+  611.0xc0015fade0.false:
+    title: "false"
+    type: object
+  637.0xc0012f0f30.false:
+    title: "false"
+    type: object
+  5487.string:
     title: string
     type: object
-  5960.0xc001673020.false:
+  13363.0xc0016edef0.false:
     title: "false"
     type: object
-  13279.0xc0015d2270.false:
+  37876.0xc001685830.false:
     title: "false"
     type: object
-  13385.0xc000fd05a0.false:
-    title: "false"
-    type: object
-  13431.0xc0012d20c0.false:
-    title: "false"
-    type: object
-  19810.string:
+  45889.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6114,7 +6114,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/45889.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6165,7 +6165,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/19810.string'
+        $ref: '#/definitions/5487.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6216,10 +6216,6 @@ definitions:
         $ref: '#/definitions/aks.ManagedClusterAPIServerAccessProfile'
       client_id:
         type: string
-      cluster_tags:
-        type: array
-        items:
-          $ref: '#/definitions/aks.Tag'
       dns_prefix:
         type: string
       dns_service_ip:
@@ -6248,6 +6244,10 @@ definitions:
         type: string
       service_cidr:
         type: string
+      tags:
+        type: array
+        items:
+          $ref: '#/definitions/aks.Tag'
   aks.ManagedClusterPropertiesT:
     title: ManagedClusterPropertiesT
     type: object
@@ -6304,7 +6304,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000fd05a0.false'
+        $ref: '#/definitions/605.0xc000fed440.false'
       name:
         type: string
       network_name:
@@ -6685,7 +6685,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc0012d20c0.false'
+        $ref: '#/definitions/637.0xc0012f0f30.false'
       name:
         type: string
       network_name:
@@ -7819,7 +7819,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13279.0xc0015d2270.false'
+        $ref: '#/definitions/611.0xc0015fade0.false'
       kube_version:
         type: string
       name:
@@ -7884,6 +7884,8 @@ definitions:
     properties:
       _id:
         $ref: '#/definitions/bson.ObjectId'
+      availability_zone:
+        type: string
       machine_type:
         type: string
       name:
@@ -7922,7 +7924,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0015a4870.false'
+        $ref: '#/definitions/37876.0xc001685830.false'
       kube_version:
         type: string
       name:
@@ -8088,7 +8090,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001673020.false'
+        $ref: '#/definitions/442.0xc0016d20c0.false'
       name:
         type: string
       node_pools:
@@ -8174,7 +8176,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001649b00.false'
+        $ref: '#/definitions/13363.0xc0016edef0.false'
       name:
         type: string
       node_pools:
