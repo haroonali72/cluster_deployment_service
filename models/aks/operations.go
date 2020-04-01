@@ -185,18 +185,21 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 
 	request := cloud.generateClusterCreateRequest(aksCluster)
 	cloud.ProjectId = aksCluster.ProjectId
-	//networkInformation := cloud.getAzureNetwork(token, ctx)
 
-	//if len(networkInformation.Definition) > 0 {
-	//	for _, AKSnodePool := range *request.ManagedClusterProperties.AgentPoolProfiles {
-	//		for _, subnet := range networkInformation.Definition[0].Subnets {
-	//			if subnet.Name == *AKSnodePool.VnetSubnetID {
-	//				*AKSnodePool.VnetSubnetID = subnet.SubnetId
-	//				break
-	//			}
-	//		}
-	//	}
-	//}
+	//Network will be added in every case BASIC, ADVANCE, EXPERT
+	networkInformation := cloud.getAzureNetwork(token, ctx)
+	if len(networkInformation.Definition) > 0 {
+		for _, AKSnodePool := range *request.ManagedClusterProperties.AgentPoolProfiles {
+			for _, subnet := range networkInformation.Definition[0].Subnets {
+				if subnet.Name == *AKSnodePool.VnetSubnetID {
+					*AKSnodePool.VnetSubnetID = subnet.SubnetId
+					break
+				}
+			}
+		}
+	}
+	//Network will be added in every case BASIC, ADVANCE, EXPERT
+
 	cloud.Context = context.Background()
 	future, err := cloud.MCClient.CreateOrUpdate(cloud.Context, aksCluster.ResourceGoup, *request.Name, *request)
 	if err != nil {
@@ -412,7 +415,11 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 		}
 	} else {
 		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
-			AKSNodePools[i].Name = nodepool.Name
+			if nodepool.Name == nil {
+				AKSNodePools[i].Name = to.StringPtr("pool0")
+			} else {
+				AKSNodePools[i].Name = nodepool.Name
+			}
 			AKSNodePools[i].Count = nodepool.Count
 			AKSNodePools[i].OsType = "Linux"
 			AKSNodePools[i].VMSize = *nodepool.VMSize
@@ -548,7 +555,7 @@ func generateClusterIdentity() *containerservice.ManagedClusterIdentity {
 
 func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClusterAddonProfile {
 	AKSaddon := make(map[string]*containerservice.ManagedClusterAddonProfile)
-	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsHttpRouting {
+	if c.ClusterProperties.IsExpert && c.ClusterProperties.IsHttpRouting {
 		var httpAddOn containerservice.ManagedClusterAddonProfile
 		httpAddOn.Enabled = to.BoolPtr(true)
 		AKSaddon["httpApplicationRouting"] = &httpAddOn
