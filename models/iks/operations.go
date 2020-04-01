@@ -223,11 +223,11 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 
 	subentId := cloud.GetSubnets(cluster.NodePools[0], network)
 	if subentId == "" {
-		return "", errors.New("error in gettinh subnet id")
+		return "", errors.New("error in getting subnet id")
 	}
 	zone := ClusterZone{
 		Id:     cluster.NodePools[0].AvailabilityZone,
-		Subnet: cluster.NodePools[0].SubnetID,
+		Subnet: subentId,
 	}
 	var zones []ClusterZone
 	zones = append(zones, zone)
