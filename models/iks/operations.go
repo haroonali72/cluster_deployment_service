@@ -253,8 +253,6 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 
 	defer res.Body.Close()
 
-	b, _ := ioutil.ReadAll(res.Body)
-	beego.Info(string(b))
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
@@ -266,6 +264,8 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
+
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
