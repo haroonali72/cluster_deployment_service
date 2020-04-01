@@ -75,7 +75,7 @@ type ZoneInput struct {
 	WorkerPool string `json:"workerpool"`
 }
 type KubeClusterResponse struct {
-	ID string `json:"id"`
+	ID string `json:"clusterID"`
 }
 type WorkerPoolResponse struct {
 	ID string `json:"workerPoolID"`
