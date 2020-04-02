@@ -832,12 +832,13 @@ func (c *AKSClusterController) TerminateCluster() {
 // @Title GetAKSVmsTypes
 // @Description get aks vm types
 // @Param	token	header	string	token ""
+// @Param	region path	string	region ""
 // @Success 200 {object} []aks.VMSizeTypes
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 400 {"error": "error_msg"}
 // @Failure 404 {"error": "error_msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getvms/ [get]
+// @router /getvms/:region [get]
 func (c *AKSClusterController) GetAKSVms() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AKSClusterController: GetVms.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -846,6 +847,14 @@ func (c *AKSClusterController) GetAKSVms() {
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	region := c.GetString(":region")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -862,7 +871,14 @@ func (c *AKSClusterController) GetAKSVms() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: GetVms.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	aksVms := aks.GetAKSVms(*ctx)
+	aksVms, err := aks.GetVms(region, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	c.Data["json"] = aksVms
 	c.ServeJSON()

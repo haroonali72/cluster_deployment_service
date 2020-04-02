@@ -497,6 +497,34 @@ func GetAKSVms(ctx utils.Context) []string {
 	return vms
 }
 
+func GetVms(region string, ctx utils.Context) ([]string, error) {
+	skusList, err := GetVmSkus(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, err
+	}
+
+	var vms []string
+	for _, v := range skusList {
+		for _, location := range v.Locations {
+			if location != region {
+				continue
+			} else {
+				if v.ResourceType == "virtualMachines" {
+					if v.Name == "Standard_A0" || v.Name == "Standard_A1" || v.Name == "Standard_A1_v2" || v.Name == "Standard_B1s" || v.Name == "Standard_B1ms" || v.Name == "Standard_F1" || v.Name == "Standard_F1s" {
+						continue
+					} else {
+						vms = append(vms, v.Name)
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return vms, nil
+}
+
 func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]string, error) {
 	aksOps, err := GetAKS(credentials.Profile)
 	if err != nil {
