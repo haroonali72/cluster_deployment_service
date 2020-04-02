@@ -399,6 +399,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].VMSize = *nodepool.VMSize
 			AKSNodePools[i].OsDiskSizeGB = nodepool.OsDiskSizeGB
 			AKSNodePools[i].MaxPods = nodepool.MaxPods
+			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
@@ -430,6 +431,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].Count = nodepool.Count
 			AKSNodePools[i].OsType = "Linux"
 			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
 			nodelabels := make(map[string]*string)
