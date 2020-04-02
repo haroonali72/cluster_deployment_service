@@ -642,7 +642,7 @@ func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
 }
 
 func GetVmSkus(ctx utils.Context) ([]SkuResp, error) {
-	bytes, err := ioutil.ReadFile("files/azure-list-skus.txt")
+	bytes, err := ioutil.ReadFile("/app/files/azure-list-skus.txt")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []SkuResp{}, err
