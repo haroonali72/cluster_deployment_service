@@ -6068,28 +6068,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001716960.false:
+  459.0xc0012e3b30.false:
     title: "false"
     type: object
-  605.0xc0010359b0.false:
+  629.0xc000c38ff0.false:
     title: "false"
     type: object
-  611.0xc00164f380.false:
+  633.0xc00122c630.false:
     title: "false"
     type: object
-  637.0xc00133d4a0.false:
+  660.0xc000f388a0.false:
     title: "false"
     type: object
-  5487.string:
+  5567.string:
     title: string
     type: object
-  13363.0xc0017427b0.false:
+  13736.0xc00131f980.false:
     title: "false"
     type: object
-  38601.0xc0016e80f0.false:
+  39791.0xc0012b3380.false:
     title: "false"
     type: object
-  46086.string:
+  47365.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6144,7 +6144,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/46086.string'
+        $ref: '#/definitions/47365.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6195,7 +6195,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5487.string'
+        $ref: '#/definitions/5567.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6334,7 +6334,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010359b0.false'
+        $ref: '#/definitions/629.0xc000c38ff0.false'
       name:
         type: string
       network_name:
@@ -6715,7 +6715,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc00133d4a0.false'
+        $ref: '#/definitions/660.0xc000f388a0.false'
       name:
         type: string
       network_name:
@@ -7378,6 +7378,9 @@ definitions:
         type: string
       current_master_version:
         type: string
+      current_node_count:
+        type: integer
+        format: int64
       default_max_pods_constraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
@@ -7849,7 +7852,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc00164f380.false'
+        $ref: '#/definitions/633.0xc00122c630.false'
       kube_version:
         type: string
       name:
@@ -7954,7 +7957,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/38601.0xc0016e80f0.false'
+        $ref: '#/definitions/39791.0xc0012b3380.false'
       kube_version:
         type: string
       name:
@@ -8120,7 +8123,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001716960.false'
+        $ref: '#/definitions/459.0xc0012e3b30.false'
       name:
         type: string
       node_pools:
@@ -8206,7 +8209,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc0017427b0.false'
+        $ref: '#/definitions/13736.0xc00131f980.false'
       name:
         type: string
       node_pools:
