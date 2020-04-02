@@ -621,6 +621,7 @@ func GenerateNodePoolFromRequest(pools []*NodePool) []*gke.NodePool {
 					Value:  i.Value,
 				})
 			}
+			nodePool.Config = nodeConfig
 		}
 		if v.MaxPodsConstraint != nil {
 			nodePool.MaxPodsConstraint = GenerateMaxPodsConstraintFromRequest(v.MaxPodsConstraint)
