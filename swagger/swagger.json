@@ -11164,6 +11164,10 @@
                 "current_master_version": {
                     "type": "string"
                 },
+                "current_node_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "default_max_pods_constraint": {
                     "$ref": "#/definitions/gke.MaxPodsConstraint"
                 },

@@ -30,6 +30,7 @@ type GKECluster struct {
 	Conditions                     []*StatusCondition              `json:"conditions,omitempty" bson:"conditions,omitempty"`
 	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty"`
 	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty"`
+	CurrentNodeCount               int64                           `json:"current_node_count,omitempty" bson:"current_node_count,omitempty"`
 	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constraint,omitempty" bson:"default_max_pods_constraint,omitempty"`
 	Description                    string                          `json:"description,omitempty" bson:"description,omitempty"`
 	EnableKubernetesAlpha          bool                            `json:"enable_kubernetes_alpha,omitempty" bson:"enable_kubernetes_alpha,omitempty"`
@@ -378,7 +379,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 		)
 		return errors.New("cluster is in running state")
 	}
-*/
+	*/
 	err = DeleteGKECluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs(
