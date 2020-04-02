@@ -11,6 +11,7 @@ func GenerateClusterFromResponse(v gke.Cluster) GKECluster {
 		ClusterIpv4Cidr:                v.ClusterIpv4Cidr,
 		CreateTime:                     v.CreateTime,
 		CurrentMasterVersion:           v.CurrentMasterVersion,
+		CurrentNodeCount:               v.CurrentNodeCount,
 		Description:                    v.Description,
 		EnableKubernetesAlpha:          v.EnableKubernetesAlpha,
 		EnableTpu:                      v.EnableTpu,
