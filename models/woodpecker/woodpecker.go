@@ -20,7 +20,7 @@ func GetCertificate(projectID, token string, ctx utils.Context) (string, error) 
 	}
 	basePath = basePath + models.WoodPeckerCertificate
 	basePath = strings.Replace(basePath, "{profileId}", projectID, 1)
-	req, err := utils.CreatePostRequest(nil, basePath)
+	req, err := utils.CreateGetRequest(basePath)
 	if err != nil {
 		beego.Info(err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
