@@ -390,8 +390,100 @@ func (c *DOKSClusterController) Post() {
 	c.ServeJSON()
 }
 
+// @Title Update
+// @Description update an existing kubernetes cluster
+// @Param	token	header	string	token ""
+// @Param	body	body 	doks.KubernetesCluster	true	"body for cluster content"
+// @Success 200 {"msg": "cluster updated successfully"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 402 {"error": "error msg"}
+// @Failure 404 {"error": "no cluster exists with this name"}
+// @Failure 500 {"error": "error msg"}
+// @router / [put]
+func (c *DOKSClusterController) Patch() {
+	ctx := new(utils.Context)
+
+	var cluster doks.KubernetesCluster
+	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("DOKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
+	ctx.SendLogs("DOKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
+
+	err = doks.UpdateKubernetesCluster(cluster, *ctx)
+	if err != nil {
+		ctx.SendLogs("DOKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if strings.Contains(err.Error(), "does not exist") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "Cluster is in running state") {
+			c.Ctx.Output.SetStatus(402)
+			c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "cluster is in deploying state") {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "cluster is in terminating state") {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
+	c.ServeJSON()
+}
+
 // @Title Start
-// @Description starts a  cluster
+// @Description starts a kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
@@ -970,8 +1062,8 @@ func (c *DOKSClusterController) ApplyAgent() {
 }
 
 
-// @Title Update
-// @Description update an existing kubernetes cluster
+// @Title Update check
+// @Description update an existing cluster
 // @Param	token	header	string	token ""
 // @Param	body	body 	doks.KubernetesCluster	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
@@ -981,7 +1073,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 // @Failure 404 {"error": "no cluster exists with this name"}
 // @Failure 500 {"error": "error msg"}
 // @router /a [put]
-func (c *DOKSClusterController) Patch() {
+func (c *DOKSClusterController) PatchA() {
 	ctx := new(utils.Context)
 
 	var cluster doks.KubernetesCluster

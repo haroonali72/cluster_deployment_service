@@ -186,7 +186,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aks/getvms/:
+  /cluster/aks/getvms/{region}:
     get:
       tags:
       - cluster/aks
@@ -196,6 +196,10 @@ paths:
       - in: header
         name: token
         description: token
+        type: string
+      - in: path
+        name: region
+        description: region
         type: string
       responses:
         "200":
@@ -1689,6 +1693,35 @@ paths:
         "404":
           description: '{"error": "error msg"}'
   /cluster/doks/:
+    put:
+      tags:
+      - cluster/doks
+      description: update an existing kubernetes cluster
+      operationId: DOKSClusterController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/doks.KubernetesCluster'
+      responses:
+        "200":
+          description: '{"msg": "cluster updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "402":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no cluster exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
     post:
       tags:
       - cluster/doks
@@ -1782,8 +1815,8 @@ paths:
     put:
       tags:
       - cluster/doks
-      description: update an existing kubernetes cluster
-      operationId: DOKSClusterController.Update
+      description: update an existing cluster
+      operationId: DOKSClusterController.Update check
       parameters:
       - in: header
         name: token
@@ -1929,7 +1962,7 @@ paths:
     post:
       tags:
       - cluster/doks
-      description: starts a  cluster
+      description: starts a kubernetes cluster
       operationId: DOKSClusterController.Start
       parameters:
       - in: header
@@ -6039,28 +6072,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0017262a0.false:
+  434.0xc0016daa20.false:
     title: "false"
     type: object
-  605.0xc0010472f0.false:
+  518.0xc001615380.false:
     title: "false"
     type: object
-  611.0xc001660cc0.false:
-    title: "false"
-    type: object
-  637.0xc00134ade0.false:
-    title: "false"
-    type: object
-  5487.string:
+  1559.string:
     title: string
     type: object
-  13363.0xc0017560f0.false:
+  5960.0xc0016dbf20.false:
     title: "false"
     type: object
-  38601.0xc0016dda10.false:
+  13279.0xc001640d80.false:
     title: "false"
     type: object
-  46086.string:
+  13385.0xc0010372f0.false:
+    title: "false"
+    type: object
+  13431.0xc00133ce10.false:
+    title: "false"
+    type: object
+  19794.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6115,7 +6148,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/46086.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6166,7 +6199,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5487.string'
+        $ref: '#/definitions/19794.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6305,7 +6338,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010472f0.false'
+        $ref: '#/definitions/13385.0xc0010372f0.false'
       name:
         type: string
       network_name:
@@ -6686,7 +6719,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc00134ade0.false'
+        $ref: '#/definitions/13431.0xc00133ce10.false'
       name:
         type: string
       network_name:
@@ -7349,6 +7382,9 @@ definitions:
         type: string
       current_master_version:
         type: string
+      current_node_count:
+        type: integer
+        format: int64
       default_max_pods_constraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
@@ -7820,7 +7856,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc001660cc0.false'
+        $ref: '#/definitions/13279.0xc001640d80.false'
       kube_version:
         type: string
       name:
@@ -7925,7 +7961,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/38601.0xc0016dda10.false'
+        $ref: '#/definitions/518.0xc001615380.false'
       kube_version:
         type: string
       name:
@@ -8091,7 +8127,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0017262a0.false'
+        $ref: '#/definitions/5960.0xc0016dbf20.false'
       name:
         type: string
       node_pools:
@@ -8177,7 +8213,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc0017560f0.false'
+        $ref: '#/definitions/434.0xc0016daa20.false'
       name:
         type: string
       node_pools:
