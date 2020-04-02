@@ -2573,7 +2573,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "update an existing cluster",
+                "description": "update an existing kubernetes cluster",
                 "operationId": "DOKSClusterController.Update",
                 "parameters": [
                     {
@@ -2651,6 +2651,52 @@
                     },
                     "410": {
                         "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/doks/a": {
+            "put": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "update an existing cluster",
+                "operationId": "DOKSClusterController.Update check",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/doks.KubernetesCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no cluster exists with this name\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -2840,7 +2886,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "starts a  cluster",
+                "description": "starts a kubernetes cluster",
                 "operationId": "DOKSClusterController.Start",
                 "parameters": [
                     {
@@ -9185,15 +9231,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13279.0xc0015fa870.false": {
+        "13279.0xc00161ad20.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000ff6de0.false": {
+        "13385.0xc00100f290.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc0012f2900.false": {
+        "13431.0xc001316db0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9205,15 +9251,15 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc00169a210.false": {
+        "434.0xc0016b09c0.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0015d2e70.false": {
+        "518.0xc0015ed320.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc00169b710.false": {
+        "5960.0xc0016b1ec0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9570,7 +9616,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000ff6de0.false"
+                    "$ref": "#/definitions/13385.0xc00100f290.false"
                 },
                 "name": {
                     "type": "string"
@@ -10135,7 +10181,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc0012f2900.false"
+                    "$ref": "#/definitions/13431.0xc001316db0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11820,7 +11866,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13279.0xc0015fa870.false"
+                    "$ref": "#/definitions/13279.0xc00161ad20.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11975,7 +12021,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0015d2e70.false"
+                    "$ref": "#/definitions/518.0xc0015ed320.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12204,7 +12250,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc00169b710.false"
+                    "$ref": "#/definitions/5960.0xc0016b1ec0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12332,7 +12378,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc00169a210.false"
+                    "$ref": "#/definitions/434.0xc0016b09c0.false"
                 },
                 "name": {
                     "type": "string"
