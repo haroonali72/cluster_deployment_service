@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/go-autorest/autorest/to"
+	"io/ioutil"
 	"time"
 
 	"strings"
@@ -40,6 +41,12 @@ type AKS struct {
 	Resources         map[string]interface{}
 	RoleAssignment    authorization.RoleAssignmentsClient
 	RoleDefinition    authorization.RoleDefinitionsClient
+}
+
+type SkuResp struct {
+	Locations    []string
+	Name         string
+	ResourceType string
 }
 
 func (cloud *AKS) init() error {
@@ -630,6 +637,22 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 
 func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
 	return containerservice.PossibleVMSizeTypesValues()
+}
+
+func GetVmSkus(ctx utils.Context) ([]SkuResp, error) {
+	bytes, err := ioutil.ReadFile("files/azure-list-skus.txt")
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []SkuResp{}, err
+	}
+
+	var skus []SkuResp
+	err = json.Unmarshal(bytes, &skus)
+	if err != nil {
+		return []SkuResp{}, err
+	}
+
+	return skus, nil
 }
 
 func validate(aksCluster AKSCluster) error {
