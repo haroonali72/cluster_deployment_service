@@ -1220,6 +1220,6 @@ func (c *IKSClusterController) ValidateProfile() {
 		c.ServeJSON()
 		return
 	}
-	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
+	c.Data["json"] = map[string]string{"msg": "Valid Profile"}
 	c.ServeJSON()
 }
