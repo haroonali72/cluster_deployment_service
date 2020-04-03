@@ -5,6 +5,7 @@ import (
 	"antelope/models/iks"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
@@ -1160,5 +1161,65 @@ func (c *IKSClusterController) FetchZones() {
 	}
 	ctx.SendLogs(" IKS zones fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = regions
+	c.ServeJSON()
+}
+
+
+// @Title Get Validate Profile
+// @Description validate ibm profile
+// @Param	body	body 	vault.IBMProfile		true	"body for cluster content"
+// @Param	token	header	string	token ""
+// @Success 200 {"msg": "Profile is valid"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "error msg"}
+// @Failure 500 {"error": "error msg"}
+// @router /validateProfile [post]
+func (c *IKSClusterController) ValidateProfile() {
+
+	var profile vault.IBMProfile
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &profile)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+
+	token := c.Ctx.Input.Header("token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx := new(utils.Context)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.SendLogs("IKSClusterController: Validating profile.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+
+
+	region := "us-east"
+	profile.Profile.Region=region
+
+	 err = iks.ValidateProfile(profile, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Invalid Profile"}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
