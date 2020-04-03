@@ -1167,7 +1167,7 @@ func (c *IKSClusterController) FetchZones() {
 
 // @Title Get Validate Profile
 // @Description validate ibm profile
-// @Param	body	body 	vault.IBMProfile		true	"body for cluster content"
+// @Param	body	body 	vault.IBMCredentials		true	"body for cluster content"
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "Profile is valid"}
 // @Failure 401 {"error": "error msg"}
@@ -1178,7 +1178,8 @@ func (c *IKSClusterController) FetchZones() {
 func (c *IKSClusterController) ValidateProfile() {
 
 	var profile vault.IBMProfile
-	err := json.Unmarshal(c.Ctx.Input.RequestBody, &profile)
+	profile.Profile = vault.IBMCredentials{}
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &profile.Profile)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
