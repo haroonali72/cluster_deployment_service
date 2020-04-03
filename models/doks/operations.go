@@ -5,7 +5,6 @@ import (
 	"antelope/models/utils"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
 	"golang.org/x/oauth2"
