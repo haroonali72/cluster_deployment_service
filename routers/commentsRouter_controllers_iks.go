@@ -124,6 +124,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
+        beego.ControllerComments{
+            Method: "ValidateProfile",
+            Router: `/validateProfile`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSTemplateController"],
         beego.ControllerComments{
             Method: "Post",
