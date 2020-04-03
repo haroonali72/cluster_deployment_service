@@ -4738,6 +4738,49 @@
                 }
             }
         },
+        "/cluster/iks/validateProfile": {
+            "post": {
+                "tags": [
+                    "cluster/iks"
+                ],
+                "description": "validate ibm profile",
+                "operationId": "IKSClusterController.Get Validate Profile",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/vault.IBMProfile"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"Profile is valid\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/cluster/iks/{projectId}/": {
             "get": {
                 "tags": [
@@ -9231,35 +9274,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc001725a40.false": {
+        "13363.0xc001739860.false": {
             "title": "false",
             "type": "object"
         },
-        "38601.0xc0016cd380.false": {
+        "39150.0xc0016d51a0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc0016f9bf0.false": {
+        "442.0xc001703a10.false": {
             "title": "false",
             "type": "object"
         },
-        "47405.string": {
+        "48986.string": {
             "title": "string",
             "type": "object"
         },
-        "5487.string": {
+        "5519.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc00104ed20.false": {
+        "605.0xc0010507e0.false": {
             "title": "false",
             "type": "object"
         },
-        "611.0xc001646630.false": {
+        "611.0xc00165a0f0.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc00134c810.false": {
+        "637.0xc0013662d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9338,7 +9381,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/47405.string"
+                    "$ref": "#/definitions/48986.string"
                 },
                 "type": {
                     "type": "string"
@@ -9412,7 +9455,7 @@
                     }
                 },
                 "node_taints": {
-                    "$ref": "#/definitions/5487.string"
+                    "$ref": "#/definitions/5519.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9616,7 +9659,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc00104ed20.false"
+                    "$ref": "#/definitions/605.0xc0010507e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10181,7 +10224,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc00134c810.false"
+                    "$ref": "#/definitions/637.0xc0013662d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11870,7 +11913,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/611.0xc001646630.false"
+                    "$ref": "#/definitions/611.0xc00165a0f0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12025,7 +12068,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/38601.0xc0016cd380.false"
+                    "$ref": "#/definitions/39150.0xc0016d51a0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12254,7 +12297,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0016f9bf0.false"
+                    "$ref": "#/definitions/442.0xc001703a10.false"
                 },
                 "name": {
                     "type": "string"
@@ -12382,7 +12425,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc001725a40.false"
+                    "$ref": "#/definitions/13363.0xc001739860.false"
                 },
                 "name": {
                     "type": "string"
@@ -12449,6 +12492,27 @@
                 },
                 "region": {
                     "type": "string"
+                }
+            }
+        },
+        "vault.IBMCredentials": {
+            "title": "IBMCredentials",
+            "type": "object",
+            "properties": {
+                "iam_key": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                }
+            }
+        },
+        "vault.IBMProfile": {
+            "title": "IBMProfile",
+            "type": "object",
+            "properties": {
+                "credentials": {
+                    "$ref": "#/definitions/vault.IBMCredentials"
                 }
             }
         }
