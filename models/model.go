@@ -493,7 +493,7 @@ const (
 	FrontEndLoggingURI   = "frontend/logging"
 	AuditTrailLoggingURI = "audit/store"
 )
-const WoodPeckerCertificate = "/agent/api/v1/clientcert/{profileId}"
+const WoodPeckerCertificate = "/agent/api/v1/config/k8s/{profileId}"
 const GKEAuthContainerName = "jhgke"
 const AKSAuthContainerName = "jhaks"
 const EKSAuthContainerName = "jheks"

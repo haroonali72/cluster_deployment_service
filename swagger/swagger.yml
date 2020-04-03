@@ -186,7 +186,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aks/getvms/:
+  /cluster/aks/getvms/{region}:
     get:
       tags:
       - cluster/aks
@@ -196,6 +196,10 @@ paths:
       - in: header
         name: token
         description: token
+        type: string
+      - in: path
+        name: region
+        description: region
         type: string
       responses:
         "200":
@@ -6068,28 +6072,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0016d50e0.false:
+  434.0xc0016daa20.false:
     title: "false"
     type: object
-  605.0xc001024150.false:
+  518.0xc001615380.false:
     title: "false"
     type: object
-  611.0xc00160fb00.false:
-    title: "false"
-    type: object
-  637.0xc0012fdc20.false:
-    title: "false"
-    type: object
-  5487.string:
+  1559.string:
     title: string
     type: object
-  13363.0xc0016fef30.false:
+  5960.0xc0016dbf20.false:
     title: "false"
     type: object
-  38601.0xc0016aa870.false:
+  13279.0xc001640d80.false:
     title: "false"
     type: object
-  46086.string:
+  13385.0xc0010372f0.false:
+    title: "false"
+    type: object
+  13431.0xc00133ce10.false:
+    title: "false"
+    type: object
+  19794.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6144,7 +6148,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/46086.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6195,7 +6199,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5487.string'
+        $ref: '#/definitions/19794.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6334,7 +6338,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc001024150.false'
+        $ref: '#/definitions/13385.0xc0010372f0.false'
       name:
         type: string
       network_name:
@@ -6715,7 +6719,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc0012fdc20.false'
+        $ref: '#/definitions/13431.0xc00133ce10.false'
       name:
         type: string
       network_name:
@@ -6869,33 +6873,33 @@ definitions:
     title: Cluster
     type: object
     properties:
-      certificate-authority-data:
+      Certificate:
         type: string
-      server:
+      Server:
         type: string
   doks.Clusters:
     title: Clusters
     type: object
     properties:
-      cluster:
+      Cluster:
         $ref: '#/definitions/doks.Cluster'
-      name:
+      Name:
         type: string
   doks.Context:
     title: Context
     type: object
     properties:
-      cluster:
+      Cluster:
         type: string
-      user:
+      User:
         type: string
   doks.Contexts:
     title: Contexts
     type: object
     properties:
-      context:
+      Context:
         $ref: '#/definitions/doks.Context'
-      name:
+      Name:
         type: string
   doks.DOKSCluster:
     title: DOKSCluster
@@ -6938,23 +6942,23 @@ definitions:
     title: KubernetesConfig
     type: object
     properties:
-      apiVersion:
+      ApiVersion:
         type: string
-      clusters:
+      Clusters:
         type: array
         items:
           $ref: '#/definitions/doks.Clusters'
-      contexts:
+      Contexts:
         type: array
         items:
           $ref: '#/definitions/doks.Contexts'
-      current-context:
+      CurrentContext:
         type: string
-      kind:
+      Kind:
         type: string
-      preferences:
+      Preferences:
         $ref: '#/definitions/doks.Preference'
-      users:
+      Users:
         type: array
         items:
           $ref: '#/definitions/doks.Users'
@@ -7066,15 +7070,15 @@ definitions:
     title: User
     type: object
     properties:
-      token:
+      Token:
         type: string
   doks.Users:
     title: Users
     type: object
     properties:
-      name:
+      Name:
         type: string
-      user:
+      User:
         $ref: '#/definitions/doks.User'
   gcp.AccountData:
     title: AccountData
@@ -7378,6 +7382,9 @@ definitions:
         type: string
       current_master_version:
         type: string
+      current_node_count:
+        type: integer
+        format: int64
       default_max_pods_constraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
@@ -7849,7 +7856,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc00160fb00.false'
+        $ref: '#/definitions/13279.0xc001640d80.false'
       kube_version:
         type: string
       name:
@@ -7954,7 +7961,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/38601.0xc0016aa870.false'
+        $ref: '#/definitions/518.0xc001615380.false'
       kube_version:
         type: string
       name:
@@ -8120,7 +8127,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0016d50e0.false'
+        $ref: '#/definitions/5960.0xc0016dbf20.false'
       name:
         type: string
       node_pools:
@@ -8206,7 +8213,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc0016fef30.false'
+        $ref: '#/definitions/434.0xc0016daa20.false'
       name:
         type: string
       node_pools:
