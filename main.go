@@ -1,6 +1,7 @@
 package main
 
 import (
+	"antelope/models/aks"
 	"antelope/models/db"
 	"antelope/models/utils"
 	_ "antelope/routers"
@@ -36,6 +37,9 @@ func main() {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
+
+	//for getting azure resource-sku-list
+	go aks.RunCronJob()
 
 	// TODO enable basic authentication if required
 	//authPlugin := auth.NewBasicAuthenticator(SecretAuth, "Authorization Required")

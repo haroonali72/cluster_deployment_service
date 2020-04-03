@@ -9,12 +9,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-09-01/skus"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/go-autorest/autorest/to"
 	"io/ioutil"
+	"os"
 	"time"
 
 	"strings"
@@ -655,6 +657,50 @@ func GetVmSkus(ctx utils.Context) ([]SkuResp, error) {
 	}
 
 	return skus, nil
+}
+
+func (cloud *AKS) WriteAzureSkus() {
+	if cloud == nil {
+		err := cloud.init()
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+	}
+
+	cloud.Context = context.Background()
+	pages, err := cloud.ResourceSkuClient.List(cloud.Context)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	var ResourceList []skus.ResourceSku
+	for pages.NotDone() {
+		for _, value := range pages.Values() {
+			ResourceList = append(ResourceList, value)
+		}
+		_ = pages.Next()
+	}
+
+	err = os.Remove("/app/files/azure-list-skus.txt")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	bytes, _ := json.Marshal(ResourceList)
+	f, err := os.Create("/app/files/azure-list-skus.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer f.Close()
+
+	_, err = f.Write(bytes)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 func validate(aksCluster AKSCluster) error {
