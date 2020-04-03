@@ -113,6 +113,8 @@ github.com/google/uuid
 github.com/googleapis/gax-go/v2
 # github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c
 github.com/gopherjs/gopherjs/js
+# github.com/jasonlvhit/gocron v0.0.0-20200323211822-1a413f9a41a2
+github.com/jasonlvhit/gocron
 # github.com/jmespath/go-jmespath v0.3.0
 github.com/jmespath/go-jmespath
 # github.com/jtolds/gls v4.20.0+incompatible

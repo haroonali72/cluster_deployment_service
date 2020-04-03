@@ -13,6 +13,7 @@ import (
 	aks "github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice"
 	"github.com/astaxie/beego"
 	"github.com/ghodss/yaml"
+	"github.com/jasonlvhit/gocron"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -586,10 +587,10 @@ func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 				return errors.New("machine type with pool " + *pool.Name + " is empty")
 			} else if pool.Count != nil && *pool.Count == 0 {
 				return errors.New("node count value is zero within pool " + *pool.Name)
-			} else if pool.OsDiskSizeGB != nil && *pool.OsDiskSizeGB == 0 {
-				return errors.New("Disk size is zero within pool " + *pool.Name)
-			} else if pool.MaxPods != nil && *pool.MaxPods == 0 {
-				return errors.New("max pods should not be zero within pool " + *pool.Name)
+			} else if pool.OsDiskSizeGB != nil && (*pool.OsDiskSizeGB == 0 || *pool.OsDiskSizeGB < 40 || *pool.OsDiskSizeGB > 2048) {
+				return errors.New("Disk size must be greater than 40 and less than 2048 within pool " + *pool.Name)
+			} else if pool.MaxPods != nil && (*pool.MaxPods == 0 || *pool.MaxPods < 40) {
+				return errors.New("max pods must be greater than or equal to 40 within pool " + *pool.Name)
 			} else if pool.EnableAutoScaling != nil && *pool.EnableAutoScaling {
 				if *pool.MinCount > *pool.MaxCount {
 					return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
@@ -611,4 +612,34 @@ func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 	}
 
 	return nil
+}
+
+func RunCronJob() {
+	gocron.Every(1).Monday().Do(Task)
+	gocron.Start()
+}
+
+func Task() {
+	fmt.Println("running job")
+	credentials := vault.AzureCredentials{
+		ClientId:       "87b20591-1867-49ac-add7-ada0f22a70e4",
+		ClientSecret:   "IV54Er?tiv8H3CSYwjZzPaAMl*UoFl?=",
+		SubscriptionId: "aa94b050-2c52-4b7b-9ce3-2ac18253e61e",
+		TenantId:       "959c117c-1656-470a-8403-947584c67e55",
+		Location:       "new",
+	}
+
+	aksOps, err := GetAKS(credentials)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = aksOps.init()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	aksOps.WriteAzureSkus()
 }
