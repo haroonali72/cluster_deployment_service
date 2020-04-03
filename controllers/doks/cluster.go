@@ -773,7 +773,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: TerminateKubernetesCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -781,7 +781,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -796,7 +796,8 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+*/
+region := "sgp1"
 
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
