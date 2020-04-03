@@ -587,10 +587,10 @@ func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 				return errors.New("machine type with pool " + *pool.Name + " is empty")
 			} else if pool.Count != nil && *pool.Count == 0 {
 				return errors.New("node count value is zero within pool " + *pool.Name)
-			} else if pool.OsDiskSizeGB != nil && *pool.OsDiskSizeGB == 0 {
-				return errors.New("Disk size is zero within pool " + *pool.Name)
-			} else if pool.MaxPods != nil && *pool.MaxPods == 0 {
-				return errors.New("max pods should not be zero within pool " + *pool.Name)
+			} else if pool.OsDiskSizeGB != nil && (*pool.OsDiskSizeGB == 0 || *pool.OsDiskSizeGB < 40) {
+				return errors.New("Disk size must be greater than 40 and less than 2048 within pool " + *pool.Name)
+			} else if pool.MaxPods != nil && (*pool.MaxPods == 0 || *pool.MaxPods < 40) {
+				return errors.New("max pods must be greater than or equal to 40 within pool " + *pool.Name)
 			} else if pool.EnableAutoScaling != nil && *pool.EnableAutoScaling {
 				if *pool.MinCount > *pool.MaxCount {
 					return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
