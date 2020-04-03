@@ -6100,25 +6100,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001714480.false:
+  442.0xc001703a10.false:
     title: "false"
     type: object
-  605.0xc00105d230.false:
+  605.0xc0010507e0.false:
     title: "false"
     type: object
-  611.0xc001648b40.false:
+  611.0xc00165a0f0.false:
     title: "false"
     type: object
-  637.0xc001344d20.false:
+  637.0xc0013662d0.false:
     title: "false"
     type: object
   5519.string:
     title: string
     type: object
-  13363.0xc0017442d0.false:
+  13363.0xc001739860.false:
     title: "false"
     type: object
-  39150.0xc0016cbbf0.false:
+  39150.0xc0016d51a0.false:
     title: "false"
     type: object
   48986.string:
@@ -6366,7 +6366,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc00105d230.false'
+        $ref: '#/definitions/605.0xc0010507e0.false'
       name:
         type: string
       network_name:
@@ -6747,7 +6747,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc001344d20.false'
+        $ref: '#/definitions/637.0xc0013662d0.false'
       name:
         type: string
       network_name:
@@ -7884,7 +7884,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc001648b40.false'
+        $ref: '#/definitions/611.0xc00165a0f0.false'
       kube_version:
         type: string
       name:
@@ -7989,7 +7989,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/39150.0xc0016cbbf0.false'
+        $ref: '#/definitions/39150.0xc0016d51a0.false'
       kube_version:
         type: string
       name:
@@ -8155,7 +8155,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001714480.false'
+        $ref: '#/definitions/442.0xc001703a10.false'
       name:
         type: string
       node_pools:
@@ -8241,7 +8241,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc0017442d0.false'
+        $ref: '#/definitions/13363.0xc001739860.false'
       name:
         type: string
       node_pools:
