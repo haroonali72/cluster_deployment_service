@@ -1811,36 +1811,6 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/doks/a:
-    put:
-      tags:
-      - cluster/doks
-      description: update an existing cluster
-      operationId: DOKSClusterController.Update check
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: body
-        name: body
-        description: body for cluster content
-        required: true
-        schema:
-          $ref: '#/definitions/doks.KubernetesCluster'
-      responses:
-        "200":
-          description: '{"msg": "cluster updated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "no cluster exists with this name"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/doks/all:
     get:
       tags:
@@ -3197,7 +3167,7 @@ paths:
         description: body for cluster content
         required: true
         schema:
-          $ref: '#/definitions/vault.IBMProfile'
+          $ref: '#/definitions/vault.IBMCredentials'
       - in: header
         name: token
         description: token
@@ -6100,25 +6070,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001703a10.false:
+  442.0xc001764b40.false:
     title: "false"
     type: object
-  605.0xc0010507e0.false:
+  605.0xc0010998f0.false:
     title: "false"
     type: object
-  611.0xc00165a0f0.false:
+  611.0xc00169f200.false:
     title: "false"
     type: object
-  637.0xc0013662d0.false:
+  637.0xc0013993e0.false:
     title: "false"
     type: object
   5519.string:
     title: string
     type: object
-  13363.0xc001739860.false:
+  13363.0xc001796990.false:
     title: "false"
     type: object
-  39150.0xc0016d51a0.false:
+  39150.0xc0017342d0.false:
     title: "false"
     type: object
   48986.string:
@@ -6366,7 +6336,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010507e0.false'
+        $ref: '#/definitions/605.0xc0010998f0.false'
       name:
         type: string
       network_name:
@@ -6747,7 +6717,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc0013662d0.false'
+        $ref: '#/definitions/637.0xc0013993e0.false'
       name:
         type: string
       network_name:
@@ -7884,7 +7854,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc00165a0f0.false'
+        $ref: '#/definitions/611.0xc00169f200.false'
       kube_version:
         type: string
       name:
@@ -7989,7 +7959,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/39150.0xc0016d51a0.false'
+        $ref: '#/definitions/39150.0xc0017342d0.false'
       kube_version:
         type: string
       name:
@@ -8155,7 +8125,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001703a10.false'
+        $ref: '#/definitions/442.0xc001764b40.false'
       name:
         type: string
       node_pools:
@@ -8241,7 +8211,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc001739860.false'
+        $ref: '#/definitions/13363.0xc001796990.false'
       name:
         type: string
       node_pools:
@@ -8294,12 +8264,6 @@ definitions:
         type: string
       region:
         type: string
-  vault.IBMProfile:
-    title: IBMProfile
-    type: object
-    properties:
-      credentials:
-        $ref: '#/definitions/vault.IBMCredentials'
 tags:
 - name: health
   description: |
