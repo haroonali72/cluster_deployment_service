@@ -19,38 +19,38 @@ type KubernetesClusterConfig struct {
 	KubeconfigYAML []byte
 }
 type KubernetesConfig struct {
-	ApiVersion		string		  	`yaml:"apiVersion"`
-	Clusters		[]Clusters  	  	`yaml:"clusters"`
-	Contexts 		[]Contexts         	`yaml:"contexts"`
-	CurrentContext	string			`yaml:"current-context"`
-	Kind			string			`yaml:"kind"`
-	Preferences		Preference		`yaml:"preference"`
-	Users			[]Users			`yaml:"users"`
+	ApiVersion		string		  	`yaml:"apiVersion"  json:"apiVersion"`
+	Clusters		[]Clusters  	`yaml:"clusters" json:"clusters"`
+	Contexts 		[]Contexts      `yaml:"contexts" json:"contexts"`
+	CurrentContext	string			`yaml:"current-context" json:"current-context"`
+	Kind			string			`yaml:"kind" json:"kind"`
+	Preferences		Preference		`yaml:"preferences" json:"preferences"`
+	Users			[]Users			`yaml:"users" json:"users"`
 }
 
 type Clusters struct {
-	Cluster			Cluster  	  	`yaml:"cluster"`
-	Name			string			`yaml:"name"`
+	Cluster			Cluster  	  	`yaml:"cluster" json:"cluster"`
+	Name			string			`yaml:"name" json:"name"`
 }
 type Cluster struct {
-	Certificate		string			`yaml:"certificate-authority-data"`
-	Server			string			`yaml:"server"`
+	Certificate		string			`yaml:"certificate-authority-data" json:"certificate-authority-data"`
+	Server			string			`yaml:"server" json:"server"`
 }
 type Contexts struct{
-	Context    		Context      		`yaml:"context"`
-	Name			string			`yaml:"name"`
+	Context    		Context      	`yaml:"context" json:"context"`
+	Name			string			`yaml:"name" json:"name"`
 }
 type Context struct{
-	Cluster			string			`yaml:"cluster"`
-	User			string			`yaml:"user"`
+	Cluster			string			`yaml:"cluster" json:"cluster"`
+	User			string			`yaml:"user" json:"user"`
 }
 type Preference struct {}
 type Users struct {
-	Name			string			`yaml:"name"`
-	User			User			`yaml:"user"`
+	Name			string			`yaml:"name" json:"name"`
+	User			User			`yaml:"user" json:"user"`
 }
 type User struct {
-	Token			string			`yaml:"token"`
+	Token			string			`yaml:"token" json:"token"`
 }
 type KubernetesCluster struct {
 	ID               string       			`json:"id" bson:"id"`
@@ -484,9 +484,6 @@ func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster K
 		ctx.SendLogs("DOKSClusterModel:  Get kubernetes configuration file - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return config, nil
 	}
-
-
-
 	return config, confError
 }
 
