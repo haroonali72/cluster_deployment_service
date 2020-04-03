@@ -193,8 +193,8 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 			return KubernetesConfig{}, err
 		}
 	}
-	//"b01f9429-459b-4fc6-9726-ba9c21e88272"
-	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(), cluster.ID)
+
+	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(),cluster.ID)
 	if err != nil {
 		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
 		return KubernetesConfig{}, err
@@ -208,13 +208,12 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- t after unmarshal:\n%v\n\n", kubeFile)
-
+/*
 	d, err := yaml.Marshal(&kubeFile)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- t after marshal:\n%s\n\n", string(d))
+*/
 	 utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 
 	return kubeFile, nil
