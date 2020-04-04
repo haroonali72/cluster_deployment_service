@@ -1811,36 +1811,6 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/doks/a:
-    put:
-      tags:
-      - cluster/doks
-      description: update an existing cluster
-      operationId: DOKSClusterController.Update check
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: body
-        name: body
-        description: body for cluster content
-        required: true
-        schema:
-          $ref: '#/definitions/doks.KubernetesCluster'
-      responses:
-        "200":
-          description: '{"msg": "cluster updated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "no cluster exists with this name"}'
-        "500":
-          description: '{"error": "error msg"}'
   /cluster/doks/all:
     get:
       tags:
@@ -3183,6 +3153,34 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /cluster/iks/validateProfile:
+    post:
+      tags:
+      - cluster/iks
+      description: validate ibm profile
+      operationId: IKSClusterController.Get Validate Profile
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/vault.IBMCredentials'
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Profile is valid"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/op/:
@@ -6072,28 +6070,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0016f9bf0.false:
+  442.0xc001764b40.false:
     title: "false"
     type: object
-  605.0xc00104ed20.false:
+  605.0xc0010998f0.false:
     title: "false"
     type: object
-  611.0xc001646630.false:
+  611.0xc00169f200.false:
     title: "false"
     type: object
-  637.0xc00134c810.false:
+  637.0xc0013993e0.false:
     title: "false"
     type: object
-  5487.string:
+  5519.string:
     title: string
     type: object
-  13363.0xc001725a40.false:
+  13363.0xc001796990.false:
     title: "false"
     type: object
-  38601.0xc0016cd380.false:
+  39150.0xc0017342d0.false:
     title: "false"
     type: object
-  47405.string:
+  48986.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6148,7 +6146,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/47405.string'
+        $ref: '#/definitions/48986.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6199,7 +6197,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5487.string'
+        $ref: '#/definitions/5519.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6338,7 +6336,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc00104ed20.false'
+        $ref: '#/definitions/605.0xc0010998f0.false'
       name:
         type: string
       network_name:
@@ -6719,7 +6717,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc00134c810.false'
+        $ref: '#/definitions/637.0xc0013993e0.false'
       name:
         type: string
       network_name:
@@ -7856,7 +7854,7 @@ definitions:
       disable_public_service_endpoint:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc001646630.false'
+        $ref: '#/definitions/611.0xc00169f200.false'
       kube_version:
         type: string
       name:
@@ -7961,7 +7959,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/38601.0xc0016cd380.false'
+        $ref: '#/definitions/39150.0xc0017342d0.false'
       kube_version:
         type: string
       name:
@@ -8127,7 +8125,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0016f9bf0.false'
+        $ref: '#/definitions/442.0xc001764b40.false'
       name:
         type: string
       node_pools:
@@ -8213,7 +8211,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc001725a40.false'
+        $ref: '#/definitions/13363.0xc001796990.false'
       name:
         type: string
       node_pools:
@@ -8255,6 +8253,14 @@ definitions:
     type: object
     properties:
       access_token:
+        type: string
+      region:
+        type: string
+  vault.IBMCredentials:
+    title: IBMCredentials
+    type: object
+    properties:
+      iam_key:
         type: string
       region:
         type: string

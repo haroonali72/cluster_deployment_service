@@ -45,15 +45,6 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
         beego.ControllerComments{
-            Method: "PatchA",
-            Router: `/a`,
-            AllowHTTPMethods: []string{"put"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
-        beego.ControllerComments{
             Method: "GetAll",
             Router: `/all`,
             AllowHTTPMethods: []string{"get"},

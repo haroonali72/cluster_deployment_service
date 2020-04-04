@@ -33,6 +33,7 @@ type Cluster_Def struct {
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 	VPCId            string        `json:"vpc_id" bson:"vpc_id"`
+	IsAdvance        bool          `json:"is_advance" bson:"is_advance"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
@@ -591,4 +592,25 @@ func GeZones(region string, ctx utils.Context) ([]string, error) {
 	}
 
 	return zones, nil
+}
+func ValidateProfile(profile  vault.IBMProfile, ctx utils.Context)  error {
+	iks, err := GetIBM(profile.Profile)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	err = iks.init(profile.Profile.Region, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	_, err = iks.GetAllVersions(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  err
+	}
+
+	return  nil
 }
