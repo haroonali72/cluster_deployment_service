@@ -33,6 +33,7 @@ type Cluster_Def struct {
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 	VPCId            string        `json:"vpc_id" bson:"vpc_id"`
+	IsAdvance        bool          `json:"is_advance" bson:"is_advance"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
