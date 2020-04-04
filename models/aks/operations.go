@@ -17,9 +17,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"io/ioutil"
 	"os"
-	"time"
-
 	"strings"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
@@ -271,14 +270,10 @@ func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) error 
 	}
 
 	for {
+		time.Sleep(10 * time.Second)
 		akscluster, err := cloud.MCClient.Get(cloud.Context, cluster.ResourceGoup, cluster.Name)
 		if err != nil {
-			ctx.SendLogs(
-				"AKS cluster deletion for '"+cluster.Name+"' failed: "+err.Error(),
-				models.LOGGING_LEVEL_ERROR,
-				models.Backend_Logging,
-			)
-			return err
+			break
 		}
 
 		if akscluster.ProvisioningState == to.StringPtr("Deleting") {
@@ -287,8 +282,6 @@ func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) error 
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
-
-			time.Sleep(10 * time.Second)
 		} else if akscluster.ProvisioningState == to.StringPtr("Deleted") {
 			break
 		} else {
@@ -566,7 +559,7 @@ func generateClusterIdentity() *containerservice.ManagedClusterIdentity {
 
 func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClusterAddonProfile {
 	AKSaddon := make(map[string]*containerservice.ManagedClusterAddonProfile)
-	if c.ClusterProperties.IsExpert && c.ClusterProperties.IsHttpRouting {
+	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsHttpRouting {
 		var httpAddOn containerservice.ManagedClusterAddonProfile
 		httpAddOn.Enabled = to.BoolPtr(true)
 		AKSaddon["httpApplicationRouting"] = &httpAddOn
