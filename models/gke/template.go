@@ -23,7 +23,7 @@ type GKEClusterTemplate struct {
 	IsCloudplex      bool          `json:"is_cloudplex" bson:"is_cloudplex"`
 
 	AddonsConfig                   *AddonsConfig                   `json:"addons_config,omitempty" bson:"addons_config,omitempty"`
-	ClusterIpv4Cidr                string                          `json:"cluster_ipv_4_cidr,omitempty" bson:"cluster_ipv_4_cidr,omitempty"`
+	ClusterIpv4Cidr                string                          `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty"`
 	Conditions                     []*StatusCondition              `json:"conditions,omitempty" bson:"conditions,omitempty"`
 	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty"`
 	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty"`
@@ -48,17 +48,17 @@ type GKEClusterTemplate struct {
 	Network                        string                          `json:"network,omitempty" bson:"network,omitempty"`
 	NetworkConfig                  *NetworkConfig                  `json:"network_config,omitempty" bson:"network_config,omitempty"`
 	NetworkPolicy                  *NetworkPolicy                  `json:"network_policy,omitempty" bson:"network_policy,omitempty"`
-	NodeIpv4CidrSize               int64                           `json:"node_ipv_4_cidr_size,omitempty" bson:"node_ipv_4_cidr_size,omitempty"`
+	NodeIpv4CidrSize               int64                           `json:"node_ipv4_cidr_size,omitempty" bson:"node_ipv4_cidr_size,omitempty"`
 	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty"`
 	PrivateClusterConfig           *PrivateClusterConfig           `json:"private_cluster_config,omitempty" bson:"private_cluster_config,omitempty"`
 	ResourceLabels                 map[string]string               `json:"resource_labels,omitempty" bson:"resource_labels,omitempty"`
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
 	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty"`
-	ServicesIpv4Cidr               string                          `json:"services_ipv_4_cidr,omitempty" bson:"services_ipv_4_cidr,omitempty"`
+	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty"`
 	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
-	TpuIpv4CidrBlock               string                          `json:"tpu_ipv_4_cidr_block,omitempty" bson:"tpu_ipv_4_cidr_block,omitempty"`
+	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
 	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty"`
 }
 

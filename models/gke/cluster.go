@@ -26,7 +26,7 @@ type GKECluster struct {
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
 	AddonsConfig                   *AddonsConfig                   `json:"addons_config,omitempty" bson:"addons_config,omitempty"`
-	ClusterIpv4Cidr                string                          `json:"cluster_ipv_4_cidr,omitempty" bson:"cluster_ipv_4_cidr,omitempty"`
+	ClusterIpv4Cidr                string                          `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty"`
 	Conditions                     []*StatusCondition              `json:"conditions,omitempty" bson:"conditions,omitempty"`
 	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty"`
 	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty"`
@@ -52,17 +52,17 @@ type GKECluster struct {
 	Network                        string                          `json:"network,omitempty" bson:"network,omitempty"`
 	NetworkConfig                  *NetworkConfig                  `json:"network_config,omitempty" bson:"network_config,omitempty"`
 	NetworkPolicy                  *NetworkPolicy                  `json:"network_policy,omitempty" bson:"network_policy,omitempty"`
-	NodeIpv4CidrSize               int64                           `json:"node_ipv_4_cidr_size,omitempty" bson:"node_ipv_4_cidr_size,omitempty"`
+	NodeIpv4CidrSize               int64                           `json:"node_ipv4_cidr_size,omitempty" bson:"node_ipv4_cidr_size,omitempty"`
 	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty"`
 	PrivateClusterConfig           *PrivateClusterConfig           `json:"private_cluster_config,omitempty" bson:"private_cluster_config,omitempty"`
 	ResourceLabels                 map[string]string               `json:"resource_labels,omitempty" bson:"resource_labels,omitempty"`
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
 	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty"`
-	ServicesIpv4Cidr               string                          `json:"services_ipv_4_cidr,omitempty" bson:"services_ipv_4_cidr,omitempty"`
+	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty"`
 	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
-	TpuIpv4CidrBlock               string                          `json:"tpu_ipv_4_cidr_block,omitempty" bson:"tpu_ipv_4_cidr_block,omitempty"`
+	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
 	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty"`
 }
 
@@ -99,17 +99,17 @@ type MaxPodsConstraint struct {
 }
 
 type IPAllocationPolicy struct {
-	ClusterIpv4Cidr            string `json:"cluster_ipv_4_cidr,omitempty" bson:"cluster_ipv_4_cidr,omitempty"`
-	ClusterIpv4CidrBlock       string `json:"cluster_ipv_4_cidr_block,omitempty" bson:"cluster_ipv_4_cidr_block,omitempty"`
+	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty"`
+	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block,omitempty" bson:"cluster_ipv4_cidr_block,omitempty"`
 	ClusterSecondaryRangeName  string `json:"cluster_secondary_range_name,omitempty" bson:"cluster_secondary_range_name,omitempty"`
 	CreateSubnetwork           bool   `json:"create_subnetwork,omitempty" bson:"create_subnetwork,omitempty"`
-	NodeIpv4Cidr               string `json:"node_ipv_4_cidr,omitempty" bson:"node_ipv_4_cidr,omitempty"`
-	NodeIpv4CidrBlock          string `json:"node_ipv_4_cidr_block,omitempty" bson:"node_ipv_4_cidr_block,omitempty"`
-	ServicesIpv4Cidr           string `json:"services_ipv_4_cidr,omitempty" bson:"services_ipv_4_cidr,omitempty"`
-	ServicesIpv4CidrBlock      string `json:"services_ipv_4_cidr_block,omitempty" bson:"services_ipv_4_cidr_block,omitempty"`
+	NodeIpv4Cidr               string `json:"node_ipv4_cidr,omitempty" bson:"node_ipv4_cidr,omitempty"`
+	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block,omitempty" bson:"node_ipv4_cidr_block,omitempty"`
+	ServicesIpv4Cidr           string `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty"`
+	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block,omitempty" bson:"services_ipv4_cidr_block,omitempty"`
 	ServicesSecondaryRangeName string `json:"services_secondary_range_name,omitempty" bson:"services_secondary_range_name,omitempty"`
 	SubnetworkName             string `json:"subnetwork_name,omitempty" bson:"subnetwork_name,omitempty"`
-	TpuIpv4CidrBlock           string `json:"tpu_ipv_4_cidr_block,omitempty" bson:"tpu_ipv_4_cidr_block,omitempty"`
+	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
 	UseIpAliases               bool   `json:"use_ip_aliases,omitempty" bson:"use_ip_aliases,omitempty"`
 }
 
@@ -166,7 +166,7 @@ type NetworkPolicy struct {
 type PrivateClusterConfig struct {
 	EnablePrivateEndpoint bool   `json:"enable_private_endpoint,omitempty" bson:"enable_private_endpoint,omitempty"`
 	EnablePrivateNodes    bool   `json:"enable_private_nodes,omitempty" bson:"enable_private_nodes,omitempty"`
-	MasterIpv4CidrBlock   string `json:"master_ipv_4_cidr_block,omitempty" bson:"master_ipv_4_cidr_block,omitempty"`
+	MasterIpv4CidrBlock   string `json:"master_ipv4_cidr_block,omitempty" bson:"master_ipv4_cidr_block,omitempty"`
 	PrivateEndpoint       string `json:"private_endpoint,omitempty" bson:"private_endpoint,omitempty"`
 	PublicEndpoint        string `json:"public_endpoint,omitempty" bson:"public_endpoint,omitempty"`
 }
@@ -194,7 +194,7 @@ type NodePool struct {
 	Management        *NodeManagement      `json:"management,omitempty" bson:"management,omitempty"`
 	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty"`
 	Name              string               `json:"name,omitempty" bson:"name,omitempty"`
-	PodIpv4CidrSize   int64                `json:"pod_ipv_4_cidr_size,omitempty" bson:"pod_ipv_4_cidr_size,omitempty"`
+	PodIpv4CidrSize   int64                `json:"pod_ipv4_cidr_size,omitempty" bson:"pod_ipv4_cidr_size,omitempty"`
 	SelfLink          string               `json:"self_link,omitempty" bson:"self_link,omitempty"`
 	Status            string               `json:"status,omitempty" bson:"status,omitempty"`
 	StatusMessage     string               `json:"status_message,omitempty" bson:"status_message,omitempty"`
@@ -529,13 +529,13 @@ func FetchStatus(credentials gcp.GcpCredentials, token, projectId, companyId str
 		return cluster, err
 	}
 
-	err = gkeOps.fetchClusterStatus(&cluster, ctx)
+	latestCluster, err := gkeOps.fetchClusterStatus(cluster.Name, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err
 	}
 
-	return cluster, nil
+	return latestCluster, nil
 }
 
 func TerminateCluster(credentials gcp.GcpCredentials, projectId, companyId string, ctx utils.Context) error {
