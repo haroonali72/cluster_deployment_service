@@ -535,6 +535,12 @@ func FetchStatus(credentials gcp.GcpCredentials, token, projectId, companyId str
 		return cluster, err
 	}
 
+	latestCluster.ProjectId = projectId
+	latestCluster.CompanyId = companyId
+	latestCluster.CloudplexStatus = cluster.CloudplexStatus
+	latestCluster.IsExpert = cluster.IsExpert
+	latestCluster.IsAdvance = cluster.IsAdvance
+
 	return latestCluster, nil
 }
 
