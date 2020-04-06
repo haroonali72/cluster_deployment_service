@@ -88,6 +88,12 @@ type KubeClusterStatus struct {
 	State             string `json:"state"`
 	WorkerCount       int    `json:"workerCount"`
 }
+type KubeWorkerPoolStatus struct {
+	ID     string `json:"id"`
+	Name   string `json:"poolName"`
+	Region string `json:"flavour"`
+	State  string `json:"state"`
+}
 type AllInstancesResponse struct {
 	Profile []InstanceProfile `json:"profiles"`
 }
@@ -173,7 +179,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 	cluster.ClusterId = clusterId
 
 	for {
-		response, err := cloud.fetchStatus(&cluster, ctx, companyId)
+		response, err := cloud.fetchClusterStatus(&cluster, ctx, companyId)
 		if err != nil {
 			beego.Error(err.Error())
 			return cluster, err
@@ -485,7 +491,7 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) erro
 		return err
 	}
 	for {
-		response, err := cloud.fetchStatus(cluster, ctx, "")
+		response, err := cloud.fetchClusterStatus(cluster, ctx, "")
 		if err != nil {
 			break
 		}
@@ -496,7 +502,7 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) erro
 	}
 	return nil
 }
-func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, error) {
+func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, error) {
 
 	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?cluster=" + cluster.ClusterId)
 
@@ -505,7 +511,6 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	m["Content-Type"] = "application/json"
 	m["Accept"] = "application/json"
 	m["Authorization"] = cloud.IAMToken
-	m["X-Auth-Refresh-Token"] = cloud.RefreshToken
 	m["X-Auth-Resource-Group"] = cluster.ResourceGroup
 	utils.SetHeaders(req, m)
 
@@ -539,6 +544,52 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return KubeClusterStatus{}, err
+	}
+	return response, nil
+}
+func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) ([]KubeWorkerPoolStatus, error) {
+
+	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetWorker_Endpoint + "?cluster=" + cluster.ClusterId)
+
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Region"] = cloud.Region
+	m["X-Auth-Resource-Group"] = cluster.ResourceGroup
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []KubeWorkerPoolStatus{}, err
+	}
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
+	beego.Info(string(body))
+	if res.StatusCode != 200 {
+		ctx.SendLogs("error in fetching cluster ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []KubeWorkerPoolStatus{}, errors.New("error in fetching cluster: " + res.Status)
+	}
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []KubeWorkerPoolStatus{}, err
+	}
+
+	// body is []byte format
+	// parse the JSON-encoded body and stores the result in the struct object for the res
+	var response []KubeWorkerPoolStatus
+	err = json.Unmarshal([]byte(body), &response)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []KubeWorkerPoolStatus{}, err
 	}
 	return response, nil
 }

@@ -313,28 +313,28 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	return nil
 }
-func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) (KubeClusterStatus, error) {
+func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) ([]KubeWorkerPoolStatus, error) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err
+		return []KubeWorkerPoolStatus{}, err
 	}
 	iks, err := GetIBM(credentials.Profile)
 	if err != nil {
-		return KubeClusterStatus{}, err
+		return []KubeWorkerPoolStatus{}, err
 	}
 	err = iks.init(credentials.Profile.Region, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err
+		return []KubeWorkerPoolStatus{}, err
 	}
 
 	response, e := iks.fetchStatus(&cluster, ctx, companyId)
 	if e != nil {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, e
+		return []KubeWorkerPoolStatus{}, e
 	}
 	return response, nil
 }

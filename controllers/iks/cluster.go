@@ -398,12 +398,12 @@ func (c *IKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-		if !allowed {
-			c.Ctx.Output.SetStatus(401)
-			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-			c.ServeJSON()
-			return
-		}
+	if !allowed {
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	//=============================================================================//
 
@@ -603,7 +603,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} iks.KubeClusterStatus
+// @Success 200 {object} []iks.KubeWorkerPoolStatus
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
