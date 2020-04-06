@@ -4036,7 +4036,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "returns status of nodes",
+                "description": "returns latest status of cluster",
                 "operationId": "GKEClusterController.Status",
                 "parameters": [
                     {
@@ -9228,35 +9228,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc001796990.false": {
+        "13736.0xc0013817d0.false": {
             "title": "false",
             "type": "object"
         },
-        "39150.0xc0017342d0.false": {
+        "40431.0xc0013251d0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc001764b40.false": {
+        "459.0xc00134f980.false": {
             "title": "false",
             "type": "object"
         },
-        "48986.string": {
+        "50228.string": {
             "title": "string",
             "type": "object"
         },
-        "5519.string": {
+        "5600.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc0010998f0.false": {
+        "629.0xc000cb6bd0.false": {
             "title": "false",
             "type": "object"
         },
-        "611.0xc00169f200.false": {
+        "633.0xc0012a2120.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc0013993e0.false": {
+        "660.0xc000fb6480.false": {
             "title": "false",
             "type": "object"
         },
@@ -9335,7 +9335,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/48986.string"
+                    "$ref": "#/definitions/50228.string"
                 },
                 "type": {
                     "type": "string"
@@ -9409,7 +9409,7 @@
                     }
                 },
                 "node_taints": {
-                    "$ref": "#/definitions/5519.string"
+                    "$ref": "#/definitions/5600.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9613,7 +9613,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc0010998f0.false"
+                    "$ref": "#/definitions/629.0xc000cb6bd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10178,7 +10178,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc0013993e0.false"
+                    "$ref": "#/definitions/660.0xc000fb6480.false"
                 },
                 "name": {
                     "type": "string"
@@ -11143,7 +11143,7 @@
                 "cloud_status": {
                     "type": "string"
                 },
-                "cluster_ipv_4_cidr": {
+                "cluster_ipv4_cidr": {
                     "type": "string"
                 },
                 "company_id": {
@@ -11237,7 +11237,7 @@
                 "network_policy": {
                     "$ref": "#/definitions/gke.NetworkPolicy"
                 },
-                "node_ipv_4_cidr_size": {
+                "node_ipv4_cidr_size": {
                     "type": "integer",
                     "format": "int64"
                 },
@@ -11264,7 +11264,7 @@
                 "self_link": {
                     "type": "string"
                 },
-                "services_ipv_4_cidr": {
+                "services_ipv4_cidr": {
                     "type": "string"
                 },
                 "status": {
@@ -11276,7 +11276,7 @@
                 "subnetwork": {
                     "type": "string"
                 },
-                "tpu_ipv_4_cidr_block": {
+                "tpu_ipv4_cidr_block": {
                     "type": "string"
                 },
                 "zone": {
@@ -11297,7 +11297,7 @@
                 "cloud_status": {
                     "type": "string"
                 },
-                "cluster_ipv_4_cidr": {
+                "cluster_ipv4_cidr": {
                     "type": "string"
                 },
                 "company_id": {
@@ -11384,7 +11384,7 @@
                 "network_policy": {
                     "$ref": "#/definitions/gke.NetworkPolicy"
                 },
-                "node_ipv_4_cidr_size": {
+                "node_ipv4_cidr_size": {
                     "type": "integer",
                     "format": "int64"
                 },
@@ -11408,7 +11408,7 @@
                 "self_link": {
                     "type": "string"
                 },
-                "services_ipv_4_cidr": {
+                "services_ipv4_cidr": {
                     "type": "string"
                 },
                 "status": {
@@ -11423,7 +11423,7 @@
                 "template_id": {
                     "type": "string"
                 },
-                "tpu_ipv_4_cidr_block": {
+                "tpu_ipv4_cidr_block": {
                     "type": "string"
                 },
                 "zone": {
@@ -11457,10 +11457,10 @@
             "title": "IPAllocationPolicy",
             "type": "object",
             "properties": {
-                "cluster_ipv_4_cidr": {
+                "cluster_ipv4_cidr": {
                     "type": "string"
                 },
-                "cluster_ipv_4_cidr_block": {
+                "cluster_ipv4_cidr_block": {
                     "type": "string"
                 },
                 "cluster_secondary_range_name": {
@@ -11469,16 +11469,16 @@
                 "create_subnetwork": {
                     "type": "boolean"
                 },
-                "node_ipv_4_cidr": {
+                "node_ipv4_cidr": {
                     "type": "string"
                 },
-                "node_ipv_4_cidr_block": {
+                "node_ipv4_cidr_block": {
                     "type": "string"
                 },
-                "services_ipv_4_cidr": {
+                "services_ipv4_cidr": {
                     "type": "string"
                 },
-                "services_ipv_4_cidr_block": {
+                "services_ipv4_cidr_block": {
                     "type": "string"
                 },
                 "services_secondary_range_name": {
@@ -11487,7 +11487,7 @@
                 "subnetwork_name": {
                     "type": "string"
                 },
-                "tpu_ipv_4_cidr_block": {
+                "tpu_ipv4_cidr_block": {
                     "type": "string"
                 },
                 "use_ip_aliases": {
@@ -11729,7 +11729,7 @@
                 "name": {
                     "type": "string"
                 },
-                "pod_ipv_4_cidr_size": {
+                "pod_ipv4_cidr_size": {
                     "type": "integer",
                     "format": "int64"
                 },
@@ -11789,7 +11789,7 @@
                 "enable_private_nodes": {
                     "type": "boolean"
                 },
-                "master_ipv_4_cidr_block": {
+                "master_ipv4_cidr_block": {
                     "type": "string"
                 },
                 "private_endpoint": {
@@ -11866,8 +11866,11 @@
                 "disable_public_service_endpoint": {
                     "type": "boolean"
                 },
+                "is_advance": {
+                    "type": "boolean"
+                },
                 "kube_credentials": {
-                    "$ref": "#/definitions/611.0xc00169f200.false"
+                    "$ref": "#/definitions/633.0xc0012a2120.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12022,7 +12025,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/39150.0xc0017342d0.false"
+                    "$ref": "#/definitions/40431.0xc0013251d0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12251,7 +12254,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc001764b40.false"
+                    "$ref": "#/definitions/459.0xc00134f980.false"
                 },
                 "name": {
                     "type": "string"
@@ -12379,7 +12382,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc001796990.false"
+                    "$ref": "#/definitions/13736.0xc0013817d0.false"
                 },
                 "name": {
                     "type": "string"

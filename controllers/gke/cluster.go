@@ -645,7 +645,7 @@ func (c *GKEClusterController) StartCluster() {
 }
 
 // @Title Status
-// @Description returns status of nodes
+// @Description returns latest status of cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"

@@ -604,7 +604,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Param	token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} iks.KubeClusterStatus
+// @Success 200 {object} []iks.KubeWorkerPoolStatus
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}

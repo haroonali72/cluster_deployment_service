@@ -81,7 +81,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 
 	_, err = cloud.Client.Projects.Zones.Clusters.Create(
 		cloud.ProjectId,
-		cloud.Region + "-" + cloud.Zone,
+		cloud.Region+"-"+cloud.Zone,
 		clusterRequest,
 	).Context(context.Background()).Do()
 
@@ -341,30 +341,30 @@ func (cloud *GKE) init() error {
 	return nil
 }
 
-func (cloud *GKE) fetchClusterStatus(cluster *GKECluster, ctx utils.Context) error {
+func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (cluster GKECluster, err error) {
 	if cloud.Client == nil {
-		err := cloud.init()
+		err = cloud.init()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
+			return cluster, err
 		}
 	}
 
-	latestCluster, err := cloud.Client.Projects.Zones.Clusters.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
+	latestCluster, err := cloud.Client.Projects.Zones.Clusters.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName).Do()
 	if err != nil && !strings.Contains(err.Error(), "not exist") {
 		ctx.SendLogs(
 			"GKE get cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return err
+		return cluster, err
 	}
 
-	if latestCluster != nil {
-		cluster.NodePools = GenerateNodePoolFromResponse(latestCluster.NodePools)
+	if latestCluster == nil {
+		return cluster, err
 	}
 
-	return nil
+	return GenerateClusterFromResponse(*latestCluster), err
 }
 
 func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) error {

@@ -2694,7 +2694,7 @@ paths:
     get:
       tags:
       - cluster/gke
-      description: returns status of nodes
+      description: returns latest status of cluster
       operationId: GKEClusterController.Status
       parameters:
       - in: header
@@ -6070,29 +6070,29 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001764b40.false:
+  459.0xc00134f980.false:
     title: "false"
     type: object
-  605.0xc0010998f0.false:
+  629.0xc000cb6bd0.false:
     title: "false"
     type: object
-  611.0xc00169f200.false:
+  633.0xc0012a2120.false:
     title: "false"
     type: object
-  637.0xc0013993e0.false:
+  660.0xc000fb6480.false:
     title: "false"
     type: object
-  5519.string:
+  40431.0xc0013251d0.false:
+    title: "false"
+    type: object
+  50228.string:
     title: string
     type: object
-  13363.0xc001796990.false:
-    title: "false"
-    type: object
-  39150.0xc0017342d0.false:
-    title: "false"
-    type: object
-  48986.string:
+  5600.string:
     title: string
+    type: object
+  13736.0xc0013817d0.false:
+    title: "false"
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -6146,7 +6146,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/48986.string'
+        $ref: '#/definitions/50228.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6197,7 +6197,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5519.string'
+        $ref: '#/definitions/5600.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6336,7 +6336,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010998f0.false'
+        $ref: '#/definitions/629.0xc000cb6bd0.false'
       name:
         type: string
       network_name:
@@ -6717,7 +6717,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc0013993e0.false'
+        $ref: '#/definitions/660.0xc000fb6480.false'
       name:
         type: string
       network_name:
@@ -7368,7 +7368,7 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       cloud_status:
         type: string
-      cluster_ipv_4_cidr:
+      cluster_ipv4_cidr:
         type: string
       company_id:
         type: string
@@ -7431,7 +7431,7 @@ definitions:
         $ref: '#/definitions/gke.NetworkConfig'
       network_policy:
         $ref: '#/definitions/gke.NetworkPolicy'
-      node_ipv_4_cidr_size:
+      node_ipv4_cidr_size:
         type: integer
         format: int64
       node_pools:
@@ -7449,7 +7449,7 @@ definitions:
         $ref: '#/definitions/gke.ResourceUsageExportConfig'
       self_link:
         type: string
-      services_ipv_4_cidr:
+      services_ipv4_cidr:
         type: string
       status:
         type: string
@@ -7457,7 +7457,7 @@ definitions:
         type: string
       subnetwork:
         type: string
-      tpu_ipv_4_cidr_block:
+      tpu_ipv4_cidr_block:
         type: string
       zone:
         type: string
@@ -7471,7 +7471,7 @@ definitions:
         $ref: '#/definitions/models.Cloud'
       cloud_status:
         type: string
-      cluster_ipv_4_cidr:
+      cluster_ipv4_cidr:
         type: string
       company_id:
         type: string
@@ -7529,7 +7529,7 @@ definitions:
         $ref: '#/definitions/gke.NetworkConfig'
       network_policy:
         $ref: '#/definitions/gke.NetworkPolicy'
-      node_ipv_4_cidr_size:
+      node_ipv4_cidr_size:
         type: integer
         format: int64
       node_pools:
@@ -7545,7 +7545,7 @@ definitions:
         $ref: '#/definitions/gke.ResourceUsageExportConfig'
       self_link:
         type: string
-      services_ipv_4_cidr:
+      services_ipv4_cidr:
         type: string
       status:
         type: string
@@ -7555,7 +7555,7 @@ definitions:
         type: string
       template_id:
         type: string
-      tpu_ipv_4_cidr_block:
+      tpu_ipv4_cidr_block:
         type: string
       zone:
         type: string
@@ -7578,27 +7578,27 @@ definitions:
     title: IPAllocationPolicy
     type: object
     properties:
-      cluster_ipv_4_cidr:
+      cluster_ipv4_cidr:
         type: string
-      cluster_ipv_4_cidr_block:
+      cluster_ipv4_cidr_block:
         type: string
       cluster_secondary_range_name:
         type: string
       create_subnetwork:
         type: boolean
-      node_ipv_4_cidr:
+      node_ipv4_cidr:
         type: string
-      node_ipv_4_cidr_block:
+      node_ipv4_cidr_block:
         type: string
-      services_ipv_4_cidr:
+      services_ipv4_cidr:
         type: string
-      services_ipv_4_cidr_block:
+      services_ipv4_cidr_block:
         type: string
       services_secondary_range_name:
         type: string
       subnetwork_name:
         type: string
-      tpu_ipv_4_cidr_block:
+      tpu_ipv4_cidr_block:
         type: string
       use_ip_aliases:
         type: boolean
@@ -7760,7 +7760,7 @@ definitions:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       name:
         type: string
-      pod_ipv_4_cidr_size:
+      pod_ipv4_cidr_size:
         type: integer
         format: int64
       self_link:
@@ -7801,7 +7801,7 @@ definitions:
         type: boolean
       enable_private_nodes:
         type: boolean
-      master_ipv_4_cidr_block:
+      master_ipv4_cidr_block:
         type: string
       private_endpoint:
         type: string
@@ -7853,8 +7853,10 @@ definitions:
         type: string
       disable_public_service_endpoint:
         type: boolean
+      is_advance:
+        type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc00169f200.false'
+        $ref: '#/definitions/633.0xc0012a2120.false'
       kube_version:
         type: string
       name:
@@ -7959,7 +7961,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/39150.0xc0017342d0.false'
+        $ref: '#/definitions/40431.0xc0013251d0.false'
       kube_version:
         type: string
       name:
@@ -8125,7 +8127,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001764b40.false'
+        $ref: '#/definitions/459.0xc00134f980.false'
       name:
         type: string
       node_pools:
@@ -8211,7 +8213,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc001796990.false'
+        $ref: '#/definitions/13736.0xc0013817d0.false'
       name:
         type: string
       node_pools:
