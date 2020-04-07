@@ -487,8 +487,8 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 
 			//WindowsProfile:          generateWindowsProfile(),
 		},
-		Identity: generateClusterIdentity(),
-		Tags:     generateClusterTags(c),
+		//Identity: generateClusterIdentity(),
+		Tags: generateClusterTags(c),
 	}
 	return &request
 }

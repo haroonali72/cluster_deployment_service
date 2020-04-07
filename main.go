@@ -89,6 +89,5 @@ func setEnv() {
 	os.Setenv("jump_host_ip", "52.220.196.92")
 	os.Setenv("jump_host_ssh_key", "/home/haroon/CloudPlex/cloudFiles/ahmadnewkey.txt")
 	os.Setenv("jump_host_ip", "52.220.196.92")
-	os.Setenv("jump_host_ssh_key", "/home/mahmad/ahmadnewkey.pem")
 	os.Setenv("woodpecker_url", "http://woodpecker:3300")
 }
