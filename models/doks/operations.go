@@ -3,6 +3,7 @@ package doks
 import (
 	"antelope/models"
 	"antelope/models/utils"
+	"antelope/models/vault"
 	"context"
 	"errors"
 	"github.com/astaxie/beego"
@@ -41,13 +42,14 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 func getWoodpecker() string {
 	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
 }
+
 func (cloud *DOKS) init(ctx utils.Context) error {
 	if cloud.Client != nil {
 		return nil
 	}
 
 	if cloud.AccessKey == "" {
-		text := "invalid cloud credentials"
+		text := "Invalid cloud credentials"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(text)
 		return errors.New(text)
@@ -78,28 +80,16 @@ func getNetworkHost(cloudType, projectId string) string {
 	return host
 }
 
-func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, companyId string, token string) (KubernetesCluster, error) {
+func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, companyId , token string, credentials vault.DOCredentials) (KubernetesCluster, CustomError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return cluster, err
+			return cluster, ApiError(err,credentials,ctx,companyId)
 		}
 	}
 
-	/*	var doksNetwork types.DONetwork
-		url := getNetworkHost("do", cluster.ProjectId)
 
-		network, err := api_handler.GetAPIStatus(token, url, ctx)
-		if err != nil || network == nil {
-			return cluster, errors.New("error in fetching network")
-		}
-		err = json.Unmarshal(network.([]byte), &doksNetwork)
-		if err != nil {
-			beego.Error(err.Error())
-			return cluster, err
-		}
-	*/
 	utils.SendLog(companyId, "Creating DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
 	/*	list := godo.ListOptions{}
@@ -126,7 +116,6 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
 		Tags:        cluster.Tags,
-		//VPCUUID:           cluster.VPCUUID,
 		NodePools: nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
@@ -134,8 +123,9 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
 	if err != nil {
-		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", cluster.ProjectId)
-		return cluster, err
+		cluErr :=ApiError(err,credentials,ctx,companyId)
+		utils.SendLog(companyId, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
+		return cluster,cluErr
 	}
 	cluster.ID = clus.ID
 	time.Sleep(2 *30 * time.Second)
@@ -146,9 +136,8 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 	}
 
 	time.Sleep(15 * time.Second)
-	return cluster, nil
+	return cluster, CustomError{}
 }
-
 func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context, projectId, companyId string) error {
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
