@@ -49,7 +49,7 @@ func (cloud *DOKS) init(ctx utils.Context) error {
 	}
 
 	if cloud.AccessKey == "" {
-		text := "invalid cloud credentials"
+		text := "Invalid cloud credentials"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(text)
 		return errors.New(text)
@@ -113,7 +113,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 	}
 	input := godo.KubernetesClusterCreateRequest{
 		Name:        cluster.Name,
-		//RegionSlug:  cluster.Region,
+		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
 		Tags:        cluster.Tags,
 		NodePools: nodepool,
@@ -124,11 +124,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
 	if err != nil {
 		cluErr :=ApiError(err,credentials,ctx,companyId)
-		utils.SendLog(companyId, "Error in cluster creation: "+ cluErr.StatusCode+cluErr.Type+cluErr.Message+"\n"+cluErr.Description, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		utils.SendLog(companyId, "Status Code : "+ cluErr.StatusCode+ " Type: "+cluErr.Type, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		utils.SendLog(companyId, "Error : "+ cluErr.Message, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		utils.SendLog(companyId, "Error : "+ cluErr.Description, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-
+		utils.SendLog(companyId, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		return cluster,cluErr
 	}
 	cluster.ID = clus.ID

@@ -20,14 +20,15 @@ func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context,comp
 	errr :=strings.Fields(err.Error())
 	cError.StatusCode = errr[2]
 	cError.Type=errr[3]
-	cError.Message = err.Error()
+	cError.Description = err.Error()
 	if (errr[2]=="422"){
-		cError.Description=ValidationError(err.Error(),credentials,ctx ,companyId )
+		cError.Message =ValidationError(err.Error(),credentials,ctx ,companyId )
 	}
 
 	return cError
 
 }
+
 func getKubernetesVersion(credentials vault.DOCredentials,ctx utils.Context,companyId string) string{
 	config,_:=GetServerConfig(credentials ,ctx , companyId )
 	var versions string
@@ -52,7 +53,7 @@ func getRegions(credentials vault.DOCredentials,ctx utils.Context,companyId stri
 	config,_:=GetServerConfig(credentials ,ctx , companyId )
 	var regions string
 	for _,re:= range config.Regions {
-		regions = regions + *godo.String(re.Name)+ " : " +*godo.String(re.Slug) + " , "
+		regions = regions + *godo.String(re.Name)+ "(" +*godo.String(re.Slug) + ") , "
 	}
 	return regions
 }
@@ -63,7 +64,7 @@ func ValidationError(description string ,credentials vault.DOCredentials,ctx uti
  	if strings.Contains(description,"cluster_spec.missing"){
 		if strings.Contains(description,"region"){
 			regions := getRegions(credentials ,ctx ,companyId )
-			return "Missing Value : Region. Select region from : "+regions
+			return "Request have some missing value : Region . Select region from : "+regions
 
 		} else if strings.Contains(description,"name"){
 			return "Missing Value : Name .Give a valid name"
