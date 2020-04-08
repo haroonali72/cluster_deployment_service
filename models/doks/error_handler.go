@@ -10,6 +10,7 @@ import (
 type CustomError struct{
 //	Status				string 			 `json:"status,omitempty"  bson:"status"`
 	StatusCode			string			 `json:"code,omitempty"  bson:"code"`
+	Type				string 			 `json:"type,omitempty"  bson:"type"`
 	Message				string 			 `json:"message,omitempty"  bson:"message"`
 	Description			string  		 `json:"description,omitempty"  bson:"description"`
 }
@@ -17,26 +18,43 @@ type CustomError struct{
 func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context,companyId string) (cError CustomError){
 
 	errr :=strings.Fields(err.Error())
-	cError.StatusCode = errr[0]
-	cError.Message = errr[1]
-	if (errr[0]=="422"){
-		cError.Description=ValidationError(errr[3],credentials,ctx ,companyId )
+	cError.StatusCode = errr[2]
+	cError.Type=errr[3]
+	cError.Message = err.Error()
+	if (errr[2]=="422"){
+		cError.Description=ValidationError(err.Error(),credentials,ctx ,companyId )
 	}
 
 	return cError
 
 }
-func getKubernetesVersion(credentials vault.DOCredentials,ctx utils.Context,companyId string) []*godo.KubernetesVersion{
-	kubeversion,_:=GetServerConfig(credentials ,ctx , companyId )
-	return kubeversion.Versions
+func getKubernetesVersion(credentials vault.DOCredentials,ctx utils.Context,companyId string) string{
+	config,_:=GetServerConfig(credentials ,ctx , companyId )
+	var versions string
+	for _,version:= range config.Versions {
+		versions = versions + *godo.String(version.KubernetesVersion)+ ": " +*godo.String(version.Slug) + " , "
+	}
+
+	return versions
 }
-func getMachineSizes(credentials vault.DOCredentials,ctx utils.Context,companyId string) []*godo.KubernetesNodeSize{
-	machines,_:=GetServerConfig(credentials ,ctx , companyId )
-	return machines.Sizes
+
+func getMachineSizes(credentials vault.DOCredentials,ctx utils.Context,companyId string) string{
+	config,_:=GetServerConfig(credentials ,ctx , companyId )
+	var sizes string
+	for _,size:= range config.Sizes {
+		sizes = sizes + *godo.String(size.Name)+ " : " +*godo.String(size.Slug) + " , "
+	}
+	return sizes
 }
-func getRegions(credentials vault.DOCredentials,ctx utils.Context,companyId string )[]*godo.KubernetesRegion{
-	regions,_:=GetServerConfig(credentials ,ctx , companyId )
-	return regions.Regions
+
+func getRegions(credentials vault.DOCredentials,ctx utils.Context,companyId string )string{
+
+	config,_:=GetServerConfig(credentials ,ctx , companyId )
+	var regions string
+	for _,re:= range config.Regions {
+		regions = regions + *godo.String(re.Name)+ " : " +*godo.String(re.Slug) + " , "
+	}
+	return regions
 }
 
 
