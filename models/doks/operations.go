@@ -2,6 +2,7 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
@@ -80,15 +81,14 @@ func getNetworkHost(cloudType, projectId string) string {
 	return host
 }
 
-func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, companyId , token string, credentials vault.DOCredentials) (KubernetesCluster, CustomError) {
+func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, companyId, token string, credentials vault.DOCredentials) (KubernetesCluster, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return cluster, ApiError(err,credentials,ctx,companyId)
+			return cluster, ApiError(err, credentials, ctx, companyId)
 		}
 	}
-
 
 	utils.SendLog(companyId, "Creating DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
@@ -116,27 +116,27 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
 		Tags:        cluster.Tags,
-		NodePools: nodepool,
+		NodePools:   nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
 	}
 
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
 	if err != nil {
-		cluErr :=ApiError(err,credentials,ctx,companyId)
+		cluErr := ApiError(err, credentials, ctx, companyId)
 		utils.SendLog(companyId, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		return cluster,cluErr
+		return cluster, cluErr
 	}
 	cluster.ID = clus.ID
-	time.Sleep(2 *30 * time.Second)
+	time.Sleep(2 * 30 * time.Second)
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
-	for  status.Status.State != "running"{
+	for status.Status.State != "running" {
 		time.Sleep(30 * time.Second)
 		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
 	}
 
 	time.Sleep(15 * time.Second)
-	return cluster, CustomError{}
+	return cluster, types.CustomCPError{}
 }
 func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context, projectId, companyId string) error {
 	if cloud.Client == nil {
@@ -182,7 +182,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 		}
 	}
 
-	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(),cluster.ID)
+	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(), cluster.ID)
 	if err != nil {
 		utils.SendLog(cluster.CompanyId, "Error in gettin kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
 		return KubernetesConfig{}, err
@@ -196,13 +196,13 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-/*
-	d, err := yaml.Marshal(&kubeFile)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-*/
-	 utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
+	/*
+		d, err := yaml.Marshal(&kubeFile)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+	*/
+	utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 
 	return kubeFile, nil
 }
