@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/iks"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -685,10 +686,11 @@ func (c *IKSClusterController) GetStatus() {
 		return
 	}
 
-	cluster, err := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "nodes not found") {
+	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
+	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "nodes not found") {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
 		return
 	}
@@ -883,10 +885,11 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	ctx.SendLogs("IKSClusterController: Getting All Machines. "+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	machineTypes, err := iks.GetAllMachines(ibmProfile, *ctx)
-	if err != nil {
+	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
+	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
 		return
 	}
@@ -995,10 +998,11 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	ctx.SendLogs("IKSClusterController: Getting All Machines. "+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	versions, err := iks.GetAllVersions(ibmProfile, *ctx)
-	if err != nil {
+	versions, cpErr := iks.GetAllVersions(ibmProfile, *ctx)
+	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
 		return
 	}
@@ -1164,7 +1168,6 @@ func (c *IKSClusterController) FetchZones() {
 	c.ServeJSON()
 }
 
-
 // @Title Get Validate Profile
 // @Description validate ibm profile
 // @Param	body	body 	vault.IBMCredentials		true	"body for cluster content"
@@ -1187,7 +1190,6 @@ func (c *IKSClusterController) ValidateProfile() {
 		return
 	}
 
-
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -1209,15 +1211,14 @@ func (c *IKSClusterController) ValidateProfile() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("IKSClusterController: Validating profile.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
-
 	region := "us-east"
-	profile.Profile.Region=region
+	profile.Profile.Region = region
 
-	 err = iks.ValidateProfile(profile, *ctx)
-	if err != nil {
+	cpErr := iks.ValidateProfile(profile, *ctx)
+	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Invalid Profile"}
+		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
 		return
 	}
