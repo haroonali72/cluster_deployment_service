@@ -303,7 +303,8 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	confError = aksOps.CreateCluster(cluster, token, ctx)
 
 	if confError != nil {
-		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		customeErr := ApiError(confError)
+		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+customeErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
 		cluster.Status = "Cluster creation failed"
