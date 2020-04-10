@@ -84,7 +84,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 		cloud.Region+"-"+cloud.Zone,
 		clusterRequest,
 	).Context(context.Background()).Do()
-
+	gcp.ApiErrors(err)
 	requestJson, _ := json.Marshal(clusterRequest)
 	ctx.SendLogs(
 		"GKE cluster creation request for '"+gkeCluster.Name+"' submitted: "+string(requestJson),
