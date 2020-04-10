@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"antelope/models/woodpecker"
@@ -280,7 +281,7 @@ func PrintError(confError error, name, projectId string, companyId string) {
 		_, _ = utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
 }
-func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCredentials, companyId string, token string, ctx utils.Context) (customError CustomError) {
+func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCredentials, companyId string, token string, ctx utils.Context) (customError types.CustomCPError) {
 
 	publisher := utils.Notifier{}
 	confError := publisher.Init_notifier()
@@ -338,7 +339,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return CustomError{}
+		return types.CustomCPError{}
 
 	}
 	utils.SendLog(companyId, "DOKS cluster created Successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
@@ -355,10 +356,10 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 
 	_, _ = utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return CustomError{}
+	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.DOCredentials, projectId, companyId string, ctx utils.Context) (*godo.KubernetesCluster, CustomError) {
-	var errr CustomError
+func FetchStatus(credentials vault.DOCredentials, projectId, companyId string, ctx utils.Context) (*godo.KubernetesCluster,types.CustomCPError) {
+	var errr types.CustomCPError
 	cluster, err := GetKubernetesCluster(projectId, companyId, ctx)
 	if err != nil {
 		errr.Message=err.Error()
@@ -388,8 +389,8 @@ func FetchStatus(credentials vault.DOCredentials, projectId, companyId string, c
 
 	return status, errr
 }
-func TerminateCluster(credentials vault.DOCredentials, projectId, companyId string, ctx utils.Context) CustomError {
-	var errr CustomError
+func TerminateCluster(credentials vault.DOCredentials, projectId, companyId string, ctx utils.Context) types.CustomCPError {
+	var errr types.CustomCPError
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {
@@ -453,7 +454,7 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 			return errr
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return CustomError{}
+		return types.CustomCPError{}
 	}
 	cluster.ID = ""
 	cluster.CloudplexStatus = "Cluster Terminated"
@@ -469,7 +470,7 @@ func TerminateCluster(credentials vault.DOCredentials, projectId, companyId stri
 	}
 	_, _ = utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return CustomError{}
+	return types.CustomCPError{}
 }
 func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster KubernetesCluster) (config KubernetesConfig, confError error) {
 	publisher := utils.Notifier{}

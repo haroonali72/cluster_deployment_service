@@ -1,19 +1,14 @@
 package doks
 
 import (
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"github.com/digitalocean/godo"
 	"strings"
 )
 
-type CustomError struct{
-	StatusCode			string			 `json:"code,omitempty"  bson:"code"`
-	Message				string 			 `json:"message,omitempty"  bson:"message"`
-	Description			string  		 `json:"description,omitempty"  bson:"description"`
-}
-
-func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context,companyId string) (cError CustomError){
+func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context,companyId string) (cError types.CustomCPError){
 
 	errr :=strings.Fields(err.Error())
 	cError.StatusCode = errr[2]

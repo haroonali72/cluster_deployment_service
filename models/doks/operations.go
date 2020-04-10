@@ -2,6 +2,7 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
@@ -80,7 +81,7 @@ func getNetworkHost(cloudType, projectId string) string {
 	return host
 }
 
-func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, companyId , token string, credentials vault.DOCredentials) (KubernetesCluster, CustomError) {
+func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, companyId , token string, credentials vault.DOCredentials) (KubernetesCluster, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -136,13 +137,13 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 	}
 
 	time.Sleep(15 * time.Second)
-	return cluster, CustomError{}
+	return cluster, types.CustomCPError{}
 }
-func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context, projectId, companyId string) CustomError {
+func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context, projectId, companyId string) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return CustomError{}
+			return types.CustomCPError{}
 		}
 	}
 
@@ -159,14 +160,14 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context, p
 	}
 
 	utils.SendLog(companyId, "DOKS cluster deleted successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
-	return CustomError{}
+	return types.CustomCPError{}
 }
-func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (KubernetesConfig, CustomError) {
+func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (KubernetesConfig, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return KubernetesConfig{}, CustomError{}
+			return KubernetesConfig{}, types.CustomCPError{}
 		}
 	}
 
@@ -187,7 +188,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 
 	 utils.SendLog(cluster.CompanyId, "DOKS kubernetes config file fetched successfully : "+cluster.ProjectId, "info", cluster.ProjectId)
 
-	return kubeFile, CustomError{}
+	return kubeFile, types.CustomCPError{}
 }
 
 func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
@@ -199,12 +200,12 @@ func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context, projectId, companyId, clusterId, token string) (KubernetesNodePool, error) {
 	return KubernetesNodePool{}, nil
 }
-func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId, companyId, projectId string) (*godo.KubernetesCluster,  CustomError) {
+func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId, companyId, projectId string) (*godo.KubernetesCluster,  types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != nil {
-			return &godo.KubernetesCluster{}, CustomError{}
+			return &godo.KubernetesCluster{}, types.CustomCPError{}
 		}
 	}
 	//clusterId ="b01f9429-459b-4fc6-9726-ba9c21e88272"
@@ -213,7 +214,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId, companyId, projectI
 		utils.SendLog(companyId, "Error in cluster creation: "+err.Error(), "info", projectId)
 		return &godo.KubernetesCluster{}, ApiError(err,vault.DOCredentials{},ctx,companyId)
 	}
-	return status, CustomError{}
+	return status, types.CustomCPError{}
 }
 func (cloud *DOKS) GetServerConfig(ctx utils.Context, companyId string) (*godo.KubernetesOptions, error) {
 

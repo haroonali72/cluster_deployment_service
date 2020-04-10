@@ -1,13 +1,12 @@
 package gke
 
-import "strings"
+import (
+	"antelope/models/types"
+	"strings"
+)
 
-type CustomError struct{
-	StatusCode			string			 `json:"code,omitempty"  bson:"code"`
-	Message				string 			 `json:"message,omitempty"  bson:"message"`
-	Description			string  		 `json:"description,omitempty"  bson:"description"`
-}
-func ApiErrors (err error) (cError CustomError){
+
+func ApiErrors (err error) (cError types.CustomCPError){
 	errr :=strings.Fields(err.Error())
 	cError.StatusCode = errr[2]
 	cError.Description = err.Error()
