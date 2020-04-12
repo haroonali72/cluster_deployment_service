@@ -105,8 +105,13 @@ func (c *OPClusterController) Get() {
 func (c *OPClusterController) Post() {
 
 	var cluster op.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	cluster.CreationDate = time.Now()
 
 	token := c.Ctx.Input.Header("token")
@@ -192,8 +197,13 @@ func (c *OPClusterController) Post() {
 // @router / [put]
 func (c *OPClusterController) Patch() {
 	var cluster op.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)

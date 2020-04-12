@@ -254,8 +254,13 @@ func (c *IKSClusterController) Post() {
 // @router / [put]
 func (c *IKSClusterController) Patch() {
 	var cluster iks.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
