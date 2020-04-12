@@ -62,7 +62,7 @@ func (c *OPClusterController) Get() {
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": "Bad Request: "+err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -76,13 +76,6 @@ func (c *OPClusterController) Get() {
 	//====================================================================================//
 
 	ctx.SendLogs("OPClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	cluster, err := op.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
@@ -201,7 +194,6 @@ func (c *OPClusterController) Post() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 402 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @Failure 405 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *OPClusterController) Patch() {
@@ -227,7 +219,7 @@ func (c *OPClusterController) Patch() {
 		return
 	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Update", token, *ctx)
@@ -290,6 +282,7 @@ func (c *OPClusterController) Patch() {
 // @Param	token	header	string	token ""
 // @Success 200 {object} []op.Cluster_Def
 // @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *OPClusterController) GetAll() {
@@ -343,8 +336,9 @@ func (c *OPClusterController) GetAll() {
 // @Param	token	header	string	token ""
 // @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
-// @Success 200 {"msg": "cluster deleted successfully"}
+// @Success 204 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
+// @Failure 402 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
@@ -403,13 +397,6 @@ func (c *OPClusterController) Delete() {
 
 	ctx.SendLogs("OPClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if id == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	cluster, err := op.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -418,7 +405,7 @@ func (c *OPClusterController) Delete() {
 		return
 	}
 	if cluster.Status == "Cluster Created" && !forceDelete {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
 		c.ServeJSON()
 		return
