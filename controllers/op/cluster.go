@@ -81,7 +81,7 @@ func (c *OPClusterController) Get() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
 		c.ServeJSON()
 		return
 	}
