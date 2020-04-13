@@ -22,7 +22,6 @@ type OPClusterController struct {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	token	header	string	token ""
 // @Success 200 {object} op.Cluster_Def
-// @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @router /:projectId/ [get]
@@ -47,7 +46,7 @@ func (c *OPClusterController) Get() {
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -61,8 +60,8 @@ func (c *OPClusterController) Get() {
 	allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": "Bad Request: " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -77,18 +76,11 @@ func (c *OPClusterController) Get() {
 
 	ctx.SendLogs("OPClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	cluster, err := op.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
 		c.ServeJSON()
 		return
 	}
@@ -113,8 +105,13 @@ func (c *OPClusterController) Get() {
 func (c *OPClusterController) Post() {
 
 	var cluster op.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	cluster.CreationDate = time.Now()
 
 	token := c.Ctx.Input.Header("token")
@@ -130,19 +127,19 @@ func (c *OPClusterController) Post() {
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -175,11 +172,6 @@ func (c *OPClusterController) Post() {
 			c.Data["json"] = map[string]string{"error": "cluster against this project id  already exists"}
 			c.ServeJSON()
 			return
-		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
-			c.Ctx.Output.SetStatus(410)
-			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
-			c.ServeJSON()
-			return
 		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -201,13 +193,17 @@ func (c *OPClusterController) Post() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 402 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @Failure 405 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *OPClusterController) Patch() {
 	var cluster op.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -221,19 +217,19 @@ func (c *OPClusterController) Patch() {
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 	allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -289,7 +285,7 @@ func (c *OPClusterController) Patch() {
 // @Description get all the clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []op.Cluster_Def
-// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *OPClusterController) GetAll() {
@@ -304,7 +300,7 @@ func (c *OPClusterController) GetAll() {
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -318,7 +314,7 @@ func (c *OPClusterController) GetAll() {
 	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.OP, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -343,8 +339,9 @@ func (c *OPClusterController) GetAll() {
 // @Param	token	header	string	token ""
 // @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
-// @Success 200 {"msg": "cluster deleted successfully"}
+// @Success 204 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
+// @Failure 402 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
@@ -375,7 +372,7 @@ func (c *OPClusterController) Delete() {
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -387,7 +384,7 @@ func (c *OPClusterController) Delete() {
 	allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -403,13 +400,6 @@ func (c *OPClusterController) Delete() {
 
 	ctx.SendLogs("OPClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if id == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	cluster, err := op.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -418,7 +408,7 @@ func (c *OPClusterController) Delete() {
 		return
 	}
 	if cluster.Status == "Cluster Created" && !forceDelete {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
 		c.ServeJSON()
 		return
@@ -452,7 +442,7 @@ func (c *OPClusterController) Delete() {
 	c.ServeJSON()
 }
 
-// @Title ValidateCluster
+/*// @Title ValidateCluster
 // @Description validates a cluster
 // @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
@@ -529,3 +519,4 @@ func (c *OPClusterController) Validate() {
 	c.Data["json"] = map[string]string{"msg": "cluster is working successfully"}
 	c.ServeJSON()
 }
+*/
