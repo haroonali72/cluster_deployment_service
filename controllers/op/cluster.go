@@ -282,7 +282,7 @@ func (c *OPClusterController) Patch() {
 }
 
 // @Title Get All
-// @Description get all the clusters
+// @Description get all the company's clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []op.Cluster_Def
 // @Failure 404 {"error": "error msg"}

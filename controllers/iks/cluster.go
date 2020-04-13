@@ -92,7 +92,7 @@ func (c *IKSClusterController) Get() {
 }
 
 // @Title Get All
-// @Description get all the clusters
+// @Description get all the companys's clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []iks.Cluster_Def
 // @Failure 404 {"error": "error msg"}
