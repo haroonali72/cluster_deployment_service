@@ -90,7 +90,6 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		}
 	}
 
-
 	utils.SendLog(companyId, "Creating DOKS Cluster With ID : "+cluster.ProjectId, "info", cluster.ProjectId)
 
 	/*	list := godo.ListOptions{}
@@ -117,21 +116,21 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, c
 		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
 		Tags:        cluster.Tags,
-		NodePools: nodepool,
+		NodePools:   nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
 	}
 
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
 	if err != nil {
-		cluErr :=ApiError(err,credentials,ctx,companyId)
+		cluErr := ApiError(err, credentials, ctx, companyId)
 		utils.SendLog(companyId, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		return cluster,cluErr
+		return cluster, cluErr
 	}
 	cluster.ID = clus.ID
-	time.Sleep(2 *30 * time.Second)
+	time.Sleep(2 * 30 * time.Second)
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
-	for  status.Status.State != "running"{
+	for status.Status.State != "running" {
 		time.Sleep(30 * time.Second)
 		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
 	}
@@ -171,7 +170,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 		}
 	}
 
-	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(),cluster.ID)
+	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(), cluster.ID)
 	if err != nil {
 		utils.SendLog(cluster.CompanyId, "Error in getting kubernetes config file: "+err.Error(), "error", cluster.ProjectId)
 		return KubernetesConfig{}, ApiError(err,vault.DOCredentials{},ctx,"")
