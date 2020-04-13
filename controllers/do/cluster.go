@@ -154,7 +154,7 @@ func (c *DOClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param body do.Cluster_Def true "body for cluster content"
+// @Param body body do.Cluster_Def true "body for cluster content"
 // @Param token header string token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 body not found
@@ -258,7 +258,7 @@ func (c *DOClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param token header string token ""
-// @Param body do.Cluster_Def true "body for cluster content"
+// @Param body body do.Cluster_Def true "body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}

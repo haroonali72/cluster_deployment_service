@@ -148,7 +148,7 @@ func (c *AKSClusterController) GetAll() {
 // @Title Add
 // @Description add a new cluster
 // @Param token  header  string  true    "token"
-// @Param body aks.AKSCluster true	"body for cluster content"
+// @Param body body aks.AKSCluster true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -255,7 +255,7 @@ func (c *AKSClusterController) Post() {
 // @Title Update
 // @Description update an existing cluster
 // @Param token  header  string  true    "token"
-// @Param body aks.AKSCluster true "body for cluster content"
+// @Param body body aks.AKSCluster true "body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
