@@ -65,6 +65,9 @@ func Forbidden(err string)string{
 
 }
 func NotFound(err string)string{
+	if strings.Contains(err,"/cluster/"){
+		return "The cluster is not in running state on console."
+	}
 	return ""
 }
 func Conflict(err string)string{
