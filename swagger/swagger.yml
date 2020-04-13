@@ -23,11 +23,12 @@ paths:
         description: token
         required: true
         type: string
-      - in: aks.AKSCluster
+      - in: body
         name: body
         description: body for cluster content
+        required: true
         schema:
-          $ref: '#/definitions/true'
+          $ref: '#/definitions/aks.AKSCluster'
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
@@ -52,11 +53,12 @@ paths:
         description: token
         required: true
         type: string
-      - in: aks.AKSCluster
+      - in: body
         name: body
         description: body for cluster content
+        required: true
         schema:
-          $ref: '#/definitions/true'
+          $ref: '#/definitions/aks.AKSCluster'
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
@@ -1357,11 +1359,12 @@ paths:
         name: token
         description: token
         type: string
-      - in: do.Cluster_Def
+      - in: body
         name: body
         description: body for cluster content
+        required: true
         schema:
-          $ref: '#/definitions/true'
+          $ref: '#/definitions/do.Cluster_Def'
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
@@ -1383,11 +1386,12 @@ paths:
       description: create a new cluster
       operationId: DOClusterController.Create
       parameters:
-      - in: do.Cluster_Def
+      - in: body
         name: body
         description: body for cluster content
+        required: true
         schema:
-          $ref: '#/definitions/true'
+          $ref: '#/definitions/do.Cluster_Def'
       - in: header
         name: token
         description: token
@@ -6073,25 +6077,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001215770.false:
+  442.0xc00172ec30.false:
     title: "false"
     type: object
-  518.0xc00115b500.false:
+  605.0xc001043e60.false:
     title: "false"
     type: object
-  1559.string:
+  611.0xc00166ea80.false:
+    title: "false"
+    type: object
+  637.0xc001349950.false:
+    title: "false"
+    type: object
+  5519.string:
     title: string
     type: object
-  5960.0xc001236c90.false:
+  13363.0xc00175aa80.false:
     title: "false"
     type: object
-  13279.0xc001188f00.false:
-    title: "false"
-    type: object
-  13385.0xc000b93530.false:
-    title: "false"
-    type: object
-  13431.0xc000e87050.false:
+  40895.0xc0016fa3c0.false:
     title: "false"
     type: object
   48853.string:
@@ -6339,7 +6343,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000b93530.false'
+        $ref: '#/definitions/605.0xc001043e60.false'
       name:
         type: string
       network_name:
@@ -6720,7 +6724,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc000e87050.false'
+        $ref: '#/definitions/637.0xc001349950.false'
       name:
         type: string
       network_name:
@@ -7859,7 +7863,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13279.0xc001188f00.false'
+        $ref: '#/definitions/611.0xc00166ea80.false'
       kube_version:
         type: string
       name:
@@ -7959,7 +7963,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc00115b500.false'
+        $ref: '#/definitions/40895.0xc0016fa3c0.false'
       kube_version:
         type: string
       name:
@@ -8125,7 +8129,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001236c90.false'
+        $ref: '#/definitions/442.0xc00172ec30.false'
       name:
         type: string
       node_pools:
@@ -8211,7 +8215,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001215770.false'
+        $ref: '#/definitions/13363.0xc00175aa80.false'
       name:
         type: string
       node_pools:

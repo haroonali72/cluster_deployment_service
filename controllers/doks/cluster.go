@@ -6,7 +6,6 @@ import (
 	"antelope/models/doks"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
-	"antelope/models/vault"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"
@@ -584,7 +583,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-/*	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", cluster.ProjectId)
 		c.Ctx.Output.SetStatus(500)
@@ -592,7 +591,7 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-*/
+
 	if cluster.CloudplexStatus == "Cluster Created" {
 		ctx.SendLogs("DOKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
@@ -627,7 +626,7 @@ func (c *DOKSClusterController) StartCluster() {
 	}
 	ctx.SendLogs("DOKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go doks.DeployKubernetesCluster(cluster,vault.DOCredentials{}, userInfo.CompanyId, token, *ctx)
+	go doks.DeployKubernetesCluster(cluster, doProfile.Profile, userInfo.CompanyId, token, *ctx)
 
 	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
