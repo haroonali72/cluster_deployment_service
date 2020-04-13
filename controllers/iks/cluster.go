@@ -82,7 +82,7 @@ func (c *IKSClusterController) Get() {
 
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
 		c.ServeJSON()
 		return
 	}
@@ -248,7 +248,6 @@ func (c *IKSClusterController) Post() {
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
-// @Failure 402 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
@@ -309,7 +308,7 @@ func (c *IKSClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "Cluster is in runnning state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(400)
 			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
 			c.ServeJSON()
 			return

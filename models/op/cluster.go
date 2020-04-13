@@ -97,14 +97,9 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams s
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
-	err = checkMasterPools(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
 	/*
 		inserting key in vault
-		**/
+	**/
 	for index, pool := range cluster.NodePools {
 
 		_, err := vault.PostSSHKey(pool.KeyInfo, pool.KeyInfo.KeyName, models.OP, ctx, token, teams, "")
