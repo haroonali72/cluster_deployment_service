@@ -272,13 +272,7 @@ func DeleteAKSCluster(projectId, companyId string, ctx utils.Context) error {
 func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, companyId string, token string, ctx utils.Context) (confError error) {
 
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
-
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
-		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return confError
-	}
+	_ = publisher.Init_notifier()
 
 	aksOps, err := GetAKS(credentials.Profile)
 	if err != nil {
@@ -303,7 +297,9 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	confError = aksOps.CreateCluster(cluster, token, ctx)
 
 	if confError != nil {
-		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		customeErr := ApiError(confError, 400)
+		confError = errors.New(customeErr.Message)
+		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+customeErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
 		cluster.Status = "Cluster creation failed"
@@ -376,11 +372,7 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 
 func TerminateCluster(credentials vault.AzureProfile, projectId, companyId string, ctx utils.Context) error {
 	publisher := utils.Notifier{}
-	pubErr := publisher.Init_notifier()
-	if pubErr != nil {
-		ctx.SendLogs("AKSClusterModel:  Terminate -"+pubErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return pubErr
-	}
+	_ = publisher.Init_notifier()
 
 	cluster, err := GetAKSCluster(projectId, companyId, ctx)
 	if err != nil {
@@ -421,7 +413,9 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 
 	err = aksOps.TerminateCluster(cluster, ctx)
 	if err != nil {
+		customErr := ApiError(err, 400)
 		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, customErr.Message, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateAKSCluster(cluster, ctx)

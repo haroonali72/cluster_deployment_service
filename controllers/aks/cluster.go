@@ -19,13 +19,11 @@ type AKSClusterController struct {
 
 // @Title Get
 // @Description get cluster
-// @Param projectId path string true "Id of the project"
-// @Param token  header  string  true    "token"
+// @Param	projectId	path	string	true	"Id of the project"
+// @Param	token	header	string	token ""
 // @Success 200 {object} aks.AKSCluster
-// @Failure 400 "{"error": ""}"
-// @Failure 401 "{"error": ""}"
-// @Failure 404 "{"error": ""}"
-// @Failure 500 "{"error": ""}"
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @router /:projectId/ [get]
 func (c *AKSClusterController) Get() {
 	ctx := new(utils.Context)
@@ -50,7 +48,7 @@ func (c *AKSClusterController) Get() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -62,7 +60,7 @@ func (c *AKSClusterController) Get() {
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -92,9 +90,9 @@ func (c *AKSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param token  header  string  true    "token"
+// @Param	token	header	string	token ""
 // @Success 200 {object} []aks.AKSCluster
-// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AKSClusterController) GetAll() {
@@ -112,7 +110,7 @@ func (c *AKSClusterController) GetAll() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -125,7 +123,7 @@ func (c *AKSClusterController) GetAll() {
 	err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AKS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -145,15 +143,15 @@ func (c *AKSClusterController) GetAll() {
 	c.ServeJSON()
 }
 
-// @Title Add
-// @Description add a new cluster
-// @Param token  header  string  true    "token"
-// @Param body body aks.AKSCluster true	"body for cluster content"
+// @Title Create
+// @Description create a new cluster
+// @Param	body	body 	aks.AKSCluster		true	"body for cluster content"
+// @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
+// @Success 400 {"msg": "error msg"}
 // @Failure 401 {"error": "error msg"}
-// @Failure 409 {"error": "cluster against same project id already exists"}
-// @Failure 410 {"error": "Core limit exceeded"}
+// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "cluster against this project already exists"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
 func (c *AKSClusterController) Post() {
@@ -191,7 +189,7 @@ func (c *AKSClusterController) Post() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -203,7 +201,7 @@ func (c *AKSClusterController) Post() {
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -235,11 +233,6 @@ func (c *AKSClusterController) Post() {
 			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
 			c.ServeJSON()
 			return
-		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
-			c.Ctx.Output.SetStatus(410)
-			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
-			c.ServeJSON()
-			return
 		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -254,13 +247,13 @@ func (c *AKSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param token  header  string  true    "token"
-// @Param body body aks.AKSCluster true "body for cluster content"
+// @Param	token	header	string	token ""
+// @Param	body	body 	aks.AKSCluster	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 402 {"error": "error msg"}
-// @Failure 404 {"error": "no cluster exists with this name"}
+// @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *AKSClusterController) Patch() {
@@ -281,7 +274,7 @@ func (c *AKSClusterController) Patch() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -293,7 +286,7 @@ func (c *AKSClusterController) Patch() {
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -355,12 +348,13 @@ func (c *AKSClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	projectId	path	string	true	"project id of the cluster"
-// @Param	forceDelete path  boolean	true ""
-// @Param token  header  string  true    "token"
-// @Success 200 {"msg": "cluster deleted successfully"}
+// @Param	token	header	string	token ""
+// @Param	projectId	path 	string	true	"project id of the cluster"
+// @Param	forceDelete path    boolean	true    ""
+// @Success 204 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
+// @Failure 402 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId/:forceDelete [delete]
@@ -393,7 +387,7 @@ func (c *AKSClusterController) Delete() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -405,7 +399,7 @@ func (c *AKSClusterController) Delete() {
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -428,7 +422,7 @@ func (c *AKSClusterController) Delete() {
 	}
 	if strings.ToLower(cluster.Status) == string(models.ClusterCreated) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
 		return
@@ -467,12 +461,13 @@ func (c *AKSClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param token  header  string  true    "token"
+// @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 402 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "project id is empty"}
+// @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *AKSClusterController) StartCluster() {
@@ -509,7 +504,7 @@ func (c *AKSClusterController) StartCluster() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -520,7 +515,7 @@ func (c *AKSClusterController) StartCluster() {
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -544,8 +539,8 @@ func (c *AKSClusterController) StartCluster() {
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -555,16 +550,16 @@ func (c *AKSClusterController) StartCluster() {
 	cluster, err := aks.GetAKSCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "cluster not found"}
 		c.ServeJSON()
 		return
 	}
 
 	if cluster.Status == "Cluster Created" {
 		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+		c.Ctx.Output.SetStatus(402)
+		c.Data["json"] = map[string]string{"error": "cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
@@ -605,13 +600,11 @@ func (c *AKSClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param token  header  string  true    "token"
+// @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aks.AKSCluster
-// @Failure 206 {object} aks.AKSCluster
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "authorization params missing or invalid"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
 func (c *AKSClusterController) GetStatus() {
@@ -647,7 +640,7 @@ func (c *AKSClusterController) GetStatus() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -659,7 +652,7 @@ func (c *AKSClusterController) GetStatus() {
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -682,8 +675,8 @@ func (c *AKSClusterController) GetStatus() {
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -692,7 +685,8 @@ func (c *AKSClusterController) GetStatus() {
 
 	cluster, err := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		customErr := aks.ApiError(err, 500)
+		ctx.SendLogs("AKSClusterController :"+customErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
 	}
 
@@ -704,11 +698,11 @@ func (c *AKSClusterController) GetStatus() {
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param token  header  string  true    "token"
-// @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
-// @Failure 400 {"error": "error_msg"}
-// @Failure 404 {"error": "error_msg"}
+// @Param	token	header	string	token ""
+// @Success 200 {"msg": "cluster termination is in progress"}
+// @Failure 401 {"error": "error msg"}
+// @Failure 400 {"error": "error msg"}
+// @Failure 404 {"error": "project id is empty"}
 // @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
 func (c *AKSClusterController) TerminateCluster() {
@@ -744,7 +738,7 @@ func (c *AKSClusterController) TerminateCluster() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -756,7 +750,7 @@ func (c *AKSClusterController) TerminateCluster() {
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -780,8 +774,8 @@ func (c *AKSClusterController) TerminateCluster() {
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -839,10 +833,9 @@ func (c *AKSClusterController) TerminateCluster() {
 
 // @Title GetAKSVmsTypes
 // @Description get aks vm types
-// @Param token  header  string  true    "token"
+// @Param	token	header	string	token ""
 // @Param	region path	string	region ""
 // @Success 200 {object} []aks.VMSizeTypes
-// @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 400 {"error": "error_msg"}
 // @Failure 404 {"error": "error_msg"}
 // @Failure 500 {"error": "error msg"}
@@ -870,7 +863,7 @@ func (c *AKSClusterController) GetAKSVms() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -882,7 +875,7 @@ func (c *AKSClusterController) GetAKSVms() {
 	aksVms, err := aks.GetVms(region, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -895,7 +888,7 @@ func (c *AKSClusterController) GetAKSVms() {
 // @Title Kubeconfig
 // @Description get cluter kubeconfig
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param token  header  string  true    "token"
+// @Param	token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -936,7 +929,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -956,8 +949,8 @@ func (c *AKSClusterController) GetKubeConfig() {
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -976,8 +969,9 @@ func (c *AKSClusterController) GetKubeConfig() {
 
 	kubeconfig, err := aks.GetKubeCofing(azureProfile.Profile, cluster, *ctx)
 	if err != nil {
-		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		customErr := aks.ApiError(err, 500)
+		ctx.SendLogs("AKSClusterController :"+customErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -991,7 +985,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 // @Description fetch version of kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	region	path	string	true	"region of the cloud"
-// @Param token  header  string  true    "token"
+// @Param	token	header	string	token ""
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -1026,7 +1020,7 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1039,16 +1033,17 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	kubeVersions, err := aks.GetKubeVersions(azureProfile, *ctx)
 	if err != nil {
+		customErr := aks.ApiError(err, 500)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": customErr.Message}
 		c.ServeJSON()
 		return
 	}
