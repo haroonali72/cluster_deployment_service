@@ -25,7 +25,7 @@ type DOKSClusterController struct {
 // @Failure 401 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /config [get]
-func (c *DOKSClusterController) GetServerConfig(){
+func (c *DOKSClusterController) GetServerConfig() {
 
 	ctx := new(utils.Context)
 
@@ -127,14 +127,14 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	region,  err := do.GetRegion(token, projectId, *ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(500)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
+	region, err := do.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	//region := "nyc1"
 
@@ -363,11 +363,11 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 	if !allowed {
-			c.Ctx.Output.SetStatus(401)
-			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-			c.ServeJSON()
-			return
-		}
+		c.Ctx.Output.SetStatus(401)
+		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.ServeJSON()
+		return
+	}
 
 	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -563,15 +563,15 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	/*region, err := do.GetRegion(token, projectId, *ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(500)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
-*/
+	region, err := do.GetRegion(token, projectId, *ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	//region := "nyc1"
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -704,15 +704,15 @@ func (c *DOKSClusterController) GetStatus() {
 	}
 
 	region, err := do.GetRegion(token, projectId, *ctx)
-		if err != nil {
-			ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(500)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
+	if err != nil {
+		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
-//	region := "nyc1"
+	//	region := "nyc1"
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, "Profile not fetched "+err.Error(), "error", projectId)
@@ -1072,6 +1072,3 @@ func (c *DOKSClusterController) ApplyAgent() {
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()
 }
-
-
-

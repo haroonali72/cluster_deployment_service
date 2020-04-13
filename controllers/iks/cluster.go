@@ -1164,7 +1164,6 @@ func (c *IKSClusterController) FetchZones() {
 	c.ServeJSON()
 }
 
-
 // @Title Get Validate Profile
 // @Description validate ibm profile
 // @Param	body	body 	vault.IBMCredentials		true	"body for cluster content"
@@ -1187,7 +1186,6 @@ func (c *IKSClusterController) ValidateProfile() {
 		return
 	}
 
-
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -1209,12 +1207,10 @@ func (c *IKSClusterController) ValidateProfile() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("IKSClusterController: Validating profile.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
-
 	region := "us-east"
-	profile.Profile.Region=region
+	profile.Profile.Region = region
 
-	 err = iks.ValidateProfile(profile, *ctx)
+	err = iks.ValidateProfile(profile, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Invalid Profile"}

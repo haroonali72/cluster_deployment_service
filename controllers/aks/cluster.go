@@ -19,13 +19,13 @@ type AKSClusterController struct {
 
 // @Title Get
 // @Description get cluster
-// @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param projectId path string true "Id of the project"
+// @Param token  header  string  true    "token"
 // @Success 200 {object} aks.AKSCluster
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 400 "{"error": ""}"
+// @Failure 401 "{"error": ""}"
+// @Failure 404 "{"error": ""}"
+// @Failure 500 "{"error": ""}"
 // @router /:projectId/ [get]
 func (c *AKSClusterController) Get() {
 	ctx := new(utils.Context)
@@ -92,7 +92,7 @@ func (c *AKSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Success 200 {object} []aks.AKSCluster
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -147,7 +147,7 @@ func (c *AKSClusterController) GetAll() {
 
 // @Title Add
 // @Description add a new cluster
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Param body body aks.AKSCluster true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -254,8 +254,8 @@ func (c *AKSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	token	header	string	token ""
-// @Param	body	body 	aks.AKSCluster	true	"body for cluster content"
+// @Param token  header  string  true    "token"
+// @Param body body aks.AKSCluster true "body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -357,7 +357,7 @@ func (c *AKSClusterController) Patch() {
 // @Description delete a cluster
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -467,7 +467,7 @@ func (c *AKSClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -605,7 +605,7 @@ func (c *AKSClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aks.AKSCluster
 // @Failure 206 {object} aks.AKSCluster
@@ -704,7 +704,7 @@ func (c *AKSClusterController) GetStatus() {
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 400 {"error": "error_msg"}
@@ -839,7 +839,7 @@ func (c *AKSClusterController) TerminateCluster() {
 
 // @Title GetAKSVmsTypes
 // @Description get aks vm types
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Param	region path	string	region ""
 // @Success 200 {object} []aks.VMSizeTypes
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
@@ -895,7 +895,7 @@ func (c *AKSClusterController) GetAKSVms() {
 // @Title Kubeconfig
 // @Description get cluter kubeconfig
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -991,7 +991,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 // @Description fetch version of kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	region	path	string	true	"region of the cloud"
-// @Param	token	header	string	token ""
+// @Param token  header  string  true    "token"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}

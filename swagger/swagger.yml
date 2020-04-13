@@ -21,13 +21,13 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
-      - in: body
+      - in: aks.AKSCluster
         name: body
         description: body for cluster content
-        required: true
         schema:
-          $ref: '#/definitions/aks.AKSCluster'
+          $ref: '#/definitions/true'
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
@@ -50,13 +50,13 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
-      - in: body
+      - in: aks.AKSCluster
         name: body
         description: body for cluster content
-        required: true
         schema:
-          $ref: '#/definitions/aks.AKSCluster'
+          $ref: '#/definitions/true'
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
@@ -85,6 +85,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -92,13 +93,13 @@ paths:
           schema:
             $ref: '#/definitions/aks.AKSCluster'
         "400":
-          description: '{"error": "error msg"}'
+          description: '"{"error": ""}"'
         "401":
-          description: '{"error": "error msg"}'
+          description: '"{"error": ""}"'
         "404":
-          description: '{"error": "error msg"}'
+          description: '"{"error": ""}"'
         "500":
-          description: '{"error": "error msg"}'
+          description: '"{"error": ""}"'
   /cluster/aks/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -118,6 +119,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -140,6 +142,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -172,6 +175,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -196,6 +200,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: region
@@ -232,6 +237,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -262,6 +268,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -294,6 +301,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -335,6 +343,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1348,12 +1357,11 @@ paths:
         name: token
         description: token
         type: string
-      - in: body
+      - in: do.Cluster_Def
         name: body
         description: body for cluster content
-        required: true
         schema:
-          $ref: '#/definitions/do.Cluster_Def'
+          $ref: '#/definitions/true'
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
@@ -1375,12 +1383,11 @@ paths:
       description: create a new cluster
       operationId: DOClusterController.Create
       parameters:
-      - in: body
+      - in: do.Cluster_Def
         name: body
         description: body for cluster content
-        required: true
         schema:
-          $ref: '#/definitions/do.Cluster_Def'
+          $ref: '#/definitions/true'
       - in: header
         name: token
         description: token
@@ -1389,11 +1396,11 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"msg": "error msg"}'
+          description: body not found
         "401":
           description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: token not found
         "409":
           description: '{"error": "cluster against this project already exists"}'
         "410":
@@ -1679,12 +1686,11 @@ paths:
         name: token
         description: "true"
         type: string
-      - in: body
+      - in: vault.DOCredentials
         name: body
         description: body for cluster content
-        required: true
         schema:
-          $ref: '#/definitions/vault.DOCredentials'
+          $ref: '#/definitions/true'
       responses:
         "200":
           description: '{"msg": "Profile is valid"}'
@@ -6067,25 +6073,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc00175a3f0.false:
+  434.0xc001215770.false:
     title: "false"
     type: object
-  605.0xc001073620.false:
+  518.0xc00115b500.false:
     title: "false"
     type: object
-  611.0xc0016a0240.false:
-    title: "false"
-    type: object
-  637.0xc001373110.false:
-    title: "false"
-    type: object
-  5519.string:
+  1559.string:
     title: string
     type: object
-  13363.0xc00178a240.false:
+  5960.0xc001236c90.false:
     title: "false"
     type: object
-  40895.0xc001717b60.false:
+  13279.0xc001188f00.false:
+    title: "false"
+    type: object
+  13385.0xc000b93530.false:
+    title: "false"
+    type: object
+  13431.0xc000e87050.false:
     title: "false"
     type: object
   48853.string:
@@ -6333,7 +6339,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc001073620.false'
+        $ref: '#/definitions/13385.0xc000b93530.false'
       name:
         type: string
       network_name:
@@ -6714,7 +6720,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc001373110.false'
+        $ref: '#/definitions/13431.0xc000e87050.false'
       name:
         type: string
       network_name:
@@ -7853,7 +7859,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc0016a0240.false'
+        $ref: '#/definitions/13279.0xc001188f00.false'
       kube_version:
         type: string
       name:
@@ -7953,7 +7959,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/40895.0xc001717b60.false'
+        $ref: '#/definitions/518.0xc00115b500.false'
       kube_version:
         type: string
       name:
@@ -8119,7 +8125,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc00175a3f0.false'
+        $ref: '#/definitions/5960.0xc001236c90.false'
       name:
         type: string
       node_pools:
@@ -8205,7 +8211,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc00178a240.false'
+        $ref: '#/definitions/434.0xc001215770.false'
       name:
         type: string
       node_pools:
@@ -8218,6 +8224,9 @@ definitions:
         type: string
       token_name:
         type: string
+  "true":
+    title: "true"
+    type: object
   vault.AwsCredentials:
     title: AwsCredentials
     type: object
@@ -8241,14 +8250,6 @@ definitions:
       subscription_id:
         type: string
       tenant_id:
-        type: string
-  vault.DOCredentials:
-    title: DOCredentials
-    type: object
-    properties:
-      access_token:
-        type: string
-      region:
         type: string
   vault.IBMCredentials:
     title: IBMCredentials
