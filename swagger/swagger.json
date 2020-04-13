@@ -31,11 +31,12 @@
                         "type": "string"
                     },
                     {
-                        "in": "aks.AKSCluster",
+                        "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/true"
+                            "$ref": "#/definitions/aks.AKSCluster"
                         }
                     }
                 ],
@@ -75,11 +76,12 @@
                         "type": "string"
                     },
                     {
-                        "in": "aks.AKSCluster",
+                        "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/true"
+                            "$ref": "#/definitions/aks.AKSCluster"
                         }
                     }
                 ],
@@ -2051,11 +2053,12 @@
                         "type": "string"
                     },
                     {
-                        "in": "do.Cluster_Def",
+                        "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/true"
+                            "$ref": "#/definitions/do.Cluster_Def"
                         }
                     }
                 ],
@@ -2091,11 +2094,12 @@
                 "operationId": "DOClusterController.Create",
                 "parameters": [
                     {
-                        "in": "do.Cluster_Def",
+                        "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/true"
+                            "$ref": "#/definitions/do.Cluster_Def"
                         }
                     },
                     {
@@ -3064,7 +3068,7 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
                     "400": {
@@ -3332,26 +3336,6 @@
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/gcp/machine/info": {
-            "get": {
-                "tags": [
-                    "cluster/gcp"
-                ],
-                "description": "Get GCP Machine instance cores",
-                "operationId": "GcpClusterController.GetCores",
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Machine"
-                        }
-                    },
-                    "500": {
-                        "description": "{\"error\":  \"error msg\"}"
                     }
                 }
             }
@@ -3799,19 +3783,19 @@
                         "description": "{\"msg\": \"cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             },
@@ -3843,16 +3827,16 @@
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"\"}"
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against same project id already exists\"}"
-                    },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -3865,7 +3849,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get all the clusters",
+                "description": "get all the company's clusters",
                 "operationId": "GKEClusterController.Get All",
                 "parameters": [
                     {
@@ -3886,10 +3870,13 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -3905,7 +3892,7 @@
                     {
                         "in": "header",
                         "name": "clusterName",
-                        "description": "clusterName",
+                        "description": "Name of the cluster",
                         "type": "string"
                     },
                     {
@@ -3934,16 +3921,16 @@
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -3953,7 +3940,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get cluster",
+                "description": "get cluster version and image type details",
                 "operationId": "GKEClusterController.Get",
                 "parameters": [
                     {
@@ -3966,7 +3953,14 @@
                     {
                         "in": "header",
                         "name": "token",
-                        "description": "token",
+                        "description": "rbac token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "zone",
+                        "description": "zone of the region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3977,14 +3971,14 @@
                             "$ref": "#/definitions/gke.ServerConfig"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -3994,7 +3988,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "starts a  cluster",
+                "description": "starts a cluster",
                 "operationId": "GKEClusterController.Start",
                 "parameters": [
                     {
@@ -4023,16 +4017,19 @@
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -4042,7 +4039,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "returns latest status of cluster",
+                "description": "returns latest status of the running cluster",
                 "operationId": "GKEClusterController.Status",
                 "parameters": [
                     {
@@ -4077,16 +4074,16 @@
                         "description": "{object} gke.GKECluster"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -4096,7 +4093,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "terminates a  cluster",
+                "description": "terminates a running cluster",
                 "operationId": "GKEClusterController.Terminate",
                 "parameters": [
                     {
@@ -4122,19 +4119,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                        "description": "{\"msg\": \"\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -4144,7 +4141,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get cluster",
+                "description": "get cluster against the projectId",
                 "operationId": "GKEClusterController.Get",
                 "parameters": [
                     {
@@ -4169,16 +4166,16 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -9237,35 +9234,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13279.0xc001188f00.false": {
+        "13363.0xc00175aa80.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000b93530.false": {
+        "40895.0xc0016fa3c0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc000e87050.false": {
+        "442.0xc00172ec30.false": {
             "title": "false",
             "type": "object"
         },
-        "1559.string": {
+        "48853.string": {
             "title": "string",
             "type": "object"
         },
-        "19826.string": {
+        "5519.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc001215770.false": {
+        "605.0xc001043e60.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc00115b500.false": {
+        "611.0xc00166ea80.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc001236c90.false": {
+        "637.0xc001349950.false": {
             "title": "false",
             "type": "object"
         },
@@ -9344,7 +9341,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/48853.string"
                 },
                 "type": {
                     "type": "string"
@@ -9418,7 +9415,7 @@
                     }
                 },
                 "node_taints": {
-                    "$ref": "#/definitions/19826.string"
+                    "$ref": "#/definitions/5519.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9622,7 +9619,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000b93530.false"
+                    "$ref": "#/definitions/605.0xc001043e60.false"
                 },
                 "name": {
                     "type": "string"
@@ -10187,7 +10184,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc000e87050.false"
+                    "$ref": "#/definitions/637.0xc001349950.false"
                 },
                 "name": {
                     "type": "string"
@@ -11879,7 +11876,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13279.0xc001188f00.false"
+                    "$ref": "#/definitions/611.0xc00166ea80.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12027,7 +12024,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc00115b500.false"
+                    "$ref": "#/definitions/40895.0xc0016fa3c0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12256,7 +12253,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc001236c90.false"
+                    "$ref": "#/definitions/442.0xc00172ec30.false"
                 },
                 "name": {
                     "type": "string"
@@ -12384,7 +12381,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001215770.false"
+                    "$ref": "#/definitions/13363.0xc00175aa80.false"
                 },
                 "name": {
                     "type": "string"

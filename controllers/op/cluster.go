@@ -99,7 +99,6 @@ func (c *OPClusterController) Get() {
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 409 {"error": "cluster against this project already exists"}
-// @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "error msg"}
 // @router / [post]
 func (c *OPClusterController) Post() {
@@ -122,8 +121,6 @@ func (c *OPClusterController) Post() {
 		return
 	}
 
-	teams := c.Ctx.Input.Header("teams")
-
 	userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -132,6 +129,8 @@ func (c *OPClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+	teams := c.Ctx.Input.Header("teams")
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -191,7 +190,7 @@ func (c *OPClusterController) Post() {
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
-// @Failure 402 {"error": "error msg"}
+// @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
@@ -254,7 +253,7 @@ func (c *OPClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "Cluster is in runnning state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(400)
 			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
 			c.ServeJSON()
 			return
@@ -282,7 +281,7 @@ func (c *OPClusterController) Patch() {
 }
 
 // @Title Get All
-// @Description get all the clusters
+// @Description get all the company's clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []op.Cluster_Def
 // @Failure 404 {"error": "error msg"}
