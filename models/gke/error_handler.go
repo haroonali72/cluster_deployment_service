@@ -4,8 +4,6 @@ import (
 	"antelope/models/types"
 	"strings"
 )
-
-
 func ApiErrors (err error) (cError types.CustomCPError){
 	errr :=strings.Fields(err.Error())
 	cError.StatusCode = errr[2]
@@ -55,7 +53,6 @@ func BadRequest(err string)string{
 }
 func Unauthorized(err string) string{
 	return "Invalid Profile.Use valid google cretentials profile"
-	return ""
 }
 func QuotaReached(err string)string{
 	return ""
@@ -64,8 +61,8 @@ func Forbidden(err string)string{
 	if strings.Contains(err,"Permission denied") && strings.Contains(err,"locations"){
 		return "You do not have permission to create resource in this region.Select another region."
 	}
-	return "You does not have sufficient permission For this resource. The OAuth token does not have the right scopes.Enable  the premission on console or use another profile."
-	return ""
+	return "You does not have sufficient permission For this resource. The OAuth token does not have the right scopes. Enable the premission on console or use another profile."
+
 }
 func NotFound(err string)string{
 	return ""

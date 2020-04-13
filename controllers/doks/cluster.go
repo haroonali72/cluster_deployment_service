@@ -38,7 +38,6 @@ func (c *DOKSClusterController) GetServerConfig(){
 		return
 	}
 
-
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(400)
@@ -865,7 +864,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
 // @Param	token	header	string	token ""
-// @Success 200 {"msg": "cluster deleted successfully"}
+// @Success 204 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
@@ -976,9 +975,9 @@ func (c *DOKSClusterController) Delete() {
 // @Description Apply cloudplex Agent file to eks cluster
 // @Param	clusterName	header	string	clusterName ""
 // @Param	token	header	string	token ""
-// @Success 200 {"msg": "Agent Applied successfully"}
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
