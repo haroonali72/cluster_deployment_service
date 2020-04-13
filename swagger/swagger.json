@@ -2607,19 +2607,19 @@
                         "description": "{\"msg\": \"cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             },
@@ -2648,19 +2648,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                        "description": "{\"msg\": \"\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"\"}"
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against same project id already exists\"}"
-                    },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -2694,10 +2694,10 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -2707,7 +2707,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "Apply cloudplex Agent file to eks cluster",
+                "description": "Apply cloudplex Agent file to doks cluster",
                 "operationId": "DOKSClusterController.Start",
                 "parameters": [
                     {
@@ -2742,16 +2742,16 @@
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -2785,14 +2785,11 @@
                             "$ref": "#/definitions/doks.ServerConfig"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "404": {
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -2802,7 +2799,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get server config file",
+                "description": "get valid kubernetes cluster version and machine sizes",
                 "operationId": "DOKSClusterController.Get",
                 "parameters": [
                     {
@@ -2834,13 +2831,16 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -2884,6 +2884,9 @@
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
@@ -2898,7 +2901,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "returns status of nodes",
+                "description": "returns latest status of the running cluster",
                 "operationId": "DOKSClusterController.Status",
                 "parameters": [
                     {
@@ -2933,16 +2936,16 @@
                         "description": "{object} doks.DOKSCluster"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -2981,16 +2984,16 @@
                         "description": "{\"msg\": \"cluster terminated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"}"
                     }
                 }
             }
@@ -3000,7 +3003,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get kubernetes cluster",
+                "description": "get cluster against the projectId",
                 "operationId": "DOKSClusterController.Get",
                 "parameters": [
                     {
@@ -3025,16 +3028,16 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"\"}"
                     }
                 }
             }
@@ -3068,6 +3071,9 @@
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
                     "204": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
@@ -3935,7 +3941,7 @@
                 }
             }
         },
-        "/cluster/gke/config/{zone}": {
+        "/cluster/gke/config/{region}": {
             "get": {
                 "tags": [
                     "cluster/gke"
@@ -3958,7 +3964,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "zone",
+                        "name": "region",
                         "description": "zone of the region",
                         "required": true,
                         "type": "string"
@@ -4221,9 +4227,6 @@
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "405": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
@@ -4268,9 +4271,6 @@
                     "409": {
                         "description": "{\"error\": \"cluster against this project already exists\"}"
                     },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
-                    },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
@@ -4302,7 +4302,7 @@
                             }
                         }
                     },
-                    "400": {
+                    "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -4356,9 +4356,6 @@
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
@@ -4410,9 +4407,6 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
@@ -4459,9 +4453,6 @@
                             "$ref": "#/definitions/iks.AllInstancesResponse"
                         }
                     },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
@@ -4495,9 +4486,6 @@
                                 "$ref": "#/definitions/iks.Regions"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4539,9 +4527,6 @@
                                 "$ref": "#/definitions/iks.Zone"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4588,6 +4573,9 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -4637,9 +4625,6 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
@@ -4684,7 +4669,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                        "description": "{\"msg\": \"cluster termination is in progress\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4726,16 +4714,13 @@
                     "200": {
                         "description": "{\"msg\": \"Profile is valid\"}"
                     },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
                 }
@@ -4769,9 +4754,6 @@
                         "schema": {
                             "$ref": "#/definitions/iks.Cluster_Def"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4811,13 +4793,16 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -4873,9 +4858,6 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "405": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -4962,49 +4944,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/op/checkCluster/{projectId}/": {
-            "get": {
-                "tags": [
-                    "cluster/op"
-                ],
-                "description": "validates a cluster",
-                "operationId": "OPClusterController.ValidateCluster",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster is running successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -5040,9 +4981,6 @@
                         "schema": {
                             "$ref": "#/definitions/op.Cluster_Def"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -5082,13 +5020,16 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -9234,15 +9175,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc00175aa80.false": {
+        "13363.0xc001773e30.false": {
             "title": "false",
             "type": "object"
         },
-        "40895.0xc0016fa3c0.false": {
+        "43586.0xc001713590.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc00172ec30.false": {
+        "442.0xc00175c000.false": {
             "title": "false",
             "type": "object"
         },
@@ -9254,15 +9195,15 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc001043e60.false": {
+        "605.0xc0010697a0.false": {
             "title": "false",
             "type": "object"
         },
-        "611.0xc00166ea80.false": {
+        "636.0xc00168bf80.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc001349950.false": {
+        "637.0xc00136f290.false": {
             "title": "false",
             "type": "object"
         },
@@ -9619,7 +9560,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc001043e60.false"
+                    "$ref": "#/definitions/605.0xc0010697a0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10184,7 +10125,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc001349950.false"
+                    "$ref": "#/definitions/637.0xc00136f290.false"
                 },
                 "name": {
                     "type": "string"
@@ -11876,7 +11817,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/611.0xc00166ea80.false"
+                    "$ref": "#/definitions/636.0xc00168bf80.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12024,7 +11965,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/40895.0xc0016fa3c0.false"
+                    "$ref": "#/definitions/43586.0xc001713590.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12253,7 +12194,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc00172ec30.false"
+                    "$ref": "#/definitions/442.0xc00175c000.false"
                 },
                 "name": {
                     "type": "string"
@@ -12381,7 +12322,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc00175aa80.false"
+                    "$ref": "#/definitions/13363.0xc001773e30.false"
                 },
                 "name": {
                     "type": "string"

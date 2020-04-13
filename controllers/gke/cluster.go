@@ -7,6 +7,7 @@ import (
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 )
@@ -20,12 +21,12 @@ type GKEClusterController struct {
 // @Description get cluster version and image type details
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	token	header	string	token "rbac token"
-// @Param	zone	path	string	true	"zone of the region"
+// @Param	region	path	string	true	"zone of the region"
 // @Success 200 {object} gke.ServerConfig
 // @Failure 401 {"error": ""}
 // @Failure 404 {"error": ""}
 // @Failure 500 {"error": ""}
-// @router /config/:zone [get]
+// @router /config/:region [get]
 func (c *GKEClusterController) GetServerConfig() {
 	ctx := new(utils.Context)
 
@@ -38,11 +39,11 @@ func (c *GKEClusterController) GetServerConfig() {
 		return
 	}
 
-	zone := c.GetString(":zone")
+	zone := c.GetString(":region")
 	if zone == "" {
-		ctx.SendLogs("GKEClusterController: Zone field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEClusterController: Region field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "zone is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -65,10 +66,10 @@ func (c *GKEClusterController) GetServerConfig() {
 	}
 
 	config, err := gke.GetServerConfig(credentials, *ctx)
-	if err != nil {
-		ctx.SendLogs("GKEClusterController: error getting gke server config "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err.Description != "" {
+		ctx.SendLogs("GKEClusterController: error getting gke server config "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = err
 		c.ServeJSON()
 		return
 	}
@@ -110,7 +111,7 @@ func (c *GKEClusterController) Get() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -122,7 +123,7 @@ func (c *GKEClusterController) Get() {
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -136,7 +137,7 @@ func (c *GKEClusterController) Get() {
 
 	ctx.SendLogs("GKEClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.GetGKECluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := gke.GetGKECluster( *ctx)
 	if err != nil {
 		ctx.SendLogs("GKEGetClusterController: error getting gke cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -173,7 +174,7 @@ func (c *GKEClusterController) GetAll() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -186,7 +187,7 @@ func (c *GKEClusterController) GetAll() {
 	err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.GKE, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -223,12 +224,10 @@ func (c *GKEClusterController) Post() {
 
 	ctx := new(utils.Context)
 
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
-	err := gke.Validate(cluster)
+	err:= json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -241,10 +240,19 @@ func (c *GKEClusterController) Post() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	_, err = govalidator.ValidateStruct(cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -256,7 +264,7 @@ func (c *GKEClusterController) Post() {
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -267,6 +275,8 @@ func (c *GKEClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.SendLogs("GKEClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GKEClusterController: JSON Payload: ", cluster)
@@ -308,12 +318,10 @@ func (c *GKEClusterController) Patch() {
 	ctx := new(utils.Context)
 
 	var cluster gke.GKECluster
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
-	err := gke.Validate(cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -329,7 +337,7 @@ func (c *GKEClusterController) Patch() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -341,7 +349,7 @@ func (c *GKEClusterController) Patch() {
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -432,10 +440,11 @@ func (c *GKEClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -447,7 +456,7 @@ func (c *GKEClusterController) Delete() {
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -461,9 +470,9 @@ func (c *GKEClusterController) Delete() {
 
 	ctx.SendLogs("GKEClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.GetGKECluster(id, userInfo.CompanyId, *ctx)
+	cluster, err := gke.GetGKECluster( *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -492,7 +501,7 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 
-	err = gke.DeleteGKECluster(id, userInfo.CompanyId, *ctx)
+	err = gke.DeleteGKECluster( *ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -513,14 +522,13 @@ func (c *GKEClusterController) Delete() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": ""}
+// @Failure 401 {"error": ""}
 // @Failure 402 {"error": ""}
 // @Failure 404 {"error": ""}
-// @Failure 401 {"error": ""}
 // @Failure 500 {"error": ""}
 // @router /start/:projectId [post]
 func (c *GKEClusterController) StartCluster() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: StartCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -551,7 +559,7 @@ func (c *GKEClusterController) StartCluster() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -562,7 +570,7 @@ func (c *GKEClusterController) StartCluster() {
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -594,7 +602,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	ctx.SendLogs("GKEClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.GetGKECluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -637,7 +645,7 @@ func (c *GKEClusterController) StartCluster() {
 	}
 	ctx.SendLogs("GKEClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go gke.DeployGKECluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
+	go gke.DeployGKECluster(cluster, credentials, token, *ctx)
 
 	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
@@ -658,7 +666,7 @@ func (c *GKEClusterController) StartCluster() {
 // @router /status/:projectId/ [get]
 func (c *GKEClusterController) GetStatus() {
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -689,7 +697,7 @@ func (c *GKEClusterController) GetStatus() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -701,7 +709,7 @@ func (c *GKEClusterController) GetStatus() {
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -733,9 +741,9 @@ func (c *GKEClusterController) GetStatus() {
 
 	ctx.SendLogs("GKEClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil {
-		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	cluster, err1 := gke.FetchStatus(credentials, token,  *ctx)
+	if err1.Description != "" {
+		ctx.SendLogs("GKEClusterController :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
 	}
 
@@ -757,7 +765,6 @@ func (c *GKEClusterController) GetStatus() {
 func (c *GKEClusterController) TerminateCluster() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -788,7 +795,7 @@ func (c *GKEClusterController) TerminateCluster() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -831,7 +838,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	ctx.SendLogs("GKEClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gke.GetGKECluster(projectId, userInfo.CompanyId, *ctx)
+	cluster, err := gke.GetGKECluster( *ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
@@ -856,7 +863,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		return
 	}
 
-	go gke.TerminateCluster(credentials, projectId, userInfo.CompanyId, *ctx)
+	go gke.TerminateCluster(credentials,  *ctx)
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
@@ -923,7 +930,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -935,7 +942,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
