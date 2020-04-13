@@ -25,7 +25,6 @@ type AKSClusterController struct {
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
 // @router /:projectId/ [get]
 func (c *AKSClusterController) Get() {
 	ctx := new(utils.Context)
@@ -94,6 +93,7 @@ func (c *AKSClusterController) Get() {
 // @Description get all the clusters
 // @Param	token	header	string	token ""
 // @Success 200 {object} []aks.AKSCluster
+// @Failure 404 {"error": "error msg"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
@@ -331,13 +331,13 @@ func (c *AKSClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -358,7 +358,7 @@ func (c *AKSClusterController) Patch() {
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
 // @Param	token	header	string	token ""
-// @Success 200 {"msg": "cluster deleted successfully"}
+// @Success 204 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "project id is empty"}
@@ -692,7 +692,8 @@ func (c *AKSClusterController) GetStatus() {
 
 	cluster, err := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		customErr := aks.ApiError(err)
+		ctx.SendLogs("AKSClusterController :"+customErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
 	}
 
@@ -976,7 +977,8 @@ func (c *AKSClusterController) GetKubeConfig() {
 
 	kubeconfig, err := aks.GetKubeCofing(azureProfile.Profile, cluster, *ctx)
 	if err != nil {
-		ctx.SendLogs("AKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		customErr := aks.ApiError(err)
+		ctx.SendLogs("AKSClusterController :"+customErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1047,8 +1049,9 @@ func (c *AKSClusterController) FetchKubeVersions() {
 
 	kubeVersions, err := aks.GetKubeVersions(azureProfile, *ctx)
 	if err != nil {
+		customErr := aks.ApiError(err)
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": customErr.Message}
 		c.ServeJSON()
 		return
 	}
