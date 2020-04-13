@@ -685,7 +685,7 @@ func (c *AKSClusterController) GetStatus() {
 
 	cluster, err := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		customErr := aks.ApiError(err)
+		customErr := aks.ApiError(err, 500)
 		ctx.SendLogs("AKSClusterController :"+customErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(206)
 	}
@@ -969,7 +969,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 
 	kubeconfig, err := aks.GetKubeCofing(azureProfile.Profile, cluster, *ctx)
 	if err != nil {
-		customErr := aks.ApiError(err)
+		customErr := aks.ApiError(err, 500)
 		ctx.SendLogs("AKSClusterController :"+customErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1041,7 +1041,7 @@ func (c *AKSClusterController) FetchKubeVersions() {
 
 	kubeVersions, err := aks.GetKubeVersions(azureProfile, *ctx)
 	if err != nil {
-		customErr := aks.ApiError(err)
+		customErr := aks.ApiError(err, 500)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": customErr.Message}
 		c.ServeJSON()

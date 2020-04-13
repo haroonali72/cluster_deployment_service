@@ -1,26 +1,15 @@
 package aks
 
 import (
+	"antelope/models/types"
 	"strings"
 )
 
-type CustomError struct {
-	//	Status				string 			 `json:"status,omitempty"  bson:"status"`
-	StatusCode  string `json:"code,omitempty"  bson:"code"`
-	Type        string `json:"type,omitempty"  bson:"type"`
-	Message     string `json:"message,omitempty"  bson:"message"`
-	Description string `json:"description,omitempty"  bson:"description"`
-}
+func ApiError(err error, code int) (cError types.CustomCPError) {
 
-func ApiError(err error) (cError CustomError) {
-
-	errr := strings.Fields(err.Error())
-	cError.StatusCode = errr[2]
-	cError.Type = errr[3]
+	cError.StatusCode = code
 	cError.Description = err.Error()
-	if errr[2] == "422" {
-		cError.Message = ValidationError(err.Error())
-	}
+	cError.Message = ValidationError(err.Error())
 
 	return cError
 

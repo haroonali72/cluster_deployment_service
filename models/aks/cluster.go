@@ -297,7 +297,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	confError = aksOps.CreateCluster(cluster, token, ctx)
 
 	if confError != nil {
-		customeErr := ApiError(confError)
+		customeErr := ApiError(confError, 400)
 		confError = errors.New(customeErr.Message)
 		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+customeErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
@@ -413,7 +413,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 
 	err = aksOps.TerminateCluster(cluster, ctx)
 	if err != nil {
-		customErr := ApiError(err)
+		customErr := ApiError(err, 400)
 		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, customErr.Message, "error", cluster.ProjectId)
 
