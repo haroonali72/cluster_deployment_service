@@ -326,7 +326,6 @@ func (cloud *GKE) init() types.CustomCPError {
 
 	cloud.Client, err = gke.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
 	if err != nil {
-		beego.Error(err.Error())
 		return ApiErrors(err)
 	}
 
@@ -337,7 +336,7 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err.Description != "" {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("Error in fetch status: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
 	}
@@ -353,6 +352,11 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 	}
 
 	if latestCluster == nil {
+		ctx.SendLogs(
+			err1.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
 		return cluster, ApiErrors(err1)
 	}
 
@@ -363,7 +367,7 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err.Description != "" {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("Error in termination: "+ err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -371,7 +375,7 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE delete cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
+			"GKE terminate cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)

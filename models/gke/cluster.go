@@ -359,7 +359,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	err = DeleteGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEUpdateClusterModel:  Update - Got error deleting cluster "+err.Error(),
+			"GKEUpdateClusterModel:  Update - Got error deleting old cluster ",
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -372,7 +372,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	err = AddGKECluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEUpdateClusterModel:  Update - Got error creating cluster "+err.Error(),
+			"GKEUpdateClusterModel:  Update - Got error creating new cluster ",
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -439,10 +439,9 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		return err
 	}
 
-	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, "info", ctx.Data.ProjectId)
+	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	err = gkeOps.CreateCluster(cluster, token, ctx)
 	if err.Description != "" {
-		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
@@ -455,12 +454,8 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError.Description != "" {
-		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.CloudplexStatus = "Cluster creation failed"
-		confError := UpdateGKECluster(cluster, ctx)
-		if confError != nil {
-			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
+		_ = UpdateGKECluster(cluster, ctx)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
 	}
@@ -469,7 +464,6 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	err1 := UpdateGKECluster(cluster, ctx)
 	if err1 != nil {
 		PrintError(err1, cluster.Name,ctx)
-		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return confError
 	}
@@ -483,7 +477,7 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 	cluster, err := GetGKECluster( ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, ApiErrors(err)
+		return cluster, types.CustomCPError{Description:err.Error()}
 	}
 
 	gkeOps, err1 := GetGKE(credentials)
@@ -500,7 +494,7 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 
 	latestCluster, err1 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
 	if err1.Description != "" {
-		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
 	}
 
@@ -517,13 +511,12 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context)types.Cu
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {
-		ctx.SendLogs("GKEClusterModel:  Terminate -"+pubErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return types.CustomCPError{Description:pubErr.Error()}
 	}
 
 	cluster, err := GetGKECluster( ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEClusterModel : Terminate ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return types.CustomCPError{Description:err.Error()}
 	}
 
@@ -579,7 +572,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context)types.Cu
 
 	err = UpdateGKECluster(cluster, ctx)
 	if err != nil {
-		ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEClusterModel : Terminate "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
@@ -608,7 +601,6 @@ func GetServerConfig(credentials gcp.GcpCredentials, ctx utils.Context) (*gke.Se
 
 func PrintError(confError error, name string, ctx utils.Context) {
 	if confError != nil {
-		beego.Error(confError.Error())
 		_, _ = utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, "error", ctx.Data.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, confError.Error(), "error", ctx.Data.Company)
 	}

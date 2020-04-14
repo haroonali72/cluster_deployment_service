@@ -21,7 +21,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -39,37 +38,36 @@ paths:
         "402":
           description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
     post:
       tags:
       - cluster/aks
-      description: add a new cluster
-      operationId: AKSClusterController.Add
+      description: create a new cluster
+      operationId: AKSClusterController.Create
       parameters:
-      - in: header
-        name: token
-        description: token
-        required: true
-        type: string
       - in: body
         name: body
         description: body for cluster content
         required: true
         schema:
           $ref: '#/definitions/aks.AKSCluster'
+      - in: header
+        name: token
+        description: token
+        type: string
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"msg": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "cluster against this project already exists"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aks/{projectId}/:
@@ -87,21 +85,16 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/aks.AKSCluster'
-        "400":
-          description: '"{"error": ""}"'
         "401":
-          description: '"{"error": ""}"'
+          description: '{"error": "error msg"}'
         "404":
-          description: '"{"error": ""}"'
-        "500":
-          description: '"{"error": ""}"'
+          description: '{"error": "error msg"}'
   /cluster/aks/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -109,6 +102,10 @@ paths:
       description: delete a cluster
       operationId: AKSClusterController.Delete
       parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       - in: path
         name: projectId
         description: project id of the cluster
@@ -118,17 +115,14 @@ paths:
         name: forceDelete
         description: "true"
         type: boolean
-      - in: header
-        name: token
-        description: token
-        required: true
-        type: string
       responses:
-        "200":
+        "204":
           description: '{"msg": "cluster deleted successfully"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
+          description: '{"error": "error msg"}'
+        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
@@ -144,7 +138,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -153,7 +146,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/aks.AKSCluster'
-        "400":
+        "404":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -177,7 +170,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -202,7 +194,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: region
@@ -217,9 +208,6 @@ paths:
               $ref: '#/definitions/aks.VMSizeTypes'
         "400":
           description: '{"error": "error_msg"}'
-        "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
         "404":
           description: '{"error": "error_msg"}'
         "500":
@@ -239,7 +227,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -270,7 +257,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -284,8 +270,10 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
-        "404":
+        "402":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aks/status/{projectId}/:
@@ -303,7 +291,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -315,14 +302,10 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aks.AKSCluster'
-        "206":
-          description: '{object} aks.AKSCluster'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
-        "404":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aks/terminate/{projectId}/:
@@ -345,18 +328,16 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
-          description: '{"msg": "cluster terminated successfully"}'
+          description: '{"msg": "cluster termination is in progress"}'
         "400":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/:
@@ -2493,7 +2474,8 @@ paths:
       parameters:
       - in: header
         name: token
-        description: token
+        description: "true"
+        required: true
         type: string
       - in: body
         name: body
@@ -2505,15 +2487,15 @@ paths:
         "200":
           description: '{"msg": "cluster updated successfully"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": ""}'
+          description: '{"error": "Cluster is in running state"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/gke
@@ -2523,6 +2505,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -2534,15 +2517,15 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "cluster against same project id already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/{projectId}/:
     get:
       tags:
@@ -2558,6 +2541,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -2565,24 +2549,25 @@ paths:
           schema:
             $ref: '#/definitions/gke.GKECluster'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/{projectId}/{forceDelete}: {}
   /cluster/gke/all:
     get:
       tags:
       - cluster/gke
-      description: get all the company's clusters
+      description: get all of the company clusters
       operationId: GKEClusterController.Get All
       parameters:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -2592,11 +2577,11 @@ paths:
             items:
               $ref: '#/definitions/gke.GKECluster'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/applyagent/{projectId}:
     post:
       tags:
@@ -2611,6 +2596,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -2626,13 +2612,13 @@ paths:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/config/{region}:
     get:
       tags:
@@ -2647,11 +2633,12 @@ paths:
         type: string
       - in: header
         name: token
-        description: rbac token
+        description: token
+        required: true
         type: string
       - in: path
         name: region
-        description: zone of the region
+        description: region
         required: true
         type: string
       responses:
@@ -2660,11 +2647,11 @@ paths:
           schema:
             $ref: '#/definitions/gke.ServerConfig'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime error"}'
   /cluster/gke/start/{projectId}:
     post:
       tags:
@@ -2680,6 +2667,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -2690,15 +2678,15 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": ""}'
+          description: '{"error": "Cluster is in running state"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/status/{projectId}/:
     get:
       tags:
@@ -2714,6 +2702,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -2728,13 +2717,13 @@ paths:
         "206":
           description: '{object} gke.GKECluster'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/terminate/{projectId}/:
     post:
       tags:
@@ -2755,18 +2744,19 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
-          description: '{"msg": ""}'
+          description: '{"msg": "Cluster is terminating"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
   /cluster/iks/:
     put:
       tags:
@@ -2790,8 +2780,6 @@ paths:
         "400":
           description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
@@ -2888,7 +2876,7 @@ paths:
     get:
       tags:
       - cluster/iks
-      description: get all the clusters
+      description: get all the companys's clusters
       operationId: IKSClusterController.Get All
       parameters:
       - in: header
@@ -3207,8 +3195,6 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
         "500":
@@ -3244,8 +3230,6 @@ paths:
           description: '{"error": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/op/{projectId}/:
@@ -3310,7 +3294,7 @@ paths:
     get:
       tags:
       - cluster/op
-      description: get all the clusters
+      description: get all the company's clusters
       operationId: OPClusterController.Get All
       parameters:
       - in: header
@@ -6037,28 +6021,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001743c80.false:
+  442.0xc00172ba10.false:
     title: "false"
     type: object
-  605.0xc0010891a0.false:
+  605.0xc0010750e0.false:
     title: "false"
     type: object
-  636.0xc001693c20.false:
+  636.0xc0016759b0.false:
     title: "false"
     type: object
-  637.0xc001378c90.false:
+  637.0xc00135ebd0.false:
     title: "false"
     type: object
   5519.string:
     title: string
     type: object
-  13363.0xc00177dad0.false:
+  13200.0xc0017637a0.false:
     title: "false"
     type: object
-  43586.0xc00171b230.false:
+  43586.0xc0016fefc0.false:
     title: "false"
     type: object
-  48853.string:
+  48687.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6113,7 +6097,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/48853.string'
+        $ref: '#/definitions/48687.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6303,7 +6287,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010891a0.false'
+        $ref: '#/definitions/605.0xc0010750e0.false'
       name:
         type: string
       network_name:
@@ -6684,7 +6668,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc001378c90.false'
+        $ref: '#/definitions/637.0xc00135ebd0.false'
       name:
         type: string
       network_name:
@@ -7823,7 +7807,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/636.0xc001693c20.false'
+        $ref: '#/definitions/636.0xc0016759b0.false'
       kube_version:
         type: string
       name:
@@ -7923,7 +7907,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/43586.0xc00171b230.false'
+        $ref: '#/definitions/43586.0xc0016fefc0.false'
       kube_version:
         type: string
       name:
@@ -8089,7 +8073,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001743c80.false'
+        $ref: '#/definitions/442.0xc00172ba10.false'
       name:
         type: string
       node_pools:
@@ -8175,7 +8159,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc00177dad0.false'
+        $ref: '#/definitions/13200.0xc0017637a0.false'
       name:
         type: string
       node_pools:
