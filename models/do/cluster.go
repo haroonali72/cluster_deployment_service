@@ -230,14 +230,14 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 
 	return nil
 }
-func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
+func GetRegion(token string, ctx utils.Context) (string, error) {
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
 	if strings.Contains(url, "{projectId}") {
-		url = strings.Replace(url, "{projectId}", projectId, -1)
+		url = strings.Replace(url, "{projectId}",ctx.Data.ProjectId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Fetch region:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
 	var region Project

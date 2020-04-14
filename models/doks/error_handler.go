@@ -8,13 +8,13 @@ import (
 	"strings"
 )
 
-func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context,companyId string) (cError types.CustomCPError){
+func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context) (cError types.CustomCPError){
 
 	errr :=strings.Fields(err.Error())
-	cError.StatusCode = errr[2]
+	cError.StatusCode = "502"
 	cError.Description = err.Error()
 	if (errr[2]=="422"){
-		cError.Message =ValidationError(err.Error(),credentials,ctx ,companyId )
+		cError.Message =ValidationError(err.Error(),credentials,ctx )
 	}else if errr[2]=="404"{
 		cError.Message =NotFoundError(err.Error(),errr[0],ctx)
 	} else if strings.Contains(err.Error(),"Invalid cloud credentials"){
@@ -27,18 +27,17 @@ func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context,comp
 
 }
 
-func getKubernetesVersion(credentials vault.DOCredentials,ctx utils.Context,companyId string) string{
-	config,_:=GetServerConfig(credentials ,ctx , companyId )
+func getKubernetesVersion(credentials vault.DOCredentials,ctx utils.Context) string{
+	config,_:=GetServerConfig(credentials ,ctx )
 	var versions string
 	for _,version:= range config.Versions {
 		versions = versions + *godo.String(version.KubernetesVersion)+ ": " +*godo.String(version.Slug) + " , "
 	}
-
 	return versions
 }
 
-func getMachineSizes(credentials vault.DOCredentials,ctx utils.Context,companyId string) string{
-	config,_:=GetServerConfig(credentials ,ctx , companyId )
+func getMachineSizes(credentials vault.DOCredentials,ctx utils.Context) string{
+	config,_:=GetServerConfig(credentials ,ctx )
 	var sizes string
 	for _,size:= range config.Sizes {
 		sizes = sizes + *godo.String(size.Name)+ " : " +*godo.String(size.Slug) + " , "
@@ -46,9 +45,9 @@ func getMachineSizes(credentials vault.DOCredentials,ctx utils.Context,companyId
 	return sizes
 }
 
-func getRegions(credentials vault.DOCredentials,ctx utils.Context,companyId string )string{
+func getRegions(credentials vault.DOCredentials,ctx utils.Context )string{
 
-	config,_:=GetServerConfig(credentials ,ctx , companyId )
+	config,_:=GetServerConfig(credentials ,ctx )
 	var regions string
 	for _,re:= range config.Regions {
 		regions = regions + *godo.String(re.Name)+ "(" +*godo.String(re.Slug) + ") , "
@@ -57,24 +56,24 @@ func getRegions(credentials vault.DOCredentials,ctx utils.Context,companyId stri
 }
 
 
-func ValidationError(description string ,credentials vault.DOCredentials,ctx utils.Context,companyId string) string{
+func ValidationError(description string ,credentials vault.DOCredentials,ctx utils.Context) string{
 
  	if strings.Contains(description,"cluster_spec.missing"){
 		if strings.Contains(description,"region"){
-			regions := getRegions(credentials ,ctx ,companyId )
+			regions := getRegions(credentials ,ctx  )
 			return "Request have some missing value : Region . Select region from : "+regions
 
 		} else if strings.Contains(description,"name"){
 			return "Missing Value : Name .Give a valid name"
 		} else if strings.Contains(description,"size"){
-			sizes := getMachineSizes(credentials ,ctx ,companyId )
+			sizes := getMachineSizes(credentials ,ctx  )
 			return "Missing Value : Machine size of node pool.  Select machine size from : " +sizes
 		} else if strings.Contains(description,"min_count"){
 			return "Missing Value : Minimum Node Count for auto scaling.Select a numerical value of minimun number of nodes for autoscaling."
 		}else if strings.Contains(description,"max_count"){
 			return "Missing Value : Max Count for auto scaling.Select a minimun numerical value of maximun number of nodes for autoscaling.The value should be more than minimun count and less than 25"
 		}  else if strings.Contains(description,"version"){
-			versions := getKubernetesVersion(credentials ,ctx ,companyId )
+			versions := getKubernetesVersion(credentials ,ctx )
 			return "Missing Value : Kubernetes Version.Select a Kubernetes Version from : "+versions
 		}else {
 			return description
@@ -82,19 +81,19 @@ func ValidationError(description string ,credentials vault.DOCredentials,ctx uti
 
 	}else if  strings.Contains(description,"cluster_spec.invalid") {
 		if strings.Contains(description, "region") {
-			regions := getRegions(credentials, ctx, companyId)
+			regions := getRegions(credentials, ctx)
 			return "Invalid Value : Region. Select region from : " + regions
 		} else if strings.Contains(description, "name") {
 			return "Invalid Value : Name .Give a valid name"
 		} else if strings.Contains(description, "size") {
-			sizes := getMachineSizes(credentials, ctx, companyId)
+			sizes := getMachineSizes(credentials, ctx)
 			return "Invalid Value : Machine size of node pool.  Select machine size from : " + sizes
 		} else if strings.Contains(description, "min_count") {
 			return "Invalid Value : Minimum Node Count for auto scaling.Select a numerical value of minimun number of nodes for autoscaling."
 		} else if strings.Contains(description, "max_count") {
 			return "Invalid Value : Max Count for auto scaling.Select a minimun numerical value of maximun number of nodes for autoscaling.The value should be more than minimun count and less than 25"
 		} else if strings.Contains(description, "version") {
-			versions := getKubernetesVersion(credentials, ctx, companyId)
+			versions := getKubernetesVersion(credentials, ctx)
 			return "Invalid Value : Kubernetes Version.Select a Kubernetes Version from : " + versions
 		}else {
 			return description

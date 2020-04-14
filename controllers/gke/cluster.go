@@ -26,6 +26,7 @@ type GKEClusterController struct {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /config/:region [get]
 func (c *GKEClusterController) GetServerConfig() {
 	ctx := new(utils.Context)
@@ -85,6 +86,7 @@ func (c *GKEClusterController) GetServerConfig() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /:projectId/ [get]
 func (c *GKEClusterController) Get() {
 	ctx := new(utils.Context)
@@ -114,7 +116,7 @@ func (c *GKEClusterController) Get() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
@@ -153,6 +155,7 @@ func (c *GKEClusterController) Get() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /all [get]
 func (c *GKEClusterController) GetAll() {
 	ctx := new(utils.Context)
@@ -174,11 +177,11 @@ func (c *GKEClusterController) GetAll() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", ctx.Data.Company, userInfo.UserId)
 
 	ctx.SendLogs("GKEClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.GKE, *ctx)
+	err, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.GKE, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -209,6 +212,7 @@ func (c *GKEClusterController) GetAll() {
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router / [post]
 func (c *GKEClusterController) Post() {
 
@@ -249,7 +253,7 @@ func (c *GKEClusterController) Post() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
@@ -271,7 +275,7 @@ func (c *GKEClusterController) Post() {
 	ctx.SendLogs("GKEClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("GKEClusterController: JSON Payload: ", cluster)
 
-	cluster.CompanyId = userInfo.CompanyId
+	cluster.CompanyId = ctx.Data.Company
 
 	err = gke.AddGKECluster(cluster, *ctx)
 	if err != nil {
@@ -302,6 +306,7 @@ func (c *GKEClusterController) Post() {
 // @Failure 402 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router / [put]
 func (c *GKEClusterController) Patch() {
 	ctx := new(utils.Context)
@@ -331,7 +336,7 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
@@ -399,6 +404,7 @@ func (c *GKEClusterController) Patch() {
 // @Failure 402 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /:projectId/:forceDelete  [delete]
 func (c *GKEClusterController) Delete() {
 	ctx := new(utils.Context)
@@ -435,7 +441,7 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
@@ -509,6 +515,7 @@ func (c *GKEClusterController) Delete() {
 // @Failure 402 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /start/:projectId [post]
 func (c *GKEClusterController) StartCluster() {
 	ctx := new(utils.Context)
@@ -547,7 +554,7 @@ func (c *GKEClusterController) StartCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
@@ -641,6 +648,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /status/:projectId/ [get]
 func (c *GKEClusterController) GetStatus() {
 	ctx := new(utils.Context)
@@ -680,7 +688,7 @@ func (c *GKEClusterController) GetStatus() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
@@ -734,6 +742,7 @@ func (c *GKEClusterController) GetStatus() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /terminate/:projectId/ [post]
 func (c *GKEClusterController) TerminateCluster() {
 
@@ -774,7 +783,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
@@ -858,6 +867,7 @@ func (c *GKEClusterController) TerminateCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {"error": "Cloud API Error"}
 // @router /applyagent/:projectId [post]
 func (c *GKEClusterController) ApplyAgent() {
 
@@ -905,7 +915,7 @@ func (c *GKEClusterController) ApplyAgent() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
