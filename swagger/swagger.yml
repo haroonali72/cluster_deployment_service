@@ -1714,8 +1714,6 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
     post:
       tags:
       - cluster/doks
@@ -1746,8 +1744,6 @@ paths:
           description: '{"error": "Cluster against same project id already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
   /cluster/doks/{projectId}/:
     get:
       tags:
@@ -1778,8 +1774,6 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
   /cluster/doks/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -1814,8 +1808,6 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
   /cluster/doks/all:
     get:
       tags:
@@ -1839,8 +1831,6 @@ paths:
           description: '{"error": "Bad Request"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
   /cluster/doks/applyagent/{projectId}:
     post:
       tags:
@@ -2529,8 +2519,6 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
     post:
       tags:
       - cluster/gke
@@ -2561,8 +2549,6 @@ paths:
           description: '{"error": "cluster against same project id already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
   /cluster/gke/{projectId}/:
     get:
       tags:
@@ -2593,8 +2579,6 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
   /cluster/gke/{projectId}/{forceDelete}: {}
   /cluster/gke/all:
     get:
@@ -2621,8 +2605,6 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "502":
-          description: '{"error": "Cloud API Error"}'
   /cluster/gke/applyagent/{projectId}:
     post:
       tags:
@@ -6072,28 +6054,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0017770e0.false:
+  442.0xc0017509c0.false:
     title: "false"
     type: object
-  605.0xc00109c7e0.false:
+  605.0xc00106be30.false:
     title: "false"
     type: object
-  636.0xc0016b7080.false:
+  636.0xc00168c960.false:
     title: "false"
     type: object
-  644.0xc0013a8300.false:
+  644.0xc001369950.false:
     title: "false"
     type: object
   5519.string:
     title: string
     type: object
-  13200.0xc0017a2e70.false:
+  13200.0xc001782750.false:
     title: "false"
     type: object
-  43586.0xc001740690.false:
+  43586.0xc00170bf50.false:
     title: "false"
     type: object
-  48687.string:
+  47985.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6148,7 +6130,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/48687.string'
+        $ref: '#/definitions/47985.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6338,7 +6320,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc00109c7e0.false'
+        $ref: '#/definitions/605.0xc00106be30.false'
       name:
         type: string
       network_name:
@@ -6719,7 +6701,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc0013a8300.false'
+        $ref: '#/definitions/644.0xc001369950.false'
       name:
         type: string
       network_name:
@@ -7858,7 +7840,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/636.0xc0016b7080.false'
+        $ref: '#/definitions/636.0xc00168c960.false'
       kube_version:
         type: string
       name:
@@ -7958,7 +7940,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/43586.0xc001740690.false'
+        $ref: '#/definitions/43586.0xc00170bf50.false'
       kube_version:
         type: string
       name:
@@ -8124,7 +8106,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0017770e0.false'
+        $ref: '#/definitions/442.0xc0017509c0.false'
       name:
         type: string
       node_pools:
@@ -8210,7 +8192,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13200.0xc0017a2e70.false'
+        $ref: '#/definitions/13200.0xc001782750.false'
       name:
         type: string
       node_pools:

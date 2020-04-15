@@ -86,7 +86,6 @@ func (c *GKEClusterController) GetServerConfig() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router /:projectId/ [get]
 func (c *GKEClusterController) Get() {
 	ctx := new(utils.Context)
@@ -155,7 +154,6 @@ func (c *GKEClusterController) Get() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router /all [get]
 func (c *GKEClusterController) GetAll() {
 	ctx := new(utils.Context)
@@ -212,7 +210,6 @@ func (c *GKEClusterController) GetAll() {
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router / [post]
 func (c *GKEClusterController) Post() {
 
@@ -307,7 +304,6 @@ func (c *GKEClusterController) Post() {
 // @Failure 402 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router / [put]
 func (c *GKEClusterController) Patch() {
 	ctx := new(utils.Context)

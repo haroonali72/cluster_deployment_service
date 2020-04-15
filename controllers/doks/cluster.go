@@ -164,7 +164,6 @@ func (c *DOKSClusterController) GetKubeConfig() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router /:projectId/ [get]
 func (c *DOKSClusterController) Get() {
 	ctx := new(utils.Context)
@@ -233,7 +232,6 @@ func (c *DOKSClusterController) Get() {
 // @Success 200 {object} []doks.KubernetesCluster
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router /all [get]
 func (c *DOKSClusterController) GetAll() {
 
@@ -291,7 +289,6 @@ func (c *DOKSClusterController) GetAll() {
 // @Failure 404 {"error": "Not found"}
 // @Failure 409 {"error": "Cluster against same project id already exists"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router / [post]
 func (c *DOKSClusterController) Post() {
 
@@ -388,7 +385,6 @@ func (c *DOKSClusterController) Post() {
 // @Failure 402 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router / [put]
 func (c *DOKSClusterController) Patch() {
 	ctx := new(utils.Context)
@@ -486,7 +482,6 @@ func (c *DOKSClusterController) Patch() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
 // @router /:projectId/:forceDelete [delete]
 func (c *DOKSClusterController) Delete() {
 	ctx := new(utils.Context)
