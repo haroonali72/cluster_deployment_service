@@ -417,7 +417,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if errr != nil {
 		PrintError(errr, cluster.Name,ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return ApiErrors(errr)
+		return types.CustomCPError{StatusCode:"500",Description:errr.Error()}
 	}
 
 	gkeOps, err := GetGKE(credentials)

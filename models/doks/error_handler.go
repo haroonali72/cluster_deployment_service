@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context) (cError types.CustomCPError){
+func ApiError (err error,message string, credentials vault.DOCredentials,ctx utils.Context) (cError types.CustomCPError){
 
 	errr :=strings.Fields(err.Error())
 	cError.StatusCode = "502"
@@ -22,7 +22,9 @@ func ApiError (err error, credentials vault.DOCredentials,ctx utils.Context) (cE
 		cError.Message="Invalid cloud credentials"
 		cError.Description="The Access Token is not valid."
 	}
-
+	if cError.Message==""{
+		cError.Message= message
+	}
 	return cError
 
 }

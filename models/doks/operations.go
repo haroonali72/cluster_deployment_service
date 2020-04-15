@@ -113,7 +113,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging, )
-		return cluster, ApiError(err, credentials, ctx)
+		return cluster, ApiError(err,"Error in Cluster Creation", credentials, ctx)
 	}
 
 	cluster.ID = clus.ID
@@ -144,7 +144,7 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) t
 	_, err := cloud.Client.Kubernetes.Delete(context.Background(), cluster.ID)
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in cluster termination: "+err.Error(), models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-		return ApiError(err,vault.DOCredentials{},ctx)
+		return ApiError(err,"Error in terminating kubernetes cluster",vault.DOCredentials{},ctx)
 	}
 
 	return types.CustomCPError{}
@@ -166,7 +166,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return KubernetesConfig{}, ApiError(err,vault.DOCredentials{},ctx)
+		return KubernetesConfig{}, ApiError(err,"Error in getting kubernetes config file",vault.DOCredentials{},ctx)
 	}
 
 	var con KubernetesClusterConfig
@@ -205,7 +205,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (*godo.Kuber
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clusterId)
 	if err != nil {
 		ctx.SendLogs("DOKS get cluster status  failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging, )
-		return &godo.KubernetesCluster{}, ApiError(err,vault.DOCredentials{},ctx)
+		return &godo.KubernetesCluster{}, ApiError(err,"Error in fetching kubernetes cluster status",vault.DOCredentials{},ctx)
 	}
 
 	return status, types.CustomCPError{}
@@ -222,7 +222,7 @@ func (cloud *DOKS) GetServerConfig(ctx utils.Context) (*godo.KubernetesOptions,t
 
 	options, _, err := cloud.Client.Kubernetes.GetOptions(context.Background())
 	if err != nil {
-		return &godo.KubernetesOptions{}, ApiError(err,vault.DOCredentials{},ctx)
+		return &godo.KubernetesOptions{}, ApiError(err,"Error in fetching valid version and machine sizes",vault.DOCredentials{},ctx)
 	}
 
 	return options,types.CustomCPError{}

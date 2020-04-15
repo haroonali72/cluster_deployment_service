@@ -42,7 +42,7 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster,types.CustomCPEr
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiErrors(err)
+		return nil, ApiErrors(err,"Error in listing running clusters")
 	}
 
 	result := []GKECluster{}
@@ -143,7 +143,7 @@ func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ct
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err)
+		return ApiErrors(err,"Error in updating node version")
 	}
 
 	return cloud.waitForNodePool(clusterName, nodeName, ctx)
@@ -172,7 +172,7 @@ func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, 
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err)
+		return ApiErrors(err,"Error in updating node count")
 	}
 
 	return cloud.waitForNodePool(clusterName, nodeName, ctx)
@@ -191,14 +191,14 @@ func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) types.Cus
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err)
+		return ApiErrors(err,"Error in cluster deletion")
 	} else if err != nil && strings.Contains(err.Error(), "notFound") {
 		ctx.SendLogs(
 			"GKE cluster '"+clusterName+"' was not found.",
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err)
+		return ApiErrors(err,"Error in cluster deletion")
 	}
 
 	return types.CustomCPError{}
@@ -218,7 +218,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context)types.Cus
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
-			return ApiErrors(err)
+			return ApiErrors(err,"Error in GKE cluster creation/Updation")
 		}
 		if cluster.Status == statusRunning {
 			ctx.SendLogs(
@@ -255,7 +255,7 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
-			return ApiErrors(err)
+			return ApiErrors(err,"Error in cluster"+clusterName +"nodepool creation/updation")
 		}
 		if nodepool.Status == statusRunning {
 			ctx.SendLogs(
@@ -288,7 +288,7 @@ func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, types.Cu
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiErrors(err)
+		return nil, ApiErrors(err,"Error in fetching GKE versions")
 	}
 
 	return config, types.CustomCPError{}
@@ -322,7 +322,7 @@ func (cloud *GKE) init() types.CustomCPError {
 
 	cloud.Client, err = gke.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
 	if err != nil {
-		return ApiErrors(err)
+		return ApiErrors(err,"Error in initializing cloud credentials")
 	}
 
 	return types.CustomCPError{}
@@ -344,7 +344,7 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return cluster, ApiErrors(err1)
+		return cluster, ApiErrors(err1,"Error in fetching cluster status")
 	}
 
 	if latestCluster == nil {
@@ -353,7 +353,7 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return cluster, ApiErrors(err1)
+		return cluster, ApiErrors(err1,"Error in fetching cluster status")
 	}
 
 	return GenerateClusterFromResponse(*latestCluster), types.CustomCPError{}
@@ -376,7 +376,7 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err)
+		return ApiErrors(err,"Error in deleting cluster")
 	}
 
 	return types.CustomCPError{}
