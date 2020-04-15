@@ -1693,6 +1693,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -1702,17 +1703,19 @@ paths:
           $ref: '#/definitions/doks.KubernetesCluster'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": ""}'
+          description: '{"error": "Cluster is in running state"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
     post:
       tags:
       - cluster/doks
@@ -1722,6 +1725,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -1731,17 +1735,19 @@ paths:
           $ref: '#/definitions/doks.KubernetesCluster'
       responses:
         "200":
-          description: '{"msg": ""}'
+          description: '{"msg": "Cluster added successfully"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
+          description: '{"error": "Cluster against same project id already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/{projectId}/:
     get:
       tags:
@@ -1757,6 +1763,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1764,13 +1771,15 @@ paths:
           schema:
             $ref: '#/definitions/doks.KubernetesCluster'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -1790,6 +1799,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1797,13 +1807,15 @@ paths:
         "204":
           description: '{"msg": "cluster deleted successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/all:
     get:
       tags:
@@ -1814,6 +1826,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1823,9 +1836,11 @@ paths:
             items:
               $ref: '#/definitions/doks.KubernetesCluster'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/applyagent/{projectId}:
     post:
       tags:
@@ -1840,6 +1855,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -1855,13 +1871,15 @@ paths:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/config:
     get:
       tags:
@@ -1877,6 +1895,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1884,9 +1903,11 @@ paths:
           schema:
             $ref: '#/definitions/doks.ServerConfig'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/kubeconfig/{projectId}:
     get:
       tags:
@@ -1897,6 +1918,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -1914,13 +1936,15 @@ paths:
           schema:
             $ref: '#/definitions/doks.KubernetesConfig'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/start/{projectId}:
     post:
       tags:
@@ -1936,6 +1960,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -1944,17 +1969,19 @@ paths:
         type: string
       responses:
         "200":
-          description: '{"msg": "cluster created successfully"}'
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Cluster is in running state"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/status/{projectId}/:
     get:
       tags:
@@ -1970,6 +1997,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -1984,13 +2012,15 @@ paths:
         "206":
           description: '{object} doks.DOKSCluster'
         "400":
-          description: '{"error": ""}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": ""}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": ""}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/doks/terminate/{projectId}/:
     post:
       tags:
@@ -2011,18 +2041,21 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
           description: '{"msg": "cluster terminated successfully"}'
         "400":
-          description: '{"error": "}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": ""}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gcp/:
     put:
       tags:
@@ -2496,6 +2529,8 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
     post:
       tags:
       - cluster/gke
@@ -2526,6 +2561,8 @@ paths:
           description: '{"error": "cluster against same project id already exists"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gke/{projectId}/:
     get:
       tags:
@@ -2556,6 +2593,8 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gke/{projectId}/{forceDelete}: {}
   /cluster/gke/all:
     get:
@@ -2582,6 +2621,8 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gke/applyagent/{projectId}:
     post:
       tags:
@@ -2619,6 +2660,8 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gke/config/{region}:
     get:
       tags:
@@ -2652,6 +2695,8 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gke/start/{projectId}:
     post:
       tags:
@@ -2687,6 +2732,8 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gke/status/{projectId}/:
     get:
       tags:
@@ -2724,6 +2771,8 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/gke/terminate/{projectId}/:
     post:
       tags:
@@ -2757,6 +2806,8 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{"error": "Cloud API Error"}'
   /cluster/iks/:
     put:
       tags:
@@ -6021,25 +6072,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc00172ba10.false:
+  442.0xc0017770e0.false:
     title: "false"
     type: object
-  605.0xc0010750e0.false:
+  605.0xc00109c7e0.false:
     title: "false"
     type: object
-  636.0xc0016759b0.false:
+  636.0xc0016b7080.false:
     title: "false"
     type: object
-  637.0xc00135ebd0.false:
+  644.0xc0013a8300.false:
     title: "false"
     type: object
   5519.string:
     title: string
     type: object
-  13200.0xc0017637a0.false:
+  13200.0xc0017a2e70.false:
     title: "false"
     type: object
-  43586.0xc0016fefc0.false:
+  43586.0xc001740690.false:
     title: "false"
     type: object
   48687.string:
@@ -6287,7 +6338,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010750e0.false'
+        $ref: '#/definitions/605.0xc00109c7e0.false'
       name:
         type: string
       network_name:
@@ -6668,7 +6719,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc00135ebd0.false'
+        $ref: '#/definitions/644.0xc0013a8300.false'
       name:
         type: string
       network_name:
@@ -7807,7 +7858,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/636.0xc0016759b0.false'
+        $ref: '#/definitions/636.0xc0016b7080.false'
       kube_version:
         type: string
       name:
@@ -7907,7 +7958,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/43586.0xc0016fefc0.false'
+        $ref: '#/definitions/43586.0xc001740690.false'
       kube_version:
         type: string
       name:
@@ -8073,7 +8124,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc00172ba10.false'
+        $ref: '#/definitions/442.0xc0017770e0.false'
       name:
         type: string
       node_pools:
@@ -8159,7 +8210,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13200.0xc0017637a0.false'
+        $ref: '#/definitions/13200.0xc0017a2e70.false'
       name:
         type: string
       node_pools:

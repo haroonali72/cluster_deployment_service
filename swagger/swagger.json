@@ -2570,6 +2570,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2584,22 +2585,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "402": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Cluster is in running state\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             },
@@ -2614,6 +2618,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2628,22 +2633,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"\"}"
+                        "description": "{\"msg\": \"Cluster added successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against same project id already exists\"}"
+                        "description": "{\"error\": \"Cluster against same project id already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2660,6 +2668,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2674,10 +2683,13 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2700,6 +2712,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2722,16 +2735,19 @@
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2755,6 +2771,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2766,10 +2783,13 @@
                         }
                     },
                     "404": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2786,6 +2806,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2811,16 +2832,19 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2844,6 +2868,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2856,22 +2881,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Cluster is in running state\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2895,6 +2923,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2916,16 +2945,19 @@
                         "description": "{object} doks.DOKSCluster"
                     },
                     "400": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2956,6 +2988,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2964,16 +2997,19 @@
                         "description": "{\"msg\": \"cluster terminated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -2997,6 +3033,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3008,16 +3045,19 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -3047,6 +3087,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3058,16 +3099,19 @@
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -3783,6 +3827,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             },
@@ -3828,6 +3875,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -3866,6 +3916,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -3921,6 +3974,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -3970,6 +4026,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -4022,6 +4081,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -4077,6 +4139,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -4126,6 +4191,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -4171,6 +4239,9 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{\"error\": \"Cloud API Error\"}"
                     }
                 }
             }
@@ -9155,15 +9226,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13200.0xc0017637a0.false": {
+        "13200.0xc0017a2e70.false": {
             "title": "false",
             "type": "object"
         },
-        "43586.0xc0016fefc0.false": {
+        "43586.0xc001740690.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc00172ba10.false": {
+        "442.0xc0017770e0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9175,15 +9246,15 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc0010750e0.false": {
+        "605.0xc00109c7e0.false": {
             "title": "false",
             "type": "object"
         },
-        "636.0xc0016759b0.false": {
+        "636.0xc0016b7080.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc00135ebd0.false": {
+        "644.0xc0013a8300.false": {
             "title": "false",
             "type": "object"
         },
@@ -9540,7 +9611,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc0010750e0.false"
+                    "$ref": "#/definitions/605.0xc00109c7e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10105,7 +10176,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc00135ebd0.false"
+                    "$ref": "#/definitions/644.0xc0013a8300.false"
                 },
                 "name": {
                     "type": "string"
@@ -11797,7 +11868,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/636.0xc0016759b0.false"
+                    "$ref": "#/definitions/636.0xc0016b7080.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11945,7 +12016,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/43586.0xc0016fefc0.false"
+                    "$ref": "#/definitions/43586.0xc001740690.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12174,7 +12245,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc00172ba10.false"
+                    "$ref": "#/definitions/442.0xc0017770e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12302,7 +12373,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13200.0xc0017637a0.false"
+                    "$ref": "#/definitions/13200.0xc0017a2e70.false"
                 },
                 "name": {
                     "type": "string"

@@ -7,9 +7,6 @@ import (
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
-	"fmt"
-
-	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
 	"strings"
 )
@@ -198,7 +195,7 @@ func (c *DOKSClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-	fmt.Println(ctx.Data.UserId )
+	ctx.Data.Company=userInfo.CompanyId
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -221,7 +218,7 @@ func (c *DOKSClusterController) Get() {
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -232,7 +229,7 @@ func (c *DOKSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []doks.KubernetesCluster
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -286,7 +283,7 @@ func (c *DOKSClusterController) GetAll() {
 
 // @Title Add
 // @Description add a new cluster
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	body	body 	doks.KubernetesCluster		true	"body for cluster content"
 // @Success 200 {"msg": "Cluster added successfully"}
 // @Failure 400 {"error": "Bad Request"}
@@ -319,7 +316,7 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 
-	_, err = govalidator.ValidateStruct(cluster)
+/*	_, err = govalidator.ValidateStruct(cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -327,7 +324,7 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+*/
 
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -359,7 +356,7 @@ func (c *DOKSClusterController) Post() {
 
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
-	cluster.CompanyId = ctx.Data.Company
+	cluster.CompanyId = userInfo.CompanyId
 
 	err = doks.AddKubernetesCluster(cluster, *ctx)
 	if err != nil {
@@ -383,7 +380,7 @@ func (c *DOKSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing kubernetes cluster
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	body	body 	doks.KubernetesCluster	true	"body for cluster content"
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
@@ -424,28 +421,28 @@ func (c *DOKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	ctx.SendLogs("DOKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
-
+	ctx.Data.Company = userInfo.CompanyId
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
+			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
@@ -482,7 +479,7 @@ func (c *DOKSClusterController) Patch() {
 // @Description delete a kubernetes cluster
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Success 204 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "Bad Request"}
@@ -594,7 +591,7 @@ func (c *DOKSClusterController) Delete() {
 // @Title Start
 // @Description starts a kubernetes cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	true ""
+// @Param	token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "Cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
@@ -643,29 +640,30 @@ func (c *DOKSClusterController) StartCluster() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
-
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
+	ctx.Data.Company=userInfo.CompanyId
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
-	region, err := do.GetRegion(token,  *ctx)
+*/
+	region:="nyc1"
+/*	region, err := do.GetRegion(token,  *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
+*/
 
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -780,28 +778,29 @@ func (c *DOKSClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId,ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
-	region, err := do.GetRegion(token, *ctx)
+*/
+region:="nyc1"
+/*	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
+*/
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -810,7 +809,7 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 	ctx.SendLogs("DOKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.Data.Company=userInfo.CompanyId
 	cluster, errr := doks.FetchStatus(doProfile.Profile, *ctx)
 	if errr.Description != "" {
 		c.Ctx.Output.SetStatus(206)
@@ -871,21 +870,23 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 	ctx.SendLogs("DOKSClusterController: TerminateKubernetesCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
+	ctx.Data.Company=userInfo.CompanyId
+	_, err = rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
+/*	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
 		return
 	}
-
+*/
+region:="nyc1"
+/*
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -894,9 +895,9 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+*/
 	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.Data.Company=userInfo.CompanyId
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

@@ -10,6 +10,7 @@ import (
 	"antelope/models/vault"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
 	"gopkg.in/mgo.v2/bson"
@@ -231,6 +232,7 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context) error {
 	return nil
 }
 func GetRegion(token string, ctx utils.Context) (string, error) {
+	fmt.Println(ctx.Data.ProjectId)
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
 	if strings.Contains(url, "{projectId}") {
 		url = strings.Replace(url, "{projectId}",ctx.Data.ProjectId, -1)

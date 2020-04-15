@@ -73,9 +73,9 @@ type KubernetesCluster struct {
 	KubeVersion 	 string       			`json:"version,omitempty" bson:"version" valid:"required"`
 	Tags      		 []string     			`json:"tags,omitempty" bson:"tags"`
 	NodePools 		 []*KubernetesNodePool  `json:"node_pools,omitempty" bson:"node_pools" valid:"required"`
-	AutoUpgrade 	 bool                   `json:"auto_upgrade,omitempty" bson:"auto_upgrade" valid:"required,matches(^[0-9]+$)"`
-	IsAdvance		bool					 `json:"is_advance" bson:"is_advance"`
-	IsExpert 		bool					 `json:"is_expert" bson:"is_expert"`
+	AutoUpgrade 	 bool                   `json:"auto_upgrade,omitempty" bson:"auto_upgrade,omitempty" valid:"required,matches(^[0-9]+$)"`
+	IsAdvance		bool					 `json:"is_advance,omitempty" bson:"is_advance,omitempty"`
+	IsExpert 		bool					 `json:"is_expert,omitempty" bson:"is_expert,omitempty"`
 	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
 	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`
@@ -306,7 +306,6 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 	cluster, errr := doksOps.createCluster(cluster, ctx,token, credentials)
-
 	if errr.Description != ""{
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError = UpdateKubernetesCluster(cluster, ctx)
