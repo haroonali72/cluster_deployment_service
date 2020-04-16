@@ -677,8 +677,9 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 
 		isZoneExist, err := validateIKSZone(cluster.NodePools[0].AvailabilityZone, ctx)
 		if err != nil && !isZoneExist {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
+			text := "availabe zones are " + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
 		}
 	}
 
