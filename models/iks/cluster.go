@@ -620,3 +620,92 @@ func ValidateProfile(profile vault.IBMProfile, ctx utils.Context) types.CustomCP
 
 	return types.CustomCPError{}
 }
+
+func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
+
+	if cluster.ProjectId == "" {
+
+		return errors.New("project id is empty")
+
+	} else if cluster.Name == "" {
+
+		return errors.New("cluster name is empty")
+
+	} else if cluster.KubeVersion == "" {
+
+		return errors.New("kubernetes version is empty")
+
+	} else if cluster.NetworkName == "" {
+
+		return errors.New("network name is empty")
+
+	} else if cluster.VPCId == "" {
+
+		return errors.New("VPC name is empty")
+
+	} else if len(cluster.NodePools) == 0 {
+
+		return errors.New("node pool length must be greater than zero")
+
+	} else if len(cluster.NodePools) > 0 {
+
+		for _, nodepool := range cluster.NodePools {
+
+			if nodepool.Name == "" {
+
+				return errors.New("node pool name is empty")
+
+			} else if nodepool.NodeCount == 0 {
+
+				return errors.New("machine count must be greater than zero")
+
+			} else if nodepool.MachineType == "" {
+
+				return errors.New("machine type is empty")
+
+			} else if nodepool.SubnetID == "" {
+
+				return errors.New("subnet Id is empty")
+
+			} else if nodepool.AvailabilityZone == "" {
+
+				return errors.New("availability zone is empty")
+
+			}
+
+		}
+
+		isZoneExist, err := validateIKSZone(cluster.NodePools[0].AvailabilityZone, ctx)
+		if err != nil && !isZoneExist {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateIKSZone(zone string, ctx utils.Context) (bool, error) {
+
+	regionList, err := GetRegions(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	for _, v1 := range regionList {
+		for _, v2 := range v1.Zones {
+			if zone == v2 {
+				return true, nil
+			}
+		}
+	}
+
+	var errData string
+	for _, v1 := range regionList {
+		for _, v2 := range v1.Zones {
+			errData += v2 + ", "
+		}
+	}
+
+	return false, errors.New(errData)
+}

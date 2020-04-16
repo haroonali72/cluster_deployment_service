@@ -21,7 +21,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -39,37 +38,36 @@ paths:
         "402":
           description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
     post:
       tags:
       - cluster/aks
-      description: add a new cluster
-      operationId: AKSClusterController.Add
+      description: create a new cluster
+      operationId: AKSClusterController.Create
       parameters:
-      - in: header
-        name: token
-        description: token
-        required: true
-        type: string
       - in: body
         name: body
         description: body for cluster content
         required: true
         schema:
           $ref: '#/definitions/aks.AKSCluster'
+      - in: header
+        name: token
+        description: token
+        type: string
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"msg": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "cluster against this project already exists"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aks/{projectId}/:
@@ -87,21 +85,16 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/aks.AKSCluster'
-        "400":
-          description: '"{"error": ""}"'
         "401":
-          description: '"{"error": ""}"'
+          description: '{"error": "error msg"}'
         "404":
-          description: '"{"error": ""}"'
-        "500":
-          description: '"{"error": ""}"'
+          description: '{"error": "error msg"}'
   /cluster/aks/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -109,6 +102,10 @@ paths:
       description: delete a cluster
       operationId: AKSClusterController.Delete
       parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
       - in: path
         name: projectId
         description: project id of the cluster
@@ -118,17 +115,14 @@ paths:
         name: forceDelete
         description: "true"
         type: boolean
-      - in: header
-        name: token
-        description: token
-        required: true
-        type: string
       responses:
-        "200":
+        "204":
           description: '{"msg": "cluster deleted successfully"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
+          description: '{"error": "error msg"}'
+        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
@@ -144,7 +138,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -153,7 +146,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/aks.AKSCluster'
-        "400":
+        "404":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -177,7 +170,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -202,7 +194,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: region
@@ -217,9 +208,6 @@ paths:
               $ref: '#/definitions/aks.VMSizeTypes'
         "400":
           description: '{"error": "error_msg"}'
-        "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
         "404":
           description: '{"error": "error_msg"}'
         "500":
@@ -239,7 +227,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -270,7 +257,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -284,8 +270,10 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
-        "404":
+        "402":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aks/status/{projectId}/:
@@ -303,7 +291,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -315,14 +302,10 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aks.AKSCluster'
-        "206":
-          description: '{object} aks.AKSCluster'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
-        "404":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aks/terminate/{projectId}/:
@@ -345,18 +328,16 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
-          description: '{"msg": "cluster terminated successfully"}'
+          description: '{"msg": "cluster termination is in progress"}'
         "400":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
+          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aws/:
@@ -2788,11 +2769,7 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -2823,8 +2800,6 @@ paths:
           description: '{"error": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/iks/{projectId}/:
@@ -2848,8 +2823,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/iks.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
         "404":
@@ -2875,11 +2848,13 @@ paths:
         description: "true"
         type: boolean
       responses:
-        "200":
+        "204":
           description: '{"msg": "cluster deleted successfully"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
+          description: '{"error": "error msg"}'
+        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
@@ -2889,7 +2864,7 @@ paths:
     get:
       tags:
       - cluster/iks
-      description: get all the clusters
+      description: get all the companys's clusters
       operationId: IKSClusterController.Get All
       parameters:
       - in: header
@@ -2903,7 +2878,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.Cluster_Def'
-        "400":
+        "404":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -2939,8 +2914,6 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
         "404":
@@ -2975,8 +2948,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.Versions'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
         "500":
@@ -3007,8 +2978,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/iks.AllInstancesResponse'
-        "401":
-          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
         "500":
@@ -3031,8 +3000,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.Regions'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
         "500":
@@ -3060,8 +3027,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.Zone'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
         "500":
@@ -3087,11 +3052,13 @@ paths:
         required: true
         type: string
       responses:
-        "200":
+        "201":
           description: '{"msg": "cluster created successfully"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
+          description: '{"error": "error msg"}'
+        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
@@ -3124,8 +3091,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.KubeWorkerPoolStatus'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
         "404":
@@ -3155,7 +3120,9 @@ paths:
         type: string
       responses:
         "200":
-          description: '{"msg": "cluster terminated successfully"}'
+          description: '{"msg": "cluster termination is in progress"}'
+        "400":
+          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
         "404":
@@ -3182,13 +3149,11 @@ paths:
       responses:
         "200":
           description: '{"msg": "Profile is valid"}'
+        "400":
+          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
-        "409":
-          description: '{"error": "error msg"}'
-        "500":
           description: '{"error": "error msg"}'
   /cluster/op/:
     put:
@@ -3198,7 +3163,7 @@ paths:
       operationId: OPClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -3218,11 +3183,7 @@ paths:
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
@@ -3243,11 +3204,11 @@ paths:
         description: teams
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
-        "200":
+        "201":
           description: '{"msg": "cluster created successfully"}'
         "400":
           description: '{"msg": "error msg"}'
@@ -3257,8 +3218,6 @@ paths:
           description: '{"error": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/op/{projectId}/:
@@ -3274,7 +3233,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -3282,8 +3241,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/op.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
         "404":
@@ -3296,7 +3253,7 @@ paths:
       operationId: OPClusterController.Delete
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -3309,11 +3266,13 @@ paths:
         description: "true"
         type: boolean
       responses:
-        "200":
+        "204":
           description: '{"msg": "cluster deleted successfully"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
+          description: '{"error": "error msg"}'
+        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
@@ -3323,11 +3282,11 @@ paths:
     get:
       tags:
       - cluster/op
-      description: get all the clusters
+      description: get all the company's clusters
       operationId: OPClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -3337,35 +3296,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/op.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
-        "500":
-          description: '{"error": "error msg"}'
-  /cluster/op/checkCluster/{projectId}/:
-    get:
-      tags:
-      - cluster/op
-      description: validates a cluster
-      operationId: OPClusterController.ValidateCluster
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "cluster is running successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
   /customerTemplate/register:
@@ -6077,28 +6009,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc00172ec30.false:
+  434.0xc001359860.false:
     title: "false"
     type: object
-  605.0xc001043e60.false:
+  518.0xc0012a7350.false:
     title: "false"
     type: object
-  611.0xc00166ea80.false:
-    title: "false"
-    type: object
-  637.0xc001349950.false:
-    title: "false"
-    type: object
-  5519.string:
+  1559.string:
     title: string
     type: object
-  13363.0xc00175aa80.false:
+  5960.0xc00137ad80.false:
     title: "false"
     type: object
-  40895.0xc0016fa3c0.false:
+  13304.0xc0012cad80.false:
     title: "false"
     type: object
-  48853.string:
+  13385.0xc000cbe0c0.false:
+    title: "false"
+    type: object
+  13431.0xc000f99bc0.false:
+    title: "false"
+    type: object
+  19826.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6153,7 +6085,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/48853.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6204,7 +6136,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5519.string'
+        $ref: '#/definitions/19826.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6343,7 +6275,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc001043e60.false'
+        $ref: '#/definitions/13385.0xc000cbe0c0.false'
       name:
         type: string
       network_name:
@@ -6724,7 +6656,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/637.0xc001349950.false'
+        $ref: '#/definitions/13431.0xc000f99bc0.false'
       name:
         type: string
       network_name:
@@ -7863,7 +7795,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/611.0xc00166ea80.false'
+        $ref: '#/definitions/13304.0xc0012cad80.false'
       kube_version:
         type: string
       name:
@@ -7963,7 +7895,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/40895.0xc0016fa3c0.false'
+        $ref: '#/definitions/518.0xc0012a7350.false'
       kube_version:
         type: string
       name:
@@ -8129,7 +8061,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc00172ec30.false'
+        $ref: '#/definitions/5960.0xc00137ad80.false'
       name:
         type: string
       node_pools:
@@ -8215,7 +8147,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13363.0xc00175aa80.false'
+        $ref: '#/definitions/434.0xc001359860.false'
       name:
         type: string
       node_pools:

@@ -215,6 +215,7 @@ func (c *IKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	err = iks.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -223,6 +224,16 @@ func (c *IKSClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
+
+	//custom data validation
+	err = iks.ValidateIKSData(cluster, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	err = iks.CreateCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
