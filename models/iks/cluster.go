@@ -289,16 +289,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	if cpError != (types.CustomCPError{}) {
 
-		utils.SendLog(companyId, cpError.Message, "error", cluster.ProjectId)
-		utils.SendLog(companyId, cpError.Description, "error", cluster.ProjectId)
 		if cluster.ClusterId != "" {
 
-			cpError = iks.terminateCluster(&cluster, ctx)
-			if cpError != (types.CustomCPError{}) {
+			iks.terminateCluster(&cluster, ctx)
 
-				utils.SendLog(companyId, cpError.Message, "error", cluster.ProjectId)
-				utils.SendLog(companyId, cpError.Description, "error", cluster.ProjectId)
-			}
 		}
 		cluster.Status = "Cluster Creation Failed"
 		confError := UpdateCluster(cluster, false, ctx)
@@ -306,8 +300,14 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
+			cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			return cpErr
+
 		}
 		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
+		ctx.SendLogs("Cluster creation failed", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpError
@@ -324,7 +324,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		}
 
-		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+		cpErr := ApiError(confError, "Error occurred deploying agent", 500)
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr

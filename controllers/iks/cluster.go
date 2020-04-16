@@ -671,7 +671,7 @@ func (c *IKSClusterController) GetStatus() {
 
 	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "nodes not found") {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -870,7 +870,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -981,7 +981,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	versions, cpErr := iks.GetAllVersions(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
