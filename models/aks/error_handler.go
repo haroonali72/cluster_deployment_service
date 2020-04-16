@@ -7,7 +7,7 @@ import (
 
 func ApiError(err error, code int) (cError types.CustomCPError) {
 
-	cError.StatusCode = code
+//	cError.StatusCode = code
 	cError.Description = err.Error()
 	cError.Message = ValidationError(err.Error())
 

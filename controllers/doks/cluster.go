@@ -8,6 +8,7 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"strconv"
 	"strings"
 )
 
@@ -22,11 +23,11 @@ type DOKSClusterController struct {
 // @Success 200 {object} doks.ServerConfig
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /config [get]
 func (c *DOKSClusterController) GetServerConfig() {
-
 	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Get cluster options ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -63,6 +64,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 		return
 	}
 
+	ctx.SendLogs("DOKSClusterController: Getting cluster options ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	config, err1 := doks.GetServerConfig(doProfile.Profile, *ctx)
 	if err1.Description != "" {
 		c.Ctx.Output.SetStatus(500)
@@ -70,6 +73,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("DOKSClusterController: Cluster options fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = config
 	c.ServeJSON()
@@ -85,11 +90,13 @@ func (c *DOKSClusterController) GetServerConfig() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /kubeconfig/:projectId [get]
 func (c *DOKSClusterController) GetKubeConfig() {
 
 	ctx := new(utils.Context)
+
+	ctx.SendLogs("DOKSClusterController: Get cluster configuration file", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -142,6 +149,8 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
+	ctx.SendLogs("DOKSClusterController: Getting cluster configuration file of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	config, err1 := doks.GetKubeConfig(doProfile.Profile, *ctx, cluster)
 	if err1.Description != "" {
 		c.Ctx.Output.SetStatus(500)
@@ -149,6 +158,8 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("DOKSClusterController: Cluster configuration file of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = config
 	c.ServeJSON()
@@ -166,6 +177,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 // @router /:projectId/ [get]
 func (c *DOKSClusterController) Get() {
 	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Get Cluster ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
@@ -194,8 +206,8 @@ func (c *DOKSClusterController) Get() {
 		return
 	}
 	ctx.Data.Company=userInfo.CompanyId
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
@@ -211,7 +223,7 @@ func (c *DOKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Getting cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
@@ -220,7 +232,11 @@ func (c *DOKSClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("DOKSClusterController: Cluster of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -235,7 +251,7 @@ func (c *DOKSClusterController) Get() {
 func (c *DOKSClusterController) GetAll() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("DOKSClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKSClusterController: Get all clusters", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
@@ -255,8 +271,6 @@ func (c *DOKSClusterController) GetAll() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", ctx.Data.Company, userInfo.UserId)
 
-	ctx.SendLogs("DOKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
 	_, data := rbacAuthentication.GetAllAuthenticate("cluster",ctx.Data.Company, token, models.DOKS, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -264,6 +278,8 @@ func (c *DOKSClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("DOKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	clusters, err := doks.GetAllKubernetesCluster(data, *ctx)
 	if err != nil {
@@ -273,7 +289,9 @@ func (c *DOKSClusterController) GetAll() {
 		return
 	}
 
-	ctx.SendLogs("All DOKS cluster fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKSClusterController: All clusters fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs("All DOKS cluster fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
@@ -292,8 +310,8 @@ func (c *DOKSClusterController) GetAll() {
 func (c *DOKSClusterController) Post() {
 
 	var cluster doks.KubernetesCluster
-
 	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Add new clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
@@ -346,13 +364,11 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	ctx.SendLogs("DOKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
 	cluster.CompanyId = userInfo.CompanyId
+
+	ctx.SendLogs("DOKSClusterController: Adding new cluster "+cluster.Name+" in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = doks.AddKubernetesCluster(cluster, *ctx)
 	if err != nil {
@@ -368,7 +384,8 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 
-	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKSClusterController: New cluster "+cluster.Name+" in project "+cluster.ProjectId+" added", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" added ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 
@@ -386,9 +403,11 @@ func (c *DOKSClusterController) Post() {
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *DOKSClusterController) Patch() {
-	ctx := new(utils.Context)
-
 	var cluster doks.KubernetesCluster
+
+	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Update cluster ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -414,8 +433,6 @@ func (c *DOKSClusterController) Patch() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -430,8 +447,9 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Updating cluster "+cluster.Name+" of the project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
+
 	ctx.Data.Company = userInfo.CompanyId
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
@@ -465,7 +483,9 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKS cluster "+cluster.Name+" of the project "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
@@ -484,6 +504,7 @@ func (c *DOKSClusterController) Patch() {
 // @router /:projectId/:forceDelete [delete]
 func (c *DOKSClusterController) Delete() {
 	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Delete cluster", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	id := c.GetString(":projectId")
 	if id == "" {
@@ -519,7 +540,6 @@ func (c *DOKSClusterController) Delete() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, ctx.Data.Company, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
@@ -534,8 +554,6 @@ func (c *DOKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
-	ctx.SendLogs("DOKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster( *ctx)
 	if err != nil {
@@ -569,6 +587,8 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
+	ctx.SendLogs("DOKSClusterController: Deleting cluster "+cluster.Name+" of the project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	err = doks.DeleteKubernetesCluster(*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -577,7 +597,10 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
+	ctx.SendLogs("DOKSClusterController: Cluster "+cluster.Name+" of the project"+cluster.ProjectId+" deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	ctx.SendLogs("DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -593,11 +616,12 @@ func (c *DOKSClusterController) Delete() {
 // @Failure 402 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *DOKSClusterController) StartCluster() {
 
 	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Create cluster", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -634,7 +658,9 @@ func (c *DOKSClusterController) StartCluster() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
+
 	ctx.Data.Company=userInfo.CompanyId
+
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -656,8 +682,6 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
-	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
@@ -700,6 +724,7 @@ func (c *DOKSClusterController) StartCluster() {
 	}
 
 	cluster.CloudplexStatus = string(models.Deploying)
+
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -707,11 +732,13 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("DOKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go doks.DeployKubernetesCluster(cluster, doProfile.Profile, token, *ctx)
 
-	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -727,11 +754,12 @@ func (c *DOKSClusterController) StartCluster() {
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
 func (c *DOKSClusterController) GetStatus() {
 
 	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Get cluster Status", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -768,7 +796,6 @@ func (c *DOKSClusterController) GetStatus() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId,ctx.Data.Company, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
@@ -800,12 +827,17 @@ func (c *DOKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-	ctx.SendLogs("DOKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	ctx.SendLogs("DOKSClusterController: Fetching cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.Data.Company=userInfo.CompanyId
+
 	cluster, errr := doks.FetchStatus(doProfile.Profile, *ctx)
-	if errr.Description != "" {
-		c.Ctx.Output.SetStatus(206)
+	if errr.Description != ""{
+		status,_ :=strconv.Atoi(errr.StatusCode)
+	    c.Ctx.Output.SetStatus(status)
 	}
+
+	ctx.SendLogs("DOKSClusterController: Cluster Status of project. "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -821,10 +853,11 @@ func (c *DOKSClusterController) GetStatus() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *DOKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
+	ctx.SendLogs("DOKSClusterController: Terminate cluster", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
@@ -861,7 +894,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: TerminateKubernetesCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	ctx.Data.Company=userInfo.CompanyId
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
@@ -887,7 +920,6 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.Data.Company=userInfo.CompanyId
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
@@ -921,7 +953,12 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
+	ctx.SendLogs("DOKSClusterController: Terminating cluster"+cluster.Name+" of project"+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	go doks.TerminateCluster(doProfile.Profile, *ctx)
+
+	ctx.SendLogs("DOKSClusterController: Cluster"+cluster.Name+" of project"+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
@@ -930,6 +967,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -946,7 +984,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /applyagent/:projectId [post]
 func (c *DOKSClusterController) ApplyAgent() {
 
@@ -997,7 +1035,6 @@ func (c *DOKSClusterController) ApplyAgent() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
-	ctx.SendLogs("DOKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
@@ -1028,9 +1065,11 @@ func (c *DOKSClusterController) ApplyAgent() {
 		return
 	}
 
-	ctx.SendLogs("DOKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOKSClusterController: Applying agent on cluster of "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go doks.ApplyAgent(doProfile.Profile, token, *ctx, clusterName)
+
+	ctx.SendLogs("DOKSClusterController: Agent applied on cluster of "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()

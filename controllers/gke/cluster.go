@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+	"strconv"
 	"strings"
 )
 
@@ -26,7 +27,7 @@ type GKEClusterController struct {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /config/:region [get]
 func (c *GKEClusterController) GetServerConfig() {
 	ctx := new(utils.Context)
@@ -67,8 +68,9 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	config, err := gke.GetServerConfig(credentials, *ctx)
 	if err.Description != "" {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = err
+		status,_ :=strconv.Atoi(err.StatusCode)
+		c.Ctx.Output.SetStatus(status)
+		c.Data["json"] =err
 		c.ServeJSON()
 		return
 	}
@@ -540,7 +542,7 @@ func (c *GKEClusterController) Delete() {
 // @Failure 402 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *GKEClusterController) StartCluster() {
 	ctx := new(utils.Context)
@@ -676,7 +678,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
 func (c *GKEClusterController) GetStatus() {
 	ctx := new(utils.Context)
@@ -773,7 +775,7 @@ func (c *GKEClusterController) GetStatus() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *GKEClusterController) TerminateCluster() {
 
@@ -903,7 +905,7 @@ func (c *GKEClusterController) TerminateCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {"error": "Cloud API Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /applyagent/:projectId [post]
 func (c *GKEClusterController) ApplyAgent() {
 
