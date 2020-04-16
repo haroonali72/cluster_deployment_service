@@ -3,6 +3,7 @@ package aks
 import (
 	"antelope/models"
 	"antelope/models/azure"
+	"antelope/models/cores"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
@@ -14,6 +15,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/ghodss/yaml"
 	"github.com/jasonlvhit/gocron"
+	"github.com/signalsciences/ipv4"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -26,8 +28,8 @@ type AKSCluster struct {
 	ModificationDate  time.Time                `json:"-" bson:"modification_date"`
 	CompanyId         string                   `json:"company_id" bson:"company_id"`
 	Status            string                   `json:"status,omitempty" bson:"status,omitempty"`
-	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" validate:"required"`
-	ClusterProperties ManagedClusterProperties `json:"properties" bson:"properties" validate:"required"`
+	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" valid:"required"`
+	ClusterProperties ManagedClusterProperties `json:"property" bson:"property" valid:"required"`
 	ResourceID        string                   `json:"cluster_id,omitempty" bson:"cluster_id,omitempty"`
 	Name              string                   `json:"name,omitempty" bson:"name,omitempty"`
 	Type              string                   `json:"type,omitempty" bson:"type,omitempty"`
@@ -68,9 +70,9 @@ type ManagedClusterAPIServerAccessProfile struct {
 
 // ManagedClusterAgentPoolProfile profile for the container service agent pool.
 type ManagedClusterAgentPoolProfile struct {
-	Name              *string            `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
-	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required"`
-	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
+	Name              *string            `json:"name,omitempty" bson:"name,omitempty" valid:"required"`
+	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" valid:"required"`
+	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" valid:"required"`
 	OsDiskSizeGB      *int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
 	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id"`
 	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
@@ -549,57 +551,167 @@ func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]strin
 
 func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 	if cluster.ProjectId == "" {
-		return errors.New("project ID must not be empty")
-	} else if cluster.Location == "" {
-		return errors.New("location must not be empty")
+
+		return errors.New("project ID is empty")
+
 	} else if cluster.ResourceGoup == "" {
-		return errors.New("Resource group name must not be empty")
+
+		return errors.New("Resource group name must is empty")
+
+	} else if cluster.Location == "" {
+
+		return errors.New("location is empty")
+
+	} else {
+
+		isRegionExist, err := validateAKSRegion(cluster.Location)
+		if err != nil && !isRegionExist {
+			text := "availabe locations are " + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+
 	}
+
 	if len(cluster.ClusterProperties.AgentPoolProfiles) == 0 {
+
 		return errors.New("length of node pools must be greater than zero")
+
 	} else if cluster.ClusterProperties.IsAdvanced {
+
 		if cluster.ClusterProperties.KubernetesVersion == "" {
-			return errors.New("kubernetes version must not be empty")
+
+			return errors.New("kubernetes version is empty")
+
 		} else if cluster.ClusterProperties.DNSPrefix == "" {
-			return errors.New("DNS prefix must not be empty")
+
+			return errors.New("DNS prefix is empty")
+
 		} else if cluster.ClusterProperties.IsServicePrincipal {
+
 			if cluster.ClusterProperties.ClientID == "" || cluster.ClusterProperties.Secret == "" {
-				return errors.New("client id or secret must not be empty")
+
+				return errors.New("client id or secret is empty")
+
 			}
 		}
 
 		for _, pool := range cluster.ClusterProperties.AgentPoolProfiles {
+
 			if pool.Name != nil && *pool.Name == "" {
-				return errors.New("Node Pool name must not be empty")
+
+				return errors.New("Node Pool name is empty")
+
 			} else if pool.VMSize != nil && *pool.VMSize == "" {
+
 				return errors.New("machine type with pool " + *pool.Name + " is empty")
+
 			} else if pool.Count != nil && *pool.Count == 0 {
+
 				return errors.New("node count value is zero within pool " + *pool.Name)
+
 			} else if pool.OsDiskSizeGB != nil && (*pool.OsDiskSizeGB == 0 || *pool.OsDiskSizeGB < 40 || *pool.OsDiskSizeGB > 2048) {
+
 				return errors.New("Disk size must be greater than 40 and less than 2048 within pool " + *pool.Name)
+
 			} else if pool.MaxPods != nil && (*pool.MaxPods == 0 || *pool.MaxPods < 40) {
+
 				return errors.New("max pods must be greater than or equal to 40 within pool " + *pool.Name)
+
 			} else if pool.EnableAutoScaling != nil && *pool.EnableAutoScaling {
+
 				if *pool.MinCount > *pool.MaxCount {
 					return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
 				}
+
 			}
+
 		}
 	}
 
 	if cluster.ClusterProperties.IsExpert {
 		if cluster.ClusterProperties.PodCidr == "" {
+
 			return errors.New("pod CIDR must not be empty")
-		} else if cluster.ClusterProperties.DNSServiceIP == "" {
+
+		} else {
+
+			isValidCidr := ipv4.IsIPv4(cluster.ClusterProperties.PodCidr)
+			if !isValidCidr {
+				return errors.New("pod CIDR is not valid")
+			}
+
+		}
+
+		if cluster.ClusterProperties.DNSServiceIP == "" {
+
 			return errors.New("DNS service IP must not be empty")
-		} else if cluster.ClusterProperties.DockerBridgeCidr == "" {
+
+		} else {
+
+			isValidIp := ipv4.IsIPv4(cluster.ClusterProperties.DNSServiceIP)
+			if !isValidIp {
+				return errors.New("DNS service IP is not valid")
+			}
+
+		}
+
+		if cluster.ClusterProperties.DockerBridgeCidr == "" {
+
 			return errors.New("Docker Bridge CIDR must not be empty")
-		} else if cluster.ClusterProperties.ServiceCidr == "" {
+
+		} else {
+
+			isValidCidr := ipv4.IsIPv4(cluster.ClusterProperties.DockerBridgeCidr)
+			if !isValidCidr {
+				return errors.New("docker bridge CIDR is not valid")
+			}
+
+		}
+
+		if cluster.ClusterProperties.ServiceCidr == "" {
+
 			return errors.New("Service CIDR must not be empty")
+
+		} else {
+
+			isValidCidr := ipv4.IsIPv4(cluster.ClusterProperties.ServiceCidr)
+			if !isValidCidr {
+				return errors.New("service CIDR is not valid")
+			}
+
 		}
 	}
 
 	return nil
+}
+
+func validateAKSRegion(region string) (bool, error) {
+
+	bytes := cores.AzureRegions
+
+	regionList := []struct {
+		region   string
+		location string
+	}{}
+
+	err := json.Unmarshal(bytes, &regionList)
+	if err != nil {
+		return false, err
+	}
+
+	for _, v1 := range regionList {
+		if v1.location == region {
+			return true, nil
+		}
+	}
+
+	var errData string
+	for _, v1 := range regionList {
+		errData += v1.location + ", "
+	}
+
+	return false, errors.New(errData)
 }
 
 func RunCronJob() {

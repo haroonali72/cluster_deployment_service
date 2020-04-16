@@ -143,7 +143,7 @@ func (c *AKSClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	body	body 	aks.AKSCluster		true	"body for cluster content"
+// @Param	body body aks.AKSCluster true "body for cluster content"
 // @Param	token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
