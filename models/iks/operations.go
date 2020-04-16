@@ -114,7 +114,7 @@ func (cloud *IBM) init(region string, ctx utils.Context) types.CustomCPError {
 	payloadSlice := "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=" + cloud.APIKey
 	res, err := http.Post(models.IBM_IAM_Endpoint, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(payloadSlice)))
 	if err != nil {
-		ctx.SendLogs("Error while getting IBM Auth Token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Error while getting IBM Auth Token", 500)
 		return cpErr
 	}
@@ -122,12 +122,12 @@ func (cloud *IBM) init(region string, ctx utils.Context) types.CustomCPError {
 	if res.StatusCode != 200 {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			ctx.SendLogs("Error while getting IBM Auth Token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("Error while getting IBM Auth Token: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			cpErr := ApiError(err, "Error while getting IBM Auth Token", 502)
 			return cpErr
 		}
 		beego.Info(string(body))
-		ctx.SendLogs("Error while getting IBM Auth Token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error while getting IBM Auth Token: "+string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Error while getting IBM Auth Token", 502)
 		return cpErr
 	}
