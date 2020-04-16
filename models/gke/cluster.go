@@ -448,7 +448,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 			PrintError(confError, cluster.Name, ctx)
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-
+		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
 	}
@@ -468,7 +468,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		return confError
 	}
 
-	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, "info", ctx.Data.ProjectId)
+	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	return types.CustomCPError{}
 }
@@ -534,7 +534,6 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context)types.Cu
 	}
 
 	cluster.CloudplexStatus = string(models.Terminating)
-	_, _ = utils.SendLog(ctx.Data.Company, "Terminating cluster: "+cluster.Name, "info", ctx.Data.ProjectId)
 
 	err1 = gkeOps.init()
 	if err1.Description != "" {
@@ -543,7 +542,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context)types.Cu
 		err = UpdateGKECluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
+			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 			_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 			return types.CustomCPError{StatusCode:"500",Description:err.Error(),}
 		}
@@ -551,10 +550,11 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context)types.Cu
 		return err1
 	}
 
+	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	errr := gkeOps.deleteCluster(cluster, ctx)
 	if errr.Description != "" {
-		_, _ = utils.SendLog(ctx.Data.Company, "Cluster termination failed: "+cluster.Name, "error", ctx.Data.ProjectId)
-
+		_, _ = utils.SendLog(ctx.Data.Company, "Cluster termination failed: "+cluster.Name , models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateGKECluster(cluster, ctx)
 		if err != nil {
@@ -578,7 +578,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context)types.Cu
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{StatusCode:"500",Description:err.Error(),}
 	}
-	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, "info", ctx.Data.ProjectId)
+	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	return types.CustomCPError{}
 }
@@ -601,8 +601,8 @@ func GetServerConfig(credentials gcp.GcpCredentials, ctx utils.Context) (*gke.Se
 
 func PrintError(confError error, name string, ctx utils.Context) {
 	if confError != nil {
-		_, _ = utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, "error", ctx.Data.ProjectId)
-		_, _ = utils.SendLog(ctx.Data.Company, confError.Error(), "error", ctx.Data.Company)
+		_, _ = utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		_, _ = utils.SendLog(ctx.Data.Company, confError.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
 	}
 }
 

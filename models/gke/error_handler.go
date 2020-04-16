@@ -6,7 +6,7 @@ import (
 )
 func ApiErrors (err error,message string) (cError types.CustomCPError){
 	errr :=strings.Fields(err.Error())
-	cError.StatusCode = errr[2]
+	cError.StatusCode = "502"
 	cError.Description = err.Error()
 	if (errr[2]=="304"){
 		cError.Message =NotModified(err.Error())

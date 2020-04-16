@@ -79,7 +79,6 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 	)
 
 	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
-		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, gkeCluster.ProjectId)
 		ctx.SendLogs(
 			"GKE cluster creation of '"+gkeCluster.Name+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
@@ -370,7 +369,6 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in cluster termination: "+err.Error(), models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 		ctx.SendLogs(
 			"GKE terminate cluster for "+cloud.ProjectId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
