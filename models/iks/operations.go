@@ -114,21 +114,21 @@ func (cloud *IBM) init(region string, ctx utils.Context) types.CustomCPError {
 	payloadSlice := "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=" + cloud.APIKey
 	res, err := http.Post(models.IBM_IAM_Endpoint, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(payloadSlice)))
 	if err != nil {
-		ctx.SendLogs("Error while getting IBM Auth Token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "Error while getting IBM Auth Token", res.StatusCode)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "Error while getting IBM Auth Token", 500)
 		return cpErr
 	}
 
 	if res.StatusCode != 200 {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			ctx.SendLogs("Error while getting IBM Auth Token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(err, "Error while getting IBM Auth Token", 500)
+			ctx.SendLogs("Error while getting IBM Auth Token: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "Error while getting IBM Auth Token", 502)
 			return cpErr
 		}
 		beego.Info(string(body))
-		ctx.SendLogs("Error while getting IBM Auth Token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "Error while getting IBM Auth Token", 500)
+		ctx.SendLogs("Error while getting IBM Auth Token: "+string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "Error while getting IBM Auth Token", 502)
 		return cpErr
 	}
 	defer res.Body.Close()
@@ -198,9 +198,6 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 	if cpErr != (types.CustomCPError{}) {
 
-		ctx.SendLogs(cpErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		ctx.SendLogs(cpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 		utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
 		utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
@@ -212,9 +209,6 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 	for {
 		response, cpErr := cloud.fetchClusterStatus(&cluster, ctx, companyId)
 		if cpErr != (types.CustomCPError{}) {
-
-			ctx.SendLogs(cpErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			ctx.SendLogs(cpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 			utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
 			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
@@ -239,8 +233,6 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 		err := cloud.createWorkerPool(cluster.ResourceGroup, clusterId, vpcID, pool, ibmNetwork, ctx)
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(cpErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			ctx.SendLogs(cpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 			utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
 			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
@@ -269,6 +261,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 
 	subentId := cloud.GetSubnets(cluster.NodePools[0], network)
 	if subentId == "" {
+		ctx.SendLogs(errors.New("subnet not found").Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(errors.New("subnet not found"), "subnet not found", 500)
 		return "", cpErr
 	}
@@ -284,6 +277,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 
 	bytes, err := json.Marshal(input)
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error while creating iks cluster request", 500)
 		return "", cpErr
 	}
@@ -304,6 +298,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	defer res.Body.Close()
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error while sending iks cluster creation request", 500)
 		return "", cpErr
 	}
@@ -313,12 +308,14 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	beego.Info(res.Status)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occured during iks cluster creation", 500)
 		return "", cpErr
 	}
 
 	if res.StatusCode != 201 {
-		cpErr := ApiError(errors.New(string(body)), "error occured during iks cluster creation", 500)
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occured during iks cluster creation", 502)
 		return "", cpErr
 	}
 
@@ -326,6 +323,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	err = json.Unmarshal([]byte(body), &kubeResponse)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occured while parsing cluster creation response of ibm", 500)
 		return "", cpErr
 	}
@@ -334,6 +332,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, network types.IBMNetwork, ctx utils.Context) types.CustomCPError {
 	subnetId := cloud.GetSubnets(pool, network)
 	if subnetId == "" {
+		ctx.SendLogs(errors.New("subnet not found").Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(errors.New("subnet not found"), "error occurred while adding workepool: "+pool.Name, 500)
 		return cpErr
 	}
@@ -348,6 +347,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	bytes, err := json.Marshal(workerpool)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while creating workpool addition request", 500)
 		return cpErr
 	}
@@ -369,6 +369,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	defer res.Body.Close()
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while sending workpool  "+pool.Name+" creation request", 500)
 		return cpErr
 	}
@@ -376,7 +377,8 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	if res.StatusCode != 201 {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 500)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 502)
 			return cpErr
 		}
 
@@ -385,15 +387,18 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 			var ibmResponse IBMResponse
 			err = json.Unmarshal(body, &ibmResponse)
 			if err != nil {
-				cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 500)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 502)
 				return cpErr
 			}
 			if !strings.Contains(ibmResponse.Description, "already exits") {
-				cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 500)
+				ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 502)
 				return cpErr
 			}
 		} else {
-			cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 500)
+			ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 502)
 			return cpErr
 		}
 	}
@@ -431,6 +436,7 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 	defer res.Body.Close()
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 500)
 		return cpErr
 	}
@@ -438,7 +444,8 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 	if res.StatusCode != 201 {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 500)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 502)
 			return cpErr
 		}
 
@@ -447,15 +454,18 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 			var ibmResponse IBMResponse
 			err = json.Unmarshal(body, &ibmResponse)
 			if err != nil {
-				cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 500)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 502)
 				return cpErr
 			}
 			if !strings.Contains(ibmResponse.Description, "The zone is already part of the worker pool") {
-				cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 500)
+				ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 502)
 				return cpErr
 			}
 		} else {
-			cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 500)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 502)
 			return cpErr
 		}
 	}
@@ -472,21 +482,29 @@ func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, types.CustomCPErr
 	res, err := client.SendRequest(req)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while getting kubernetes versions", 500)
 		return Versions{}, cpErr
 	}
 	defer res.Body.Close()
-
-	// Reading response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while getting kubernetes versions", 500)
 		return Versions{}, cpErr
 	}
+	if res.StatusCode != 200 {
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while getting kubernetes versions", 502)
+		return Versions{}, cpErr
+	}
+	// Reading response
+
 	var kube Versions
 	err = json.Unmarshal(body, &kube)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while parsing kubernetes versions", 500)
 		return Versions{}, cpErr
 	}
@@ -530,14 +548,21 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 	defer res.Body.Close()
 
 	if err != nil {
-		cpErr := ApiError(err, "error occurred while sending cluster "+cluster.Name+" termination request", 500)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while sending cluster creation request"+cluster.Name+" termination request", 500)
 		return cpErr
 	}
 	body, _ := ioutil.ReadAll(res.Body)
 	beego.Info(string(body))
 
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while sending cluster creation request"+cluster.Name+" termination request", 500)
+		return cpErr
+	}
 	if res.StatusCode != 204 {
-		cpErr := ApiError(errors.New(string(body)), "error occurred while terminatin cluster "+cluster.Name, res.StatusCode)
+		ctx.SendLogs(string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while terminating cluster "+cluster.Name, 502)
 		return cpErr
 	}
 	for {
@@ -569,6 +594,7 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 	defer res.Body.Close()
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while getting status of cluster", 500)
 		return KubeClusterStatus{}, cpErr
 	}
@@ -578,11 +604,13 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 	beego.Info(string(body))
 
 	if res.StatusCode != 200 {
-		cpErr := ApiError(errors.New(res.Status), "error in fetching cluster", 500)
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(res.Status), "error in fetching cluster", 502)
 		return KubeClusterStatus{}, cpErr
 	}
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error in fetching cluster", 500)
 		return KubeClusterStatus{}, cpErr
 	}
@@ -591,6 +619,7 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 	err = json.Unmarshal([]byte(body), &response)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while parsing ibm cluster status", 500)
 		return KubeClusterStatus{}, cpErr
 	}
@@ -614,6 +643,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	res, err := client.SendRequest(req)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
@@ -625,6 +655,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
@@ -632,7 +663,8 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	beego.Info(string(body))
 
 	if res.StatusCode != 200 {
-		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", res.StatusCode)
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", 502)
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
 
@@ -640,6 +672,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	err = json.Unmarshal([]byte(body), &response)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
@@ -654,6 +687,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	res, err := client.SendRequest(req)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while getting machine types.", 500)
 		return AllInstancesResponse{}, cpErr
 	}
@@ -662,7 +696,13 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	// Reading response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while getting machine types.", 500)
+		return AllInstancesResponse{}, cpErr
+	}
+	if res.StatusCode != 200 {
+		ctx.SendLogs(string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while getting machine types.", 502)
 		return AllInstancesResponse{}, cpErr
 	}
 
@@ -670,6 +710,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	err = json.Unmarshal(body, &InstanceList.Profile)
 
 	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while parsing supported machine types.", 500)
 		return AllInstancesResponse{}, cpErr
 	}
