@@ -20,7 +20,7 @@ type OPClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} op.Cluster_Def
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -35,7 +35,7 @@ func (c *OPClusterController) Get() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
@@ -93,8 +93,8 @@ func (c *OPClusterController) Get() {
 // @Description create a new cluster
 // @Param	body	body 	op.Cluster_Def		true	"body for cluster content"
 // @Param	teams	header	string	teams ""
-// @Param	token	header	string	token ""
-// @Success 200 {"msg": "cluster created successfully"}
+// @Param	X-Auth-Token	header	string	token ""
+// @Success 201 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -113,7 +113,7 @@ func (c *OPClusterController) Post() {
 	}
 	cluster.CreationDate = time.Now()
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
@@ -184,7 +184,7 @@ func (c *OPClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	teams	header	string	teams ""
 // @Param	body	body 	op.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
@@ -203,7 +203,7 @@ func (c *OPClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
@@ -282,13 +282,13 @@ func (c *OPClusterController) Patch() {
 
 // @Title Get All
 // @Description get all the company's clusters
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} []op.Cluster_Def
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *OPClusterController) GetAll() {
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
@@ -335,7 +335,7 @@ func (c *OPClusterController) GetAll() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
 // @Success 204 {"msg": "cluster deleted successfully"}
@@ -354,7 +354,7 @@ func (c *OPClusterController) Delete() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}

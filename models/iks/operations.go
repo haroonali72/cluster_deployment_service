@@ -115,7 +115,7 @@ func (cloud *IBM) init(region string, ctx utils.Context) types.CustomCPError {
 	res, err := http.Post(models.IBM_IAM_Endpoint, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(payloadSlice)))
 	if err != nil {
 		ctx.SendLogs("Error while getting IBM Auth Token", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "Error while getting IBM Auth Token", 500)
+		cpErr := ApiError(err, "Error while getting IBM Auth Token", res.StatusCode)
 		return cpErr
 	}
 
@@ -135,8 +135,8 @@ func (cloud *IBM) init(region string, ctx utils.Context) types.CustomCPError {
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		ctx.SendLogs("Error while getting IBM Auth Token: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "Error while getting IBM Auth Token", 500)
+		ctx.SendLogs("Error while reading IBM auth token response:  "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "EError while reading IBM auth token response", 500)
 		return cpErr
 	}
 
