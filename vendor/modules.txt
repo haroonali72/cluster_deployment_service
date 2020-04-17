@@ -89,6 +89,13 @@ github.com/dgrijalva/jwt-go
 github.com/digitalocean/godo
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
+# github.com/go-playground/locales v0.13.0
+github.com/go-playground/locales
+github.com/go-playground/locales/currency
+# github.com/go-playground/universal-translator v0.17.0
+github.com/go-playground/universal-translator
+# github.com/go-playground/validator/v10 v10.2.0
+github.com/go-playground/validator/v10
 # github.com/go-redis/redis v6.15.7+incompatible
 github.com/go-redis/redis
 github.com/go-redis/redis/internal
@@ -121,6 +128,8 @@ github.com/jmespath/go-jmespath
 github.com/jtolds/gls
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 github.com/kballard/go-shellquote
+# github.com/leodido/go-urn v1.2.0
+github.com/leodido/go-urn
 # github.com/russross/blackfriday v1.5.2
 github.com/russross/blackfriday
 # github.com/russross/blackfriday/v2 v2.0.1
