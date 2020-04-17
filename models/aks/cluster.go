@@ -320,7 +320,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster.Status = models.Deploying
+	cluster.Status =  string(models.Deploying)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 
@@ -438,7 +438,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	aksOps, _ := GetAKS(credentials.Profile)
 	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	cluster.Status = models.Terminating
+	cluster.Status =  string(models.Terminating)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)

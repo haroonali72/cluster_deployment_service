@@ -458,7 +458,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus = models.Deploying
+	cluster.CloudplexStatus =  string(models.Deploying)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
@@ -586,7 +586,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus = models.Terminating
+	cluster.CloudplexStatus = string(models.Terminating)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 

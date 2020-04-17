@@ -342,7 +342,7 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+/*
 	err = validateStruct(cluster, token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -351,7 +351,7 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+*/
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

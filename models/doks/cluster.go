@@ -325,7 +325,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
-	cluster.CloudplexStatus = models.Deploying
+	cluster.CloudplexStatus =  string(models.Deploying)
 	err_ := UpdateKubernetesCluster(cluster, ctx)
 	if err_ != nil {
 
@@ -444,7 +444,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return types.CustomCPError{StatusCode: 500, Description: text}
 	}
 
-	cluster.CloudplexStatus = (models.Terminating)
+	cluster.CloudplexStatus =  string(models.Terminating)
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating cluster: "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
 	err_ := UpdateKubernetesCluster(cluster, ctx)
