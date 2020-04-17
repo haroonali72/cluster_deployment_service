@@ -564,7 +564,7 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	region, err := do.GetRegion(token, projectId, *ctx)
+	region, err := do.GetRegion(token,*ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -670,7 +670,7 @@ func (c *DOClusterController) GetStatus() {
 
 	ctx.SendLogs("DOClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	region, err := do.GetRegion(token, projectId, *ctx)
+	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -765,7 +765,7 @@ func (c *DOClusterController) TerminateCluster() {
 		return
 	}
 
-	region, err := do.GetRegion(token, projectId, *ctx)
+	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
