@@ -5,10 +5,10 @@ import (
 	"antelope/models/do"
 	"antelope/models/doks"
 	rbacAuthentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
-	"strconv"
 	"strings"
 )
 
@@ -211,7 +211,7 @@ func (c *DOKSClusterController) Get() {
 		c.ServeJSON()
 		return
 	}
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
@@ -283,7 +283,7 @@ func (c *DOKSClusterController) GetAll() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", ctx.Data.Company, userInfo.UserId)
 
-	_, data := rbacAuthentication.GetAllAuthenticate("cluster",ctx.Data.Company, token, models.DOKS, *ctx)
+	_, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.DOKS, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -342,15 +342,15 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 
-/*	_, err = govalidator.ValidateStruct(cluster)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-*/
+	/*	_, err = govalidator.ValidateStruct(cluster)
+		if err != nil {
+			beego.Error(err.Error())
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+	*/
 
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -567,7 +567,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	cluster, err := doks.GetKubernetesCluster( *ctx)
+	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found"){
 			c.Ctx.Output.SetStatus(404)
@@ -677,7 +677,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
@@ -693,7 +693,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	region, err := do.GetRegion(token,  *ctx)
+	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -773,7 +773,6 @@ func (c *DOKSClusterController) StartCluster() {
 // @Param	token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} doks.DOKSCluster
-// @Failure 206 {object} doks.DOKSCluster
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -819,7 +818,7 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId,ctx.Data.Company, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
@@ -834,7 +833,6 @@ func (c *DOKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
 
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
@@ -853,12 +851,20 @@ func (c *DOKSClusterController) GetStatus() {
 	}
 
 	ctx.SendLogs("DOKSClusterController: Fetching cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 
-	cluster, errr := doks.FetchStatus(doProfile.Profile, *ctx)
-	if errr.Description != ""{
-		status,_ :=strconv.Atoi(errr.StatusCode)
-	    c.Ctx.Output.SetStatus(status)
+	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
+
+	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.ServeJSON()
+		return
+	}
+	if cpErr != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.ServeJSON()
 	}
 
 	ctx.SendLogs("DOKSClusterController: Cluster Status of project. "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -919,7 +925,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 
 	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
@@ -944,7 +950,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found"){

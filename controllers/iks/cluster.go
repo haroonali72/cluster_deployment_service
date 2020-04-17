@@ -704,6 +704,17 @@ func (c *IKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.ServeJSON()
+		return
+	}
+	if cpErr != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.ServeJSON()
+	}
 
 	c.Data["json"] = cluster
 	c.ServeJSON()

@@ -90,7 +90,24 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 	ibmProfile.Profile.Region = region
 	return ibmProfile, nil
 }
+func GetError(projectId, companyId string, ctx utils.Context) (err types.ClusterError, err1 error) {
 
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return types.ClusterError{}, err1
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
+	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": models.IKS}).One(&err)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return types.ClusterError{}, err1
+	}
+	return err, nil
+}
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -349,6 +366,14 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
+	}
+	customErr, err := GetError(projectId, companyId, ctx)
+	if err != nil {
+		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
+		return []KubeWorkerPoolStatus{}, cpErr
+	}
+	if customErr.Err != (types.CustomCPError{}) {
+		return []KubeWorkerPoolStatus{}, customErr.Err
 	}
 	iks := GetIBM(credentials.Profile)
 

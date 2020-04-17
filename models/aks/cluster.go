@@ -6,6 +6,7 @@ import (
 	"antelope/models/cores"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -84,6 +85,24 @@ type ManagedClusterAgentPoolProfile struct {
 	NodeTaints        map[string]*string `json:"node_taints,omitempty" bson:"node_taints,omitempty"`
 }
 
+func GetError(projectId, companyId string, ctx utils.Context) (err types.ClusterError, err1 error) {
+
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return types.ClusterError{}, err1
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
+	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": models.IKS}).One(&err)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return types.ClusterError{}, err1
+	}
+	return err, nil
+}
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -349,26 +368,40 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	return nil
 }
 
-func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (AKSCluster, error) {
+func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (AKSCluster, types.CustomCPError) {
 	cluster, err := GetAKSCluster(projectId, companyId, ctx)
 	if err != nil {
-		return cluster, err
+		return cluster, types.CustomCPError{Message: err.Error(),
+			Description: "Error occurred while getting cluster status in database",
+			StatusCode:  500}
 	}
-
+	customErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)
+	if err != nil {
+		return AKSCluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
+			Description: "Error occurred while getting cluster status in database",
+			StatusCode:  500}
+	}
+	if customErr.Err != (types.CustomCPError{}) {
+		return AKSCluster{}, customErr.Err
+	}
 	aksOps, _ := GetAKS(credentials)
 
 	err = aksOps.init()
 	if err != nil {
 		ctx.SendLogs("AKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return cluster, types.CustomCPError{Message: "Error while connecting to AKS",
+			Description: err.Error(),
+			StatusCode:  500}
 	}
 
 	err = aksOps.fetchClusterStatus(&cluster, ctx)
 	if err != nil {
-		return cluster, err
+		return cluster, types.CustomCPError{Message: "Error while fetching AKS status",
+			Description: err.Error(),
+			StatusCode:  500}
 	}
 
-	return cluster, nil
+	return cluster, types.CustomCPError{}
 }
 
 func TerminateCluster(credentials vault.AzureProfile, projectId, companyId string, ctx utils.Context) error {
