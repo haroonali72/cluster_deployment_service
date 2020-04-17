@@ -16,11 +16,11 @@ import (
 func GetMongoSession(ctx utils.Context) (session *mgo.Session, err error) {
 	conf := GetMongoConf()
 
-	ctx.SendLogs("Connecting to mongo host: " + conf.mongoHost, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("Connecting to mongo host: "+conf.mongoHost, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if !conf.mongoAuth {
 		session, err = mgo.Dial(conf.mongoHost)
-		ctx.SendLogs("Mongo host connected: " + conf.mongoHost, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("Mongo host connected: "+conf.mongoHost, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		return session, err
 	}
 
@@ -52,11 +52,11 @@ func IsMongoAlive() bool {
 	ctx := new(utils.Context)
 	_, err := GetMongoSession(*ctx)
 	if err != nil {
-		ctx.SendLogs("Unable to establish connection to "+ conf.mongoHost + " mongo db", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Unable to establish connection to "+conf.mongoHost+" mongo db", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return false
 	}
 
-	ctx.SendLogs("Successfully connected to mongo host: " + conf.mongoHost + "", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("Successfully connected to mongo host: "+conf.mongoHost+"", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	return true
 }
@@ -173,6 +173,7 @@ type mongConf struct {
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
 	MongoDOKSClusterCollection           string
+	MongoClusterErrorCollection          string
 	MongoDOKSTemplateCollection          string
 	MongoDOKSCustomerTemplateCollection  string
 }
