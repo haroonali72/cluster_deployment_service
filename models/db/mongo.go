@@ -16,15 +16,15 @@ import (
 func GetMongoSession(ctx utils.Context) (session *mgo.Session, err error) {
 	conf := GetMongoConf()
 
-	beego.Info("connecting to mongo host: " + conf.mongoHost)
+	ctx.SendLogs("Connecting to mongo host: " + conf.mongoHost, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if !conf.mongoAuth {
 		session, err = mgo.Dial(conf.mongoHost)
-		beego.Info("Mongo host connected: " + conf.mongoHost)
+		ctx.SendLogs("Mongo host connected: " + conf.mongoHost, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		return session, err
 	}
 
-	tlsconfig := getTLSCertificate()
+	tlsconfig := getTLSCertificate(ctx)
 	if tlsconfig == nil {
 		return
 	}
@@ -52,21 +52,22 @@ func IsMongoAlive() bool {
 	ctx := new(utils.Context)
 	_, err := GetMongoSession(*ctx)
 	if err != nil {
-		beego.Error(err.Error())
-		beego.Error("unable to establish connection to " + conf.mongoHost + " mongo db")
+		ctx.SendLogs("Unable to establish connection to "+ conf.mongoHost + " mongo db", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return false
 	}
 
-	beego.Info("successfully connected to mongo host: " + conf.mongoHost + "")
+	ctx.SendLogs("Successfully connected to mongo host: " + conf.mongoHost + "", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	return true
 }
+
 func InsertManyInMongo(collection string, data []interface{}) error {
 	conf := GetMongoConf()
 	ctx := new(utils.Context)
 	session, err := GetMongoSession(*ctx)
 	if err != nil {
-		errorText := "unable to establish connection to " + conf.mongoHost + " db"
-		beego.Error(errorText)
+		errorText := "Unable to establish connection to " + conf.mongoHost + " db"
+		ctx.SendLogs(errorText, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(errorText)
 	}
 	defer session.Close()
@@ -74,7 +75,7 @@ func InsertManyInMongo(collection string, data []interface{}) error {
 	c := session.DB(conf.MongoDb).C(collection)
 	err = c.Insert(data...)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendLogs("Unable to insert data in mongo db "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -85,8 +86,8 @@ func InsertInMongo(collection string, data interface{}) error {
 	ctx := new(utils.Context)
 	session, err := GetMongoSession(*ctx)
 	if err != nil {
-		errorText := "unable to establish connection to " + conf.mongoHost + " db"
-		beego.Error(errorText)
+		errorText := "Unable to establish connection to " + conf.mongoHost + " db"
+		ctx.SendLogs(errorText, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(errorText)
 	}
 	defer session.Close()
@@ -94,7 +95,7 @@ func InsertInMongo(collection string, data interface{}) error {
 	c := session.DB(conf.MongoDb).C(collection)
 	err = c.Insert(data)
 	if err != nil {
-		beego.Error(err.Error())
+		ctx.SendLogs("Unable to insert data in mongo db "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
@@ -181,7 +182,7 @@ type tlsConfig struct {
 	CaCert     string
 }
 
-func getTLSCertificate() *tls.Config {
+func getTLSCertificate(ctx utils.Context) *tls.Config {
 	var conf tlsConfig
 	conf.CaCert = beego.AppConfig.String("ca_certificate")
 	conf.ClientCert = beego.AppConfig.String("client_cert")
@@ -191,24 +192,30 @@ func getTLSCertificate() *tls.Config {
 		rootCAs := x509.NewCertPool()
 		rootCert, err := ioutil.ReadFile(conf.CaCert)
 		if err != nil {
+			ctx.SendLogs("Error in getting root certificate"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil
 		}
 		rootCAs.AppendCertsFromPEM(rootCert)
 		if conf.ClientCert == "" || conf.ClientPem == "" {
+			ctx.SendLogs("Error in getting certificate"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil
 		}
 		clientCrt, err := ioutil.ReadFile(conf.ClientCert)
 		if err != nil {
+			ctx.SendLogs("Error in getting client certificate"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil
 		}
 		clientPem, err := ioutil.ReadFile(conf.ClientPem)
 		if err != nil {
+			ctx.SendLogs("Error in getting client certificate"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil
 		}
 		clientCertificate, err := tls.X509KeyPair(clientCrt, clientPem)
 		if err != nil {
+			ctx.SendLogs("Error in getting client certificate"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil
 		}
+
 		tlsConfig.Certificates = append(tlsConfig.Certificates, clientCertificate)
 		tlsConfig.RootCAs = rootCAs
 		tlsConfig.BuildNameToCertificate()
