@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
-	"strconv"
 	"strings"
 )
 
@@ -69,8 +68,7 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	config, err := gke.GetServerConfig(credentials, *ctx)
 	if err.Description != "" {
-		status, _ := strconv.Atoi(err.StatusCode)
-		c.Ctx.Output.SetStatus(status)
+		c.Ctx.Output.SetStatus(err.StatusCode)
 		c.Data["json"] = err
 		c.ServeJSON()
 		return

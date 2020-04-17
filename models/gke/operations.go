@@ -85,7 +85,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 			models.Backend_Logging,
 		)
 		return types.CustomCPError{
-			StatusCode:"500",
+			StatusCode:500,
 			Description:err.Error(),
 		}
 	}
@@ -151,7 +151,7 @@ func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ct
 func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, ctx utils.Context) types.CustomCPError {
 	if newCount == 0 {
 		return types.CustomCPError{
-			StatusCode: "500",
+			StatusCode: 500,
 			Message: "Node Count Can't be zero.Select a numerical value for node count.",
 		}
 	}

@@ -297,7 +297,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(ctx, confError.Error(), cluster.Name)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = confError.Error()
 		return customError
 	}
@@ -305,7 +305,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = err.Error()
 		return customError
 	}
@@ -356,7 +356,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		PrintError(ctx, confError.Error(), cluster.Name)
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -406,7 +406,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		ctx.SendLogs("DOKSClusterModel:  Terminate Cluster : "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = confError.Error()
 		return customError
 	}
@@ -414,7 +414,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Terminate Cluster : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = err.Error()
 		return customError
 	}
@@ -422,14 +422,14 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	if cluster.CloudplexStatus == "" || cluster.CloudplexStatus == "new" {
 		text := "DOKSClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: text}
+		return types.CustomCPError{StatusCode: 500, Description: text}
 	}
 
 	cluster.CloudplexStatus = string(models.Terminating)
@@ -473,7 +473,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -486,7 +486,7 @@ func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster K
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get kube config file : "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = confError.Error()
 		return config, customError
 	}
@@ -494,7 +494,7 @@ func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster K
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get kube config file : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = err.Error()
 		return config, customError
 	}
@@ -525,7 +525,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: "Agent Deployment failed " + err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: "Agent Deployment failed " + err.Error()}
 	}
 
 	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
@@ -533,7 +533,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: "Agent Deployment failed " + err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: "Agent Deployment failed " + err.Error()}
 	}
 
 	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e DIGITALOCEAN_ACCESS_TOKEN=" + credentials.AccessKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.DOAuthContainerName
@@ -541,7 +541,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: "Agent Deployment failed " + err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: "Agent Deployment failed " + err.Error()}
 	}
 	return types.CustomCPError{}
 }
@@ -553,7 +553,7 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (option
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get Options : "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = confError.Error()
 		return options, customError
 	}
@@ -561,7 +561,7 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (option
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Get Options : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = err.Error()
 		return options, customError
 	}

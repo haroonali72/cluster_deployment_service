@@ -435,7 +435,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if errr != nil {
 		PrintError(errr, cluster.Name, ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: errr.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: errr.Error()}
 	}
 
 	gkeOps, err := GetGKE(credentials)
@@ -570,7 +570,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 			_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
-			return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+			return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err1
@@ -588,7 +588,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-			return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+			return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return errr
@@ -602,7 +602,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
@@ -637,14 +637,14 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	data2, err := woodpecker.GetCertificate(ctx.Data.ProjectId, token, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 	filePath := "/tmp/" + ctx.Data.Company + "/" + ctx.Data.ProjectId + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	if credentials.Zone != "" {
@@ -656,7 +656,7 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 	return types.CustomCPError{}
 }
