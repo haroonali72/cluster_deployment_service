@@ -413,7 +413,7 @@ func (c *AKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if strings.ToLower(cluster.Status) == string(models.ClusterCreated) && !forceDelete {
+	if strings.ToLower(string(cluster.Status)) == string(models.ClusterCreated) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
@@ -421,7 +421,7 @@ func (c *AKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) && !forceDelete {
+	if cluster.Status == (models.Deploying) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -429,7 +429,7 @@ func (c *AKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) && !forceDelete {
+	if cluster.Status == (models.Terminating) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}

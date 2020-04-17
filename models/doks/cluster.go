@@ -76,6 +76,7 @@ type KubernetesCluster struct {
 	AutoUpgrade      bool                  `json:"auto_upgrade,omitempty" bson:"auto_upgrade,omitempty" valid:"required,matches(^[0-9]+$)"`
 	IsAdvance        bool                  `json:"is_advance,omitempty" bson:"is_advance,omitempty"`
 	IsExpert         bool                  `json:"is_expert,omitempty" bson:"is_expert,omitempty"`
+	Status           models.Type           `json:"status",omitempty" bson:"status",omitempty"`
 	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
 	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`
@@ -297,7 +298,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(ctx, confError.Error(), cluster.Name)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = confError.Error()
 		return customError
 	}
@@ -305,7 +306,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = err.Error()
 		return customError
 	}
@@ -323,6 +324,16 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
+	cluster.Status = models.Deploying
+	err_ := UpdateKubernetesCluster(cluster, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
 	cluster, errr := doksOps.createCluster(cluster, ctx, token, credentials)
 	if errr.Description != "" {
 		cluster.CloudplexStatus = "Cluster creation failed"
@@ -356,7 +367,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		PrintError(ctx, confError.Error(), cluster.Name)
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -406,7 +417,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		ctx.SendLogs("DOKSClusterModel:  Terminate Cluster : "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = confError.Error()
 		return customError
 	}
@@ -414,7 +425,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Terminate Cluster : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError.StatusCode = "500"
+		customError.StatusCode = 500
 		customError.Description = err.Error()
 		return customError
 	}
@@ -422,19 +433,28 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	if cluster.CloudplexStatus == "" || cluster.CloudplexStatus == "new" {
 		text := "DOKSClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: text}
+		return types.CustomCPError{StatusCode: 500, Description: text}
 	}
 
 	cluster.CloudplexStatus = string(models.Terminating)
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating cluster: "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
+	err_ := UpdateKubernetesCluster(cluster, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
 	errr := doksOps.init(ctx)
 	if errr.Description != "" {
 		cluster.CloudplexStatus = "Cluster Termination Failed"
@@ -473,7 +493,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
