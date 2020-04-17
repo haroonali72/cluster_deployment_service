@@ -8,8 +8,8 @@ import (
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
 )
@@ -152,7 +152,7 @@ func (c *IKSClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	iks.Cluster_Def		true	"body for cluster content"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token header	string	token ""
 // @Success 201 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -212,7 +212,8 @@ func (c *IKSClusterController) Post() {
 
 	ctx.SendLogs("IKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	_, err = govalidator.ValidateStruct(cluster)
+	validate := validator.New()
+	err = validate.Struct(cluster)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -698,7 +699,7 @@ func (c *IKSClusterController) GetStatus() {
 
 	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "nodes not found") {
-	//	c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -822,7 +823,7 @@ func (c *IKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == string(models.New) {
+	if cluster.Status == models.New {
 		ctx.SendLogs("IKSClusterController: Cannot terminate new cluster", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -922,7 +923,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-	//	c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -1033,7 +1034,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	versions, cpErr := iks.GetAllVersions(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-	//	c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()

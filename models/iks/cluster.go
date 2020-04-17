@@ -20,31 +20,30 @@ import (
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ClusterId        string        `json:"cluster_id" bson:"cluster_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(IKS|iks)"`
+	Name             string        `json:"name" bson:"name" validate:"required"`
+	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required"`
 	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint"`
-	KubeVersion      string        `json:"kube_version" bson:"kube_version"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version" validate:"required"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
-	VPCId            string        `json:"vpc_id" bson:"vpc_id"`
+	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required"`
 	IsAdvance        bool          `json:"is_advance" bson:"is_advance"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
-	ID               bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
-	Name             string          `json:"name" bson:"name" valid:"required"`
-	NodeCount        int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType      string          `json:"machine_type" bson:"machine_type" valid:"required"`
-	PoolRole         models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
-	SubnetID         string          `json:"subnet_id" bson:"subnet_id"`
-	AvailabilityZone string          `json:"availability_zone" bson:"availability_zone"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	NodeCount        int           `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType      string        `json:"machine_type" bson:"machine_type" valid:"required"`
+	SubnetID         string        `json:"subnet_id" bson:"subnet_id"`
+	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone"`
 }
 
 type Project struct {
@@ -157,31 +156,12 @@ func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	return nil
 }
-func checkMasterPools(cluster Cluster_Def) error {
-	noOfMasters := 0
-	for _, pools := range cluster.NodePools {
-		if pools.PoolRole == models.Master {
-			noOfMasters += 1
-			if noOfMasters == 2 {
-				return errors.New("Cluster can't have more than 1 master")
-			}
-		}
-	}
-	return nil
-}
-
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
-	err = checkMasterPools(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoIKSClusterCollection, cluster)
 	if err != nil {
@@ -198,11 +178,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
+	if oldCluster.Status == (models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
+	if oldCluster.Status == (models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
@@ -302,6 +282,17 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	cluster.Status = models.Deploying
+	confError := UpdateCluster(cluster, false, ctx)
+	if confError != nil {
+
+		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
+
 	cluster, cpError = iks.create(cluster, ctx, companyId, token)
 
 	if cpError != (types.CustomCPError{}) {
@@ -327,7 +318,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return cpError
 	}
 
-	confError := ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
 
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
@@ -397,9 +388,18 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 	iks := GetIBM(profile.Profile)
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = (models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
+	err_ := UpdateCluster(cluster, false, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
 	cpErr := iks.init(profile.Profile.Region, ctx)
 	if cpErr != (types.CustomCPError{}) {
 

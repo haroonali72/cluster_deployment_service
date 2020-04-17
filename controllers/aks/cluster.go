@@ -8,8 +8,8 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 )
 
@@ -182,15 +182,6 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	res, err := govalidator.ValidateStruct(cluster)
-	if !res || err != nil {
-		beego.Error("data is not valid")
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "data is not valid"}
-		c.ServeJSON()
-		return
-	}
-
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -219,6 +210,16 @@ func (c *AKSClusterController) Post() {
 
 	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
+
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	err = aks.ValidateAKSData(cluster, *ctx)
 	if err != nil {
@@ -425,7 +426,7 @@ func (c *AKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if strings.ToLower(cluster.Status) == string(models.ClusterCreated) && !forceDelete {
+	if strings.ToLower(string(cluster.Status)) == string(models.ClusterCreated) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
@@ -433,7 +434,7 @@ func (c *AKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) && !forceDelete {
+	if cluster.Status == (models.Deploying) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -441,7 +442,7 @@ func (c *AKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) && !forceDelete {
+	if cluster.Status == (models.Terminating) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
