@@ -5,6 +5,7 @@ import (
 	"antelope/models/aks"
 	"antelope/models/azure"
 	rbacAuthentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
@@ -669,11 +670,18 @@ func (c *AKSClusterController) GetStatus() {
 
 	ctx.SendLogs("AKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil {
-		customErr := aks.ApiError(err, 500)
-		ctx.SendLogs("AKSClusterController :"+customErr.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(206)
+	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
+
+	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.ServeJSON()
+		return
+	}
+	if cpErr != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.ServeJSON()
 	}
 
 	c.Data["json"] = cluster
