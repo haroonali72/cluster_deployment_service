@@ -22,7 +22,7 @@ type GKECluster struct {
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                string                          `json:"status" bson:"status"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
@@ -60,7 +60,7 @@ type GKECluster struct {
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
 	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty"`
 	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty"`
-	Status                         models.Type                     `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
+	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
 	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
@@ -458,7 +458,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.Status = models.Deploying
+	cluster.CloudplexStatus = models.Deploying
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
@@ -570,8 +570,6 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		return err1
 	}
 
-	cluster.CloudplexStatus = string(models.Terminating)
-
 	err1 = gkeOps.init()
 	if err1.Description != "" {
 		ctx.SendLogs("GKEClusterModel : Terminate -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -588,7 +586,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.Status = models.Deploying
+	cluster.CloudplexStatus = models.Terminating
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
