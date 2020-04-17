@@ -8,6 +8,7 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 )
 
@@ -333,15 +334,6 @@ func (c *DOKSClusterController) Post() {
 
 	token := c.Ctx.Input.Header("token")
 
-	err = validateStruct(cluster, token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -375,6 +367,25 @@ func (c *DOKSClusterController) Post() {
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
 	cluster.CompanyId = userInfo.CompanyId
+
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = doks.ValidateDOKSData(cluster, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	err = doks.AddKubernetesCluster(cluster, *ctx)
 	if err != nil {

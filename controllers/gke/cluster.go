@@ -8,6 +8,7 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 )
 
@@ -225,7 +226,17 @@ func (c *GKEClusterController) Post() {
 
 	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	err := gke.Validate(cluster)
+	validate := validator.New()
+	err := validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = gke.Validate(cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}

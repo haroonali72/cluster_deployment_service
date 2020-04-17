@@ -4171,7 +4171,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4221,13 +4221,13 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
@@ -4258,7 +4258,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4304,7 +4304,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4363,7 +4363,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4412,7 +4412,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4443,7 +4443,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4484,7 +4484,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4518,7 +4518,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4568,7 +4568,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4626,7 +4626,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4676,7 +4676,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4714,7 +4714,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4745,7 +4745,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -9140,15 +9140,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13304.0xc00131c3c0.false": {
+        "13307.0xc0012f2bd0.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000cfd6e0.false": {
+        "13385.0xc000ce0cf0.false": {
             "title": "false",
             "type": "object"
         },
-        "13431.0xc001005200.false": {
+        "13431.0xc000fda840.false": {
             "title": "false",
             "type": "object"
         },
@@ -9156,19 +9156,19 @@
             "title": "string",
             "type": "object"
         },
-        "19832.string": {
+        "19866.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc00139fc50.false": {
+        "434.0xc0013a24b0.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0012f2990.false": {
+        "518.0xc0012c91a0.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc0013cb170.false": {
+        "5960.0xc0013a39b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9321,7 +9321,7 @@
                     }
                 },
                 "node_taints": {
-                    "$ref": "#/definitions/19832.string"
+                    "$ref": "#/definitions/19866.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9525,7 +9525,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000cfd6e0.false"
+                    "$ref": "#/definitions/13385.0xc000ce0cf0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10090,7 +10090,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13431.0xc001005200.false"
+                    "$ref": "#/definitions/13431.0xc000fda840.false"
                 },
                 "name": {
                     "type": "string"
@@ -11782,7 +11782,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13304.0xc00131c3c0.false"
+                    "$ref": "#/definitions/13307.0xc0012f2bd0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11930,7 +11930,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0012f2990.false"
+                    "$ref": "#/definitions/518.0xc0012c91a0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12159,7 +12159,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc0013cb170.false"
+                    "$ref": "#/definitions/5960.0xc0013a39b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12287,7 +12287,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc00139fc50.false"
+                    "$ref": "#/definitions/434.0xc0013a24b0.false"
                 },
                 "name": {
                     "type": "string"

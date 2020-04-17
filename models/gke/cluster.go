@@ -17,11 +17,11 @@ import (
 
 type GKECluster struct {
 	ID                             bson.ObjectId                   `json:"-" bson:"_id,omitempty"`
-	ProjectId                      string                          `json:"project_id" bson:"project_id"`
+	ProjectId                      string                          `json:"project_id" bson:"project_id" validate:"required"`
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                string                          `json:"status" bson:"status"`
+	CloudplexStatus                string                          `json:"status" bson:"status" validate:"eq=New|eq=new"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
@@ -48,12 +48,12 @@ type GKECluster struct {
 	MasterAuth                     *MasterAuth                     `json:"master_auth,omitempty" bson:"master_auth,omitempty"`
 	MasterAuthorizedNetworksConfig *MasterAuthorizedNetworksConfig `json:"master_authorized_networks_config,omitempty" bson:"master_authorized_networks_config,omitempty"`
 	MonitoringService              string                          `json:"monitoring_service,omitempty" bson:"monitoring_service,omitempty"`
-	Name                           string                          `json:"name,omitempty" bson:"name,omitempty"`
+	Name                           string                          `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
 	Network                        string                          `json:"network,omitempty" bson:"network,omitempty"`
 	NetworkConfig                  *NetworkConfig                  `json:"network_config,omitempty" bson:"network_config,omitempty"`
 	NetworkPolicy                  *NetworkPolicy                  `json:"network_policy,omitempty" bson:"network_policy,omitempty"`
 	NodeIpv4CidrSize               int64                           `json:"node_ipv4_cidr_size,omitempty" bson:"node_ipv4_cidr_size,omitempty"`
-	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty"`
+	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty" validate:"required,dive"`
 	PrivateClusterConfig           *PrivateClusterConfig           `json:"private_cluster_config,omitempty" bson:"private_cluster_config,omitempty"`
 	ResourceLabels                 map[string]string               `json:"resource_labels,omitempty" bson:"resource_labels,omitempty"`
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
@@ -63,7 +63,7 @@ type GKECluster struct {
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
 	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
-	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty"`
+	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty" validate:"required"`
 }
 
 type AddonsConfig struct {
@@ -95,21 +95,21 @@ type StatusCondition struct {
 }
 
 type MaxPodsConstraint struct {
-	MaxPodsPerNode int64 `json:"max_pods_per_node,omitempty" bson:"max_pods_per_node,omitempty"`
+	MaxPodsPerNode int64 `json:"max_pods_per_node,omitempty" bson:"max_pods_per_node,omitempty" validate:"required"`
 }
 
 type IPAllocationPolicy struct {
-	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty"`
-	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block,omitempty" bson:"cluster_ipv4_cidr_block,omitempty"`
+	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty" validate:"cidrv4"`
+	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block,omitempty" bson:"cluster_ipv4_cidr_block,omitempty" validate:"cidrv4"`
 	ClusterSecondaryRangeName  string `json:"cluster_secondary_range_name,omitempty" bson:"cluster_secondary_range_name,omitempty"`
 	CreateSubnetwork           bool   `json:"create_subnetwork,omitempty" bson:"create_subnetwork,omitempty"`
-	NodeIpv4Cidr               string `json:"node_ipv4_cidr,omitempty" bson:"node_ipv4_cidr,omitempty"`
-	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block,omitempty" bson:"node_ipv4_cidr_block,omitempty"`
-	ServicesIpv4Cidr           string `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty"`
-	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block,omitempty" bson:"services_ipv4_cidr_block,omitempty"`
+	NodeIpv4Cidr               string `json:"node_ipv4_cidr,omitempty" bson:"node_ipv4_cidr,omitempty" validate:"cidrv4"`
+	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block,omitempty" bson:"node_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	ServicesIpv4Cidr           string `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty" validate:"cidrv4"`
+	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block,omitempty" bson:"services_ipv4_cidr_block,omitempty" validate:"cidrv4"`
 	ServicesSecondaryRangeName string `json:"services_secondary_range_name,omitempty" bson:"services_secondary_range_name,omitempty"`
 	SubnetworkName             string `json:"subnetwork_name,omitempty" bson:"subnetwork_name,omitempty"`
-	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
+	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" validate:"cidrv4"`
 	UseIpAliases               bool   `json:"use_ip_aliases,omitempty" bson:"use_ip_aliases,omitempty"`
 }
 
@@ -188,12 +188,12 @@ type ConsumptionMeteringConfig struct {
 type NodePool struct {
 	Autoscaling       *NodePoolAutoscaling `json:"autoscaling,omitempty" bson:"autoscaling,omitempty"`
 	Conditions        []*StatusCondition   `json:"conditions,omitempty" bson:"conditions,omitempty"`
-	Config            *NodeConfig          `json:"config,omitempty" bson:"config,omitempty"`
-	InitialNodeCount  int64                `json:"initial_node_count,omitempty" bson:"initial_node_count,omitempty"`
+	Config            *NodeConfig          `json:"config,omitempty" bson:"config,omitempty" validate:"required,dive"`
+	InitialNodeCount  int64                `json:"initial_node_count,omitempty" bson:"initial_node_count,omitempty" validate:"required,gte=1"`
 	InstanceGroupUrls []string             `json:"instance_group_urls,omitempty" bson:"instance_group_urls,omitempty"`
 	Management        *NodeManagement      `json:"management,omitempty" bson:"management,omitempty"`
-	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty"`
-	Name              string               `json:"name,omitempty" bson:"name,omitempty"`
+	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty" validate:"required,dive"`
+	Name              string               `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
 	PodIpv4CidrSize   int64                `json:"pod_ipv4_cidr_size,omitempty" bson:"pod_ipv4_cidr_size,omitempty"`
 	SelfLink          string               `json:"self_link,omitempty" bson:"self_link,omitempty"`
 	Status            string               `json:"status,omitempty" bson:"status,omitempty"`
@@ -209,17 +209,17 @@ type NodePoolAutoscaling struct {
 
 type NodeConfig struct {
 	Accelerators   []*AcceleratorConfig `json:"accelerators,omitempty" bson:"accelerators,omitempty"`
-	DiskSizeGb     int64                `json:"disk_size_gb,omitempty" bson:"disk_size_gb,omitempty"`
-	DiskType       string               `json:"disk_type,omitempty" bson:"disk_type,omitempty"`
-	ImageType      string               `json:"image_type,omitempty" bson:"image_type,omitempty"`
+	DiskSizeGb     int64                `json:"disk_size_gb,omitempty" bson:"disk_size_gb,omitempty" validate:"required,gte=30"`
+	DiskType       string               `json:"disk_type,omitempty" bson:"disk_type,omitempty" validate:"required"`
+	ImageType      string               `json:"image_type,omitempty" bson:"image_type,omitempty" validate:"required"`
 	Labels         map[string]string    `json:"labels,omitempty" bson:"labels,omitempty"`
 	LocalSsdCount  int64                `json:"local_ssd_count,omitempty" bson:"local_ssd_count,omitempty"`
-	MachineType    string               `json:"machine_type,omitempty" bson:"machine_type,omitempty"`
+	MachineType    string               `json:"machine_type,omitempty" bson:"machine_type,omitempty" validate:"required"`
 	Metadata       map[string]string    `json:"metadata,omitempty" bson:"metadata,omitempty"`
 	MinCpuPlatform string               `json:"min_cpu_platform,omitempty" bson:"min_cpu_platform,omitempty"`
 	OauthScopes    []string             `json:"oauth_scopes,omitempty" bson:"oauth_scopes,omitempty"`
 	Preemptible    bool                 `json:"preemptible,omitempty" bson:"preemptible,omitempty"`
-	ServiceAccount string               `json:"service_account,omitempty" bson:"service_account,omitempty"`
+	ServiceAccount string               `json:"service_account,omitempty" bson:"service_account,omitempty" validate:"required"`
 	Tags           []string             `json:"tags,omitempty" bson:"tags,omitempty"`
 	Taints         []*NodeTaint         `json:"taints,omitempty" bson:"taints,omitempty"`
 }
