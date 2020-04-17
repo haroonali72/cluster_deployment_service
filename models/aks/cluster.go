@@ -28,21 +28,21 @@ type AKSCluster struct {
 	CreationDate      time.Time                `json:"-" bson:"creation_date"`
 	ModificationDate  time.Time                `json:"-" bson:"modification_date"`
 	CompanyId         string                   `json:"company_id" bson:"company_id"`
-	Status            models.Type              `json:"status,omitempty" bson:"status,omitempty"`
-	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" valid:"required"`
-	ClusterProperties ManagedClusterProperties `json:"property" bson:"property" valid:"required"`
+	Status            string                   `json:"status,omitempty" bson:"status,omitempty" validate:"eq=New|eq=new|eq=NEW"`
+	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" validate:"required"`
+	ClusterProperties ManagedClusterProperties `json:"property" bson:"property" validate:"required,dive"`
 	ResourceID        string                   `json:"cluster_id,omitempty" bson:"cluster_id,omitempty"`
-	Name              string                   `json:"name,omitempty" bson:"name,omitempty"`
+	Name              string                   `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
 	Type              string                   `json:"type,omitempty" bson:"type,omitempty"`
-	Location          string                   `json:"location,omitempty" bson:"location,omitempty"`
+	Location          string                   `json:"location,omitempty" bson:"location,omitempty" validate:"required"`
 }
 
 type ManagedClusterProperties struct {
 	ProvisioningState      string                               `json:"provisioning_state,omitempty" bson:"provisioning_state,omitempty"`
-	KubernetesVersion      string                               `json:"kubernetes_version,omitempty" bson:"kubernetes_version,omitempty"`
-	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty"`
+	KubernetesVersion      string                               `json:"kubernetes_version,omitempty" bson:"kubernetes_version,omitempty" validate:"required"`
+	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" validate:"required"`
 	Fqdn                   string                               `json:"fqdn,omitempty" bson:"fqdn,omitempty"`
-	AgentPoolProfiles      []ManagedClusterAgentPoolProfile     `json:"agent_pool,omitempty" bson:"agent_pool,omitempty"`
+	AgentPoolProfiles      []ManagedClusterAgentPoolProfile     `json:"agent_pool,omitempty" bson:"agent_pool,omitempty" validate:"required,dive"`
 	APIServerAccessProfile ManagedClusterAPIServerAccessProfile `json:"api_server_access_profile,omitempty" bson:"api_server_access_profile,omitempty"`
 	EnableRBAC             bool                                 `json:"enable_rbac,omitempty" bson:"enable_rbac,omitempty"`
 	IsHttpRouting          bool                                 `json:"enable_http_routing,omitempty" bson:"enable_http_routing,omitempty"`
@@ -52,10 +52,10 @@ type ManagedClusterProperties struct {
 	ClusterTags            []Tag                                `json:"tags" bson:"tags"`
 	IsAdvanced             bool                                 `json:"is_advance" bson:"is_advance"`
 	IsExpert               bool                                 `json:"is_expert" bson:"is_expert"`
-	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty"`
-	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty"`
-	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty"`
-	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty"`
+	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty" validate:"cidrv4"`
+	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" validate:"cidrv4"`
+	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" validate:"ipv4"`
+	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" validate:"cidrv4"`
 }
 
 type Tag struct {
@@ -71,12 +71,12 @@ type ManagedClusterAPIServerAccessProfile struct {
 
 // ManagedClusterAgentPoolProfile profile for the container service agent pool.
 type ManagedClusterAgentPoolProfile struct {
-	Name              *string            `json:"name,omitempty" bson:"name,omitempty" valid:"required"`
-	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" valid:"required"`
-	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" valid:"required"`
+	Name              *string            `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
+	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required,gte=1"`
+	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required"`
 	OsDiskSizeGB      *int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty"`
 	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id"`
-	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty"`
+	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty" validate:"required"`
 	OsType            *aks.OSType        `json:"os_type,omitempty" bson:"os_type,omitempty"`
 	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty"`
 	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty"`
@@ -103,6 +103,11 @@ func GetError(projectId, companyId string, ctx utils.Context) (err types.Cluster
 	}
 	return err, nil
 }
+type AzureRegion struct {
+	region   string
+	location string
+}
+
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -738,10 +743,7 @@ func validateAKSRegion(region string) (bool, error) {
 
 	bytes := cores.AzureRegions
 
-	regionList := []struct {
-		region   string
-		location string
-	}{}
+	var regionList []AzureRegion
 
 	err := json.Unmarshal(bytes, &regionList)
 	if err != nil {

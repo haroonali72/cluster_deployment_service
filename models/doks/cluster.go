@@ -2,12 +2,14 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/cores"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"antelope/models/woodpecker"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -62,20 +64,20 @@ type User struct {
 
 type KubernetesCluster struct {
 	ID               string                `json:"id" bson:"id"`
-	ProjectId        string                `json:"project_id" bson:"project_id" valid:"required"`
-	CompanyId        string                `json:"company_id" bson:"company_id" valid:"required"`
-	Cloud            models.Cloud          `json:"cloud" bson:"cloud" valid:"in(DOKS|doks|Doks)"`
+	ProjectId        string                `json:"project_id" bson:"project_id" validate:"required"`
+	CompanyId        string                `json:"company_id" bson:"company_id" validate:"required"`
+	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  models.Type           `json:"status" bson:"status"`
-	Name             string                `json:"name,omitempty" bson:"name" valid:"required"`
-	Region           string                `json:"region,omitempty" bson:"region" valid:"required"`
-	KubeVersion      string                `json:"version,omitempty" bson:"version" valid:"required"`
+	CloudplexStatus  string                `json:"status" bson:"status"`
+	Name             string                `json:"name,omitempty" bson:"name" validate:"required"`
+	Region           string                `json:"region,omitempty" bson:"region" validate:"required"`
+	KubeVersion      string                `json:"version,omitempty" bson:"version" validate:"required"`
 	Tags             []string              `json:"tags,omitempty" bson:"tags"`
-	NodePools        []*KubernetesNodePool `json:"node_pools,omitempty" bson:"node_pools" valid:"required"`
-	AutoUpgrade      bool                  `json:"auto_upgrade,omitempty" bson:"auto_upgrade,omitempty" valid:"required,matches(^[0-9]+$)"`
-	IsAdvance        bool                  `json:"is_advance,omitempty" bson:"is_advance,omitempty"`
-	IsExpert         bool                  `json:"is_expert,omitempty" bson:"is_expert,omitempty"`
+	NodePools        []*KubernetesNodePool `json:"node_pools,omitempty" bson:"node_pools" validate:"required,dive"`
+	AutoUpgrade      bool                  `json:"auto_upgrade,omitempty" bson:"auto_upgrade"`
+	IsAdvance        bool                  `json:"is_advance" bson:"is_advance"`
+	IsExpert         bool                  `json:"is_expert" bson:"is_expert"`
 	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
 	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`
@@ -88,9 +90,9 @@ type KubernetesCluster struct {
 
 type KubernetesNodePool struct {
 	ID          string            `json:"id,omitempty"  bson:"id"`
-	Name        string            `json:"name,omitempty"  bson:"name"`
-	MachineType string            `json:"machine_type,omitempty"  bson:"machine_type"` //machine size
-	NodeCount   int               `json:"node_count,omitempty"  bson:"node_count"`
+	Name        string            `json:"name,omitempty"  bson:"name" validate:"required"`
+	MachineType string            `json:"machine_type,omitempty"  bson:"machine_type" validate:"required"` //machine size
+	NodeCount   int               `json:"node_count,omitempty"  bson:"node_count" validate:"required,gte=1"`
 	Tags        []string          `json:"tags,omitempty"  bson:"tags"`
 	Labels      map[string]string `json:"labels,omitempty"  bson:"labels"`
 	AutoScale   bool              `json:"auto_scale,omitempty"  bson:"auto_scale"`
@@ -596,4 +598,106 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (option
 	}
 
 	return options, types.CustomCPError{}
+}
+
+func ValidateDOKSData(cluster KubernetesCluster, ctx utils.Context) error {
+	if cluster.ProjectId == "" {
+
+		return errors.New("project Id is empty")
+
+	} else if cluster.Name == "" {
+
+		return errors.New("cluster name is empty")
+
+	} else if cluster.KubeVersion == "" {
+
+		return errors.New("kubernetes version is empty")
+
+	} else if len(cluster.NodePools) == 0 {
+
+		return errors.New("node pool length must not be zero")
+
+	} else {
+
+		for _, nodepool := range cluster.NodePools {
+
+			if nodepool.Name == "" {
+
+				return errors.New("node pool name is empty")
+
+			} else if nodepool.MachineType == "" {
+
+				return errors.New("machine type is empty")
+
+			} else if nodepool.NodeCount == 0 {
+
+				return errors.New("node count must be greater than zero")
+
+			} else if nodepool.AutoScale {
+
+				if nodepool.MinNodes < 1 {
+
+					return errors.New("min node count must be greater than zero")
+
+				} else if nodepool.MaxNodes < 1 {
+
+					return errors.New("max node count must be greater than zero")
+
+				} else if nodepool.MaxNodes <= nodepool.MinNodes {
+
+					return errors.New("max node count must be greater than min node count")
+
+				} else if nodepool.MaxNodes > 25 {
+
+					return errors.New("max node count msut be less than or equal to 25")
+
+				}
+
+			}
+
+		}
+
+	}
+
+	if cluster.Region == "" {
+
+		return errors.New("region is empty")
+
+	} else {
+
+		isRegionExist, err := validateDOKSRegion(cluster.Region)
+		if err != nil && !isRegionExist {
+			text := "availabe regions are " + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+
+	}
+
+	return nil
+}
+
+func validateDOKSRegion(region string) (bool, error) {
+
+	bytes := cores.DORegions
+
+	var regionList []KubernetesRegion
+
+	err := json.Unmarshal(bytes, &regionList)
+	if err != nil {
+		return false, err
+	}
+
+	for _, v1 := range regionList {
+		if v1.Slug == region {
+			return true, nil
+		}
+	}
+
+	var errData string
+	for _, v1 := range regionList {
+		errData += v1.Slug + ", "
+	}
+
+	return false, errors.New(errData)
 }

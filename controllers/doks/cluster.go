@@ -9,6 +9,7 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 )
 
@@ -330,15 +331,14 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 
-	/*	_, err = govalidator.ValidateStruct(cluster)
-		if err != nil {
-			beego.Error(err.Error())
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
-	*/
+	err = validateStruct(cluster, token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -368,7 +368,24 @@ func (c *DOKSClusterController) Post() {
 
 	cluster.CompanyId = userInfo.CompanyId
 
-	ctx.SendLogs("DOKSClusterController: Adding new cluster "+cluster.Name+" in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = doks.ValidateDOKSData(cluster, *ctx)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	err = doks.AddKubernetesCluster(cluster, *ctx)
 	if err != nil {
