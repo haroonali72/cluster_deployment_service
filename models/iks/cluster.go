@@ -38,13 +38,12 @@ type Cluster_Def struct {
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
-	ID               bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
-	Name             string          `json:"name" bson:"name" validate:"required"`
-	NodeCount        int             `json:"node_count" bson:"node_count" validate:"required"`
-	MachineType      string          `json:"machine_type" bson:"machine_type" validate:"required"`
-	PoolRole         models.PoolRole `json:"pool_role" bson:"pool_role"`
-	SubnetID         string          `json:"subnet_id" bson:"subnet_id" validate:"required"`
-	AvailabilityZone string          `json:"availability_zone" bson:"availability_zone" validate:"required"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	NodeCount        int           `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType      string        `json:"machine_type" bson:"machine_type" valid:"required"`
+	SubnetID         string        `json:"subnet_id" bson:"subnet_id"`
+	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone"`
 }
 
 type Project struct {
@@ -157,31 +156,12 @@ func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	return nil
 }
-func checkMasterPools(cluster Cluster_Def) error {
-	noOfMasters := 0
-	for _, pools := range cluster.NodePools {
-		if pools.PoolRole == models.Master {
-			noOfMasters += 1
-			if noOfMasters == 2 {
-				return errors.New("Cluster can't have more than 1 master")
-			}
-		}
-	}
-	return nil
-}
-
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
-	err = checkMasterPools(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoIKSClusterCollection, cluster)
 	if err != nil {
