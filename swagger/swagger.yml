@@ -66,8 +66,6 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-        "404":
-          description: '{"error": "error msg"}'
         "409":
           description: '{"error": "cluster against this project already exists"}'
         "500":
@@ -123,8 +121,6 @@ paths:
         "400":
           description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
           description: '{"error": "error msg"}'
         "402":
           description: '{"error": "error msg"}'
@@ -1873,7 +1869,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/doks/config:
     get:
       tags:
@@ -1901,7 +1897,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/doks/kubeconfig/{projectId}:
     get:
       tags:
@@ -1938,7 +1934,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/doks/start/{projectId}:
     post:
       tags:
@@ -1975,7 +1971,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/doks/status/{projectId}/:
     get:
       tags:
@@ -2014,7 +2010,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/doks/terminate/{projectId}/:
     post:
       tags:
@@ -2049,7 +2045,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/gcp/:
     put:
       tags:
@@ -2647,7 +2643,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/gke/config/{region}:
     get:
       tags:
@@ -2682,7 +2678,7 @@ paths:
         "500":
           description: '{"error": "Runtime error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/gke/start/{projectId}:
     post:
       tags:
@@ -2719,7 +2715,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/gke/status/{projectId}/:
     get:
       tags:
@@ -2758,7 +2754,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/gke/terminate/{projectId}/:
     post:
       tags:
@@ -2793,7 +2789,7 @@ paths:
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
-          description: '{"error": "Cloud API Error"}'
+          description: '{object} types.CustomCPError'
   /cluster/iks/:
     put:
       tags:
@@ -2802,7 +2798,7 @@ paths:
       operationId: IKSClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -2835,11 +2831,11 @@ paths:
         schema:
           $ref: '#/definitions/iks.Cluster_Def'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
-        "200":
+        "201":
           description: '{"msg": "cluster created successfully"}'
         "400":
           description: '{"msg": "error msg"}'
@@ -2864,7 +2860,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2884,7 +2880,7 @@ paths:
       operationId: IKSClusterController.Delete
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -2905,8 +2901,6 @@ paths:
           description: '{"error": "error msg"}'
         "402":
           description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
         "500":
@@ -2919,7 +2913,7 @@ paths:
       operationId: IKSClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2949,7 +2943,7 @@ paths:
         description: resourceGroup
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -2989,7 +2983,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -3021,7 +3015,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -3041,7 +3035,7 @@ paths:
       operationId: IKSClusterController.Get Regions
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -3068,7 +3062,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -3090,7 +3084,7 @@ paths:
       operationId: IKSClusterController.Start
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -3123,7 +3117,7 @@ paths:
       operationId: IKSClusterController.Status
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -3161,7 +3155,7 @@ paths:
         schema:
           $ref: '#/definitions/X-Profile-Id'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -3194,7 +3188,7 @@ paths:
         schema:
           $ref: '#/definitions/vault.IBMCredentials'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -3322,8 +3316,6 @@ paths:
         "400":
           description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
           description: '{"error": "error msg"}'
         "402":
           description: '{"error": "error msg"}'
@@ -6062,28 +6054,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc00139fc50.false:
+  442.0xc0017919e0.false:
     title: "false"
     type: object
-  518.0xc0012f2990.false:
+  605.0xc0010b7d10.false:
     title: "false"
     type: object
-  1559.string:
+  636.0xc0016cc7e0.false:
+    title: "false"
+    type: object
+  644.0xc0013a9830.false:
+    title: "false"
+    type: object
+  5559.string:
     title: string
     type: object
-  5960.0xc0013cb170.false:
+  13200.0xc0017c5770.false:
     title: "false"
     type: object
-  13304.0xc00131c3c0.false:
+  47081.0xc001762f30.false:
     title: "false"
     type: object
-  13385.0xc000cfd6e0.false:
-    title: "false"
-    type: object
-  13431.0xc001005200.false:
-    title: "false"
-    type: object
-  19832.string:
+  49356.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6138,7 +6130,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/49356.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6189,7 +6181,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/19832.string'
+        $ref: '#/definitions/5559.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6328,8 +6320,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000cfd6e0.false'
-        $ref: '#/definitions/605.0xc001068ea0.false'
+        $ref: '#/definitions/605.0xc0010b7d10.false'
       name:
         type: string
       network_name:
@@ -6710,7 +6701,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc001005200.false'
+        $ref: '#/definitions/644.0xc0013a9830.false'
       name:
         type: string
       network_name:
@@ -7849,7 +7840,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13304.0xc00131c3c0.false'
+        $ref: '#/definitions/636.0xc0016cc7e0.false'
       kube_version:
         type: string
       name:
@@ -7949,7 +7940,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0012f2990.false'
+        $ref: '#/definitions/47081.0xc001762f30.false'
       kube_version:
         type: string
       name:
@@ -8115,7 +8106,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc0013cb170.false'
+        $ref: '#/definitions/442.0xc0017919e0.false'
       name:
         type: string
       node_pools:
@@ -8201,7 +8192,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc00139fc50.false'
+        $ref: '#/definitions/13200.0xc0017c5770.false'
       name:
         type: string
       node_pools:

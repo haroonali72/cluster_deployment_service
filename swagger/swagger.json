@@ -96,9 +96,6 @@
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "409": {
                         "description": "{\"error\": \"cluster against this project already exists\"}"
                     },
@@ -2741,7 +2738,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2783,7 +2780,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2838,7 +2835,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2893,7 +2890,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2951,7 +2948,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -3003,7 +3000,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -3955,7 +3952,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4007,7 +4004,7 @@
                         "description": "{\"error\": \"Runtime error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4062,7 +4059,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4120,7 +4117,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4172,7 +4169,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{\"error\": \"Cloud API Error\"}"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4233,7 +4230,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4283,13 +4280,13 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
@@ -4320,7 +4317,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4366,7 +4363,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4425,7 +4422,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4474,7 +4471,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4505,7 +4502,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4546,7 +4543,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4580,7 +4577,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4630,7 +4627,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4688,7 +4685,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4738,7 +4735,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4776,7 +4773,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4807,7 +4804,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4833,9 +4830,6 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "402": {
@@ -5057,9 +5051,6 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "402": {
@@ -9208,36 +9199,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13200.0xc00175b7a0.false": {
-        "13304.0xc00131c3c0.false": {
+        "13200.0xc0017c5770.false": {
             "title": "false",
             "type": "object"
         },
-        "43586.0xc0016f6fc0.false": {
+        "442.0xc0017919e0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc001727a10.false": {
+        "47081.0xc001762f30.false": {
             "title": "false",
             "type": "object"
         },
-        "47985.string": {
+        "49356.string": {
             "title": "string",
             "type": "object"
         },
-        "19832.string": {
+        "5559.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc001068ea0.false": {
+        "605.0xc0010b7d10.false": {
             "title": "false",
             "type": "object"
         },
-        "636.0xc0016699b0.false": {
+        "636.0xc0016cc7e0.false": {
             "title": "false",
             "type": "object"
         },
-        "644.0xc00135c9c0.false": {
+        "644.0xc0013a9830.false": {
             "title": "false",
             "type": "object"
         },
@@ -9316,7 +9306,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/47985.string"
+                    "$ref": "#/definitions/49356.string"
                 },
                 "type": {
                     "type": "string"
@@ -9390,7 +9380,7 @@
                     }
                 },
                 "node_taints": {
-                    "$ref": "#/definitions/19832.string"
+                    "$ref": "#/definitions/5559.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9594,7 +9584,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000cfd6e0.false"
+                    "$ref": "#/definitions/605.0xc0010b7d10.false"
                 },
                 "name": {
                     "type": "string"
@@ -10159,7 +10149,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/644.0xc00135c9c0.false"
+                    "$ref": "#/definitions/644.0xc0013a9830.false"
                 },
                 "name": {
                     "type": "string"
@@ -11851,7 +11841,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13304.0xc00131c3c0.false"
+                    "$ref": "#/definitions/636.0xc0016cc7e0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11999,7 +11989,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0012f2990.false"
+                    "$ref": "#/definitions/47081.0xc001762f30.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12228,7 +12218,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc0013cb170.false"
+                    "$ref": "#/definitions/442.0xc0017919e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12356,7 +12346,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc00139fc50.false"
+                    "$ref": "#/definitions/13200.0xc0017c5770.false"
                 },
                 "name": {
                     "type": "string"
