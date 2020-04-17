@@ -53,11 +53,12 @@ require (
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/siddontang/ledisdb v0.0.0-20181029004158-becf5f38d373 // indirect
 	github.com/siddontang/rdb v0.0.0-20150307021120-fc89ed2e418d // indirect
+	github.com/signalsciences/ipv4 v1.0.1
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/smartystreets/goconvey v1.6.3
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec // indirect
 	github.com/swagger-api/swagger-ui v3.25.0+incompatible // indirect
-	github.com/swaggo/http-swagger v0.0.0-20200308142732-58ac5e232fba
+	github.com/swaggo/http-swagger v0.0.0-20200308142732-58ac5e232fba // indirect
 	github.com/swaggo/swag v1.6.5 // indirect
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef // indirect
