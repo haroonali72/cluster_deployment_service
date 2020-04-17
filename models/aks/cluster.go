@@ -28,7 +28,7 @@ type AKSCluster struct {
 	CreationDate      time.Time                `json:"-" bson:"creation_date"`
 	ModificationDate  time.Time                `json:"-" bson:"modification_date"`
 	CompanyId         string                   `json:"company_id" bson:"company_id"`
-	Status            string                   `json:"status,omitempty" bson:"status,omitempty"`
+	Status            models.Type              `json:"status,omitempty" bson:"status,omitempty"`
 	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" valid:"required"`
 	ClusterProperties ManagedClusterProperties `json:"property" bson:"property" valid:"required"`
 	ResourceID        string                   `json:"cluster_id,omitempty" bson:"cluster_id,omitempty"`
@@ -314,6 +314,15 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	cluster.Status = models.Deploying
+	err_ := UpdateAKSCluster(cluster, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return err_
+	}
 	confError = aksOps.CreateCluster(cluster, token, ctx)
 
 	if confError != nil {
@@ -421,9 +430,15 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	}
 
 	aksOps, _ := GetAKS(credentials.Profile)
-
-	cluster.Status = string(models.Terminating)
 	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
+
+	cluster.Status = models.Terminating
+	err_ := UpdateAKSCluster(cluster, ctx)
+	if err_ != nil {
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return err_
+	}
 
 	err = aksOps.init()
 	if err != nil {

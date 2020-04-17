@@ -2,13 +2,12 @@ package aks
 
 import (
 	"antelope/models/types"
-	"strconv"
 	"strings"
 )
 
 func ApiError(err error, code int) (cError types.CustomCPError) {
 
-	cError.StatusCode = strconv.Itoa(code)
+	cError.StatusCode = code
 	cError.Description = err.Error()
 	cError.Message = ValidationError(err.Error())
 

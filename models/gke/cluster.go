@@ -60,7 +60,7 @@ type GKECluster struct {
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
 	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty"`
 	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty"`
-	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
+	Status                         models.Type                     `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
 	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
@@ -435,7 +435,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if errr != nil {
 		PrintError(errr, cluster.Name, ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: errr.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: errr.Error()}
 	}
 
 	gkeOps, err := GetGKE(credentials)
@@ -458,6 +458,17 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	cluster.Status = models.Deploying
+	err_ := UpdateGKECluster(cluster, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: confError.Message, Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
+
 	err = gkeOps.CreateCluster(cluster, token, ctx)
 	if err.Description != "" {
 		cluster.CloudplexStatus = "Cluster creation failed"
@@ -577,6 +588,16 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	cluster.Status = models.Deploying
+	err_ := UpdateGKECluster(cluster, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
 	errr := gkeOps.deleteCluster(cluster, ctx)
 	if errr.Description != "" {
 		_, _ = utils.SendLog(ctx.Data.Company, "Cluster termination failed: "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
