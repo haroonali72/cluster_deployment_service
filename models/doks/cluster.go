@@ -67,7 +67,7 @@ type KubernetesCluster struct {
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" valid:"in(DOKS|doks|Doks)"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  string                `json:"status" bson:"status"`
+	CloudplexStatus  models.Type           `json:"status" bson:"status"`
 	Name             string                `json:"name,omitempty" bson:"name" valid:"required"`
 	Region           string                `json:"region,omitempty" bson:"region" valid:"required"`
 	KubeVersion      string                `json:"version,omitempty" bson:"version" valid:"required"`
@@ -76,7 +76,6 @@ type KubernetesCluster struct {
 	AutoUpgrade      bool                  `json:"auto_upgrade,omitempty" bson:"auto_upgrade,omitempty" valid:"required,matches(^[0-9]+$)"`
 	IsAdvance        bool                  `json:"is_advance,omitempty" bson:"is_advance,omitempty"`
 	IsExpert         bool                  `json:"is_expert,omitempty" bson:"is_expert,omitempty"`
-	Status           models.Type           `json:"status",omitempty" bson:"status",omitempty"`
 	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
 	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`
@@ -324,7 +323,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
-	cluster.Status = models.Deploying
+	cluster.CloudplexStatus = models.Deploying
 	err_ := UpdateKubernetesCluster(cluster, ctx)
 	if err_ != nil {
 
@@ -443,7 +442,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return types.CustomCPError{StatusCode: 500, Description: text}
 	}
 
-	cluster.CloudplexStatus = string(models.Terminating)
+	cluster.CloudplexStatus = (models.Terminating)
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating cluster: "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
 	err_ := UpdateKubernetesCluster(cluster, ctx)
