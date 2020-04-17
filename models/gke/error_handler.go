@@ -4,9 +4,9 @@ import (
 	"antelope/models/types"
 	"strings"
 )
-func ApiErrors (err error) (cError types.CustomCPError){
+func ApiErrors (err error,message string) (cError types.CustomCPError){
 	errr :=strings.Fields(err.Error())
-	cError.StatusCode = errr[2]
+	cError.StatusCode = "502"
 	cError.Description = err.Error()
 	if (errr[2]=="304"){
 		cError.Message =NotModified(err.Error())
@@ -32,6 +32,9 @@ func ApiErrors (err error) (cError types.CustomCPError){
 		cError.Message = ServiceUnavailable(err.Error())
 	}else {
 		return cError
+	}
+	if cError.Message==""{
+		cError.Message=message
 	}
 	return cError
 }
