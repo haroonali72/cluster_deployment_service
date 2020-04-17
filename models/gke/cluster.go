@@ -674,3 +674,63 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	}
 	return nil
 }
+
+func Validate(gkeCluster GKECluster) error {
+	if gkeCluster.ProjectId == "" {
+		return errors.New("project id is empty")
+	} else if gkeCluster.Name == "" {
+		return errors.New("cluster name is empty")
+	} else if len(gkeCluster.NodePools) > 0 {
+		for _, nodepool := range gkeCluster.NodePools {
+			if nodepool.Config != nil {
+				isDiskExist, err := validateGKEDiskType(nodepool.Config.DiskType)
+				if err != nil && !isDiskExist {
+					text := "availabe disks are " + err.Error()
+					return errors.New(text)
+				}
+
+				isImageExist, err := validateGKEImageType(nodepool.Config.ImageType)
+				if err != nil && !isImageExist {
+					text := "availabe images are " + err.Error()
+					return errors.New(text)
+				}
+
+			}
+		}
+	}
+	return nil
+}
+
+func validateGKEDiskType(diskType string) (bool, error) {
+	diskList := []string{"pd-ssd", "pd-standard"}
+
+	for _, v := range diskList {
+		if v == diskType {
+			return true, nil
+		}
+	}
+
+	var errData string
+	for _, v := range diskList {
+		errData += v + ", "
+	}
+
+	return false, errors.New(errData)
+}
+
+func validateGKEImageType(imageType string) (bool, error) {
+	imageList := []string{"COS_CONTAINERD", "COS", "UBUNTU"}
+
+	for _, v := range imageList {
+		if v == imageType {
+			return true, nil
+		}
+	}
+
+	var errData string
+	for _, v := range imageList {
+		errData += v + ", "
+	}
+
+	return false, errors.New(errData)
+}
