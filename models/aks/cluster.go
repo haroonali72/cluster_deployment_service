@@ -147,8 +147,8 @@ func AddAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 	_, err := GetAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil {
 		text := fmt.Sprintf("AKSAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.ProjectId)
-		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New(text)
+		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New(text+err.Error())
 	}
 
 	session, err := db.GetMongoSession(ctx)

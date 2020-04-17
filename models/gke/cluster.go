@@ -309,8 +309,8 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 	_, err := GetGKECluster( ctx)
 	if err == nil {
-		text := fmt.Sprintf("GKEAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.ProjectId)
-		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		text := fmt.Sprintf("GKEAddClusterModel:  Add - Cluster for project '%s' already exists in the database."+err.Error(), cluster.ProjectId)
+		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
 
@@ -351,7 +351,7 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	oldCluster, err := GetGKECluster( ctx)
 	if err != nil {
-		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name + "' does not exist in the database: " + err.Error()
+		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name  + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}

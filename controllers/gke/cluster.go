@@ -140,8 +140,14 @@ func (c *GKEClusterController) Get() {
 	ctx.SendLogs("GKEClusterController: Getting cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster, err := gke.GetGKECluster( *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -485,6 +491,12 @@ func (c *GKEClusterController) Delete() {
 
 	cluster, err := gke.GetGKECluster( *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -618,6 +630,12 @@ func (c *GKEClusterController) StartCluster() {
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -754,7 +772,8 @@ func (c *GKEClusterController) GetStatus() {
 	ctx.Data.Company=userInfo.CompanyId
 
 	ctx.SendLogs("GKEClusterController: Fetching status of cluster of the project  "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	cluster, err1 := gke.FetchStatus(credentials, token,  *ctx)
+	cluster, err1 := gke.FetchStatus(credentials,
+		token,  *ctx)
 	if err1.Description != "" {
 		c.Ctx.Output.SetStatus(206)
 	}
@@ -852,6 +871,12 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	cluster, err := gke.GetGKECluster( *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
