@@ -103,6 +103,7 @@ func GetError(projectId, companyId string, ctx utils.Context) (err types.Cluster
 	}
 	return err, nil
 }
+
 type AzureRegion struct {
 	region   string
 	location string
