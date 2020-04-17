@@ -103,6 +103,7 @@ func GetError(projectId, companyId string, ctx utils.Context) (err types.Cluster
 	}
 	return err, nil
 }
+
 type AzureRegion struct {
 	region   string
 	location string
@@ -295,91 +296,91 @@ func DeleteAKSCluster(projectId, companyId string, ctx utils.Context) error {
 	return nil
 }
 
-func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, companyId string, token string, ctx utils.Context) (confError error) {
+func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, companyId string, token string, ctx utils.Context) (confError types.CustomCPError) {
 
 	publisher := utils.Notifier{}
 	_ = publisher.Init_notifier()
 
 	aksOps, _ := GetAKS(credentials.Profile)
 
-	err := aksOps.init()
-	if err != nil {
-		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	CpErr := aksOps.init()
+	if CpErr != (types.CustomCPError{}) {
+		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateAKSCluster(cluster, ctx)
-		if confError != nil {
-			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+confError.Error(), "error", cluster.ProjectId)
+		UpdationErr := UpdateAKSCluster(cluster, ctx)
+		if UpdationErr != nil {
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
 
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return CpErr
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster.Status = models.Deploying
+	cluster.Status = string(models.Deploying)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err_
+		return ApiError(err_, "Error occurred while updating cluster in database", 500)
 	}
-	confError = aksOps.CreateCluster(cluster, token, ctx)
+	err := aksOps.CreateCluster(cluster, token, ctx)
 
-	if confError != nil {
-		customeErr := ApiError(confError, 400)
+	if err != nil {
+		customeErr := ApiError(err, "", 502)
 
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+customeErr.Message, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, customeErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateAKSCluster(cluster, ctx)
-		if confError != nil {
-			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+confError.Error(), "error", cluster.ProjectId)
+		UpdationErr := UpdateAKSCluster(cluster, ctx)
+		if UpdationErr != nil {
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
 
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return customeErr
 	}
-	confError = azure.ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGoup)
-	if confError != nil {
-		customeErr := ApiError(confError, 400)
+	AgentErr := azure.ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGoup)
+	if AgentErr != nil {
+		customeErr := ApiError(AgentErr, "agent deployment failed", 500)
 
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+customeErr.Message, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, customeErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster creation failed"
-		confError = UpdateAKSCluster(cluster, ctx)
-		if confError != nil {
-			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+confError.Error(), "error", cluster.ProjectId)
+		UpdationErr := UpdateAKSCluster(cluster, ctx)
+		if UpdationErr != nil {
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
 
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return customeErr
 	}
 	cluster.Status = "Cluster Created"
 
-	confError = UpdateAKSCluster(cluster, ctx)
-	if confError != nil {
+	UpdationErr := UpdateAKSCluster(cluster, ctx)
+	if UpdationErr != nil {
 
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+confError.Error(), "error", cluster.ProjectId)
-		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
+		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return ApiError(err_, "Error occurred while updating cluster in database", 500)
 	}
 
 	_, _ = utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+	return types.CustomCPError{}
 }
 
 func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (AKSCluster, types.CustomCPError) {
@@ -400,83 +401,76 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 	}
 	aksOps, _ := GetAKS(credentials)
 
-	err = aksOps.init()
-	if err != nil {
-		ctx.SendLogs("AKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, types.CustomCPError{Message: "Error while connecting to AKS",
-			Description: err.Error(),
-			StatusCode:  500}
+	CpErr := aksOps.init()
+	if CpErr != (types.CustomCPError{}) {
+		ctx.SendLogs("AKSClusterModel:  Fetch -"+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return AKSCluster{}, CpErr
 	}
 
-	err = aksOps.fetchClusterStatus(&cluster, ctx)
-	if err != nil {
-		return cluster, types.CustomCPError{Message: "Error while fetching AKS status",
-			Description: err.Error(),
-			StatusCode:  500}
+	CpErr = aksOps.fetchClusterStatus(&cluster, ctx)
+	if CpErr != (types.CustomCPError{}) {
+		return cluster, CpErr
 	}
 
 	return cluster, types.CustomCPError{}
 }
 
-func TerminateCluster(credentials vault.AzureProfile, projectId, companyId string, ctx utils.Context) error {
+func TerminateCluster(credentials vault.AzureProfile, projectId, companyId string, ctx utils.Context) types.CustomCPError {
 	publisher := utils.Notifier{}
 	_ = publisher.Init_notifier()
 
 	cluster, err := GetAKSCluster(projectId, companyId, ctx)
 	if err != nil {
-		return err
+		return ApiError(err, "Error wile getting cluster from database", 500)
 	}
 
 	if cluster.Status == "" || cluster.Status == "new" {
 		text := "AKSClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return errors.New(text)
+		return ApiError(errors.New(text), text, 400)
 	}
 
 	aksOps, _ := GetAKS(credentials.Profile)
 	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	cluster.Status = models.Terminating
+	cluster.Status = string(models.Terminating)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err_
+		return ApiError(err_, "Error while updating cluster in database", 500)
 	}
 
-	err = aksOps.init()
-	if err != nil {
-		ctx.SendLogs("AKSClusterModel : Terminate -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status = "Cluster Termination Failed"
-		err = UpdateAKSCluster(cluster, ctx)
-		if err != nil {
-			ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			_, _ = utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-			return err
-		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
-	}
+	CpErr := aksOps.init()
+	if CpErr != (types.CustomCPError{}) {
+		ctx.SendLogs("AKSClusterModel : Terminate -"+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-	err = aksOps.TerminateCluster(cluster, ctx)
-	if err != nil {
-		customErr := ApiError(err, 400)
-		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+customErr.Message, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, customErr.Description, "error", cluster.ProjectId)
+		utils.SendLog(companyId, CpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateAKSCluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
-			_, _ = utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return err
+		}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return CpErr
+	}
+
+	CpErr = aksOps.TerminateCluster(cluster, ctx)
+	if CpErr != (types.CustomCPError{}) {
+
+		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+CpErr.Message, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, CpErr.Description, "error", cluster.ProjectId)
+
+		cluster.Status = "Cluster Termination Failed"
+		err = UpdateAKSCluster(cluster, ctx)
+		if err != nil {
+			ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return CpErr
 	}
 
 	cluster.Status = "Cluster Terminated"
@@ -487,36 +481,32 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 		_, _ = utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return ApiError(err, "Error while updating cluster in database", 500)
 	}
 	_, _ = utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+	return types.CustomCPError{}
 }
 
-func GetKubeCofing(credentials vault.AzureCredentials, cluster AKSCluster, ctx utils.Context) (interface{}, error) {
-	aksOps, err := GetAKS(credentials)
-	if err != nil {
-		ctx.SendLogs("AKSClusterModel : GetKubeConfig - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
-	}
+func GetKubeCofing(credentials vault.AzureCredentials, cluster AKSCluster, ctx utils.Context) (interface{}, types.CustomCPError) {
+	aksOps, _ := GetAKS(credentials)
 
-	err = aksOps.init()
-	if err != nil {
-		ctx.SendLogs("AKSClusterModel : GetKubeConfig -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return "", err
+	CpErr := aksOps.init()
+	if CpErr != (types.CustomCPError{}) {
+		ctx.SendLogs("AKSClusterModel : GetKubeConfig -"+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return "", CpErr
 	}
 
 	aksKubeConfig, err := aksOps.GetKubeConfig(ctx, cluster)
-	if err != nil {
-		ctx.SendLogs("AKSClusterModel : GetKubeConfig -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("AKSClusterModel : GetKubeConfig -"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
 
 	var kubeconfigobj interface{}
 	bytes, _ := yaml.YAMLToJSON(*aksKubeConfig.Value)
 	_ = json.Unmarshal(bytes, &kubeconfigobj)
-	return kubeconfigobj, nil
+	return kubeconfigobj, types.CustomCPError{}
 
 }
 
@@ -569,22 +559,18 @@ func GetVms(region string, ctx utils.Context) ([]string, error) {
 	return vms, nil
 }
 
-func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]string, error) {
-	aksOps, err := GetAKS(credentials.Profile)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []string{}, err
-	}
+func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]string, types.CustomCPError) {
+	aksOps, _ := GetAKS(credentials.Profile)
 
-	err = aksOps.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []string{}, err
+	CpErr := aksOps.init()
+	if CpErr != (types.CustomCPError{}) {
+		ctx.SendLogs(CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return []string{}, CpErr
 	}
 
 	result, err := aksOps.GetKubernetesVersions(ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []string{}, err
 	}
 
@@ -598,7 +584,7 @@ func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]strin
 		}
 	}
 
-	return versions, nil
+	return versions, types.CustomCPError{}
 
 }
 
@@ -785,9 +771,9 @@ func Task() {
 		return
 	}
 
-	err = aksOps.init()
-	if err != nil {
-		fmt.Println(err)
+	CpErr := aksOps.init()
+	if CpErr != (types.CustomCPError{}) {
+		fmt.Println(CpErr)
 		return
 	}
 
