@@ -20,20 +20,20 @@ import (
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ClusterId        string        `json:"cluster_id" bson:"cluster_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           models.Type   `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(IKS|iks)"`
+	Name             string        `json:"name" bson:"name" validate:"required"`
+	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required"`
 	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint"`
-	KubeVersion      string        `json:"kube_version" bson:"kube_version"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version" validate:"required"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
-	VPCId            string        `json:"vpc_id" bson:"vpc_id"`
+	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required"`
 	IsAdvance        bool          `json:"is_advance" bson:"is_advance"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }

@@ -8,8 +8,8 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 )
 
@@ -176,15 +176,6 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	res, err := govalidator.ValidateStruct(cluster)
-	if !res || err != nil {
-		beego.Error("data is not valid")
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "data is not valid"}
-		c.ServeJSON()
-		return
-	}
-
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -213,6 +204,16 @@ func (c *AKSClusterController) Post() {
 
 	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
+
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	err = aks.ValidateAKSData(cluster, *ctx)
 	if err != nil {
