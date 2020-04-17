@@ -801,7 +801,7 @@ func (c *IKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == string(models.New) {
+	if cluster.Status == models.New {
 		ctx.SendLogs("IKSClusterController: Cannot terminate new cluster", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}

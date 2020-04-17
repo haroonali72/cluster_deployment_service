@@ -198,11 +198,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
+	if oldCluster.Status == (models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
+	if oldCluster.Status == (models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
@@ -302,6 +302,17 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+	cluster.Status = models.Deploying
+	confError := UpdateCluster(cluster, false, ctx)
+	if confError != nil {
+
+		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
+
 	cluster, cpError = iks.create(cluster, ctx, companyId, token)
 
 	if cpError != (types.CustomCPError{}) {
@@ -327,7 +338,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return cpError
 	}
 
-	confError := ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
 
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
@@ -397,9 +408,18 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 	iks := GetIBM(profile.Profile)
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = (models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
+	err_ := UpdateCluster(cluster, false, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
 	cpErr := iks.init(profile.Profile.Region, ctx)
 	if cpErr != (types.CustomCPError{}) {
 

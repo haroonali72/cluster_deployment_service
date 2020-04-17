@@ -435,7 +435,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if errr != nil {
 		PrintError(errr, cluster.Name, ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: errr.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: errr.Error()}
 	}
 
 	gkeOps, err := GetGKE(credentials)
@@ -458,6 +458,17 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	cluster.CloudplexStatus = models.Deploying
+	err_ := UpdateGKECluster(cluster, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: confError.Message, Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
+
 	err = gkeOps.CreateCluster(cluster, token, ctx)
 	if err.Description != "" {
 		cluster.CloudplexStatus = "Cluster creation failed"
@@ -559,8 +570,6 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		return err1
 	}
 
-	cluster.CloudplexStatus = string(models.Terminating)
-
 	err1 = gkeOps.init()
 	if err1.Description != "" {
 		ctx.SendLogs("GKEClusterModel : Terminate -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -577,6 +586,16 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	cluster.CloudplexStatus = models.Terminating
+	err_ := UpdateGKECluster(cluster, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
 	errr := gkeOps.deleteCluster(cluster, ctx)
 	if errr.Description != "" {
 		_, _ = utils.SendLog(ctx.Data.Company, "Cluster termination failed: "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
