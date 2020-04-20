@@ -5,11 +5,17 @@ import (
 	"strings"
 )
 
-func ApiError(err error, code int) (cError types.CustomCPError) {
+func ApiError(err error, msg string, code int) (cError types.CustomCPError) {
 
-	cError.StatusCode = code
-	cError.Description = err.Error()
-	cError.Message = ValidationError(err.Error())
+	if msg != "" {
+		cError.StatusCode = code
+		cError.Description = err.Error()
+		cError.Message = msg
+	} else {
+		cError.StatusCode = code
+		cError.Description = err.Error()
+		cError.Message = ValidationError(err.Error())
+	}
 
 	return cError
 
