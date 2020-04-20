@@ -69,8 +69,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 
 	config, err1 := doks.GetServerConfig(doProfile.Profile, *ctx)
 	if err1.Description != "" {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err1.Description}
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -144,6 +144,12 @@ func (c *DOKSClusterController) GetKubeConfig() {
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -154,8 +160,8 @@ func (c *DOKSClusterController) GetKubeConfig() {
 
 	config, err1 := doks.GetKubeConfig(doProfile.Profile, *ctx, cluster)
 	if err1.Description != "" {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err1.Description}
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -228,6 +234,12 @@ func (c *DOKSClusterController) Get() {
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -284,6 +296,12 @@ func (c *DOKSClusterController) GetAll() {
 
 	clusters, err := doks.GetAllKubernetesCluster(data, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -330,7 +348,7 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+/*
 	err = validateStruct(cluster, token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -339,7 +357,7 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+*/
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -389,6 +407,12 @@ func (c *DOKSClusterController) Post() {
 
 	err = doks.AddKubernetesCluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
@@ -483,13 +507,13 @@ func (c *DOKSClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -574,6 +598,12 @@ func (c *DOKSClusterController) Delete() {
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -608,6 +638,12 @@ func (c *DOKSClusterController) Delete() {
 
 	err = doks.DeleteKubernetesCluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -701,7 +737,13 @@ func (c *DOKSClusterController) StartCluster() {
 	}
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
-	if err != nil {
+	if err != nil{
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -744,6 +786,12 @@ func (c *DOKSClusterController) StartCluster() {
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -847,7 +895,6 @@ func (c *DOKSClusterController) GetStatus() {
 	ctx.Data.Company = userInfo.CompanyId
 
 	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
-
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
@@ -946,7 +993,12 @@ func (c *DOKSClusterController) TerminateCluster() {
 	ctx.Data.Company = userInfo.CompanyId
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
-		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -985,6 +1037,12 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1080,6 +1138,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
+
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

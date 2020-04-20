@@ -327,8 +327,8 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 	_, err := GetGKECluster(ctx)
 	if err == nil {
-		text := fmt.Sprintf("GKEAddClusterModel:  Add - Cluster for project '%s' already exists in the database.", cluster.ProjectId)
-		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		text := fmt.Sprintf("GKEAddClusterModel:  Add - Cluster for project '%s' already exists in the database."+err.Error(), cluster.ProjectId)
+		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
 
@@ -369,7 +369,7 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	oldCluster, err := GetGKECluster(ctx)
 	if err != nil {
-		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name + "' does not exist in the database: " + err.Error()
+		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name  + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -458,7 +458,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus = models.Deploying
+	cluster.CloudplexStatus =  string(models.Deploying)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
@@ -579,14 +579,14 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 			_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
-			return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+			return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err1
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus = models.Terminating
+	cluster.CloudplexStatus = string(models.Terminating)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
@@ -607,7 +607,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-			return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+			return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return errr
@@ -621,7 +621,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
@@ -656,14 +656,14 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	data2, err := woodpecker.GetCertificate(ctx.Data.ProjectId, token, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 	filePath := "/tmp/" + ctx.Data.Company + "/" + ctx.Data.ProjectId + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 
 	if credentials.Zone != "" {
@@ -675,7 +675,7 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: "500", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
 	}
 	return types.CustomCPError{}
 }

@@ -202,7 +202,6 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 func CheckCluster(projectId, companyId string, ctx utils.Context) error {
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
-
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}

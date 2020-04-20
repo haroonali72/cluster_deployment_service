@@ -79,10 +79,15 @@ func (c *IKSClusterController) Get() {
 	ctx.SendLogs("IKSClusterController: Get cluster with project id: "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := iks.GetCluster(projectId, userInfo.CompanyId, *ctx)
-
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error":err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -415,7 +420,13 @@ func (c *IKSClusterController) Delete() {
 
 	cluster, err := iks.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -529,10 +540,15 @@ func (c *IKSClusterController) StartCluster() {
 	ctx.SendLogs("IKSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = iks.GetCluster(projectId, userInfo.CompanyId, *ctx)
-
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "cluster not found"}
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error":err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -683,7 +699,7 @@ func (c *IKSClusterController) GetStatus() {
 
 	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "nodes not found") {
-		//c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -795,13 +811,19 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	cluster, err = iks.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	if cluster.Status == models.New {
+	if cluster.Status ==  string(models.New) {
 		ctx.SendLogs("IKSClusterController: Cannot terminate new cluster", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(402)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -901,7 +923,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-		//c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -1012,7 +1034,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	versions, cpErr := iks.GetAllVersions(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-		//c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
