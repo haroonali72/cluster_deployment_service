@@ -171,7 +171,5 @@ $RECYCLE.BIN/
 
 *.tmp
 
-*swagger*
-
 # End of https://www.gitignore.io/api/go,macos,linux,windows,intellij
 /antelope

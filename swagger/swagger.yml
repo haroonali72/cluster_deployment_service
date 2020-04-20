@@ -19,62 +19,64 @@ paths:
       operationId: AKSClusterController.Update
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/aks.AKSCluster'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/aks
       description: add a new cluster
-      operationId: AKSClusterController.Add
+      operationId: AKSClusterController.Create
       parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
       - in: body
         name: body
         description: body for cluster content
         required: true
         schema:
           $ref: '#/definitions/aks.AKSCluster'
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"msg": "Runtime Error"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthrized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against this project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aks/{projectId}/:
     get:
       tags:
       - cluster/aks
-      description: get cluster
+      description: Get cluster against the projectId
       operationId: AKSClusterController.Get
       parameters:
       - in: path
@@ -83,7 +85,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -91,45 +93,46 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aks.AKSCluster'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aks/{projectId}/{forceDelete}:
     delete:
       tags:
       - cluster/aks
-      description: delete a cluster
+      description: Delete a cluster
       operationId: AKSClusterController.Delete
       parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
       - in: path
         name: projectId
-        description: project id of the cluster
+        description: Project id of the cluster
         required: true
         type: string
       - in: path
         name: forceDelete
         description: "true"
         type: boolean
-      - in: header
-        name: token
-        description: token
-        type: string
       responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aks/all:
     get:
       tags:
@@ -138,7 +141,7 @@ paths:
       operationId: AKSClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -148,10 +151,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/aks.AKSCluster'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aks/getallkubeversions/{region}:
     get:
       tags:
@@ -170,7 +173,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -186,6 +189,8 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/aks/getvms/{region}:
     get:
       tags:
@@ -194,7 +199,7 @@ paths:
       operationId: AKSClusterController.GetAKSVmsTypes
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -210,9 +215,6 @@ paths:
               $ref: '#/definitions/aks.VMSizeTypes'
         "400":
           description: '{"error": "error_msg"}'
-        "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
         "404":
           description: '{"error": "error_msg"}'
         "500":
@@ -221,17 +223,18 @@ paths:
     get:
       tags:
       - cluster/aks
-      description: get cluter kubeconfig
-      operationId: AKSClusterController.Kubeconfig
+      description: Get cluter configuration file
+      operationId: AKSClusterController.Get Kubeconfig
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -240,28 +243,31 @@ paths:
         type: string
       responses:
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/aks/start/{projectId}:
     post:
       tags:
       - cluster/aks
-      description: starts a  cluster
+      description: Deploy a kubernetes cluster
       operationId: AKSClusterController.Start
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -269,31 +275,36 @@ paths:
         required: true
         type: string
       responses:
-        "200":
+        "201":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/aks/status/{projectId}/:
     get:
       tags:
       - cluster/aks
-      description: returns status of nodes
+      description: Get live status of the running cluster
       operationId: AKSClusterController.Status
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -305,26 +316,27 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aks.AKSCluster'
-        "206":
-          description: '{object} aks.AKSCluster'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
-        "404":
           description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
   /cluster/aks/terminate/{projectId}/:
     post:
       tags:
       - cluster/aks
-      description: terminates a  cluster
+      description: Terminate a running cluster
       operationId: AKSClusterController.Terminate
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
         required: true
         type: string
       - in: path
@@ -332,22 +344,21 @@ paths:
         description: Id of the project
         required: true
         type: string
-      - in: header
-        name: token
-        description: token
-        type: string
       responses:
         "200":
-          description: '{"msg": "cluster terminated successfully"}'
+          description: '{"msg": "Cluster termination is in progress"}'
         "400":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in new/deployed/terminating state"}'
         "404":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/aws/:
     put:
       tags:
@@ -1389,11 +1400,11 @@ paths:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"msg": "error msg"}'
+          description: body not found
         "401":
           description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: token not found
         "409":
           description: '{"error": "cluster against this project already exists"}'
         "410":
@@ -1679,12 +1690,11 @@ paths:
         name: token
         description: "true"
         type: string
-      - in: body
+      - in: vault.DOCredentials
         name: body
         description: body for cluster content
-        required: true
         schema:
-          $ref: '#/definitions/vault.DOCredentials'
+          $ref: '#/definitions/true'
       responses:
         "200":
           description: '{"msg": "Profile is valid"}'
@@ -1696,66 +1706,68 @@ paths:
     put:
       tags:
       - cluster/doks
-      description: update an existing kubernetes cluster
+      description: Update an existing kubernetes cluster
       operationId: DOKSClusterController.Update
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/doks.KubernetesCluster'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/doks
-      description: add a new cluster
-      operationId: DOKSClusterController.Add
+      description: Add a new cluster
+      operationId: DOKSClusterController.Create
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/doks.KubernetesCluster'
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster added successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against same project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/doks/{projectId}/:
     get:
       tags:
       - cluster/doks
-      description: get kubernetes cluster
+      description: Get cluster against the projectId
       operationId: DOKSClusterController.Get
       parameters:
       - in: path
@@ -1764,8 +1776,9 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -1773,44 +1786,47 @@ paths:
           schema:
             $ref: '#/definitions/doks.KubernetesCluster'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/doks/{projectId}/{forceDelete}:
     delete:
       tags:
       - cluster/doks
-      description: delete a kubernetes cluster
+      description: Delete a cluster
       operationId: DOKSClusterController.Delete
       parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
       - in: path
         name: projectId
-        description: project id of the cluster
+        description: Project id of the cluster
         required: true
         type: string
       - in: path
         name: forceDelete
         description: "true"
         type: boolean
-      - in: header
-        name: token
-        description: token
-        type: string
       responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/doks/all:
     get:
       tags:
@@ -1819,8 +1835,9 @@ paths:
       operationId: DOKSClusterController.Get All
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -1829,28 +1846,30 @@ paths:
             type: array
             items:
               $ref: '#/definitions/doks.KubernetesCluster'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/doks/applyagent/{projectId}:
     post:
       tags:
       - cluster/doks
-      description: Apply cloudplex Agent file to eks cluster
-      operationId: DOKSClusterController.Start
+      description: Apply cloudplex Agent file to doks cluster
+      operationId: DOKSClusterController.Start agent
       parameters:
       - in: header
         name: clusterName
-        description: clusterName
+        description: Name of the cluster
+        required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: path
@@ -1862,54 +1881,58 @@ paths:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/doks/config:
     get:
       tags:
       - cluster/doks
-      description: get kubernetes version,machine types and regions
-      operationId: DOKSClusterController.Get
+      description: Get kubernetes version,machine types and regions
+      operationId: DOKSClusterController.Get Options
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/doks.ServerConfig'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/doks/kubeconfig/{projectId}:
     get:
       tags:
       - cluster/doks
-      description: get server config file
-      operationId: DOKSClusterController.Get
+      description: Get valid kubernetes cluster version and machine sizes
+      operationId: DOKSClusterController.Get Config File
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: path
@@ -1923,26 +1946,31 @@ paths:
           schema:
             $ref: '#/definitions/doks.KubernetesConfig'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/doks/start/{projectId}:
     post:
       tags:
       - cluster/doks
-      description: starts a kubernetes cluster
+      description: Deploy a kubernetes cluster
       operationId: DOKSClusterController.Start
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -1950,31 +1978,36 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/doks/status/{projectId}/:
     get:
       tags:
       - cluster/doks
-      description: returns status of nodes
+      description: Get live status of the running cluster
       operationId: DOKSClusterController.Status
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -1985,27 +2018,25 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/doks.DOKSCluster'
-        "206":
-          description: '{object} doks.DOKSCluster'
-        "400":
-          description: '{"error": "error msg"}'
+            $ref: '#/definitions/doks.KubernetesCluster'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/doks/terminate/{projectId}/:
     post:
       tags:
       - cluster/doks
-      description: terminates a  cluster
+      description: Terminate a running cluster
       operationId: DOKSClusterController.Terminate
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: path
@@ -2014,21 +2045,23 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
-          description: '{"msg": "cluster terminated successfully"}'
-        "400":
-          description: '{"error": "error_msg"}'
+          description: '{"msg": "Cluster termination is in progress"}'
         "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in new/deployed/terminating state"}'
         "404":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/gcp/:
     put:
       tags:
@@ -2226,19 +2259,6 @@ paths:
           description: '{"error": "authorization params missing or invalid"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/gcp/machine/info:
-    get:
-      tags:
-      - cluster/gcp
-      description: Get GCP Machine instance cores
-      operationId: GcpClusterController.GetCores
-      responses:
-        "200":
-          description: ""
-          schema:
-            $ref: '#/definitions/models.Machine'
-        "500":
-          description: '{"error":  "error msg"}'
   /cluster/gcp/serviceaccounts:
     get:
       tags:
@@ -2252,7 +2272,7 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile Id
         required: true
         type: string
       responses:
@@ -2488,66 +2508,68 @@ paths:
     put:
       tags:
       - cluster/gke
-      description: update an existing cluster
+      description: Update an existing cluster
       operationId: GKEClusterController.Update
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/gke.GKECluster'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/gke
       description: add a new cluster
-      operationId: GKEClusterController.Add
+      operationId: GKEClusterController.Create
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/gke.GKECluster'
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against same project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/{projectId}/:
     get:
       tags:
       - cluster/gke
-      description: get cluster
+      description: Get cluster against the projectId
       operationId: GKEClusterController.Get
       parameters:
       - in: path
@@ -2556,8 +2578,9 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -2565,13 +2588,13 @@ paths:
           schema:
             $ref: '#/definitions/gke.GKECluster'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/{projectId}/{forceDelete}: {}
   /cluster/gke/all:
     get:
@@ -2581,8 +2604,9 @@ paths:
       operationId: GKEClusterController.Get All
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -2591,10 +2615,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/gke.GKECluster'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/applyagent/{projectId}:
     post:
       tags:
@@ -2604,11 +2628,13 @@ paths:
       parameters:
       - in: header
         name: clusterName
-        description: clusterName
+        description: Name of the cluster
+        required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -2624,55 +2650,66 @@ paths:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
-  /cluster/gke/config/{zone}:
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
+  /cluster/gke/config/{region}:
     get:
       tags:
       - cluster/gke
-      description: get cluster
-      operationId: GKEClusterController.Get
+      description: Get cluster versions and image sizes
+      operationId: GKEClusterController.Get Options
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: region
+        description: Region of the cloud
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/gke.ServerConfig'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/gke/start/{projectId}:
     post:
       tags:
       - cluster/gke
-      description: starts a  cluster
+      description: Deploy a kubernetes cluster
       operationId: GKEClusterController.Start
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -2680,31 +2717,36 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/gke/status/{projectId}/:
     get:
       tags:
       - cluster/gke
-      description: returns latest status of cluster
+      description: Get live status of the running cluster
       operationId: GKEClusterController.Status
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -2716,26 +2758,29 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gke.GKECluster'
-        "206":
-          description: '{object} gke.GKECluster'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/gke/terminate/{projectId}/:
     post:
       tags:
       - cluster/gke
-      description: terminates a  cluster
+      description: Terminate a running cluster
       operationId: GKEClusterController.Terminate
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
         required: true
         type: string
       - in: path
@@ -2743,90 +2788,87 @@ paths:
         description: Id of the project
         required: true
         type: string
-      - in: header
-        name: token
-        description: token
-        type: string
       responses:
         "200":
-          description: '{"msg": "cluster terminated successfully"}'
+          description: '{"msg": "Cluster termination is in progress"}'
         "400":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in new/deployed/terminating state"}'
         "404":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/iks/:
     put:
       tags:
       - cluster/iks
-      description: update an existing cluster
+      description: Update an existing cluster
       operationId: IKSClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/iks.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/iks
-      description: create a new cluster
+      description: Add a new cluster
       operationId: IKSClusterController.Create
       parameters:
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/iks.Cluster_Def'
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster added successfully"}'
         "400":
-          description: '{"msg": "error msg"}'
+          description: '{"msg": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against this project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/iks/{projectId}/:
     get:
       tags:
       - cluster/iks
-      description: get cluster
+      description: Get cluster against the projectId
       operationId: IKSClusterController.Get
       parameters:
       - in: path
@@ -2835,20 +2877,21 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/iks.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/iks/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -2857,12 +2900,13 @@ paths:
       operationId: IKSClusterController.Delete
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
-        description: project id of the cluster
+        description: Project id of the cluster
         required: true
         type: string
       - in: path
@@ -2870,16 +2914,18 @@ paths:
         description: "true"
         type: boolean
       responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Baad request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/iks/all:
     get:
       tags:
@@ -2888,8 +2934,9 @@ paths:
       operationId: IKSClusterController.Get All
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -2898,32 +2945,35 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Erorr"}'
   /cluster/iks/applyagent/{projectId}:
     post:
       tags:
       - cluster/iks
-      description: Apply cloudplex Agent file to eks cluster
-      operationId: IKSClusterController.Start
+      description: Apply cloudplex agent file to eks cluster
+      operationId: IKSClusterController.Apply agent
       parameters:
       - in: header
-        name: clusterName
-        description: clusterName
-        type: string
-      - in: header
-        name: resourceGroup
-        description: resourceGroup
-        type: string
-      - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
+        required: true
+        type: string
+      - in: header
+        name: clusterName
+        description: Name of the cluster
+        required: true
+        type: string
+      - in: header
+        name: resourceGroup
+        description: Resource Group
         required: true
         type: string
       - in: path
@@ -2934,34 +2984,33 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/iks/getallkubeversions/{region}:
     get:
       tags:
       - cluster/iks
       description: fetch version of kubernetes cluster
-      operationId: IKSClusterController.Get Kube Versions
+      operationId: IKSClusterController.Get Kubernetes Versions
       parameters:
       - in: path
         name: region
-        description: selected region value
+        description: region of the cloud
         required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -2971,53 +3020,61 @@ paths:
             items:
               $ref: '#/definitions/iks.Versions'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/iks/getallmachines/{region}/:
     get:
       tags:
       - cluster/iks
-      description: get all instance list
-      operationId: IKSClusterController.Get All Instance List
+      description: Get all available instance list
+      operationId: IKSClusterController.Get Instance List
       parameters:
       - in: header
         name: X-Profile-Id
-        description: profileId
+        description: Vault credentials profile id
+        required: true
         schema:
           $ref: '#/definitions/X-Profile-Id'
-      - in: path
-        name: region
-        description: region of the cloud
+        default: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
         required: true
         type: string
-      - in: header
-        name: token
-        description: token
+      - in: path
+        name: region
+        description: Region of the cloud
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/iks.AllInstancesResponse'
-        "401":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/iks/getallregions/:
     get:
       tags:
       - cluster/iks
-      description: fetch regions of iks
+      description: fetch regions of IKS
       operationId: IKSClusterController.Get Regions
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -3026,27 +3083,26 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.Regions'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/iks/getzones/{region}/:
     get:
       tags:
       - cluster/iks
-      description: get zone
+      description: get zone against region
       operationId: IKSClusterController.Get Zone
       parameters:
       - in: path
         name: region
-        description: Id of region
+        description: Region of the cloud
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -3055,26 +3111,26 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.Zone'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/iks/start/{projectId}:
     post:
       tags:
       - cluster/iks
-      description: starts a  cluster
+      description: Deploy a kubernetes cluster
       operationId: IKSClusterController.Start
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: profileId
+        description: Vault credentials profile id
+        required: true
         type: string
       - in: path
         name: projectId
@@ -3082,30 +3138,35 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/iks/status/{projectId}/:
     get:
       tags:
       - cluster/iks
-      description: returns status of nodes
+      description: Get live status of the running cluster
       operationId: IKSClusterController.Status
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: profileId
+        description: Vault credentials profile Id
         type: string
       - in: path
         name: projectId
@@ -3119,29 +3180,32 @@ paths:
             type: array
             items:
               $ref: '#/definitions/iks.KubeWorkerPoolStatus'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/iks/terminate/{projectId}/:
     post:
       tags:
       - cluster/iks
-      description: terminates a  cluster
+      description: Terminate a running cluster
       operationId: IKSClusterController.Terminate
       parameters:
       - in: header
         name: X-Profile-Id
-        description: profileId
+        description: Vault credentials profile Id
+        required: true
         schema:
           $ref: '#/definitions/X-Profile-Id'
+        default: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -3150,41 +3214,48 @@ paths:
         type: string
       responses:
         "200":
-          description: '{"msg": "cluster terminated successfully"}'
+          description: '{"msg": "Cluster termination is in progress"}'
+        "400":
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in new/deployed/terminating state"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/iks/validateProfile:
     post:
       tags:
       - cluster/iks
-      description: validate ibm profile
-      operationId: IKSClusterController.Get Validate Profile
+      description: Validate IBM profile
+      operationId: IKSClusterController.Validate Profile
       parameters:
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/vault.IBMCredentials'
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
-          description: '{"msg": "Profile is valid"}'
+          description: '{"msg": "Valid Profile"}'
+        "400":
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "409":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/op/:
     put:
       tags:
@@ -3193,12 +3264,13 @@ paths:
       operationId: OPClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
-        description: teams
+        description: '''teams'
         type: string
       - in: body
         name: body
@@ -3210,26 +3282,22 @@ paths:
         "200":
           description: '{"msg": "cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/op
-      description: create a new cluster
+      description: add a new cluster
       operationId: OPClusterController.Create
       parameters:
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/op.Cluster_Def'
@@ -3238,29 +3306,28 @@ paths:
         description: teams
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"msg": "error msg"}'
+          description: '{"msg": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against this project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/op/{projectId}/:
     get:
       tags:
       - cluster/op
-      description: get cluster
+      description: Get cluster against the projectId
       operationId: OPClusterController.Get
       parameters:
       - in: path
@@ -3269,20 +3336,21 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/op.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/op/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -3291,12 +3359,13 @@ paths:
       operationId: OPClusterController.Delete
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
-        description: project id of the cluster
+        description: Project id of the cluster
         required: true
         type: string
       - in: path
@@ -3304,26 +3373,29 @@ paths:
         description: "true"
         type: boolean
       responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/op/all:
     get:
       tags:
       - cluster/op
-      description: get all the clusters
+      description: get all the company's clusters
       operationId: OPClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3332,37 +3404,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/op.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
-        "500":
-          description: '{"error": "error msg"}'
-  /cluster/op/checkCluster/{projectId}/:
-    get:
-      tags:
-      - cluster/op
-      description: validates a cluster
-      operationId: OPClusterController.ValidateCluster
-      parameters:
-      - in: header
-        name: token
-        description: token
-        type: string
-      - in: path
-        name: projectId
-        description: Id of the project
-        required: true
-        type: string
-      responses:
-        "200":
-          description: '{"msg": "cluster is running successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
-        "401":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /customerTemplate/register:
     post:
       tags:
@@ -6072,28 +6117,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0016bf380.false:
+  442.0xc0017f10b0.false:
     title: "false"
     type: object
-  518.0xc00160d110.false:
+  605.0xc001108150.false:
     title: "false"
     type: object
-  1559.string:
+  639.0xc001713b30.false:
+    title: "false"
+    type: object
+  644.0xc0013dbb60.false:
+    title: "false"
+    type: object
+  5837.string:
     title: string
     type: object
-  5960.0xc0016ec8a0.false:
+  13199.0xc001820e40.false:
     title: "false"
     type: object
-  13279.0xc001632b10.false:
+  48432.0xc0017b4630.false:
     title: "false"
     type: object
-  13385.0xc00102f140.false:
-    title: "false"
-    type: object
-  13431.0xc001338c60.false:
-    title: "false"
-    type: object
-  19826.string:
+  52426.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6115,7 +6160,7 @@ definitions:
         type: string
       project_id:
         type: string
-      properties:
+      property:
         $ref: '#/definitions/aks.ManagedClusterProperties'
       resource_group:
         type: string
@@ -6148,7 +6193,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/52426.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6199,7 +6244,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/19826.string'
+        $ref: '#/definitions/5837.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6338,7 +6383,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc00102f140.false'
+        $ref: '#/definitions/605.0xc001108150.false'
       name:
         type: string
       network_name:
@@ -6719,7 +6764,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13431.0xc001338c60.false'
+        $ref: '#/definitions/644.0xc0013dbb60.false'
       name:
         type: string
       network_name:
@@ -6901,9 +6946,6 @@ definitions:
         $ref: '#/definitions/doks.Context'
       name:
         type: string
-  doks.DOKSCluster:
-    title: DOKSCluster
-    type: object
   doks.KubernetesCluster:
     title: KubernetesCluster
     type: object
@@ -7858,7 +7900,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/13279.0xc001632b10.false'
+        $ref: '#/definitions/639.0xc001713b30.false'
       kube_version:
         type: string
       name:
@@ -7927,8 +7969,6 @@ definitions:
       node_count:
         type: integer
         format: int64
-      pool_role:
-        $ref: '#/definitions/models.PoolRole'
       subnet_id:
         type: string
   iks.Regions:
@@ -7958,7 +7998,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc00160d110.false'
+        $ref: '#/definitions/48432.0xc0017b4630.false'
       kube_version:
         type: string
       name:
@@ -8106,13 +8146,12 @@ definitions:
     title: Type
     type: string
     enum:
-    - Existing = "existing"
     - New = "new"
     - Created = "created"
     - ClusterCreated = "cluster created"
     - Deploying = "deploying"
     - Terminating = "terminating"
-    example: existing
+    example: new
   op.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -8124,7 +8163,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc0016ec8a0.false'
+        $ref: '#/definitions/442.0xc0017f10b0.false'
       name:
         type: string
       node_pools:
@@ -8210,7 +8249,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0016bf380.false'
+        $ref: '#/definitions/13199.0xc001820e40.false'
       name:
         type: string
       node_pools:
@@ -8223,6 +8262,9 @@ definitions:
         type: string
       token_name:
         type: string
+  "true":
+    title: "true"
+    type: object
   vault.AwsCredentials:
     title: AwsCredentials
     type: object
@@ -8246,14 +8288,6 @@ definitions:
       subscription_id:
         type: string
       tenant_id:
-        type: string
-  vault.DOCredentials:
-    title: DOCredentials
-    type: object
-    properties:
-      access_token:
-        type: string
-      region:
         type: string
   vault.IBMCredentials:
     title: IBMCredentials

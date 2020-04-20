@@ -5,6 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/db"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"antelope/models/woodpecker"
@@ -19,31 +20,30 @@ import (
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ClusterId        string        `json:"cluster_id" bson:"cluster_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(IKS|iks)"`
+	Name             string        `json:"name" bson:"name" validate:"required"`
+	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required"`
 	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint"`
-	KubeVersion      string        `json:"kube_version" bson:"kube_version"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version" validate:"required"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
-	VPCId            string        `json:"vpc_id" bson:"vpc_id"`
+	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required"`
 	IsAdvance        bool          `json:"is_advance" bson:"is_advance"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
 }
 type NodePool struct {
-	ID               bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
-	Name             string          `json:"name" bson:"name" valid:"required"`
-	NodeCount        int             `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType      string          `json:"machine_type" bson:"machine_type" valid:"required"`
-	PoolRole         models.PoolRole `json:"pool_role" bson:"pool_role" valid:"required"`
-	SubnetID         string          `json:"subnet_id" bson:"subnet_id"`
-	AvailabilityZone string          `json:"availability_zone" bson:"availability_zone"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	NodeCount        int           `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType      string        `json:"machine_type" bson:"machine_type" valid:"required"`
+	SubnetID         string        `json:"subnet_id" bson:"subnet_id"`
+	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone"`
 }
 
 type Project struct {
@@ -89,7 +89,24 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 	ibmProfile.Profile.Region = region
 	return ibmProfile, nil
 }
+func GetError(projectId, companyId string, ctx utils.Context) (err types.ClusterError, err1 error) {
 
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return types.ClusterError{}, err1
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
+	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": models.IKS}).One(&err)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return types.ClusterError{}, err1
+	}
+	return err, nil
+}
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -139,31 +156,12 @@ func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	return nil
 }
-func checkMasterPools(cluster Cluster_Def) error {
-	noOfMasters := 0
-	for _, pools := range cluster.NodePools {
-		if pools.PoolRole == models.Master {
-			noOfMasters += 1
-			if noOfMasters == 2 {
-				return errors.New("Cluster can't have more than 1 master")
-			}
-		}
-	}
-	return nil
-}
-
 func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
-	err = checkMasterPools(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoIKSClusterCollection, cluster)
 	if err != nil {
@@ -180,11 +178,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
+	if oldCluster.Status ==  string(models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
+	if oldCluster.Status ==  string(models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
@@ -259,197 +257,206 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx utils.Context, companyId string, token string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx utils.Context, companyId string, token string) types.CustomCPError {
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		return confError
-	}
-	iks, err := GetIBM(credentials)
-	if err != nil {
-		return err
-	}
-	confError = iks.init(credentials.Region, ctx)
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+	publisher.Init_notifier()
+
+	iks := GetIBM(credentials)
+
+	cpError := iks.init(credentials.Region, ctx)
+	if cpError != (types.CustomCPError{}) {
+
+		utils.SendLog(companyId, cpError.Message, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cpError.Description, "error", cluster.ProjectId)
+		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
+
 		cluster.Status = "Cluster Creation Failed"
-		confError = UpdateCluster(cluster, false, ctx)
+		confError := UpdateCluster(cluster, false, ctx)
+
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return cpError
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = iks.create(cluster, ctx, companyId, token)
+	cluster.Status =  string(models.Deploying)
+	confError := UpdateCluster(cluster, false, ctx)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+
+		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
+
+	cluster, cpError = iks.create(cluster, ctx, companyId, token)
+
+	if cpError != (types.CustomCPError{}) {
+
 		if cluster.ClusterId != "" {
-			confError = iks.terminateCluster(&cluster, ctx)
-			if confError != nil {
-				PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-			}
+
+			iks.terminateCluster(&cluster, ctx)
+
 		}
 		cluster.Status = "Cluster Creation Failed"
-		confError = UpdateCluster(cluster, false, ctx)
+		confError := UpdateCluster(cluster, false, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+
+			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+			cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			return cpErr
+
 		}
+		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
+		ctx.SendLogs("Cluster creation failed", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return cpError
 	}
 
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		if cluster.ClusterId != "" {
-			confError = iks.terminateCluster(&cluster, ctx)
-			if confError != nil {
-				PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-			}
-		}
+
+		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		}
+
+		cpErr := ApiError(confError, "Error occurred deploying agent", 500)
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return cpErr
 	}
 	cluster.Status = "Cluster Created"
+
 	confError = UpdateCluster(cluster, false, ctx)
+
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+
+		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-	return nil
+	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) ([]KubeWorkerPoolStatus, error) {
+func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) ([]KubeWorkerPoolStatus, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
-		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []KubeWorkerPoolStatus{}, err
+		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
+		return []KubeWorkerPoolStatus{}, cpErr
 	}
-	iks, err := GetIBM(credentials.Profile)
+	customErr, err := GetError(projectId, companyId, ctx)
 	if err != nil {
-		return []KubeWorkerPoolStatus{}, err
+		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
+		return []KubeWorkerPoolStatus{}, cpErr
 	}
-	err = iks.init(credentials.Profile.Region, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []KubeWorkerPoolStatus{}, err
+	if customErr.Err != (types.CustomCPError{}) {
+		return []KubeWorkerPoolStatus{}, customErr.Err
+	}
+	iks := GetIBM(credentials.Profile)
+
+	cpErr := iks.init(credentials.Profile.Region, ctx)
+	if cpErr != (types.CustomCPError{}) {
+		return []KubeWorkerPoolStatus{}, cpErr
 	}
 
 	response, e := iks.fetchStatus(&cluster, ctx, companyId)
-	if e != nil {
+	if e != (types.CustomCPError{}) {
 
-		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []KubeWorkerPoolStatus{}, e
 	}
-	return response, nil
+	return response, types.CustomCPError{}
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.Context, companyId, token string) error {
+func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.Context, companyId, token string) types.CustomCPError {
 
 	publisher := utils.Notifier{}
+	publisher.Init_notifier()
 
-	pub_err := publisher.Init_notifier()
-	if pub_err != nil {
-		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return pub_err
-	}
+	iks := GetIBM(profile.Profile)
 
-	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
-	if err != nil {
-		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	if cluster.Status == "" || cluster.Status == "new" {
-		text := "Cannot terminate a new cluster"
-		ctx.SendLogs("IBMClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return errors.New(text)
-	}
-
-	iks, err := GetIBM(profile.Profile)
-	if err != nil {
-		return err
-	}
-
-	cluster.Status = string(models.Terminating)
+	cluster.Status =  string(models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = iks.init(profile.Profile.Region, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	err_ := UpdateCluster(cluster, false, ctx)
+	if err_ != nil {
+
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
+	cpErr := iks.init(profile.Profile.Region, ctx)
+	if cpErr != (types.CustomCPError{}) {
+
+		utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
+
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster, false, ctx)
+		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
-			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return cpErr
 	}
 
-	err = iks.terminateCluster(&cluster, ctx)
-	if err != nil {
-		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
+	cpErr = iks.terminateCluster(&cluster, ctx)
+	if cpErr != (types.CustomCPError{}) {
+
+		utils.SendLog(companyId, "Cluster termination failed: "+cpErr.Description+cluster.Name, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
-		err = UpdateCluster(cluster, false, ctx)
+		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
-			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return err
+
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return cpErr
 	}
 
 	cluster.Status = "Cluster Terminated"
-	err = UpdateCluster(cluster, false, ctx)
+	err := UpdateCluster(cluster, false, ctx)
 	if err != nil {
-		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+	return types.CustomCPError{}
 }
-func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesResponse, error) {
-	iks, err := GetIBM(profile.Profile)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return AllInstancesResponse{}, err
-	}
+func GetAllMachines(profile vault.IBMProfile, ctx utils.Context) (AllInstancesResponse, types.CustomCPError) {
+	iks := GetIBM(profile.Profile)
 
-	err = iks.init(profile.Profile.Region, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	err := iks.init(profile.Profile.Region, ctx)
+	if err != (types.CustomCPError{}) {
 		return AllInstancesResponse{}, err
 	}
 
 	machineTypes, err := iks.GetAllInstances(ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
 		return AllInstancesResponse{}, err
 	}
 
-	return machineTypes, nil
+	return machineTypes, types.CustomCPError{}
 }
 func GetRegions(ctx utils.Context) ([]Regions, error) {
 	regionsDetails := []byte(`[
@@ -516,26 +523,24 @@ func GetRegions(ctx utils.Context) ([]Regions, error) {
 	}
 	return regions, nil
 }
-func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, error) {
-	iks, err := GetIBM(profile.Profile)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Versions{}, err
-	}
+func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, types.CustomCPError) {
+	iks := GetIBM(profile.Profile)
 
-	err = iks.init(profile.Profile.Region, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	err := iks.init(profile.Profile.Region, ctx)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
 	versions, err := iks.GetAllVersions(ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
-	return versions, nil
+	return versions, types.CustomCPError{}
 }
 func ApplyAgent(credentials vault.IBMCredentials, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
@@ -563,7 +568,7 @@ func ApplyAgent(credentials vault.IBMCredentials, token string, ctx utils.Contex
 	}
 	return nil
 }
-func GeZones(region string, ctx utils.Context) ([]string, error) {
+func GetZones(region string, ctx utils.Context) ([]string, error) {
 	var zones []string
 	if region == "us-south" {
 		zones = append(zones, "us-south-1")
@@ -593,24 +598,108 @@ func GeZones(region string, ctx utils.Context) ([]string, error) {
 
 	return zones, nil
 }
-func ValidateProfile(profile  vault.IBMProfile, ctx utils.Context)  error {
-	iks, err := GetIBM(profile.Profile)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
+func ValidateProfile(profile vault.IBMProfile, ctx utils.Context) types.CustomCPError {
+	iks := GetIBM(profile.Profile)
 
-	err = iks.init(profile.Profile.Region, ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	err := iks.init(profile.Profile.Region, ctx)
+	if err != (types.CustomCPError{}) {
 		return err
 	}
 
 	_, err = iks.GetAllVersions(ctx)
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  err
+	if err != (types.CustomCPError{}) {
+		return err
 	}
 
-	return  nil
+	return types.CustomCPError{}
+}
+
+func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
+
+	if cluster.ProjectId == "" {
+
+		return errors.New("project id is empty")
+
+	} else if cluster.Name == "" {
+
+		return errors.New("cluster name is empty")
+
+	} else if cluster.KubeVersion == "" {
+
+		return errors.New("kubernetes version is empty")
+
+	} else if cluster.NetworkName == "" {
+
+		return errors.New("network name is empty")
+
+	} else if cluster.VPCId == "" {
+
+		return errors.New("VPC name is empty")
+
+	} else if len(cluster.NodePools) == 0 {
+
+		return errors.New("node pool length must be greater than zero")
+
+	} else if len(cluster.NodePools) > 0 {
+
+		for _, nodepool := range cluster.NodePools {
+
+			if nodepool.Name == "" {
+
+				return errors.New("node pool name is empty")
+
+			} else if nodepool.NodeCount == 0 {
+
+				return errors.New("machine count must be greater than zero")
+
+			} else if nodepool.MachineType == "" {
+
+				return errors.New("machine type is empty")
+
+			} else if nodepool.SubnetID == "" {
+
+				return errors.New("subnet Id is empty")
+
+			} else if nodepool.AvailabilityZone == "" {
+
+				return errors.New("availability zone is empty")
+
+			}
+
+		}
+
+		isZoneExist, err := validateIKSZone(cluster.NodePools[0].AvailabilityZone, ctx)
+		if err != nil && !isZoneExist {
+			text := "availabe zones are " + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+	}
+
+	return nil
+}
+
+func validateIKSZone(zone string, ctx utils.Context) (bool, error) {
+
+	regionList, err := GetRegions(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	for _, v1 := range regionList {
+		for _, v2 := range v1.Zones {
+			if zone == v2 {
+				return true, nil
+			}
+		}
+	}
+
+	var errData string
+	for _, v1 := range regionList {
+		for _, v2 := range v1.Zones {
+			errData += v2 + ", "
+		}
+	}
+
+	return false, errors.New(errData)
 }
