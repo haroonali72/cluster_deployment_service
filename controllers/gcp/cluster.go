@@ -216,7 +216,7 @@ func (c *GcpClusterController) Post() {
 
 	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -309,7 +309,7 @@ func (c *GcpClusterController) Patch() {
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -891,7 +891,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 // @Title ListServiceAccounts
 // @Description returns list of service account emails
 // @Param	token	header	string	token ""
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile Id"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "profile id is empty"}
 // @Failure 401 {"error": "authorization params missing or invalid"}

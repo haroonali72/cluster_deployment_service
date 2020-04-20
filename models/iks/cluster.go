@@ -568,7 +568,7 @@ func ApplyAgent(credentials vault.IBMCredentials, token string, ctx utils.Contex
 	}
 	return nil
 }
-func GeZones(region string, ctx utils.Context) ([]string, error) {
+func GetZones(region string, ctx utils.Context) ([]string, error) {
 	var zones []string
 	if region == "us-south" {
 		zones = append(zones, "us-south-1")
