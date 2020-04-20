@@ -323,7 +323,7 @@ func (c *DOKSClusterController) GetAll() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
-// @Failure 409 {"error": "Cluster against same project id already exists"}
+// @Failure 409 {"error": "Cluster against same project already exists"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *DOKSClusterController) Post() {
@@ -663,10 +663,10 @@ func (c *DOKSClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "Cluster created successfully"}
+// @Success 201 {"msg": "Cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in deployed/terminating state"}
+// @Failure 402 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -919,6 +919,7 @@ func (c *DOKSClusterController) GetStatus() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {"msg": "Cluster termination is in progress"}
 // @Failure 401 {"error": "Unauthorized"}
+// @Failure 402 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError

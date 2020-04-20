@@ -369,7 +369,7 @@ func (c *AKSClusterController) GetAll() {
 // @Description add a new cluster
 // @Param	body body aks.AKSCluster true "body for cluster content"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {"msg": "Cluster created successfully"}
+// @Success 201 {"msg": "Cluster created successfully"}
 // @Success 400 {"msg": "Runtime Error"}
 // @Failure 401 {"error": "Unauthrized"}
 // @Failure 404 {"error": "Not Found"}
@@ -474,7 +474,7 @@ func (c *AKSClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in deploying/running/terminating state"}
+// @Failure 402 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -685,10 +685,10 @@ func (c *AKSClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "cluster created successfully"}
+// @Success 201 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in deployed/terminating state"}
+// @Failure 402 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -931,8 +931,9 @@ func (c *AKSClusterController) GetStatus() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "Cluster termination is in progress"}
-// @Failure 401 {"error": "Unauthorized"}
 // @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 402 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError

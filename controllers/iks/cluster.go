@@ -19,14 +19,15 @@ type IKSClusterController struct {
 	beego.Controller
 }
 
-// @Title Get All Instance List
-// @Description Get all instance list
+// @Title Get Instance List
+// @Description Get all available instance list
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	region	path	string	true	"Region of the cloud"
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /getallmachines/:region/ [get]
 func (c *IKSClusterController) GetAllMachineTypes() {
 	ctx := new(utils.Context)
@@ -762,7 +763,7 @@ func (c *IKSClusterController) Delete() {
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in deployed/terminating state"}
+// @Failure 402 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -1028,6 +1029,7 @@ func (c *IKSClusterController) GetStatus() {
 // @Success 200 {"msg": "Cluster termination is in progress"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
+// @Failure 402 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
