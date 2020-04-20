@@ -69,8 +69,7 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	config, err := gke.GetServerConfig(credentials, *ctx)
 	if err.Description != "" {
-		status, _ := strconv.Atoi(err.StatusCode)
-		c.Ctx.Output.SetStatus(status)
+		c.Ctx.Output.SetStatus(err.StatusCode)
 		c.Data["json"] = err
 		c.ServeJSON()
 		return
@@ -141,8 +140,14 @@ func (c *GKEClusterController) Get() {
 	ctx.SendLogs("GKEClusterController: Getting cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -198,6 +203,12 @@ func (c *GKEClusterController) GetAll() {
 
 	clusters, err := gke.GetAllGKECluster(data, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -299,6 +310,12 @@ func (c *GKEClusterController) Post() {
 
 	err = gke.AddGKECluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
@@ -384,7 +401,7 @@ func (c *GKEClusterController) Patch() {
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
+			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
@@ -395,13 +412,13 @@ func (c *GKEClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(402)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -492,6 +509,12 @@ func (c *GKEClusterController) Delete() {
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -525,6 +548,12 @@ func (c *GKEClusterController) Delete() {
 	ctx.SendLogs("GKEClusterController: Deleting cluster"+cluster.Name+"of project "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	err = gke.DeleteGKECluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -625,6 +654,12 @@ func (c *GKEClusterController) StartCluster() {
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -658,6 +693,12 @@ func (c *GKEClusterController) StartCluster() {
 	cluster.CloudplexStatus = string(models.Deploying)
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -766,6 +807,7 @@ func (c *GKEClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
@@ -846,6 +888,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -864,6 +907,12 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -892,6 +941,12 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -957,6 +1012,7 @@ func (c *GKEClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
+
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

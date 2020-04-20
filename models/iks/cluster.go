@@ -89,24 +89,6 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 	ibmProfile.Profile.Region = region
 	return ibmProfile, nil
 }
-func GetError(projectId, companyId string, ctx utils.Context) (err types.ClusterError, err1 error) {
-
-	session, err1 := db.GetMongoSession(ctx)
-	if err1 != nil {
-		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.ClusterError{}, err1
-	}
-
-	defer session.Close()
-	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
-	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": models.IKS}).One(&err)
-	if err1 != nil {
-		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.ClusterError{}, err1
-	}
-	return err, nil
-}
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -178,11 +160,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == (models.Deploying) && update {
+	if oldCluster.Status == string(models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == (models.Terminating) && update {
+	if oldCluster.Status == string(models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
@@ -277,18 +259,26 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
 		}
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpError
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster.Status = models.Deploying
+	cluster.Status = string(models.Deploying)
 	confError := UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
 
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
@@ -308,12 +298,20 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 			cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
+			err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+			if err != nil {
+				ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return cpErr
 
 		}
 		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
 		ctx.SendLogs("Cluster creation failed", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpError
 	}
@@ -330,7 +328,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		}
 
 		cpErr := ApiError(confError, "Error occurred deploying agent", 500)
-
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
@@ -342,7 +343,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
-
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
@@ -358,7 +362,7 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
-	customErr, err := GetError(projectId, companyId, ctx)
+	customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
@@ -388,7 +392,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 	iks := GetIBM(profile.Profile)
 
-	cluster.Status = (models.Terminating)
+	cluster.Status = string(models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
 	err_ := UpdateCluster(cluster, false, ctx)
@@ -396,7 +400,10 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
 		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
-
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
@@ -411,6 +418,10 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		if err != nil {
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		}
+		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
@@ -427,6 +438,10 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
+		}
+		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
