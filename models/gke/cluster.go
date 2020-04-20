@@ -247,24 +247,6 @@ type AutoUpgradeOptions struct {
 	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
-func GetError(projectId, companyId string, ctx utils.Context) (err types.ClusterError, err1 error) {
-
-	session, err1 := db.GetMongoSession(ctx)
-	if err1 != nil {
-		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.ClusterError{}, err1
-	}
-
-	defer session.Close()
-	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
-	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": models.IKS}).One(&err)
-	if err1 != nil {
-		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.ClusterError{}, err1
-	}
-	return err, nil
-}
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -369,7 +351,7 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	oldCluster, err := GetGKECluster(ctx)
 	if err != nil {
-		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name  + err.Error()
+		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -435,12 +417,21 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if errr != nil {
 		PrintError(errr, cluster.Name, ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500, Description: errr.Error()}
+		cpErr := types.CustomCPError{StatusCode: 500, Description: errr.Error()}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return cpErr
 	}
 
 	gkeOps, err := GetGKE(credentials)
 	if err.Description != "" {
 		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		return err
 	}
 
@@ -453,18 +444,25 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 			PrintError(confError, cluster.Name, ctx)
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus =  string(models.Deploying)
+	cluster.CloudplexStatus = string(models.Deploying)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
 		cpErr := types.CustomCPError{Description: confError.Message, Message: "Error occurred while updating cluster status in database", StatusCode: 500}
-
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
@@ -478,23 +476,37 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{}
+		return err
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError.Description != "" {
 		cluster.CloudplexStatus = "Cluster creation failed"
 		_ = UpdateGKECluster(cluster, ctx)
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{}
+		return confError
 	}
 	cluster.CloudplexStatus = "Cluster Created"
 
 	err1 := UpdateGKECluster(cluster, ctx)
 	if err1 != nil {
 		PrintError(err1, cluster.Name, ctx)
+		cpErr := types.CustomCPError{StatusCode: 500, Description: err1.Error()}
+
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		return confError
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return cpErr
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -508,7 +520,7 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, types.CustomCPError{Description: err.Error()}
 	}
-	customErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)
+	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 	if err != nil {
 		return GKECluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
 			Description: "Error occurred while getting cluster status in database",
@@ -548,25 +560,45 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {
-		return types.CustomCPError{Description: pubErr.Error()}
+		err_ := types.CustomCPError{Description: pubErr.Error()}
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return err_
 	}
 
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Terminate ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{Description: err.Error()}
+		err_ := types.CustomCPError{Description: err.Error()}
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return err_
 	}
 
 	if cluster.CloudplexStatus == "" || cluster.CloudplexStatus == "new" {
 		text := "GKEClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		err_ := types.CustomCPError{Description: text}
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{Description: text}
+		return err_
 	}
 
 	gkeOps, err1 := GetGKE(credentials)
 	if err1.Description != "" {
 		ctx.SendLogs("GKEClusterModel : Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err1)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		return err1
 	}
 
@@ -579,7 +611,15 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 			_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
-			return types.CustomCPError{StatusCode: 500, Description: err.Error()}
+			err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err1)
+			if err != nil {
+				ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			return err1
+		}
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err1)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err1
@@ -592,6 +632,10 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
 		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
@@ -606,8 +650,16 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
+			err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, errr)
+			if err != nil {
+				ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
 			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-			return types.CustomCPError{StatusCode: 500, Description: err.Error()}
+			return errr
+		}
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, errr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return errr
@@ -621,7 +673,13 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: 500, Description: err.Error()}
+		err_ := types.CustomCPError{StatusCode: 500, Description: err.Error()}
+
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return err_
 	}
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
