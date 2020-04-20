@@ -428,7 +428,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 		cpErr := ApiError(err, "Error wile getting cluster from database", 500)
 		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return cpErr
 	}
@@ -441,7 +441,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 
 		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
@@ -457,7 +457,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
 		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
@@ -476,7 +476,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 		}
 		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
@@ -497,7 +497,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 
 		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return CpErr
@@ -515,7 +515,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 
 		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
 		if err != nil {
-			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AKSDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return ApiError(err, "Error while updating cluster in database", 500)
