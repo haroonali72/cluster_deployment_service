@@ -9,13 +9,12 @@ import (
 type Type string
 
 const (
-	New                      Type = "new"
-	Created                  Type = "created"
-	ClusterCreated           Type = "cluster created"
-	ClusterCreationFailed         = "Cluster Creation Failed"
-	ClusterTerminationFailed      = "Cluster Termination Failed"
-	Deploying                Type = "deploying"
-	Terminating              Type = "terminating"
+	Existing       Type = "existing"
+	New            Type = "new"
+	Created        Type = "created"
+	ClusterCreated Type = "cluster created"
+	Deploying      Type = "deploying"
+	Terminating    Type = "terminating"
 )
 
 type RequestType string

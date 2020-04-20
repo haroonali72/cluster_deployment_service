@@ -24,7 +24,6 @@ import (
 
 func init() {
 	ns := beego.NewNamespace("/antelope",
-
 		beego.NSNamespace("/health",
 			beego.NSInclude(
 				&controllers.HealthController{},
