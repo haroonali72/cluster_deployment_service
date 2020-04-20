@@ -247,24 +247,6 @@ type AutoUpgradeOptions struct {
 	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
-func GetError(projectId, companyId string, ctx utils.Context) (err types.ClusterError, err1 error) {
-
-	session, err1 := db.GetMongoSession(ctx)
-	if err1 != nil {
-		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.ClusterError{}, err1
-	}
-
-	defer session.Close()
-	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
-	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": models.IKS}).One(&err)
-	if err1 != nil {
-		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.ClusterError{}, err1
-	}
-	return err, nil
-}
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -369,7 +351,7 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	oldCluster, err := GetGKECluster(ctx)
 	if err != nil {
-		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name  + err.Error()
+		text := "GKEUpdateClusterModel:  Update - Cluster '" + cluster.Name + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
@@ -458,7 +440,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus =  string(models.Deploying)
+	cluster.CloudplexStatus = string(models.Deploying)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
@@ -508,7 +490,7 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, types.CustomCPError{Description: err.Error()}
 	}
-	customErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)
+	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 	if err != nil {
 		return GKECluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
 			Description: "Error occurred while getting cluster status in database",
