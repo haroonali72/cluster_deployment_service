@@ -822,7 +822,7 @@ func (c *DOKSClusterController) StartCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 502 {object} doks.KubernetesCluster
 // @router /status/:projectId/ [get]
 func (c *DOKSClusterController) GetStatus() {
 
