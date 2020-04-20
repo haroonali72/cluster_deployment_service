@@ -398,6 +398,12 @@ func (c *GKEClusterController) Patch() {
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}

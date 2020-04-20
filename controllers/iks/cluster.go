@@ -591,6 +591,12 @@ func (c *IKSClusterController) Patch() {
 
 	err = iks.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
@@ -1270,6 +1276,8 @@ func (c *IKSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
+
+
 	ctx.SendLogs("IKSubernetesClusterController: Applying agent on cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go iks.ApplyAgent(ibmProfile.Profile, token, *ctx, clusterName, resourceGroup)

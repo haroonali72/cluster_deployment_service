@@ -319,6 +319,12 @@ func (c *OPClusterController) Patch() {
 
 	err = op.UpdateCluster(cluster, true, *ctx, teams, token)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
