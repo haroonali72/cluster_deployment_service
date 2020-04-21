@@ -140,7 +140,7 @@ func (c *GKEClusterController) Get() {
 	ctx.SendLogs("GKEClusterController: Getting cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -203,7 +203,7 @@ func (c *GKEClusterController) GetAll() {
 
 	clusters, err := gke.GetAllGKECluster(data, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -310,7 +310,7 @@ func (c *GKEClusterController) Post() {
 
 	err = gke.AddGKECluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -342,7 +342,7 @@ func (c *GKEClusterController) Post() {
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in running state"}
+// @Failure 304 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -406,19 +406,19 @@ func (c *GKEClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "Cluster is in running state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -446,7 +446,7 @@ func (c *GKEClusterController) Patch() {
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in running state"}
+// @Failure 304 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {"error": "Cloud API Error"}
@@ -509,7 +509,7 @@ func (c *GKEClusterController) Delete() {
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -523,7 +523,7 @@ func (c *GKEClusterController) Delete() {
 
 	if strings.ToLower(cluster.CloudplexStatus) == string(models.ClusterCreated) && !forceDelete {
 		ctx.SendLogs("GKEClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(402)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
 		return
@@ -548,7 +548,7 @@ func (c *GKEClusterController) Delete() {
 	ctx.SendLogs("GKEClusterController: Deleting cluster"+cluster.Name+"of project "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	err = gke.DeleteGKECluster(*ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -575,7 +575,7 @@ func (c *GKEClusterController) Delete() {
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in running state"}
+// @Failure 304 {"error": "Cluster is in running state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -654,7 +654,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -668,7 +668,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	if cluster.CloudplexStatus == "Cluster Created" {
 		ctx.SendLogs("GKEClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(402)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
 		c.ServeJSON()
 		return
@@ -676,7 +676,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	if cluster.CloudplexStatus == string(models.Deploying) {
 		ctx.SendLogs("GKEClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -684,7 +684,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	if cluster.CloudplexStatus == string(models.Terminating) {
 		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -693,7 +693,7 @@ func (c *GKEClusterController) StartCluster() {
 	cluster.CloudplexStatus = string(models.Deploying)
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -826,6 +826,7 @@ func (c *GKEClusterController) GetStatus() {
 // @Param	token	header	string	true "token"
 // @Success 200 {"msg": "Cluster is terminating"}
 // @Failure 400 {"error": "Bad Request"}
+// @Failure 304 {"error": "Not Modified"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -907,7 +908,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -921,7 +922,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	if cluster.CloudplexStatus == string(models.Deploying) {
 		ctx.SendLogs("GKEClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -929,7 +930,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	if cluster.CloudplexStatus == string(models.Terminating) {
 		ctx.SendLogs("GKEClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -941,7 +942,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()

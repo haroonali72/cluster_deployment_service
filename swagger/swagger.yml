@@ -19,7 +19,7 @@ paths:
       operationId: AKSClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -31,16 +31,16 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
+        "304":
+          description: '{"error": "Not Modified"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
     post:
       tags:
       - cluster/aks
@@ -54,22 +54,22 @@ paths:
         schema:
           $ref: '#/definitions/aks.AKSCluster'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"msg": "error msg"}'
+          description: '{"msg": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
   /cluster/aks/{projectId}/:
     get:
       tags:
@@ -83,7 +83,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -92,9 +92,11 @@ paths:
           schema:
             $ref: '#/definitions/aks.AKSCluster'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Internal Server Error"}'
   /cluster/aks/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -103,7 +105,7 @@ paths:
       operationId: AKSClusterController.Delete
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -118,16 +120,16 @@ paths:
       responses:
         "204":
           description: '{"msg": "cluster deleted successfully"}'
+        "304":
+          description: '{"error": "Not Modified"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
   /cluster/aks/all:
     get:
       tags:
@@ -136,7 +138,7 @@ paths:
       operationId: AKSClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -147,9 +149,9 @@ paths:
             items:
               $ref: '#/definitions/aks.AKSCluster'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
   /cluster/aks/getallkubeversions/{region}:
     get:
       tags:
@@ -168,7 +170,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -179,11 +181,13 @@ paths:
             items:
               type: string
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/aks/getvms/{region}:
     get:
       tags:
@@ -192,7 +196,7 @@ paths:
       operationId: AKSClusterController.GetAKSVmsTypes
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -207,11 +211,11 @@ paths:
             items:
               $ref: '#/definitions/aks.VMSizeTypes'
         "400":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Bad Request"}'
         "404":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
   /cluster/aks/kubeconfig/{projectId}:
     get:
       tags:
@@ -225,7 +229,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -235,13 +239,15 @@ paths:
         type: string
       responses:
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/aks/start/{projectId}:
     post:
       tags:
@@ -255,7 +261,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -266,16 +272,16 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
+        "304":
+          description: '{"error": "Not Modified"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
   /cluster/aks/status/{projectId}/:
     get:
       tags:
@@ -289,7 +295,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -303,11 +309,11 @@ paths:
           schema:
             $ref: '#/definitions/aks.AKSCluster'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
   /cluster/aks/terminate/{projectId}/:
     post:
       tags:
@@ -326,20 +332,20 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
         "200":
           description: '{"msg": "cluster termination is in progress"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Internal Server Error"}'
   /cluster/aws/:
     put:
       tags:
@@ -1704,12 +1710,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "Cluster updated successfully"}'
+        "304":
+          description: '{"error": "Cluster is in running state"}'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
-        "402":
-          description: '{"error": "Cluster is in running state"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -1960,12 +1966,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "Cluster created successfully"}'
+        "304":
+          description: '{"error": "Not Modified"}'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
-        "402":
-          description: '{"error": "Cluster is in running state"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -1999,8 +2005,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/doks.DOKSCluster'
-        "206":
-          description: '{object} doks.DOKSCluster'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
@@ -2036,6 +2040,8 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster terminated successfully"}'
+        "304":
+          description: '{"error": "Not Modified"}'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
@@ -2509,12 +2515,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster updated successfully"}'
+        "304":
+          description: '{"error": "Cluster is in running state"}'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
-        "402":
-          description: '{"error": "Cluster is in running state"}'
         "404":
           description: '{"error": "Not found"}'
         "500":
@@ -2704,12 +2710,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster created successfully"}'
+        "304":
+          description: '{"error": "Cluster is in running state"}'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
-        "402":
-          description: '{"error": "Cluster is in running state"}'
         "404":
           description: '{"error": "Not found"}'
         "500":
@@ -2743,8 +2749,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gke.GKECluster'
-        "206":
-          description: '{object} gke.GKECluster'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
@@ -2780,6 +2784,8 @@ paths:
       responses:
         "200":
           description: '{"msg": "Cluster is terminating"}'
+        "304":
+          description: '{"error": "Not Modified"}'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
@@ -2895,11 +2901,11 @@ paths:
       responses:
         "204":
           description: '{"msg": "cluster deleted successfully"}'
+        "304":
+          description: '{"error": "error msg"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
@@ -3099,11 +3105,11 @@ paths:
       responses:
         "201":
           description: '{"msg": "cluster created successfully"}'
+        "304":
+          description: '{"error": "error msg"}'
         "400":
           description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "project id is empty"}'
@@ -3166,7 +3172,7 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster termination is in progress"}'
-        "400":
+        "304":
           description: '{"error": "error msg"}'
         "401":
           description: '{"error": "error msg"}'
@@ -6054,28 +6060,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0017919e0.false:
+  434.0xc00146ba40.false:
     title: "false"
     type: object
-  605.0xc0010b7d10.false:
+  518.0xc001395ef0.false:
     title: "false"
     type: object
-  636.0xc0016cc7e0.false:
-    title: "false"
-    type: object
-  644.0xc0013a9830.false:
-    title: "false"
-    type: object
-  5559.string:
+  1559.string:
     title: string
     type: object
-  13200.0xc0017c5770.false:
+  5960.0xc00149af60.false:
     title: "false"
     type: object
-  47081.0xc001762f30.false:
+  13307.0xc0013b5920.false:
     title: "false"
     type: object
-  49356.string:
+  13385.0xc000d7d500.false:
+    title: "false"
+    type: object
+  13438.0xc00108c0f0.false:
+    title: "false"
+    type: object
+  20144.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6130,7 +6136,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/49356.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6181,7 +6187,7 @@ definitions:
         items:
           $ref: '#/definitions/aks.Tag'
       node_taints:
-        $ref: '#/definitions/5559.string'
+        $ref: '#/definitions/20144.string'
       os_disk_size_gb:
         type: integer
         format: int32
@@ -6320,7 +6326,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010b7d10.false'
+        $ref: '#/definitions/13385.0xc000d7d500.false'
       name:
         type: string
       network_name:
@@ -6701,7 +6707,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc0013a9830.false'
+        $ref: '#/definitions/13438.0xc00108c0f0.false'
       name:
         type: string
       network_name:
@@ -7840,7 +7846,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/636.0xc0016cc7e0.false'
+        $ref: '#/definitions/13307.0xc0013b5920.false'
       kube_version:
         type: string
       name:
@@ -7909,8 +7915,6 @@ definitions:
       node_count:
         type: integer
         format: int64
-      pool_role:
-        $ref: '#/definitions/models.PoolRole'
       subnet_id:
         type: string
   iks.Regions:
@@ -7940,7 +7944,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/47081.0xc001762f30.false'
+        $ref: '#/definitions/518.0xc001395ef0.false'
       kube_version:
         type: string
       name:
@@ -8088,13 +8092,12 @@ definitions:
     title: Type
     type: string
     enum:
-    - Existing = "existing"
     - New = "new"
     - Created = "created"
     - ClusterCreated = "cluster created"
     - Deploying = "deploying"
     - Terminating = "terminating"
-    example: existing
+    example: new
   op.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -8106,7 +8109,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0017919e0.false'
+        $ref: '#/definitions/5960.0xc00149af60.false'
       name:
         type: string
       node_pools:
@@ -8192,7 +8195,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13200.0xc0017c5770.false'
+        $ref: '#/definitions/434.0xc00146ba40.false'
       name:
         type: string
       node_pools:
