@@ -14,7 +14,7 @@ type CustomerTempalteController struct {
 
 // @Title Post
 // @Description register customer templates
-// @Param	token	header	string	token ""
+// @Param token header string token ""
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}

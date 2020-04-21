@@ -53,7 +53,7 @@
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -64,15 +64,9 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "add a new cluster",
-                "operationId": "AKSClusterController.Add",
+                "description": "create a new cluster",
+                "operationId": "AKSClusterController.Create",
                 "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
                     {
                         "in": "body",
                         "name": "body",
@@ -81,6 +75,12 @@
                         "schema": {
                             "$ref": "#/definitions/aks.AKSCluster"
                         }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -88,16 +88,16 @@
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"msg\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "409": {
-                        "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    "409": {
+                        "description": "{\"error\": \"cluster against this project already exists\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -130,7 +130,7 @@
                             }
                         }
                     },
-                    "400": {
+                    "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -223,9 +223,6 @@
                     },
                     "400": {
                         "description": "{\"error\": \"error_msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"error_msg\"}"
@@ -320,8 +317,11 @@
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "404": {
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -365,17 +365,11 @@
                             "$ref": "#/definitions/aks.AKSCluster"
                         }
                     },
-                    "206": {
-                        "description": "{object} aks.AKSCluster"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -414,16 +408,16 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                        "description": "{\"msg\": \"cluster termination is in progress\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"project id is empty\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -460,16 +454,10 @@
                             "$ref": "#/definitions/aks.AKSCluster"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
                 }
@@ -484,6 +472,12 @@
                 "operationId": "AKSClusterController.Delete",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
                         "in": "path",
                         "name": "projectId",
                         "description": "project id of the cluster",
@@ -495,22 +489,19 @@
                         "name": "forceDelete",
                         "description": "true",
                         "type": "boolean"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -2103,13 +2094,13 @@
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"msg\": \"error msg\"}"
+                        "description": "body not found"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "token not found"
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against this project already exists\"}"
@@ -2504,12 +2495,11 @@
                         "type": "string"
                     },
                     {
-                        "in": "body",
+                        "in": "vault.DOCredentials",
                         "name": "body",
                         "description": "body for cluster content",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/vault.DOCredentials"
+                            "$ref": "#/definitions/true"
                         }
                     }
                 ],
@@ -2580,6 +2570,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2594,22 +2585,22 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Cluster is in running state\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -2624,6 +2615,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2637,23 +2629,23 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster added successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against same project id already exists\"}"
-                    },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
+                        "description": "{\"error\": \"Cluster against same project id already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2670,6 +2662,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2684,10 +2677,10 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2697,7 +2690,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "Apply cloudplex Agent file to eks cluster",
+                "description": "Apply cloudplex Agent file to doks cluster",
                 "operationId": "DOKSClusterController.Start",
                 "parameters": [
                     {
@@ -2710,6 +2703,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2732,16 +2726,19 @@
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2765,6 +2762,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2775,14 +2773,14 @@
                             "$ref": "#/definitions/doks.ServerConfig"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2792,13 +2790,14 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get server config file",
+                "description": "get valid kubernetes cluster version and machine sizes",
                 "operationId": "DOKSClusterController.Get",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2824,13 +2823,19 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2854,6 +2859,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2866,19 +2872,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"Cluster is in running state\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2888,7 +2900,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "returns status of nodes",
+                "description": "returns latest status of the running cluster",
                 "operationId": "DOKSClusterController.Status",
                 "parameters": [
                     {
@@ -2902,6 +2914,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2923,16 +2936,19 @@
                         "description": "{object} doks.DOKSCluster"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2963,6 +2979,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2971,16 +2988,19 @@
                         "description": "{\"msg\": \"cluster terminated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2990,7 +3010,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get kubernetes cluster",
+                "description": "get cluster against the projectId",
                 "operationId": "DOKSClusterController.Get",
                 "parameters": [
                     {
@@ -3004,6 +3024,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3015,16 +3036,16 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3054,6 +3075,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3061,17 +3083,20 @@
                     "200": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
+                    "204": {
+                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                    },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3326,26 +3351,6 @@
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/gcp/machine/info": {
-            "get": {
-                "tags": [
-                    "cluster/gcp"
-                ],
-                "description": "Get GCP Machine instance cores",
-                "operationId": "GcpClusterController.GetCores",
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Machine"
-                        }
-                    },
-                    "500": {
-                        "description": "{\"error\":  \"error msg\"}"
                     }
                 }
             }
@@ -3775,7 +3780,8 @@
                     {
                         "in": "header",
                         "name": "token",
-                        "description": "token",
+                        "description": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -3793,19 +3799,19 @@
                         "description": "{\"msg\": \"cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Cluster is in running state\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -3820,6 +3826,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -3833,23 +3840,23 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
                         "description": "{\"error\": \"cluster against same project id already exists\"}"
                     },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
-                    },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3859,13 +3866,14 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get all the clusters",
+                "description": "get all of the company clusters",
                 "operationId": "GKEClusterController.Get All",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3880,10 +3888,13 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3899,13 +3910,14 @@
                     {
                         "in": "header",
                         "name": "clusterName",
-                        "description": "clusterName",
+                        "description": "Name of the cluster",
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -3928,26 +3940,29 @@
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
         },
-        "/cluster/gke/config/{zone}": {
+        "/cluster/gke/config/{region}": {
             "get": {
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get cluster",
+                "description": "get cluster version and image type details",
                 "operationId": "GKEClusterController.Get",
                 "parameters": [
                     {
@@ -3961,6 +3976,14 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3971,14 +3994,17 @@
                             "$ref": "#/definitions/gke.ServerConfig"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -3988,7 +4014,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "starts a  cluster",
+                "description": "starts a cluster",
                 "operationId": "GKEClusterController.Start",
                 "parameters": [
                     {
@@ -4002,6 +4028,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -4017,16 +4044,22 @@
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"Cluster is in running state\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4036,7 +4069,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "returns latest status of cluster",
+                "description": "returns latest status of the running cluster",
                 "operationId": "GKEClusterController.Status",
                 "parameters": [
                     {
@@ -4050,6 +4083,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -4071,16 +4105,19 @@
                         "description": "{object} gke.GKECluster"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4090,7 +4127,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "terminates a  cluster",
+                "description": "terminates a running cluster",
                 "operationId": "GKEClusterController.Terminate",
                 "parameters": [
                     {
@@ -4111,24 +4148,28 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                        "description": "{\"msg\": \"Cluster is terminating\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4138,7 +4179,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get cluster",
+                "description": "get cluster against the projectId",
                 "operationId": "GKEClusterController.Get",
                 "parameters": [
                     {
@@ -4152,6 +4193,7 @@
                         "in": "header",
                         "name": "token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -4163,16 +4205,16 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4188,7 +4230,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4212,13 +4254,7 @@
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "402": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "405": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -4244,13 +4280,13 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
@@ -4265,9 +4301,6 @@
                     "409": {
                         "description": "{\"error\": \"cluster against this project already exists\"}"
                     },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
-                    },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
@@ -4279,12 +4312,12 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "get all the clusters",
+                "description": "get all the companys's clusters",
                 "operationId": "IKSClusterController.Get All",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4299,7 +4332,7 @@
                             }
                         }
                     },
-                    "400": {
+                    "404": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -4330,7 +4363,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4352,9 +4385,6 @@
                 "responses": {
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4392,7 +4422,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4406,9 +4436,6 @@
                                 "$ref": "#/definitions/iks.Versions"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4444,7 +4471,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4455,9 +4482,6 @@
                         "schema": {
                             "$ref": "#/definitions/iks.AllInstancesResponse"
                         }
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4478,7 +4502,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4492,9 +4516,6 @@
                                 "$ref": "#/definitions/iks.Regions"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4522,7 +4543,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4536,9 +4557,6 @@
                                 "$ref": "#/definitions/iks.Zone"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4559,7 +4577,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4578,13 +4596,16 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -4606,7 +4627,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4633,9 +4654,6 @@
                                 "$ref": "#/definitions/iks.KubeWorkerPoolStatus"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4667,7 +4685,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4681,7 +4699,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                        "description": "{\"msg\": \"cluster termination is in progress\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4714,7 +4735,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4723,16 +4744,13 @@
                     "200": {
                         "description": "{\"msg\": \"Profile is valid\"}"
                     },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
                 }
@@ -4755,7 +4773,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4766,9 +4784,6 @@
                         "schema": {
                             "$ref": "#/definitions/iks.Cluster_Def"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -4789,7 +4804,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4808,13 +4823,16 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -4836,7 +4854,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -4866,13 +4884,7 @@
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
                     },
-                    "402": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "405": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
@@ -4904,13 +4916,13 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
@@ -4925,9 +4937,6 @@
                     "409": {
                         "description": "{\"error\": \"cluster against this project already exists\"}"
                     },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
-                    },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
                     }
@@ -4939,12 +4948,12 @@
                 "tags": [
                     "cluster/op"
                 ],
-                "description": "get all the clusters",
+                "description": "get all the company's clusters",
                 "operationId": "OPClusterController.Get All",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -4959,49 +4968,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"error msg\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/op/checkCluster/{projectId}/": {
-            "get": {
-                "tags": [
-                    "cluster/op"
-                ],
-                "description": "validates a cluster",
-                "operationId": "OPClusterController.ValidateCluster",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster is running successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"error msg\"}"
@@ -5026,7 +4994,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -5037,9 +5005,6 @@
                         "schema": {
                             "$ref": "#/definitions/op.Cluster_Def"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"error msg\"}"
@@ -5060,7 +5025,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -5079,13 +5044,16 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"cluster deleted successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
                         "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
@@ -9231,35 +9199,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13363.0xc001812a20.false": {
+        "13200.0xc0017c5770.false": {
             "title": "false",
             "type": "object"
         },
-        "44080.0xc0017ae360.false": {
+        "442.0xc0017919e0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc0017dcbd0.false": {
+        "47081.0xc001762f30.false": {
             "title": "false",
             "type": "object"
         },
-        "53393.string": {
+        "49356.string": {
             "title": "string",
             "type": "object"
         },
-        "5838.string": {
+        "5559.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc0010d6570.false": {
+        "605.0xc0010b7d10.false": {
             "title": "false",
             "type": "object"
         },
-        "637.0xc0013d31d0.false": {
+        "636.0xc0016cc7e0.false": {
             "title": "false",
             "type": "object"
         },
-        "639.0xc001701bc0.false": {
+        "644.0xc0013a9830.false": {
             "title": "false",
             "type": "object"
         },
@@ -9338,7 +9306,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/53393.string"
+                    "$ref": "#/definitions/49356.string"
                 },
                 "type": {
                     "type": "string"
@@ -9412,7 +9380,7 @@
                     }
                 },
                 "node_taints": {
-                    "$ref": "#/definitions/5838.string"
+                    "$ref": "#/definitions/5559.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9616,7 +9584,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc0010d6570.false"
+                    "$ref": "#/definitions/605.0xc0010b7d10.false"
                 },
                 "name": {
                     "type": "string"
@@ -10181,7 +10149,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/637.0xc0013d31d0.false"
+                    "$ref": "#/definitions/644.0xc0013a9830.false"
                 },
                 "name": {
                     "type": "string"
@@ -11873,7 +11841,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/639.0xc001701bc0.false"
+                    "$ref": "#/definitions/636.0xc0016cc7e0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11975,6 +11943,9 @@
                     "type": "integer",
                     "format": "int64"
                 },
+                "pool_role": {
+                    "$ref": "#/definitions/models.PoolRole"
+                },
                 "subnet_id": {
                     "type": "string"
                 }
@@ -12018,7 +11989,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/44080.0xc0017ae360.false"
+                    "$ref": "#/definitions/47081.0xc001762f30.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12247,7 +12218,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0017dcbd0.false"
+                    "$ref": "#/definitions/442.0xc0017919e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12375,7 +12346,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13363.0xc001812a20.false"
+                    "$ref": "#/definitions/13200.0xc0017c5770.false"
                 },
                 "name": {
                     "type": "string"
@@ -12396,6 +12367,10 @@
                     "type": "string"
                 }
             }
+        },
+        "true": {
+            "title": "true",
+            "type": "object"
         },
         "vault.AwsCredentials": {
             "title": "AwsCredentials",
@@ -12429,18 +12404,6 @@
                     "type": "string"
                 },
                 "tenant_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "vault.DOCredentials": {
-            "title": "DOCredentials",
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "region": {
                     "type": "string"
                 }
             }

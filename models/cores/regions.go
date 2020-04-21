@@ -90,3 +90,15 @@ var GCPRegions = []byte(
 			{"name":"","location": "us-west2"},
 			{"name":"","location": "us-west3"}
 ]`)
+
+var DORegions = []byte(`[
+  {"slug": "nyc1","name": "New York 1"},
+  {"slug": "sgp1","name": "Singapore 1"},
+  {"slug": "lon1","name": "London 1"},
+  {"slug": "nyc3","name": "New York 3"},
+  {"slug": "ams3","name": "Amsterdam 3"},
+  {"slug": "fra1","name": "Frankfurt 1"},
+  {"slug": "tor1","name": "Toronto 1"},
+  {"slug": "sfo2","name": "San Francisco 2"},
+  {"slug": "blr1","name": "Bangalore 1"}
+]`)
