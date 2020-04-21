@@ -51,7 +51,7 @@ func (cloud *DOKS) init(ctx utils.Context) types.CustomCPError {
 		text := "Invalid cloud credentials"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(text)
-		return types.CustomCPError{StatusCode:500,Description:text,}
+		return types.CustomCPError{StatusCode:500,Message:"Error in cloud credentials",Description:text,}
 	}
 
 	tokenSource := &TokenSource{
