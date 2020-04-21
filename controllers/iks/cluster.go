@@ -25,7 +25,7 @@ type IKSClusterController struct {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	region	path	string	true	"Region of the cloud"
 // @Success 200 {object} iks.AllInstancesResponse
-// @Failure 404 {"error": "Not Found"}
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 500 {"error": "Runtime error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /getallmachines/:region/ [get]
@@ -35,7 +35,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -43,7 +43,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -51,7 +51,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	region := c.GetString(":region")
 	if region == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
@@ -80,8 +80,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
-		c.Data["json"] = map[string]string{"description": cpErr.Description}
+		c.Data["json"] = cpErr.Message
 		c.ServeJSON()
 		return
 	}
@@ -97,7 +96,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 // @Description fetch regions of IKS
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []iks.Regions
-// @Failure 404 {"error": "Not Found"}
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /getallregions/ [get]
 func (c *IKSClusterController) FetchRegions() {
@@ -106,7 +105,7 @@ func (c *IKSClusterController) FetchRegions() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -145,9 +144,8 @@ func (c *IKSClusterController) FetchRegions() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param   X-Auth-Token	header string true "Token"
 // @Success 200 {object} []iks.Versions
-// @Failure 400 {"error": "Bad Request"}
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Unauthorized"}
 // @Failure 502 {object} types.CustomCPError
 // @router /getallkubeversions/:region [get]
@@ -157,7 +155,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -165,7 +163,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -173,7 +171,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	region := c.GetString(":region")
 	if region == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
@@ -202,8 +200,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 	versions, cpErr := iks.GetAllVersions(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
-		c.Data["json"] = map[string]string{"description": cpErr.Description}
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	}
@@ -220,7 +217,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 // @Param	region	path	string	true	"Region of the cloud"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []iks.Zone
-// @Failure 404 {"error": "Not Found"}
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /getzones/:region/ [get]
 func (c *IKSClusterController) FetchZones() {
@@ -229,7 +226,7 @@ func (c *IKSClusterController) FetchZones() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -237,7 +234,7 @@ func (c *IKSClusterController) FetchZones() {
 
 	region := c.GetString(":region")
 	if region == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
@@ -274,6 +271,7 @@ func (c *IKSClusterController) FetchZones() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} iks.Cluster_Def
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -285,7 +283,7 @@ func (c *IKSClusterController) Get() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -293,7 +291,7 @@ func (c *IKSClusterController) Get() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -354,6 +352,7 @@ func (c *IKSClusterController) Get() {
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []iks.Cluster_Def
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Erorr"}
 // @router /all [get]
@@ -362,7 +361,7 @@ func (c *IKSClusterController) GetAll() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -438,7 +437,7 @@ func (c *IKSClusterController) Post() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -546,7 +545,7 @@ func (c *IKSClusterController) Patch() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -591,32 +590,27 @@ func (c *IKSClusterController) Patch() {
 
 	err = iks.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found")  {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "does not exist") {
-			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
-			c.ServeJSON()
-			return
-		}
 		if strings.Contains(err.Error(), "Cluster is in runnning state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(402)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -640,7 +634,7 @@ func (c *IKSClusterController) Patch() {
 // @Param	projectId	path 	string	true	"Project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
-// @Failure 400 {"error": "Baad request"}
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -652,7 +646,7 @@ func (c *IKSClusterController) Delete() {
 
 	id := c.GetString(":projectId")
 	if id == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -660,7 +654,7 @@ func (c *IKSClusterController) Delete() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -668,7 +662,7 @@ func (c *IKSClusterController) Delete() {
 
 	forceDelete, err := c.GetBool(":forceDelete")
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -767,7 +761,7 @@ func (c *IKSClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true "Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
-// @Failure 400 {"error": "Bad Request"}
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -781,7 +775,7 @@ func (c *IKSClusterController) StartCluster() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -789,7 +783,7 @@ func (c *IKSClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -797,7 +791,7 @@ func (c *IKSClusterController) StartCluster() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -920,6 +914,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	profileId	"Vault credentials profile Id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} []iks.KubeWorkerPoolStatus
+// @Success 400 {"msg": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -939,7 +934,7 @@ func (c *IKSClusterController) GetStatus() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
 		c.ServeJSON()
 		return
@@ -947,7 +942,7 @@ func (c *IKSClusterController) GetStatus() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -1004,20 +999,19 @@ func (c *IKSClusterController) GetStatus() {
 	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "nodes not found") {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
-		c.Data["json"] = map[string]string{"description": cpErr.Description}
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	}
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	}
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] =cpErr
 		c.ServeJSON()
 	}
 	ctx.SendLogs("IKSClusterController: Status fetched of project"+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -1054,7 +1048,7 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -1062,7 +1056,7 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -1182,9 +1176,10 @@ func (c *IKSClusterController) TerminateCluster() {
 // @Description Apply cloudplex agent file to eks cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	clusterName	header	string	true "Name of the cluster"
+// @Param	clusterName	path	string	true "Name of the cluster"
 // @Param	resourceGroup	header	string	true "Resource Group"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Success 400 {"msg": "Bad Request"}
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -1197,7 +1192,7 @@ func (c *IKSClusterController) ApplyAgent() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
 		c.ServeJSON()
 		return
@@ -1205,7 +1200,7 @@ func (c *IKSClusterController) ApplyAgent() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -1213,15 +1208,15 @@ func (c *IKSClusterController) ApplyAgent() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	clusterName := c.Ctx.Input.Header("clusterName")
+	clusterName := c.GetString("clusterName")
 	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
 		c.ServeJSON()
 		return
@@ -1229,7 +1224,7 @@ func (c *IKSClusterController) ApplyAgent() {
 
 	resourceGroup := c.Ctx.Input.Header("resourceGroup")
 	if resourceGroup == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "resourceGroup is empty"}
 		c.ServeJSON()
 		return
@@ -1296,6 +1291,7 @@ func (c *IKSClusterController) ApplyAgent() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /validateProfile [post]
 func (c *IKSClusterController) ValidateProfile() {
 	ctx := new(utils.Context)
@@ -1312,7 +1308,7 @@ func (c *IKSClusterController) ValidateProfile() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -1336,9 +1332,8 @@ func (c *IKSClusterController) ValidateProfile() {
 
 	cpErr := iks.ValidateProfile(profile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "Invalid Profile"}
-		c.Data["json"] = map[string]string{"description": cpErr.Description}
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	}
