@@ -18,7 +18,6 @@ import (
 	"github.com/jasonlvhit/gocron"
 	"github.com/signalsciences/ipv4"
 	"gopkg.in/mgo.v2/bson"
-
 	"time"
 )
 
@@ -326,10 +325,10 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	err := aksOps.CreateCluster(cluster, token, ctx)
 
 	if err != nil {
-		customeErr := ApiError(err, "", 502)
+		cpErr := ApiError(err, "", 502)
 
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+customeErr.Message, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, customeErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Message, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster creation failed"
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
@@ -343,14 +342,14 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return customeErr
+		return cpErr
 	}
 	AgentErr := azure.ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGoup)
 	if AgentErr != nil {
-		customeErr := ApiError(AgentErr, "agent deployment failed", 500)
+		cpErr := ApiError(AgentErr, "agent deployment failed", 500)
 
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+customeErr.Message, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, customeErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Message, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster creation failed"
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
@@ -364,7 +363,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return customeErr
+		return cpErr
 	}
 	cluster.Status = "Cluster Created"
 
@@ -394,14 +393,14 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 			Description: "Error occurred while getting cluster status in database",
 			StatusCode:  500}
 	}
-	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.AKS, ctx)
+	cpErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)
 	if err != nil {
 		return AKSCluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
 			Description: "Error occurred while getting cluster status in database",
 			StatusCode:  500}
 	}
-	if customErr.Err != (types.CustomCPError{}) {
-		return AKSCluster{}, customErr.Err
+	if cpErr.Err != (types.CustomCPError{}) {
+		return AKSCluster{}, cpErr.Err
 	}
 	aksOps, _ := GetAKS(credentials)
 
