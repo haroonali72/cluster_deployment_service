@@ -337,7 +337,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, customeErr)
+		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -358,7 +358,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, customeErr)
+		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -393,15 +393,15 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 			Description: "Error occurred while getting cluster status in database",
 			StatusCode:  500}
 	}
-	cpErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)
-	if err != nil {
-		return AKSCluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
-			Description: "Error occurred while getting cluster status in database",
-			StatusCode:  500}
-	}
-	if cpErr.Err != (types.CustomCPError{}) {
-		return AKSCluster{}, cpErr.Err
-	}
+	//cpErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)
+	//if err != nil {
+	//	return AKSCluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
+	//		Description: "Error occurred while getting cluster status in database",
+	//		StatusCode:  500}
+	//}
+	//if cpErr.Err != (types.CustomCPError{}) {
+	//	return AKSCluster{}, cpErr.Err
+	//}
 	aksOps, _ := GetAKS(credentials)
 
 	CpErr := aksOps.init()
