@@ -22,7 +22,7 @@ type DOKSClusterController struct {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} doks.ServerConfig
-// @Failure 404 {"error": "Not Found"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /config [get]
@@ -32,8 +32,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("DOKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -41,7 +40,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -86,8 +85,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} doks.KubernetesConfig
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /kubeconfig/:projectId [get]
@@ -99,8 +98,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("DOKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -108,8 +106,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("DOKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -117,8 +114,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		ctx.SendLogs("DOKSClusterController: Token is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -175,6 +171,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} doks.KubernetesCluster
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -185,8 +182,7 @@ func (c *DOKSClusterController) Get() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("DOKSClusterController: projectId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -194,7 +190,7 @@ func (c *DOKSClusterController) Get() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -255,6 +251,7 @@ func (c *DOKSClusterController) Get() {
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []doks.KubernetesCluster
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
@@ -265,7 +262,7 @@ func (c *DOKSClusterController) GetAll() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -331,7 +328,6 @@ func (c *DOKSClusterController) Post() {
 
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
-		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -340,7 +336,7 @@ func (c *DOKSClusterController) Post() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -386,7 +382,6 @@ func (c *DOKSClusterController) Post() {
 	validate := validator.New()
 	err = validate.Struct(cluster)
 	if err != nil {
-		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -395,7 +390,6 @@ func (c *DOKSClusterController) Post() {
 
 	err = doks.ValidateDOKSData(cluster, *ctx)
 	if err != nil {
-		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -456,7 +450,7 @@ func (c *DOKSClusterController) Patch() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -540,6 +534,7 @@ func (c *DOKSClusterController) Patch() {
 // @Param	projectId	path	string	true	"Project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -551,8 +546,7 @@ func (c *DOKSClusterController) Delete() {
 
 	id := c.GetString(":projectId")
 	if id == "" {
-		ctx.SendLogs("DOKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -560,7 +554,7 @@ func (c *DOKSClusterController) Delete() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -568,7 +562,7 @@ func (c *DOKSClusterController) Delete() {
 
 	forceDelete, err := c.GetBool(":forceDelete")
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -666,6 +660,7 @@ func (c *DOKSClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -679,8 +674,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("DOKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -688,8 +682,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("DOKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -697,7 +690,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -740,7 +733,7 @@ func (c *DOKSClusterController) StartCluster() {
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			c.Ctx.Output.SetStatus(404)
+			c.Ctx.Output.SetStatus(400)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -815,8 +808,8 @@ func (c *DOKSClusterController) StartCluster() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} doks.KubernetesCluster
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} doks.KubernetesCluster
 // @router /status/:projectId/ [get]
@@ -828,7 +821,7 @@ func (c *DOKSClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		ctx.SendLogs("DOKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -837,7 +830,7 @@ func (c *DOKSClusterController) GetStatus() {
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		ctx.SendLogs("DOKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -845,7 +838,7 @@ func (c *DOKSClusterController) GetStatus() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -919,6 +912,7 @@ func (c *DOKSClusterController) GetStatus() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {"msg": "Cluster termination is in progress"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in new/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -932,7 +926,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		ctx.SendLogs("DOKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -941,7 +935,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		ctx.SendLogs("DOKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -949,7 +943,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -1061,8 +1055,8 @@ func (c *DOKSClusterController) TerminateCluster() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "Agent Applied successfully"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /applyagent/:projectId [post]
@@ -1073,8 +1067,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("DOKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -1082,8 +1075,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("DOKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
@@ -1091,7 +1083,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
@@ -1099,7 +1091,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 
 	clusterName := c.Ctx.Input.Header("clusterName")
 	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
 		c.ServeJSON()
 		return
