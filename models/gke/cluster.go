@@ -359,7 +359,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	err = DeleteGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEUpdateClusterModel:  Update - Got error deleting cluster "+err.Error(),
+			"GKEUpdateClusterModel:  Update - Got error deleting old cluster ",
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -372,7 +372,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	err = AddGKECluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEUpdateClusterModel:  Update - Got error creating cluster "+err.Error(),
+			"GKEUpdateClusterModel:  Update - Got error creating new cluster ",
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -681,9 +681,9 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		}
 		return err_
 	}
-	_, _ = utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+	_, _ = utils.SendLog(ctx.Data.Company, "Cluster terminated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	return types.CustomCPError{}
 }
 
 func GetServerConfig(credentials gcp.GcpCredentials, ctx utils.Context) (*gke.ServerConfig, types.CustomCPError) {
