@@ -26,13 +26,14 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/aks.AKSCluster"
@@ -41,10 +42,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Not Modified\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
@@ -52,11 +50,14 @@
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
+                    "402": {
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
+                    },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Internal Server Error\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -64,7 +65,7 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "create a new cluster",
+                "description": "add a new cluster",
                 "operationId": "AKSClusterController.Create",
                 "parameters": [
                     {
@@ -79,28 +80,29 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"msg\": \"Bad Request\"}"
+                        "description": "{\"msg\": \"Runtime Error\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"Unauthrized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Conflict\"}"
+                        "description": "{\"error\": \"Cluster against this project already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Internal Server Error\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -134,7 +136,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Internal Server Error\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -289,20 +291,21 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "starts a  cluster",
+                "description": "Deploy a kubernetes cluster",
                 "operationId": "AKSClusterController.Start",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -314,11 +317,11 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Not Modified\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
@@ -330,7 +333,10 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Internal Server Error\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -340,20 +346,21 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "returns status of nodes",
+                "description": "Get live status of the running cluster",
                 "operationId": "AKSClusterController.Status",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -388,13 +395,20 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "terminates a  cluster",
+                "description": "Terminate a running cluster",
                 "operationId": "AKSClusterController.Terminate",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -404,17 +418,14 @@
                         "description": "Id of the project",
                         "required": true,
                         "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "X-Auth-Token",
-                        "description": "token",
-                        "type": "string"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster termination is in progress\"}"
+                        "description": "{\"msg\": \"Cluster termination is in progress\"}"
+                    },
+                    "304": {
+                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
@@ -426,7 +437,10 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Internal Server Error\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -436,7 +450,7 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "get cluster",
+                "description": "Get cluster against the projectId",
                 "operationId": "AKSClusterController.Get",
                 "parameters": [
                     {
@@ -467,7 +481,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Internal Server Error\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -477,19 +491,20 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "delete a cluster",
+                "description": "Delete a cluster",
                 "operationId": "AKSClusterController.Delete",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "path",
                         "name": "projectId",
-                        "description": "project id of the cluster",
+                        "description": "Project id of the cluster",
                         "required": true,
                         "type": "string"
                     },
@@ -502,22 +517,22 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Not Modified\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"unauthorized\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Internal Server Error\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2572,20 +2587,20 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "update an existing kubernetes cluster",
+                "description": "Update an existing kubernetes cluster",
                 "operationId": "DOKSClusterController.Update",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/doks.KubernetesCluster"
@@ -2597,7 +2612,7 @@
                         "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Cluster is in running state\"}"
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
@@ -2617,20 +2632,20 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "add a new cluster",
-                "operationId": "DOKSClusterController.Add",
+                "description": "Add a new cluster",
+                "operationId": "DOKSClusterController.Create",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/doks.KubernetesCluster"
@@ -2651,7 +2666,7 @@
                         "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster against same project id already exists\"}"
+                        "description": "{\"error\": \"Cluster against same project already exists\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2669,8 +2684,8 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
@@ -2685,8 +2700,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2700,25 +2715,26 @@
                     "cluster/doks"
                 ],
                 "description": "Apply cloudplex Agent file to doks cluster",
-                "operationId": "DOKSClusterController.Start",
+                "operationId": "DOKSClusterController.Start agent",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "clusterName",
-                        "description": "clusterName",
+                        "description": "Name of the cluster",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
@@ -2733,9 +2749,6 @@
                 "responses": {
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -2757,20 +2770,20 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get kubernetes version,machine types and regions",
-                "operationId": "DOKSClusterController.Get",
+                "description": "Get kubernetes version,machine types and regions",
+                "operationId": "DOKSClusterController.Get Options",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
@@ -2799,20 +2812,20 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get valid kubernetes cluster version and machine sizes",
-                "operationId": "DOKSClusterController.Get",
+                "description": "Get valid kubernetes cluster version and machine sizes",
+                "operationId": "DOKSClusterController.Get Config File",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
@@ -2830,9 +2843,6 @@
                         "schema": {
                             "$ref": "#/definitions/doks.KubernetesConfig"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -2854,20 +2864,20 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "starts a kubernetes cluster",
+                "description": "Deploy a kubernetes cluster",
                 "operationId": "DOKSClusterController.Start",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -2880,14 +2890,11 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Not Modified\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -2909,20 +2916,20 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "returns latest status of the running cluster",
+                "description": "Get live status of the running cluster",
                 "operationId": "DOKSClusterController.Status",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -2938,11 +2945,8 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/doks.DOKSCluster"
+                            "$ref": "#/definitions/doks.KubernetesCluster"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -2954,7 +2958,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "502": {
-                        "description": "{object} types.CustomCPError"
+                        "description": "{object} doks.KubernetesCluster"
                     }
                 }
             }
@@ -2964,13 +2968,13 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "terminates a  cluster",
+                "description": "Terminate a running cluster",
                 "operationId": "DOKSClusterController.Terminate",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
@@ -2983,21 +2987,18 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                        "description": "{\"msg\": \"Cluster termination is in progress\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Not Modified\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                        "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -3019,7 +3020,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "get cluster against the projectId",
+                "description": "Get cluster against the projectId",
                 "operationId": "DOKSClusterController.Get",
                 "parameters": [
                     {
@@ -3031,8 +3032,8 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
@@ -3043,9 +3044,6 @@
                         "schema": {
                             "$ref": "#/definitions/doks.KubernetesCluster"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -3064,13 +3062,20 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "delete a kubernetes cluster",
+                "description": "Delete a cluster",
                 "operationId": "DOKSClusterController.Delete",
                 "parameters": [
                     {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "in": "path",
                         "name": "projectId",
-                        "description": "project id of the cluster",
+                        "description": "Project id of the cluster",
                         "required": true,
                         "type": "string"
                     },
@@ -3079,24 +3084,14 @@
                         "name": "forceDelete",
                         "description": "true",
                         "type": "boolean"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "required": true,
-                        "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
-                    },
                     "204": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                    "304": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -3783,20 +3778,20 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "update an existing cluster",
+                "description": "Update an existing cluster",
                 "operationId": "GKEClusterController.Update",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "true",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/gke.GKECluster"
@@ -3805,10 +3800,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Cluster is in running state\"}"
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
@@ -3829,19 +3824,19 @@
                     "cluster/gke"
                 ],
                 "description": "add a new cluster",
-                "operationId": "GKEClusterController.Add",
+                "operationId": "GKEClusterController.Create",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/gke.GKECluster"
@@ -3850,7 +3845,7 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
@@ -3862,7 +3857,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against same project id already exists\"}"
+                        "description": "{\"error\": \"Cluster against same project already exists\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -3875,13 +3870,13 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get all of the company clusters",
+                "description": "get all the clusters",
                 "operationId": "GKEClusterController.Get All",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
@@ -3895,9 +3890,6 @@
                                 "$ref": "#/definitions/gke.GKECluster"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
@@ -3917,15 +3909,16 @@
                 "operationId": "GKEClusterController.Start",
                 "parameters": [
                     {
-                        "in": "header",
+                        "in": "path",
                         "name": "clusterName",
                         "description": "Name of the cluster",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -3948,9 +3941,6 @@
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
@@ -3971,27 +3961,27 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get cluster version and image type details",
-                "operationId": "GKEClusterController.Get",
+                "description": "Get cluster versions and image sizes",
+                "operationId": "GKEClusterController.Get Options",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "path",
                         "name": "region",
-                        "description": "region",
+                        "description": "Region of the cloud",
                         "required": true,
                         "type": "string"
                     }
@@ -4023,20 +4013,20 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "starts a cluster",
+                "description": "Deploy a kubernetes cluster",
                 "operationId": "GKEClusterController.Start",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -4049,14 +4039,11 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Cluster is in running state\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -4078,20 +4065,20 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "returns latest status of the running cluster",
+                "description": "Get live status of the running cluster",
                 "operationId": "GKEClusterController.Status",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -4109,9 +4096,6 @@
                         "schema": {
                             "$ref": "#/definitions/gke.GKECluster"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -4133,13 +4117,20 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "terminates a running cluster",
+                "description": "Terminate a running cluster",
                 "operationId": "GKEClusterController.Terminate",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -4149,24 +4140,14 @@
                         "description": "Id of the project",
                         "required": true,
                         "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "description": "token",
-                        "required": true,
-                        "type": "string"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"Cluster is terminating\"}"
+                        "description": "{\"msg\": \"Cluster termination is in progress\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"Not Modified\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -4188,7 +4169,7 @@
                 "tags": [
                     "cluster/gke"
                 ],
-                "description": "get cluster against the projectId",
+                "description": "Get cluster against the projectId",
                 "operationId": "GKEClusterController.Get",
                 "parameters": [
                     {
@@ -4200,8 +4181,8 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
@@ -4212,9 +4193,6 @@
                         "schema": {
                             "$ref": "#/definitions/gke.GKECluster"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -4234,19 +4212,20 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "update an existing cluster",
+                "description": "Update an existing cluster",
                 "operationId": "IKSClusterController.Update",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/iks.Cluster_Def"
@@ -4255,19 +4234,22 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -4275,13 +4257,13 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "create a new cluster",
+                "description": "Add a new cluster",
                 "operationId": "IKSClusterController.Create",
                 "parameters": [
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/iks.Cluster_Def"
@@ -4290,28 +4272,29 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                        "description": "{\"msg\": \"Cluster added successfully\"}"
                     },
                     "400": {
-                        "description": "{\"msg\": \"error msg\"}"
+                        "description": "{\"msg\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against this project already exists\"}"
+                        "description": "{\"error\": \"Cluster against this project already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4321,13 +4304,14 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "get all the companys's clusters",
+                "description": "get all the clusters",
                 "operationId": "IKSClusterController.Get All",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -4342,10 +4326,10 @@
                         }
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Erorr\"}"
                     }
                 }
             }
@@ -4355,31 +4339,34 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "Apply cloudplex Agent file to eks cluster",
-                "operationId": "IKSClusterController.Start",
+                "description": "Apply cloudplex agent file to eks cluster",
+                "operationId": "IKSClusterController.Apply agent",
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "clusterName",
-                        "description": "clusterName",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "resourceGroup",
-                        "description": "resourceGroup",
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "clusterName",
+                        "description": "Name of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "resourceGroup",
+                        "description": "Resource Group",
                         "required": true,
                         "type": "string"
                     },
@@ -4396,13 +4383,13 @@
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4413,26 +4400,27 @@
                     "cluster/iks"
                 ],
                 "description": "fetch version of kubernetes cluster",
-                "operationId": "IKSClusterController.Get Kube Versions",
+                "operationId": "IKSClusterController.Get Kubernetes Versions",
                 "parameters": [
                     {
                         "in": "path",
                         "name": "region",
-                        "description": "selected region value",
+                        "description": "region of the cloud",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -4446,11 +4434,20 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "{\"error\": \"Bad Request\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4460,28 +4457,31 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "get all instance list",
-                "operationId": "IKSClusterController.Get All Instance List",
+                "description": "Get all available instance list",
+                "operationId": "IKSClusterController.Get Instance List",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profileId",
+                        "description": "Vault credentials profile id",
+                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/X-Profile-Id"
-                        }
-                    },
-                    {
-                        "in": "path",
-                        "name": "region",
-                        "description": "region of the cloud",
-                        "required": true,
-                        "type": "string"
+                        },
+                        "default": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "Region of the cloud",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -4493,10 +4493,13 @@
                         }
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4506,13 +4509,14 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "fetch regions of iks",
+                "description": "fetch regions of IKS",
                 "operationId": "IKSClusterController.Get Regions",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -4527,10 +4531,10 @@
                         }
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4540,20 +4544,21 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "get zone",
+                "description": "get zone against region",
                 "operationId": "IKSClusterController.Get Zone",
                 "parameters": [
                     {
                         "in": "path",
                         "name": "region",
-                        "description": "Id of region",
+                        "description": "Region of the cloud",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -4568,10 +4573,10 @@
                         }
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4581,19 +4586,21 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "starts a  cluster",
+                "description": "Deploy a kubernetes cluster",
                 "operationId": "IKSClusterController.Start",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profileId",
+                        "description": "Vault credentials profile id",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -4606,22 +4613,25 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4631,19 +4641,20 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "returns status of nodes",
+                "description": "Get live status of the running cluster",
                 "operationId": "IKSClusterController.Status",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profileId",
+                        "description": "Vault credentials profile Id",
                         "type": "string"
                     },
                     {
@@ -4665,13 +4676,16 @@
                         }
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4681,21 +4695,24 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "terminates a  cluster",
+                "description": "Terminate a running cluster",
                 "operationId": "IKSClusterController.Terminate",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profileId",
+                        "description": "Vault credentials profile Id",
+                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/X-Profile-Id"
-                        }
+                        },
+                        "default": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -4708,19 +4725,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster termination is in progress\"}"
+                        "description": "{\"msg\": \"Cluster termination is in progress\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "502": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4730,13 +4753,13 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "validate ibm profile",
-                "operationId": "IKSClusterController.Get Validate Profile",
+                "description": "Validate IBM profile",
+                "operationId": "IKSClusterController.Validate Profile",
                 "parameters": [
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/vault.IBMCredentials"
@@ -4745,22 +4768,26 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"Profile is valid\"}"
+                        "description": "{\"msg\": \"Valid Profile\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4770,7 +4797,7 @@
                 "tags": [
                     "cluster/iks"
                 ],
-                "description": "get cluster",
+                "description": "Get cluster against the projectId",
                 "operationId": "IKSClusterController.Get",
                 "parameters": [
                     {
@@ -4783,7 +4810,8 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -4795,10 +4823,13 @@
                         }
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4814,13 +4845,14 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "path",
                         "name": "projectId",
-                        "description": "project id of the cluster",
+                        "description": "Project id of the cluster",
                         "required": true,
                         "type": "string"
                     },
@@ -4833,22 +4865,22 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "{\"msg\": \"cluster deleted successfully\"}"
+                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
                     "304": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Baad request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -9208,35 +9240,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13307.0xc0013f2e70.false": {
+        "13199.0xc0018a2210.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000db8a50.false": {
+        "442.0xc001872480.false": {
             "title": "false",
             "type": "object"
         },
-        "13438.0xc0010ab620.false": {
+        "49769.0xc0018299e0.false": {
             "title": "false",
             "type": "object"
         },
-        "1559.string": {
+        "54169.string": {
             "title": "string",
             "type": "object"
         },
-        "20144.string": {
+        "5837.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc0014a6f90.false": {
+        "605.0xc00115e180.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0013c5440.false": {
+        "639.0xc00178ea20.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc0014ce4b0.false": {
+        "644.0xc001438d20.false": {
             "title": "false",
             "type": "object"
         },
@@ -9315,7 +9347,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/54169.string"
                 },
                 "type": {
                     "type": "string"
@@ -9389,7 +9421,7 @@
                     }
                 },
                 "node_taints": {
-                    "$ref": "#/definitions/20144.string"
+                    "$ref": "#/definitions/5837.string"
                 },
                 "os_disk_size_gb": {
                     "type": "integer",
@@ -9593,7 +9625,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000db8a50.false"
+                    "$ref": "#/definitions/605.0xc00115e180.false"
                 },
                 "name": {
                     "type": "string"
@@ -10158,7 +10190,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13438.0xc0010ab620.false"
+                    "$ref": "#/definitions/644.0xc001438d20.false"
                 },
                 "name": {
                     "type": "string"
@@ -10429,10 +10461,6 @@
                     "type": "string"
                 }
             }
-        },
-        "doks.DOKSCluster": {
-            "title": "DOKSCluster",
-            "type": "object"
         },
         "doks.KubernetesCluster": {
             "title": "KubernetesCluster",
@@ -11850,7 +11878,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13307.0xc0013f2e70.false"
+                    "$ref": "#/definitions/639.0xc00178ea20.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -11995,7 +12023,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0013c5440.false"
+                    "$ref": "#/definitions/49769.0xc0018299e0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12223,7 +12251,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc0014ce4b0.false"
+                    "$ref": "#/definitions/442.0xc001872480.false"
                 },
                 "name": {
                     "type": "string"
@@ -12351,7 +12379,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0014a6f90.false"
+                    "$ref": "#/definitions/13199.0xc0018a2210.false"
                 },
                 "name": {
                     "type": "string"
