@@ -8,6 +8,7 @@ import (
 	"antelope/models/utils"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/astaxie/beego"
 	gke "google.golang.org/api/container/v1"
 	"google.golang.org/api/option"
@@ -27,10 +28,11 @@ type GKE struct {
 	Zone        string
 }
 
-func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster,types.CustomCPError) {
+func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster, error) {
 	if cloud.Client == nil {
 		err := cloud.init()
-		if err.Description !=""{
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -42,7 +44,7 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster,types.CustomCPEr
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiErrors(err,"Error in listing running clusters")
+		return nil, err
 	}
 
 	result := []GKECluster{}
@@ -52,10 +54,19 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster,types.CustomCPEr
 		}
 	}
 
-	return result, types.CustomCPError{}
+	return result, nil
 }
 
-func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.Context) error {
+	err := Validate(gkeCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"GKE cluster validation for '"+gkeCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
 
 	clusterRequest := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, gkeCluster)
 	networkInformation := cloud.getGCPNetwork(token, ctx)
@@ -68,34 +79,41 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 		}
 	}
 
-	_, err := cloud.Client.Projects.Zones.Clusters.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterRequest, ).Context(context.Background()).Do()
+	_, err = cloud.Client.Projects.Zones.Clusters.Create(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		clusterRequest,
+	).Context(context.Background()).Do()
 
 	requestJson, _ := json.Marshal(clusterRequest)
-
 	ctx.SendLogs(
-		"GKE cluster creation of "+gkeCluster.Name+" submitted: "+string(requestJson),
+		"GKE cluster creation request for '"+gkeCluster.Name+"' submitted: "+string(requestJson),
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
 	)
 
 	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
 		ctx.SendLogs(
-			"GKE cluster creation of '"+gkeCluster.Name+"' failed: "+err.Error(),
+			"GKE cluster creation request for '"+gkeCluster.Name+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return types.CustomCPError{
-			StatusCode:500,
-			Description:err.Error(),
-		}
+		return err
+	} else if err != nil && strings.Contains(err.Error(), "alreadyExists") {
+		ctx.SendLogs(
+			"GKE cluster '"+gkeCluster.Name+"' already exists.",
+			models.LOGGING_LEVEL_INFO,
+			models.Backend_Logging,
+		)
+		return nil
 	}
 
 	return cloud.waitForCluster(gkeCluster.Name, ctx)
 }
 
-func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.Context)types.CustomCPError {
+func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.Context) error {
 	if newVersion == "" {
-		return types.CustomCPError{}
+		return nil
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
@@ -110,21 +128,19 @@ func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.
 	).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE cluster update of '"+clusterName+"' failed: "+err.Error(),
+			"GKE cluster update request for '"+clusterName+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return types.CustomCPError{
-			Description:err.Error(),
-		}
+		return err
 	}
 
 	return cloud.waitForCluster(clusterName, ctx)
 }
 
-func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ctx utils.Context) error {
 	if newVersion == "" {
-		return types.CustomCPError{}
+		return nil
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Update(
@@ -138,22 +154,19 @@ func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ct
 	).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE node update of cluster "+clusterName+" and node "+nodeName+" failed: "+err.Error(),
+			"GKE node update request for cluster '"+clusterName+"' and node '"+nodeName+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in updating node version")
+		return err
 	}
 
 	return cloud.waitForNodePool(clusterName, nodeName, ctx)
 }
 
-func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, ctx utils.Context) error {
 	if newCount == 0 {
-		return types.CustomCPError{
-			StatusCode: 500,
-			Message: "Node Count Can't be zero.Select a numerical value for node count.",
-		}
+		return nil
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.SetSize(
@@ -167,17 +180,17 @@ func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, 
 	).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE node update request for cluster "+clusterName+" and node "+nodeName+" failed "+err.Error(),
+			"GKE node update request for cluster '"+clusterName+"' and node '"+nodeName+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in updating node count")
+		return err
 	}
 
 	return cloud.waitForNodePool(clusterName, nodeName, ctx)
 }
 
-func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) error {
 	_, err := cloud.Client.Projects.Zones.Clusters.Delete(
 		cloud.ProjectId,
 		cloud.Region+"-"+cloud.Zone,
@@ -190,20 +203,20 @@ func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) types.Cus
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in cluster deletion")
+		return err
 	} else if err != nil && strings.Contains(err.Error(), "notFound") {
 		ctx.SendLogs(
 			"GKE cluster '"+clusterName+"' was not found.",
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in cluster deletion")
+		return err
 	}
 
-	return types.CustomCPError{}
+	return nil
 }
 
-func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context)types.CustomCPError {
+func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context) error {
 	message := ""
 	for {
 		cluster, err := cloud.Client.Projects.Zones.Clusters.Get(
@@ -217,7 +230,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context)types.Cus
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
-			return ApiErrors(err,"Error in GKE cluster creation/Updation")
+			return err
 		}
 		if cluster.Status == statusRunning {
 			ctx.SendLogs(
@@ -225,7 +238,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context)types.Cus
 				models.LOGGING_LEVEL_INFO,
 				models.Backend_Logging,
 			)
-			return types.CustomCPError{}
+			return nil
 		}
 		if cluster.Status != message {
 			ctx.SendLogs(
@@ -239,7 +252,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context)types.Cus
 	}
 }
 
-func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Context) error {
 	message := ""
 	for {
 		nodepool, err := cloud.Client.Projects.Zones.Clusters.NodePools.Get(
@@ -254,7 +267,7 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
-			return ApiErrors(err,"Error in cluster"+clusterName +"nodepool creation/updation")
+			return err
 		}
 		if nodepool.Status == statusRunning {
 			ctx.SendLogs(
@@ -262,7 +275,7 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 				models.LOGGING_LEVEL_INFO,
 				models.Backend_Logging,
 			)
-			return types.CustomCPError{}
+			return nil
 		}
 		if nodepool.Status != message {
 			ctx.SendLogs(
@@ -276,21 +289,21 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 	}
 }
 
-func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, types.CustomCPError) {
+func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, error) {
 	config, err := cloud.Client.Projects.Zones.GetServerconfig("*", cloud.Zone).
 		Context(context.Background()).
 		Do()
 
 	if err != nil {
 		ctx.SendLogs(
-			"GKE fetch options for '"+cloud.ProjectId+"' failed: "+err.Error(),
+			"GKE server config for '"+cloud.ProjectId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiErrors(err,"Error in fetching GKE versions")
+		return nil, err
 	}
 
-	return config, types.CustomCPError{}
+	return config, nil
 }
 
 func (cloud *GKE) getGCPNetwork(token string, ctx utils.Context) (gcpNetwork types.GCPNetwork) {
@@ -298,22 +311,22 @@ func (cloud *GKE) getGCPNetwork(token string, ctx utils.Context) (gcpNetwork typ
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs("GKE get network:"+ err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return gcpNetwork
 	}
 
 	err = json.Unmarshal(network.([]byte), &gcpNetwork)
 	if err != nil {
-		ctx.SendLogs("GKE get network: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return gcpNetwork
 	}
 
 	return gcpNetwork
 }
 
-func (cloud *GKE) init() types.CustomCPError {
+func (cloud *GKE) init() error {
 	if cloud.Client != nil {
-		return types.CustomCPError{}
+		return nil
 	}
 
 	var err error
@@ -321,48 +334,44 @@ func (cloud *GKE) init() types.CustomCPError {
 
 	cloud.Client, err = gke.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
 	if err != nil {
-		return ApiErrors(err,"Error in initializing cloud credentials")
+		beego.Error(err.Error())
+		return err
 	}
 
-	return types.CustomCPError{}
+	return nil
 }
 
-func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (cluster GKECluster, err types.CustomCPError) {
+func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (cluster GKECluster, err error) {
 	if cloud.Client == nil {
-		err := cloud.init()
-		if err.Description != "" {
-			ctx.SendLogs("GKE get status for '"+cloud.ProjectId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err = cloud.init()
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
 	}
 
-	latestCluster, err1 := cloud.Client.Projects.Zones.Clusters.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName).Do()
-	if err1 != nil && !strings.Contains(err1.Error(), "not exist") {
+	latestCluster, err := cloud.Client.Projects.Zones.Clusters.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName).Do()
+	if err != nil && !strings.Contains(err.Error(), "not exist") {
 		ctx.SendLogs(
-			"GKE get status for '"+cloud.ProjectId+" failed: "+err1.Error(),
+			"GKE get cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return cluster, ApiErrors(err1,"Error in fetching cluster status")
+		return cluster, err
 	}
 
 	if latestCluster == nil {
-		ctx.SendLogs(
-			err1.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		return cluster, ApiErrors(err1,"Error in fetching cluster status")
+		return cluster, err
 	}
 
-	return GenerateClusterFromResponse(*latestCluster), types.CustomCPError{}
+	return GenerateClusterFromResponse(*latestCluster), err
 }
 
-func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) error {
 	if cloud.Client == nil {
 		err := cloud.init()
-		if err.Description != "" {
-			ctx.SendLogs("GKE terminate cluster for "+cloud.ProjectId+"' failed: "+ err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -370,14 +379,23 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 	_, err := cloud.Client.Projects.Zones.Clusters.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, cluster.Name).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE terminate cluster for "+cloud.ProjectId+"' failed: "+err.Error(),
+			"GKE delete cluster for '"+cloud.ProjectId+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in deleting cluster")
+		return err
 	}
 
-	return types.CustomCPError{}
+	return nil
+}
+
+func Validate(gkeCluster GKECluster) error {
+	if gkeCluster.ProjectId == "" {
+		return errors.New("project id is required")
+	} else if gkeCluster.Name == "" {
+		return errors.New("cluster name is required")
+	}
+	return nil
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -392,11 +410,11 @@ func getNetworkHost(cloudType, projectId string) string {
 	return host
 }
 
-func GetGKE(credentials gcp.GcpCredentials) (GKE, types.CustomCPError) {
+func GetGKE(credentials gcp.GcpCredentials) (GKE, error) {
 	return GKE{
 		Credentials: credentials.RawData,
 		ProjectId:   credentials.AccountData.ProjectId,
 		Region:      credentials.Region,
 		Zone:        credentials.Zone,
-	}, types.CustomCPError{}
+	}, nil
 }

@@ -21,7 +21,7 @@ func DeleteError(projectId, companyId string, ctx utils.Context) error {
 
 	defer session.Close()
 	mc := GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
 	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
 	if err != nil {
 		ctx.SendLogs(
@@ -34,7 +34,7 @@ func DeleteError(projectId, companyId string, ctx utils.Context) error {
 
 	return nil
 }
-func AddError(ctx utils.Context, errDef types.ClusterError) error {
+func AddError(ctx utils.Context, errDef types.CustomCPError) error {
 	session, err := GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(
@@ -47,7 +47,7 @@ func AddError(ctx utils.Context, errDef types.ClusterError) error {
 	defer session.Close()
 
 	mc := GetMongoConf()
-	err = InsertInMongo(mc.MongoClusterErrorCollection, errDef)
+	err = InsertInMongo(mc.MongoIKSClusterCollection, errDef)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSAddClusterModel:  Add - Got error while inserting cluster to the database:  "+err.Error(),
@@ -58,7 +58,7 @@ func AddError(ctx utils.Context, errDef types.ClusterError) error {
 	}
 	return nil
 }
-func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Context, errDef types.CustomCPError) error {
+func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Context, errDef types.ClusterError) error {
 
 	var customErr types.ClusterError
 	customErr.ProjectId = projectId
