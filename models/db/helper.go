@@ -88,7 +88,7 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 			)
 			return err
 		}
-		err = AddError(ctx, errDef)
+		err = AddError(ctx, customErr)
 		if err != nil {
 			ctx.SendLogs(
 				"AKSAddClusterModel:  Add - Got error while inserting cluster to the database:  "+err.Error(),
