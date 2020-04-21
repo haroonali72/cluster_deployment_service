@@ -2700,9 +2700,6 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
@@ -2753,9 +2750,6 @@
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
@@ -2798,8 +2792,8 @@
                             "$ref": "#/definitions/doks.ServerConfig"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2847,11 +2841,8 @@
                             "$ref": "#/definitions/doks.KubernetesConfig"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2898,9 +2889,6 @@
                     },
                     "304": {
                         "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -2954,9 +2942,6 @@
                             "$ref": "#/definitions/doks.KubernetesCluster"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
@@ -3000,14 +2985,11 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"Cluster termination is in progress\"}"
                     },
                     "304": {
                         "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -3053,9 +3035,6 @@
                         "schema": {
                             "$ref": "#/definitions/doks.KubernetesCluster"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -3104,9 +3083,6 @@
                     },
                     "304": {
                         "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -3906,9 +3882,6 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
@@ -3959,11 +3932,11 @@
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4011,11 +3984,11 @@
                             "$ref": "#/definitions/gke.ServerConfig"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime error\"}"
@@ -4062,9 +4035,6 @@
                     },
                     "304": {
                         "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -4118,11 +4088,11 @@
                             "$ref": "#/definitions/gke.GKECluster"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4164,14 +4134,11 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "{\"msg\": \"Cluster termination is in progress\"}"
                     },
                     "304": {
                         "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -4217,9 +4184,6 @@
                         "schema": {
                             "$ref": "#/definitions/gke.GKECluster"
                         }
-                    },
-                    "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -9267,15 +9231,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13199.0xc001882120.false": {
+        "13199.0xc0018a02a0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc001858390.false": {
+        "442.0xc001870510.false": {
             "title": "false",
             "type": "object"
         },
-        "49769.0xc0018098f0.false": {
+        "49769.0xc001821a70.false": {
             "title": "false",
             "type": "object"
         },
@@ -9287,15 +9251,15 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc00113e090.false": {
+        "605.0xc00115a210.false": {
             "title": "false",
             "type": "object"
         },
-        "639.0xc001764930.false": {
+        "639.0xc001784ab0.false": {
             "title": "false",
             "type": "object"
         },
-        "644.0xc001422c30.false": {
+        "644.0xc001438db0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9652,7 +9616,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc00113e090.false"
+                    "$ref": "#/definitions/605.0xc00115a210.false"
                 },
                 "name": {
                     "type": "string"
@@ -10217,7 +10181,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/644.0xc001422c30.false"
+                    "$ref": "#/definitions/644.0xc001438db0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11905,7 +11869,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/639.0xc001764930.false"
+                    "$ref": "#/definitions/639.0xc001784ab0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12050,7 +12014,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/49769.0xc0018098f0.false"
+                    "$ref": "#/definitions/49769.0xc001821a70.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12278,7 +12242,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc001858390.false"
+                    "$ref": "#/definitions/442.0xc001870510.false"
                 },
                 "name": {
                     "type": "string"
@@ -12406,7 +12370,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13199.0xc001882120.false"
+                    "$ref": "#/definitions/13199.0xc0018a02a0.false"
                 },
                 "name": {
                     "type": "string"
