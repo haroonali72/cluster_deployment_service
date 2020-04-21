@@ -17,16 +17,16 @@ type DOKSClusterController struct {
 	beego.Controller
 }
 
-// @Title Get
-// @Description get kubernetes version,machine types and regions
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	true "token"
+// @Title Get Options
+// @Description Get kubernetes version,machine types and regions
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} doks.ServerConfig
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /config [get]
-func (c *DOKSClusterController) GetServerConfig() {
+func (c *DOKSClusterController) GetServerConfig(){
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOKSClusterController: Get cluster options ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -39,11 +39,10 @@ func (c *DOKSClusterController) GetServerConfig() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		ctx.SendLogs("DOKSClusterController: Token is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -68,7 +67,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 	ctx.SendLogs("DOKSClusterController: Getting cluster options ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	config, err1 := doks.GetServerConfig(doProfile.Profile, *ctx)
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
 		c.ServeJSON()
@@ -81,10 +80,10 @@ func (c *DOKSClusterController) GetServerConfig() {
 	c.ServeJSON()
 }
 
-// @Title Get
-// @Description get valid kubernetes cluster version and machine sizes
-// @Param	token	header	string	true "token"
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Title Get Config File
+// @Description Get valid kubernetes cluster version and machine sizes
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} doks.KubernetesConfig
 // @Failure 400 {"error": "Bad Request"}
@@ -117,22 +116,22 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		ctx.SendLogs("DOKSClusterController: Token is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	region, err := do.GetRegion(token, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+		if err != nil {
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
@@ -146,10 +145,10 @@ func (c *DOKSClusterController) GetKubeConfig() {
 	if err != nil {
 		if strings.Contains(err.Error(), "not found"){
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -159,7 +158,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 	ctx.SendLogs("DOKSClusterController: Getting cluster configuration file of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	config, err1 := doks.GetKubeConfig(doProfile.Profile, *ctx, cluster)
-	if err1.Description != "" {
+	if err1 !=  (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
 		c.ServeJSON()
@@ -173,9 +172,9 @@ func (c *DOKSClusterController) GetKubeConfig() {
 }
 
 // @Title Get
-// @Description  get cluster against the projectId
+// @Description  Get cluster against the projectId
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	true "token"
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} doks.KubernetesCluster
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -195,11 +194,11 @@ func (c *DOKSClusterController) Get() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-		ctx.SendLogs("DOKSClusterController: token is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -235,7 +234,7 @@ func (c *DOKSClusterController) Get() {
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found"){
-			c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -256,9 +255,9 @@ func (c *DOKSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	token	header	string	true "token"
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []doks.KubernetesCluster
-// @Failure 400 {"error": "Bad Request"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
 func (c *DOKSClusterController) GetAll() {
@@ -266,10 +265,10 @@ func (c *DOKSClusterController) GetAll() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOKSClusterController: Get all clusters", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -310,20 +309,20 @@ func (c *DOKSClusterController) GetAll() {
 
 	ctx.SendLogs("DOKSClusterController: All clusters fetched ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.SendLogs("All DOKS cluster fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	ctx.SendLogs("All DOKS cluster fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
 }
 
-// @Title Add
-// @Description add a new cluster
-// @Param	token	header	string	true "token"
-// @Param	body	body 	doks.KubernetesCluster		true	"body for cluster content"
+// @Title Create
+// @Description Add a new cluster
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	body	body 	doks.KubernetesCluster		true	"Body for cluster content"
 // @Success 201 {"msg": "Cluster added successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
-// @Failure 409 {"error": "Cluster against same project id already exists"}
+// @Failure 409 {"error": "Cluster against same project already exists"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *DOKSClusterController) Post() {
@@ -341,10 +340,10 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -375,18 +374,18 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
+		if !allowed {
+			c.Ctx.Output.SetStatus(401)
+			c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+			c.ServeJSON()
+			return
+		}
 
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
 	cluster.CompanyId = userInfo.CompanyId
 
-	validate := validator.New()
+/*	validate := validator.New()
 	err = validate.Struct(cluster)
 	if err != nil {
 		beego.Error(err.Error())
@@ -395,7 +394,7 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+*/
 	err = doks.ValidateDOKSData(cluster, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
@@ -433,13 +432,13 @@ func (c *DOKSClusterController) Post() {
 }
 
 // @Title Update
-// @Description update an existing kubernetes cluster
-// @Param	token	header	string	true "token"
-// @Param	body	body 	doks.KubernetesCluster	true	"body for cluster content"
+// @Description Update an existing kubernetes cluster
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	body	body 	doks.KubernetesCluster	true	"Body for cluster content"
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in running state"}
+// @Failure 402 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -457,10 +456,10 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -494,6 +493,12 @@ func (c *DOKSClusterController) Patch() {
 	ctx.Data.Company = userInfo.CompanyId
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found"){
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
@@ -532,14 +537,14 @@ func (c *DOKSClusterController) Patch() {
 }
 
 // @Title Delete
-// @Description delete a kubernetes cluster
-// @Param	projectId	path	string	true	"project id of the cluster"
+// @Description Delete a cluster
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	projectId	path	string	true	"Project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
-// @Param	token	header	string	true "token"
-// @Success 200 {"msg": "cluster deleted successfully"}
-// @Success 204 {"msg": "cluster deleted successfully"}
+// @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
+// @Failure 402 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete [delete]
@@ -556,10 +561,10 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -620,7 +625,7 @@ func (c *DOKSClusterController) Delete() {
 
 	if cluster.CloudplexStatus == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -659,14 +664,14 @@ func (c *DOKSClusterController) Delete() {
 }
 
 // @Title Start
-// @Description starts a kubernetes cluster
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	true "token"
+// @Description Deploy a kubernetes cluster
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "Cluster created successfully"}
+// @Success 201 {"msg": "Cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in running state"}
+// @Failure 402 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -694,10 +699,10 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -729,15 +734,15 @@ func (c *DOKSClusterController) StartCluster() {
 	}
 
 	region, err := do.GetRegion(token, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+		if err != nil {
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 
 	cluster, err := doks.GetKubernetesCluster(*ctx)
-	if err != nil{
+	if err != nil {
 		if strings.Contains(err.Error(), "not found"){
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
@@ -809,14 +814,13 @@ func (c *DOKSClusterController) StartCluster() {
 }
 
 // @Title Status
-// @Description returns latest status of the running cluster
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	true "token"
+// @Description Get live status of the running cluster
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} doks.DOKSCluster
-// @Failure 400 {"error": "Bad Request"}
-// @Failure 404 {"error": "Not Found"}
+// @Success 200 {object} doks.KubernetesCluster
 // @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
@@ -843,10 +847,10 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -876,12 +880,12 @@ func (c *DOKSClusterController) GetStatus() {
 	}
 
 	region, err := do.GetRegion(token, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+		if err != nil {
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 
 	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
@@ -897,13 +901,13 @@ func (c *DOKSClusterController) GetStatus() {
 	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = map[string]string{"error": cpErr.Description}
 		c.ServeJSON()
 		return
 	}
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 	}
 
@@ -914,13 +918,13 @@ func (c *DOKSClusterController) GetStatus() {
 }
 
 // @Title Terminate
-// @Description terminates a  cluster
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Description Terminate a running cluster
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	true "token"
-// @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 400 {"error": "Bad Request"}
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Success 200 {"msg": "Cluster termination is in progress"}
 // @Failure 401 {"error": "Unauthorized"}
+// @Failure 402 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -947,10 +951,10 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1038,11 +1042,11 @@ func (c *DOKSClusterController) TerminateCluster() {
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found"){
-			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1054,11 +1058,11 @@ func (c *DOKSClusterController) TerminateCluster() {
 	c.ServeJSON()
 }
 
-// @Title Start
+// @Title Start agent
 // @Description Apply cloudplex Agent file to doks cluster
-// @Param	clusterName	header	string	clusterName ""
-// @Param	token	header	string	true "token"
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	clusterName	header	string	true "Name of the cluster"
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 400 {"error": "Bad Request"}
@@ -1090,10 +1094,10 @@ func (c *DOKSClusterController) ApplyAgent() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}

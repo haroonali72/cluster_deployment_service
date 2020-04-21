@@ -48,15 +48,15 @@ type SkuResp struct {
 	ResourceType string
 }
 
-func (cloud *AKS) init() types.CustomCPError {
+func (cloud *AKS) init() error {
 	if cloud.Authorizer != nil {
-		return types.CustomCPError{}
+		return nil
 	}
 
 	if cloud.ID == "" || cloud.Key == "" || cloud.Tenant == "" || cloud.Subscription == "" || cloud.Region == "" {
 		text := "invalid cloud credentials"
 		beego.Error(text)
-		return ApiError(errors.New(text), text, 401)
+		return errors.New(text)
 	}
 
 	oauthConfig, err := adal.NewOAuthConfig(azure.PublicCloud.ActiveDirectoryEndpoint, cloud.Tenant)
@@ -66,7 +66,7 @@ func (cloud *AKS) init() types.CustomCPError {
 
 	spt, err := adal.NewServicePrincipalToken(*oauthConfig, cloud.ID, cloud.Key, azure.PublicCloud.ResourceManagerEndpoint)
 	if err != nil {
-		return ApiError(err, "", 502)
+		return err
 	}
 	cloud.Context = context.Background()
 	cloud.Authorizer = autorest.NewBearerAuthorizer(spt)
@@ -89,14 +89,14 @@ func (cloud *AKS) init() types.CustomCPError {
 	cloud.Resources = make(map[string]interface{})
 	cloud.Location = subscriptions.NewClient()
 	cloud.Location.Authorizer = cloud.Authorizer
-	return types.CustomCPError{}
+	return nil
 }
 
-func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupName string) ([]AKSCluster, types.CustomCPError) {
+func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupName string) ([]AKSCluster, error) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -109,7 +109,7 @@ func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupNa
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiError(err, "Error while getting cluster list", 502)
+		return nil, err
 	}
 
 	result := []AKSCluster{}
@@ -120,14 +120,14 @@ func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupNa
 		_ = pages.Next()
 	}
 
-	return result, types.CustomCPError{}
+	return result, nil
 }
 
-func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, types.CustomCPError) {
+func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, error) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -140,7 +140,7 @@ func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, types.CustomCPE
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiError(err, "Error while getting cluster list", 502)
+		return nil, err
 	}
 
 	result := []AKSCluster{}
@@ -151,14 +151,14 @@ func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, types.CustomCPE
 		_ = pages.Next()
 	}
 
-	return result, types.CustomCPError{}
+	return result, nil
 }
 
-func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName string) (*AKSCluster, types.CustomCPError) {
+func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName string) (*AKSCluster, error) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -171,11 +171,11 @@ func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName s
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiError(err, "Error while getting cluster", 502)
+		return nil, err
 	}
 
 	aksCluster := cloud.generateClusterFromResponse(result)
-	return &aksCluster, types.CustomCPError{}
+	return &aksCluster, nil
 }
 
 func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.Context) error {
@@ -247,11 +247,11 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	return nil
 }
 
-func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) types.CustomCPError {
+func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) error {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -264,7 +264,7 @@ func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) types.
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiError(err, "", 502)
+		return err
 	}
 
 	//for {
@@ -299,17 +299,17 @@ func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) types.
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiError(err, "", 502)
+		return err
 	}
 
-	return types.CustomCPError{}
+	return nil
 }
 
-func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*containerservice.CredentialResult, types.CustomCPError) {
+func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*containerservice.CredentialResult, error) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -322,14 +322,14 @@ func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*contain
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiError(err, "Error while getting kube config", 502)
+		return nil, err
 	}
 
 	for _, kubeconfig := range *results.Kubeconfigs {
-		return &kubeconfig, types.CustomCPError{}
+		return &kubeconfig, nil
 	}
 
-	return nil, types.CustomCPError{}
+	return nil, nil
 }
 
 func (cloud *AKS) getAzureNetwork(token string, ctx utils.Context) (azureNetwork types.AzureNetwork) {
@@ -500,11 +500,11 @@ func generateWindowsProfile() *containerservice.ManagedClusterWindowsProfile {
 	return &AKSwindowProfile
 }
 
-func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.OrchestratorVersionProfileListResult, types.CustomCPError) {
+func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.OrchestratorVersionProfileListResult, error) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -513,10 +513,10 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "Microsoft.ContainerService")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, ApiError(err, "Error while getting kubernetes version", 502)
+		return nil, err
 	}
 
-	return &result, types.CustomCPError{}
+	return &result, nil
 }
 
 func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
@@ -586,11 +586,11 @@ func generateDnsPrefix(c AKSCluster) *string {
 	}
 }
 
-func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) types.CustomCPError {
+func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) error {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -603,7 +603,7 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) typ
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiError(err, "", 502)
+		return err
 	}
 
 	for index, agentPool := range *AKScluster.AgentPoolProfiles {
@@ -627,7 +627,7 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) typ
 	cluster.ClusterProperties.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
 	cluster.ClusterProperties.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
 
-	return types.CustomCPError{}
+	return nil
 }
 
 func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
@@ -653,8 +653,8 @@ func GetVmSkus(ctx utils.Context) ([]SkuResp, error) {
 func (cloud *AKS) WriteAzureSkus() {
 	if cloud == nil {
 		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			fmt.Println(err.Description)
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
 	}
