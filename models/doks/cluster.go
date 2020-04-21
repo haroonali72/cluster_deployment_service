@@ -468,7 +468,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: 500, Description: text}
+		return types.CustomCPError{StatusCode: 500, Message:"Error in cluster termination",Description: text}
 	}
 
 	cluster.CloudplexStatus = string(models.Terminating)
