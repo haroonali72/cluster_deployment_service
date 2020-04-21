@@ -141,7 +141,6 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
 	var region Project
