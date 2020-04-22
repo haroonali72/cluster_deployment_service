@@ -389,8 +389,8 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (AKSCluster, types.CustomCPError) {
 	cluster, err := GetAKSCluster(projectId, companyId, ctx)
 	if err != nil {
-		return cluster, types.CustomCPError{Message: err.Error(),
-			Description: "Error occurred while getting cluster status in database",
+		return cluster, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
+			Description: err.Error(),
 			StatusCode:  500}
 	}
 	//cpErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)

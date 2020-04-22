@@ -21,7 +21,7 @@ type AKSClusterController struct {
 // @Title Get
 // @Description Get cluster against the projectId
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} aks.AKSCluster
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
@@ -32,7 +32,6 @@ func (c *AKSClusterController) Get() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("AKSClusterController: projectId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -49,7 +48,6 @@ func (c *AKSClusterController) Get() {
 
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -61,7 +59,6 @@ func (c *AKSClusterController) Get() {
 
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -138,6 +135,12 @@ func (c *AKSClusterController) GetAll() {
 
 	clusters, err := aks.GetAllAKSCluster(data, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -155,7 +158,7 @@ func (c *AKSClusterController) GetAll() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Success 400 {"msg": "Runtime Error"}
-// @Failure 401 {"error": "Unauthrized"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster against this project already exists"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -313,13 +316,7 @@ func (c *AKSClusterController) Patch() {
 
 	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
-			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
-		if strings.Contains(err.Error(), "does not exist") {
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
 			c.ServeJSON()
@@ -332,13 +329,13 @@ func (c *AKSClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(400)
+			c.Ctx.Output.SetStatus(304)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -360,7 +357,6 @@ func (c *AKSClusterController) Patch() {
 // @Param	projectId	path 	string	true	"Project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -444,7 +440,7 @@ func (c *AKSClusterController) Delete() {
 
 	if cluster.Status == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -452,7 +448,7 @@ func (c *AKSClusterController) Delete() {
 
 	if cluster.Status == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -460,6 +456,12 @@ func (c *AKSClusterController) Delete() {
 
 	err = aks.DeleteAKSCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -476,7 +478,7 @@ func (c *AKSClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 201 {"msg": "cluster created successfully"}
+// @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
@@ -619,9 +621,10 @@ func (c *AKSClusterController) StartCluster() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aks.AKSCluster
-// @Failure 401 {"error": "unauthorized"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Internal Server Error"}
+// @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
 func (c *AKSClusterController) GetStatus() {
 	ctx := new(utils.Context)
@@ -698,13 +701,13 @@ func (c *AKSClusterController) GetStatus() {
 
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	}
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] =cpErr
 		c.ServeJSON()
 	}
 
@@ -720,7 +723,7 @@ func (c *AKSClusterController) GetStatus() {
 // @Success 200 {"msg": "Cluster termination is in progress"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in new/deployed/terminating state"}
+// @Failure 304 {"error": "Cluster is in new/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -815,7 +818,7 @@ func (c *AKSClusterController) TerminateCluster() {
 
 	if cluster.Status == "Cluster Terminated" {
 		ctx.SendLogs("AKSClusterController : Cluster is terminated", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is already in terminated state"}
 		c.ServeJSON()
 		return
@@ -855,12 +858,11 @@ func (c *AKSClusterController) TerminateCluster() {
 
 // @Title GetAKSVmsTypes
 // @Description get aks vm types
-// @Param	X-Auth-Token	header	string	token ""
-// @Param	region path	string	region ""
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	region path	string	true "Cloud region"
 // @Success 200 {object} []aks.VMSizeTypes
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 500 {"error": "Internal Server Error"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /getvms/:region [get]
 func (c *AKSClusterController) GetAKSVms() {
 	ctx := new(utils.Context)
@@ -908,9 +910,8 @@ func (c *AKSClusterController) GetAKSVms() {
 // @Title Kubeconfig
 // @Description get cluter kubeconfig
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Internal Server Error"}
@@ -1002,11 +1003,10 @@ func (c *AKSClusterController) GetKubeConfig() {
 
 // @Title Get Kube Versions
 // @Description fetch version of kubernetes cluster
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	region	path	string	true	"region of the cloud"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
+// @Param	region	path	string	true	"Cloud region"
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Internal Server Error"}
 // @Failure 502 {object} types.CustomCPError
