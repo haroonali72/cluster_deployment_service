@@ -65,7 +65,7 @@ paths:
         "400":
           description: '{"msg": "Runtime Error"}'
         "401":
-          description: '{"error": "Unauthrized"}'
+          description: '{"error": "Unauthorized"}'
         "404":
           description: '{"error": "Not Found"}'
         "409":
@@ -86,7 +86,8 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -125,8 +126,6 @@ paths:
           description: '{"msg": "Cluster deleted successfully"}'
         "304":
           description: '{"error": "Cluster is in running/deploying/terminating state"}'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -164,17 +163,18 @@ paths:
       parameters:
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: path
         name: region
-        description: region of the cloud
+        description: Cloud region
         required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -183,8 +183,6 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "Bad Request"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -200,11 +198,13 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
+        required: true
         type: string
       - in: path
         name: region
-        description: region
+        description: Cloud region
+        required: true
         type: string
       responses:
         "200":
@@ -213,12 +213,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/aks.VMSizeTypes'
-        "400":
-          description: '{"error": "Bad Request"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "Internal Server Error"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aks/kubeconfig/{projectId}:
     get:
       tags:
@@ -233,7 +231,8 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -241,8 +240,6 @@ paths:
         required: true
         type: string
       responses:
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -274,7 +271,7 @@ paths:
         required: true
         type: string
       responses:
-        "201":
+        "200":
           description: '{"msg": "cluster created successfully"}'
         "304":
           description: '{"error": "Cluster is in running/deploying/terminating state"}'
@@ -316,11 +313,13 @@ paths:
           schema:
             $ref: '#/definitions/aks.AKSCluster'
         "401":
-          description: '{"error": "unauthorized"}'
+          description: '{"error": "Unauthorized"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Internal Server Error"}'
+        "502":
+          description: '{object} types.CustomCPError'
   /cluster/aks/terminate/{projectId}/:
     post:
       tags:
@@ -347,7 +346,7 @@ paths:
         "200":
           description: '{"msg": "Cluster termination is in progress"}'
         "304":
-          description: '{"error": "Cluster is in new/deployed/terminating state"}'
+          description: '{"error": "Cluster is in new/deploying/terminating state"}'
         "400":
           description: '{"error": "Bad Request"}'
         "401":
@@ -1784,8 +1783,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/doks.KubernetesCluster'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -1818,8 +1815,6 @@ paths:
           description: '{"msg": "Cluster deleted successfully"}'
         "304":
           description: '{"error": "Cluster is in deploying/running/terminating state"}'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -1879,12 +1874,8 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
@@ -1912,7 +1903,7 @@ paths:
           schema:
             $ref: '#/definitions/doks.ServerConfig'
         "404":
-          description: '{"error": "Not Found"}'
+          description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
@@ -1944,12 +1935,8 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/doks.KubernetesConfig'
-        "400":
-          description: '{"error": "Bad Request"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "Not Found"}'
+          description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
@@ -1981,8 +1968,6 @@ paths:
           description: '{"msg": "Cluster created successfully"}'
         "304":
           description: '{"error": "Cluster is in running/deploying/terminating state"}'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -2020,8 +2005,6 @@ paths:
             $ref: '#/definitions/doks.KubernetesCluster'
         "401":
           description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
@@ -2049,10 +2032,10 @@ paths:
         required: true
         type: string
       responses:
-        "200":
+        "204":
           description: '{"msg": "Cluster termination is in progress"}'
         "304":
-          description: '{"error": "Cluster is in new/deployed/terminating state"}'
+          description: '{"error": "Cluster is in new/deploying/terminating state"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -2586,8 +2569,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gke.GKECluster'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -2625,7 +2606,7 @@ paths:
       description: Apply cloudplex Agent file to a gke cluster
       operationId: GKEClusterController.Start
       parameters:
-      - in: header
+      - in: path
         name: clusterName
         description: Name of the cluster
         required: true
@@ -2648,12 +2629,10 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "Not Found"}'
+          description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
@@ -2688,7 +2667,7 @@ paths:
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "Not Found"}'
+          description: '{"error": "Bad Request"}'
         "500":
           description: '{"error": "Runtime error"}'
         "502":
@@ -2720,8 +2699,6 @@ paths:
           description: '{"msg": "Cluster created successfully"}'
         "304":
           description: '{"error": "Cluster is in running/deploying/terminating state"}'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -2760,7 +2737,7 @@ paths:
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "Not Found"}'
+          description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
@@ -2788,12 +2765,10 @@ paths:
         required: true
         type: string
       responses:
-        "200":
+        "204":
           description: '{"msg": "Cluster termination is in progress"}'
         "304":
           description: '{"error": "Cluster is in new/deployed/terminating state"}'
-        "400":
-          description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -6101,25 +6076,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001816f00.false:
+  442.0xc0017fe420.false:
     title: "false"
     type: object
-  605.0xc0010fec30.false:
+  605.0xc0010fa120.false:
     title: "false"
     type: object
-  639.0xc0017394a0.false:
+  639.0xc0017129c0.false:
     title: "false"
     type: object
-  644.0xc0013eb7d0.false:
+  644.0xc0013c6cc0.false:
     title: "false"
     type: object
   5837.string:
     title: string
     type: object
-  13199.0xc001854c90.false:
+  13199.0xc0018301b0.false:
     title: "false"
     type: object
-  49808.0xc0017ea480.false:
+  49808.0xc0017b3980.false:
     title: "false"
     type: object
   54169.string:
@@ -6367,7 +6342,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc0010fec30.false'
+        $ref: '#/definitions/605.0xc0010fa120.false'
       name:
         type: string
       network_name:
@@ -6748,7 +6723,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc0013eb7d0.false'
+        $ref: '#/definitions/644.0xc0013c6cc0.false'
       name:
         type: string
       network_name:
@@ -7884,7 +7859,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/639.0xc0017394a0.false'
+        $ref: '#/definitions/639.0xc0017129c0.false'
       kube_version:
         type: string
       name:
@@ -7982,7 +7957,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/49808.0xc0017ea480.false'
+        $ref: '#/definitions/49808.0xc0017b3980.false'
       kube_version:
         type: string
       name:
@@ -8147,7 +8122,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001816f00.false'
+        $ref: '#/definitions/442.0xc0017fe420.false'
       name:
         type: string
       node_pools:
@@ -8233,7 +8208,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13199.0xc001854c90.false'
+        $ref: '#/definitions/13199.0xc0018301b0.false'
       name:
         type: string
       node_pools:
