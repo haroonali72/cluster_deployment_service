@@ -505,7 +505,7 @@ func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, types.CustomCPErr
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "error occurred while parsing kubernetes versions", 500)
+		cpErr := ApiError(errors.New("Profilenot valid.Check profile credentails again."), "Error in validating profile", 500)
 		return Versions{}, cpErr
 	}
 
