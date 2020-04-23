@@ -28,12 +28,12 @@ type List struct {
 func getRbacHost() string {
 	return beego.AppConfig.String("rbac_url")
 }
-func GetAllAuthenticate(resourceType, companyId string, token string, cloudType models.Cloud, ctx utils.Context) (error, List) {
+func GetAllAuthenticate(resourceType, companyId string, token string, cloudType models.Cloud, ctx utils.Context) (int,error , List) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacListURI)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err, List{}
+		return 500,err, List{}
 	}
 	q := req.URL.Query()
 	q.Add("companyId", companyId)
@@ -47,44 +47,43 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err, List{}
+		return 500,err, List{}
 	}
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		code := string(response.StatusCode)
-		return errors.New("Status Code: " + code), List{}
+		return response.StatusCode, errors.New( response.Status ), List{}
 	}
 
 	var data List
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err, List{}
+		return 500,err, List{}
 	}
 	err = json.Unmarshal(contents, &data)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err, List{}
+		return 500,err, List{}
 	}
 
-	return nil, data
+	return 0,nil, data
 }
-func Authenticate(cloud interface{}, resourceType, resourceId string, action string, token string, ctx utils.Context) (bool, error) {
+func Authenticate(cloud interface{}, resourceType, resourceId string, action string, token string, ctx utils.Context) (int,bool, error) {
 	subType := ""
 	b, err := json.Marshal(cloud)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return 500,false, err
 	}
 	err = json.Unmarshal(b, &subType)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return 500,false, err
 	}
 	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacAccessURI)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return 500,false, err
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
@@ -98,14 +97,14 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return response.StatusCode,false, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode == 200 {
-		return true, nil
+		return 0,true, nil
 	}
-	return false, nil
+	return 500,false, nil
 }
 
 func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
@@ -136,11 +135,11 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 
 }
 
-func GetInfo(token string) (types.Response, error) {
+func GetInfo(token string) (int,types.Response, error) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacInfoURI)
 	if err != nil {
-		return types.Response{}, err
+		return 500,types.Response{}, err
 	}
 	q := req.URL.Query()
 	req.Header.Set("token", token)
@@ -149,24 +148,24 @@ func GetInfo(token string) (types.Response, error) {
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
-		return types.Response{}, err
+		return 500,types.Response{}, err
 	}
 	defer response.Body.Close()
 	beego.Info(response.StatusCode)
 	if response.StatusCode != 200 {
-		return types.Response{}, errors.New("RBAC: Unauthorized , " + strconv.Itoa(response.StatusCode))
+		return response.StatusCode,types.Response{}, errors.New(response.Status)
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 
-		return types.Response{}, err
+		return 500,types.Response{}, err
 	}
 	var res types.Response
 	err = json.Unmarshal(contents, &res)
 	if err != nil {
-		return types.Response{}, err
+		return 500,types.Response{}, err
 	}
-	return res, nil
+	return 0,res, nil
 }
 func GetRole(token string) (types.UserRole, error) {
 
@@ -213,10 +212,9 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 	client := utils.InitReq()
 	request_data, err := utils.TransformData(input)
 	if err != nil {
-
 		beego.Info(err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
+		return 500, err
 	}
 	var req *http.Request
 	if requestType == models.POST {
@@ -233,20 +231,20 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 	if err != nil {
 		beego.Info(err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
+		return 500, err
 	}
 	req.Header.Set("token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		beego.Info(err.Error())
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
+		return response.StatusCode, err
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	beego.Info(string(contents))
 	beego.Info(response.StatusCode)
 
-	return response.StatusCode, err
+	return 0, err
 
 }
 func DeletePolicy(cloud models.Cloud, resourceId string, token string, ctx utils.Context) (int, error) {
@@ -274,7 +272,7 @@ func DeletePolicy(cloud models.Cloud, resourceId string, token string, ctx utils
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
+		return response.StatusCode, err
 	}
 	return response.StatusCode, err
 

@@ -327,7 +327,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	if err != nil {
 		cpErr := ApiError(err, "", 502)
 
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Message, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster creation failed"
@@ -348,7 +348,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	if AgentErr != nil {
 		cpErr := ApiError(AgentErr, "agent deployment failed", 500)
 
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Message, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster creation failed"
@@ -389,13 +389,13 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (AKSCluster, types.CustomCPError) {
 	cluster, err := GetAKSCluster(projectId, companyId, ctx)
 	if err != nil {
-		return cluster, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
+		return cluster, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 			Description: err.Error(),
 			StatusCode:  500}
 	}
 	//cpErr, err := GetError(cluster.ProjectId, ctx.Data.Company, ctx)
 	//if err != nil {
-	//	return AKSCluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
+	//	return AKSCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 	//		Description: "Error occurred while getting cluster status in database",
 	//		StatusCode:  500}
 	//}
@@ -485,7 +485,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	CpErr = aksOps.TerminateCluster(cluster, ctx)
 	if CpErr != (types.CustomCPError{}) {
 
-		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+CpErr.Message, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+CpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, CpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"

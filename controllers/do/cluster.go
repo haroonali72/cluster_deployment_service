@@ -46,10 +46,10 @@ func (c *DOClusterController) Get() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -60,10 +60,10 @@ func (c *DOClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -115,10 +115,10 @@ func (c *DOClusterController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -129,10 +129,10 @@ func (c *DOClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DO, *ctx)
+	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DO, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -185,10 +185,10 @@ func (c *DOClusterController) Post() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -197,10 +197,10 @@ func (c *DOClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -279,10 +279,10 @@ func (c *DOClusterController) Patch() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -291,10 +291,10 @@ func (c *DOClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -380,10 +380,10 @@ func (c *DOClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -392,10 +392,10 @@ func (c *DOClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", id, "Delete", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -489,10 +489,10 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -501,10 +501,10 @@ func (c *DOClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Start", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -571,12 +571,11 @@ func (c *DOClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
-
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -629,10 +628,10 @@ func (c *DOClusterController) GetStatus() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -641,10 +640,10 @@ func (c *DOClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -678,9 +677,9 @@ func (c *DOClusterController) GetStatus() {
 		return
 	}
 
-	awsProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -726,10 +725,10 @@ func (c *DOClusterController) TerminateCluster() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -739,10 +738,10 @@ func (c *DOClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Terminate", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -773,9 +772,9 @@ func (c *DOClusterController) TerminateCluster() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -843,10 +842,10 @@ func (c *DOClusterController) GetSSHKeys() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -920,10 +919,10 @@ func (c *DOClusterController) PostSSHKey() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -951,9 +950,9 @@ func (c *DOClusterController) PostSSHKey() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1002,10 +1001,10 @@ func (c *DOClusterController) GetRegions() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1014,9 +1013,9 @@ func (c *DOClusterController) GetRegions() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	doProfile, err := do.GetProfile(profileId, "", token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, "", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1067,10 +1066,10 @@ func (c *DOClusterController) DeleteSSHKey() {
 	}
 	//==========================RBAC Authentication==============================//
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1105,9 +1104,9 @@ func (c *DOClusterController) DeleteSSHKey() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1149,10 +1148,10 @@ func (c *DOClusterController) ValidateProfile() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

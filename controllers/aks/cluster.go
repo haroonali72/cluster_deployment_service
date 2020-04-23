@@ -46,9 +46,9 @@ func (c *AKSClusterController) Get() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -57,8 +57,15 @@ func (c *AKSClusterController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "not authorized") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -111,10 +118,10 @@ func (c *AKSClusterController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -124,10 +131,10 @@ func (c *AKSClusterController) GetAll() {
 
 	ctx.SendLogs("AKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AKS, *ctx)
+	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AKS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -186,10 +193,10 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -198,9 +205,9 @@ func (c *AKSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -279,9 +286,9 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -290,9 +297,9 @@ func (c *AKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -390,9 +397,9 @@ func (c *AKSClusterController) Delete() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -401,9 +408,9 @@ func (c *AKSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", id, "Delete", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -517,10 +524,10 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -528,9 +535,9 @@ func (c *AKSClusterController) StartCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -550,9 +557,9 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -654,10 +661,10 @@ func (c *AKSClusterController) GetStatus() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -666,9 +673,9 @@ func (c *AKSClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -687,9 +694,9 @@ func (c *AKSClusterController) GetStatus() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -698,7 +705,6 @@ func (c *AKSClusterController) GetStatus() {
 	ctx.SendLogs("AKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
-
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = cpErr
@@ -758,10 +764,10 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -770,9 +776,9 @@ func (c *AKSClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Terminate", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -792,9 +798,9 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -884,9 +890,9 @@ func (c *AKSClusterController) GetAKSVms() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -946,9 +952,9 @@ func (c *AKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -964,9 +970,9 @@ func (c *AKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1037,10 +1043,10 @@ func (c *AKSClusterController) FetchKubeVersions() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1050,9 +1056,9 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: GetAllKubernetesVersions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

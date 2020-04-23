@@ -57,9 +57,9 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -67,9 +67,9 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	statusCode,ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -80,7 +80,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = cpErr.Message
+		c.Data["json"] = cpErr.Error
 		c.ServeJSON()
 		return
 	}
@@ -111,9 +111,9 @@ func (c *IKSClusterController) FetchRegions() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -176,9 +176,9 @@ func (c *IKSClusterController) FetchKubeVersions() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -186,9 +186,9 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	statusCode,ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -239,9 +239,9 @@ func (c *IKSClusterController) FetchZones() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -295,9 +295,9 @@ func (c *IKSClusterController) Get() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -307,9 +307,9 @@ func (c *IKSClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -364,9 +364,9 @@ func (c *IKSClusterController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -376,9 +376,9 @@ func (c *IKSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.IKS, *ctx)
+	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.IKS, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -440,9 +440,9 @@ func (c *IKSClusterController) Post() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -451,9 +451,9 @@ func (c *IKSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -557,9 +557,9 @@ func (c *IKSClusterController) Patch() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -568,9 +568,9 @@ func (c *IKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -665,9 +665,9 @@ func (c *IKSClusterController) Delete() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -676,9 +676,9 @@ func (c *IKSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", id, "Delete", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -793,9 +793,9 @@ func (c *IKSClusterController) StartCluster() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -805,9 +805,9 @@ func (c *IKSClusterController) StartCluster() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -867,11 +867,11 @@ func (c *IKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	statusCode,ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -943,9 +943,9 @@ func (c *IKSClusterController) GetStatus() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -955,9 +955,9 @@ func (c *IKSClusterController) GetStatus() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -981,9 +981,9 @@ func (c *IKSClusterController) GetStatus() {
 		return
 	}
 
-	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	statusCode,ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1056,9 +1056,9 @@ func (c *IKSClusterController) TerminateCluster() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1068,9 +1068,9 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Terminate", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1092,9 +1092,9 @@ func (c *IKSClusterController) TerminateCluster() {
 		return
 	}
 
-	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	statusCode,ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1223,9 +1223,9 @@ func (c *IKSClusterController) ApplyAgent() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1233,9 +1233,9 @@ func (c *IKSClusterController) ApplyAgent() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1256,10 +1256,10 @@ func (c *IKSClusterController) ApplyAgent() {
 		return
 	}
 
-	ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
+	statusCode,ibmProfile, err := iks.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 	c.ServeJSON()
 		return
@@ -1306,9 +1306,9 @@ func (c *IKSClusterController) ValidateProfile() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

@@ -251,20 +251,20 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.DOProfile, error) {
-	data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.DOProfile, error) {
+	statusCode,data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.DOProfile{}, err
+		return statusCode,vault.DOProfile{}, err
 	}
 	doProfile := vault.DOProfile{}
 	err = json.Unmarshal(data, &doProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.DOProfile{}, err
+		return 500,vault.DOProfile{}, err
 	}
 	doProfile.Profile.Region = region
-	return doProfile, nil
+	return 0,doProfile, nil
 
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {

@@ -10,11 +10,11 @@ func ApiError(err error, msg string, code int) (cError types.CustomCPError) {
 	if msg != "" {
 		cError.StatusCode = code
 		cError.Description = err.Error()
-		cError.Message = msg
+		cError.Error = msg
 	} else {
 		cError.StatusCode = code
 		cError.Description = err.Error()
-		cError.Message = ValidationError(err.Error())
+		cError.Error = ValidationError(err.Error())
 	}
 
 	return cError

@@ -45,7 +45,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 		c.ServeJSON()
 		return
 	}
-
+	region :="nyc1"
+/*
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -54,10 +55,10 @@ func (c *DOKSClusterController) GetServerConfig() {
 		c.ServeJSON()
 		return
 	}
-
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+*/
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -127,9 +128,9 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -194,10 +195,9 @@ func (c *DOKSClusterController) Get() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		ctx.SendLogs("DOKSClusterController: RBAC:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -207,9 +207,9 @@ func (c *DOKSClusterController) Get() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -265,9 +265,9 @@ func (c *DOKSClusterController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -275,9 +275,9 @@ func (c *DOKSClusterController) GetAll() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", ctx.Data.Company, userInfo.UserId)
 
-	_, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.DOKS, *ctx)
+	statusCode,_, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.DOKS, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -348,9 +348,9 @@ func (c *DOKSClusterController) Post() {
 		return
 	}
 */
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -358,9 +358,9 @@ func (c *DOKSClusterController) Post() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -453,18 +453,18 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -564,9 +564,9 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -574,9 +574,9 @@ func (c *DOKSClusterController) Delete() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", id, "Delete", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -691,9 +691,9 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -703,9 +703,9 @@ func (c *DOKSClusterController) StartCluster() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -739,9 +739,9 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -836,9 +836,9 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -846,9 +846,9 @@ func (c *DOKSClusterController) GetStatus() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -868,9 +868,9 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -938,9 +938,9 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -950,9 +950,9 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1004,9 +1004,9 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1085,10 +1085,10 @@ func (c *DOKSClusterController) ApplyAgent() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1096,9 +1096,9 @@ func (c *DOKSClusterController) ApplyAgent() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1118,9 +1118,9 @@ func (c *DOKSClusterController) ApplyAgent() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

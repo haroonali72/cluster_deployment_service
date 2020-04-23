@@ -116,20 +116,20 @@ func checkMasterPools(cluster Cluster_Def) error {
 	return nil
 }
 
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AwsProfile, error) {
-	data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.AwsProfile, error) {
+	statusCode,data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.AwsProfile{}, err
+		return statusCode,vault.AwsProfile{}, err
 	}
 	awsProfile := vault.AwsProfile{}
 	err = json.Unmarshal(data, &awsProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.AwsProfile{}, err
+		return 500,vault.AwsProfile{}, err
 	}
 	awsProfile.Profile.Region = region
-	return awsProfile, nil
+	return 0,awsProfile, nil
 
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, error) {

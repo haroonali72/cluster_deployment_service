@@ -9,32 +9,32 @@ func ApiErrors (err error,message string) (cError types.CustomCPError){
 	cError.StatusCode = 502
 	cError.Description = err.Error()
 	if (errr[2]=="304"){
-		cError.Message =NotModified(err.Error())
+		cError.Error =NotModified(err.Error())
 	}else if errr[2]=="400"{
-		cError.Message =BadRequest(err.Error())
+		cError.Error =BadRequest(err.Error())
 	} else if errr[2]=="401" {
-		cError.Message = Unauthorized(err.Error())
+		cError.Error = Unauthorized(err.Error())
 	}else if errr[2]=="402"{
-		cError.Message =QuotaReached(err.Error())
+		cError.Error =QuotaReached(err.Error())
 	}else if errr[2]=="403"{
-		cError.Message =Forbidden(err.Error())
+		cError.Error =Forbidden(err.Error())
 	}else if errr[2]=="404" {
-		cError.Message = NotFound(err.Error())
+		cError.Error = NotFound(err.Error())
 	}	else if errr[2]=="409"{
-		cError.Message =Conflict(err.Error())
+		cError.Error =Conflict(err.Error())
 	}else if errr[2]=="410" {
-		cError.Message = Gone(err.Error())
+		cError.Error = Gone(err.Error())
 	}else if errr[2]=="429" {
-		cError.Message = ResourceExhausted(err.Error())
+		cError.Error = ResourceExhausted(err.Error())
 	}else if errr[2]=="500" {
-		cError.Message = InternalServerError(err.Error())
+		cError.Error = InternalServerError(err.Error())
 	}else if errr[2]=="503" {
-		cError.Message = ServiceUnavailable(err.Error())
+		cError.Error = ServiceUnavailable(err.Error())
 	}else {
 		return cError
 	}
-	if cError.Message==""{
-		cError.Message=message
+	if cError.Error==""{
+		cError.Error=message
 	}
 	return cError
 }

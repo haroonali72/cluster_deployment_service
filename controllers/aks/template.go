@@ -46,10 +46,10 @@ func (c *AKSTemplateController) Get() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -58,10 +58,10 @@ func (c *AKSTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSTemplateController: Get template  id : "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", id, "View", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", id, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -106,10 +106,10 @@ func (c *AKSTemplateController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -118,10 +118,10 @@ func (c *AKSTemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSTemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, _ = rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
+	statusCode,err, _ = rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -173,10 +173,10 @@ func (c *AKSTemplateController) Post() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -225,9 +225,9 @@ func (c *AKSTemplateController) Post() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbacAuthentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.AKS, *ctx)
+	statusCode, err = rbacAuthentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.AKS, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
 		c.ServeJSON()
 		return
@@ -275,10 +275,10 @@ func (c *AKSTemplateController) Patch() {
 
 	ctx := new(utils.Context)
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -287,10 +287,10 @@ func (c *AKSTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSTemplateController: Patch template with templateId "+template.TemplateId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", template.TemplateId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -328,11 +328,11 @@ func (c *AKSTemplateController) Patch() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbacAuthentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AKS, *ctx)
+	statusCode, err = rbacAuthentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AKS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error":err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -377,10 +377,10 @@ func (c *AKSTemplateController) Delete() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -388,10 +388,10 @@ func (c *AKSTemplateController) Delete() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", id, "Delete", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.AKS, "clusterTemplate", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -413,10 +413,10 @@ func (c *AKSTemplateController) Delete() {
 	}
 	ctx.SendLogs("AKSTemplateController: Deleting template with templateId "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, err := rbacAuthentication.DeletePolicy(models.GKE, id, token, utils.Context{})
+	statusCode, err = rbacAuthentication.DeletePolicy(models.GKE, id, token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -522,10 +522,10 @@ func (c *AKSTemplateController) GetCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -591,10 +591,10 @@ func (c *AKSTemplateController) PatchCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -671,10 +671,10 @@ func (c *AKSTemplateController) DeleteCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -733,10 +733,10 @@ func (c *AKSTemplateController) AllCustomerTemplates() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -790,10 +790,10 @@ func (c *AKSTemplateController) GetAllTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -803,10 +803,10 @@ func (c *AKSTemplateController) GetAllTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
+	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -845,10 +845,10 @@ func (c *AKSTemplateController) GetAllCustomerTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -858,10 +858,10 @@ func (c *AKSTemplateController) GetAllCustomerTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
+	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
