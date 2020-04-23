@@ -129,10 +129,10 @@ func (c *AWSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
+	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -584,12 +584,11 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
-
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -691,9 +690,9 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -786,9 +785,9 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -957,10 +956,10 @@ func (c *AWSClusterController) GetAMI() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1064,9 +1063,9 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1172,9 +1171,9 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1283,9 +1282,9 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1377,10 +1376,10 @@ func (c *AWSClusterController) GetZones() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1574,10 +1573,10 @@ func (c *AWSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

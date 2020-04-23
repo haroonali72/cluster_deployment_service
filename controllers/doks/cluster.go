@@ -45,7 +45,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 		c.ServeJSON()
 		return
 	}
-
+	region :="nyc1"
+/*
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -54,10 +55,10 @@ func (c *DOKSClusterController) GetServerConfig() {
 		c.ServeJSON()
 		return
 	}
-
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+*/
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -127,9 +128,9 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -275,9 +276,9 @@ func (c *DOKSClusterController) GetAll() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", ctx.Data.Company, userInfo.UserId)
 
-	_, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.DOKS, *ctx)
+	statusCode,_, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.DOKS, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -739,9 +740,9 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -868,9 +869,9 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1004,9 +1005,9 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1118,9 +1119,9 @@ func (c *DOKSClusterController) ApplyAgent() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

@@ -118,10 +118,10 @@ func (c *GKETemplateController) GetAll() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GKETemplateController: GetAll template.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, _ = rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GKE, utils.Context{})
+	statusCode,err, _ := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GKE, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -805,10 +805,10 @@ func (c *GKETemplateController) GetAllTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GKE, utils.Context{})
+	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GKE, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -860,10 +860,10 @@ func (c *GKETemplateController) GetAllCustomerTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GKE, utils.Context{})
+	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GKE, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

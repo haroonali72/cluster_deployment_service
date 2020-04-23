@@ -198,7 +198,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 	if cpErr != (types.CustomCPError{}) {
 
-		utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 		utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
 		return cluster, cpErr
@@ -210,7 +210,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		response, cpErr := cloud.fetchClusterStatus(&cluster, ctx, companyId)
 		if cpErr != (types.CustomCPError{}) {
 
-			utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
+			utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
 		}
@@ -234,7 +234,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		err := cloud.createWorkerPool(cluster.ResourceGroup, clusterId, vpcID, pool, ibmNetwork, ctx)
 		if err != (types.CustomCPError{}) {
 
-			utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
+			utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 		}
 		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)

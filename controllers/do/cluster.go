@@ -129,10 +129,10 @@ func (c *DOClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DO, *ctx)
+	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DO, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -571,12 +571,11 @@ func (c *DOClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
-
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -678,9 +677,9 @@ func (c *DOClusterController) GetStatus() {
 		return
 	}
 
-	awsProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -773,9 +772,9 @@ func (c *DOClusterController) TerminateCluster() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -951,9 +950,9 @@ func (c *DOClusterController) PostSSHKey() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1014,9 +1013,9 @@ func (c *DOClusterController) GetRegions() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	doProfile, err := do.GetProfile(profileId, "", token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, "", token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1105,9 +1104,9 @@ func (c *DOClusterController) DeleteSSHKey() {
 		return
 	}
 
-	doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

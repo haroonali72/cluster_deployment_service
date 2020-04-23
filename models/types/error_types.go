@@ -3,9 +3,8 @@ package types
 import "antelope/models"
 
 type CustomCPError struct {
-	StatusCode int `json:"code,omitempty"  bson:"code"`
-	//Type        string `json:"type,omitempty"  bson:"type"`
-	Message     string `json:"message,omitempty"  bson:"message"`
+	StatusCode int `json:"status_code,omitempty"  bson:"code"`
+	Error     string `json:"error,omitempty"  bson:"message"`
 	Description string `json:"description,omitempty"  bson:"description"`
 }
 type ClusterError struct {

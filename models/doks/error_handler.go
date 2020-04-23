@@ -14,16 +14,16 @@ func ApiError (err error,message string, credentials vault.DOCredentials,ctx uti
 	cError.StatusCode = 502
 	cError.Description = err.Error()
 	if (errr[2]=="422"){
-		cError.Message =ValidationError(err.Error(),credentials,ctx )
+		cError.Error =ValidationError(err.Error(),credentials,ctx )
 	}else if errr[2]=="404"{
-		cError.Message =NotFoundError(err.Error(),errr[0],ctx)
+		cError.Error =NotFoundError(err.Error(),errr[0],ctx)
 	} else if strings.Contains(err.Error(),"Invalid cloud credentials"){
 		cError.StatusCode=402
-		cError.Message="Invalid cloud credentials"
+		cError.Error="Invalid cloud credentials"
 		cError.Description="The Access Token is not valid."
 	}
-	if cError.Message==""{
-		cError.Message= message
+	if cError.Error==""{
+		cError.Error= message
 	}
 	return cError
 

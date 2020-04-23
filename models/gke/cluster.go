@@ -417,7 +417,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if errr != nil {
 		PrintError(errr, cluster.Name, ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := types.CustomCPError{StatusCode: 500,Message:"Error in deploying GKE Cluster", Description: errr.Error()}
+		cpErr := types.CustomCPError{StatusCode: 500,Error:"Error in deploying GKE Cluster", Description: errr.Error()}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -458,7 +458,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
-		cpErr := types.CustomCPError{Description: confError.Message, Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+		cpErr := types.CustomCPError{Description: confError.Error, Error: "Error occurred while updating cluster status in database", StatusCode: 500}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -499,7 +499,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	err1 := UpdateGKECluster(cluster, ctx)
 	if err1 != nil {
 		PrintError(err1, cluster.Name, ctx)
-		cpErr := types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err1.Error()}
+		cpErr := types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err1.Error()}
 
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
@@ -518,11 +518,11 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, types.CustomCPError{StatusCode:500,Message:"Error in fetching status",Description: err.Error()}
+		return cluster, types.CustomCPError{StatusCode:500,Error:"Error in fetching status",Description: err.Error()}
 	}
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 	if err != nil {
-		return GKECluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
+		return GKECluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 			Description: "Error occurred while getting cluster status in database",
 			StatusCode:  500}
 	}
@@ -560,7 +560,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {
-		err_ := types.CustomCPError{StatusCode:500,Message:"Error in terminating cluster",Description: pubErr.Error()}
+		err_ := types.CustomCPError{StatusCode:500,Error:"Error in terminating cluster",Description: pubErr.Error()}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -571,7 +571,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Terminate ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		err_ := types.CustomCPError{StatusCode:500,Message:"Error in terminating cluster",Description: err.Error()}
+		err_ := types.CustomCPError{StatusCode:500,Error:"Error in terminating cluster",Description: err.Error()}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -583,7 +583,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		text := "GKEClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		err_ := types.CustomCPError{StatusCode:500,Message:"Error in terminating error",Description: text}
+		err_ := types.CustomCPError{StatusCode:500,Error:"Error in terminating error",Description: text}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -631,7 +631,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
-		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+		cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -673,7 +673,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		err_ := types.CustomCPError{StatusCode: 500,Message:"Error in terminating Cluster", Description: err.Error()}
+		err_ := types.CustomCPError{StatusCode: 500,Error:"Error in terminating Cluster", Description: err.Error()}
 
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
@@ -714,14 +714,14 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	data2, err := woodpecker.GetCertificate(ctx.Data.ProjectId, token, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 	}
 	filePath := "/tmp/" + ctx.Data.Company + "/" + ctx.Data.ProjectId + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 	}
 
 	if credentials.Zone != "" {
@@ -733,7 +733,7 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 	}
 	return types.CustomCPError{}
 }

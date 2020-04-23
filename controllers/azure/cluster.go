@@ -121,10 +121,10 @@ func (c *AzureClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.Azure, *ctx)
+	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.Azure, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -563,11 +563,11 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -664,9 +664,9 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -761,9 +761,9 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1057,10 +1057,10 @@ func (c *AzureClusterController) GetInstances() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1129,10 +1129,10 @@ func (c *AzureClusterController) GetRegions() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, "useast", token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, "useast", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1327,10 +1327,10 @@ func (c *AzureClusterController) ApplyAgent() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, "", token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, "", token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

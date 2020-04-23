@@ -59,6 +59,13 @@ func (c *AKSClusterController) Get() {
 
 	allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "not authorized") {
+			c.Ctx.Output.SetStatus(401)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -124,10 +131,10 @@ func (c *AKSClusterController) GetAll() {
 
 	ctx.SendLogs("AKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AKS, *ctx)
+	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AKS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -550,9 +557,9 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -687,9 +694,9 @@ func (c *AKSClusterController) GetStatus() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -698,7 +705,6 @@ func (c *AKSClusterController) GetStatus() {
 	ctx.SendLogs("AKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
-
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = cpErr
@@ -792,9 +798,9 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -964,9 +970,9 @@ func (c *AKSClusterController) GetKubeConfig() {
 		return
 	}
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1050,9 +1056,9 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: GetAllKubernetesVersions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
