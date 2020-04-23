@@ -1170,7 +1170,6 @@ func (c *IKSClusterController) TerminateCluster() {
 // @Description Apply cloudplex agent file to eks cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	clusterName	path	string	true "Name of the cluster"
 // @Param	resourceGroup	header	string	true "Resource Group"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "Agent Applied successfully"}
@@ -1207,10 +1206,33 @@ func (c *IKSClusterController) ApplyAgent() {
 		return
 	}
 
-	clusterName := c.GetString("clusterName")
-	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	if err != nil {
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	cluster, err := iks.GetCluster(projectId, userInfo.CompanyId, *ctx)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.Status !="Cluster Created" {
+		text :="IKSClusterController: Cannot apply agent until cluster is in created state. Cluster is in "+cluster.Status+ " state."
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": text}
 		c.ServeJSON()
 		return
 	}
@@ -1223,13 +1245,6 @@ func (c *IKSClusterController) ApplyAgent() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -1266,7 +1281,7 @@ func (c *IKSClusterController) ApplyAgent() {
 }
 	ctx.SendLogs("IKSubernetesClusterController: Applying agent on cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go iks.ApplyAgent(ibmProfile.Profile, token, *ctx, clusterName, resourceGroup)
+	go iks.ApplyAgent(ibmProfile.Profile, token, *ctx, cluster.Name, resourceGroup)
 
 	ctx.SendLogs("IKSubernetesClusterController: Agent applied on cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("IKSubernetesClusterController: Agent applied on cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)

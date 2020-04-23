@@ -123,7 +123,6 @@ func GetMongoConf() mongConf {
 	conf.MongoAKSClusterCollection = beego.AppConfig.String("mongo_aks_cluster_collection")
 	conf.MongoAKSTemplateCollection = beego.AppConfig.String("mongo_aks_template_collection")
 	conf.MongoDOClusterCollection = beego.AppConfig.String("mongo_do_cluster_collection")
-	conf.MongoDOKSClusterCollection = beego.AppConfig.String("mongo_doks_cluster_collection")
 	conf.MongoDOTemplateCollection = beego.AppConfig.String("mongo_do_template_collection")
 	conf.MongoIKSClusterCollection = beego.AppConfig.String("mongo_iks_cluster_collection")
 	conf.MongoIKSTemplateCollection = beego.AppConfig.String("mongo_iks_template_collection")

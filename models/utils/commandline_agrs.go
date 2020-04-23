@@ -32,6 +32,7 @@ var (
 	mongo_aks_cluster_collection    = ""
 	mongo_iks_template_collection   = ""
 	mongo_iks_cluster_collection    = ""
+	mongo_cluster_error_collection  = ""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
@@ -302,6 +303,12 @@ func InitFlags() error {
 			Destination: &mongo_iks_cluster_collection,
 			EnvVar:      "mongo_iks_cluster_collection",
 		},
+		cli.StringFlag{
+			Name:        "mongo_cluster_error_collection",
+			Usage:       "cluster error  collection name",
+			Destination: &mongo_cluster_error_collection,
+			EnvVar:      "mongo_cluster_error_collection",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		return nil
@@ -353,5 +360,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("woodpecker_url", woodpecker_url)
 	beego.AppConfig.Set("jump_host_ssh_key", jump_host_ssh_key)
 	beego.AppConfig.Set("jump_host_ip", jump_host_ip)
+	beego.AppConfig.Set("mongo_cluster_error_collection", mongo_cluster_error_collection)
+
 	return nil
 }

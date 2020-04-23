@@ -65,7 +65,6 @@ func (c *AKSClusterController) Get() {
 			c.ServeJSON()
 			return
 		}
-
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
