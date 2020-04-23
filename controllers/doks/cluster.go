@@ -197,7 +197,6 @@ func (c *DOKSClusterController) Get() {
 
 	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		ctx.SendLogs("DOKSClusterController: RBAC:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
