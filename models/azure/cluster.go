@@ -179,20 +179,20 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	}
 	return network, nil
 }
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AzureProfile, error) {
-	data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.AzureProfile, error) {
+	statusCode,data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.AzureProfile{}, err
+		return statusCode,vault.AzureProfile{}, err
 	}
 	azureProfile := vault.AzureProfile{}
 	err = json.Unmarshal(data, &azureProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.AzureProfile{}, err
+		return 500,vault.AzureProfile{}, err
 	}
 	azureProfile.Profile.Location = region
-	return azureProfile, nil
+	return 0,azureProfile, nil
 
 }
 func checkClusterSize(cluster Cluster_Def) error {

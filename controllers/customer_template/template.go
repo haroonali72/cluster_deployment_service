@@ -29,10 +29,10 @@ func (c *CustomerTempalteController) Post() {
 		return
 	}
 
-	userInfo, err := rbac.GetInfo(token)
+	statusCode,userInfo, err := rbac.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

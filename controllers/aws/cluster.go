@@ -46,10 +46,10 @@ func (c *AWSClusterController) Get() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -60,10 +60,10 @@ func (c *AWSClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -115,10 +115,10 @@ func (c *AWSClusterController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -129,10 +129,10 @@ func (c *AWSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
+	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -185,10 +185,10 @@ func (c *AWSClusterController) Post() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -197,10 +197,10 @@ func (c *AWSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -283,10 +283,10 @@ func (c *AWSClusterController) Patch() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -295,10 +295,10 @@ func (c *AWSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -393,10 +393,10 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -405,10 +405,10 @@ func (c *AWSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", id, "Delete", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -502,10 +502,10 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -514,10 +514,10 @@ func (c *AWSClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -584,12 +584,11 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
-
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -642,10 +641,10 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -654,10 +653,10 @@ func (c *AWSClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -691,9 +690,9 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -739,10 +738,10 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -752,10 +751,10 @@ func (c *AWSClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Terminate", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -786,9 +785,9 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -857,10 +856,10 @@ func (c *AWSClusterController) GetSSHKeys() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -916,10 +915,10 @@ func (c *AWSClusterController) GetAMI() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -957,10 +956,10 @@ func (c *AWSClusterController) GetAMI() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1018,10 +1017,10 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1031,10 +1030,10 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1064,9 +1063,9 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1141,10 +1140,10 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1172,9 +1171,9 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1245,10 +1244,10 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	}
 	//==========================RBAC Authentication==============================//
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1283,9 +1282,9 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1348,10 +1347,10 @@ func (c *AWSClusterController) GetZones() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1377,10 +1376,10 @@ func (c *AWSClusterController) GetZones() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1449,10 +1448,10 @@ func (c *AWSClusterController) ValidateProfile() {
 	var credentials vault.AwsCredentials
 	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1541,10 +1540,10 @@ func (c *AWSClusterController) ApplyAgent() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1553,10 +1552,10 @@ func (c *AWSClusterController) ApplyAgent() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1574,10 +1573,10 @@ func (c *AWSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

@@ -51,7 +51,7 @@ func (cloud *DOKS) init(ctx utils.Context) types.CustomCPError {
 		text := "Invalid cloud credentials"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(text)
-		return types.CustomCPError{StatusCode:500,Message:"Error in cloud credentials",Description:text,}
+		return types.CustomCPError{StatusCode:500,Error:"Error in cloud credentials",Description:text,}
 	}
 
 	tokenSource := &TokenSource{
@@ -104,7 +104,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
 		Tags:        cluster.Tags,
-		NodePools:   nodepool,
+	//	NodePools:   nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
 	}

@@ -25,8 +25,8 @@ type GKEClusterController struct {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	region	path	string	true	"Region of the cloud"
 // @Success 200 {object} gke.ServerConfig
+// @Failure 404 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /config/:region [get]
@@ -35,8 +35,7 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
+	c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -44,7 +43,6 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	zone := c.GetString(":region")
 	if zone == "" {
-		ctx.SendLogs("GKEClusterController: Region field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
@@ -68,8 +66,8 @@ func (c *GKEClusterController) GetServerConfig() {
 	}
 
 	config, err := gke.GetServerConfig(credentials, *ctx)
-	if err.Description != "" {
-		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
+	if err != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err.StatusCode)
 		c.Data["json"] = err
 		c.ServeJSON()
 		return
@@ -84,7 +82,6 @@ func (c *GKEClusterController) GetServerConfig() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} gke.GKECluster
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -96,7 +93,6 @@ func (c *GKEClusterController) Get() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: projectId is empty", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -111,9 +107,9 @@ func (c *GKEClusterController) Get() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -123,9 +119,9 @@ func (c *GKEClusterController) Get() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -138,6 +134,7 @@ func (c *GKEClusterController) Get() {
 	}
 
 	ctx.SendLogs("GKEClusterController: Getting cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	cluster, err := gke.GetGKECluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -180,9 +177,9 @@ func (c *GKEClusterController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -190,9 +187,9 @@ func (c *GKEClusterController) GetAll() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", ctx.Data.Company, userInfo.UserId)
 
-	err, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.GKE, *ctx)
+	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.GKE, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -243,7 +240,6 @@ func (c *GKEClusterController) Post() {
 	validate := validator.New()
 	err := validate.Struct(cluster)
 	if err != nil {
-		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -275,9 +271,9 @@ func (c *GKEClusterController) Post() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -287,9 +283,9 @@ func (c *GKEClusterController) Post() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -317,7 +313,7 @@ func (c *GKEClusterController) Post() {
 		}
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
+			c.Data["json"] = map[string]string{"error": "Cluster against same project id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -330,7 +326,7 @@ func (c *GKEClusterController) Post() {
 	ctx.SendLogs("GKEClusterController: New cluster with name: "+cluster.Name+" added in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("GKE cluster "+cluster.Name+" add in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
+	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
 	c.ServeJSON()
 }
 
@@ -366,9 +362,9 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -378,9 +374,9 @@ func (c *GKEClusterController) Patch() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -398,7 +394,7 @@ func (c *GKEClusterController) Patch() {
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if strings.Contains(err.Error(), "not found"){
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -448,7 +444,6 @@ func (c *GKEClusterController) Patch() {
 // @Param	projectId	path	string	true	"Project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not found"}
@@ -462,7 +457,6 @@ func (c *GKEClusterController) Delete() {
 
 	id := c.GetString(":projectId")
 	if id == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -485,9 +479,9 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -497,9 +491,9 @@ func (c *GKEClusterController) Delete() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -526,7 +520,6 @@ func (c *GKEClusterController) Delete() {
 	}
 
 	if strings.ToLower(cluster.CloudplexStatus) == string(models.ClusterCreated) && !forceDelete {
-		ctx.SendLogs("GKEClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
@@ -535,7 +528,7 @@ func (c *GKEClusterController) Delete() {
 
 	if cluster.CloudplexStatus == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("GKEClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -543,7 +536,7 @@ func (c *GKEClusterController) Delete() {
 
 	if cluster.CloudplexStatus == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(304)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -577,7 +570,6 @@ func (c *GKEClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not found"}
@@ -589,7 +581,6 @@ func (c *GKEClusterController) StartCluster() {
 	ctx.SendLogs("GKEClusterController: Start cluster ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -598,7 +589,6 @@ func (c *GKEClusterController) StartCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -613,9 +603,9 @@ func (c *GKEClusterController) StartCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -626,9 +616,9 @@ func (c *GKEClusterController) StartCluster() {
 	ctx.SendLogs("GKEClusterController: Strat cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.Data.Company = userInfo.CompanyId
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -726,7 +716,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gke.GKECluster
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 404 {"error": "Not Found"}
+// @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
@@ -736,7 +726,6 @@ func (c *GKEClusterController) GetStatus() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -745,7 +734,6 @@ func (c *GKEClusterController) GetStatus() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -760,9 +748,9 @@ func (c *GKEClusterController) GetStatus() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -770,9 +758,9 @@ func (c *GKEClusterController) GetStatus() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -806,14 +794,14 @@ func (c *GKEClusterController) GetStatus() {
 	cluster, cpErr := gke.FetchStatus(credentials, token, *ctx)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	}
 
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
-		c.Data["json"] = map[string]string{"error": cpErr.Message}
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 	}
 	ctx.SendLogs("GKEClusterController: Status Fetched of "+cluster.Name+" of the project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -827,8 +815,7 @@ func (c *GKEClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "Cluster termination is in progress"}
-// @Failure 400 {"error": "Bad Request"}
+// @Success 204 {"msg": "Cluster termination is in progress"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not found"}
@@ -841,7 +828,6 @@ func (c *GKEClusterController) TerminateCluster() {
 	ctx.SendLogs("GKEClusterController: Terminate Cluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -850,7 +836,6 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -865,10 +850,9 @@ func (c *GKEClusterController) TerminateCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -878,10 +862,9 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
-
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -967,14 +950,13 @@ func (c *GKEClusterController) TerminateCluster() {
 
 // @Title Start
 // @Description Apply cloudplex Agent file to a gke cluster
-// @Param	clusterName	header	string	true "Name of the cluster"
+// @Param	clusterName	path	string	true "Name of the cluster"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "Agent Applied successfully"}
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 404 {"error": "Not Found"}
+// @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /applyagent/:projectId [post]
@@ -985,7 +967,6 @@ func (c *GKEClusterController) ApplyAgent() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
@@ -994,7 +975,6 @@ func (c *GKEClusterController) ApplyAgent() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -1009,7 +989,7 @@ func (c *GKEClusterController) ApplyAgent() {
 		return
 	}
 
-	clusterName := c.Ctx.Input.Header("clusterName")
+	clusterName :=c.GetString(":clusterName")
 	if clusterName == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
@@ -1017,9 +997,9 @@ func (c *GKEClusterController) ApplyAgent() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1027,9 +1007,9 @@ func (c *GKEClusterController) ApplyAgent() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

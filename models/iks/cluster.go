@@ -74,20 +74,20 @@ func getNetworkHost(cloudType, projectId string) string {
 	return host
 }
 
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.IBMProfile, error) {
-	data, err := vault.GetCredentialProfile("ibm", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.IBMProfile, error) {
+	statusCode,data, err := vault.GetCredentialProfile("ibm", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.IBMProfile{}, err
+		return statusCode,vault.IBMProfile{}, err
 	}
 	ibmProfile := vault.IBMProfile{}
 	err = json.Unmarshal(data, &ibmProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.IBMProfile{}, err
+		return 500,vault.IBMProfile{}, err
 	}
 	ibmProfile.Profile.Region = region
-	return ibmProfile, nil
+	return 0,ibmProfile, nil
 }
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
@@ -248,7 +248,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	cpError := iks.init(credentials.Region, ctx)
 	if cpError != (types.CustomCPError{}) {
 
-		utils.SendLog(companyId, cpError.Message, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cpError.Error, "error", cluster.ProjectId)
 		utils.SendLog(companyId, cpError.Description, "error", cluster.ProjectId)
 		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
 
@@ -399,7 +399,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
-		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+		cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -410,7 +410,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 	cpErr := iks.init(profile.Profile.Region, ctx)
 	if cpErr != (types.CustomCPError{}) {
 
-		utils.SendLog(companyId, cpErr.Message, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 		utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
@@ -544,14 +544,14 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, type
 	err := iks.init(profile.Profile.Region, ctx)
 	if err != (types.CustomCPError{}) {
 		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		ctx.SendLogs(err.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 
 	versions, err := iks.GetAllVersions(ctx)
 	if err != (types.CustomCPError{}) {
 		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		ctx.SendLogs(err.Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
 

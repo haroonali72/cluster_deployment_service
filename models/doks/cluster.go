@@ -324,7 +324,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
-		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+		cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -371,7 +371,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	if confError != nil {
 		PrintError(ctx, confError.Error(), cluster.Name)
 		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		CpErr := types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		CpErr := types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx, CpErr)
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -391,11 +391,11 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Message:"Error in applying agent",Description: err.Error()}
+		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error:"Error in applying agent",Description: err.Error()}
 	}
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
 	if err != nil {
-		return &godo.KubernetesCluster{}, types.CustomCPError{Message: "Error occurred while getting cluster status in database",
+		return &godo.KubernetesCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 			Description: "Error occurred while getting cluster status in database",
 			StatusCode:  500}
 	}
@@ -405,7 +405,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 	}
 
 	err1 := doksOps.init(ctx)
@@ -451,7 +451,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError = types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		customError = types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DOKS, ctx, customError)
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -462,13 +462,13 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	if cluster.CloudplexStatus == "" || cluster.CloudplexStatus == "new" {
 		text := "DOKSClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError = types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		customError = types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DOKS, ctx, customError)
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: 500, Description: text}
+		return types.CustomCPError{StatusCode: 500, Error:"Error in cluster termination",Description: text}
 	}
 
 	cluster.CloudplexStatus = string(models.Terminating)
@@ -478,7 +478,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	if err_ != nil {
 
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
-		cpErr := types.CustomCPError{Description: err_.Error(), Message: "Error occurred while updating cluster status in database", StatusCode: 500}
+		cpErr := types.CustomCPError{Description: err_.Error(), Error: "Error occurred while updating cluster status in database", StatusCode: 500}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DOKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -535,7 +535,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		ctx.SendLogs("DOKSClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		cpErr := types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		cpErr := types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DOKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -593,7 +593,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: "Agent Deployment failed " + err.Error()}
+		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: "Agent Deployment failed " + err.Error()}
 	}
 
 	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
@@ -601,7 +601,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
 	}
 
 	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e DIGITALOCEAN_ACCESS_TOKEN=" + credentials.AccessKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.DOAuthContainerName
@@ -609,7 +609,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Message:"Error in applying agent", Description: "Agent Deployment failed " + err.Error()}
+		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: "Agent Deployment failed " + err.Error()}
 	}
 	return types.CustomCPError{}
 }
