@@ -68,22 +68,22 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 
 	return 0,nil, data
 }
-func Authenticate(cloud interface{}, resourceType, resourceId string, action string, token string, ctx utils.Context) (bool, error) {
+func Authenticate(cloud interface{}, resourceType, resourceId string, action string, token string, ctx utils.Context) (int,bool, error) {
 	subType := ""
 	b, err := json.Marshal(cloud)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return 500,false, err
 	}
 	err = json.Unmarshal(b, &subType)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return 500,false, err
 	}
 	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacAccessURI)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return 500,false, err
 	}
 	q := req.URL.Query()
 	q.Add("resource_id", resourceId)
@@ -97,14 +97,14 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return false, err
+		return response.StatusCode,false, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode == 200 {
-		return true, nil
+		return 0,true, nil
 	}
-	return false, nil
+	return 500,false, nil
 }
 
 func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
