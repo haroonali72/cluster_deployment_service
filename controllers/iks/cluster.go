@@ -79,7 +79,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -201,7 +201,7 @@ func (c *IKSClusterController) FetchKubeVersions() {
 
 	versions, cpErr := iks.GetAllVersions(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -343,7 +343,7 @@ func (c *IKSClusterController) Get() {
 		return
 	}
 
-	ctx.SendLogs("IKSClusterController: Cluster"+cluster.Name+" of project "+projectId+ " fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Cluster"+cluster.Name+" of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs(" Iks cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = cluster
@@ -393,7 +393,7 @@ func (c *IKSClusterController) GetAll() {
 
 	clusters, err := iks.GetAllCluster(*ctx, data)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -591,7 +591,7 @@ func (c *IKSClusterController) Patch() {
 
 	err = iks.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -741,7 +741,7 @@ func (c *IKSClusterController) Delete() {
 
 	err = iks.DeleteCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -753,7 +753,7 @@ func (c *IKSClusterController) Delete() {
 		return
 	}
 
-	ctx.SendLogs("IKSClusterController: Cluster of project "+id+ " deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("IKSClusterController: Cluster of project "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.SendLogs(" Iks cluster "+cluster.Name+" of project "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
@@ -890,7 +890,7 @@ func (c *IKSClusterController) StartCluster() {
 	cluster.Status = string(models.Deploying)
 	err = iks.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -1003,7 +1003,7 @@ func (c *IKSClusterController) GetStatus() {
 
 	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "nodes not found") {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.Data["json"] = map[string]string{"description": cpErr.Description}
 		c.ServeJSON()
@@ -1016,7 +1016,7 @@ func (c *IKSClusterController) GetStatus() {
 		return
 	}
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.ServeJSON()
 	}
@@ -1160,12 +1160,12 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	err = iks.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1175,8 +1175,8 @@ func (c *IKSClusterController) TerminateCluster() {
 	ctx.SendLogs("IKSClusterController: Cluster "+cluster.Name+" of project"+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
-		c.ServeJSON()
-	}
+	c.ServeJSON()
+}
 
 // @Title Apply agent
 // @Description Apply cloudplex agent file to eks cluster
@@ -1273,9 +1273,9 @@ func (c *IKSClusterController) ApplyAgent() {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
-	c.ServeJSON()
+		c.ServeJSON()
 		return
-}
+	}
 	ctx.SendLogs("IKSubernetesClusterController: Applying agent on cluster of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go iks.ApplyAgent(ibmProfile.Profile, token, *ctx, clusterName, resourceGroup)
@@ -1325,7 +1325,6 @@ func (c *IKSClusterController) ValidateProfile() {
 		c.ServeJSON()
 		return
 	}
-
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 

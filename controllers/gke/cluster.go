@@ -69,7 +69,7 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	config, err := gke.GetServerConfig(credentials, *ctx)
 	if err.Description != "" {
-		c.Ctx.Output.SetStatus(err.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = err
 		c.ServeJSON()
 		return
@@ -398,7 +398,7 @@ func (c *GKEClusterController) Patch() {
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -812,7 +812,7 @@ func (c *GKEClusterController) GetStatus() {
 	}
 
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.ServeJSON()
 	}

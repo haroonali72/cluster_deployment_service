@@ -313,7 +313,7 @@ func (c *AKSClusterController) Patch() {
 
 	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -703,7 +703,7 @@ func (c *AKSClusterController) GetStatus() {
 		return
 	}
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.ServeJSON()
 	}
@@ -990,7 +990,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 
 	kubeconfig, CpErr := aks.GetKubeCofing(azureProfile.Profile, cluster, *ctx)
 	if CpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(CpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = CpErr
 		c.ServeJSON()
 		return
@@ -1060,7 +1060,7 @@ func (c *AKSClusterController) FetchKubeVersions() {
 
 	kubeVersions, CpErr := aks.GetKubeVersions(azureProfile, *ctx)
 	if CpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(CpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = CpErr
 		c.ServeJSON()
 		return

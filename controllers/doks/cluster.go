@@ -68,7 +68,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 
 	config, err1 := doks.GetServerConfig(doProfile.Profile, *ctx)
 	if err1.Description != "" {
-		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = err1
 		c.ServeJSON()
 		return
@@ -159,7 +159,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 
 	config, err1 := doks.GetKubeConfig(doProfile.Profile, *ctx, cluster)
 	if err1.Description != "" {
-		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = err1
 		c.ServeJSON()
 		return
@@ -347,16 +347,16 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-/*
-	err = validateStruct(cluster, token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-*/
+	/*
+		err = validateStruct(cluster, token)
+		if err != nil {
+			beego.Error(err.Error())
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+	*/
 	userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -493,7 +493,7 @@ func (c *DOKSClusterController) Patch() {
 	ctx.Data.Company = userInfo.CompanyId
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -906,7 +906,7 @@ func (c *DOKSClusterController) GetStatus() {
 		return
 	}
 	if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = map[string]string{"error": cpErr.Message}
 		c.ServeJSON()
 	}
