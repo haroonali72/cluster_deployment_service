@@ -170,13 +170,13 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, string, erro
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", "", err
 	}
 	var project Project
 	err = json.Unmarshal(data.([]byte), &project)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", "", err
 	}
 	return project.ProjectData.Region, project.ProjectData.Zone, nil

@@ -318,7 +318,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("ca_certificate", ca_cert)
 	beego.AppConfig.Set("client_cert", client_cert)
 	beego.AppConfig.Set("client_pem", client_pem)
-
 	beego.AppConfig.Set("mongo_host", mongo)
 	beego.AppConfig.Set("mongo_user", mongo_user)
 	beego.AppConfig.Set("mongo_pass", mongo_pass)
@@ -353,5 +352,6 @@ func InitFlags() error {
 	beego.AppConfig.Set("woodpecker_url", woodpecker_url)
 	beego.AppConfig.Set("jump_host_ssh_key", jump_host_ssh_key)
 	beego.AppConfig.Set("jump_host_ip", jump_host_ip)
+
 	return nil
 }

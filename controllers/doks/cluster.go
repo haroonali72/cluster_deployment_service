@@ -656,6 +656,7 @@ func (c *DOKSClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
+// @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -880,8 +881,11 @@ func (c *DOKSClusterController) GetStatus() {
 	ctx.Data.Company = userInfo.CompanyId
 
 	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
-	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(409)
+	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description),"not found"){
+		c.Data["json"] = cluster
+		c.ServeJSON()
+	}else if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
@@ -903,7 +907,8 @@ func (c *DOKSClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 204 {"msg": "Cluster termination is in progress"}
+// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in new/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -1039,7 +1044,6 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 // @Title Start agent
 // @Description Apply cloudplex Agent file to doks cluster
-// @Param	clusterName	header	string	true "Name of the cluster"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
@@ -1077,13 +1081,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 		return
 	}
 
-	clusterName := c.Ctx.Input.Header("clusterName")
-	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -1126,9 +1124,32 @@ func (c *DOKSClusterController) ApplyAgent() {
 		return
 	}
 
+	cluster, err := doks.GetKubernetesCluster(*ctx)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.CloudplexStatus !="Cluster Created" {
+		text :="DOKSClusterController: Cannot apply agent until cluster is in created state. Cluster is in"+cluster.CloudplexStatus+ " state."
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": text}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("DOKSClusterController: Applying agent on cluster of "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go doks.ApplyAgent(doProfile.Profile, token, *ctx, clusterName)
+	go doks.ApplyAgent(doProfile.Profile, token, *ctx, cluster.Name)
 
 	ctx.SendLogs("DOKSClusterController: Agent applied on cluster of "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
