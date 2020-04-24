@@ -880,13 +880,15 @@ func (c *DOKSClusterController) GetStatus() {
 	ctx.Data.Company = userInfo.CompanyId
 
 	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
-	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
+	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description),"not found"){
+		c.Data["json"] = cluster
+		c.ServeJSON()
+	}else if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
-	}
-	if cpErr != (types.CustomCPError{}) {
+	} else if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = cpErr
 		c.ServeJSON()

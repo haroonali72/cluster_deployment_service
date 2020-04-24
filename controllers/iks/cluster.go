@@ -999,7 +999,7 @@ func (c *IKSClusterController) GetStatus() {
 		return
 	}
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(409)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
