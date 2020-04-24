@@ -996,7 +996,7 @@ func (c *IKSClusterController) GetStatus() {
 	ctx.SendLogs("IKSClusterController: Fetching Status of project"+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
-	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
+	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
