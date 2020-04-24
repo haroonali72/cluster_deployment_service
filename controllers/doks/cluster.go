@@ -890,7 +890,7 @@ func (c *DOKSClusterController) GetStatus() {
 
 	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
