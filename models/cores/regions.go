@@ -20,8 +20,7 @@ var AWSRegions = []byte(
 			{"name":"","location": "us-west-2"}
 ]`)
 
-var AzureRegions = []byte(
-	`[
+var AzureRegions = []byte(`[
 			{"region":"East Asia","location":"eastasia"},
 			{"region":"Southeast Asia","location": "southeastasia"},
 			{"region":"Central US","location": "centralus"},

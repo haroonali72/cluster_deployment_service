@@ -18,6 +18,12 @@ const (
 	Terminating              Type = "terminating"
 )
 
+type StatusCode int
+
+const (
+	CloudStatusCode StatusCode = 512
+)
+
 type RequestType string
 
 const (
