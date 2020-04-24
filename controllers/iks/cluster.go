@@ -448,6 +448,24 @@ func (c *IKSClusterController) Post() {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//custom data validation
+	err = iks.ValidateIKSData(cluster, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
@@ -469,15 +487,6 @@ func (c *IKSClusterController) Post() {
 
 	ctx.SendLogs("IKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	validate := validator.New()
-	err = validate.Struct(cluster)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
 	err = iks.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -487,14 +496,7 @@ func (c *IKSClusterController) Post() {
 	}
 	cluster.CompanyId = userInfo.CompanyId
 
-	//custom data validation
-	err = iks.ValidateIKSData(cluster, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+
 
 	ctx.SendLogs("IKSClusterController: Add new cluster "+cluster.Name+" in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -561,6 +563,24 @@ func (c *IKSClusterController) Patch() {
 	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	//custom data validation
+	err = iks.ValidateIKSData(cluster, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
