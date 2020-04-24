@@ -256,6 +256,7 @@ func (c *AKSClusterController) Post() {
 	}
 
 	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -293,6 +294,25 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = aks.ValidateAKSData(cluster, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -312,14 +332,7 @@ func (c *AKSClusterController) Patch() {
 	ctx.SendLogs("AKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
-	err = aks.ValidateAKSData(cluster, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
+	cluster.CompanyId = userInfo.CompanyId
 	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
@@ -475,6 +488,7 @@ func (c *AKSClusterController) Delete() {
 	}
 
 	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -485,7 +499,7 @@ func (c *AKSClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
-// @Success 202 {"msg": "Cluster creation started successfully"}
+// @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
@@ -618,7 +632,9 @@ func (c *AKSClusterController) StartCluster() {
 	go aks.DeployAKSCluster(cluster, azureProfile, userInfo.CompanyId, token, *ctx)
 
 	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
 }
 
@@ -705,13 +721,12 @@ func (c *AKSClusterController) GetStatus() {
 	ctx.SendLogs("AKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
-	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(500)
+	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") {
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
-	}
-	if cpErr != (types.CustomCPError{}) {
+	}else if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] =cpErr
 		c.ServeJSON()
@@ -859,7 +874,9 @@ func (c *AKSClusterController) TerminateCluster() {
 	go aks.TerminateCluster(azureProfile, projectId, userInfo.CompanyId, *ctx)
 
 	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}
 	c.ServeJSON()
 }
 
