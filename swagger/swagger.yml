@@ -1967,12 +1967,12 @@ paths:
           description: '{"msg": "Cluster created successfully"}'
         "202":
           description: '{"msg": "Cluster creation started successfully"}'
-        "304":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
           description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
         "502":
@@ -6077,25 +6077,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0013596b0.false:
+  442.0xc00135b770.false:
     title: "false"
     type: object
-  605.0xc000c3b230.false:
+  605.0xc000c312f0.false:
     title: "false"
     type: object
-  639.0xc001279bf0.false:
+  639.0xc001277cb0.false:
     title: "false"
     type: object
-  644.0xc000f19e90.false:
+  644.0xc000f15f50.false:
     title: "false"
     type: object
   5837.string:
     title: string
     type: object
-  13199.0xc001397440.false:
+  13199.0xc00138d500.false:
     title: "false"
     type: object
-  49878.0xc001326c30.false:
+  49878.0xc001326cf0.false:
     title: "false"
     type: object
   54159.string:
@@ -6343,7 +6343,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000c3b230.false'
+        $ref: '#/definitions/605.0xc000c312f0.false'
       name:
         type: string
       network_name:
@@ -6724,7 +6724,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc000f19e90.false'
+        $ref: '#/definitions/644.0xc000f15f50.false'
       name:
         type: string
       network_name:
@@ -7860,7 +7860,7 @@ definitions:
       is_advance:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/639.0xc001279bf0.false'
+        $ref: '#/definitions/639.0xc001277cb0.false'
       kube_version:
         type: string
       name:
@@ -7958,7 +7958,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/49878.0xc001326c30.false'
+        $ref: '#/definitions/49878.0xc001326cf0.false'
       kube_version:
         type: string
       name:
@@ -8123,7 +8123,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0013596b0.false'
+        $ref: '#/definitions/442.0xc00135b770.false'
       name:
         type: string
       node_pools:
@@ -8209,7 +8209,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13199.0xc001397440.false'
+        $ref: '#/definitions/13199.0xc00138d500.false'
       name:
         type: string
       node_pools:

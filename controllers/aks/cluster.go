@@ -256,6 +256,7 @@ func (c *AKSClusterController) Post() {
 	}
 
 	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -475,6 +476,7 @@ func (c *AKSClusterController) Delete() {
 	}
 
 	ctx.SendLogs("AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -618,6 +620,8 @@ func (c *AKSClusterController) StartCluster() {
 	go aks.DeployAKSCluster(cluster, azureProfile, userInfo.CompanyId, token, *ctx)
 
 	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
@@ -706,7 +710,7 @@ func (c *AKSClusterController) GetStatus() {
 
 	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
@@ -859,6 +863,8 @@ func (c *AKSClusterController) TerminateCluster() {
 	go aks.TerminateCluster(azureProfile, projectId, userInfo.CompanyId, *ctx)
 
 	ctx.SendLogs(" AKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
 }

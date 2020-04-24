@@ -521,6 +521,7 @@ func (c *IKSClusterController) Post() {
 	ctx.SendLogs("IKSClusterController: New cluster "+cluster.Name+" in project "+cluster.ProjectId+" added", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs(" Iks cluster "+cluster.Name+" in project "+cluster.ProjectId+" added ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
+	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
 	c.ServeJSON()
 }
@@ -530,7 +531,7 @@ func (c *IKSClusterController) Post() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	iks.Cluster_Def	true	"Body for cluster content"
 // @Success 200 {"msg": "Cluster updated successfully"}
-// @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 402 {"error": "Cluster is in deploying/running/terminating state"}
@@ -596,19 +597,19 @@ func (c *IKSClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "Cluster is in runnning state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -633,7 +634,7 @@ func (c *IKSClusterController) Patch() {
 // @Param	forceDelete path    boolean	true    ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in deploying/running/terminating state"}
+// @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete [delete]
@@ -707,14 +708,14 @@ func (c *IKSClusterController) Delete() {
 	}
 
 	if cluster.Status == "Cluster Created" && !forceDelete {
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
 		c.ServeJSON()
 		return
 	}
 	if cluster.Status == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -722,7 +723,7 @@ func (c *IKSClusterController) Delete() {
 
 	if cluster.Status == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -748,6 +749,7 @@ func (c *IKSClusterController) Delete() {
 
 	ctx.SendLogs(" Iks cluster "+cluster.Name+" of project "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
+	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -760,7 +762,7 @@ func (c *IKSClusterController) Delete() {
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -839,7 +841,7 @@ func (c *IKSClusterController) StartCluster() {
 	}
 
 	if cluster.Status == "Cluster Created" {
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in running state"}
 		c.ServeJSON()
 		return
@@ -847,7 +849,7 @@ func (c *IKSClusterController) StartCluster() {
 
 	if cluster.Status == string(models.Deploying) {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -855,7 +857,7 @@ func (c *IKSClusterController) StartCluster() {
 
 	if cluster.Status == string(models.Terminating) {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -901,6 +903,7 @@ func (c *IKSClusterController) StartCluster() {
 
 	ctx.SendLogs(" Iks cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" started ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
+	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "cluster creation is in progress"}
 	c.ServeJSON()
 }
@@ -993,14 +996,8 @@ func (c *IKSClusterController) GetStatus() {
 	ctx.SendLogs("IKSClusterController: Fetching Status of project"+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, cpErr := iks.FetchStatus(ibmProfile, projectId, *ctx, userInfo.CompanyId, token)
-	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "nodes not found") {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = cpErr
-		c.ServeJSON()
-		return
-	}
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(500)
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
@@ -1025,7 +1022,7 @@ func (c *IKSClusterController) GetStatus() {
 // @Success 202 {"msg": "Cluster termination started successfully"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in new/deployed/terminating state"}
+// @Failure 409 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -1120,7 +1117,7 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	if cluster.Status == string(models.New) {
 		ctx.SendLogs("IKSClusterController: Cannot terminate new cluster", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is not deployed"}
 		c.ServeJSON()
 		return
@@ -1128,7 +1125,7 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	if cluster.Status == string(models.Deploying) {
 		ctx.SendLogs("IKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -1136,7 +1133,7 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	if cluster.Status == string(models.Terminating) {
 		ctx.SendLogs("IKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -1164,6 +1161,7 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	ctx.SendLogs("IKSClusterController: Cluster "+cluster.Name+" of project"+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
+	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 		c.ServeJSON()
 	}
