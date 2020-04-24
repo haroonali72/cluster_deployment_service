@@ -757,7 +757,8 @@ func (c *IKSClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true "Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 202 {"msg": "Cluster created successfully"}
+// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -1021,7 +1022,8 @@ func (c *IKSClusterController) GetStatus() {
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile Id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 202 {"msg": "Cluster termination is in progress"}
+// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not Found"}
