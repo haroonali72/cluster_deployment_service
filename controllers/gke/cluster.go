@@ -35,7 +35,7 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-	c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "profile id is empty"}
 		c.ServeJSON()
 		return
@@ -67,7 +67,7 @@ func (c *GKEClusterController) GetServerConfig() {
 
 	config, err := gke.GetServerConfig(credentials, *ctx)
 	if err != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(err.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = err
 		c.ServeJSON()
 		return
@@ -107,7 +107,7 @@ func (c *GKEClusterController) Get() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -119,7 +119,7 @@ func (c *GKEClusterController) Get() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -177,7 +177,7 @@ func (c *GKEClusterController) GetAll() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -187,7 +187,7 @@ func (c *GKEClusterController) GetAll() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", ctx.Data.Company, userInfo.UserId)
 
-	statusCode,err, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.GKE, *ctx)
+	statusCode, err, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.GKE, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -271,7 +271,7 @@ func (c *GKEClusterController) Post() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -283,7 +283,7 @@ func (c *GKEClusterController) Post() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -363,7 +363,7 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -401,7 +401,7 @@ func (c *GKEClusterController) Patch() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -421,7 +421,7 @@ func (c *GKEClusterController) Patch() {
 	cluster.CompanyId = userInfo.CompanyId
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -506,7 +506,7 @@ func (c *GKEClusterController) Delete() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -518,7 +518,7 @@ func (c *GKEClusterController) Delete() {
 
 	ctx.Data.Company = userInfo.CompanyId
 
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -632,7 +632,7 @@ func (c *GKEClusterController) StartCluster() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -645,7 +645,7 @@ func (c *GKEClusterController) StartCluster() {
 	ctx.SendLogs("GKEClusterController: Strat cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.Data.Company = userInfo.CompanyId
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -778,7 +778,7 @@ func (c *GKEClusterController) GetStatus() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -788,7 +788,7 @@ func (c *GKEClusterController) GetStatus() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -828,7 +828,7 @@ func (c *GKEClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}else if cpErr != (types.CustomCPError{}) {
-		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 	}
@@ -879,7 +879,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		return
 	}
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -891,7 +891,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1019,7 +1019,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	}
 
 
-	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1029,7 +1029,7 @@ func (c *GKEClusterController) ApplyAgent() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
-	statusCode,allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}

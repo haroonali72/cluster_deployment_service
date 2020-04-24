@@ -57,7 +57,7 @@ func setEnv() {
 	os.Setenv("client_cert", "/home/zunaira/Downloads/antelope.crt")
 	os.Setenv("client_pem", "/home/zunaira/Downloads/antelope.pem")
 	os.Setenv("subscription_host", "35.246.150.221:30906")
-	os.Setenv("rbac_url", "https://dapis.cloudplex.io")
+	os.Setenv("rbac_url", "https://dapis.cloudplex.cf")
 	os.Setenv("mongo_host", "cloudplex-mongodb.cloudplex-system.svc.cluster.local:27017,mongodb-secondary-0.cloudplex-mongodb-headless:27017,mongodb-arbiter-0.cloudplex-mongodb-headless:27017")
 	//os.Setenv("mongo_host", "localhost:27017")
 

@@ -52,10 +52,10 @@ type ManagedClusterProperties struct {
 	ClusterTags            []Tag                                `json:"tags" bson:"tags"`
 	IsAdvanced             bool                                 `json:"is_advance" bson:"is_advance"`
 	IsExpert               bool                                 `json:"is_expert" bson:"is_expert"`
-	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty" validate:"cidrv4"`
-	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" validate:"cidrv4"`
-	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" validate:"ipv4"`
-	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" validate:"cidrv4"`
+	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty"`
+	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty"`
+	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty"`
+	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty"`
 }
 
 type Tag struct {
