@@ -735,7 +735,7 @@ func (c *GKEClusterController) StartCluster() {
 	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
 }
 
@@ -974,7 +974,7 @@ func (c *GKEClusterController) TerminateCluster() {
 	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.Data["json"] = map[string]string{"msg": "cluster termination initiated"}
 	c.ServeJSON()
 }
 

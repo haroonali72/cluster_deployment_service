@@ -819,7 +819,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "Cluster creation in progress"}
+	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
 }
 
@@ -1061,7 +1061,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}
 	c.ServeJSON()
 }
 

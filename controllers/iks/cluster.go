@@ -925,7 +925,7 @@ func (c *IKSClusterController) StartCluster() {
 	ctx.SendLogs(" Iks cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" started ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "cluster creation is in progress"}
+	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
 }
 
@@ -1182,7 +1182,7 @@ func (c *IKSClusterController) TerminateCluster() {
 	ctx.SendLogs("IKSClusterController: Cluster "+cluster.Name+" of project"+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}
 		c.ServeJSON()
 	}
 
