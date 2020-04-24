@@ -138,7 +138,6 @@ func GetMongoConf() mongConf {
 	conf.MongoIKSCustomerTemplateCollection = "mongo_iks_customer_template_collection"
 	conf.MongoDOKSCustomerTemplateCollection = "mongo_doks_customer_template_collection"
 	conf.MongoClusterErrorCollection = "mongo_cluster_error_collection"
-
 	return conf
 
 }

@@ -570,6 +570,7 @@ func (c *GKEClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
+// @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not found"}
@@ -793,7 +794,7 @@ func (c *GKEClusterController) GetStatus() {
 	ctx.SendLogs("GKEClusterController: Fetching status of cluster of the project  "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster, cpErr := gke.FetchStatus(credentials, token, *ctx)
 	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(409)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
@@ -815,7 +816,8 @@ func (c *GKEClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 204 {"msg": "Cluster termination is in progress"}
+// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not found"}
@@ -950,7 +952,6 @@ func (c *GKEClusterController) TerminateCluster() {
 
 // @Title Start
 // @Description Apply cloudplex Agent file to a gke cluster
-// @Param	clusterName	path	string	true "Name of the cluster"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
@@ -989,13 +990,6 @@ func (c *GKEClusterController) ApplyAgent() {
 		return
 	}
 
-	clusterName :=c.GetString(":clusterName")
-	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	statusCode,userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -1037,9 +1031,32 @@ func (c *GKEClusterController) ApplyAgent() {
 		return
 	}
 
+	cluster, err := gke.GetGKECluster(*ctx)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.CloudplexStatus !="Cluster Created" {
+		text :="DOKSClusterController: Cannot apply agent until cluster is in created state. Cluster is in "+cluster.CloudplexStatus+ " state."
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": text}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("GKEClusterController: Applying agent on cluster of the project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	go gke.ApplyAgent(credentials, token, *ctx, clusterName)
+	go gke.ApplyAgent(credentials, token, *ctx, cluster.Name)
 
 	ctx.SendLogs("GKEClusterController: Agent Applied on cluster of the project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

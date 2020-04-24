@@ -22,6 +22,7 @@ type KubernetesClusterConfig struct {
 	KubeconfigYAML []byte
 }
 type KubernetesConfig struct {
+
 	ApiVersion     string     `yaml:"apiVersion"  json:"apiVersion"`
 	Clusters       []Clusters `yaml:"clusters" json:"clusters"`
 	Contexts       []Contexts `yaml:"contexts" json:"contexts"`
@@ -29,6 +30,7 @@ type KubernetesConfig struct {
 	Kind           string     `yaml:"kind" json:"kind"`
 	Preferences    Preference `yaml:"preferences" json:"preferences"`
 	Users          []Users    `yaml:"users" json:"users"`
+
 }
 
 type Clusters struct {
@@ -395,8 +397,8 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 	}
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
 	if err != nil {
-		return &godo.KubernetesCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
-			Description: "Error occurred while getting cluster status in database",
+		return &godo.KubernetesCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
+			Description: "Error occurred while getting cluster status from database",
 			StatusCode:  500}
 	}
 	if customErr.Err != (types.CustomCPError{}) {
@@ -405,7 +407,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
+		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500,Error:"Error in fetching cluster status ", Description: err.Error()}
 	}
 
 	err1 := doksOps.init(ctx)
