@@ -372,7 +372,7 @@ func (c *GKEClusterController) Patch() {
 	}
 
 	validate := validator.New()
-	err := validate.Struct(cluster)
+	err = validate.Struct(cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
