@@ -104,9 +104,8 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	if response.StatusCode == 200 {
 		return 0,true, nil
 	}
-	return 500,false, nil
+	return response.StatusCode,false, err
 }
-
 func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacEvaluateURI)
@@ -134,7 +133,6 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 	return false, nil
 
 }
-
 func GetInfo(token string) (int,types.Response, error) {
 
 	req, err := utils.CreateGetRequest(getRbacHost() + models.RbacEndpoint + models.RbacInfoURI)

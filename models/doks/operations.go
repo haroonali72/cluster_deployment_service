@@ -104,7 +104,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
 		Tags:        cluster.Tags,
-	//	NodePools:   nodepool,
+		NodePools:   nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
 	}

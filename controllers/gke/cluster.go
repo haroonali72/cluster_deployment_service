@@ -237,6 +237,14 @@ func (c *GKEClusterController) Post() {
 
 	ctx.SendLogs("GKEClusterController: Add cluster", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
+	token := c.Ctx.Input.Header("X-Auth-Token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	validate := validator.New()
 	err := validate.Struct(cluster)
 	if err != nil {
@@ -250,14 +258,6 @@ func (c *GKEClusterController) Post() {
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("X-Auth-Token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -326,6 +326,7 @@ func (c *GKEClusterController) Post() {
 	ctx.SendLogs("GKEClusterController: New cluster with name: "+cluster.Name+" added in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("GKE cluster "+cluster.Name+" add in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
+	c.Ctx.Output.SetStatus(201)
 	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
 	c.ServeJSON()
 }
@@ -337,7 +338,7 @@ func (c *GKEClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in deploying/running/terminating state"}
+// @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -370,6 +371,32 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = gke.Validate(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	_, err = govalidator.ValidateStruct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 
 	ctx.Data.Company = userInfo.CompanyId
@@ -391,7 +418,7 @@ func (c *GKEClusterController) Patch() {
 	beego.Info("GKEClusterController: JSON Payload: ", cluster)
 
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	cluster.CompanyId = userInfo.CompanyId
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -407,19 +434,19 @@ func (c *GKEClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "Cluster is in running state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -445,7 +472,7 @@ func (c *GKEClusterController) Patch() {
 // @Param	forceDelete path  boolean	true ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in deploying/running/terminating state"}
+// @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -520,7 +547,7 @@ func (c *GKEClusterController) Delete() {
 	}
 
 	if strings.ToLower(cluster.CloudplexStatus) == string(models.ClusterCreated) && !forceDelete {
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
 		return
@@ -528,7 +555,7 @@ func (c *GKEClusterController) Delete() {
 
 	if cluster.CloudplexStatus == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("GKEClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -536,7 +563,7 @@ func (c *GKEClusterController) Delete() {
 
 	if cluster.CloudplexStatus == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -560,6 +587,7 @@ func (c *GKEClusterController) Delete() {
 	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of project "+id+" deleted", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("GKE cluster "+cluster.Name+" of project Id: "+id+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
+	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -569,10 +597,10 @@ func (c *GKEClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 201 {"msg": "Cluster created initiated"}
 // @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -663,7 +691,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	if cluster.CloudplexStatus == "Cluster Created" {
 		ctx.SendLogs("GKEClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
 		c.ServeJSON()
 		return
@@ -671,7 +699,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	if cluster.CloudplexStatus == string(models.Deploying) {
 		ctx.SendLogs("GKEClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -679,7 +707,7 @@ func (c *GKEClusterController) StartCluster() {
 
 	if cluster.CloudplexStatus == string(models.Terminating) {
 		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -706,7 +734,8 @@ func (c *GKEClusterController) StartCluster() {
 
 	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
 }
 
@@ -793,14 +822,12 @@ func (c *GKEClusterController) GetStatus() {
 
 	ctx.SendLogs("GKEClusterController: Fetching status of cluster of the project  "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster, cpErr := gke.FetchStatus(credentials, token, *ctx)
-	if cpErr != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(500)
+	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") {
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
-	}
-
-	if cpErr != (types.CustomCPError{}) {
+	}else if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
 		c.Data["json"] = cpErr
 		c.ServeJSON()
@@ -816,10 +843,10 @@ func (c *GKEClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in new/deployed/terminating state"}
+// @Failure 409 {"error": "Cluster is in new/deployed/terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -910,7 +937,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	if cluster.CloudplexStatus == string(models.Deploying) {
 		ctx.SendLogs("GKEClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -918,7 +945,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	if cluster.CloudplexStatus == string(models.Terminating) {
 		ctx.SendLogs("GKEClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -946,7 +973,8 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	ctx.SendLogs(" GKE cluster "+cluster.Name+" of project "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "cluster termination initiated"}
 	c.ServeJSON()
 }
 
