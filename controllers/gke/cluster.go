@@ -418,7 +418,7 @@ func (c *GKEClusterController) Patch() {
 	beego.Info("GKEClusterController: JSON Payload: ", cluster)
 
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	cluster.CompanyId = userInfo.CompanyId
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found"){
@@ -597,7 +597,7 @@ func (c *GKEClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 201 {"msg": "Cluster created initiated"}
 // @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
@@ -843,7 +843,7 @@ func (c *GKEClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in new/deployed/terminating state"}

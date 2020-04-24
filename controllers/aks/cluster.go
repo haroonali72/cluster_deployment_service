@@ -332,6 +332,7 @@ func (c *AKSClusterController) Patch() {
 	ctx.SendLogs("AKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
+	cluster.CompanyId = userInfo.CompanyId
 	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
@@ -498,7 +499,7 @@ func (c *AKSClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
-// @Success 202 {"msg": "Cluster creation started successfully"}
+// @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}

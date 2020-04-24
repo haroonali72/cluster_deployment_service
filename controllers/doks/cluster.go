@@ -503,7 +503,7 @@ func (c *DOKSClusterController) Patch() {
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
 	ctx.Data.Company = userInfo.CompanyId
-	cluster.ProjectId=ctx.Data.Company
+	cluster.CompanyId=ctx.Data.Company
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found"){
@@ -681,7 +681,7 @@ func (c *DOKSClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
-// @Success 202 {"msg": "Cluster creation started successfully"}
+// @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -928,7 +928,7 @@ func (c *DOKSClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in new/deploying/terminating state"}

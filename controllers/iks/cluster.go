@@ -607,6 +607,7 @@ func (c *IKSClusterController) Patch() {
 
 	ctx.SendLogs("IKSClusterController:Update cluster "+cluster.Name+" of project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
+	cluster.CompanyId = userInfo.CompanyId
 	err = iks.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 
@@ -780,7 +781,7 @@ func (c *IKSClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true "Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 201 {"msg": "Cluster created successfully"}
-// @Success 202 {"msg": "Cluster creation started successfully"}
+// @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -1038,7 +1039,7 @@ func (c *IKSClusterController) GetStatus() {
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile Id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in new/deployed/terminating state"}
