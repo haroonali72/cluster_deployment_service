@@ -655,7 +655,7 @@ func (c *DOKSClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 202 {"msg": "Cluster created successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
@@ -905,7 +905,7 @@ func (c *DOKSClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 204 {"msg": "Cluster termination is in progress"}
+// @Success 202 {"msg": "Cluster termination is in progress"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 304 {"error": "Cluster is in new/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
