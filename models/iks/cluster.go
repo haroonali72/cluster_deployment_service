@@ -18,32 +18,32 @@ import (
 )
 
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ClusterId        string        `json:"cluster_id" bson:"cluster_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required"`
-	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" validate:"required"`
-	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ClusterId        string        `json:"-" bson:"cluster_id,omitempty"`
+	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
+	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
+	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
-	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required"`
-	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint"`
-	KubeVersion      string        `json:"kube_version" bson:"kube_version" validate:"required"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-	TokenName        string        `json:"token_name" bson:"token_name"`
-	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required"`
+	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required" description:"Network name in which cluster will be provisioned [required]"`
+	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint" description:"[optional]"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
+	CompanyId        string        `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
+	TokenName        string        `json:"-" bson:"token_name"`
+	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required" description:"Virtual private cloud ID in which cluster will be provisioned [required]"`
 	IsAdvance        bool          `json:"is_advance" bson:"is_advance"`
-	ResourceGroup    string        `json:"resource_group" bson:"resource_group"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group" description:"Resources would be created within resource_group [required]"`
 }
 type NodePool struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Name             string        `json:"name" bson:"name" validate:"required"`
 	NodeCount        int           `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType      string        `json:"machine_type" bson:"machine_type" valid:"required"`
-	SubnetID         string        `json:"subnet_id" bson:"subnet_id"`
-	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone"`
+	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required"`
+	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required"`
+	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
 }
 
 type Project struct {
@@ -74,20 +74,20 @@ func getNetworkHost(cloudType, projectId string) string {
 	return host
 }
 
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.IBMProfile, error) {
-	statusCode,data, err := vault.GetCredentialProfile("ibm", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.IBMProfile, error) {
+	statusCode, data, err := vault.GetCredentialProfile("ibm", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return statusCode,vault.IBMProfile{}, err
+		return statusCode, vault.IBMProfile{}, err
 	}
 	ibmProfile := vault.IBMProfile{}
 	err = json.Unmarshal(data, &ibmProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,vault.IBMProfile{}, err
+		return 500, vault.IBMProfile{}, err
 	}
 	ibmProfile.Profile.Region = region
-	return 0,ibmProfile, nil
+	return 0, ibmProfile, nil
 }
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 

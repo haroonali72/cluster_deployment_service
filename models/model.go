@@ -39,6 +39,8 @@ const (
 	Admin     Role = "Admin"
 )
 
+// cloud type of the cluster
+// swagger:enum Cloud
 type Cloud string
 
 const (
