@@ -39,10 +39,10 @@ type Cluster_Def struct {
 }
 type NodePool struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name             string        `json:"name" bson:"name" validate:"required"`
-	NodeCount        int           `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required"`
-	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required"`
+	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster pool name [required]"`
+	NodeCount        int           `json:"node_count" bson:"node_count" validate:"required,gte=1" description:"Pool node count [required]"`
+	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required" description:"Machine type for pool [required]"`
+	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required" description:"ID of subnet in which pool will be created [required]"`
 	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
 }
 
