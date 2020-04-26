@@ -15,6 +15,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 	"time"
 )
 
@@ -393,7 +394,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 		ctx.SendLogs("DOKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
-	if cluster.CloudplexStatus == (models.New) {
+	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
 		return &godo.KubernetesCluster{}, cpErr
 	}

@@ -354,7 +354,7 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
-	if cluster.Status == models.New {
+	if string(cluster.Status) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
