@@ -18,53 +18,53 @@ import (
 
 type GKECluster struct {
 	ID                             bson.ObjectId                   `json:"-" bson:"_id,omitempty"`
-	ProjectId                      string                          `json:"project_id" bson:"project_id" validate:"required"`
-	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
+	ProjectId                      string                          `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud" validate:"eq=gcp|eq=GCP"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                string                          `json:"status" bson:"status" validate:"eq=New|eq=new"`
-	CompanyId                      string                          `json:"company_id" bson:"company_id"`
+	CloudplexStatus                string                          `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Status of cluster [required]"`
+	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
 	AddonsConfig                   *AddonsConfig                   `json:"addons_config,omitempty" bson:"addons_config,omitempty"`
-	ClusterIpv4Cidr                string                          `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty"`
+	ClusterIpv4Cidr                string                          `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty" description:"The IP address range of the container pods in this cluster [optional]"`
 	Conditions                     []*StatusCondition              `json:"conditions,omitempty" bson:"conditions,omitempty"`
-	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty"`
-	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty"`
-	CurrentNodeCount               int64                           `json:"current_node_count,omitempty" bson:"current_node_count,omitempty"`
-	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constraint,omitempty" bson:"default_max_pods_constraint,omitempty"`
-	Description                    string                          `json:"description,omitempty" bson:"description,omitempty"`
-	EnableKubernetesAlpha          bool                            `json:"enable_kubernetes_alpha,omitempty" bson:"enable_kubernetes_alpha,omitempty"`
-	EnableTpu                      bool                            `json:"enable_tpu,omitempty" bson:"enable_tpu,omitempty"`
-	Endpoint                       string                          `json:"endpoint,omitempty" bson:"endpoint,omitempty"`
-	ExpireTime                     string                          `json:"expire_time,omitempty" bson:"expire_time,omitempty"`
-	InitialClusterVersion          string                          `json:"initial_cluster_version,omitempty" bson:"initial_cluster_version,omitempty"`
+	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty" description:"The time the cluster was created [readonly]"`
+	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty" description:"The current software version of master endpoint [readonly]"`
+	CurrentNodeCount               int64                           `json:"current_node_count,omitempty" bson:"current_node_count,omitempty" description:"The number of nodes currently in the cluster [readonly]"`
+	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constraint,omitempty" bson:"default_max_pods_constraint,omitempty" validate:"dive"`
+	Description                    string                          `json:"description,omitempty" bson:"description,omitempty" description:"An optional description of this cluster [optional]"`
+	EnableKubernetesAlpha          bool                            `json:"enable_kubernetes_alpha,omitempty" bson:"enable_kubernetes_alpha,omitempty" description:"Alpha enabled clusters are automatically deleted thirty days after [optional]"`
+	EnableTpu                      bool                            `json:"enable_tpu,omitempty" bson:"enable_tpu,omitempty" description:"Enable the ability to use Cloud TPUs in this cluster [optional]"`
+	Endpoint                       string                          `json:"endpoint,omitempty" bson:"endpoint,omitempty" description:"IP address of this cluster's master endpoint [readonly]"`
+	ExpireTime                     string                          `json:"expire_time,omitempty" bson:"expire_time,omitempty" description:"Time the cluster will be automatically deleted [readonly]"`
+	InitialClusterVersion          string                          `json:"initial_cluster_version,omitempty" bson:"initial_cluster_version,omitempty" description:"Initial kubernetes version for this cluster [optional]"`
 	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy,omitempty" bson:"ip_allocation_policy,omitempty"`
-	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty"`
+	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty" description:"The fingerprint of the set of labels for this cluster [optional]"`
 	LegacyAbac                     *LegacyAbac                     `json:"legacy_abac,omitempty" bson:"legacy_abac,omitempty"`
-	Location                       string                          `json:"location,omitempty" bson:"location,omitempty"`
-	Locations                      []string                        `json:"locations,omitempty" bson:"locations,omitempty"`
-	LoggingService                 string                          `json:"logging_service,omitempty" bson:"logging_service,omitempty"`
+	Location                       string                          `json:"location,omitempty" bson:"location,omitempty" description:"The name of GCP zone or region in which cluster resides [required]"`
+	Locations                      []string                        `json:"locations,omitempty" bson:"locations,omitempty" description:"The name of GCP zones in which cluster nodes located [optional]"`
+	LoggingService                 string                          `json:"logging_service,omitempty" bson:"logging_service,omitempty" description:"The logging service the cluster should use to write logs [optional]"`
 	MaintenancePolicy              *MaintenancePolicy              `json:"maintenance_policy,omitempty" bson:"maintenance_policy,omitempty"`
 	MasterAuth                     *MasterAuth                     `json:"master_auth,omitempty" bson:"master_auth,omitempty"`
 	MasterAuthorizedNetworksConfig *MasterAuthorizedNetworksConfig `json:"master_authorized_networks_config,omitempty" bson:"master_authorized_networks_config,omitempty"`
-	MonitoringService              string                          `json:"monitoring_service,omitempty" bson:"monitoring_service,omitempty"`
-	Name                           string                          `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
-	Network                        string                          `json:"network,omitempty" bson:"network,omitempty"`
+	MonitoringService              string                          `json:"monitoring_service,omitempty" bson:"monitoring_service,omitempty" description:"The monitoring service the cluster should use to write metrics [optional]"`
+	Name                           string                          `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"The name of this cluster [required]"`
+	Network                        string                          `json:"network,omitempty" bson:"network,omitempty" description:"The name of GCP network to which the cluster connected [required]"`
 	NetworkConfig                  *NetworkConfig                  `json:"network_config,omitempty" bson:"network_config,omitempty"`
 	NetworkPolicy                  *NetworkPolicy                  `json:"network_policy,omitempty" bson:"network_policy,omitempty"`
-	NodeIpv4CidrSize               int64                           `json:"node_ipv4_cidr_size,omitempty" bson:"node_ipv4_cidr_size,omitempty"`
+	NodeIpv4CidrSize               int64                           `json:"node_ipv4_cidr_size,omitempty" bson:"node_ipv4_cidr_size,omitempty" description:"The size of the address space on each node [readonly]"`
 	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty" validate:"required,dive"`
 	PrivateClusterConfig           *PrivateClusterConfig           `json:"private_cluster_config,omitempty" bson:"private_cluster_config,omitempty"`
 	ResourceLabels                 map[string]string               `json:"resource_labels,omitempty" bson:"resource_labels,omitempty"`
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
-	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty"`
-	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty"`
-	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty"`
-	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty"`
-	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty"`
-	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty"`
-	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty" validate:"required"`
+	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty" description:"Server-defined URL for the resource [readonly]"`
+	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty" description:"The IP address range of the kubernetes services in the cluster [readonly]"`
+	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty" description:"The current status of this cluster [readonly]"`
+	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty" description:"Additional information about the current status [readonly]"`
+	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty" description:"The name of the GCP subnetwork cluster is connected to [required]"`
+	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" description:"The IP address range of the Cloud TPUs in the cluster [readonly]"`
+	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty" validate:"required" description:"Name of GCP zone in which cluster resides [required]"`
 }
 
 type AddonsConfig struct {
@@ -75,19 +75,19 @@ type AddonsConfig struct {
 }
 
 type HorizontalPodAutoscaling struct {
-	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty" description:"Whether the Horizontal Pod Autoscaling feature is enabled in cluster [optional]"`
 }
 
 type HttpLoadBalancing struct {
-	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty" description:"Whether the HTTP Load Balancing controller is enabled in cluster [optional]"`
 }
 
 type KubernetesDashboard struct {
-	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty" description:"Whether the Kubernetes Dashboard is enabled for this cluster [optional]"`
 }
 
 type NetworkPolicyConfig struct {
-	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty" bson:"disabled,omitempty" description:"Whether NetworkPolicy is enabled for this cluster [optional]"`
 }
 
 type StatusCondition struct {
@@ -96,7 +96,7 @@ type StatusCondition struct {
 }
 
 type MaxPodsConstraint struct {
-	MaxPodsPerNode int64 `json:"max_pods_per_node,omitempty" bson:"max_pods_per_node,omitempty" validate:"required"`
+	MaxPodsPerNode int64 `json:"max_pods_per_node,omitempty" bson:"max_pods_per_node,omitempty" validate:"required" description:"Constraint enforced on the max num of pods per node [required]"`
 }
 
 type IPAllocationPolicy struct {
@@ -417,7 +417,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if errr != nil {
 		PrintError(errr, cluster.Name, ctx)
 		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := types.CustomCPError{StatusCode: 500,Error:"Error in deploying GKE Cluster", Description: errr.Error()}
+		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in deploying GKE Cluster", Description: errr.Error()}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -499,7 +499,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	err1 := UpdateGKECluster(cluster, ctx)
 	if err1 != nil {
 		PrintError(err1, cluster.Name, ctx)
-		cpErr := types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err1.Error()}
+		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err1.Error()}
 
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
@@ -518,7 +518,7 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, types.CustomCPError{StatusCode:500,Error:"Error in fetching status",Description: err.Error()}
+		return cluster, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
 	}
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 	if err != nil {
@@ -560,7 +560,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
 	if pubErr != nil {
-		err_ := types.CustomCPError{StatusCode:500,Error:"Error in terminating cluster",Description: pubErr.Error()}
+		err_ := types.CustomCPError{StatusCode: 500, Error: "Error in terminating cluster", Description: pubErr.Error()}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -571,7 +571,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Terminate ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		err_ := types.CustomCPError{StatusCode:500,Error:"Error in terminating cluster",Description: err.Error()}
+		err_ := types.CustomCPError{StatusCode: 500, Error: "Error in terminating cluster", Description: err.Error()}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -583,7 +583,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		text := "GKEClusterModel : Terminate - Cannot terminate a new cluster"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		err_ := types.CustomCPError{StatusCode:500,Error:"Error in terminating error",Description: text}
+		err_ := types.CustomCPError{StatusCode: 500, Error: "Error in terminating error", Description: text}
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -673,7 +673,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		_, _ = utils.SendLog(ctx.Data.Company, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(ctx.Data.Company, err.Error(), "error", ctx.Data.ProjectId)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-		err_ := types.CustomCPError{StatusCode: 500,Error:"Error in terminating Cluster", Description: err.Error()}
+		err_ := types.CustomCPError{StatusCode: 500, Error: "Error in terminating Cluster", Description: err.Error()}
 
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err_)
 		if err != nil {
@@ -714,14 +714,14 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	data2, err := woodpecker.GetCertificate(ctx.Data.ProjectId, token, ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
 	filePath := "/tmp/" + ctx.Data.Company + "/" + ctx.Data.ProjectId + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml && echo '" + credentials.RawData + "'>" + filePath + "gcp-auth.json"
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
 
 	if credentials.Zone != "" {
@@ -733,7 +733,7 @@ func ApplyAgent(credentials gcp.GcpCredentials, token string, ctx utils.Context,
 	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return types.CustomCPError{StatusCode: 500,Error:"Error in applying agent", Description: err.Error()}
+		return types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
 	return types.CustomCPError{}
 }
