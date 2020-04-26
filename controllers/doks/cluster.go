@@ -623,7 +623,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	if strings.ToLower(cluster.CloudplexStatus) == string(models.ClusterCreated) && !forceDelete {
+	if cluster.CloudplexStatus == models.ClusterCreated && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
@@ -631,7 +631,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.CloudplexStatus == string(models.Deploying) && !forceDelete {
+	if cluster.CloudplexStatus == (models.Deploying) && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -639,7 +639,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	if cluster.CloudplexStatus == string(models.Terminating) && !forceDelete {
+	if cluster.CloudplexStatus == (models.Terminating) && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
@@ -778,7 +778,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == string(models.Deploying) {
+	if cluster.CloudplexStatus == (models.Deploying) {
 		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in deploying state"}
@@ -786,7 +786,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == string(models.Terminating) {
+	if cluster.CloudplexStatus == (models.Terminating) {
 		ctx.SendLogs("DOKSClusterContro<ller: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
@@ -794,7 +794,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	cluster.CloudplexStatus = string(models.Deploying)
+	cluster.CloudplexStatus = (models.Deploying)
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
@@ -1013,7 +1013,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == string(models.Deploying) {
+	if cluster.CloudplexStatus == (models.Deploying) {
 		ctx.SendLogs("DOKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
@@ -1021,7 +1021,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == string(models.Terminating) {
+	if cluster.CloudplexStatus == (models.Terminating) {
 		ctx.SendLogs("DOKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
@@ -1159,7 +1159,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 	}
 
 	if cluster.CloudplexStatus != "Cluster Created" {
-		text := "DOKSClusterController: Cannot apply agent until cluster is in created state. Cluster is in" + cluster.CloudplexStatus + " state."
+		text := "DOKSClusterController: Cannot apply agent until cluster is in created state. Cluster is in" + string(cluster.CloudplexStatus) + " state."
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": text}
