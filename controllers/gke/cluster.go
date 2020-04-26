@@ -600,7 +600,7 @@ func (c *GKEClusterController) Delete() {
 // @Success 201 {"msg": "Cluster created initiated"}
 // @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -747,6 +747,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Success 200 {object} gke.GKECluster
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
+// @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
@@ -824,7 +825,7 @@ func (c *GKEClusterController) GetStatus() {
 	cluster, cpErr := gke.FetchStatus(credentials, token, *ctx)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = cpErr
+		c.Data["json"] = cpErr.Description
 		c.ServeJSON()
 		return
 	} else if cpErr != (types.CustomCPError{}) {

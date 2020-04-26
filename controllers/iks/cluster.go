@@ -935,6 +935,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Success 200 {object} []iks.KubeWorkerPoolStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
