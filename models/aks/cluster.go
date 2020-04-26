@@ -394,9 +394,13 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 			Description: err.Error(),
 			StatusCode:  500}
 	}
-	if cluster.Status == models.Deploying || cluster.Status == models.Terminating {
+	if cluster.Status == models.New {
+		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
+		return AKSCluster{}, cpErr
+	}
+	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
-			string(cluster.Status), Description: "Cluster is in " +
+			string(cluster.Status) + " state", Description: "Cluster is in " +
 			string(cluster.Status) + " state", StatusCode: 409}
 		return AKSCluster{}, cpErr
 	}
