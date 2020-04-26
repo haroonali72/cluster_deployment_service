@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Status of cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -160,11 +160,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
+	if oldCluster.Status == (models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
+	if oldCluster.Status == (models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
@@ -231,14 +231,6 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	return region.ProjectData.Region, nil
 
 }
-func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
-	if confError != nil {
-		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
-		utils.SendLog(companyId, confError.Error(), "error", projectId)
-
-	}
-}
 func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx utils.Context, companyId string, token string) types.CustomCPError {
 	publisher := utils.Notifier{}
 	publisher.Init_notifier()
@@ -268,7 +260,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster.Status = string(models.Deploying)
+	cluster.Status = (models.Deploying)
 	confError := UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 
@@ -362,6 +354,12 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
 		return []KubeWorkerPoolStatus{}, cpErr
 	}
+	if cluster.Status == models.Deploying || cluster.Status == models.Terminating {
+		cpErr := ApiError(errors.New("Cluster is in "+
+			string(cluster.Status)), "Cluster is in "+
+			string(cluster.Status)+" state", 409)
+		return []KubeWorkerPoolStatus{}, cpErr
+	}
 	customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
@@ -392,7 +390,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 	iks := GetIBM(profile.Profile)
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = (models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
 	err_ := UpdateCluster(cluster, false, ctx)
@@ -628,7 +626,6 @@ func ValidateProfile(profile vault.IBMProfile, ctx utils.Context) types.CustomCP
 
 	return types.CustomCPError{}
 }
-
 func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 
 	if cluster.ProjectId == "" {
@@ -693,7 +690,6 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
-
 func validateIKSZone(zone string, ctx utils.Context) (bool, error) {
 
 	regionList, err := GetRegions(ctx)

@@ -393,6 +393,12 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 		ctx.SendLogs("DOKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
+	if cluster.CloudplexStatus == models.Deploying || cluster.CloudplexStatus == models.Terminating {
+		cpErr := types.CustomCPError{Error: "Cluster is in " +
+			string(cluster.CloudplexStatus), Description: "Cluster is in " +
+			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
+		return &godo.KubernetesCluster{}, cpErr
+	}
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
 	if err != nil {
 		return &godo.KubernetesCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",

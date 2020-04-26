@@ -71,7 +71,7 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 		err = AddError(ctx, customErr)
 		if err != nil {
 			ctx.SendLogs(
-				"AKSUpdateClusterModel:  Update - Got error inserting in db "+err.Error(),
+				"Update - Got error inserting in db "+err.Error(),
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
@@ -82,7 +82,7 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 		err = DeleteError(projectId, companyId, ctx)
 		if err != nil {
 			ctx.SendLogs(
-				"AKSUpdateClusterModel:  Update - Got error deleting from db "+err.Error(),
+				"Update - Got error deleting from db "+err.Error(),
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
@@ -91,7 +91,7 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 		err = AddError(ctx, customErr)
 		if err != nil {
 			ctx.SendLogs(
-				"AKSAddClusterModel:  Add - Got error while inserting cluster to the database:  "+err.Error(),
+				"Add - Got error while inserting cluster to the database:  "+err.Error(),
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)

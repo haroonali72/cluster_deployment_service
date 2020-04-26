@@ -11,9 +11,9 @@ type Type string
 const (
 	New                      Type = "new"
 	Created                  Type = "created"
-	ClusterCreated           Type = "cluster created"
-	ClusterCreationFailed         = "Cluster Creation Failed"
-	ClusterTerminationFailed      = "Cluster Termination Failed"
+	ClusterCreated           Type = "Cluster Created"
+	ClusterCreationFailed    Type = "Cluster Creation Failed"
+	ClusterTerminationFailed Type = "Cluster Termination Failed"
 	Deploying                Type = "deploying"
 	Terminating              Type = "terminating"
 )

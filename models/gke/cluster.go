@@ -22,7 +22,7 @@ type GKECluster struct {
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud" validate:"eq=gcp|eq=GCP"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                string                          `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Status of cluster [required]"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Status of cluster [required]"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
@@ -438,7 +438,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	err = gkeOps.init()
 	if err.Description != "" {
 		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, ctx)
@@ -453,7 +453,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus = string(models.Deploying)
+	cluster.CloudplexStatus = (models.Deploying)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
@@ -469,7 +469,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 
 	err = gkeOps.CreateCluster(cluster, token, ctx)
 	if err.Description != "" {
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, ctx)
@@ -485,7 +485,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError.Description != "" {
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		_ = UpdateGKECluster(cluster, ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {
@@ -520,6 +520,13 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
 	}
+	if cluster.CloudplexStatus == models.Deploying || cluster.CloudplexStatus == models.Terminating {
+		cpErr := types.CustomCPError{Error: "Cluster is in " +
+			string(cluster.CloudplexStatus), Description: "Cluster is in " +
+			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
+		return GKECluster{}, cpErr
+	}
+
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 	if err != nil {
 		return GKECluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
@@ -626,7 +633,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	cluster.CloudplexStatus = string(models.Terminating)
+	cluster.CloudplexStatus = models.Terminating
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
 
