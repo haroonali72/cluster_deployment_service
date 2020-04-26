@@ -13,6 +13,7 @@ import (
 	"github.com/astaxie/beego"
 	gke "google.golang.org/api/container/v1"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 	"time"
 )
 
@@ -520,7 +521,7 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
 	}
-	if cluster.CloudplexStatus == models.New {
+	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
 		return GKECluster{}, cpErr
 	}

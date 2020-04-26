@@ -18,6 +18,7 @@ import (
 	"github.com/jasonlvhit/gocron"
 	"github.com/signalsciences/ipv4"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 	"time"
 )
 
@@ -394,7 +395,7 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 			Description: err.Error(),
 			StatusCode:  500}
 	}
-	if cluster.Status == models.New {
+	if string(cluster.Status) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
 		return AKSCluster{}, cpErr
 	}
