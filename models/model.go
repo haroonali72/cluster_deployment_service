@@ -9,14 +9,14 @@ import (
 type Type string
 
 const (
-	New                      Type = "new"
+	New                      Type = "New"
 	Created                  Type = "created"
 	ClusterCreated           Type = "Cluster Created"
 	ClusterCreationFailed    Type = "Cluster Creation Failed"
 	ClusterTerminationFailed Type = "Cluster Termination Failed"
 	ClusterTerminated        Type = "Cluster Terminated"
-	Deploying                Type = "deploying"
-	Terminating              Type = "terminating"
+	Deploying                Type = "Creating"
+	Terminating              Type = "Terminating"
 )
 
 type StatusCode int
