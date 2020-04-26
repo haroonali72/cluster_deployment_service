@@ -342,19 +342,19 @@ func (c *AKSClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "Cluster is in running state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(304)
+			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
@@ -377,7 +377,7 @@ func (c *AKSClusterController) Patch() {
 // @Param	forceDelete path    boolean	true    ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete [delete]
@@ -451,7 +451,7 @@ func (c *AKSClusterController) Delete() {
 	}
 	if strings.ToLower(string(cluster.Status)) == string(models.ClusterCreated) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
 		return
@@ -459,7 +459,7 @@ func (c *AKSClusterController) Delete() {
 
 	if cluster.Status == string(models.Deploying) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
@@ -467,7 +467,7 @@ func (c *AKSClusterController) Delete() {
 
 	if cluster.Status == string(models.Terminating) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
@@ -502,7 +502,7 @@ func (c *AKSClusterController) Delete() {
 // @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -597,7 +597,7 @@ func (c *AKSClusterController) StartCluster() {
 
 	if cluster.Status == "Cluster Created" {
 		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in running state"}
 		c.ServeJSON()
 		return
@@ -646,6 +646,7 @@ func (c *AKSClusterController) StartCluster() {
 // @Success 200 {object} aks.AKSCluster
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Internal Server Error"}
 // @Failure 502 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
@@ -723,7 +724,7 @@ func (c *AKSClusterController) GetStatus() {
 	cluster, cpErr := aks.FetchStatus(azureProfile.Profile, token, projectId, userInfo.CompanyId, *ctx)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = cpErr
+		c.Data["json"] = cpErr.Description
 		c.ServeJSON()
 		return
 	}
@@ -746,7 +747,7 @@ func (c *AKSClusterController) GetStatus() {
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 304 {"error": "Cluster is in new/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in new/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -841,7 +842,7 @@ func (c *AKSClusterController) TerminateCluster() {
 
 	if cluster.Status == "Cluster Terminated" {
 		ctx.SendLogs("AKSClusterController : Cluster is terminated", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(304)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is already in terminated state"}
 		c.ServeJSON()
 		return
