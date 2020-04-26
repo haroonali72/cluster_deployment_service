@@ -69,7 +69,7 @@ type KubernetesCluster struct {
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  string                `json:"status" bson:"status" description:"Status of cluster [required]"`
+	CloudplexStatus  models.Type           `json:"status" bson:"status" description:"Status of cluster [required]"`
 	Name             string                `json:"name,omitempty" bson:"name" validate:"required" description:"Cluster name [required]"`
 	Region           string                `json:"region,omitempty" bson:"region" validate:"required" description:"Location for cluster provisioning [required]"`
 	KubeVersion      string                `json:"version,omitempty" bson:"version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
@@ -319,7 +319,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
-	cluster.CloudplexStatus = string(models.Deploying)
+	cluster.CloudplexStatus = (models.Deploying)
 	err_ := UpdateKubernetesCluster(cluster, ctx)
 	if err_ != nil {
 
@@ -393,7 +393,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 		ctx.SendLogs("DOKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
-	if cluster.CloudplexStatus == models.New {
+	if cluster.CloudplexStatus == (models.New) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
 		return &godo.KubernetesCluster{}, cpErr
 	}
@@ -481,7 +481,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return types.CustomCPError{StatusCode: 500, Error: "Error in cluster termination", Description: text}
 	}
 
-	cluster.CloudplexStatus = string(models.Terminating)
+	cluster.CloudplexStatus = (models.Terminating)
 	_, _ = utils.SendLog(ctx.Data.Company, "Terminating cluster: "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
 	err_ := UpdateKubernetesCluster(cluster, ctx)

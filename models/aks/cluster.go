@@ -29,7 +29,7 @@ type AKSCluster struct {
 	CreationDate      time.Time                `json:"-" bson:"creation_date"`
 	ModificationDate  time.Time                `json:"-" bson:"modification_date"`
 	CompanyId         string                   `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	Status            string                   `json:"status,omitempty" bson:"status,omitempty" validate:"eq=New|eq=new|eq=NEW" description:"Status of cluster [required]"`
+	Status            models.Type              `json:"status,omitempty" bson:"status,omitempty" validate:"eq=New|eq=new|eq=NEW" description:"Status of cluster [required]"`
 	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
 	ClusterProperties ManagedClusterProperties `json:"property" bson:"property" validate:"required,dive"`
 	ResourceID        string                   `json:"-" bson:"cluster_id,omitempty"`
@@ -289,7 +289,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	if CpErr != (types.CustomCPError{}) {
 		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = "Cluster Creation Failed"
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
@@ -308,7 +308,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster.Status = string(models.Deploying)
+	cluster.Status = (models.Deploying)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
@@ -331,7 +331,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = "Cluster Creation Failed"
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
@@ -352,7 +352,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = models.ClusterCreationFailed
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
@@ -461,7 +461,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	aksOps, _ := GetAKS(credentials.Profile)
 	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = (models.Terminating)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 		cpErr := ApiError(err_, "Error while updating cluster in database", 500)
