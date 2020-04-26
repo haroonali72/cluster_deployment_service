@@ -904,8 +904,8 @@ func (c *DOKSClusterController) GetStatus() {
 	ctx.Data.Company = userInfo.CompanyId
 
 	cluster, cpErr := doks.FetchStatus(doProfile.Profile, *ctx)
-	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") {
-		c.Ctx.Output.SetStatus(409)
+	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = cpErr.Description
 		c.ServeJSON()
 		return
