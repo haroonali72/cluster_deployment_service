@@ -516,7 +516,7 @@ func (c *AKSClusterController) StartCluster() {
 	if profileId == "" {
 		ctx.SendLogs("AKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -657,7 +657,7 @@ func (c *AKSClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -760,7 +760,7 @@ func (c *AKSClusterController) TerminateCluster() {
 	if profileId == "" {
 		ctx.SendLogs("AKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -897,7 +897,7 @@ func (c *AKSClusterController) GetAKSVms() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -951,7 +951,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -967,7 +967,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1042,7 +1042,7 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1050,7 +1050,7 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}

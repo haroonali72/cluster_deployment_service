@@ -36,7 +36,7 @@ func (c *GKEClusterController) GetServerConfig() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -611,7 +611,7 @@ func (c *GKEClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -758,7 +758,7 @@ func (c *GKEClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -859,7 +859,7 @@ func (c *GKEClusterController) TerminateCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -998,7 +998,7 @@ func (c *GKEClusterController) ApplyAgent() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}

@@ -38,12 +38,12 @@ func (c *OPClusterController) Get() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -57,7 +57,7 @@ func (c *OPClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -78,14 +78,14 @@ func (c *OPClusterController) Get() {
 
 	cluster, err := op.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -121,12 +121,12 @@ func (c *OPClusterController) Post() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -140,7 +140,7 @@ func (c *OPClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -211,14 +211,14 @@ func (c *OPClusterController) Patch() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	teams := c.Ctx.Input.Header("teams")
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -230,7 +230,7 @@ func (c *OPClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -296,12 +296,12 @@ func (c *OPClusterController) GetAll() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -315,7 +315,7 @@ func (c *OPClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.OP, *ctx)
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.OP, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -362,7 +362,7 @@ func (c *OPClusterController) Delete() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -373,7 +373,7 @@ func (c *OPClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -385,7 +385,7 @@ func (c *OPClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "Delete", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -406,7 +406,7 @@ func (c *OPClusterController) Delete() {
 
 	cluster, err := op.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
@@ -474,7 +474,7 @@ func (c *OPClusterController) Validate() {
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}

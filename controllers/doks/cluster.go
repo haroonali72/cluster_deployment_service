@@ -33,7 +33,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -99,7 +99,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -693,7 +693,7 @@ func (c *DOKSClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -839,7 +839,7 @@ func (c *DOKSClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -942,7 +942,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1082,7 +1082,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
