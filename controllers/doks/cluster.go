@@ -698,6 +698,14 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
+	token := c.Ctx.Input.Header("X-Auth-Token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.ServeJSON()
+		return
+	}
+
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(404)
@@ -706,13 +714,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("X-Auth-Token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
@@ -776,24 +778,25 @@ func (c *DOKSClusterController) StartCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.CloudplexStatus == (models.Deploying) {
+	}else if cluster.CloudplexStatus == (models.Deploying) {
 		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in deploying state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.CloudplexStatus == (models.Terminating) {
+	}else if cluster.CloudplexStatus == (models.Terminating) {
 		ctx.SendLogs("DOKSClusterContro<ller: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
+	}else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("DOKSClusterContro<ller: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
+		c.ServeJSON()
+		return
 	}
-
 	cluster.CloudplexStatus = (models.Deploying)
 
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
@@ -1013,18 +1016,34 @@ func (c *DOKSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == (models.Deploying) {
-		ctx.SendLogs("DOKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if strings.ToLower(string(cluster.CloudplexStatus)) == strings.ToLower(string(models.New)) {
+		ctx.SendLogs("DOKSClusterController: Cluster is not in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is not in created state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.CloudplexStatus == (models.Terminating) {
-		ctx.SendLogs("DOKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}else if cluster.CloudplexStatus == (models.Deploying) {
+		ctx.SendLogs("DOKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.CloudplexStatus == (models.Terminating) {
+		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.CloudplexStatus == (models.ClusterTerminated) {
+		ctx.SendLogs("DOKSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
+		c.ServeJSON()
+		return
+	}else if cluster.CloudplexStatus == (models.ClusterCreationFailed) {
+		ctx.SendLogs("DOKSClusterController: Cluster creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in failed state"}
 		c.ServeJSON()
 		return
 	}

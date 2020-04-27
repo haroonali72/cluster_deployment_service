@@ -316,10 +316,7 @@
                         "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "202": {
-                        "description": "{\"msg\": \"Cluster creation started successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
+                        "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
@@ -329,6 +326,9 @@
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -382,6 +382,9 @@
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
+                    },
                     "500": {
                         "description": "{\"error\": \"Internal Server Error\"}"
                     },
@@ -428,9 +431,6 @@
                     "204": {
                         "description": "{\"msg\": \"Cluster terminated successfully\"}"
                     },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
-                    },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
                     },
@@ -439,6 +439,9 @@
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -524,14 +527,14 @@
                     "204": {
                         "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2613,9 +2616,6 @@
                     "200": {
                         "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
-                    },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
                     },
@@ -2624,6 +2624,9 @@
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2883,16 +2886,16 @@
                         "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "202": {
-                        "description": "{\"msg\": \"Cluster creation started successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
+                        "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2943,6 +2946,9 @@
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
+                    },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
@@ -2984,19 +2990,19 @@
                 ],
                 "responses": {
                     "202": {
-                        "description": "{\"msg\": \"Cluster termination started successfully\"}"
+                        "description": "{\"msg\": \"Cluster termination initiated\"}"
                     },
                     "204": {
                         "description": "{\"msg\": \"Cluster terminated successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -3082,14 +3088,14 @@
                     "204": {
                         "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -3794,9 +3800,6 @@
                     "200": {
                         "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
-                    },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
                     },
@@ -3805,6 +3808,9 @@
                     },
                     "404": {
                         "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4025,19 +4031,19 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "{\"msg\": \"Cluster created successfully\"}"
+                        "description": "{\"msg\": \"Cluster created initiated\"}"
                     },
                     "202": {
                         "description": "{\"msg\": \"Cluster creation started successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4091,6 +4097,9 @@
                     "404": {
                         "description": "{\"error\": \"Not found\"}"
                     },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
+                    },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
@@ -4132,19 +4141,19 @@
                 ],
                 "responses": {
                     "202": {
-                        "description": "{\"msg\": \"Cluster termination started successfully\"}"
+                        "description": "{\"msg\": \"Cluster termination initiated\"}"
                     },
                     "204": {
                         "description": "{\"msg\": \"Cluster terminated successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4227,9 +4236,6 @@
                     "200": {
                         "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
-                    },
                     "400": {
                         "description": "{\"error\": \"Bad Request\"}"
                     },
@@ -4241,6 +4247,9 @@
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4597,16 +4606,16 @@
                         "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "202": {
-                        "description": "{\"msg\": \"Cluster creation started successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
+                        "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4662,6 +4671,9 @@
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
+                    },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
@@ -4706,19 +4718,19 @@
                 ],
                 "responses": {
                     "202": {
-                        "description": "{\"msg\": \"Cluster termination started successfully\"}"
+                        "description": "{\"msg\": \"Cluster termination initiated\"}"
                     },
                     "204": {
                         "description": "{\"msg\": \"Cluster terminated successfully\"}"
-                    },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4848,14 +4860,14 @@
                     "204": {
                         "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
-                    "304": {
-                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
-                    },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -9218,36 +9230,36 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13335.0xc001437080.false": {
+        "13199.0xc0013ee960.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000df2600.false": {
+        "442.0xc0013b2bd0.false": {
             "title": "false",
             "type": "object"
         },
-        "13438.0xc0010f5290.false": {
+        "50771.0xc00137e150.false": {
             "title": "false",
             "type": "object"
         },
-        "1559.string": {
+        "56682.string": {
             "title": "string",
             "type": "object"
         },
-        "22069.string": {
+        "605.0xc000c8fc50.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "644.0xc000f888d0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "667.0xc0012d0f30.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "7759.string": {
             "title": "string",
-            "type": "object"
-        },
-        "434.0xc0014ef200.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "518.0xc00140f650.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "5960.0xc001516720.false": {
-            "title": "false",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -9285,8 +9297,8 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "Status of cluster [required]",
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of cluster [required]"
                 }
             }
         },
@@ -9325,7 +9337,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/56682.string"
                 },
                 "type": {
                     "type": "string"
@@ -9612,7 +9624,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000df2600.false"
+                    "$ref": "#/definitions/605.0xc000c8fc50.false"
                 },
                 "name": {
                     "type": "string"
@@ -10177,7 +10189,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13438.0xc0010f5290.false"
+                    "$ref": "#/definitions/644.0xc000f888d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10489,8 +10501,8 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "Status of cluster [required]",
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of cluster [required]"
                 },
                 "tags": {
                     "type": "array",
@@ -11145,12 +11157,15 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "cloud_status": {
+                    "description": "The current status of this cluster [readonly]",
                     "type": "string"
                 },
                 "cluster_ipv4_cidr": {
+                    "description": "The IP address range of the container pods in this cluster [optional]",
                     "type": "string"
                 },
                 "company_id": {
+                    "description": "ID of compnay [optional]",
                     "type": "string"
                 },
                 "conditions": {
@@ -11160,12 +11175,15 @@
                     }
                 },
                 "create_time": {
+                    "description": "The time the cluster was created [readonly]",
                     "type": "string"
                 },
                 "current_master_version": {
+                    "description": "The current software version of master endpoint [readonly]",
                     "type": "string"
                 },
                 "current_node_count": {
+                    "description": "The number of nodes currently in the cluster [readonly]",
                     "type": "integer",
                     "format": "int64"
                 },
@@ -11173,21 +11191,27 @@
                     "$ref": "#/definitions/gke.MaxPodsConstraint"
                 },
                 "description": {
+                    "description": "An optional description of this cluster [optional]",
                     "type": "string"
                 },
                 "enable_kubernetes_alpha": {
+                    "description": "Alpha enabled clusters are automatically deleted thirty days after [optional]",
                     "type": "boolean"
                 },
                 "enable_tpu": {
+                    "description": "Enable the ability to use Cloud TPUs in this cluster [optional]",
                     "type": "boolean"
                 },
                 "endpoint": {
+                    "description": "IP address of this cluster's master endpoint [readonly]",
                     "type": "string"
                 },
                 "expire_time": {
+                    "description": "Time the cluster will be automatically deleted [readonly]",
                     "type": "string"
                 },
                 "initial_cluster_version": {
+                    "description": "Initial kubernetes version for this cluster [optional]",
                     "type": "string"
                 },
                 "ip_allocation_policy": {
@@ -11200,21 +11224,25 @@
                     "type": "boolean"
                 },
                 "label_fingerprint": {
+                    "description": "The fingerprint of the set of labels for this cluster [optional]",
                     "type": "string"
                 },
                 "legacy_abac": {
                     "$ref": "#/definitions/gke.LegacyAbac"
                 },
                 "location": {
+                    "description": "The name of GCP zone or region in which cluster resides [required]",
                     "type": "string"
                 },
                 "locations": {
+                    "description": "The name of GCP zones in which cluster nodes located [optional]",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "logging_service": {
+                    "description": "The logging service the cluster should use to write logs [optional]",
                     "type": "string"
                 },
                 "maintenance_policy": {
@@ -11227,12 +11255,15 @@
                     "$ref": "#/definitions/gke.MasterAuthorizedNetworksConfig"
                 },
                 "monitoring_service": {
+                    "description": "The monitoring service the cluster should use to write metrics [optional]",
                     "type": "string"
                 },
                 "name": {
+                    "description": "The name of this cluster [required]",
                     "type": "string"
                 },
                 "network": {
+                    "description": "The name of GCP network to which the cluster connected [required]",
                     "type": "string"
                 },
                 "network_config": {
@@ -11242,6 +11273,7 @@
                     "$ref": "#/definitions/gke.NetworkPolicy"
                 },
                 "node_ipv4_cidr_size": {
+                    "description": "The size of the address space on each node [readonly]",
                     "type": "integer",
                     "format": "int64"
                 },
@@ -11255,6 +11287,7 @@
                     "$ref": "#/definitions/gke.PrivateClusterConfig"
                 },
                 "project_id": {
+                    "description": "ID of project [required]",
                     "type": "string"
                 },
                 "resource_labels": {
@@ -11266,24 +11299,31 @@
                     "$ref": "#/definitions/gke.ResourceUsageExportConfig"
                 },
                 "self_link": {
+                    "description": "Server-defined URL for the resource [readonly]",
                     "type": "string"
                 },
                 "services_ipv4_cidr": {
+                    "description": "The IP address range of the kubernetes services in the cluster [readonly]",
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of cluster [required]"
                 },
                 "status_message": {
+                    "description": "Additional information about the current status [readonly]",
                     "type": "string"
                 },
                 "subnetwork": {
+                    "description": "The name of the GCP subnetwork cluster is connected to [required]",
                     "type": "string"
                 },
                 "tpu_ipv4_cidr_block": {
+                    "description": "The IP address range of the Cloud TPUs in the cluster [readonly]",
                     "type": "string"
                 },
                 "zone": {
+                    "description": "Name of GCP zone in which cluster resides [required]",
                     "type": "string"
                 }
             }
@@ -11444,6 +11484,7 @@
             "type": "object",
             "properties": {
                 "disabled": {
+                    "description": "Whether the Horizontal Pod Autoscaling feature is enabled in cluster [optional]",
                     "type": "boolean"
                 }
             }
@@ -11453,6 +11494,7 @@
             "type": "object",
             "properties": {
                 "disabled": {
+                    "description": "Whether the HTTP Load Balancing controller is enabled in cluster [optional]",
                     "type": "boolean"
                 }
             }
@@ -11504,6 +11546,7 @@
             "type": "object",
             "properties": {
                 "disabled": {
+                    "description": "Whether the Kubernetes Dashboard is enabled for this cluster [optional]",
                     "type": "boolean"
                 }
             }
@@ -11579,6 +11622,7 @@
             "type": "object",
             "properties": {
                 "max_pods_per_node": {
+                    "description": "Constraint enforced on the max num of pods per node [required]",
                     "type": "integer",
                     "format": "int64"
                 }
@@ -11613,6 +11657,7 @@
             "type": "object",
             "properties": {
                 "disabled": {
+                    "description": "Whether NetworkPolicy is enabled for this cluster [optional]",
                     "type": "boolean"
                 }
             }
@@ -11896,8 +11941,8 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "Status of cluster [required]",
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of cluster [required]"
                 },
                 "vpc_id": {
                     "description": "Virtual private cloud ID in which cluster will be provisioned [required]",
@@ -11961,16 +12006,20 @@
                     "type": "string"
                 },
                 "machine_type": {
+                    "description": "Machine type for pool [required]",
                     "type": "string"
                 },
                 "name": {
+                    "description": "Cluster pool name [required]",
                     "type": "string"
                 },
                 "node_count": {
+                    "description": "Pool node count [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "subnet_id": {
+                    "description": "ID of subnet in which pool will be created [required]",
                     "type": "string"
                 }
             }
@@ -12013,7 +12062,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc00140f650.false"
+                    "$ref": "#/definitions/50771.0xc00137e150.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12219,13 +12268,16 @@
             "title": "Type",
             "type": "string",
             "enum": [
-                "New = \"new\"",
+                "New = \"New\"",
                 "Created = \"created\"",
-                "ClusterCreated = \"cluster created\"",
-                "Deploying = \"deploying\"",
-                "Terminating = \"terminating\""
+                "ClusterCreated = \"Cluster Created\"",
+                "ClusterCreationFailed = \"Cluster Creation Failed\"",
+                "ClusterTerminationFailed = \"Cluster Termination Failed\"",
+                "ClusterTerminated = \"Cluster Terminated\"",
+                "Deploying = \"Creating\"",
+                "Terminating = \"Terminating\""
             ],
-            "example": "new"
+            "example": "New"
         },
         "op.Cluster_Def": {
             "title": "Cluster_Def",
@@ -12241,7 +12293,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc001516720.false"
+                    "$ref": "#/definitions/442.0xc0013b2bd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12369,7 +12421,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0014ef200.false"
+                    "$ref": "#/definitions/13199.0xc0013ee960.false"
                 },
                 "name": {
                     "type": "string"
