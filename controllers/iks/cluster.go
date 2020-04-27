@@ -27,7 +27,7 @@ type IKSClusterController struct {
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /getallmachines/:region/ [get]
 func (c *IKSClusterController) GetAllMachineTypes() {
 	ctx := new(utils.Context)
@@ -146,7 +146,7 @@ func (c *IKSClusterController) FetchRegions() {
 // @Success 200 {object} []iks.Versions
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Unauthorized"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /getallkubeversions/:region [get]
 func (c *IKSClusterController) FetchKubeVersions() {
 	ctx := new(utils.Context)
@@ -784,7 +784,7 @@ func (c *IKSClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *IKSClusterController) StartCluster() {
 	var cluster iks.Cluster_Def
@@ -938,7 +938,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
 func (c *IKSClusterController) GetStatus() {
 	ctx := new(utils.Context)
@@ -1045,7 +1045,7 @@ func (c *IKSClusterController) GetStatus() {
 // @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *IKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
@@ -1325,7 +1325,7 @@ func (c *IKSClusterController) ApplyAgent() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /validateProfile [post]
 func (c *IKSClusterController) ValidateProfile() {
 	ctx := new(utils.Context)

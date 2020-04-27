@@ -28,7 +28,7 @@ type GKEClusterController struct {
 // @Failure 404 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /config/:region [get]
 func (c *GKEClusterController) GetServerConfig() {
 	ctx := new(utils.Context)
@@ -475,7 +475,7 @@ func (c *GKEClusterController) Patch() {
 // @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /:projectId/:forceDelete  [delete]
 func (c *GKEClusterController) Delete() {
 	ctx := new(utils.Context)
@@ -603,7 +603,7 @@ func (c *GKEClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *GKEClusterController) StartCluster() {
 	ctx := new(utils.Context)
@@ -751,7 +751,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Failure 404 {"error": "Not found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
 func (c *GKEClusterController) GetStatus() {
 	ctx := new(utils.Context)
@@ -852,7 +852,7 @@ func (c *GKEClusterController) GetStatus() {
 // @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *GKEClusterController) TerminateCluster() {
 
@@ -1005,7 +1005,7 @@ func (c *GKEClusterController) TerminateCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /applyagent/:projectId [post]
 func (c *GKEClusterController) ApplyAgent() {
 

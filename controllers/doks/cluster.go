@@ -24,7 +24,7 @@ type DOKSClusterController struct {
 // @Success 200 {object} doks.ServerConfig
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /config [get]
 func (c *DOKSClusterController) GetServerConfig() {
 	ctx := new(utils.Context)
@@ -88,7 +88,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 // @Success 200 {object} doks.KubernetesConfig
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /kubeconfig/:projectId [get]
 func (c *DOKSClusterController) GetKubeConfig() {
 
@@ -683,7 +683,7 @@ func (c *DOKSClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *DOKSClusterController) StartCluster() {
 
@@ -832,7 +832,7 @@ func (c *DOKSClusterController) StartCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} doks.KubernetesCluster
+// @Failure 512 {object} doks.KubernetesCluster
 // @router /status/:projectId/ [get]
 func (c *DOKSClusterController) GetStatus() {
 
@@ -936,7 +936,7 @@ func (c *DOKSClusterController) GetStatus() {
 // @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *DOKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
@@ -1091,7 +1091,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 502 {object} types.CustomCPError
+// @Failure 512 {object} types.CustomCPError
 // @router /applyagent/:projectId [post]
 func (c *DOKSClusterController) ApplyAgent() {
 

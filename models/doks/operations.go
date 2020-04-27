@@ -68,7 +68,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
-		if err.Description != "" {
+		if err != (types.CustomCPError{}) {
 			return cluster, err
 		}
 	}
@@ -136,7 +136,7 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) t
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
-		if err.Description != ""{
+		if err != (types.CustomCPError{}){
 			return  err
 		}
 	}
@@ -154,7 +154,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
-		if err.Description != "" {
+		if err != (types.CustomCPError{}) {
 			return KubernetesConfig{}, err
 		}
 	}
@@ -215,7 +215,7 @@ func (cloud *DOKS) GetServerConfig(ctx utils.Context) (*godo.KubernetesOptions,t
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
-		if err.Description != "" {
+		if err != (types.CustomCPError{}) {
 			return &godo.KubernetesOptions{}, err
 		}
 	}
