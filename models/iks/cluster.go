@@ -456,6 +456,14 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
+		cpErr := ApiError(err, "Error occurred while updating cluster status in database", 500)
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
