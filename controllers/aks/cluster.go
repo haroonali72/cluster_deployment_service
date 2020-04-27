@@ -598,28 +598,30 @@ func (c *AKSClusterController) StartCluster() {
 	if cluster.Status == "Cluster Created" {
 		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in running state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.Deploying {
+	ctx.SendLogs("AKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.Terminating {
+		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminationFailed {
+		ctx.SendLogs("AKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
 
-	//if cluster.Status == string(models.Deploying) {
-	//	ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//
-	//if cluster.Status == string(models.Terminating) {
-	//	ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//
-	//cluster.Status = string(models.Deploying)
+	cluster.Status = models.Deploying
 	//err = aks.UpdateAKSCluster(cluster, *ctx)
 	//if err != nil {
 	//	c.Ctx.Output.SetStatus(500)
@@ -839,32 +841,39 @@ func (c *AKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
-	if cluster.Status == "Cluster Terminated" {
-		ctx.SendLogs("AKSClusterController : Cluster is terminated", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		ctx.SendLogs("AKSClusterController : Cluster is not in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is already in terminated state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is not in created state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status ==models.Deploying {
+		ctx.SendLogs("AKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.Terminating {
+		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminated {
+		ctx.SendLogs("AKSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterCreationFailed {
+		ctx.SendLogs("AKSClusterController: Cluster creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster creation is in failed statee"}
 		c.ServeJSON()
 		return
 	}
 
-	//if cluster.Status == string(models.Deploying) {
-	//	ctx.SendLogs("AKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//
-	//if cluster.Status == string(models.Terminating) {
-	//	ctx.SendLogs("AKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//	c.Ctx.Output.SetStatus(400)
-	//	c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-	//	c.ServeJSON()
-	//	return
-	//}
-	//
-	//cluster.Status = string(models.Terminating)
+	cluster.Status = models.Terminating
 	//err = aks.UpdateAKSCluster(cluster, *ctx)
 	//if err != nil {
 	//	c.Ctx.Output.SetStatus(500)

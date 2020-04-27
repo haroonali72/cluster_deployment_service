@@ -30,7 +30,7 @@ type AKSCluster struct {
 	CreationDate      time.Time                `json:"-" bson:"creation_date"`
 	ModificationDate  time.Time                `json:"-" bson:"modification_date"`
 	CompanyId         string                   `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	Status            models.Type              `json:"status,omitempty" bson:"status,omitempty" validate:"eq=New|eq=new|eq=NEW" description:"Status of cluster [required]"`
+	Status            models.Type              `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new" description:"Status of cluster [required]"`
 	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
 	ClusterProperties ManagedClusterProperties `json:"property" bson:"property" validate:"required,dive"`
 	ResourceID        string                   `json:"-" bson:"cluster_id,omitempty"`
