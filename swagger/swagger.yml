@@ -3249,10 +3249,11 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
-        description: teams
+        description: '''teams'
         type: string
       - in: body
         name: body
@@ -3262,24 +3263,24 @@ paths:
           $ref: '#/definitions/op.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/op
-      description: create a new cluster
+      description: add a new cluster
       operationId: OPClusterController.Create
       parameters:
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/op.Cluster_Def'
@@ -3289,26 +3290,27 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
+        required: true
         type: string
       responses:
         "201":
-          description: '{"msg": "cluster created successfully"}'
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"msg": "error msg"}'
+          description: '{"msg": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
+          description: '{"error": "Cluster against this project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/op/{projectId}/:
     get:
       tags:
       - cluster/op
-      description: get cluster
+      description: Get cluster against the projectId
       operationId: OPClusterController.Get
       parameters:
       - in: path
@@ -3318,7 +3320,8 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -3326,9 +3329,11 @@ paths:
           schema:
             $ref: '#/definitions/op.Cluster_Def'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/op/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -3338,11 +3343,12 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
-        description: project id of the cluster
+        description: Project id of the cluster
         required: true
         type: string
       - in: path
@@ -3351,17 +3357,17 @@ paths:
         type: boolean
       responses:
         "204":
-          description: '{"msg": "cluster deleted successfully"}'
+          description: '{"msg": "Cluster deleted successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Creating/Created/Terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/op/all:
     get:
       tags:
@@ -3381,9 +3387,37 @@ paths:
             items:
               $ref: '#/definitions/op.Cluster_Def'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+  /cluster/op/checkCluster/{projectId}/:
+    get:
+      tags:
+      - cluster/op
+      description: validates a cluster
+      operationId: OPClusterController.ValidateCluster
+      parameters:
+      - in: header
+        name: token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Cluster is created successfully"}'
+        "400":
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /customerTemplate/register:
     post:
       tags:
@@ -6093,25 +6127,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0013fd3e0.false:
+  442.0xc00144d7a0.false:
     title: "false"
     type: object
-  605.0xc000cf2480.false:
+  605.0xc000d1a840.false:
     title: "false"
     type: object
-  644.0xc000fcf0e0.false:
+  644.0xc00101f4a0.false:
     title: "false"
     type: object
-  667.0xc001321740.false:
+  667.0xc001373b00.false:
     title: "false"
     type: object
   7759.string:
     title: string
     type: object
-  13199.0xc001433170.false:
+  13199.0xc00147b530.false:
     title: "false"
     type: object
-  50771.0xc0013d0960.false:
+  50771.0xc001418d20.false:
     title: "false"
     type: object
   56682.string:
@@ -6382,7 +6416,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000cf2480.false'
+        $ref: '#/definitions/605.0xc000d1a840.false'
       name:
         type: string
       network_name:
@@ -6763,7 +6797,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc000fcf0e0.false'
+        $ref: '#/definitions/644.0xc00101f4a0.false'
       name:
         type: string
       network_name:
@@ -8052,7 +8086,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/50771.0xc0013d0960.false'
+        $ref: '#/definitions/50771.0xc001418d20.false'
       kube_version:
         type: string
       name:
@@ -8220,7 +8254,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0013fd3e0.false'
+        $ref: '#/definitions/442.0xc00144d7a0.false'
       name:
         type: string
       node_pools:
@@ -8306,7 +8340,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13199.0xc001433170.false'
+        $ref: '#/definitions/13199.0xc00147b530.false'
       name:
         type: string
       node_pools:
