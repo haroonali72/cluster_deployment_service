@@ -187,7 +187,7 @@
                     "500": {
                         "description": "{\"error\": \"Internal Server Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -275,7 +275,7 @@
                     "500": {
                         "description": "{\"error\": \"Internal Server Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -333,7 +333,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -388,7 +388,7 @@
                     "500": {
                         "description": "{\"error\": \"Internal Server Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -446,7 +446,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -2754,7 +2754,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -2796,7 +2796,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -2845,7 +2845,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -2900,7 +2900,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -2952,7 +2952,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} doks.KubernetesCluster"
                     }
                 }
@@ -3007,7 +3007,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -3941,7 +3941,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -3993,7 +3993,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4048,7 +4048,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4103,7 +4103,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4158,7 +4158,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4436,7 +4436,7 @@
                     "500": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4488,7 +4488,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4620,7 +4620,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4677,7 +4677,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4735,7 +4735,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -4779,7 +4779,7 @@
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
-                    "502": {
+                    "512": {
                         "description": "{object} types.CustomCPError"
                     }
                 }
@@ -9279,15 +9279,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13199.0xc00147b530.false": {
+        "13199.0xc0014825d0.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc00144d7a0.false": {
+        "442.0xc001454840.false": {
             "title": "false",
             "type": "object"
         },
-        "50771.0xc001418d20.false": {
+        "50771.0xc00140dda0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9295,15 +9295,15 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000d1a840.false": {
+        "605.0xc000d0f8c0.false": {
             "title": "false",
             "type": "object"
         },
-        "644.0xc00101f4a0.false": {
+        "644.0xc00102e540.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc001373b00.false": {
+        "667.0xc001372ba0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9673,7 +9673,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000d1a840.false"
+                    "$ref": "#/definitions/605.0xc000d0f8c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10238,7 +10238,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/644.0xc00101f4a0.false"
+                    "$ref": "#/definitions/644.0xc00102e540.false"
                 },
                 "name": {
                     "type": "string"
@@ -12111,7 +12111,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/50771.0xc001418d20.false"
+                    "$ref": "#/definitions/50771.0xc00140dda0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12342,7 +12342,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc00144d7a0.false"
+                    "$ref": "#/definitions/442.0xc001454840.false"
                 },
                 "name": {
                     "type": "string"
@@ -12470,7 +12470,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13199.0xc00147b530.false"
+                    "$ref": "#/definitions/13199.0xc0014825d0.false"
                 },
                 "name": {
                     "type": "string"
