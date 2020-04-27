@@ -680,7 +680,7 @@ func (c *DOKSClusterController) Delete() {
 // @Success 201 {"msg": "Cluster created successfully"}
 // @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError
@@ -785,7 +785,7 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}else if cluster.CloudplexStatus == (models.Terminating) {
-		ctx.SendLogs("DOKSClusterContro<ller: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
@@ -933,7 +933,7 @@ func (c *DOKSClusterController) GetStatus() {
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in new/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 502 {object} types.CustomCPError

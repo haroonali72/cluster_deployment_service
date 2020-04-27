@@ -328,7 +328,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -441,7 +441,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2895,7 +2895,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -3002,7 +3002,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in new/deploying/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4043,7 +4043,7 @@
                         "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4153,7 +4153,7 @@
                         "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4615,7 +4615,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4730,7 +4730,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in new/deployed/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -9230,15 +9230,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13199.0xc0013ee960.false": {
+        "13199.0xc001433170.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc0013b2bd0.false": {
+        "442.0xc0013fd3e0.false": {
             "title": "false",
             "type": "object"
         },
-        "50771.0xc00137e150.false": {
+        "50771.0xc0013d0960.false": {
             "title": "false",
             "type": "object"
         },
@@ -9246,15 +9246,15 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000c8fc50.false": {
+        "605.0xc000cf2480.false": {
             "title": "false",
             "type": "object"
         },
-        "644.0xc000f888d0.false": {
+        "644.0xc000fcf0e0.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0012d0f30.false": {
+        "667.0xc001321740.false": {
             "title": "false",
             "type": "object"
         },
@@ -9624,7 +9624,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000c8fc50.false"
+                    "$ref": "#/definitions/605.0xc000cf2480.false"
                 },
                 "name": {
                     "type": "string"
@@ -10189,7 +10189,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/644.0xc000f888d0.false"
+                    "$ref": "#/definitions/644.0xc000fcf0e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12062,7 +12062,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/50771.0xc00137e150.false"
+                    "$ref": "#/definitions/50771.0xc0013d0960.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12293,7 +12293,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc0013b2bd0.false"
+                    "$ref": "#/definitions/442.0xc0013fd3e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12421,7 +12421,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13199.0xc0013ee960.false"
+                    "$ref": "#/definitions/13199.0xc001433170.false"
                 },
                 "name": {
                     "type": "string"
