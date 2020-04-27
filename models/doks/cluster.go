@@ -304,7 +304,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	err1 := doksOps.init(ctx)
-	if err1.Description != "" {
+	if err1 !=	(types.CustomCPError{}){
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
@@ -334,7 +334,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return cpErr
 	}
 	cluster, errr := doksOps.createCluster(cluster, ctx, token, credentials)
-	if errr.Description != "" {
+	if errr != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
@@ -349,7 +349,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	confErr := ApplyAgent(credentials, token, ctx, cluster.Name)
-	if confErr.Description != "" {
+	if confErr != (types.CustomCPError{}) {
 		PrintError(ctx, confErr.Description, cluster.Name)
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError = UpdateKubernetesCluster(cluster, ctx)
@@ -420,12 +420,12 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.Kube
 	}
 
 	err1 := doksOps.init(ctx)
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		return &godo.KubernetesCluster{}, err1
 	}
 
 	status, errr := doksOps.fetchStatus(ctx, cluster.ID)
-	if errr.Description != "" {
+	if errr != (types.CustomCPError{}) {
 		return &godo.KubernetesCluster{}, errr
 	}
 
@@ -498,7 +498,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return cpErr
 	}
 	errr := doksOps.init(ctx)
-	if errr.Description != "" {
+	if errr   !=	(types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {
@@ -516,7 +516,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 	}
 
 	errr = doksOps.deleteCluster(cluster, ctx)
-	if errr.Description != "" {
+	if errr != (types.CustomCPError{}) {
 		_, _ = utils.SendLog(ctx.Data.Company, "Cluster termination failed: "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateKubernetesCluster(cluster, ctx)
@@ -579,12 +579,12 @@ func GetKubeConfig(credentials vault.DOCredentials, ctx utils.Context, cluster K
 	}
 
 	err1 := doksOps.init(ctx)
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		return config, err1
 	}
 
 	config, errr := doksOps.GetKubeConfig(ctx, cluster)
-	if errr.Description != "" {
+	if errr != (types.CustomCPError{}) {
 		return config, errr
 	}
 	return config, customError
@@ -646,12 +646,12 @@ func GetServerConfig(credentials vault.DOCredentials, ctx utils.Context) (option
 	}
 
 	errr := doksOps.init(ctx)
-	if errr.Description != "" {
+	if errr != (types.CustomCPError{}) {
 		return &godo.KubernetesOptions{}, errr
 	}
 
 	options, confErrr := doksOps.GetServerConfig(ctx)
-	if confErrr.Description != "" {
+	if confErrr != (types.CustomCPError{}) {
 		return &godo.KubernetesOptions{}, confErrr
 	}
 

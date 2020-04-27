@@ -427,7 +427,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	gkeOps, err := GetGKE(credentials)
-	if err.Description != "" {
+	if err != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
 		if err_ != nil {
@@ -437,7 +437,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	err = gkeOps.init()
-	if err.Description != "" {
+	if err != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError := UpdateGKECluster(cluster, ctx)
@@ -469,7 +469,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	err = gkeOps.CreateCluster(cluster, token, ctx)
-	if err.Description != "" {
+	if err != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
@@ -485,7 +485,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		return err
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
-	if confError.Description != "" {
+	if confError != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		_ = UpdateGKECluster(cluster, ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
@@ -542,19 +542,19 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 		return GKECluster{}, customErr.Err
 	}
 	gkeOps, err1 := GetGKE(credentials)
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
 	}
 
 	err1 = gkeOps.init()
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
 	}
 
 	latestCluster, err1 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
 	}
@@ -605,7 +605,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	}
 
 	gkeOps, err1 := GetGKE(credentials)
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel : Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.GKE, ctx, err1)
 		if err != nil {
@@ -615,7 +615,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	}
 
 	err1 = gkeOps.init()
-	if err1.Description != "" {
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel : Terminate -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateGKECluster(cluster, ctx)
@@ -653,7 +653,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		return cpErr
 	}
 	errr := gkeOps.deleteCluster(cluster, ctx)
-	if errr.Description != "" {
+	if errr != (types.CustomCPError{}) {
 		_, _ = utils.SendLog(ctx.Data.Company, "Cluster termination failed: "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 		utils.SendLog(ctx.Data.Company, err.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 		cluster.CloudplexStatus = "Cluster Termination Failed"
@@ -700,13 +700,13 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 
 func GetServerConfig(credentials gcp.GcpCredentials, ctx utils.Context) (*gke.ServerConfig, types.CustomCPError) {
 	gkeOps, err := GetGKE(credentials)
-	if err.Description != "" {
+	if err != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel : GetServerConfig - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	err = gkeOps.init()
-	if err.Description != "" {
+	if err != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel : GetServerConfig -"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}

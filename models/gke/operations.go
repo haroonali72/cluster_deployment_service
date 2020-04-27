@@ -334,7 +334,7 @@ func (cloud *GKE) init() types.CustomCPError {
 func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (cluster GKECluster, err types.CustomCPError) {
 	if cloud.Client == nil {
 		err := cloud.init()
-		if err.Description != "" {
+		if err != (types.CustomCPError{}) {
 			ctx.SendLogs("GKE get status for '"+cloud.ProjectId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return cluster, err
 		}
@@ -365,7 +365,7 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
-		if err.Description != "" {
+		if err != (types.CustomCPError{}) {
 			ctx.SendLogs("GKE terminate cluster for "+cloud.ProjectId+"' failed: "+ err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
