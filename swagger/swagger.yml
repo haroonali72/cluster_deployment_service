@@ -6127,28 +6127,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc001454840.false:
+  434.0xc001556930.false:
     title: "false"
     type: object
-  605.0xc000d0f8c0.false:
+  518.0xc00146cab0.false:
     title: "false"
     type: object
-  644.0xc00102e540.false:
-    title: "false"
-    type: object
-  667.0xc001372ba0.false:
-    title: "false"
-    type: object
-  7759.string:
+  1559.string:
     title: string
     type: object
-  13199.0xc0014825d0.false:
+  5960.0xc001557e30.false:
     title: "false"
     type: object
-  50771.0xc00140dda0.false:
+  13335.0xc0014964e0.false:
     title: "false"
     type: object
-  56682.string:
+  13385.0xc000e39140.false:
+    title: "false"
+    type: object
+  13438.0xc00114ddd0.false:
+    title: "false"
+    type: object
+  21921.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6158,10 +6158,47 @@ definitions:
     title: AKSCluster
     type: object
     properties:
+      api_server_access_profile:
+        $ref: '#/definitions/aks.ManagedClusterAPIServerAccessProfile'
+      client_id:
+        description: Client ID for service principal ['required' if service principal
+          enabled]
+        type: string
       cloud:
         $ref: '#/definitions/models.Cloud'
       company_id:
         description: ID of compnay [optional]
+        type: string
+      dns_prefix:
+        description: Cluster DNS prefix ['required' if advance settings enabled]
+        type: string
+      dns_service_ip:
+        description: DNS service IP for cluster ['required' if expert settings enabled]
+        type: string
+      docker_bridge_cidr:
+        description: Docker bridge CIDR for cluster ['required' if expert settings
+          enabled]
+        type: string
+      enable_http_routing:
+        description: Cluster Http Routing configuration ['required' if advance settings
+          enabled]
+        type: boolean
+      enable_rbac:
+        description: Cluster RBAC configuration ['required' if advance settings enabled]
+        type: boolean
+      enable_service_principal:
+        description: Service principal configurations ['required' if advance settings
+          enabled]
+        type: boolean
+      is_advance:
+        description: Cluster advance level settings possible value 'true' or 'false'
+        type: boolean
+      is_expert:
+        description: Cluster expert level settings possible value 'true' or 'false'
+        type: boolean
+      kubernetes_version:
+        description: Kubernetes version to be provisioned ['required' if advance settings
+          enabled]
         type: string
       location:
         description: Location for cluster provisioning [required]
@@ -6169,17 +6206,34 @@ definitions:
       name:
         description: Cluster name [required]
         type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/aks.ManagedClusterAgentPoolProfile'
+      pod_cidr:
+        description: Pod CIDR for cluster ['required' if expert settings enabled]
+        type: string
       project_id:
         description: ID of project [required]
         type: string
-      property:
-        $ref: '#/definitions/aks.ManagedClusterProperties'
       resource_group:
         description: Resources would be created within resource_group [required]
+        type: string
+      secret:
+        description: Client secret for service principal ['required' if service principal
+          enabled]
+        type: string
+      service_cidr:
+        description: Service CIDR for cluster ['required' if expert settings enabled]
         type: string
       status:
         $ref: '#/definitions/models.Type'
         description: Status of cluster [required]
+      tags:
+        description: Cluster tags [optional]
+        type: array
+        items:
+          $ref: '#/definitions/aks.Tag'
   aks.AKSClusterTemplate:
     title: AKSClusterTemplate
     type: object
@@ -6205,7 +6259,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/56682.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6300,66 +6354,6 @@ definitions:
         type: string
       vm_size:
         $ref: '#/definitions/aks.VMSizeTypes'
-  aks.ManagedClusterProperties:
-    title: ManagedClusterProperties
-    type: object
-    properties:
-      agent_pool:
-        type: array
-        items:
-          $ref: '#/definitions/aks.ManagedClusterAgentPoolProfile'
-      api_server_access_profile:
-        $ref: '#/definitions/aks.ManagedClusterAPIServerAccessProfile'
-      client_id:
-        description: Client ID for service principal ['required' if service principal
-          enabled]
-        type: string
-      dns_prefix:
-        description: Cluster DNS prefix ['required' if advance settings enabled]
-        type: string
-      dns_service_ip:
-        description: DNS service IP for cluster ['required' if expert settings enabled]
-        type: string
-      docker_bridge_cidr:
-        description: Docker bridge CIDR for cluster ['required' if expert settings
-          enabled]
-        type: string
-      enable_http_routing:
-        description: Cluster Http Routing configuration ['required' if advance settings
-          enabled]
-        type: boolean
-      enable_rbac:
-        description: Cluster RBAC configuration ['required' if advance settings enabled]
-        type: boolean
-      enable_service_principal:
-        description: Service principal configurations ['required' if advance settings
-          enabled]
-        type: boolean
-      is_advance:
-        description: Cluster advance level settings possible value 'true' or 'false'
-        type: boolean
-      is_expert:
-        description: Cluster expert level settings possible value 'true' or 'false'
-        type: boolean
-      kubernetes_version:
-        description: Kubernetes version to be provisioned ['required' if advance settings
-          enabled]
-        type: string
-      pod_cidr:
-        description: Pod CIDR for cluster ['required' if expert settings enabled]
-        type: string
-      secret:
-        description: Client secret for service principal ['required' if service principal
-          enabled]
-        type: string
-      service_cidr:
-        description: Service CIDR for cluster ['required' if expert settings enabled]
-        type: string
-      tags:
-        description: Cluster tags [optional]
-        type: array
-        items:
-          $ref: '#/definitions/aks.Tag'
   aks.ManagedClusterPropertiesT:
     title: ManagedClusterPropertiesT
     type: object
@@ -6416,7 +6410,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000d0f8c0.false'
+        $ref: '#/definitions/13385.0xc000e39140.false'
       name:
         type: string
       network_name:
@@ -6797,7 +6791,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc00102e540.false'
+        $ref: '#/definitions/13438.0xc00114ddd0.false'
       name:
         type: string
       network_name:
@@ -8086,7 +8080,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/50771.0xc00140dda0.false'
+        $ref: '#/definitions/518.0xc00146cab0.false'
       kube_version:
         type: string
       name:
@@ -8254,7 +8248,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc001454840.false'
+        $ref: '#/definitions/5960.0xc001557e30.false'
       name:
         type: string
       node_pools:
@@ -8340,7 +8334,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13199.0xc0014825d0.false'
+        $ref: '#/definitions/434.0xc001556930.false'
       name:
         type: string
       node_pools:
