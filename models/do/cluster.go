@@ -24,7 +24,7 @@ type Cluster_Def struct {
 	DOProjectId      string        `json:"do_project_id" bson:"do_project_id"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
+	Status           models.Type   `json:"status" bson:"status" valid:"in(New|new)"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -144,11 +144,11 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
-	err = checkMasterPools(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
+	/*	err = checkMasterPools(cluster)
+		if err != nil { //cluster found
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}*/
 
 	//err = checkClusterSize(cluster, ctx)
 	//if err != nil { //cluster size limit exceed
@@ -179,11 +179,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
+	if oldCluster.Status == (models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
+	if oldCluster.Status == (models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
@@ -235,7 +235,7 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 	fmt.Println(ctx.Data.ProjectId)
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
 	if strings.Contains(url, "{projectId}") {
-		url = strings.Replace(url, "{projectId}",ctx.Data.ProjectId, -1)
+		url = strings.Replace(url, "{projectId}", ctx.Data.ProjectId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -252,19 +252,19 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.DOProfile, error) {
-	statusCode,data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
+	statusCode, data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return statusCode,vault.DOProfile{}, err
+		return statusCode, vault.DOProfile{}, err
 	}
 	doProfile := vault.DOProfile{}
 	err = json.Unmarshal(data, &doProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,vault.DOProfile{}, err
+		return 500, vault.DOProfile{}, err
 	}
 	doProfile.Profile.Region = region
-	return 0,doProfile, nil
+	return 0, doProfile, nil
 
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
@@ -382,7 +382,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		Region:    profile.Profile.Region,
 	}
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = (models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
 	err = do.init(ctx)
