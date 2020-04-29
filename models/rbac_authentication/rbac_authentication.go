@@ -40,7 +40,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	q.Add("resource_type", resourceType)
 	q.Add("sub_type", string(cloudType))
 
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
 	client := utils.InitReq()
@@ -90,7 +90,7 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	q.Add("resource_type", resourceType)
 	q.Add("action", action)
 	q.Add("sub_type", subType)
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
 	client := utils.InitReq()
@@ -116,7 +116,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 	q := req.URL.Query()
 	q.Add("resource", "clusterTemplate")
 	q.Add("action", action)
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
 	client := utils.InitReq()
@@ -140,7 +140,7 @@ func GetInfo(token string) (int,types.Response, error) {
 		return 500,types.Response{}, err
 	}
 	q := req.URL.Query()
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
 	client := utils.InitReq()
@@ -172,7 +172,7 @@ func GetRole(token string) (types.UserRole, error) {
 		return types.UserRole{}, err
 	}
 	q := req.URL.Query()
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
 	client := utils.InitReq()
@@ -231,7 +231,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 500, err
 	}
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		beego.Info(err.Error())
@@ -261,10 +261,10 @@ func DeletePolicy(cloud models.Cloud, resourceId string, token string, ctx utils
 
 	m := make(map[string]string)
 	m["Content-Type"] = "application/json"
-	m["token"] = token
+	m["X-Auth-Token"] = token
 	utils.SetHeaders(req, m)
 
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
 	response, err := client.SendRequest(req)
