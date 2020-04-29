@@ -531,6 +531,12 @@ func (c *DOClusterController) StartCluster() {
 	cluster, err = do.GetCluster(projectId, userInfo.CompanyId, *ctx)
 
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -782,6 +788,12 @@ func (c *DOClusterController) TerminateCluster() {
 
 	cluster, err = do.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
