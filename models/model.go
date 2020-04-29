@@ -480,7 +480,7 @@ const (
 	RbacListURI     = "list"
 	RbacAccessURI   = "allowed"
 	RbacEvaluateURI = "evaluate"
-	RbacInfoURI     = "token/info"
+	RbacInfoURI     = "X-Auth-Token/info"
 	RbacPolicyURI   = "policy"
 	RbacExtractURI  = "token/extract"
 )
