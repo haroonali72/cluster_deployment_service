@@ -5,6 +5,7 @@ import (
 	"antelope/models/aws"
 	"antelope/models/do"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -353,7 +354,6 @@ func (c *DOClusterController) Patch() {
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete [delete]
-// @router /:projectId/:forceDelete  [delete]
 func (c *DOClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
@@ -461,11 +461,12 @@ func (c *DOClusterController) Delete() {
 // @Param X-Auth-Token header string token ""
 // @Param X-Profile-Id header string profileId ""
 // @Param projectId path string	true "Id of the project"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Success 202 {"msg": "Cluster creation initiated"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
+// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *DOClusterController) StartCluster() {
 
@@ -519,7 +520,7 @@ func (c *DOClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -543,25 +544,28 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Cluster Created" {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+	if cluster.Status == models.ClusterCreated {
+		ctx.SendLogs("DOClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == (models.Deploying) {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	} else if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("DOClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == (models.Terminating) {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("DOClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("DOClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
@@ -583,14 +587,14 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	cluster.Status = (models.Deploying)
+	/*cluster.Status = (models.Deploying)
 	err = do.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
 	ctx.SendLogs("DOClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -664,7 +668,7 @@ func (c *DOClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -704,10 +708,11 @@ func (c *DOClusterController) GetStatus() {
 // @Param X-Profile-Id header X-Profile-Id string profileId	""
 // @Param X-Auth-Token header string token ""
 // @Param projectId path string true "Id of the project"
-// @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
+// @Success 202 {"msg": "cluster termination initiated"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /terminate/:projectId/ [post]
 func (c *DOClusterController) TerminateCluster() {
 
@@ -761,7 +766,7 @@ func (c *DOClusterController) TerminateCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -799,6 +804,37 @@ func (c *DOClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+	if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		ctx.SendLogs("DOClusterController: Cluster is not in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is not in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("DOClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("DOClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminated) {
+		ctx.SendLogs("DOClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterCreationFailed) {
+		ctx.SendLogs("DOClusterController: Cluster creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in failed state"}
+		c.ServeJSON()
+		return
+	}
 
 	if cluster.Status == (models.Deploying) {
 		ctx.SendLogs("DOClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -808,25 +844,17 @@ func (c *DOClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == (models.Terminating) {
-		ctx.SendLogs("DOClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
-
 	ctx.SendLogs("DOClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go do.TerminateCluster(cluster, doProfile, *ctx, userInfo.CompanyId, token)
 
-	err = do.UpdateCluster(cluster, false, *ctx)
+	/*err = do.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 	ctx.SendLogs(" DO cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
@@ -836,9 +864,8 @@ func (c *DOClusterController) TerminateCluster() {
 // @Description returns ssh key pairs
 // @Param X-Auth-Token header string token ""
 // @Success 200 {object} []string
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /sshkeys [get]
 func (c *DOClusterController) GetSSHKeys() {
 
@@ -866,7 +893,7 @@ func (c *DOClusterController) GetSSHKeys() {
 
 	//=============================================================================//
 
-	ctx.SendLogs("AWSClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("DOClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	keys, err := do.GetAllSSHKeyPair(*ctx, token)
 
 	if err != nil {
@@ -887,13 +914,14 @@ func (c *DOClusterController) GetSSHKeys() {
 // @Param X-Profile-Id header string profileId	""
 // @Param X-Auth-Token header string token ""
 // @Param teams header string teams ""
-// @Param X-Region header string X-Region ""
+// @Param region path string  true  "region"
 // @Success 200 {object} key_utils.AZUREKey
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
-// @router /sshkey/:projectId/:keyname [post]
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
+// @Failure 512 {object} types.CustomCPError
+// @router /sshkey/:projectId/:keyname/:region [post]
 func (c *DOClusterController) PostSSHKey() {
 
 	ctx := new(utils.Context)
@@ -906,26 +934,31 @@ func (c *DOClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
-
+	region := c.GetString(":region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+	keyName := c.GetString(":keyname")
+	if keyName == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "keyname is empty"}
+		c.ServeJSON()
+		return
+	}
 	//==========================RBAC Authentication==============================//
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	teams := c.Ctx.Input.Header("teams")
-
-	region := c.Ctx.Input.Header("X-Region")
-	if region == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region id is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
@@ -942,18 +975,10 @@ func (c *DOClusterController) PostSSHKey() {
 
 	//==========================RBAC Authentication==============================//
 
-	keyName := c.GetString(":keyname")
-	if keyName == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "keyname is empty"}
-		c.ServeJSON()
-		return
-	}
-
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -967,8 +992,13 @@ func (c *DOClusterController) PostSSHKey() {
 	}
 	//==========================RBAC Authentication==============================//
 
-	keyMaterial, err := do.CreateSSHkey(keyName, doProfile.Profile, token, teams, region, *ctx)
-	if err != nil {
+	keyMaterial, err_ := do.CreateSSHkey(keyName, doProfile.Profile, token, teams, region, *ctx)
+	if err_ != (types.CustomCPError{}) {
+		if err_.StatusCode != 500 {
+			c.Ctx.Output.SetStatus(err_.StatusCode)
+			c.Data["json"] = err_
+			c.ServeJSON()
+		}
 		ctx.SendLogs("DOClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -985,8 +1015,9 @@ func (c *DOClusterController) PostSSHKey() {
 // @Param X-Profile-Id header string X-Profile-Id "DO profile"
 // @Param X-Auth-Token header string token true ""
 // @Success 200 {object} []godo.Region
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime error"}
+// @Failure 512 {object} types.CustomCPError
 // @router /getallregions/ [get]
 func (c *DOClusterController) GetRegions() {
 
@@ -996,7 +1027,7 @@ func (c *DOClusterController) GetRegions() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profileid is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1031,10 +1062,10 @@ func (c *DOClusterController) GetRegions() {
 
 	ctx.SendLogs("DOClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	zones, err := do.GetRegionsAndCores(doProfile.Profile, *ctx)
+	zones, err_ := do.GetRegionsAndCores(doProfile.Profile, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Ctx.Output.SetStatus(err_.StatusCode)
+		c.Data["json"] = err_
 		c.ServeJSON()
 		return
 	}
@@ -1048,9 +1079,10 @@ func (c *DOClusterController) GetRegions() {
 // @Param X-Profile-Id header string profileId ""
 // @Param X-Auth-Token header string token ""
 // @Success 200 {"msg": "key deleted successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "User is unauthorized to perform this action"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 409 {"error": "key is in used by some projects"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /sshkey/:keyname [delete]
 func (c *DOClusterController) DeleteSSHKey() {
 
@@ -1098,7 +1130,7 @@ func (c *DOClusterController) DeleteSSHKey() {
 	}
 	alreadyUsed := aws.CheckKeyUsage(keyName, userInfo.CompanyId, *ctx)
 	if alreadyUsed {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
 		c.ServeJSON()
 		return
@@ -1107,7 +1139,7 @@ func (c *DOClusterController) DeleteSSHKey() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1120,10 +1152,10 @@ func (c *DOClusterController) DeleteSSHKey() {
 		return
 	}
 
-	err = do.DeleteSSHkey(keyName, token, doProfile.Profile, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	cpErr := do.DeleteSSHkey(keyName, token, doProfile.Profile, *ctx)
+	if cpErr != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = map[string]string{"error": cpErr.Description}
 		c.ServeJSON()
 		return
 	}
@@ -1137,14 +1169,20 @@ func (c *DOClusterController) DeleteSSHKey() {
 // @Param X-Auth-Token header string token true ""
 // @Param body vault.DOCredentials true	"body for cluster content"
 // @Success 200 {"msg": "Profile is valid"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Invalid Profile"}
+// @Failure 404 {"error": "Not Found"}
 // @router /validateProfile/ [post]
 func (c *DOClusterController) ValidateProfile() {
 
 	var credentials vault.DOCredentials
-	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
-
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOClusterController:Check if profile is valid.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1165,14 +1203,14 @@ func (c *DOClusterController) ValidateProfile() {
 		return
 	}
 
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.SendLogs("DOClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = do.ValidateProfile(credentials.AccessKey, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(409)
+	err_ := do.ValidateProfile(credentials.AccessKey, *ctx)
+	if err_ != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

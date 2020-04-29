@@ -540,7 +540,6 @@ func ValidateProfile(key string, ctx utils.Context) types.CustomCPError {
 	}
 	_, err = do.getCores(ctx)
 	if err != (types.CustomCPError{}) {
-
 		return err
 	}
 	return types.CustomCPError{}
