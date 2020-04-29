@@ -480,9 +480,9 @@ const (
 	RbacListURI     = "list"
 	RbacAccessURI   = "allowed"
 	RbacEvaluateURI = "evaluate"
-	RbacInfoURI     = "X-Auth-Token/info"
+	RbacInfoURI     = "token/info"
 	RbacPolicyURI   = "policy"
-	RbacExtractURI  = "X-Auth-Token/extract"
+	RbacExtractURI  = "token/extract"
 )
 
 type Logger string
