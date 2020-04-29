@@ -373,7 +373,7 @@ paths:
       operationId: AWSClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -410,7 +410,7 @@ paths:
         schema:
           $ref: '#/definitions/aws.Cluster_Def'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -441,7 +441,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -463,7 +463,7 @@ paths:
       operationId: AWSClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -489,7 +489,7 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -526,7 +526,7 @@ paths:
         description: clusterName
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -567,7 +567,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -617,7 +617,7 @@ paths:
       operationId: AWSClusterController.Get Availability Zone
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       - in: path
@@ -669,7 +669,7 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -707,7 +707,7 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -739,7 +739,7 @@ paths:
       operationId: AWSClusterController.SSHKeyPair
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -767,7 +767,7 @@ paths:
       operationId: AWSClusterController.Start
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -798,7 +798,7 @@ paths:
       operationId: AWSClusterController.Status
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -836,7 +836,7 @@ paths:
         schema:
           $ref: '#/definitions/X-Profile-Id'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -861,7 +861,7 @@ paths:
       operationId: AWSClusterController.Validate Profile
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -891,7 +891,7 @@ paths:
       operationId: AWSClusterController.Delete
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -2063,7 +2063,7 @@ paths:
       operationId: GcpClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -2092,7 +2092,7 @@ paths:
       operationId: GcpClusterController.Create
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -2127,7 +2127,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2152,7 +2152,7 @@ paths:
       operationId: GcpClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2178,7 +2178,7 @@ paths:
         description: "true"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       - in: path
@@ -2231,7 +2231,7 @@ paths:
         description: "true"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       - in: path
@@ -2260,7 +2260,7 @@ paths:
       operationId: GcpClusterController.ListServiceAccounts
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -2293,7 +2293,7 @@ paths:
         description: "true"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2326,7 +2326,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -2352,7 +2352,7 @@ paths:
       operationId: GcpClusterController.SSHKeyPair
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2379,7 +2379,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -2411,7 +2411,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -2452,7 +2452,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2475,7 +2475,7 @@ paths:
       operationId: GcpClusterController.Validate Profile
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -6127,28 +6127,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001556930.false:
+  442.0xc0014aeff0.false:
     title: "false"
     type: object
-  518.0xc00146cab0.false:
+  605.0xc000d65f80.false:
     title: "false"
     type: object
-  1559.string:
+  644.0xc001084c00.false:
+    title: "false"
+    type: object
+  667.0xc0013c9260.false:
+    title: "false"
+    type: object
+  7818.string:
     title: string
     type: object
-  5960.0xc001557e30.false:
+  13199.0xc0014dad80.false:
     title: "false"
     type: object
-  13335.0xc0014964e0.false:
+  51173.0xc00147a570.false:
     title: "false"
     type: object
-  13385.0xc000e39140.false:
-    title: "false"
-    type: object
-  13438.0xc00114ddd0.false:
-    title: "false"
-    type: object
-  21921.string:
+  55730.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6259,7 +6259,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/55730.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6410,7 +6410,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000e39140.false'
+        $ref: '#/definitions/605.0xc000d65f80.false'
       name:
         type: string
       network_name:
@@ -6791,7 +6791,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc00114ddd0.false'
+        $ref: '#/definitions/644.0xc001084c00.false'
       name:
         type: string
       network_name:
@@ -8080,7 +8080,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc00146cab0.false'
+        $ref: '#/definitions/51173.0xc00147a570.false'
       kube_version:
         type: string
       name:
@@ -8248,7 +8248,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/5960.0xc001557e30.false'
+        $ref: '#/definitions/442.0xc0014aeff0.false'
       name:
         type: string
       node_pools:
@@ -8334,7 +8334,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001556930.false'
+        $ref: '#/definitions/13199.0xc0014dad80.false'
       name:
         type: string
       node_pools:
