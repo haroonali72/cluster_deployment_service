@@ -100,7 +100,7 @@ func (c *AKSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []aks.AKSCluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -268,7 +268,7 @@ func (c *AKSClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 412 {"error": "Cluster is in running/deploying/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -595,7 +595,7 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Cluster Created" {
+	if cluster.Status == models.ClusterCreated {
 		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
@@ -649,7 +649,7 @@ func (c *AKSClusterController) StartCluster() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
-// @Failure 500 {"error": "Internal Server Error"}
+// @Failure 500 {"error": "Runtime Error"}
 // @Failure 512 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
 func (c *AKSClusterController) GetStatus() {
@@ -745,7 +745,7 @@ func (c *AKSClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 202 {"msg": "Cluster termination started successfully"}
+// @Success 202 {"msg": "Cluster termination initialized"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -942,14 +942,14 @@ func (c *AKSClusterController) GetAKSVms() {
 	c.ServeJSON()
 }
 
-// @Title Kubeconfig
-// @Description get cluter kubeconfig
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Title Get Kubeconfig
+// @Description get cluster configuration file
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 500 {"error": "Internal Server Error"}
+// @Failure 500 {"error": "Runtime Error"}
 // @Failure 512 {object} types.CustomCPError
 // @router /kubeconfig/:projectId [get]
 func (c *AKSClusterController) GetKubeConfig() {

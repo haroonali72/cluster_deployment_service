@@ -23,6 +23,13 @@ type StatusCode int
 
 const (
 	CloudStatusCode StatusCode = 512
+	ParamMissing    StatusCode = 404
+	StateConflict      StatusCode  = 409
+	Unauthorized    StatusCode  =401
+	InternalServerError StatusCode = 500
+	BadRequest     StatusCode = 400
+	Conflict      StatusCode =409
+	NotFound      StatusCode =404
 )
 
 type RequestType string

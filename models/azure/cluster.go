@@ -290,22 +290,23 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	}
 
 	if oldCluster.Status == string(models.Deploying) && update {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in deploying state")
-	}
-	if oldCluster.Status == string(models.Terminating) && update {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in terminating state")
-	}
-
-	if oldCluster.Status == "Cluster Created" && update {
+		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in creating state")
+	}else if oldCluster.Status == string(models.Terminating) && update {
+		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in terminating state")
+	}else if oldCluster.Status == string(models.ClusterTerminationFailed) && update {
+		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in termination failed state")
+	}else if oldCluster.Status == string(models.ClusterCreated) && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
-			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Cluster is in runnning state")
+			ctx.SendLogs("Cluster is in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("Cluster is in created state")
 		} else {
 			cluster = oldCluster
 		}
 	}
+
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -314,7 +315,8 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
-
+	cluster.CompanyId=oldCluster.CompanyId
+	cluster.Status=oldCluster.Status
 	err = CreateCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
