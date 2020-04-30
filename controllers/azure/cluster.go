@@ -22,7 +22,7 @@ type AzureClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -38,10 +38,10 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -91,7 +91,7 @@ func (c *AzureClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []azure.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -100,10 +100,10 @@ func (c *AzureClusterController) GetAll() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -144,7 +144,7 @@ func (c *AzureClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	body	body 	azure.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error message"}
@@ -164,10 +164,10 @@ func (c *AzureClusterController) Post() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -248,7 +248,7 @@ func (c *AzureClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	body	body 	azure.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -262,10 +262,10 @@ func (c *AzureClusterController) Patch() {
 	var cluster azure.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -347,7 +347,7 @@ func (c *AzureClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true     ""
 // @Success 200 {"msg": "cluster deleted successfully"}
@@ -366,10 +366,10 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -456,7 +456,7 @@ func (c *AzureClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -474,10 +474,10 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -593,7 +593,7 @@ func (c *AzureClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Profile-Id	header	string	false	""
 // @Success 200 {object} azure.Cluster_Def
@@ -612,10 +612,10 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -689,7 +689,7 @@ func (c *AzureClusterController) GetStatus() {
 // @Description terminates a  cluster
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Profile-Id	header	string	false	""
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
 // @Failure 400 {"error": "error msg"}
@@ -706,10 +706,10 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -814,17 +814,17 @@ func (c *AzureClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /sshkeys [get]
 func (c *AzureClusterController) GetSSHKeys() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -862,7 +862,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Description Generates new SSH key
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	keyname	 	path	string	true	"SSHKey"
-// @Param	token		header	string	token 	""
+// @Param	-Auth-Token		header	string	true 	"token"
 // @Param	teams		header	string	teams 	""
 // @Success 200 		{object} key_utils.AZUREKey
 // @Failure 404 		{"error": "error message"}
@@ -881,10 +881,10 @@ func (c *AzureClusterController) PostSSHKey() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -948,7 +948,7 @@ func (c *AzureClusterController) GetCores() {
 // @Title DeleteSSHKey
 // @Description Delete SSH key
 // @Param	keyname	 	path	string	true	""
-// @Param	token		header	string	token 	""
+// @Param	X-Auth-Token		header	string	true 	"token"
 // @Success 200 		{"msg": key deleted successfully}
 // @Failure 400 		{"error": "error msg"}
 // @Failure 404 		{"error": "error msg"}
@@ -958,10 +958,10 @@ func (c *AzureClusterController) DeleteSSHKey() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureCustomerTemplateController: Delete SSHkey ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1008,26 +1008,26 @@ func (c *AzureClusterController) DeleteSSHKey() {
 
 // @Title Get Instances
 // @Description Getting All Instances
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	false	""
-// @Param	region	header	string	false	""
+// @Param	region	path	string	ture	"Cloud region"
 // @Success 200 []compute.VirtualMachines
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /getAllInstances [get]
+// @router /getAllInstances/:region [get]
 func (c *AzureClusterController) GetInstances() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	region := c.Ctx.Input.Header("region")
+	region := c.GetString(":region")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -1080,7 +1080,7 @@ func (c *AzureClusterController) GetInstances() {
 
 // @Title Get Azure Regions
 // @Description Get Azure Regions
-// @Param	token	header	string	token true""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	true	""
 // @Success 200 []model.Region
 // @Failure 400 {"error": "error msg"}
@@ -1090,10 +1090,10 @@ func (c *AzureClusterController) GetInstances() {
 // @router /getallregions [get]
 func (c *AzureClusterController) GetRegions() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1175,7 +1175,7 @@ func (c *AzureClusterController) GetAllMachines() {
 
 // @Title Validate Profile
 // @Description check if profile is valid
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	vault.AzureCredentials		true	"body for cluster content"
 // @Success 200 {"msg": "Profile is valid"}
 // @Failure 400 {"error": "error msg"}
@@ -1191,10 +1191,10 @@ func (c *AzureClusterController) ValidateProfile() {
 	var credentials vault.AzureCredentials
 	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1245,7 +1245,7 @@ func (c *AzureClusterController) ValidateProfile() {
 // @Description Apply cloudplex Agent file to a aks cluster
 // @Param	clusterName	header	string	clusterName ""
 // @Param	resourceGroup	header	string	resourceGroup ""
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
@@ -1277,10 +1277,10 @@ func (c *AzureClusterController) ApplyAgent() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
