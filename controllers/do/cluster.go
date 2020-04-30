@@ -611,10 +611,10 @@ func (c *DOClusterController) StartCluster() {
 // @Param X-Profile-Id header string profileId ""
 // @Param projectId path string	true "Id of the project"
 // @Success 200 {object} do.Cluster_Def
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Cluster is in deploying/terminating state"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /status/:projectId/ [get]
 func (c *DOClusterController) GetStatus() {
 
@@ -691,12 +691,17 @@ func (c *DOClusterController) GetStatus() {
 		return
 	}
 
-	cluster, err := do.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "nodes not found") {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	cluster, cpErr := do.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
+	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = cpErr.Description
 		c.ServeJSON()
 		return
+	}
+	if cpErr != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
+		c.Data["json"] = cpErr
+		c.ServeJSON()
 	}
 
 	c.Data["json"] = cluster

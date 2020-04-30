@@ -337,7 +337,25 @@ func FetchStatus(credentials vault.DOProfile, projectId string, ctx utils.Contex
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, cpErr
 	}
-	//splits := strings.Split(credentials, ":")
+	if string(cluster.Status) == strings.ToLower(string(models.New)) {
+		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
+		return Cluster_Def{}, cpErr
+	}
+	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
+		cpErr := types.CustomCPError{Error: "Cluster is in " +
+			string(cluster.Status) + " state", Description: "Cluster is in " +
+			string(cluster.Status) + " state", StatusCode: 409}
+		return Cluster_Def{}, cpErr
+	}
+	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
+	if err != nil {
+		return Cluster_Def{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
+			Description: "Error occurred while getting cluster status from database",
+			StatusCode:  500}
+	}
+	if customErr.Err != (types.CustomCPError{}) {
+		return Cluster_Def{}, customErr.Err
+	}
 	do := DO{
 		AccessKey: credentials.Profile.AccessKey,
 		Region:    credentials.Profile.Region,
