@@ -94,7 +94,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 // @Title Get Regions
 // @Description fetch regions of IKS
-// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	X-Auth-Token	header	string	true	"Token"
 // @Success 200 {object} []iks.Regions
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}

@@ -1080,7 +1080,7 @@ func (c *AzureClusterController) GetInstances() {
 
 // @Title Get Azure Regions
 // @Description Get Azure Regions
-// @Param	X-Auth-Token	header	string	true "token"
+// @Param	X-Auth-Token	header	string	true	"Token"
 // @Param	X-Profile-Id	header	string	true	""
 // @Success 200 []model.Region
 // @Failure 400 {"error": "error msg"}
@@ -1089,6 +1089,13 @@ func (c *AzureClusterController) GetInstances() {
 // @Failure 500 {"error": "error msg"}
 // @router /getallregions [get]
 func (c *AzureClusterController) GetRegions() {
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
@@ -1112,13 +1119,7 @@ func (c *AzureClusterController) GetRegions() {
 
 	beego.Info("AzureClusterController: Get All Regions.")
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-		c.ServeJSON()
-		return
-	}
+
 
 	var regions []models.Region
 	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {
