@@ -477,7 +477,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/amis/{amiId}:
+  /cluster/aws/amis/{amiId}/{region}:
     get:
       tags:
       - cluster/aws
@@ -492,9 +492,10 @@ paths:
         name: X-Auth-Token
         description: token
         type: string
-      - in: header
-        name: X-Region
-        description: "false"
+      - in: path
+        name: region
+        description: cloud region
+        required: true
         type: string
       - in: path
         name: amiId
@@ -653,7 +654,7 @@ paths:
             $ref: '#/definitions/models.Machine'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/sshkey/{keyname}:
+  /cluster/aws/sshkey/{keyname}/{region}:
     delete:
       tags:
       - cluster/aws
@@ -672,9 +673,10 @@ paths:
         name: X-Auth-Token
         description: token
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: cloud region
+        required: true
         type: string
       responses:
         "200":
@@ -685,7 +687,7 @@ paths:
           description: '{"error": "User is unauthorized to perform this action"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/aws/sshkey/{projectId}/{keyname}:
+  /cluster/aws/sshkey/{projectId}/{keyname}/{region}:
     post:
       tags:
       - cluster/aws
@@ -714,9 +716,10 @@ paths:
         name: teams
         description: teams
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: cloud region
+        required: true
         type: string
       responses:
         "200":
@@ -731,7 +734,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/sshkeys:
+  /cluster/aws/sshkeys/{region}:
     get:
       tags:
       - cluster/aws
@@ -742,9 +745,10 @@ paths:
         name: X-Auth-Token
         description: token
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: region
+        required: true
         type: string
       responses:
         "200":
@@ -922,8 +926,9 @@ paths:
       operationId: AzureClusterController.Update
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
@@ -951,8 +956,9 @@ paths:
       operationId: AzureClusterController.Create
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
@@ -988,8 +994,9 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -1011,8 +1018,9 @@ paths:
       operationId: AzureClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1041,8 +1049,9 @@ paths:
         description: resourceGroup
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -1065,7 +1074,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/azure/getAllInstances:
+  /cluster/azure/getAllInstances/{region}:
     get:
       tags:
       - cluster/azure
@@ -1073,16 +1082,17 @@ paths:
       operationId: AzureClusterController.Get Instances
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
         description: "false"
         type: string
-      - in: header
+      - in: path
         name: region
-        description: "false"
+        description: Cloud region
         type: string
       responses:
         "200":
@@ -1120,8 +1130,9 @@ paths:
       operationId: AzureClusterController.Get Azure Regions
       parameters:
       - in: header
-        name: token
-        description: "true"
+        name: X-Auth-Token
+        description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -1163,8 +1174,9 @@ paths:
         description: "true"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1191,8 +1203,9 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: -Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
@@ -1215,8 +1228,9 @@ paths:
       operationId: AzureClusterController.SSHKeyPair
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1242,8 +1256,9 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -1268,8 +1283,9 @@ paths:
       operationId: AzureClusterController.Status
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -1310,8 +1326,9 @@ paths:
         description: "false"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1332,8 +1349,9 @@ paths:
       operationId: AzureClusterController.Validate Profile
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -1362,8 +1380,9 @@ paths:
       operationId: DOClusterController.Update
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: body
         name: body
@@ -1399,8 +1418,9 @@ paths:
         schema:
           $ref: '#/definitions/do.Cluster_Def'
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -1430,8 +1450,9 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1453,8 +1474,9 @@ paths:
       operationId: DOClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1479,8 +1501,9 @@ paths:
         description: DO profile
         type: string
       - in: header
-        name: token
-        description: "true"
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -1493,7 +1516,7 @@ paths:
           description: '{"error": "error msg"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/do/sshkey/{keyname}:
+  /cluster/do/sshkey/{keyname}/{region}:
     delete:
       tags:
       - cluster/do
@@ -1509,8 +1532,14 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: region
+        description: region
+        required: true
         type: string
       responses:
         "200":
@@ -1521,7 +1550,7 @@ paths:
           description: '{"error": "User is unauthorized to perform this action"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/do/sshkey/{projectId}/{keyname}:
+  /cluster/do/sshkey/{projectId}/{keyname}/{region}:
     post:
       tags:
       - cluster/do
@@ -1543,16 +1572,18 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: region
+        required: true
         type: string
       responses:
         "200":
@@ -1575,8 +1606,9 @@ paths:
       operationId: DOClusterController.SSHKeyPair
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       responses:
         "200":
@@ -1599,8 +1631,9 @@ paths:
       operationId: DOClusterController.Start
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -1630,8 +1663,9 @@ paths:
       operationId: DOClusterController.Status
       parameters:
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -1668,8 +1702,9 @@ paths:
         schema:
           $ref: '#/definitions/X-Profile-Id'
       - in: header
-        name: token
-        description: token
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -1693,8 +1728,9 @@ paths:
       operationId: DOClusterController.ValidateProfile
       parameters:
       - in: header
-        name: token
-        description: "true"
+        name: X-Auth-Token
+        description: Token
+        required: true
         type: string
       - in: vault.DOCredentials
         name: body
@@ -6127,25 +6163,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0014aeff0.false:
+  442.0xc0014d0ab0.false:
     title: "false"
     type: object
-  605.0xc000d65f80.false:
+  605.0xc000d83a40.false:
     title: "false"
     type: object
-  644.0xc001084c00.false:
+  644.0xc0010aa6c0.false:
     title: "false"
     type: object
-  667.0xc0013c9260.false:
+  667.0xc0013e4d20.false:
     title: "false"
     type: object
   7818.string:
     title: string
     type: object
-  13199.0xc0014dad80.false:
+  13199.0xc0014fc840.false:
     title: "false"
     type: object
-  51173.0xc00147a570.false:
+  51173.0xc00149a030.false:
     title: "false"
     type: object
   55730.string:
@@ -6410,7 +6446,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000d65f80.false'
+        $ref: '#/definitions/605.0xc000d83a40.false'
       name:
         type: string
       network_name:
@@ -6791,7 +6827,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc001084c00.false'
+        $ref: '#/definitions/644.0xc0010aa6c0.false'
       name:
         type: string
       network_name:
@@ -8080,7 +8116,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51173.0xc00147a570.false'
+        $ref: '#/definitions/51173.0xc00149a030.false'
       kube_version:
         type: string
       name:
@@ -8248,7 +8284,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/442.0xc0014aeff0.false'
+        $ref: '#/definitions/442.0xc0014d0ab0.false'
       name:
         type: string
       node_pools:
@@ -8334,7 +8370,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13199.0xc0014dad80.false'
+        $ref: '#/definitions/13199.0xc0014fc840.false'
       name:
         type: string
       node_pools:
