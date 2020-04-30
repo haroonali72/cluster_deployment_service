@@ -6163,28 +6163,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc0014d0ab0.false:
+  434.0xc0015903f0.false:
     title: "false"
     type: object
-  605.0xc000d83a40.false:
+  518.0xc0014a2570.false:
     title: "false"
     type: object
-  644.0xc0010aa6c0.false:
-    title: "false"
-    type: object
-  667.0xc0013e4d20.false:
-    title: "false"
-    type: object
-  7818.string:
+  1559.string:
     title: string
     type: object
-  13199.0xc0014fc840.false:
+  6000.0xc0015918f0.false:
     title: "false"
     type: object
-  51173.0xc00149a030.false:
+  13335.0xc0014bbf80.false:
     title: "false"
     type: object
-  55730.string:
+  13385.0xc000e6ac00.false:
+    title: "false"
+    type: object
+  13438.0xc001187890.false:
+    title: "false"
+    type: object
+  22125.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6295,7 +6295,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55730.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6446,7 +6446,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000d83a40.false'
+        $ref: '#/definitions/13385.0xc000e6ac00.false'
       name:
         type: string
       network_name:
@@ -6827,7 +6827,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc0010aa6c0.false'
+        $ref: '#/definitions/13438.0xc001187890.false'
       name:
         type: string
       network_name:
@@ -8116,7 +8116,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51173.0xc00149a030.false'
+        $ref: '#/definitions/518.0xc0014a2570.false'
       kube_version:
         type: string
       name:
@@ -8178,25 +8178,32 @@ definitions:
     type: object
     properties:
       admin_password:
+        description: It is the password ['required' if credentials_type is 'password']
         type: string
       cloud:
         $ref: '#/definitions/models.Cloud'
+        description: Type of cloud [optional]
       credential_type:
         $ref: '#/definitions/models.CredentialsType'
+        description: It is type of credentials used for ssh. By default value is 'key'
+          [optional]
       finger_print:
+        description: Finger prints for the key [optional]
         type: string
-      id:
-        type: integer
-        format: int64
       key_name:
+        description: Name of the key. By default value is 'new' [required]
         type: string
       key_type:
         $ref: '#/definitions/models.KeyType'
+        description: It is type key. By default value is 'new' [required]
       private_key:
+        description: Private key for ssh ['required' if credentials_type is 'key']
         type: string
       public_key:
+        description: Public key for ssh [readonly]
         type: string
       username:
+        description: It is the user name ['required' if credentials_type is 'password']
         type: string
   models.Cloud:
     title: Cloud
@@ -8277,49 +8284,50 @@ definitions:
     title: Cluster_Def
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
-      cloud:
-        $ref: '#/definitions/models.Cloud'
       company_id:
+        description: ID of company which you are belong to [optional]
         type: string
-      kube_credentials:
-        $ref: '#/definitions/442.0xc0014d0ab0.false'
       name:
+        description: Name of cluster [required]
         type: string
       node_pools:
         type: array
         items:
           $ref: '#/definitions/op.NodePool'
       project_id:
+        description: ID of project [required]
         type: string
       status:
-        type: string
-      token_name:
+        description: Cluster status can be New, Cluster Created, Cluster Terminated.
+          By default value will be 'New' [readonly]
         type: string
   op.Node:
     title: Node
     type: object
     properties:
       name:
+        description: Name of node [required]
         type: string
       private_ip:
+        description: Private IP of node [readonly]
         type: string
       public_ip:
+        description: Public IP of node [readonly]
         type: string
       user_name:
+        description: User name which will be used for ssh into machine [required]
         type: string
   op.NodePool:
     title: NodePool
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
       name:
+        description: Name of node pool [required]
         type: string
       node_count:
+        description: Count of node pool [required]
         type: integer
         format: int64
       nodes:
@@ -8328,6 +8336,7 @@ definitions:
           $ref: '#/definitions/op.Node'
       pool_role:
         $ref: '#/definitions/models.PoolRole'
+        description: Pool role can be master or slave [required]
   op.NodePoolT:
     title: NodePoolT
     type: object
@@ -8370,7 +8379,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13199.0xc0014fc840.false'
+        $ref: '#/definitions/434.0xc0015903f0.false'
       name:
         type: string
       node_pools:
