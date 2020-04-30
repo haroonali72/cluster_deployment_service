@@ -840,12 +840,12 @@ func (c *AWSClusterController) TerminateCluster() {
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
 // @Param	X-Auth-Token	header	string	token ""
-// @Param	X-Region  header	string	X-Region	""
+// @Param	region  path	string	true	"region"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /sshkeys [get]
+// @router /sshkeys/:region [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
@@ -865,7 +865,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region :=  c.GetString("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -898,7 +898,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @Description returns aws ami details
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	X-Auth-Token	header	string	token ""
-// @Param	X-Region	header	string	false	""
+// @Param	region	path	string	true	"cloud region"
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
 // @Failure 404 {"error": "ami id is empty"}
@@ -948,7 +948,7 @@ func (c *AWSClusterController) GetAMI() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region :=  c.GetString("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -1100,7 +1100,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	X-Auth-Token			header	string	token 		""
 // @Param	teams			header	string	teams 		""
-// @Param	X-Region		header	string	X-Region	""
+// @Param	region		path	string	true	"cloud region"
 // @Success 200 			{object} key_utils.AWSKey
 // @Failure 400 			{"error": "error msg"}
 // @Failure 401 			{"error": "error msg"}
@@ -1132,7 +1132,7 @@ func (c *AWSClusterController) PostSSHKey() {
 
 	teams := c.Ctx.Input.Header("teams")
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.Ctx.Input.Header("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region id is empty"}
@@ -1216,7 +1216,7 @@ func (c *AWSClusterController) GetCores() {
 // @Param	keyname	 		path	string	true		""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	X-Auth-Token			header	string	token 		""
-// @Param	X-Region		header	string	X-Region	""
+// @Param	region		header	string	true	"cloud region"
 // @Success 200 			{"msg": "key deleted successfully"}
 // @Failure 400 			{"error": "error msg"}
 // @Failure 401 			{"error": "User is unauthorized to perform this action"}
@@ -1235,7 +1235,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region :=  c.GetString("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region id is empty"}
