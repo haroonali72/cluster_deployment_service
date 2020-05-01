@@ -552,7 +552,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -608,7 +608,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -648,7 +648,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -672,7 +672,7 @@
                 }
             }
         },
-        "/cluster/aws/amis/{amiId}": {
+        "/cluster/aws/amis/{amiId}/{region}": {
             "get": {
                 "tags": [
                     "cluster/aws"
@@ -688,14 +688,15 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "false",
+                        "in": "path",
+                        "name": "region",
+                        "description": "cloud region",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -744,7 +745,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -805,7 +806,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -882,7 +883,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     },
@@ -939,7 +940,7 @@
                 }
             }
         },
-        "/cluster/aws/sshkey/{keyname}": {
+        "/cluster/aws/sshkey/{keyname}/{region}": {
             "delete": {
                 "tags": [
                     "cluster/aws"
@@ -961,14 +962,15 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "cloud region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -988,7 +990,7 @@
                 }
             }
         },
-        "/cluster/aws/sshkey/{projectId}/{keyname}": {
+        "/cluster/aws/sshkey/{projectId}/{keyname}/{region}": {
             "post": {
                 "tags": [
                     "cluster/aws"
@@ -1018,7 +1020,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1029,9 +1031,10 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "cloud region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1057,7 +1060,7 @@
                 }
             }
         },
-        "/cluster/aws/sshkeys": {
+        "/cluster/aws/sshkeys/{region}": {
             "get": {
                 "tags": [
                     "cluster/aws"
@@ -1067,14 +1070,15 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1110,7 +1114,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1157,7 +1161,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1215,7 +1219,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1253,7 +1257,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1306,7 +1310,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -1340,7 +1344,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1387,8 +1391,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1431,8 +1436,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1480,8 +1486,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1526,8 +1533,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1564,7 +1572,7 @@
                 }
             }
         },
-        "/cluster/azure/getAllInstances": {
+        "/cluster/azure/getAllInstances/{region}": {
             "get": {
                 "tags": [
                     "cluster/azure"
@@ -1574,8 +1582,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1585,9 +1594,9 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
+                        "in": "path",
                         "name": "region",
-                        "description": "false",
+                        "description": "Cloud region",
                         "type": "string"
                     }
                 ],
@@ -1646,8 +1655,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "true",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1712,8 +1722,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1754,8 +1765,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1791,8 +1803,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1832,8 +1845,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1872,8 +1886,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -1935,8 +1950,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1969,8 +1985,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2022,8 +2039,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2057,8 +2075,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2113,8 +2132,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2153,8 +2173,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2193,8 +2214,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "true",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2217,7 +2239,7 @@
                 }
             }
         },
-        "/cluster/do/sshkey/{keyname}": {
+        "/cluster/do/sshkey/{keyname}/{region}": {
             "delete": {
                 "tags": [
                     "cluster/do"
@@ -2239,8 +2261,16 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2260,7 +2290,7 @@
                 }
             }
         },
-        "/cluster/do/sshkey/{projectId}/{keyname}": {
+        "/cluster/do/sshkey/{projectId}/{keyname}/{region}": {
             "post": {
                 "tags": [
                     "cluster/do"
@@ -2290,8 +2320,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2301,9 +2332,10 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2339,8 +2371,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2376,8 +2409,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2423,8 +2457,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2481,8 +2516,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2519,8 +2555,9 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
-                        "description": "true",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -2562,8 +2599,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -3113,7 +3151,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3157,7 +3195,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3203,7 +3241,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3243,7 +3281,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     },
@@ -3323,7 +3361,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     },
@@ -3367,7 +3405,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3417,7 +3455,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3466,7 +3504,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3506,7 +3544,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3547,7 +3585,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3595,7 +3633,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3656,7 +3694,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3690,7 +3728,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3743,7 +3781,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -9279,15 +9317,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13335.0xc0014964e0.false": {
+        "13335.0xc0014879b0.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000e39140.false": {
+        "13385.0xc000e2c630.false": {
             "title": "false",
             "type": "object"
         },
-        "13438.0xc00114ddd0.false": {
+        "13438.0xc00114f2c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9295,19 +9333,19 @@
             "title": "string",
             "type": "object"
         },
-        "21921.string": {
+        "22121.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc001556930.false": {
+        "434.0xc001539e00.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc00146cab0.false": {
+        "518.0xc00145bf80.false": {
             "title": "false",
             "type": "object"
         },
-        "5960.0xc001557e30.false": {
+        "6000.0xc00155f320.false": {
             "title": "false",
             "type": "object"
         },
@@ -9325,9 +9363,6 @@
                 "client_id": {
                     "description": "Client ID for service principal ['required' if service principal enabled]",
                     "type": "string"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
                 },
                 "company_id": {
                     "description": "ID of compnay [optional]",
@@ -9538,8 +9573,8 @@
                     "type": "string"
                 },
                 "vm_size": {
-                    "$ref": "#/definitions/aks.VMSizeTypes",
-                    "description": "Machine type for pool [required]"
+                    "description": "Machine type for pool [required]",
+                    "type": "string"
                 }
             }
         },
@@ -9664,7 +9699,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000e39140.false"
+                    "$ref": "#/definitions/13385.0xc000e2c630.false"
                 },
                 "name": {
                     "type": "string"
@@ -10229,7 +10264,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13438.0xc00114ddd0.false"
+                    "$ref": "#/definitions/13438.0xc00114f2c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12102,7 +12137,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc00146cab0.false"
+                    "$ref": "#/definitions/518.0xc00145bf80.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12194,34 +12229,39 @@
             "type": "object",
             "properties": {
                 "admin_password": {
+                    "description": "It is the password ['required' if credentials_type is 'password']",
                     "type": "string"
                 },
                 "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
+                    "$ref": "#/definitions/models.Cloud",
+                    "description": "Type of cloud [optional]"
                 },
                 "credential_type": {
-                    "$ref": "#/definitions/models.CredentialsType"
+                    "$ref": "#/definitions/models.CredentialsType",
+                    "description": "It is type of credentials used for ssh. By default value is 'key' [optional]"
                 },
                 "finger_print": {
+                    "description": "Finger prints for the key [optional]",
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer",
-                    "format": "int64"
-                },
                 "key_name": {
+                    "description": "Name of the key. By default value is 'new' [required]",
                     "type": "string"
                 },
                 "key_type": {
-                    "$ref": "#/definitions/models.KeyType"
+                    "$ref": "#/definitions/models.KeyType",
+                    "description": "It is type key. By default value is 'new' [required]"
                 },
                 "private_key": {
+                    "description": "Private key for ssh ['required' if credentials_type is 'key']",
                     "type": "string"
                 },
                 "public_key": {
+                    "description": "Public key for ssh [readonly]",
                     "type": "string"
                 },
                 "username": {
+                    "description": "It is the user name ['required' if credentials_type is 'password']",
                     "type": "string"
                 }
             }
@@ -12323,19 +12363,12 @@
             "title": "Cluster_Def",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
                 "company_id": {
+                    "description": "ID of company which you are belong to [optional]",
                     "type": "string"
                 },
-                "kube_credentials": {
-                    "$ref": "#/definitions/5960.0xc001557e30.false"
-                },
                 "name": {
+                    "description": "Name of cluster [required]",
                     "type": "string"
                 },
                 "node_pools": {
@@ -12345,12 +12378,11 @@
                     }
                 },
                 "project_id": {
+                    "description": "ID of project [required]",
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "token_name": {
+                    "description": "Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]",
                     "type": "string"
                 }
             }
@@ -12360,15 +12392,19 @@
             "type": "object",
             "properties": {
                 "name": {
+                    "description": "Name of node [required]",
                     "type": "string"
                 },
                 "private_ip": {
+                    "description": "Private IP of node [readonly]",
                     "type": "string"
                 },
                 "public_ip": {
+                    "description": "Public IP of node [readonly]",
                     "type": "string"
                 },
                 "user_name": {
+                    "description": "User name which will be used for ssh into machine [required]",
                     "type": "string"
                 }
             }
@@ -12377,16 +12413,15 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "key_info": {
                     "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "name": {
+                    "description": "Name of node pool [required]",
                     "type": "string"
                 },
                 "node_count": {
+                    "description": "Count of node pool [required]",
                     "type": "integer",
                     "format": "int64"
                 },
@@ -12397,7 +12432,8 @@
                     }
                 },
                 "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
+                    "$ref": "#/definitions/models.PoolRole",
+                    "description": "Pool role can be master or slave [required]"
                 }
             }
         },
@@ -12461,7 +12497,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001556930.false"
+                    "$ref": "#/definitions/434.0xc001539e00.false"
                 },
                 "name": {
                     "type": "string"

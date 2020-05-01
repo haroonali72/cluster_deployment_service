@@ -22,7 +22,7 @@ type AWSClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -41,7 +41,7 @@ func (c *AWSClusterController) Get() {
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -101,16 +101,16 @@ func (c *AWSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} []aws.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -155,7 +155,7 @@ func (c *AWSClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -177,10 +177,10 @@ func (c *AWSClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -260,7 +260,7 @@ func (c *AWSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -274,11 +274,11 @@ func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -361,7 +361,7 @@ func (c *AWSClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
 // @Success 200 {"msg": "cluster deleted successfully"}
@@ -379,10 +379,10 @@ func (c *AWSClusterController) Delete() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -475,7 +475,7 @@ func (c *AWSClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -494,10 +494,10 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -614,7 +614,7 @@ func (c *AWSClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
@@ -633,10 +633,10 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -713,7 +713,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "error msg"}
@@ -730,10 +730,10 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -839,19 +839,19 @@ func (c *AWSClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
-// @Param	token	header	string	token ""
-// @Param	X-Region  header	string	X-Region	""
+// @Param	X-Auth-Token	header	string	token ""
+// @Param	region  path	string	true	"region"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /sshkeys [get]
+// @router /sshkeys/:region [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -865,7 +865,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region :=  c.GetString("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -897,20 +897,20 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @Title AwsAmis
 // @Description returns aws ami details
 // @Param	X-Profile-Id	header	string	profileId	""
-// @Param	token	header	string	token ""
-// @Param	X-Region	header	string	false	""
+// @Param	X-Auth-Token	header	string	token ""
+// @Param	region	path	string	true	"cloud region"
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
 // @Failure 404 {"error": "ami id is empty"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /amis/:amiId [get]
+// @router /amis/:amiId/:region [get]
 func (c *AWSClusterController) GetAMI() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -948,7 +948,7 @@ func (c *AWSClusterController) GetAMI() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region :=  c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -991,7 +991,7 @@ func (c *AWSClusterController) GetAMI() {
 // @Description enables autoscaling
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -1009,10 +1009,10 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1098,15 +1098,15 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Param	projectId		path	string	true		"Id of the project"
 // @Param	keyname	 		path	string	true		"SSHKey"
 // @Param	X-Profile-Id	header	string	profileId	""
-// @Param	token			header	string	token 		""
+// @Param	X-Auth-Token			header	string	token 		""
 // @Param	teams			header	string	teams 		""
-// @Param	X-Region		header	string	X-Region	""
+// @Param	region		path	string	true	"cloud region"
 // @Success 200 			{object} key_utils.AWSKey
 // @Failure 400 			{"error": "error msg"}
 // @Failure 401 			{"error": "error msg"}
 // @Failure 404 			{"error": "error msg"}
 // @Failure 500 			{"error": "error msg"}
-// @router /sshkey/:projectId/:keyname [post]
+// @router /sshkey/:projectId/:keyname/:region [post]
 func (c *AWSClusterController) PostSSHKey() {
 
 	ctx := new(utils.Context)
@@ -1122,20 +1122,20 @@ func (c *AWSClusterController) PostSSHKey() {
 
 	//==========================RBAC Authentication==============================//
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token id is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	teams := c.Ctx.Input.Header("teams")
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1215,30 +1215,30 @@ func (c *AWSClusterController) GetCores() {
 // @Description Delete SSH key
 // @Param	keyname	 		path	string	true		""
 // @Param	X-Profile-Id	header	string	profileId	""
-// @Param	token			header	string	token 		""
-// @Param	X-Region		header	string	X-Region	""
+// @Param	X-Auth-Token			header	string	token 		""
+// @Param	region		path	string	true	"cloud region"
 // @Success 200 			{"msg": "key deleted successfully"}
 // @Failure 400 			{"error": "error msg"}
 // @Failure 401 			{"error": "User is unauthorized to perform this action"}
 // @Failure 404 			{"error": "error msg"}
-// @router /sshkey/:keyname [delete]
+// @router /sshkey/:keyname/:region [delete]
 func (c *AWSClusterController) DeleteSSHKey() {
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("AWSClusterController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region :=  c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1327,7 +1327,7 @@ func (c *AWSClusterController) GetAllRegions() {
 
 // @Title Get Availability Zone
 // @Description return zones against a region
-// @Param	token	header	string	token true""
+// @Param	X-Auth-Token	header	string	token true""
 // @Param	region	path	string	true	"region of AWS"
 // @Param	X-Profile-Id	header	string	profileId	true""
 // @Success 200 			[]*string
@@ -1339,10 +1339,10 @@ func (c *AWSClusterController) GetAllRegions() {
 func (c *AWSClusterController) GetZones() {
 	ctx := new(utils.Context)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1424,7 +1424,7 @@ func (c *AWSClusterController) GetAllMachines() {
 
 // @Title Validate Profile
 // @Description check if profile is valid
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	body	body 	vault.AwsCredentials		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -1437,10 +1437,10 @@ func (c *AWSClusterController) ValidateProfile() {
 
 	ctx := new(utils.Context)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1493,7 +1493,7 @@ func (c *AWSClusterController) ValidateProfile() {
 // @Title Start
 // @Description Apply cloudplex Agent file to eks cluster
 // @Param	clusterName	header	string	clusterName ""
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
@@ -1524,10 +1524,10 @@ func (c *AWSClusterController) ApplyAgent() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}

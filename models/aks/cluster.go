@@ -26,7 +26,7 @@ import (
 type AKSCluster struct {
 	ID                     bson.ObjectId                        `json:"-" bson:"_id,omitempty"`
 	ProjectId              string                               `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud                  models.Cloud                         `json:"cloud" bson:"cloud"`
+	Cloud                  models.Cloud                         `json:"-" bson:"cloud"`
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
@@ -71,7 +71,7 @@ type ManagedClusterAPIServerAccessProfile struct {
 type ManagedClusterAgentPoolProfile struct {
 	Name              *string            `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster pool name [required]"`
 	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required,gte=1" description:"Pool node count [required]"`
-	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required" description:"Machine type for pool [required]"`
+	VMSize            *string            `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required" description:"Machine type for pool [required]"`
 	OsDiskSizeGB      *int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty" description:"Disk size for VMs [required]"`
 	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool will be created [required]"`
 	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty" validate:"required" description:"Max pods per node [required]"`
