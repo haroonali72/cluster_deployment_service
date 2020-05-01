@@ -23,7 +23,7 @@ type DOClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param projectId path string true "Id of the project"
-// @Param token	header string token ""
+// @Param X-Auth-Token	header string true "token"
 // @Success 200 {object} do.Cluster_Def
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
@@ -1097,15 +1097,15 @@ func (c *DOClusterController) DeleteSSHKey() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.Ctx.Input.Header("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}

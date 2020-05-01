@@ -79,7 +79,7 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
-	m["token"] = token
+	m["X-Auth-Token"] = token
 	m["teams"] = teams
 	utils.SetHeaders(req, m)
 	response, err := client.SendRequest(req)
@@ -116,7 +116,7 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 		return []byte{}, err
 	}
 	client := utils.InitReq()
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -161,7 +161,7 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token, region string) (in
 		return keys, err
 	}
 	client := utils.InitReq()
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -209,7 +209,7 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 500, []byte{}, err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("X-Auth-Token", token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -264,7 +264,7 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region st
 
 	m := make(map[string]string)
 	m["Content-Type"] = "application/json"
-	m["token"] = token
+	m["X-Auth-Token"] = token
 	utils.SetHeaders(req, m)
 
 	response, err := client.SendRequest(req)

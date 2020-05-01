@@ -22,7 +22,7 @@ type AWSClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -41,12 +41,12 @@ func (c *AWSClusterController) Get() {
 	token := c.Ctx.Input.Header("token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -60,7 +60,7 @@ func (c *AWSClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -101,21 +101,21 @@ func (c *AWSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} []aws.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -129,7 +129,7 @@ func (c *AWSClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AWS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -155,7 +155,7 @@ func (c *AWSClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -177,15 +177,15 @@ func (c *AWSClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -197,7 +197,7 @@ func (c *AWSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -260,7 +260,7 @@ func (c *AWSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -274,16 +274,16 @@ func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -295,7 +295,7 @@ func (c *AWSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -361,7 +361,7 @@ func (c *AWSClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    ""
 // @Success 200 {"msg": "cluster deleted successfully"}
@@ -379,10 +379,10 @@ func (c *AWSClusterController) Delete() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -393,7 +393,7 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -405,7 +405,7 @@ func (c *AWSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", id, "Delete", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -475,7 +475,7 @@ func (c *AWSClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -494,15 +494,15 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -514,7 +514,7 @@ func (c *AWSClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -584,7 +584,7 @@ func (c *AWSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
@@ -614,7 +614,7 @@ func (c *AWSClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
@@ -633,15 +633,15 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -653,7 +653,7 @@ func (c *AWSClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -690,7 +690,7 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -713,7 +713,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "error msg"}
@@ -730,15 +730,15 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -751,7 +751,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Terminate", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -785,7 +785,7 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -839,24 +839,24 @@ func (c *AWSClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
-// @Param	token	header	string	token ""
-// @Param	X-Region  header	string	X-Region	""
+// @Param	X-Auth-Token	header	string	token ""
+// @Param	region  path	string	true	"region"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /sshkeys [get]
+// @router /sshkeys/:region [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -865,7 +865,7 @@ func (c *AWSClusterController) GetSSHKeys() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.GetString("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -897,25 +897,25 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @Title AwsAmis
 // @Description returns aws ami details
 // @Param	X-Profile-Id	header	string	profileId	""
-// @Param	token	header	string	token ""
-// @Param	X-Region	header	string	false	""
+// @Param	X-Auth-Token	header	string	token ""
+// @Param	region	path	string	true	"cloud region"
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
 // @Failure 404 {"error": "ami id is empty"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /amis/:amiId [get]
+// @router /amis/:amiId/:region [get]
 func (c *AWSClusterController) GetAMI() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -948,7 +948,7 @@ func (c *AWSClusterController) GetAMI() {
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -956,7 +956,7 @@ func (c *AWSClusterController) GetAMI() {
 		return
 	}
 
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(statusCode)
@@ -991,7 +991,7 @@ func (c *AWSClusterController) GetAMI() {
 // @Description enables autoscaling
 // @Param	X-Profile-Id	header	string	profileId	""
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -1009,15 +1009,15 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1030,7 +1030,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1063,7 +1063,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1098,15 +1098,15 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Param	projectId		path	string	true		"Id of the project"
 // @Param	keyname	 		path	string	true		"SSHKey"
 // @Param	X-Profile-Id	header	string	profileId	""
-// @Param	token			header	string	token 		""
+// @Param	X-Auth-Token			header	string	token 		""
 // @Param	teams			header	string	teams 		""
-// @Param	X-Region		header	string	X-Region	""
+// @Param	region		path	string	true	"cloud region"
 // @Success 200 			{object} key_utils.AWSKey
 // @Failure 400 			{"error": "error msg"}
 // @Failure 401 			{"error": "error msg"}
 // @Failure 404 			{"error": "error msg"}
 // @Failure 500 			{"error": "error msg"}
-// @router /sshkey/:projectId/:keyname [post]
+// @router /sshkey/:projectId/:keyname/:region [post]
 func (c *AWSClusterController) PostSSHKey() {
 
 	ctx := new(utils.Context)
@@ -1122,25 +1122,25 @@ func (c *AWSClusterController) PostSSHKey() {
 
 	//==========================RBAC Authentication==============================//
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token id is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	teams := c.Ctx.Input.Header("teams")
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1171,7 +1171,7 @@ func (c *AWSClusterController) PostSSHKey() {
 		return
 	}
 
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1215,36 +1215,36 @@ func (c *AWSClusterController) GetCores() {
 // @Description Delete SSH key
 // @Param	keyname	 		path	string	true		""
 // @Param	X-Profile-Id	header	string	profileId	""
-// @Param	token			header	string	token 		""
-// @Param	X-Region		header	string	X-Region	""
+// @Param	X-Auth-Token			header	string	token 		""
+// @Param	region		path	string	true	"cloud region"
 // @Success 200 			{"msg": "key deleted successfully"}
 // @Failure 400 			{"error": "error msg"}
 // @Failure 401 			{"error": "User is unauthorized to perform this action"}
 // @Failure 404 			{"error": "error msg"}
-// @router /sshkey/:keyname [delete]
+// @router /sshkey/:keyname/:region [delete]
 func (c *AWSClusterController) DeleteSSHKey() {
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("AWSClusterController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
 	//==========================RBAC Authentication==============================//
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1282,7 +1282,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		return
 	}
 
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1327,7 +1327,7 @@ func (c *AWSClusterController) GetAllRegions() {
 
 // @Title Get Availability Zone
 // @Description return zones against a region
-// @Param	token	header	string	token true""
+// @Param	X-Auth-Token	header	string	token true""
 // @Param	region	path	string	true	"region of AWS"
 // @Param	X-Profile-Id	header	string	profileId	true""
 // @Success 200 			[]*string
@@ -1339,15 +1339,15 @@ func (c *AWSClusterController) GetAllRegions() {
 func (c *AWSClusterController) GetZones() {
 	ctx := new(utils.Context)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1376,7 +1376,7 @@ func (c *AWSClusterController) GetZones() {
 		return
 	}
 
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("AWSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1424,7 +1424,7 @@ func (c *AWSClusterController) GetAllMachines() {
 
 // @Title Validate Profile
 // @Description check if profile is valid
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Param	body	body 	vault.AwsCredentials		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -1437,10 +1437,10 @@ func (c *AWSClusterController) ValidateProfile() {
 
 	ctx := new(utils.Context)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1448,7 +1448,7 @@ func (c *AWSClusterController) ValidateProfile() {
 	var credentials vault.AwsCredentials
 	json.Unmarshal(c.Ctx.Input.RequestBody, &credentials)
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1493,7 +1493,7 @@ func (c *AWSClusterController) ValidateProfile() {
 // @Title Start
 // @Description Apply cloudplex Agent file to eks cluster
 // @Param	clusterName	header	string	clusterName ""
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	token ""
 // @Success 200 {"msg": "Agent Applied successfully"}
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
@@ -1524,10 +1524,10 @@ func (c *AWSClusterController) ApplyAgent() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1540,7 +1540,7 @@ func (c *AWSClusterController) ApplyAgent() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1552,7 +1552,7 @@ func (c *AWSClusterController) ApplyAgent() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1573,7 +1573,7 @@ func (c *AWSClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		c.Ctx.Output.SetStatus(statusCode)
