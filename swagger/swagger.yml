@@ -1131,7 +1131,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: header
@@ -6163,28 +6163,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0015903f0.false:
+  434.0xc001539e00.false:
     title: "false"
     type: object
-  518.0xc0014a2570.false:
+  518.0xc00145bf80.false:
     title: "false"
     type: object
   1559.string:
     title: string
     type: object
-  6000.0xc0015918f0.false:
+  6000.0xc00155f320.false:
     title: "false"
     type: object
-  13335.0xc0014bbf80.false:
+  13335.0xc0014879b0.false:
     title: "false"
     type: object
-  13385.0xc000e6ac00.false:
+  13385.0xc000e2c630.false:
     title: "false"
     type: object
-  13438.0xc001187890.false:
+  13438.0xc00114f2c0.false:
     title: "false"
     type: object
-  22125.string:
+  22121.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6200,8 +6200,6 @@ definitions:
         description: Client ID for service principal ['required' if service principal
           enabled]
         type: string
-      cloud:
-        $ref: '#/definitions/models.Cloud'
       company_id:
         description: ID of compnay [optional]
         type: string
@@ -6359,8 +6357,8 @@ definitions:
         description: ID of subnet in which pool will be created [required]
         type: string
       vm_size:
-        $ref: '#/definitions/aks.VMSizeTypes'
         description: Machine type for pool [required]
+        type: string
   aks.ManagedClusterAgentPoolProfileT:
     title: ManagedClusterAgentPoolProfileT
     type: object
@@ -6446,7 +6444,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000e6ac00.false'
+        $ref: '#/definitions/13385.0xc000e2c630.false'
       name:
         type: string
       network_name:
@@ -6827,7 +6825,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc001187890.false'
+        $ref: '#/definitions/13438.0xc00114f2c0.false'
       name:
         type: string
       network_name:
@@ -8116,7 +8114,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0014a2570.false'
+        $ref: '#/definitions/518.0xc00145bf80.false'
       kube_version:
         type: string
       name:
@@ -8379,7 +8377,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0015903f0.false'
+        $ref: '#/definitions/434.0xc001539e00.false'
       name:
         type: string
       node_pools:
