@@ -608,8 +608,8 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) typ
 		cluster.AgentPoolProfiles[index].Name = agentPool.Name
 		cluster.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
 		cluster.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
-		vmSize := string(agentPool.VMSize)
-		cluster.AgentPoolProfiles[index].VMSize = &vmSize
+		vm := string(agentPool.VMSize)
+		cluster.AgentPoolProfiles[index].VMSize = &vm
 		cluster.AgentPoolProfiles[index].OsType = &agentPool.OsType
 		cluster.AgentPoolProfiles[index].Count = agentPool.Count
 	}
