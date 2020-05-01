@@ -1131,7 +1131,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: header
@@ -6163,28 +6163,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0015903f0.false:
+  434.0xc00154eb40.false:
     title: "false"
     type: object
-  518.0xc0014a2570.false:
+  518.0xc001462cc0.false:
     title: "false"
     type: object
   1559.string:
     title: string
     type: object
-  6000.0xc0015918f0.false:
+  6000.0xc001570060.false:
     title: "false"
     type: object
-  13335.0xc0014bbf80.false:
+  13335.0xc0014866f0.false:
     title: "false"
     type: object
-  13385.0xc000e6ac00.false:
+  13385.0xc000e3d350.false:
     title: "false"
     type: object
-  13438.0xc001187890.false:
+  13438.0xc001150000.false:
     title: "false"
     type: object
-  22125.string:
+  22245.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6200,8 +6200,6 @@ definitions:
         description: Client ID for service principal ['required' if service principal
           enabled]
         type: string
-      cloud:
-        $ref: '#/definitions/models.Cloud'
       company_id:
         description: ID of compnay [optional]
         type: string
@@ -6263,8 +6261,10 @@ definitions:
         description: Service CIDR for cluster ['required' if expert settings enabled]
         type: string
       status:
-        $ref: '#/definitions/models.Type'
-        description: Status of cluster [required]
+        description: Status of cluster. Possible values can be New, Cluster Created,
+          Cluster Creation Failed, Cluster Terminated, Cluster Termination Failed,
+          Terminating, Deploying [readonly]
+        type: string
       tags:
         description: Cluster tags [optional]
         type: array
@@ -6359,8 +6359,8 @@ definitions:
         description: ID of subnet in which pool will be created [required]
         type: string
       vm_size:
-        $ref: '#/definitions/aks.VMSizeTypes'
         description: Machine type for pool [required]
+        type: string
   aks.ManagedClusterAgentPoolProfileT:
     title: ManagedClusterAgentPoolProfileT
     type: object
@@ -6446,7 +6446,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000e6ac00.false'
+        $ref: '#/definitions/13385.0xc000e3d350.false'
       name:
         type: string
       network_name:
@@ -6827,7 +6827,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc001187890.false'
+        $ref: '#/definitions/13438.0xc001150000.false'
       name:
         type: string
       network_name:
@@ -8116,7 +8116,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0014a2570.false'
+        $ref: '#/definitions/518.0xc001462cc0.false'
       kube_version:
         type: string
       name:
@@ -8379,7 +8379,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0015903f0.false'
+        $ref: '#/definitions/434.0xc00154eb40.false'
       name:
         type: string
       node_pools:

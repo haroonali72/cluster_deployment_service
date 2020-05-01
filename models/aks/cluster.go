@@ -26,11 +26,11 @@ import (
 type AKSCluster struct {
 	ID                     bson.ObjectId                        `json:"-" bson:"_id,omitempty"`
 	ProjectId              string                               `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud                  models.Cloud                         `json:"cloud" bson:"cloud"`
+	Cloud                  models.Cloud                         `json:"-" bson:"cloud"`
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new" description:"Status of cluster [required]"`
+	Status                 string                               `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster. Possible values can be New, Cluster Created, Cluster Creation Failed, Cluster Terminated, Cluster Termination Failed, Terminating, Deploying [readonly]"`
 	ProvisioningState      string                               `json:"-" bson:"provisioning_state,omitempty"`
 	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" validate:"required" description:"Kubernetes version to be provisioned ['required' if advance settings enabled]"`
 	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" validate:"required" description:"Cluster DNS prefix ['required' if advance settings enabled]"`
@@ -71,7 +71,7 @@ type ManagedClusterAPIServerAccessProfile struct {
 type ManagedClusterAgentPoolProfile struct {
 	Name              *string            `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster pool name [required]"`
 	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required,gte=1" description:"Pool node count [required]"`
-	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required" description:"Machine type for pool [required]"`
+	VMSize            *string            `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required" description:"Machine type for pool [required]"`
 	OsDiskSizeGB      *int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty" description:"Disk size for VMs [required]"`
 	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool will be created [required]"`
 	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty" validate:"required" description:"Max pods per node [required]"`
@@ -305,7 +305,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster.Status = (models.Deploying)
+	cluster.Status = string(models.Deploying)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
@@ -349,7 +349,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
+		cluster.Status = string(models.ClusterCreationFailed)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
@@ -395,7 +395,7 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
 		return AKSCluster{}, cpErr
 	}
-	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
+	if cluster.Status == string(models.Deploying) || cluster.Status == string(models.Terminating) || cluster.Status == string(models.ClusterTerminated) {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
 			string(cluster.Status) + " state", Description: "Cluster is in " +
 			string(cluster.Status) + " state", StatusCode: 409}
@@ -458,7 +458,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 	aksOps, _ := GetAKS(credentials.Profile)
 	_, _ = utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	cluster.Status = (models.Terminating)
+	cluster.Status = string(models.Terminating)
 	err_ := UpdateAKSCluster(cluster, ctx)
 	if err_ != nil {
 		cpErr := ApiError(err_, "Error while updating cluster in database", 500)
