@@ -50,11 +50,11 @@
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
+                    "402": {
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
+                    },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "412": {
-                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -118,8 +118,7 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
+                        "description": "token",
                         "type": "string"
                     }
                 ],
@@ -241,13 +240,13 @@
                 "tags": [
                     "cluster/aks"
                 ],
-                "description": "get cluster configuration file",
-                "operationId": "AKSClusterController.Get Kubeconfig",
+                "description": "get cluter kubeconfig",
+                "operationId": "AKSClusterController.Kubeconfig",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "Vault credentials profile id",
+                        "description": "vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
@@ -274,7 +273,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"Internal Server Error\"}"
                     },
                     "512": {
                         "description": "{object} types.CustomCPError"
@@ -387,7 +386,7 @@
                         "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"Internal Server Error\"}"
                     },
                     "512": {
                         "description": "{object} types.CustomCPError"
@@ -427,7 +426,7 @@
                 ],
                 "responses": {
                     "202": {
-                        "description": "{\"msg\": \"Cluster termination initialized\"}"
+                        "description": "{\"msg\": \"Cluster termination started successfully\"}"
                     },
                     "204": {
                         "description": "{\"msg\": \"Cluster terminated successfully\"}"
@@ -553,7 +552,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -609,7 +608,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -649,7 +648,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -673,7 +672,7 @@
                 }
             }
         },
-        "/cluster/aws/amis/{amiId}": {
+        "/cluster/aws/amis/{amiId}/{region}": {
             "get": {
                 "tags": [
                     "cluster/aws"
@@ -689,14 +688,15 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "false",
+                        "in": "path",
+                        "name": "region",
+                        "description": "cloud region",
+                        "required": true,
                         "type": "string"
                     },
                     {
@@ -745,7 +745,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -806,7 +806,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -883,7 +883,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     },
@@ -940,7 +940,7 @@
                 }
             }
         },
-        "/cluster/aws/sshkey/{keyname}": {
+        "/cluster/aws/sshkey/{keyname}/{region}": {
             "delete": {
                 "tags": [
                     "cluster/aws"
@@ -962,14 +962,15 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "cloud region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -989,7 +990,7 @@
                 }
             }
         },
-        "/cluster/aws/sshkey/{projectId}/{keyname}": {
+        "/cluster/aws/sshkey/{projectId}/{keyname}/{region}": {
             "post": {
                 "tags": [
                     "cluster/aws"
@@ -1019,7 +1020,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1030,9 +1031,10 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "cloud region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1058,7 +1060,7 @@
                 }
             }
         },
-        "/cluster/aws/sshkeys": {
+        "/cluster/aws/sshkeys/{region}": {
             "get": {
                 "tags": [
                     "cluster/aws"
@@ -1068,14 +1070,15 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1111,7 +1114,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1158,7 +1161,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1216,7 +1219,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1254,7 +1257,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -1307,7 +1310,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -1341,7 +1344,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -2058,7 +2061,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -2074,25 +2077,22 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
-                    "405": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -2114,32 +2114,29 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster added successfully\"}"
                     },
                     "400": {
-                        "description": "body not found"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "token not found"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against this project already exists\"}"
-                    },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
+                        "description": "{\"error\": \"Cluster against same project already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2154,7 +2151,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -2169,11 +2166,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2194,7 +2191,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     }
@@ -2209,11 +2206,14 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2240,7 +2240,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -2249,19 +2249,22 @@
                     "200": {
                         "description": "{\"msg\": \"key deleted successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"User is unauthorized to perform this action\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"key is in used by some projects\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
         },
-        "/cluster/do/sshkey/{projectId}/{keyname}": {
+        "/cluster/do/sshkey/{projectId}/{keyname}/{region}": {
             "post": {
                 "tags": [
                     "cluster/do"
@@ -2291,7 +2294,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -2302,9 +2305,10 @@
                         "type": "string"
                     },
                     {
-                        "in": "header",
-                        "name": "X-Region",
-                        "description": "X-Region",
+                        "in": "path",
+                        "name": "region",
+                        "description": "region",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2316,16 +2320,19 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2340,7 +2347,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -2355,14 +2362,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2377,7 +2381,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -2396,20 +2400,23 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "202": {
+                        "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2424,7 +2431,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -2449,17 +2456,17 @@
                             "$ref": "#/definitions/do.Cluster_Def"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2482,7 +2489,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -2495,17 +2502,20 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    "202": {
+                        "description": "{\"msg\": \"cluster termination initiated\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2520,7 +2530,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     },
@@ -2538,10 +2548,13 @@
                         "description": "{\"msg\": \"Profile is valid\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Invalid Profile\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     }
                 }
             }
@@ -2563,8 +2576,9 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2575,19 +2589,65 @@
                             "$ref": "#/definitions/do.Cluster_Def"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
         },
-        "/cluster/do/{projectId}/{forceDelete}": {},
+        "/cluster/do/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "delete a cluster",
+                "operationId": "DOClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/doks/": {
             "put": {
                 "tags": [
@@ -2883,9 +2943,6 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "{\"msg\": \"Cluster created successfully\"}"
-                    },
                     "202": {
                         "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
@@ -2946,6 +3003,9 @@
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
                         "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
@@ -3114,7 +3174,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3158,7 +3218,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3204,7 +3264,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3244,7 +3304,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     },
@@ -3324,7 +3384,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "true",
                         "type": "string"
                     },
@@ -3368,7 +3428,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3418,7 +3478,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3467,7 +3527,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3507,7 +3567,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3548,7 +3608,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3596,7 +3656,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3657,7 +3717,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -3691,7 +3751,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     },
@@ -3744,7 +3804,7 @@
                     },
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "type": "string"
                     }
@@ -9280,36 +9340,36 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13199.0xc0014a1020.false": {
+        "13859.0xc001531680.false": {
             "title": "false",
             "type": "object"
         },
-        "442.0xc00146d290.false": {
+        "482.0xc0014e58f0.false": {
             "title": "false",
             "type": "object"
         },
-        "51173.0xc00143e810.false": {
+        "51173.0xc0014b2e70.false": {
             "title": "false",
             "type": "object"
         },
-        "55730.string": {
+        "55805.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc000d54150.false": {
+        "605.0xc000db2f00.false": {
             "title": "false",
             "type": "object"
         },
-        "644.0xc001038ea0.false": {
+        "667.0xc00140bb60.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc001391500.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "7818.string": {
+        "7814.string": {
             "title": "string",
+            "type": "object"
+        },
+        "937.0xc0010afec0.false": {
+            "title": "false",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -9326,9 +9386,6 @@
                 "client_id": {
                     "description": "Client ID for service principal ['required' if service principal enabled]",
                     "type": "string"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
                 },
                 "company_id": {
                     "description": "ID of compnay [optional]",
@@ -9452,7 +9509,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/55730.string"
+                    "$ref": "#/definitions/55805.string"
                 },
                 "type": {
                     "type": "string"
@@ -9539,8 +9596,8 @@
                     "type": "string"
                 },
                 "vm_size": {
-                    "$ref": "#/definitions/aks.VMSizeTypes",
-                    "description": "Machine type for pool [required]"
+                    "description": "Machine type for pool [required]",
+                    "type": "string"
                 }
             }
         },
@@ -9665,7 +9722,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000d54150.false"
+                    "$ref": "#/definitions/605.0xc000db2f00.false"
                 },
                 "name": {
                     "type": "string"
@@ -10230,7 +10287,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/644.0xc001038ea0.false"
+                    "$ref": "#/definitions/937.0xc0010afec0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10248,7 +10305,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type"
                 },
                 "token_name": {
                     "type": "string"
@@ -12103,7 +12160,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/51173.0xc00143e810.false"
+                    "$ref": "#/definitions/51173.0xc0014b2e70.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12195,34 +12252,39 @@
             "type": "object",
             "properties": {
                 "admin_password": {
+                    "description": "It is the password ['required' if credentials_type is 'password']",
                     "type": "string"
                 },
                 "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
+                    "$ref": "#/definitions/models.Cloud",
+                    "description": "Type of cloud [optional]"
                 },
                 "credential_type": {
-                    "$ref": "#/definitions/models.CredentialsType"
+                    "$ref": "#/definitions/models.CredentialsType",
+                    "description": "It is type of credentials used for ssh. By default value is 'key' [optional]"
                 },
                 "finger_print": {
+                    "description": "Finger prints for the key [optional]",
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer",
-                    "format": "int64"
-                },
                 "key_name": {
+                    "description": "Name of the key. By default value is 'new' [required]",
                     "type": "string"
                 },
                 "key_type": {
-                    "$ref": "#/definitions/models.KeyType"
+                    "$ref": "#/definitions/models.KeyType",
+                    "description": "It is type key. By default value is 'new' [required]"
                 },
                 "private_key": {
+                    "description": "Private key for ssh ['required' if credentials_type is 'key']",
                     "type": "string"
                 },
                 "public_key": {
+                    "description": "Public key for ssh [readonly]",
                     "type": "string"
                 },
                 "username": {
+                    "description": "It is the user name ['required' if credentials_type is 'password']",
                     "type": "string"
                 }
             }
@@ -12324,19 +12386,12 @@
             "title": "Cluster_Def",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
                 "company_id": {
+                    "description": "ID of company which you are belong to [optional]",
                     "type": "string"
                 },
-                "kube_credentials": {
-                    "$ref": "#/definitions/442.0xc00146d290.false"
-                },
                 "name": {
+                    "description": "Name of cluster [required]",
                     "type": "string"
                 },
                 "node_pools": {
@@ -12346,12 +12401,11 @@
                     }
                 },
                 "project_id": {
+                    "description": "ID of project [required]",
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "token_name": {
+                    "description": "Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]",
                     "type": "string"
                 }
             }
@@ -12361,15 +12415,19 @@
             "type": "object",
             "properties": {
                 "name": {
+                    "description": "Name of node [required]",
                     "type": "string"
                 },
                 "private_ip": {
+                    "description": "Private IP of node [readonly]",
                     "type": "string"
                 },
                 "public_ip": {
+                    "description": "Public IP of node [readonly]",
                     "type": "string"
                 },
                 "user_name": {
+                    "description": "User name which will be used for ssh into machine [required]",
                     "type": "string"
                 }
             }
@@ -12378,16 +12436,15 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "key_info": {
                     "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "name": {
+                    "description": "Name of node pool [required]",
                     "type": "string"
                 },
                 "node_count": {
+                    "description": "Count of node pool [required]",
                     "type": "integer",
                     "format": "int64"
                 },
@@ -12398,7 +12455,8 @@
                     }
                 },
                 "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
+                    "$ref": "#/definitions/models.PoolRole",
+                    "description": "Pool role can be master or slave [required]"
                 }
             }
         },
@@ -12462,7 +12520,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13199.0xc0014a1020.false"
+                    "$ref": "#/definitions/13859.0xc001531680.false"
                 },
                 "name": {
                     "type": "string"

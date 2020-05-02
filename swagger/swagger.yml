@@ -36,10 +36,10 @@ paths:
           description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
+        "402":
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
           description: '{"error": "Not Found"}'
-        "412":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -141,8 +141,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       responses:
         "200":
@@ -222,12 +221,12 @@ paths:
     get:
       tags:
       - cluster/aks
-      description: get cluster configuration file
-      operationId: AKSClusterController.Get Kubeconfig
+      description: get cluter kubeconfig
+      operationId: AKSClusterController.Kubeconfig
       parameters:
       - in: header
         name: X-Profile-Id
-        description: Vault credentials profile id
+        description: vault credentials profile id
         required: true
         type: string
       - in: header
@@ -246,7 +245,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "Runtime Error"}'
+          description: '{"error": "Internal Server Error"}'
         "512":
           description: '{object} types.CustomCPError'
   /cluster/aks/start/{projectId}:
@@ -323,7 +322,7 @@ paths:
         "409":
           description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
-          description: '{"error": "Runtime Error"}'
+          description: '{"error": "Internal Server Error"}'
         "512":
           description: '{object} types.CustomCPError'
   /cluster/aks/terminate/{projectId}/:
@@ -350,7 +349,7 @@ paths:
         type: string
       responses:
         "202":
-          description: '{"msg": "Cluster termination initialized"}'
+          description: '{"msg": "Cluster termination started successfully"}'
         "204":
           description: '{"msg": "Cluster terminated successfully"}'
         "400":
@@ -374,7 +373,7 @@ paths:
       operationId: AWSClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -411,7 +410,7 @@ paths:
         schema:
           $ref: '#/definitions/aws.Cluster_Def'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -442,7 +441,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -464,7 +463,7 @@ paths:
       operationId: AWSClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -478,7 +477,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/amis/{amiId}:
+  /cluster/aws/amis/{amiId}/{region}:
     get:
       tags:
       - cluster/aws
@@ -490,12 +489,13 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
-      - in: header
-        name: X-Region
-        description: "false"
+      - in: path
+        name: region
+        description: cloud region
+        required: true
         type: string
       - in: path
         name: amiId
@@ -527,7 +527,7 @@ paths:
         description: clusterName
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -568,7 +568,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -618,7 +618,7 @@ paths:
       operationId: AWSClusterController.Get Availability Zone
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       - in: path
@@ -654,7 +654,7 @@ paths:
             $ref: '#/definitions/models.Machine'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/sshkey/{keyname}:
+  /cluster/aws/sshkey/{keyname}/{region}:
     delete:
       tags:
       - cluster/aws
@@ -670,12 +670,13 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: cloud region
+        required: true
         type: string
       responses:
         "200":
@@ -686,7 +687,7 @@ paths:
           description: '{"error": "User is unauthorized to perform this action"}'
         "404":
           description: '{"error": "error msg"}'
-  /cluster/aws/sshkey/{projectId}/{keyname}:
+  /cluster/aws/sshkey/{projectId}/{keyname}/{region}:
     post:
       tags:
       - cluster/aws
@@ -708,16 +709,17 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
         name: teams
         description: teams
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: cloud region
+        required: true
         type: string
       responses:
         "200":
@@ -732,7 +734,7 @@ paths:
           description: '{"error": "error msg"}'
         "500":
           description: '{"error": "error msg"}'
-  /cluster/aws/sshkeys:
+  /cluster/aws/sshkeys/{region}:
     get:
       tags:
       - cluster/aws
@@ -740,12 +742,13 @@ paths:
       operationId: AWSClusterController.SSHKeyPair
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: region
+        required: true
         type: string
       responses:
         "200":
@@ -768,7 +771,7 @@ paths:
       operationId: AWSClusterController.Start
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -799,7 +802,7 @@ paths:
       operationId: AWSClusterController.Status
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -837,7 +840,7 @@ paths:
         schema:
           $ref: '#/definitions/X-Profile-Id'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -862,7 +865,7 @@ paths:
       operationId: AWSClusterController.Validate Profile
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -892,7 +895,7 @@ paths:
       operationId: AWSClusterController.Delete
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -1373,7 +1376,7 @@ paths:
       operationId: DOClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -1384,19 +1387,17 @@ paths:
           $ref: '#/definitions/do.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/do
@@ -1410,24 +1411,22 @@ paths:
         schema:
           $ref: '#/definitions/do.Cluster_Def'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster added successfully"}'
         "400":
-          description: body not found
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: token not found
+          description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against same project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/{projectId}/:
     get:
       tags:
@@ -1441,21 +1440,52 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-  /cluster/do/{projectId}/{forceDelete}: {}
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/do/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/do
+      description: delete a cluster
+      operationId: DOClusterController.Delete
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/do/all:
     get:
       tags:
@@ -1464,7 +1494,7 @@ paths:
       operationId: DOClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -1474,10 +1504,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/getallregions/:
     get:
       tags:
@@ -1490,7 +1520,7 @@ paths:
         description: DO profile
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       responses:
@@ -1500,10 +1530,12 @@ paths:
             type: array
             items:
               $ref: '#/definitions/godo.Region'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/sshkey/{keyname}:
     delete:
       tags:
@@ -1520,19 +1552,21 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
         "200":
           description: '{"msg": "key deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "User is unauthorized to perform this action"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-  /cluster/do/sshkey/{projectId}/{keyname}:
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "key is in used by some projects"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/do/sshkey/{projectId}/{keyname}/{region}:
     post:
       tags:
       - cluster/do
@@ -1554,16 +1588,17 @@ paths:
         description: profileId
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
         name: teams
         description: teams
         type: string
-      - in: header
-        name: X-Region
-        description: X-Region
+      - in: path
+        name: region
+        description: region
+        required: true
         type: string
       responses:
         "200":
@@ -1571,13 +1606,15 @@ paths:
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/sshkeys:
     get:
       tags:
@@ -1586,7 +1623,7 @@ paths:
       operationId: DOClusterController.SSHKeyPair
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -1596,12 +1633,10 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/start/{projectId}:
     post:
       tags:
@@ -1610,7 +1645,7 @@ paths:
       operationId: DOClusterController.Start
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -1623,16 +1658,19 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "202":
+          description: '{"msg": "Cluster creation initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/status/{projectId}/:
     get:
       tags:
@@ -1641,7 +1679,7 @@ paths:
       operationId: DOClusterController.Status
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -1658,14 +1696,14 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/terminate/{projectId}/:
     post:
       tags:
@@ -1679,7 +1717,7 @@ paths:
         schema:
           $ref: '#/definitions/X-Profile-Id'
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -1688,14 +1726,17 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster terminated successfully"}'
+        "202":
+          description: '{"msg": "cluster termination initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/validateProfile/:
     post:
       tags:
@@ -1704,7 +1745,7 @@ paths:
       operationId: DOClusterController.ValidateProfile
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       - in: vault.DOCredentials
@@ -1716,9 +1757,11 @@ paths:
         "200":
           description: '{"msg": "Profile is valid"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Invalid Profile"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
   /cluster/doks/:
     put:
       tags:
@@ -1978,8 +2021,6 @@ paths:
         required: true
         type: string
       responses:
-        "201":
-          description: '{"msg": "Cluster created successfully"}'
         "202":
           description: '{"msg": "Cluster creation initiated"}'
         "401":
@@ -2022,6 +2063,8 @@ paths:
             $ref: '#/definitions/doks.KubernetesCluster'
         "401":
           description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
@@ -2074,7 +2117,7 @@ paths:
       operationId: GcpClusterController.Update
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -2103,7 +2146,7 @@ paths:
       operationId: GcpClusterController.Create
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -2138,7 +2181,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2163,7 +2206,7 @@ paths:
       operationId: GcpClusterController.Get All
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2189,7 +2232,7 @@ paths:
         description: "true"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       - in: path
@@ -2242,7 +2285,7 @@ paths:
         description: "true"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: "true"
         type: string
       - in: path
@@ -2271,7 +2314,7 @@ paths:
       operationId: GcpClusterController.ListServiceAccounts
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -2304,7 +2347,7 @@ paths:
         description: "true"
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2337,7 +2380,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: header
@@ -2363,7 +2406,7 @@ paths:
       operationId: GcpClusterController.SSHKeyPair
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2390,7 +2433,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -2422,7 +2465,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: path
@@ -2463,7 +2506,7 @@ paths:
         required: true
         type: string
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       responses:
@@ -2486,7 +2529,7 @@ paths:
       operationId: GcpClusterController.Validate Profile
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         type: string
       - in: body
@@ -6138,28 +6181,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  442.0xc00146d290.false:
+  482.0xc0014e58f0.false:
     title: "false"
     type: object
-  605.0xc000d54150.false:
+  605.0xc000db2f00.false:
     title: "false"
     type: object
-  644.0xc001038ea0.false:
+  667.0xc00140bb60.false:
     title: "false"
     type: object
-  667.0xc001391500.false:
+  937.0xc0010afec0.false:
     title: "false"
     type: object
-  7818.string:
+  7814.string:
     title: string
     type: object
-  13199.0xc0014a1020.false:
+  13859.0xc001531680.false:
     title: "false"
     type: object
-  51173.0xc00143e810.false:
+  51173.0xc0014b2e70.false:
     title: "false"
     type: object
-  55730.string:
+  55805.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6175,8 +6218,6 @@ definitions:
         description: Client ID for service principal ['required' if service principal
           enabled]
         type: string
-      cloud:
-        $ref: '#/definitions/models.Cloud'
       company_id:
         description: ID of compnay [optional]
         type: string
@@ -6270,7 +6311,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55730.string'
+        $ref: '#/definitions/55805.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6334,8 +6375,8 @@ definitions:
         description: ID of subnet in which pool will be created [required]
         type: string
       vm_size:
-        $ref: '#/definitions/aks.VMSizeTypes'
         description: Machine type for pool [required]
+        type: string
   aks.ManagedClusterAgentPoolProfileT:
     title: ManagedClusterAgentPoolProfileT
     type: object
@@ -6421,7 +6462,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000d54150.false'
+        $ref: '#/definitions/605.0xc000db2f00.false'
       name:
         type: string
       network_name:
@@ -6802,7 +6843,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc001038ea0.false'
+        $ref: '#/definitions/937.0xc0010afec0.false'
       name:
         type: string
       network_name:
@@ -6814,7 +6855,7 @@ definitions:
       project_id:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
   do.ImageReference:
@@ -8091,7 +8132,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51173.0xc00143e810.false'
+        $ref: '#/definitions/51173.0xc0014b2e70.false'
       kube_version:
         type: string
       name:
@@ -8153,25 +8194,32 @@ definitions:
     type: object
     properties:
       admin_password:
+        description: It is the password ['required' if credentials_type is 'password']
         type: string
       cloud:
         $ref: '#/definitions/models.Cloud'
+        description: Type of cloud [optional]
       credential_type:
         $ref: '#/definitions/models.CredentialsType'
+        description: It is type of credentials used for ssh. By default value is 'key'
+          [optional]
       finger_print:
+        description: Finger prints for the key [optional]
         type: string
-      id:
-        type: integer
-        format: int64
       key_name:
+        description: Name of the key. By default value is 'new' [required]
         type: string
       key_type:
         $ref: '#/definitions/models.KeyType'
+        description: It is type key. By default value is 'new' [required]
       private_key:
+        description: Private key for ssh ['required' if credentials_type is 'key']
         type: string
       public_key:
+        description: Public key for ssh [readonly]
         type: string
       username:
+        description: It is the user name ['required' if credentials_type is 'password']
         type: string
   models.Cloud:
     title: Cloud
@@ -8252,49 +8300,50 @@ definitions:
     title: Cluster_Def
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
-      cloud:
-        $ref: '#/definitions/models.Cloud'
       company_id:
+        description: ID of company which you are belong to [optional]
         type: string
-      kube_credentials:
-        $ref: '#/definitions/442.0xc00146d290.false'
       name:
+        description: Name of cluster [required]
         type: string
       node_pools:
         type: array
         items:
           $ref: '#/definitions/op.NodePool'
       project_id:
+        description: ID of project [required]
         type: string
       status:
-        type: string
-      token_name:
+        description: Cluster status can be New, Cluster Created, Cluster Terminated.
+          By default value will be 'New' [readonly]
         type: string
   op.Node:
     title: Node
     type: object
     properties:
       name:
+        description: Name of node [required]
         type: string
       private_ip:
+        description: Private IP of node [readonly]
         type: string
       public_ip:
+        description: Public IP of node [readonly]
         type: string
       user_name:
+        description: User name which will be used for ssh into machine [required]
         type: string
   op.NodePool:
     title: NodePool
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
       name:
+        description: Name of node pool [required]
         type: string
       node_count:
+        description: Count of node pool [required]
         type: integer
         format: int64
       nodes:
@@ -8303,6 +8352,7 @@ definitions:
           $ref: '#/definitions/op.Node'
       pool_role:
         $ref: '#/definitions/models.PoolRole'
+        description: Pool role can be master or slave [required]
   op.NodePoolT:
     title: NodePoolT
     type: object
@@ -8345,7 +8395,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13199.0xc0014a1020.false'
+        $ref: '#/definitions/13859.0xc001531680.false'
       name:
         type: string
       node_pools:
