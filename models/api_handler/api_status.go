@@ -16,7 +16,7 @@ func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
