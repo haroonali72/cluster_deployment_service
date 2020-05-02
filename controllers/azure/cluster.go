@@ -451,25 +451,25 @@ func (c *AzureClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status ==  string(models.ClusterCreated) && !forceDelete {
+	if cluster.Status ==  models.ClusterCreated && !forceDelete {
 		ctx.SendLogs("AzureClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.Deploying) && !forceDelete {
+	}else if cluster.Status == models.Deploying && !forceDelete {
 		ctx.SendLogs("AzureClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.Terminating) && !forceDelete {
+	}else if cluster.Status == models.Terminating && !forceDelete {
 		ctx.SendLogs("AzureClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.ClusterTerminationFailed) && !forceDelete {
+	}else if cluster.Status == models.ClusterTerminationFailed && !forceDelete {
 		ctx.SendLogs("AzureClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
@@ -585,24 +585,24 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == string(models.ClusterCreated) {
+	if cluster.Status == models.ClusterCreated {
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is already in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.Deploying) {
+	}else if cluster.Status == models.Deploying {
 		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.Terminating) {
+	}else if cluster.Status == models.Terminating {
 		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.ClusterTerminationFailed) {
+	}else if cluster.Status == models.ClusterTerminationFailed {
 		ctx.SendLogs("Cluster termination is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster termination is in failed state"}
@@ -620,7 +620,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	cluster.Status = string(models.Deploying)
+	cluster.Status = models.Deploying
 	err = azure.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
@@ -844,25 +844,25 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": " Cluster is not in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.Deploying) {
+	}else if cluster.Status == models.Deploying {
 		ctx.SendLogs("AzureClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.Terminating) {
+	}else if cluster.Status == models.Terminating {
 		ctx.SendLogs("AzureClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.ClusterTerminated) {
+	}else if cluster.Status == models.ClusterTerminated {
 		ctx.SendLogs("AzureClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == string(models.Terminating) {
+	}else if cluster.Status == models.Terminating {
 		ctx.SendLogs("AzureClusterController: Cluster creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.StateConflict))
 		c.Data["json"] = map[string]string{"error": "Cluster creation is in failed state"}

@@ -6181,25 +6181,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0014e58f0.false:
+  482.0xc00153cde0.false:
     title: "false"
     type: object
-  605.0xc000db2f00.false:
+  605.0xc000dec3f0.false:
     title: "false"
     type: object
-  667.0xc00140bb60.false:
+  667.0xc001451050.false:
     title: "false"
     type: object
-  937.0xc0010afec0.false:
+  937.0xc0010f53b0.false:
     title: "false"
     type: object
   7814.string:
     title: string
     type: object
-  13859.0xc001531680.false:
+  13859.0xc001574b70.false:
     title: "false"
     type: object
-  51173.0xc0014b2e70.false:
+  51173.0xc001504360.false:
     title: "false"
     type: object
   55805.string:
@@ -6462,7 +6462,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000db2f00.false'
+        $ref: '#/definitions/605.0xc000dec3f0.false'
       name:
         type: string
       network_name:
@@ -6647,7 +6647,7 @@ definitions:
       resource_group:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
   azure.DiagnosticsProfile:
@@ -6843,7 +6843,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/937.0xc0010afec0.false'
+        $ref: '#/definitions/937.0xc0010f53b0.false'
       name:
         type: string
       network_name:
@@ -8132,7 +8132,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51173.0xc0014b2e70.false'
+        $ref: '#/definitions/51173.0xc001504360.false'
       kube_version:
         type: string
       name:
@@ -8395,7 +8395,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13859.0xc001531680.false'
+        $ref: '#/definitions/13859.0xc001574b70.false'
       name:
         type: string
       node_pools:
