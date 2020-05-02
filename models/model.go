@@ -35,9 +35,25 @@ type ErrorMessage string
 const (
 	IsEmpty  ErrorMessage = "is empty"
 	Notauthorized ErrorMessage= "User is unauthorized to perform this action"
+	)
 
-						)
+type HeaderVariable string
 
+const (
+	Token 	HeaderVariable = "X-Auth-Token"
+	ProfileId	HeaderVariable = "X-Profile-Id"
+	ProjectId	HeaderVariable = "Project Id"
+
+
+)
+type PathVariable string
+const (
+	KeyName PathVariable ="keyname"
+	RegionV PathVariable ="region"
+	ClusterName	PathVariable = "clusterName"
+	ResourceGroup PathVariable ="resourceGroup"
+
+)
 type RequestType string
 
 const (

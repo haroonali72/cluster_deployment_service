@@ -35,7 +35,7 @@ func (c *AzureClusterController) Get() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty) }
 		c.ServeJSON()
 		return
 	}
@@ -43,7 +43,7 @@ func (c *AzureClusterController) Get() {
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -106,7 +106,7 @@ func (c *AzureClusterController) GetAll() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -166,7 +166,7 @@ func (c *AzureClusterController) Post() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -277,7 +277,7 @@ func (c *AzureClusterController) Patch() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -395,7 +395,7 @@ func (c *AzureClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -403,7 +403,7 @@ func (c *AzureClusterController) Delete() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -515,7 +515,7 @@ func (c *AzureClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -523,7 +523,7 @@ func (c *AzureClusterController) StartCluster() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -531,7 +531,7 @@ func (c *AzureClusterController) StartCluster() {
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -661,7 +661,7 @@ func (c *AzureClusterController) GetStatus() {
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -669,7 +669,7 @@ func (c *AzureClusterController) GetStatus() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -703,7 +703,7 @@ func (c *AzureClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+		c.Data["json"] = map[string]string{"error":string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -762,7 +762,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -770,7 +770,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	profileId := c.Ctx.Input.Header("")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -778,7 +778,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -905,7 +905,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -957,7 +957,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -965,7 +965,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -973,7 +973,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	keyName := c.GetString(":keyname")
 	if keyName == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "Key name is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.KeyName) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1027,7 +1027,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1035,7 +1035,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 	keyName := c.GetString(":keyname")
 	if keyName == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "key name is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.KeyName) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1095,7 +1095,7 @@ func (c *AzureClusterController) GetInstances() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1103,7 +1103,7 @@ func (c *AzureClusterController) GetInstances() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1111,7 +1111,7 @@ func (c *AzureClusterController) GetInstances() {
 	region := c.Ctx.Input.Header("region")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.RegionV) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1164,7 +1164,7 @@ func (c *AzureClusterController) GetRegions() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1181,7 +1181,7 @@ func (c *AzureClusterController) GetRegions() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1260,7 +1260,7 @@ func (c *AzureClusterController) ValidateProfile() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1327,7 +1327,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	if profileId == "" {
 		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1336,7 +1336,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	if projectId == "" {
 		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1344,7 +1344,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.Token) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1352,7 +1352,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	clusterName := c.Ctx.Input.Header("clusterName")
 	if clusterName == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "Cluster name is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ClusterName) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -1360,7 +1360,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	resourceGroup := c.Ctx.Input.Header("resourceGroup")
 	if resourceGroup == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": "Resource group is empty"}
+		c.Data["json"] = map[string]string{"error": string(models.ResourceGroup) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 
