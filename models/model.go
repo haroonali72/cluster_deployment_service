@@ -5,7 +5,10 @@ import (
 	"golang.org/x/crypto/ssh"
 	"net"
 )
-
+type ResouceType string
+const(
+	Cluster ResouceType ="cluster"
+)
 type Type string
 
 const (
