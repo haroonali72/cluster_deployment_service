@@ -6181,25 +6181,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00153cde0.false:
+  482.0xc00156e150.false:
     title: "false"
     type: object
-  605.0xc000dec3f0.false:
+  605.0xc000e03740.false:
     title: "false"
     type: object
-  667.0xc001451050.false:
+  667.0xc00146e3c0.false:
     title: "false"
     type: object
-  937.0xc0010f53b0.false:
+  937.0xc001120720.false:
     title: "false"
     type: object
   7814.string:
     title: string
     type: object
-  13859.0xc001574b70.false:
+  13859.0xc001581ec0.false:
     title: "false"
     type: object
-  51173.0xc001504360.false:
+  51173.0xc0015116b0.false:
     title: "false"
     type: object
   55805.string:
@@ -6462,7 +6462,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000dec3f0.false'
+        $ref: '#/definitions/605.0xc000e03740.false'
       name:
         type: string
       network_name:
@@ -6843,7 +6843,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/937.0xc0010f53b0.false'
+        $ref: '#/definitions/937.0xc001120720.false'
       name:
         type: string
       network_name:
@@ -8132,7 +8132,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51173.0xc001504360.false'
+        $ref: '#/definitions/51173.0xc0015116b0.false'
       kube_version:
         type: string
       name:
@@ -8395,7 +8395,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13859.0xc001574b70.false'
+        $ref: '#/definitions/13859.0xc001581ec0.false'
       name:
         type: string
       node_pools:

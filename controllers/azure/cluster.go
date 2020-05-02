@@ -1321,11 +1321,11 @@ func (c *AzureClusterController) ValidateProfile() {
 func (c *AzureClusterController) ApplyAgent() {
 
 	ctx := new(utils.Context)
-	ctx.SendLogs("GKEClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GKEClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AzureClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
 		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
@@ -1334,7 +1334,7 @@ func (c *AzureClusterController) ApplyAgent() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GKEClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AzureClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
 		c.Data["json"] = map[string]string{"error": string(models.ProjectId) + string(models.IsEmpty)}
 		c.ServeJSON()
@@ -1374,9 +1374,9 @@ func (c *AzureClusterController) ApplyAgent() {
 	}
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("GKEClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("AzureClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.GKE, string(models.Cluster), projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
