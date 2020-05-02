@@ -174,8 +174,9 @@ func (c *AzureClusterController) Post() {
 
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
+		ctx.SendLogs("Error in unmarshal " + err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(int(models.BadRequest))
-		c.Data["json"] = map[string]string{"error": "Error in unmarshal " + err.Error()}
+		c.Data["json"] = map[string]string{"error": "Internal Server Error"}
 		c.ServeJSON()
 		return
 	}

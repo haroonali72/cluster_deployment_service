@@ -22,15 +22,21 @@ const (
 type StatusCode int
 
 const (
-	CloudStatusCode StatusCode = 512
-	ParamMissing    StatusCode = 404
-	StateConflict      StatusCode  = 409
-	Unauthorized    StatusCode  =401
-	InternalServerError StatusCode = 500
-	BadRequest     StatusCode = 400
-	Conflict      StatusCode =409
-	NotFound      StatusCode =404
+	CloudStatusCode 	StatusCode 	= 512
+	ParamMissing    	StatusCode 	= 404
+	StateConflict      	StatusCode  = 409
+	Unauthorized    	StatusCode  = 401
+	InternalServerError StatusCode 	= 500
+	BadRequest     		StatusCode 	= 400
+	Conflict      		StatusCode 	= 409
+	NotFound      		StatusCode 	= 404
 )
+type ErrorMessage string
+const (
+	IsEmpty  ErrorMessage = "is empty"
+	Notauthorized ErrorMessage= "User is unauthorized to perform this action"
+
+						)
 
 type RequestType string
 
