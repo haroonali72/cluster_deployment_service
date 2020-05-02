@@ -79,7 +79,7 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
-	m["token"] = token
+	m["X-Auth-Token"] = token
 	m["teams"] = teams
 	utils.SetHeaders(req, m)
 	response, err := client.SendRequest(req)
@@ -116,7 +116,7 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 		return []byte{}, err
 	}
 	client := utils.InitReq()
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -161,7 +161,7 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token, region string) (in
 		return keys, err
 	}
 	client := utils.InitReq()
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -193,7 +193,7 @@ func GetAllSSHKey(cloudType string, ctx utils.Context, token, region string) (in
 	return keys, nil
 
 }
-func GetCredentialProfile(cloudType string, profileId string, token string, ctx utils.Context) (int,[]byte, error) {
+func GetCredentialProfile(cloudType string, profileId string, token string, ctx utils.Context) (int, []byte, error) {
 	host := getVaultHost() + models.VaultGetProfileURI
 
 	if strings.Contains(host, "{cloud}") {
@@ -207,35 +207,35 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,[]byte{}, err
+		return 500, []byte{}, err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("X-Auth-Token", token)
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,[]byte{}, err
+		return 500, []byte{}, err
 	}
 	defer response.Body.Close()
 
 	beego.Info(response.StatusCode)
 	beego.Info(response.Status)
 	if response.StatusCode == 403 {
-		return response.StatusCode,[]byte{}, errors.New("User is not authorized for credential profile - " + profileId)
+		return response.StatusCode, []byte{}, errors.New("User is not authorized for credential profile - " + profileId)
 	} else if response.StatusCode == 404 {
-		return response.StatusCode,[]byte{}, errors.New("profile not found")
+		return response.StatusCode, []byte{}, errors.New("profile not found")
 	}
 
 	if response.StatusCode != 200 {
-		return response.StatusCode,[]byte{}, errors.New("profile not found "+response.Status)
+		return response.StatusCode, []byte{}, errors.New("profile not found " + response.Status)
 	}
 
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,[]byte{}, err
+		return 500, []byte{}, err
 	}
-	return 0,contents, nil
+	return 0, contents, nil
 
 }
 
@@ -264,7 +264,7 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region st
 
 	m := make(map[string]string)
 	m["Content-Type"] = "application/json"
-	m["token"] = token
+	m["X-Auth-Token"] = token
 	utils.SetHeaders(req, m)
 
 	response, err := client.SendRequest(req)

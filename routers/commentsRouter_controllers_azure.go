@@ -64,7 +64,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/azure:AzureClusterController"],
         beego.ControllerComments{
             Method: "GetInstances",
-            Router: `/getAllInstances`,
+            Router: `/getAllInstances/:region`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

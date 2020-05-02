@@ -46,7 +46,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
             Method: "GetAMI",
-            Router: `/amis/:amiId`,
+            Router: `/amis/:amiId/:region`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -109,7 +109,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
             Method: "DeleteSSHKey",
-            Router: `/sshkey/:keyname`,
+            Router: `/sshkey/:keyname/:region`,
             AllowHTTPMethods: []string{"delete"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -118,7 +118,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
             Method: "PostSSHKey",
-            Router: `/sshkey/:projectId/:keyname`,
+            Router: `/sshkey/:projectId/:keyname/:region`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -127,7 +127,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
             Method: "GetSSHKeys",
-            Router: `/sshkeys`,
+            Router: `/sshkeys/:region`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
