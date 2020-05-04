@@ -5,7 +5,6 @@ import (
 	"antelope/models/utils"
 	"github.com/russross/blackfriday"
 	"golang.org/x/net/html"
-
 	"io/ioutil"
 	"strings"
 )
@@ -24,42 +23,36 @@ func GetAwsRegions() (reg []models.Region, err error) {
 		return []models.Region{}, err
 	}
 	defer response.Body.Close()
-
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return []models.Region{}, err
 	}
-
 	md := blackfriday.MarkdownBasic(contents)
-
 	s := string(md)
-	first_index := strings.Index(s, "|  <code>")
-	last_index := strings.LastIndex(s, "|  <code>")
+	first_index := strings.Index(s, "<p>| Code")
+	last_index := strings.LastIndex(s, "|</p>")
 	regionsInfo := s[first_index : last_index+1]
 	regionsInfo = strings.TrimSpace(regionsInfo)
 	regionsInfo = strings.ReplaceAll(regionsInfo, "<code>", "")
 	regionsInfo = strings.ReplaceAll(regionsInfo, "</code> ", "")
 	information := strings.Split(regionsInfo, "\n")
-
 	for _, info := range information {
 		if info == "|" {
 			break
 		}
 		regionInfo := strings.Split(info, "| ")
-		loc := strings.Split(regionInfo[2], "(")
-		loca := strings.Split(loc[1], ")")
-		//region[loca[0]]=regionInfo[1]
-
-		region.Name = loca[0]
-		region.Location = strings.TrimSpace(regionInfo[1])
-		reg = append(reg, *region)
-
+		if strings.Contains(regionInfo[2], "(") {
+			loc := strings.Split(regionInfo[2], "(")
+			loca := strings.Split(loc[1], ")")
+			//region[loca[0]]=regionInfo[1]
+			region.Name = loca[0]
+			region.Location = strings.TrimSpace(regionInfo[1])
+			reg = append(reg, *region)
+		}
 	}
 	return reg, nil
 }
-
 func GetGcpRegion() (reg []models.Region, err error) {
-
 	//	var region models.GcpRegion
 	var regions []string
 	var region models.Region
@@ -74,12 +67,10 @@ func GetGcpRegion() (reg []models.Region, err error) {
 		return reg, err
 	}
 	defer response.Body.Close()
-
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return reg, err
 	}
-
 	s := string(contents)
 	first_index := strings.Index(s, "<table>")
 	last_index := strings.Index(s, "</table>")
@@ -114,6 +105,5 @@ loopDomTest:
 		region.Name = regions[i+2]
 		reg = append(reg, region)
 	}
-
 	return reg, nil
 }
