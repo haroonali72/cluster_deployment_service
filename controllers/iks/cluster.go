@@ -867,7 +867,7 @@ func (c *IKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Cluster Created" {
+	if cluster.Status == models.ClusterCreated {
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
 		c.ServeJSON()

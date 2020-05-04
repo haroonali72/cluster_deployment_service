@@ -613,7 +613,7 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Cluster Created" {
+	if cluster.Status == models.ClusterCreated {
 		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}

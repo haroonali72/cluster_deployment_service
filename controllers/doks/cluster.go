@@ -786,7 +786,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == "Cluster Created" {
+	if cluster.CloudplexStatus == models.ClusterCreated {
 		ctx.SendLogs("DOKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
