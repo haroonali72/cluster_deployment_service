@@ -2,6 +2,7 @@ package aks
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/azure"
 	"antelope/models/cores"
 	"antelope/models/db"
@@ -59,6 +60,19 @@ type AKSCluster struct {
 type Tag struct {
 	Key   string `json:"key" bson:"key"`
 	Value string `json:"value" bson:"value"`
+}
+
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("aks", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
 }
 
 // ManagedClusterAPIServerAccessProfile access profile for managed cluster API server.

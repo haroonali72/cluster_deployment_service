@@ -356,7 +356,13 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	err = doks.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	err = doks.ValidateDOKSData(cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -430,7 +436,7 @@ func (c *DOKSClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -495,7 +501,13 @@ func (c *DOKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	if cluster.CloudplexStatus != models.New && cluster.CloudplexStatus != models.ClusterCreationFailed && cluster.CloudplexStatus != models.ClusterTerminated {
+		ctx.SendLogs("DOKSClusterController : Cluster is in "+string(cluster.CloudplexStatus)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.CloudplexStatus) + " state"}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("DOKSClusterController: Updating cluster "+cluster.Name+" of the project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
@@ -646,7 +658,13 @@ func (c *DOKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("DOKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("DOKSClusterController: Deleting cluster "+cluster.Name+" of the project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = doks.DeleteKubernetesCluster(*ctx)
@@ -682,7 +700,6 @@ func (c *DOKSClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *DOKSClusterController) StartCluster() {
 
@@ -769,7 +786,7 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == "Cluster Created" {
+	if cluster.CloudplexStatus == models.ClusterCreated {
 		ctx.SendLogs("DOKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
@@ -930,10 +947,9 @@ func (c *DOKSClusterController) GetStatus() {
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *DOKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)

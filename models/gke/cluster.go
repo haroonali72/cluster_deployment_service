@@ -2,6 +2,7 @@ package gke
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/gcp"
 	rbacAuthentication "antelope/models/rbac_authentication"
@@ -248,6 +249,18 @@ type AutoUpgradeOptions struct {
 	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("gke", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {

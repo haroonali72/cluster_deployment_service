@@ -239,7 +239,13 @@ func (c *AKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	err = aks.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	cluster.CompanyId = userInfo.CompanyId
 	err = aks.AddAKSCluster(cluster, *ctx)
 	if err != nil {
@@ -268,7 +274,7 @@ func (c *AKSClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -332,6 +338,13 @@ func (c *AKSClusterController) Patch() {
 	ctx.SendLogs("AKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
 
+	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
+		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}
+		c.ServeJSON()
+		return
+	}
 	cluster.CompanyId = userInfo.CompanyId
 	err = aks.UpdateAKSCluster(cluster, *ctx)
 	if err != nil {
@@ -377,7 +390,7 @@ func (c *AKSClusterController) Patch() {
 // @Param	forceDelete path    boolean	true    ""
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in running/deploying/terminating state"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete [delete]
@@ -472,7 +485,13 @@ func (c *AKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("AKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
 	err = aks.DeleteAKSCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -505,7 +524,6 @@ func (c *AKSClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *AKSClusterController) StartCluster() {
 
@@ -595,7 +613,7 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Cluster Created" {
+	if cluster.Status == models.ClusterCreated {
 		ctx.SendLogs("AKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
@@ -749,10 +767,9 @@ func (c *AKSClusterController) GetStatus() {
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *AKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)

@@ -208,6 +208,7 @@ func (c *OPClusterController) Post() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *OPClusterController) Patch() {
@@ -261,7 +262,13 @@ func (c *OPClusterController) Patch() {
 	//=============================================================================//
 
 	ctx.SendLogs("OPClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
+		ctx.SendLogs("OPClusterController : Cluster is in "+string(cluster.Status)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}
+		c.ServeJSON()
+		return
+	}
 	err = op.UpdateCluster(cluster, true, *ctx, teams, token)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
@@ -359,7 +366,7 @@ func (c *OPClusterController) GetAll() {
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating state"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete [delete]
@@ -454,7 +461,13 @@ func (c *OPClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("OPClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("OPClusterController: Deleting cluster of project "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = op.DeleteCluster(id, userInfo.CompanyId, *ctx, token)
@@ -496,7 +509,7 @@ func (c *OPClusterController) Validate() {
 		return
 	}
 
-	stausCode,userInfo, err := rbac_athentication.GetInfo(token)
+	stausCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(stausCode)
@@ -508,7 +521,7 @@ func (c *OPClusterController) Validate() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "Get", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	stausCode,allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "View", token, *ctx)
+	stausCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(stausCode)
@@ -548,4 +561,3 @@ func (c *OPClusterController) Validate() {
 	c.Data["json"] = map[string]string{"msg": "Cluster deleted successfully"}
 	c.ServeJSON()
 }
-
