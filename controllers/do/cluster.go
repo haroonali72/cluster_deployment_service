@@ -337,7 +337,7 @@ func (c *DOClusterController) Patch() {
 	//=============================================================================//
 
 	ctx.SendLogs("DOClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	cluster.CompanyId = userInfo.CompanyId
 	err = do.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {

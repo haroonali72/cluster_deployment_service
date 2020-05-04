@@ -20,34 +20,34 @@ import (
 )
 
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
-	DOProjectId      string        `json:"do_project_id" bson:"do_project_id"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]`
+	DOProjectId      string        `json:"_" bson:"do_project_id"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           models.Type   `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
+	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster Name [required]`
+	Status           models.Type   `json:"status" bson:"status" validate:"in(New|new) description:"Status of cluster  [required]"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"in(DO|do)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-	TokenName        string        `json:"token_name" bson:"token_name"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required" description:"Network name of corresponding project [required]`
+	CompanyId        string        `json:"_" bson:"company_id"`
+	TokenName        string        `json:"token_name" bson:"token_name" description:"Rbac Token for Scaling Cluster [required]`
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
-	Image              ImageReference     `json:"image" bson:"image"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
-	Nodes              []*Node            `json:"nodes" bson:"nodes"`
-	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
-	IsExternal         bool               `json:"is_external" bson:"is_external"`
-	ExternalVolume     Volume             `json:"external_volume" bson:"external_volume"`
-	PrivateNetworking  bool               `json:"private_networking" bson:"private_networking"`
+	ID                 bson.ObjectId      `json:"_" bson:"_id,omitempty"`
+	Name               string             `json:"name" bson:"name" validate:"required" description:"Name of pool [required]`
+	NodeCount          int64              `json:"node_count"  bson:"node_count" validate:"required,gte=1" description:"Pool node count [required]"`
+	MachineType        string             `json:"machine_type"  bson:"machine_type" validate:"required" description:"Machine type for pool [required]"` //machine size
+	Image              ImageReference     `json:"image" bson:"image" description:"Image Information for cluster [required]"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" validate:"required" description:"Security Group for cluster [required]"`
+	Nodes              []*Node            `json:"nodes,omitempty" bson:"nodes"`
+	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info" description:"SSH Key information [required]"`
+	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" validate:"required" description:"Pool role, possible values 'master' or 'slave'. [required]"`
+	IsExternal         bool               `json:"is_external" bson:"is_external" description:"Enable Volume Option, possible values 'true' or 'false'  [optional]"`
+	ExternalVolume     Volume             `json:"external_volume" bson:"external_volume" description:"Block Store Volume Information ['required' if external volume is enabled']"`
+	PrivateNetworking  bool               `json:"private_networking" bson:"private_networking" description:"Option to enable private networking [optional]"`
 }
 
 type Node struct {
@@ -64,11 +64,11 @@ type Node struct {
 
 type ImageReference struct {
 	ID      bson.ObjectId `json:"_" bson:"_id,omitempty"`
-	Slug    string        `json:"slug" bson:"slug,omitempty"`
-	ImageId int           `json:"image_id" bson:"image_id,omitempty"`
+	Slug    string        `json:"slug" bson:"slug" description:"Image Slug Information ['optional' if ImageId is provided']"`
+	ImageId int           `json:"image_id" bson:"image_id" Image ID ['optional' if Slug is provided']`
 }
 type Volume struct {
-	VolumeSize int64 `json:"volume_size" bson:"volume_size"`
+	VolumeSize int64 `json:"volume_size" bson:"volume_size" description:"Block Store Volume Size ['required' if external volume is enabled']`
 }
 type Project struct {
 	ProjectData Data `json:"data"`
