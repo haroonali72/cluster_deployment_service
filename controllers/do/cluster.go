@@ -757,7 +757,7 @@ func (c *DOClusterController) GetStatus() {
 // @Param projectId path string true "Id of the project"
 // @Success 202 {"msg": "cluster termination initiated"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}/
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /terminate/:projectId/ [post]
