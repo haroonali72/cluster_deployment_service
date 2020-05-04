@@ -63,7 +63,7 @@ type Node struct {
 }
 
 type ImageReference struct {
-	ID      bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ID      bson.ObjectId `json:"_" bson:"_id,omitempty"`
 	Slug    string        `json:"slug" bson:"slug,omitempty"`
 	ImageId int           `json:"image_id" bson:"image_id,omitempty"`
 }
@@ -597,4 +597,69 @@ func ValidateProfile(key string, ctx utils.Context) types.CustomCPError {
 		return err
 	}
 	return types.CustomCPError{}
+}
+func ValidateDOData(cluster Cluster_Def, ctx utils.Context) error {
+	if cluster.ProjectId == "" {
+
+		return errors.New("project Id is empty")
+
+	} else if cluster.Name == "" {
+
+		return errors.New("cluster name is empty")
+
+	} else if cluster.NetworkName == "" {
+
+		return errors.New("kubernetes version is empty")
+
+	} else if len(cluster.NodePools) == 0 {
+
+		return errors.New("node pool length must not be zero")
+
+	} else {
+
+		for _, nodepool := range cluster.NodePools {
+
+			if nodepool.Name == "" {
+
+				return errors.New("node pool name is empty")
+
+			} else if nodepool.MachineType == "" {
+
+				return errors.New("machine type is empty")
+
+			} else if nodepool.NodeCount == 0 {
+
+				return errors.New("node count must be greater than zero")
+
+			} else if nodepool.PoolRole == "" {
+
+				return errors.New("pool role is empty")
+
+			} else if nodepool.KeyInfo.KeyName == "" {
+
+				return errors.New("key name is empty")
+
+			} else if len(nodepool.PoolSecurityGroups) == 0 {
+
+				return errors.New("security group is empty")
+
+			} else if nodepool.Image.Slug == "" && nodepool.Image.ImageId == 0 {
+
+				if nodepool.Image.Slug == "" {
+
+					return errors.New("image slug is empty")
+
+				} else {
+
+					return errors.New("image id is empty")
+
+				}
+
+			}
+
+		}
+
+	}
+
+	return nil
 }

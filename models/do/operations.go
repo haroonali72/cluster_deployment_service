@@ -276,7 +276,6 @@ func (cloud *DO) createProject(projectId string, ctx utils.Context) (types.Custo
 	}
 	return types.CustomCPError{}, project.ID
 }
-
 func (cloud *DO) deleteProject(projectId string, ctx utils.Context) types.CustomCPError {
 
 	_, err := cloud.Client.Projects.Delete(context.Background(), projectId)
