@@ -121,6 +121,12 @@ func (c *GKEClusterController) Get() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -189,6 +195,12 @@ func (c *GKEClusterController) GetAll() {
 
 	statusCode, err, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.GKE, *ctx)
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -285,6 +297,12 @@ func (c *GKEClusterController) Post() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -403,6 +421,12 @@ func (c *GKEClusterController) Patch() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -520,6 +544,12 @@ func (c *GKEClusterController) Delete() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -647,11 +677,18 @@ func (c *GKEClusterController) StartCluster() {
 	ctx.Data.Company = userInfo.CompanyId
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
+	if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+		c.ServeJSON()
+		return
+	}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+	
 	if !allowed {
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
@@ -793,6 +830,12 @@ func (c *GKEClusterController) GetStatus() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -896,6 +939,12 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1048,6 +1097,12 @@ func (c *GKEClusterController) ApplyAgent() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
+		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
