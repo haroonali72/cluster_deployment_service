@@ -6163,25 +6163,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0015176b0.false:
+  482.0xc00155da10.false:
     title: "false"
     type: object
-  605.0xc000dfe570.false:
+  605.0xc000e3c8d0.false:
     title: "false"
     type: object
-  644.0xc0010f52c0.false:
+  644.0xc001137620.false:
     title: "false"
     type: object
-  667.0xc00143f920.false:
+  667.0xc001483c80.false:
     title: "false"
     type: object
   7814.string:
     title: string
     type: object
-  13859.0xc001565440.false:
+  13859.0xc0015a57a0.false:
     title: "false"
     type: object
-  51197.0xc0014eac30.false:
+  51197.0xc00152cf90.false:
     title: "false"
     type: object
   55805.string:
@@ -6444,7 +6444,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000dfe570.false'
+        $ref: '#/definitions/605.0xc000e3c8d0.false'
       name:
         type: string
       network_name:
@@ -6825,7 +6825,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc0010f52c0.false'
+        $ref: '#/definitions/644.0xc001137620.false'
       name:
         type: string
       network_name:
@@ -8106,7 +8106,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51197.0xc0014eac30.false'
+        $ref: '#/definitions/51197.0xc00152cf90.false'
       kube_version:
         type: string
       name:
@@ -8369,7 +8369,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13859.0xc001565440.false'
+        $ref: '#/definitions/13859.0xc0015a57a0.false'
       name:
         type: string
       node_pools:
@@ -8414,8 +8414,10 @@ definitions:
     type: object
     properties:
       iam_key:
+        description: Cluster IAM key [required]
         type: string
       region:
+        description: Cloud region [required]
         type: string
 tags:
 - name: health
