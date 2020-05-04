@@ -303,6 +303,21 @@ func (c *DOClusterController) Patch() {
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	err = do.ValidateDOData(cluster, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
