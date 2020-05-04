@@ -104,7 +104,7 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	if response.StatusCode == 200 {
 		return 0,true, nil
 	}
-	return response.StatusCode,false, err
+	return response.StatusCode,false, errors.New(response.Status)
 }
 func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 

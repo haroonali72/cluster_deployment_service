@@ -498,7 +498,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return cpErr
 	}
 	errr := doksOps.init(ctx)
-	if errr   !=	(types.CustomCPError{}) {
+	if errr  != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {
