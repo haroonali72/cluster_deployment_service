@@ -356,7 +356,13 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	err = doks.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	err = doks.ValidateDOKSData(cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
