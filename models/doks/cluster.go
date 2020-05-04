@@ -2,6 +2,7 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/cores"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
@@ -148,6 +149,32 @@ type KubernetesNodeSize struct {
 	Slug string `json:"slug"`
 }
 
+func getNetworkHost(cloudType, projectId string) string {
+
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", projectId, -1)
+	}
+
+	return host
+}
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("doks", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
 func GetKubernetesCluster(ctx utils.Context) (cluster KubernetesCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -208,7 +235,7 @@ func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
 		cluster.ModificationDate = time.Now()
-		if cluster.CloudplexStatus == ""  {
+		if cluster.CloudplexStatus == "" {
 			cluster.CloudplexStatus = "new"
 		}
 		cluster.Cloud = models.DOKS
@@ -304,7 +331,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	err1 := doksOps.init(ctx)
-	if err1 !=	(types.CustomCPError{}){
+	if err1 != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
@@ -498,7 +525,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return cpErr
 	}
 	errr := doksOps.init(ctx)
-	if errr  != (types.CustomCPError{}) {
+	if errr != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {

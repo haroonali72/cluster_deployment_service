@@ -46,14 +46,14 @@ func (c *DOKSClusterController) GetServerConfig() {
 		return
 	}
 
-		region, err := do.GetRegion(token, *ctx)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(500)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
+	region, err := do.GetRegion(token, *ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
@@ -208,7 +208,7 @@ func (c *DOKSClusterController) Get() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -282,7 +282,7 @@ func (c *DOKSClusterController) GetAll() {
 
 	statusCode, _, data := rbacAuthentication.GetAllAuthenticate("cluster", ctx.Data.Company, token, models.DOKS, *ctx)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -351,7 +351,7 @@ func (c *DOKSClusterController) Post() {
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -373,7 +373,13 @@ func (c *DOKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	err = doks.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	err = doks.ValidateDOKSData(cluster, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
@@ -397,7 +403,7 @@ func (c *DOKSClusterController) Post() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -453,7 +459,7 @@ func (c *DOKSClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -507,7 +513,7 @@ func (c *DOKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -524,7 +530,13 @@ func (c *DOKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
+	if cluster.CloudplexStatus != models.New && cluster.CloudplexStatus != models.ClusterCreationFailed && cluster.CloudplexStatus != models.ClusterTerminated {
+		ctx.SendLogs("DOKSClusterController : Cluster is in "+string(cluster.CloudplexStatus)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.CloudplexStatus) + " state"}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("DOKSClusterController: Updating cluster "+cluster.Name+" of the project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("DOKSClusterController: JSON Payload: ", cluster)
 
@@ -626,7 +638,7 @@ func (c *DOKSClusterController) Delete() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -681,7 +693,13 @@ func (c *DOKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("DOKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("DOKSClusterController: Deleting cluster "+cluster.Name+" of the project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = doks.DeleteKubernetesCluster(*ctx)
@@ -712,13 +730,11 @@ func (c *DOKSClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 201 {"msg": "Cluster created successfully"}
 // @Success 202 {"msg": "Cluster creation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *DOKSClusterController) StartCluster() {
 
@@ -749,8 +765,6 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-
-
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -765,7 +779,7 @@ func (c *DOKSClusterController) StartCluster() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -813,25 +827,25 @@ func (c *DOKSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == "Cluster Created" {
+	if cluster.CloudplexStatus == models.ClusterCreated {
 		ctx.SendLogs("DOKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.Deploying) {
+	} else if cluster.CloudplexStatus == (models.Deploying) {
 		ctx.SendLogs("DOKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.Terminating) {
+	} else if cluster.CloudplexStatus == (models.Terminating) {
 		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
 		ctx.SendLogs("DOKSClusterContro<ller: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
@@ -871,6 +885,7 @@ func (c *DOKSClusterController) StartCluster() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} doks.KubernetesCluster
 // @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
 // @Failure 512 {object} doks.KubernetesCluster
@@ -916,7 +931,7 @@ func (c *DOKSClusterController) GetStatus() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -949,7 +964,6 @@ func (c *DOKSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx.SendLogs("DOKSClusterController: Fetching cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.Data.Company = userInfo.CompanyId
 
@@ -980,10 +994,9 @@ func (c *DOKSClusterController) GetStatus() {
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *DOKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
@@ -1027,7 +1040,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -1075,25 +1088,25 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is not in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.Deploying) {
+	} else if cluster.CloudplexStatus == (models.Deploying) {
 		ctx.SendLogs("DOKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.Terminating) {
+	} else if cluster.CloudplexStatus == (models.Terminating) {
 		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterTerminated) {
+	} else if cluster.CloudplexStatus == (models.ClusterTerminated) {
 		ctx.SendLogs("DOKSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterCreationFailed) {
+	} else if cluster.CloudplexStatus == (models.ClusterCreationFailed) {
 		ctx.SendLogs("DOKSClusterController: Cluster creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in failed state"}
@@ -1188,7 +1201,7 @@ func (c *DOKSClusterController) ApplyAgent() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
