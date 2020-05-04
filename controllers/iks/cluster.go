@@ -784,7 +784,6 @@ func (c *IKSClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *IKSClusterController) StartCluster() {
 	var cluster iks.Cluster_Def
@@ -1045,7 +1044,6 @@ func (c *IKSClusterController) GetStatus() {
 // @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *IKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
