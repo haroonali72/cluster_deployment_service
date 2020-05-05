@@ -19,15 +19,17 @@ type Key struct {
 }
 
 type AzureProfile struct {
-	Profile AzureCredentials `json:"credentials"`
+	Profile AzureCredentials `json:"credentials" validate:"required,dive" description:"AzureCredentials [required]"`
 }
+
 type AzureCredentials struct {
-	ClientId       string `json:"client_id"`
-	ClientSecret   string `json:"client_secret"`
-	SubscriptionId string `json:"subscription_id"`
-	TenantId       string `json:"tenant_id"`
-	Location       string `json:"region"`
+	ClientId       string `json:"client_id" validate:"required" description:"Client Id [required]"`
+	ClientSecret   string `json:"client_secret" validate:"required" description:"Client secret key [required]"`
+	SubscriptionId string `json:"subscription_id" validate:"required" description:"SubscriptionId of azure account [required]`
+	TenantId       string `json:"tenant_id" validate:"required" description:"TenantId of azure account [required]`
+	Location       string `json:"region" description:"Cloud location [optional]`
 }
+
 type AwsProfile struct {
 	Profile AwsCredentials `json:"credentials"`
 }
@@ -37,18 +39,18 @@ type AwsCredentials struct {
 	Region    string `json:"region"`
 }
 type DOProfile struct {
-	Profile DOCredentials `json:"credentials"`
+	Profile DOCredentials `json:"credentials" validate:"required,dive" description:"DO Credentials [required]`
 }
 type DOCredentials struct {
-	AccessKey string `json:"access_token"`
-	Region    string `json:"region"`
+	AccessKey string `json:"access_token" validate:"required" description:"Access key [required]"`
+	Region    string `json:"region" validate:"required" description:"Cloud Region [required]"`
 }
 type IBMProfile struct {
 	Profile IBMCredentials `json:"credentials" validate:"required,dive" description:"IBM Credentials [required]"`
 }
 type IBMCredentials struct {
 	IAMKey string `json:"iam_key" validate:"required" description:"Cluster IAM key [required]"`
-	Region string `json:"region" validate:"required" description:"Cloud region [required]"`
+	Region string `json:"region"  description:"Cloud region [optional]"`
 }
 
 func getVaultHost() string {
