@@ -86,7 +86,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 	machineTypes, cpErr := iks.GetAllMachines(ibmProfile, *ctx)
 	if cpErr != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
-		c.Data["json"] = cpErr.Error
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	}
