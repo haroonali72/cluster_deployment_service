@@ -38,6 +38,17 @@ type ErrorMessage string
 const (
 	IsEmpty  ErrorMessage = "is empty"
 	Notauthorized ErrorMessage= "User is unauthorized to perform this action"
+	AlreadyExist  ErrorMessage= "Cluster against same project id already exists"
+	SuccessfullyAdded ErrorMessage= "Cluster added successfully"
+	SuccessfullyUpdated ErrorMessage= "Cluster updated successfully"
+	SuccessfullyDeleted ErrorMessage=  "Cluster deleted successfully"
+	CreationInitialised ErrorMessage=  "Cluster creation initiated"
+	TerminationInitialised ErrorMessage=  "Cluster termination initialized"
+	KeySuccessfullyDeleted ErrorMessage=  "Key deleted successfully"
+	KeySuccessfullyAdded ErrorMessage= "Key added successfully"
+	ValidProfile ErrorMessage= "Profile is valid"
+
+
 	)
 
 type HeaderVariable string

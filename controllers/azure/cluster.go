@@ -69,7 +69,7 @@ func (c *AzureClusterController) Get() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -210,7 +210,7 @@ func (c *AzureClusterController) Post() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -240,7 +240,7 @@ func (c *AzureClusterController) Post() {
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(int(models.Conflict))
-			c.Data["json"] = map[string]string{"error": "Cluster against same project id already exists"}
+			c.Data["json"] = map[string]string{"error": string(models.AlreadyExist)}
 			c.ServeJSON()
 			return
 		}
@@ -254,7 +254,7 @@ func (c *AzureClusterController) Post() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
-	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
+	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyAdded)}
 	c.ServeJSON()
 }
 
@@ -312,7 +312,7 @@ func (c *AzureClusterController) Patch() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -373,7 +373,7 @@ func (c *AzureClusterController) Patch() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
+	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyUpdated)}
 	c.ServeJSON()
 }
 
@@ -437,7 +437,7 @@ func (c *AzureClusterController) Delete() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -491,7 +491,7 @@ func (c *AzureClusterController) Delete() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(204)
-	c.Data["json"] = map[string]string{"msg": "Cluster deleted successfully"}
+	c.Data["json"] = map[string]string{"msg":string(models.SuccessfullyDeleted)}
 	c.ServeJSON()
 }
 
@@ -557,7 +557,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -637,7 +637,7 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
+	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyInitialised)}
 	c.ServeJSON()
 }
 
@@ -695,7 +695,7 @@ func (c *AzureClusterController) GetStatus() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -804,7 +804,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -887,7 +887,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "Cluster termination initialized"}
+	c.Data["json"] = map[string]string{"msg": string(models.TerminationInitialised)}
 	c.ServeJSON()
 }
 
@@ -1074,7 +1074,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 	ctx.SendLogs("AZURENetworkController:: Key "+keyName+" deleted ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs(" Azure cluster key "+keyName+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(204)
-	c.Data["json"] = map[string]string{"msg": "Key deleted successfully"}
+	c.Data["json"] = map[string]string{"msg": string(models.KeySuccessfullyDeleted)}
 	c.ServeJSON()
 }
 
@@ -1302,7 +1302,7 @@ func (c *AzureClusterController) ValidateProfile() {
 	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	c.Data["json"] = map[string]string{"msg": "Profile is valid"}
+	c.Data["json"] = map[string]string{"msg": string(models.ValidProfile)}
 	c.ServeJSON()
 }
 
@@ -1385,7 +1385,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
