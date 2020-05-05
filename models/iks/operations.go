@@ -685,7 +685,6 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 
 	client := utils.InitReq()
 	res, err := client.SendRequest(req)
-
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while getting machine types.", 500)
@@ -702,7 +701,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	}
 	if res.StatusCode != 200 {
 		ctx.SendLogs(string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "error occurred while getting machine types.", 502)
+		cpErr := ApiError(errors.New(string(body)), "Error occurred while getting machine types.", 502)
 		return AllInstancesResponse{}, cpErr
 	}
 

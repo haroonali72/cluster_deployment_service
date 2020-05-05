@@ -105,9 +105,9 @@ type KubernetesNodePool struct {
 type KubernetesNode struct {
 	ID        string    `json:"id,omitempty" bson:"id"`
 	Name      string    `json:"name,omitempty" bson:"name"`
-	DropletID string    `json:"droplet_id,omitempty" bson:"droplet_id"`
-	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
-	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
+	DropletID string    `json:"-" bson:"droplet_id"`
+	CreatedAt time.Time `json:"-" bson:"created_at"`
+	UpdatedAt time.Time `json:"-" bson:"updated_at"`
 	//	Status    *KubernetesNodeStatus `json:"status,omitempty" bson:"status"`
 }
 
@@ -498,7 +498,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return cpErr
 	}
 	errr := doksOps.init(ctx)
-	if errr   !=	(types.CustomCPError{}) {
+	if errr  != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {

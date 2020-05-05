@@ -44,11 +44,11 @@ type DOCredentials struct {
 	Region    string `json:"region"`
 }
 type IBMProfile struct {
-	Profile IBMCredentials `json:"credentials"`
+	Profile IBMCredentials `json:"credentials" validate:"required,dive" description:"IBM Credentials [required]"`
 }
 type IBMCredentials struct {
-	IAMKey string `json:"iam_key"`
-	Region string `json:"region"`
+	IAMKey string `json:"iam_key" validate:"required" description:"Cluster IAM key [required]"`
+	Region string `json:"region" validate:"required" description:"Cloud region [required]"`
 }
 
 func getVaultHost() string {

@@ -116,6 +116,9 @@ func GetError(projectId, companyId string, cloud models.Cloud, ctx utils.Context
 	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
 	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": cloud}).One(&err)
 	if err1 != nil {
+		if err1 != nil &&  strings.Contains(strings.ToLower(err1.Error()),"not found"){
+			return err,nil
+		}
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return types.ClusterError{}, err1
 	}

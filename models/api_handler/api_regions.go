@@ -33,8 +33,8 @@ func GetAwsRegions() (reg []models.Region, err error) {
 	md := blackfriday.MarkdownBasic(contents)
 
 	s := string(md)
-	first_index := strings.Index(s, "|  <code>")
-	last_index := strings.LastIndex(s, "|  <code>")
+	first_index := strings.Index(s, "<p>| Code")
+	last_index := strings.LastIndex(s, "|</p>")
 	regionsInfo := s[first_index : last_index+1]
 	regionsInfo = strings.TrimSpace(regionsInfo)
 	regionsInfo = strings.ReplaceAll(regionsInfo, "<code>", "")
@@ -46,14 +46,15 @@ func GetAwsRegions() (reg []models.Region, err error) {
 			break
 		}
 		regionInfo := strings.Split(info, "| ")
-		loc := strings.Split(regionInfo[2], "(")
-		loca := strings.Split(loc[1], ")")
-		//region[loca[0]]=regionInfo[1]
+		if strings.Contains(regionInfo[2],"(") {
+			loc := strings.Split(regionInfo[2], "(")
+			loca := strings.Split(loc[1], ")")
+			//region[loca[0]]=regionInfo[1]
 
-		region.Name = loca[0]
-		region.Location = strings.TrimSpace(regionInfo[1])
-		reg = append(reg, *region)
-
+			region.Name = loca[0]
+			region.Location = strings.TrimSpace(regionInfo[1])
+			reg = append(reg, *region)
+		}
 	}
 	return reg, nil
 }
