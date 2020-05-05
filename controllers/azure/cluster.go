@@ -637,7 +637,7 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyInitialised)}
+	c.Data["json"] = map[string]string{"msg": string(models.CreationInitialised)}
 	c.ServeJSON()
 }
 
@@ -657,7 +657,6 @@ func (c *AzureClusterController) GetStatus() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AzureClusterController: Fetch Status of cluster ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
@@ -674,7 +673,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -682,11 +681,10 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "View", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -703,7 +701,7 @@ func (c *AzureClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error":string(models.ProfileId) + string(models.IsEmpty)}
+		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
 		c.ServeJSON()
 		return
 	}
@@ -717,7 +715,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -728,12 +726,13 @@ func (c *AzureClusterController) GetStatus() {
 	ctx.SendLogs("AzureClusterController: Fetching cluster status of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "was not found.") {
+	if err != nil{
 		c.Ctx.Output.SetStatus(int(models.BadRequest))
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("AzureClusterController:Cluster status of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("AzureClusterController:Cluster status of project "+projectId+ " fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

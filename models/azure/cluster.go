@@ -348,13 +348,13 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 		utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) (types.CustomCPError) {
 
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
+	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		return confError
+		return ApiError(confError,"Error in cluster creation",int(models.CloudStatusCode))
 	}
 
 	azure := AZURE{
@@ -364,9 +364,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		Subscription: credentials.Profile.SubscriptionId,
 		Region:       credentials.Profile.Location,
 	}
-	confError = azure.init()
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+	err := azure.init()
+	if err != (types.CustomCPError{}) {
+		PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 
 		cluster.Status = "Cluster creation failed"
 		confError = UpdateCluster(cluster, false, ctx)
@@ -374,18 +374,18 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return err
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = azure.createCluster(cluster, ctx, companyId, token)
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+	cluster, err = azure.createCluster(cluster, ctx, companyId, token)
+	if err !=(types.CustomCPError {}){
+		PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = "Cluster creation failed"
 		beego.Info("going to cleanup")
-		confError = azure.CleanUp(cluster, ctx, companyId)
-		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		err = azure.CleanUp(cluster, ctx, companyId)
+		if err != (types.CustomCPError {}) {
+			PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
 		cluster.Status = "Cluster creation failed"
@@ -394,23 +394,25 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return err
 
 	}
+
 	cluster.Status = "Cluster Created"
 
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return ApiError(confError,"Error in cluster creation",int(models.CloudStatusCode))
 	}
+
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-	return nil
+	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.AzureProfile, token, projectId string, companyId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, token, projectId string, companyId string, ctx utils.Context) (Cluster_Def, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
