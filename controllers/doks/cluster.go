@@ -782,7 +782,7 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.ProjectId=projectId
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
