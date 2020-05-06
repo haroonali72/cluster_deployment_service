@@ -6163,28 +6163,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001569440.false:
+  482.0xc00150f1d0.false:
     title: "false"
     type: object
-  518.0xc00148b5c0.false:
+  605.0xc000df8060.false:
     title: "false"
     type: object
-  1559.string:
+  644.0xc0010e8db0.false:
+    title: "false"
+    type: object
+  667.0xc001431410.false:
+    title: "false"
+    type: object
+  7814.string:
     title: string
     type: object
-  6000.0xc001594960.false:
+  13859.0xc001554f60.false:
     title: "false"
     type: object
-  13335.0xc0014b2ff0.false:
+  51327.0xc0014e2750.false:
     title: "false"
     type: object
-  13385.0xc000e6fb60.false:
-    title: "false"
-    type: object
-  13438.0xc00117e900.false:
-    title: "false"
-    type: object
-  22121.string:
+  55892.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6293,7 +6293,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/55892.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6444,7 +6444,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000e6fb60.false'
+        $ref: '#/definitions/605.0xc000df8060.false'
       name:
         type: string
       network_name:
@@ -6825,7 +6825,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc00117e900.false'
+        $ref: '#/definitions/644.0xc0010e8db0.false'
       name:
         type: string
       network_name:
@@ -7074,18 +7074,10 @@ definitions:
     title: KubernetesNode
     type: object
     properties:
-      created_at:
-        type: string
-        format: datetime
-      droplet_id:
-        type: string
       id:
         type: string
       name:
         type: string
-      updated_at:
-        type: string
-        format: datetime
   doks.KubernetesNodePool:
     title: KubernetesNodePool
     type: object
@@ -8114,7 +8106,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc00148b5c0.false'
+        $ref: '#/definitions/51327.0xc0014e2750.false'
       kube_version:
         type: string
       name:
@@ -8277,6 +8269,7 @@ definitions:
     - ClusterTerminated = "Cluster Terminated"
     - Deploying = "Creating"
     - Terminating = "Terminating"
+    - AgentDeploymentFailed = "Agent Deployment Failed"
     example: New
   op.Cluster_Def:
     title: Cluster_Def
@@ -8377,7 +8370,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001569440.false'
+        $ref: '#/definitions/13859.0xc001554f60.false'
       name:
         type: string
       node_pools:
@@ -8408,8 +8401,10 @@ definitions:
     type: object
     properties:
       client_id:
+        description: Client Id [required]
         type: string
       client_secret:
+        description: Client secret key [required]
         type: string
       region:
         type: string
@@ -8422,8 +8417,10 @@ definitions:
     type: object
     properties:
       iam_key:
+        description: Cluster IAM key [required]
         type: string
       region:
+        description: Cloud region [optional]
         type: string
 tags:
 - name: health
