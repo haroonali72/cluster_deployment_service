@@ -695,7 +695,7 @@ func (c *GKEClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.ProjectId=projectId
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -847,7 +847,7 @@ func (c *GKEClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.ProjectId=projectId
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -956,7 +956,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.ProjectId=projectId
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
