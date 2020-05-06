@@ -118,7 +118,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.ProjectId = projectId
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -1044,7 +1044,7 @@ func (c *DOKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.ProjectId = projectId
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
