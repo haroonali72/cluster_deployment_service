@@ -349,7 +349,7 @@ func (c *AKSClusterController) Patch() {
 	}
 	ctx.SendLogs("AKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("AKSClusterController: JSON Payload: ", cluster)
-	if cluster.CloudplexStatus == (models.Deploying) {
+	if cluster.Status == (models.Deploying) {
 		ctx.SendLogs("AKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
