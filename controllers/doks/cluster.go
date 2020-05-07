@@ -45,8 +45,8 @@ func (c *DOKSClusterController) GetServerConfig() {
 		c.ServeJSON()
 		return
 	}
-
-		region, err := do.GetRegion(token, *ctx)
+	region :="nyc1"
+	/*	region, err := do.GetRegion(token, *ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(500)
@@ -54,7 +54,7 @@ func (c *DOKSClusterController) GetServerConfig() {
 			c.ServeJSON()
 			return
 		}
-
+*/
 	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -643,7 +643,8 @@ func (c *DOKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.ProjectId=id
+	ctx.Data.Company=userInfo.CompanyId
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -657,7 +658,7 @@ func (c *DOKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	cluster.CompanyId=ctx.Data.Company
 	if cluster.CloudplexStatus == models.ClusterCreated && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
