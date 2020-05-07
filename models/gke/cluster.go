@@ -499,7 +499,8 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = models.ClusterCreationFailed
+		cluster.CloudplexStatus = models.AgentDeploymentFailed
+		_ = TerminateCluster(credentials, ctx)
 		_ = UpdateGKECluster(cluster, ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {
@@ -508,7 +509,8 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return confError
 	}
-	cluster.CloudplexStatus = "Cluster Created"
+
+	cluster.CloudplexStatus = models.ClusterCreated
 
 	err1 := UpdateGKECluster(cluster, ctx)
 	if err1 != nil {
@@ -630,7 +632,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	err1 = gkeOps.init()
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel : Terminate -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.CloudplexStatus = "Cluster Termination Failed"
+		cluster.CloudplexStatus = models.ClusterTerminationFailed
 		err = UpdateGKECluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -669,7 +671,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 	if errr != (types.CustomCPError{}) {
 		_, _ = utils.SendLog(ctx.Data.Company, "Cluster termination failed: "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 		utils.SendLog(ctx.Data.Company, err.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-		cluster.CloudplexStatus = "Cluster Termination Failed"
+		cluster.CloudplexStatus = models.ClusterTerminationFailed
 		err = UpdateGKECluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("GKEClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -690,7 +692,7 @@ func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.C
 		return errr
 	}
 
-	cluster.CloudplexStatus = "Cluster Terminated"
+	cluster.CloudplexStatus = models.ClusterTerminated
 
 	err = UpdateGKECluster(cluster, ctx)
 	if err != nil {

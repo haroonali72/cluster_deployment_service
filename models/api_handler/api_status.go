@@ -24,8 +24,8 @@ func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 	}
 
 	if response.StatusCode != 200 {
-		ctx.SendLogs("Data not fetched", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, errors.New("Data not fetched")
+		ctx.SendLogs("Regions/Network not fetched", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, errors.New("Regions/Network not fetched. " + response.Status)
 	}
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)

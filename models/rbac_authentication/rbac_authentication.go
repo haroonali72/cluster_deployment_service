@@ -89,7 +89,6 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	q.Add("resource_id", resourceId)
 	q.Add("resource_type", resourceType)
 	q.Add("action", action)
-	q.Add("sub_type", subType)
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
