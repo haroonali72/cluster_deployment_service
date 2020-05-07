@@ -97,9 +97,16 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 			)
 			return err
 		}
-
-	} else {
-		return err
+	} else if err == nil && obj == (types.ClusterError{}) {
+		err = AddError(ctx, customErr)
+		if err != nil {
+			ctx.SendLogs(
+				"Add - Got error while inserting cluster to the database:  "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
 	}
 	return nil
 }

@@ -208,7 +208,7 @@ func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
 		cluster.ModificationDate = time.Now()
-		if cluster.CloudplexStatus == ""  {
+		if cluster.CloudplexStatus == "" {
 			cluster.CloudplexStatus = "new"
 		}
 		cluster.Cloud = models.DOKS
@@ -304,7 +304,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	err1 := doksOps.init(ctx)
-	if err1 !=	(types.CustomCPError{}){
+	if err1 != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
@@ -351,7 +351,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	confErr := ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confErr != (types.CustomCPError{}) {
 		PrintError(ctx, confErr.Description, cluster.Name)
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(ctx, confError.Error(), cluster.Name)
@@ -498,7 +498,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return cpErr
 	}
 	errr := doksOps.init(ctx)
-	if errr   !=	(types.CustomCPError{}) {
+	if errr != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster Termination Failed"
 		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {
