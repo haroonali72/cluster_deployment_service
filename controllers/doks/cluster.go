@@ -530,6 +530,7 @@ func (c *DOKSClusterController) Patch() {
 
 	ctx.Data.Company = userInfo.CompanyId
 	cluster.CompanyId = ctx.Data.Company
+	ctx.Data.ProjectId=cluster.ProjectId
 	err = doks.UpdateKubernetesCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

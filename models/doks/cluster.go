@@ -70,7 +70,7 @@ type KubernetesCluster struct {
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new" description:"Status of cluster [required]"`
+	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|NEW|New|" description:"Status of cluster [required]"`
 	Name             string                `json:"name,omitempty" bson:"name" validate:"required" description:"Cluster name [required]"`
 	Region           string                `json:"region,omitempty" bson:"region" validate:"required" description:"Location for cluster provisioning [required]"`
 	KubeVersion      string                `json:"version,omitempty" bson:"version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
@@ -103,8 +103,8 @@ type KubernetesNodePool struct {
 }
 
 type KubernetesNode struct {
-	ID        string    `json:"id,omitempty" bson:"id"`
-	Name      string    `json:"name,omitempty" bson:"name"`
+	ID        string    `json:"-,omitempty" bson:"id"`
+	Name      string    `json:"name,omitempty" bson:"name" description:"Name of the node [optional]"`
 	DropletID string    `json:"-" bson:"droplet_id"`
 	CreatedAt time.Time `json:"-" bson:"created_at"`
 	UpdatedAt time.Time `json:"-" bson:"updated_at"`
