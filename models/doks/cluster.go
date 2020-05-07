@@ -70,7 +70,7 @@ type KubernetesCluster struct {
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|NEW|New|" description:"Status of cluster [required]"`
+	CloudplexStatus  models.Type           `json:"status" bson:"status" description:"Status of cluster [required]"`
 	Name             string                `json:"name,omitempty" bson:"name" validate:"required" description:"Cluster name [required]"`
 	Region           string                `json:"region,omitempty" bson:"region" validate:"required" description:"Location for cluster provisioning [required]"`
 	KubeVersion      string                `json:"version,omitempty" bson:"version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
@@ -208,11 +208,9 @@ func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
 		cluster.ModificationDate = time.Now()
-		if cluster.CloudplexStatus == ""  {
-			cluster.CloudplexStatus = "new"
-		}
-		cluster.Cloud = models.DOKS
 	}
+	cluster.CloudplexStatus=models.New
+	cluster.Cloud = models.DOKS
 
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoDOKSClusterCollection, cluster)
@@ -241,6 +239,8 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
+	cluster.CompanyId=oldCluster.CompanyId
+	cluster.CloudplexStatus= oldCluster.CloudplexStatus
 
 	err = AddKubernetesCluster(cluster, ctx)
 	if err != nil {
