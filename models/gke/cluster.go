@@ -23,7 +23,7 @@ type GKECluster struct {
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud" validate:"eq=gcp|eq=GCP"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new" description:"Status of cluster [required]"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status" description:"Status of cluster [optional]"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
@@ -329,10 +329,9 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
 		cluster.ModificationDate = time.Now()
-		if cluster.CloudplexStatus == "" {
-			cluster.CloudplexStatus = "new"
-		}
+		cluster.CloudplexStatus = models.New
 		cluster.Cloud = models.GKE
+		cluster.CompanyId=ctx.Data.Company
 	}
 
 	mc := db.GetMongoConf()
@@ -369,6 +368,8 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
+	cluster.CompanyId=oldCluster.CompanyId
+	cluster.CloudplexStatus=oldCluster.CloudplexStatus
 
 	err = AddGKECluster(cluster, ctx)
 	if err != nil {

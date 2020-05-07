@@ -166,7 +166,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 }
 
 // @Title Get
-// @Description  Get cluster against the projectId
+// @Description  Get saved cluster against the projectId
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} doks.KubernetesCluster
@@ -251,7 +251,7 @@ func (c *DOKSClusterController) Get() {
 }
 
 // @Title Get All
-// @Description get all the clusters
+// @Description Get all the saved clusters
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []doks.KubernetesCluster
 // @Failure 404 {"error": "Not Found"}
@@ -317,8 +317,8 @@ func (c *DOKSClusterController) GetAll() {
 	c.ServeJSON()
 }
 
-// @Title Create
-// @Description Add a new cluster
+// @Title Save
+// @Description Save a new cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	body	body 	doks.KubernetesCluster		true	"Body for cluster content"
 // @Success 201 {"msg": "Cluster added successfully"}
@@ -447,7 +447,7 @@ func (c *DOKSClusterController) Post() {
 }
 
 // @Title Update
-// @Description Update an existing kubernetes cluster
+// @Description Update a saved kubernetes cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	body	body 	doks.KubernetesCluster	true	"Body for cluster content"
 // @Success 200 {"msg": "Cluster updated successfully"}
@@ -586,7 +586,7 @@ func (c *DOKSClusterController) Patch() {
 }
 
 // @Title Delete
-// @Description Delete a cluster
+// @Description Delete a saved cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Project id of the cluster"
 // @Param	forceDelete path  boolean	true ""
@@ -616,7 +616,7 @@ func (c *DOKSClusterController) Delete() {
 		return
 	}
 
-	_, err := c.GetBool(":forceDelete")
+	forceDelete, err := c.GetBool(":forceDelete")
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -672,25 +672,24 @@ func (c *DOKSClusterController) Delete() {
 
 	cluster.CompanyId=ctx.Data.Company
 
-	if cluster.CloudplexStatus == (models.Deploying) {
+	if cluster.CloudplexStatus == (models.Deploying) && !forceDelete{
 		ctx.SendLogs("DOKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.Terminating) {
+	}else if cluster.CloudplexStatus == (models.Terminating) && !forceDelete{
 		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterCreated) {
-		ctx.SendLogs("DOKSClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}else if strings.ToLower(string(cluster.CloudplexStatus)) == string(string(models.ClusterCreated)) && !forceDelete {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+	}else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) && !forceDelete{
 		ctx.SendLogs("DOKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
@@ -724,8 +723,8 @@ func (c *DOKSClusterController) Delete() {
 	c.ServeJSON()
 }
 
-// @Title Start
-// @Description Deploy a kubernetes cluster
+// @Title Create
+// @Description Create/Deploy a kubernetes cluster on cloud
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
@@ -882,7 +881,7 @@ func (c *DOKSClusterController) StartCluster() {
 }
 
 // @Title Status
-// @Description Get live status of the running cluster
+// @Description Fetch live status of the running cluster from cloud
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
@@ -990,7 +989,7 @@ func (c *DOKSClusterController) GetStatus() {
 }
 
 // @Title Terminate
-// @Description Terminate a running cluster
+// @Description Terminate a running cluster from cloud
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "Token"
