@@ -6,8 +6,8 @@ import (
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
 )
@@ -61,6 +61,12 @@ func (c *OPClusterController) Get() {
 
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": "Bad Request: " + err.Error()}
@@ -133,6 +139,15 @@ func (c *OPClusterController) Post() {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -148,6 +163,12 @@ func (c *OPClusterController) Post() {
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -164,15 +185,6 @@ func (c *OPClusterController) Post() {
 	//=============================================================================//
 
 	ctx.SendLogs("OPClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	_, err = govalidator.ValidateStruct(cluster)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
 
 	cluster.CompanyId = userInfo.CompanyId
 
@@ -230,6 +242,15 @@ func (c *OPClusterController) Patch() {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	teams := c.Ctx.Input.Header("teams")
 
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
@@ -245,6 +266,12 @@ func (c *OPClusterController) Patch() {
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -330,6 +357,12 @@ func (c *OPClusterController) GetAll() {
 
 	statusCode, err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.OP, *ctx)
 	if err != nil {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -402,6 +435,12 @@ func (c *OPClusterController) Delete() {
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -496,7 +535,7 @@ func (c *OPClusterController) Validate() {
 		return
 	}
 
-	stausCode,userInfo, err := rbac_athentication.GetInfo(token)
+	stausCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(stausCode)
@@ -508,10 +547,16 @@ func (c *OPClusterController) Validate() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "Get", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	stausCode,allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "cluster", id, "View", token, *ctx)
 	if err != nil {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(stausCode)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -548,4 +593,3 @@ func (c *OPClusterController) Validate() {
 	c.Data["json"] = map[string]string{"msg": "Cluster deleted successfully"}
 	c.ServeJSON()
 }
-

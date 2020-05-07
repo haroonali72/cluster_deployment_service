@@ -16,7 +16,7 @@ func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -24,8 +24,8 @@ func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 	}
 
 	if response.StatusCode != 200 {
-		ctx.SendLogs("Regions not fetched", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, errors.New("Regions not fetched")
+		ctx.SendLogs("Regions/Network not fetched", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return nil, errors.New("Regions/Network not fetched. " + response.Status)
 	}
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)

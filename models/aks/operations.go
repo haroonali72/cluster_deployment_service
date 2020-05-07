@@ -367,29 +367,27 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 	}
 
 	return AKSCluster{
-		ProjectId: cloud.ProjectId,
-		Cloud:     models.AKS,
-		ClusterProperties: ManagedClusterProperties{
-			ProvisioningState: *v.ProvisioningState,
-			KubernetesVersion: *v.KubernetesVersion,
-			AgentPoolProfiles: agentPoolArr,
-			EnableRBAC:        *v.EnableRBAC,
-		},
-		ResourceID: *v.ID,
-		Name:       *v.Name,
-		Type:       *v.Type,
-		Location:   *v.Location,
+		ProjectId:         cloud.ProjectId,
+		Cloud:             models.AKS,
+		ProvisioningState: *v.ProvisioningState,
+		KubernetesVersion: *v.KubernetesVersion,
+		AgentPoolProfiles: agentPoolArr,
+		EnableRBAC:        *v.EnableRBAC,
+		ResourceID:        *v.ID,
+		Name:              *v.Name,
+		Type:              *v.Type,
+		Location:          *v.Location,
 	}
 }
 
 func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAgentPoolProfile {
-	AKSNodePools := make([]containerservice.ManagedClusterAgentPoolProfile, len(c.ClusterProperties.AgentPoolProfiles))
-	if c.ClusterProperties.IsAdvanced {
-		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+	AKSNodePools := make([]containerservice.ManagedClusterAgentPoolProfile, len(c.AgentPoolProfiles))
+	if c.IsAdvanced {
+		for i, nodepool := range c.AgentPoolProfiles {
 			AKSNodePools[i].Name = nodepool.Name
 			AKSNodePools[i].Count = nodepool.Count
 			AKSNodePools[i].OsType = "Linux"
-			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].VMSize = containerservice.VMSizeTypes(*nodepool.VMSize)
 			AKSNodePools[i].OsDiskSizeGB = nodepool.OsDiskSizeGB
 			AKSNodePools[i].MaxPods = nodepool.MaxPods
 			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
@@ -415,7 +413,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 
 		}
 	} else {
-		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+		for i, nodepool := range c.AgentPoolProfiles {
 			if nodepool.Name == nil {
 				AKSNodePools[i].Name = to.StringPtr("pool0")
 			} else {
@@ -423,7 +421,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			}
 			AKSNodePools[i].Count = nodepool.Count
 			AKSNodePools[i].OsType = "Linux"
-			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].VMSize = containerservice.VMSizeTypes(*nodepool.VMSize)
 			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
@@ -439,15 +437,15 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 func generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClusterAPIServerAccessProfile {
 	var AKSapiServerAccessProfile containerservice.ManagedClusterAPIServerAccessProfile
 
-	if c.ClusterProperties.IsAdvanced {
-		if c.ClusterProperties.APIServerAccessProfile.EnablePrivateCluster {
+	if c.IsAdvanced {
+		if c.APIServerAccessProfile.EnablePrivateCluster {
 			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
 		} else {
 			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(false)
 		}
 
 		var authIpRanges []string
-		for _, val := range c.ClusterProperties.APIServerAccessProfile.AuthorizedIPRanges {
+		for _, val := range c.APIServerAccessProfile.AuthorizedIPRanges {
 			authIpRanges = append(authIpRanges, val)
 		}
 
@@ -461,9 +459,9 @@ func generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClust
 
 func (cloud *AKS) generateServicePrincipal(c AKSCluster) *containerservice.ManagedClusterServicePrincipalProfile {
 	var AKSservicePrincipal containerservice.ManagedClusterServicePrincipalProfile
-	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsServicePrincipal {
-		AKSservicePrincipal.ClientID = &c.ClusterProperties.ClientID
-		AKSservicePrincipal.Secret = &c.ClusterProperties.Secret
+	if c.IsAdvanced && c.IsServicePrincipal {
+		AKSservicePrincipal.ClientID = &c.ClientID
+		AKSservicePrincipal.Secret = &c.Secret
 	} else {
 		AKSservicePrincipal.ClientID = &cloud.ID
 		AKSservicePrincipal.Secret = &cloud.Key
@@ -481,7 +479,7 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			AgentPoolProfiles:       generateClusterNodePools(c),
 			ServicePrincipalProfile: cloud.generateServicePrincipal(c),
 			APIServerAccessProfile:  generateApiServerAccessProfile(c),
-			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
+			EnableRBAC:              &c.EnableRBAC,
 			AddonProfiles:           generateAddonProfiles(c),
 			NetworkProfile:          generateNetworkProfile(c),
 
@@ -522,14 +520,14 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
 
 	var AKSnetworkProfile containerservice.NetworkProfileType
-	if c.ClusterProperties.IsExpert {
-		AKSnetworkProfile.PodCidr = &c.ClusterProperties.PodCidr
-		AKSnetworkProfile.DNSServiceIP = &c.ClusterProperties.DNSServiceIP
-		AKSnetworkProfile.ServiceCidr = &c.ClusterProperties.ServiceCidr
-		AKSnetworkProfile.DockerBridgeCidr = &c.ClusterProperties.DockerBridgeCidr
+	if c.IsExpert {
+		AKSnetworkProfile.PodCidr = &c.PodCidr
+		AKSnetworkProfile.DNSServiceIP = &c.DNSServiceIP
+		AKSnetworkProfile.ServiceCidr = &c.ServiceCidr
+		AKSnetworkProfile.DockerBridgeCidr = &c.DockerBridgeCidr
 	}
 
-	if c.ClusterProperties.IsAdvanced && len(c.ClusterProperties.APIServerAccessProfile.AuthorizedIPRanges) > 0 {
+	if c.IsAdvanced && len(c.APIServerAccessProfile.AuthorizedIPRanges) > 0 { //standard load balancer is used if AuthorizedIpRanges defined
 		AKSnetworkProfile.LoadBalancerSku = "standard"
 	}
 	return &AKSnetworkProfile
@@ -538,8 +536,8 @@ func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
 
 func generateClusterTags(c AKSCluster) map[string]*string {
 	AKSclusterTags := make(map[string]*string)
-	if c.ClusterProperties.IsAdvanced {
-		for _, tag := range c.ClusterProperties.ClusterTags {
+	if c.IsAdvanced {
+		for _, tag := range c.ClusterTags {
 			AKSclusterTags[tag.Key] = &tag.Value
 		}
 	} else {
@@ -557,7 +555,7 @@ func generateClusterIdentity() *containerservice.ManagedClusterIdentity {
 
 func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClusterAddonProfile {
 	AKSaddon := make(map[string]*containerservice.ManagedClusterAddonProfile)
-	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsHttpRouting {
+	if c.IsAdvanced && c.IsHttpRouting {
 		var httpAddOn containerservice.ManagedClusterAddonProfile
 		httpAddOn.Enabled = to.BoolPtr(true)
 		AKSaddon["httpApplicationRouting"] = &httpAddOn
@@ -571,16 +569,16 @@ func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClu
 }
 
 func generateKubernetesVersion(c AKSCluster) *string {
-	if c.ClusterProperties.IsAdvanced {
-		return to.StringPtr(c.ClusterProperties.KubernetesVersion)
+	if c.IsAdvanced {
+		return to.StringPtr(c.KubernetesVersion)
 	} else {
 		return to.StringPtr("1.15.10")
 	}
 }
 
 func generateDnsPrefix(c AKSCluster) *string {
-	if c.ClusterProperties.IsAdvanced {
-		return to.StringPtr(c.ClusterProperties.DNSPrefix + "-dns")
+	if c.IsAdvanced {
+		return to.StringPtr(c.DNSPrefix + "-dns")
 	} else {
 		return to.StringPtr(c.Name + "-dns")
 	}
@@ -607,25 +605,26 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) typ
 	}
 
 	for index, agentPool := range *AKScluster.AgentPoolProfiles {
-		cluster.ClusterProperties.AgentPoolProfiles[index].Name = agentPool.Name
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
-		cluster.ClusterProperties.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
-		cluster.ClusterProperties.AgentPoolProfiles[index].VMSize = &agentPool.VMSize
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsType = &agentPool.OsType
-		cluster.ClusterProperties.AgentPoolProfiles[index].Count = agentPool.Count
+		cluster.AgentPoolProfiles[index].Name = agentPool.Name
+		cluster.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
+		cluster.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
+		vm := string(agentPool.VMSize)
+		cluster.AgentPoolProfiles[index].VMSize = &vm
+		cluster.AgentPoolProfiles[index].OsType = &agentPool.OsType
+		cluster.AgentPoolProfiles[index].Count = agentPool.Count
 	}
 	cluster.ResourceID = *AKScluster.ID
 	cluster.Type = *AKScluster.Type
-	cluster.ClusterProperties.ProvisioningState = *AKScluster.ProvisioningState
-	cluster.ClusterProperties.KubernetesVersion = *AKScluster.KubernetesVersion
-	cluster.ClusterProperties.DNSPrefix = *AKScluster.DNSPrefix
-	cluster.ClusterProperties.Fqdn = *AKScluster.Fqdn
-	cluster.ClusterProperties.EnableRBAC = *AKScluster.EnableRBAC
+	cluster.ProvisioningState = *AKScluster.ProvisioningState
+	cluster.KubernetesVersion = *AKScluster.KubernetesVersion
+	cluster.DNSPrefix = *AKScluster.DNSPrefix
+	cluster.Fqdn = *AKScluster.Fqdn
+	cluster.EnableRBAC = *AKScluster.EnableRBAC
 
-	cluster.ClusterProperties.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
-	cluster.ClusterProperties.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
-	cluster.ClusterProperties.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
-	cluster.ClusterProperties.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
+	cluster.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
+	cluster.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
+	cluster.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
+	cluster.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
 
 	return types.CustomCPError{}
 }

@@ -24,27 +24,18 @@ import (
 
 //swagger:model akscluster
 type AKSCluster struct {
-	ID                bson.ObjectId            `json:"-" bson:"_id,omitempty"`
-	ProjectId         string                   `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud             models.Cloud             `json:"cloud" bson:"cloud"`
-	CreationDate      time.Time                `json:"-" bson:"creation_date"`
-	ModificationDate  time.Time                `json:"-" bson:"modification_date"`
-	CompanyId         string                   `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	Status            models.Type              `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new" description:"Status of cluster [required]"`
-	ResourceGoup      string                   `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
-	ClusterProperties ManagedClusterProperties `json:"property" bson:"property" validate:"required,dive"`
-	ResourceID        string                   `json:"-" bson:"cluster_id,omitempty"`
-	Name              string                   `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster name [required]"`
-	Type              string                   `json:"-" bson:"type,omitempty"`
-	Location          string                   `json:"location,omitempty" bson:"location,omitempty" validate:"required" description:"Location for cluster provisioning [required]"`
-}
-
-type ManagedClusterProperties struct {
+	ID                     bson.ObjectId                        `json:"-" bson:"_id,omitempty"`
+	ProjectId              string                               `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	Cloud                  models.Cloud                         `json:"-" bson:"cloud"`
+	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
+	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
+	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new" description:"Status of cluster [required]"`
 	ProvisioningState      string                               `json:"-" bson:"provisioning_state,omitempty"`
 	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" validate:"required" description:"Kubernetes version to be provisioned ['required' if advance settings enabled]"`
 	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" validate:"required" description:"Cluster DNS prefix ['required' if advance settings enabled]"`
 	Fqdn                   string                               `json:"-" bson:"fqdn,omitempty"`
-	AgentPoolProfiles      []ManagedClusterAgentPoolProfile     `json:"agent_pool,omitempty" bson:"agent_pool,omitempty" validate:"required,dive"`
+	AgentPoolProfiles      []ManagedClusterAgentPoolProfile     `json:"node_pools,omitempty" bson:"node_pools,omitempty" validate:"required,dive"`
 	APIServerAccessProfile ManagedClusterAPIServerAccessProfile `json:"api_server_access_profile,omitempty" bson:"api_server_access_profile,omitempty"`
 	EnableRBAC             bool                                 `json:"enable_rbac,omitempty" bson:"enable_rbac,omitempty" description:"Cluster RBAC configuration ['required' if advance settings enabled]"`
 	IsHttpRouting          bool                                 `json:"enable_http_routing,omitempty" bson:"enable_http_routing,omitempty" description:"Cluster Http Routing configuration ['required' if advance settings enabled]"`
@@ -58,6 +49,11 @@ type ManagedClusterProperties struct {
 	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" validate:"cidrv4" description:"Service CIDR for cluster ['required' if expert settings enabled]"`
 	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" validate:"ipv4" description:"DNS service IP for cluster ['required' if expert settings enabled]"`
 	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" validate:"cidrv4" description:"Docker bridge CIDR for cluster ['required' if expert settings enabled]"`
+	ResourceGoup           string                               `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
+	ResourceID             string                               `json:"-" bson:"cluster_id,omitempty"`
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster name [required]"`
+	Type                   string                               `json:"-" bson:"type,omitempty"`
+	Location               string                               `json:"location,omitempty" bson:"location,omitempty" validate:"required" description:"Location for cluster provisioning [required]"`
 }
 
 type Tag struct {
@@ -75,7 +71,7 @@ type ManagedClusterAPIServerAccessProfile struct {
 type ManagedClusterAgentPoolProfile struct {
 	Name              *string            `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster pool name [required]"`
 	Count             *int32             `json:"count,omitempty" bson:"count,omitempty" validate:"required,gte=1" description:"Pool node count [required]"`
-	VMSize            *aks.VMSizeTypes   `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required" description:"Machine type for pool [required]"`
+	VMSize            *string            `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required" description:"Machine type for pool [required]"`
 	OsDiskSizeGB      *int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty" description:"Disk size for VMs [required]"`
 	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool will be created [required]"`
 	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty" validate:"required" description:"Max pods per node [required]"`
@@ -290,7 +286,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	if CpErr != (types.CustomCPError{}) {
 		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
@@ -332,7 +328,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
@@ -349,17 +345,17 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	AgentErr := azure.ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGoup)
 	if AgentErr != nil {
 		cpErr := ApiError(AgentErr, "agent deployment failed", 500)
-
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
+		cluster.Status = models.AgentDeploymentFailed
+		_ = TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
-
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
+
 		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -367,7 +363,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 
 	UpdationErr := UpdateAKSCluster(cluster, ctx)
 	if UpdationErr != nil {
@@ -481,7 +477,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 
 		utils.SendLog(companyId, CpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateAKSCluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -501,7 +497,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+CpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, CpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateAKSCluster(cluster, ctx)
 		if err != nil {
 			ctx.SendLogs("AKSClusterModel : Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -515,7 +511,7 @@ func TerminateCluster(credentials vault.AzureProfile, projectId, companyId strin
 		return CpErr
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 
 	err = UpdateAKSCluster(cluster, ctx)
 	if err != nil {
@@ -661,30 +657,30 @@ func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 
 	}
 
-	if len(cluster.ClusterProperties.AgentPoolProfiles) == 0 {
+	if len(cluster.AgentPoolProfiles) == 0 {
 
 		return errors.New("length of node pools must be greater than zero")
 
-	} else if cluster.ClusterProperties.IsAdvanced {
+	} else if cluster.IsAdvanced {
 
-		if cluster.ClusterProperties.KubernetesVersion == "" {
+		if cluster.KubernetesVersion == "" {
 
 			return errors.New("kubernetes version is empty")
 
-		} else if cluster.ClusterProperties.DNSPrefix == "" {
+		} else if cluster.DNSPrefix == "" {
 
 			return errors.New("DNS prefix is empty")
 
-		} else if cluster.ClusterProperties.IsServicePrincipal {
+		} else if cluster.IsServicePrincipal {
 
-			if cluster.ClusterProperties.ClientID == "" || cluster.ClusterProperties.Secret == "" {
+			if cluster.ClientID == "" || cluster.Secret == "" {
 
 				return errors.New("client id or secret is empty")
 
 			}
 		}
 
-		for _, pool := range cluster.ClusterProperties.AgentPoolProfiles {
+		for _, pool := range cluster.AgentPoolProfiles {
 
 			if pool.Name != nil && *pool.Name == "" {
 
@@ -717,53 +713,53 @@ func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 		}
 	}
 
-	if cluster.ClusterProperties.IsExpert {
-		if cluster.ClusterProperties.PodCidr == "" {
+	if cluster.IsExpert {
+		if cluster.PodCidr == "" {
 
 			return errors.New("pod CIDR must not be empty")
 
 		} else {
 
-			isValidCidr := ipv4.IsIPv4(cluster.ClusterProperties.PodCidr)
+			isValidCidr := ipv4.IsIPv4(cluster.PodCidr)
 			if !isValidCidr {
 				return errors.New("pod CIDR is not valid")
 			}
 
 		}
 
-		if cluster.ClusterProperties.DNSServiceIP == "" {
+		if cluster.DNSServiceIP == "" {
 
 			return errors.New("DNS service IP must not be empty")
 
 		} else {
 
-			isValidIp := ipv4.IsIPv4(cluster.ClusterProperties.DNSServiceIP)
+			isValidIp := ipv4.IsIPv4(cluster.DNSServiceIP)
 			if !isValidIp {
 				return errors.New("DNS service IP is not valid")
 			}
 
 		}
 
-		if cluster.ClusterProperties.DockerBridgeCidr == "" {
+		if cluster.DockerBridgeCidr == "" {
 
 			return errors.New("Docker Bridge CIDR must not be empty")
 
 		} else {
 
-			isValidCidr := ipv4.IsIPv4(cluster.ClusterProperties.DockerBridgeCidr)
+			isValidCidr := ipv4.IsIPv4(cluster.DockerBridgeCidr)
 			if !isValidCidr {
 				return errors.New("docker bridge CIDR is not valid")
 			}
 
 		}
 
-		if cluster.ClusterProperties.ServiceCidr == "" {
+		if cluster.ServiceCidr == "" {
 
 			return errors.New("Service CIDR must not be empty")
 
 		} else {
 
-			isValidCidr := ipv4.IsIPv4(cluster.ClusterProperties.ServiceCidr)
+			isValidCidr := ipv4.IsIPv4(cluster.ServiceCidr)
 			if !isValidCidr {
 				return errors.New("service CIDR is not valid")
 			}

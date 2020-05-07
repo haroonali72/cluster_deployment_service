@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new" description:"Status of cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -35,7 +35,7 @@ type Cluster_Def struct {
 	TokenName        string        `json:"-" bson:"token_name"`
 	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required" description:"Virtual private cloud ID in which cluster will be provisioned [required]"`
 	IsAdvance        bool          `json:"is_advance" bson:"is_advance"`
-	ResourceGroup    string        `json:"resource_group" bson:"resource_group" description:"Resources would be created within resource_group [required]"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
 }
 type NodePool struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
@@ -310,10 +310,12 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
-
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
+		cluster.Status = models.AgentDeploymentFailed
+		profile := vault.IBMProfile{Profile: credentials}
+		_ = TerminateCluster(cluster, profile, ctx, companyId, token)
+
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
@@ -327,7 +329,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 
 	confError = UpdateCluster(cluster, false, ctx)
 
@@ -416,7 +418,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 		utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -435,7 +437,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 		utils.SendLog(companyId, "Cluster termination failed: "+cpErr.Description+cluster.Name, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -450,7 +452,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		return cpErr
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 	err := UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)

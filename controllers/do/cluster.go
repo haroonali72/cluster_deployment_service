@@ -22,7 +22,7 @@ type DOClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param projectId path string true "Id of the project"
-// @Param token	header string token ""
+// @Param X-Auth-Token	header string true "token"
 // @Success 200 {object} do.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -38,15 +38,15 @@ func (c *DOClusterController) Get() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -60,7 +60,7 @@ func (c *DOClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -101,21 +101,21 @@ func (c *DOClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "token"
 // @Success 200 {object} []do.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *DOClusterController) GetAll() {
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -129,7 +129,7 @@ func (c *DOClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DO, *ctx)
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.DO, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -155,7 +155,7 @@ func (c *DOClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param body body do.Cluster_Def true "body for cluster content"
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 body not found
 // @Failure 401 {"error": "error msg"}
@@ -177,15 +177,15 @@ func (c *DOClusterController) Post() {
 
 	cluster.CreationDate = time.Now()
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -197,7 +197,7 @@ func (c *DOClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -257,7 +257,7 @@ func (c *DOClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Param body body do.Cluster_Def true "body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -271,15 +271,15 @@ func (c *DOClusterController) Patch() {
 	var cluster do.Cluster_Def
 	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -291,7 +291,7 @@ func (c *DOClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -348,7 +348,7 @@ func (c *DOClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Param projectId path string true "project id of the cluster"
 // @Param forceDelete path boolean true ""
 // @Success 200 {"msg": "cluster deleted successfully"}
@@ -366,10 +366,10 @@ func (c *DOClusterController) Delete() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -380,7 +380,7 @@ func (c *DOClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -392,7 +392,7 @@ func (c *DOClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", id, "Delete", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -462,7 +462,7 @@ func (c *DOClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Param X-Profile-Id header string profileId ""
 // @Param projectId path string	true "Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
@@ -481,15 +481,15 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -501,7 +501,7 @@ func (c *DOClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Start", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -564,14 +564,14 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	region, err := do.GetRegion(token,*ctx)
+	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", cluster.ProjectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
@@ -601,7 +601,7 @@ func (c *DOClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Param X-Profile-Id header string profileId ""
 // @Param projectId path string	true "Id of the project"
 // @Success 200 {object} do.Cluster_Def
@@ -620,15 +620,15 @@ func (c *DOClusterController) GetStatus() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -640,7 +640,7 @@ func (c *DOClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -677,7 +677,7 @@ func (c *DOClusterController) GetStatus() {
 		return
 	}
 
-	statusCode,awsProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -700,7 +700,7 @@ func (c *DOClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param X-Profile-Id header X-Profile-Id string profileId	""
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Param projectId path string true "Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "error msg"}
@@ -717,15 +717,15 @@ func (c *DOClusterController) TerminateCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -738,7 +738,7 @@ func (c *DOClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Terminate", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -772,7 +772,7 @@ func (c *DOClusterController) TerminateCluster() {
 		return
 	}
 
-	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -826,7 +826,7 @@ func (c *DOClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -834,15 +834,15 @@ func (c *DOClusterController) TerminateCluster() {
 // @router /sshkeys [get]
 func (c *DOClusterController) GetSSHKeys() {
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -877,15 +877,15 @@ func (c *DOClusterController) GetSSHKeys() {
 // @Param projectId path string true "Id of the project"
 // @Param keyname path string true "SSHKey"
 // @Param X-Profile-Id header string profileId	""
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
 // @Param teams header string teams ""
-// @Param X-Region header string X-Region ""
+// @Param region path string true "region"
 // @Success 200 {object} key_utils.AZUREKey
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
-// @router /sshkey/:projectId/:keyname [post]
+// @router /sshkey/:projectId/:keyname/:region [post]
 func (c *DOClusterController) PostSSHKey() {
 
 	ctx := new(utils.Context)
@@ -901,17 +901,17 @@ func (c *DOClusterController) PostSSHKey() {
 
 	//==========================RBAC Authentication==============================//
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token id is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	teams := c.Ctx.Input.Header("teams")
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.GetString("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region id is empty"}
@@ -919,7 +919,7 @@ func (c *DOClusterController) PostSSHKey() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -950,7 +950,7 @@ func (c *DOClusterController) PostSSHKey() {
 		return
 	}
 
-	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -975,7 +975,7 @@ func (c *DOClusterController) PostSSHKey() {
 // @Title GetRegions
 // @Description return regions and their supported machine sizes
 // @Param X-Profile-Id header string X-Profile-Id "DO profile"
-// @Param token header string token true ""
+// @Param X-Auth-Token header string true "Token"
 // @Success 200 {object} []godo.Region
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -993,7 +993,7 @@ func (c *DOClusterController) GetRegions() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "token is empty"}
@@ -1001,7 +1001,7 @@ func (c *DOClusterController) GetRegions() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1013,7 +1013,7 @@ func (c *DOClusterController) GetRegions() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("DOClusterController: GetAllZones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode,doProfile, err := do.GetProfile(profileId, "", token, *ctx)
+	statusCode, doProfile, err := do.GetProfile(profileId, "", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1038,35 +1038,36 @@ func (c *DOClusterController) GetRegions() {
 // @Description Delete SSH key
 // @Param keyname path string true ""
 // @Param X-Profile-Id header string profileId ""
-// @Param token header string token ""
+// @Param X-Auth-Token header string true "Token"
+// @Param region path string true "region"
 // @Success 200 {"msg": "key deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "User is unauthorized to perform this action"}
 // @Failure 404 {"error": "error msg"}
-// @router /sshkey/:keyname [delete]
+// @router /sshkey/:keyname/:region [delete]
 func (c *DOClusterController) DeleteSSHKey() {
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOClusterController: DeleteSSHKey.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	region := c.Ctx.Input.Header("X-Region")
+	region := c.Ctx.Input.Header("region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region id is empty"}
+		c.Data["json"] = map[string]string{"error": "region is empty"}
 		c.ServeJSON()
 		return
 	}
 	//==========================RBAC Authentication==============================//
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1104,7 +1105,7 @@ func (c *DOClusterController) DeleteSSHKey() {
 		return
 	}
 
-	statusCode,doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1126,7 +1127,7 @@ func (c *DOClusterController) DeleteSSHKey() {
 
 // @Title ValidateProfile
 // @Description validate if profile is valid
-// @Param token header string token true ""
+// @Param X-Auth-Token header string true "Token"
 // @Param body vault.DOCredentials true	"body for cluster content"
 // @Success 200 {"msg": "Profile is valid"}
 // @Failure 400 {"error": "error msg"}
@@ -1140,15 +1141,15 @@ func (c *DOClusterController) ValidateProfile() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("DOClusterController:Check if profile is valid.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
