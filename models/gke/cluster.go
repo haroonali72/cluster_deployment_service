@@ -486,7 +486,6 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, ctx)
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
@@ -494,15 +493,23 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
+		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = models.AgentDeploymentFailed
-		_ = TerminateCluster(credentials, ctx)
-		_ = UpdateGKECluster(cluster, ctx)
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
+		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, confError.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+		cluster.CloudplexStatus = models.ClusterCreationFailed
+		TerminateCluster(credentials, ctx)
+		err := UpdateGKECluster(cluster, ctx)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		err = db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}

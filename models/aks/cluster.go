@@ -362,8 +362,8 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = models.AgentDeploymentFailed
-		_ = TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
+		cluster.Status = models.ClusterCreationFailed
+		TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)

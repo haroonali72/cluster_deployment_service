@@ -312,17 +312,17 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = models.AgentDeploymentFailed
+		cluster.Status = models.ClusterCreationFailed
 		profile := vault.IBMProfile{Profile: credentials}
-		_ = TerminateCluster(cluster, profile, ctx, companyId, token)
+		TerminateCluster(cluster, profile, ctx, companyId, token)
 
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		}
 
-		cpErr := ApiError(confError, "Error occurred deploying agent", 500)
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		cpErr := ApiError(confError, "Error occurred while deploying agent", 500)
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}

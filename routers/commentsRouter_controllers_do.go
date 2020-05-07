@@ -64,7 +64,7 @@ func init() {
 	beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/do:DOClusterController"],
 		beego.ControllerComments{
 			Method:           "DeleteSSHKey",
-			Router:           `/sshkey/:keyname`,
+			Router:           `/sshkey/:keyname/:region`,
 			AllowHTTPMethods: []string{"delete"},
 			MethodParams:     param.Make(),
 			Filters:          nil,

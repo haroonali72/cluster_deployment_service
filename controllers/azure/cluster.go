@@ -198,8 +198,7 @@ func (c *AzureClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.ProjectId, "Create", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -299,8 +298,8 @@ func (c *AzureClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Update", token, *ctx)
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -412,7 +411,6 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -424,8 +422,7 @@ func (c *AzureClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), id, "Delete", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -544,8 +541,7 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -680,7 +676,7 @@ func (c *AzureClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -789,7 +785,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Terminate", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -973,6 +969,7 @@ func (c *AzureClusterController) PostSSHKey() {
 
 	teams := c.Ctx.Input.Header("teams")
 
+	//==========================RBAC Authentication==============================//
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1034,8 +1031,6 @@ func (c *AzureClusterController) DeleteSSHKey() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	//==========================================================================//
-
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1119,6 +1114,8 @@ func (c *AzureClusterController) GetInstances() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
+	beego.Info("AzureClusterController: Get All Instances..")
+
 	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1161,7 +1158,13 @@ func (c *AzureClusterController) GetRegions() {
 		c.ServeJSON()
 		return
 	}
-
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if token == "" {
+		c.Ctx.Output.SetStatus(int(models.ParamMissing))
+		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
+		c.ServeJSON()
+		return
+	}
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1171,13 +1174,7 @@ func (c *AzureClusterController) GetRegions() {
 	}
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
-		c.ServeJSON()
-		return
-	}
+	beego.Info("AzureClusterController: Get All Regions.")
 
 	var regions []models.Region
 	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {
@@ -1369,7 +1366,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AzureClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
