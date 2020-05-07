@@ -197,31 +197,6 @@ func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	//if oldCluster.Status == string(models.Deploying) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in deploying state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in deploying state")
-	//}
-	//if oldCluster.Status == string(models.Terminating) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in terminating state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in terminating state")
-	//}
-	//if strings.ToLower(oldCluster.Status) == strings.ToLower(string(models.ClusterCreated)) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in running state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in running state")
-	//}
-
 	err = DeleteAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs(
