@@ -965,6 +965,7 @@ func (c *DOClusterController) PostSSHKey() {
 
 	teams := c.Ctx.Input.Header("teams")
 
+
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())

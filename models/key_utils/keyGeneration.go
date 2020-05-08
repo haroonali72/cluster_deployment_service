@@ -20,7 +20,7 @@ type AWSKey struct {
 
 type AZUREKey struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" description:"It is type of credentials used for ssh. By default value is 'key' [optional]"`
-	KeyType        models.KeyType         `json:"key_type" bson:"key_type" validate:"required, eq=new|eq=cp|eq=aws|eq=user" description:"It is type key. By default value is 'new' [required]"`
+	KeyType        models.KeyType         `json:"key_type" bson:"key_type" validate:"required,eq=new|eq=cp|eq=aws|eq=user" description:"It is type key. By default value is 'new' [required]"`
 	KeyName        string                 `json:"key_name" bson:"key_name" validate:"required" description:"Name of the key. By default value is 'new' [required]"`
 	Username       string                 `json:"username" bson:"username,omitempty" description:"It is the user name ['required' if credentials_type is 'password']"`
 	AdminPassword  string                 `json:"admin_password" bson:"admin_password,omitempty" description:"It is the password ['required' if credentials_type is 'password']"`

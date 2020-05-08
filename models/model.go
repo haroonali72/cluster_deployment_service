@@ -20,6 +20,7 @@ const (
 	ClusterTerminated        Type = "Cluster Terminated"
 	Deploying                Type = "Creating"
 	Terminating              Type = "Terminating"
+	//AgentDeploymentFailed    Type = "Agent Deployment Failed"
 )
 
 type StatusCode int

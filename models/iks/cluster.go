@@ -310,24 +310,26 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
-
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
+		profile := vault.IBMProfile{Profile: credentials}
+		TerminateCluster(cluster, profile, ctx, companyId, token)
+
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		}
 
-		cpErr := ApiError(confError, "Error occurred deploying agent", 500)
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		cpErr := ApiError(confError, "Error occurred while deploying agent", 500)
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 
 	confError = UpdateCluster(cluster, false, ctx)
 
@@ -416,7 +418,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 		utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -435,7 +437,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 
 		utils.SendLog(companyId, "Cluster termination failed: "+cpErr.Description+cluster.Name, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
@@ -450,7 +452,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.C
 		return cpErr
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 	err := UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
