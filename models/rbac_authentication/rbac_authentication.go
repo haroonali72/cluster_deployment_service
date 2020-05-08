@@ -38,8 +38,6 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	q := req.URL.Query()
 	q.Add("companyId", companyId)
 	q.Add("resource_type", resourceType)
-	q.Add("sub_type", string(cloudType))
-
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 

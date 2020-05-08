@@ -6173,28 +6173,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc001570e70.false:
+  482.0xc0015b8930.false:
     title: "false"
     type: object
-  605.0xc000e1d800.false:
+  605.0xc000e6f1a0.false:
     title: "false"
     type: object
-  644.0xc001138720.false:
+  644.0xc0011940c0.false:
     title: "false"
     type: object
-  667.0xc0014930e0.false:
+  667.0xc0014d2b40.false:
     title: "false"
     type: object
   7855.string:
     title: string
     type: object
-  14441.0xc0015a6d80.false:
+  14479.0xc0015e68a0.false:
     title: "false"
     type: object
-  51452.0xc0015383f0.false:
+  51490.0xc001567e90.false:
     title: "false"
     type: object
-  55819.string:
+  55857.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6303,7 +6303,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55819.string'
+        $ref: '#/definitions/55857.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6465,7 +6465,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000e1d800.false'
+        $ref: '#/definitions/605.0xc000e6f1a0.false'
       name:
         type: string
       network_name:
@@ -6846,7 +6846,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc001138720.false'
+        $ref: '#/definitions/644.0xc0011940c0.false'
       name:
         type: string
       network_name:
@@ -8159,7 +8159,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51452.0xc0015383f0.false'
+        $ref: '#/definitions/51490.0xc001567e90.false'
       kube_version:
         type: string
       name:
@@ -8434,7 +8434,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14441.0xc0015a6d80.false'
+        $ref: '#/definitions/14479.0xc0015e68a0.false'
       name:
         type: string
       node_pools:
