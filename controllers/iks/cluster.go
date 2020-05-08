@@ -23,12 +23,12 @@ type IKSClusterController struct {
 // @Description Get all available instance list
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	region	path	string	true	"Region of the cloud"
+// @Param	zone	path	string	true	"Region of the cloud"
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime error"}
 // @Failure 512 {object} types.CustomCPError
-// @router /getallmachines/:region/ [get]
+// @router /getallmachines/:zone/ [get]
 func (c *IKSClusterController) GetAllMachineTypes() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("IKSClusterController: Get All Machines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -49,7 +49,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 		return
 	}
 
-	region := c.GetString(":region")
+	region := c.GetString(":zone")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region is empty"}
@@ -976,7 +976,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Title Status
 // @Description Get live status of the running cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	X-Profile-Id	header	string	profileId	true "Vault credentials profile Id"
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile Id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} []iks.KubeWorkerPoolStatus
 // @Failure 401 {"error": "Unauthorized"}
