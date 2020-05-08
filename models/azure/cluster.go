@@ -416,7 +416,7 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, err
+		return Cluster_Def{}, ApiError(err,"Error in fetching status.",int(models.CloudStatusCode))
 	}
 
 	azure := AZURE{
@@ -426,16 +426,14 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		Subscription: credentials.Profile.SubscriptionId,
 		Region:       credentials.Profile.Location,
 	}
-	err = azure.init()
-	if err != nil {
-		return Cluster_Def{}, err
+	err1 := azure.init()
+	if err1 != (types.CustomCPError{}) {
+		return Cluster_Def{}, err1
 	}
 
 	_, e := azure.fetchStatus(&cluster, token, ctx)
-	if e != nil {
-
-		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
+	if e != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, e
 	}
 	/*err = UpdateCluster(c)
@@ -443,7 +441,7 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}*/
-	return cluster, nil
+	return cluster, types.CustomCPError{}
 }
 func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {
 
@@ -636,7 +634,7 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	return false
 }
 
-func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM, error) {
+func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM, types.CustomCPError) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -651,13 +649,13 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 	}
 
 	instances, err := azure.getAllInstances()
-	if err != nil {
-		beego.Error(err.Error())
+	if err !=(types.CustomCPError{}) {
+		beego.Error(err.Error)
 		return []azureVM{}, err
 	}
-	return instances, nil
+	return instances, types.CustomCPError{}
 }
-func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, error) {
+func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, types.CustomCPError) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -667,27 +665,28 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Reg
 		Region:       credentials.Profile.Location,
 	}
 	err := azure.init()
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return []models.Region{}, err
 	}
 
 	regions, err := azure.getRegions(ctx)
-	if err != nil {
-		beego.Error(err.Error())
+	if err != (types.CustomCPError{}) {
+		beego.Error(err.Error)
 		return []models.Region{}, err
 	}
-	return regions, nil
+	return regions, types.CustomCPError{}
 }
-func GetAllMachines() ([]string, error) {
+func GetAllMachines() ([]string,types.CustomCPError) {
 
 	regions, err := getAllVMSizes()
-	if err != nil {
-		beego.Error(err.Error())
+	if err != (types.CustomCPError{}) {
+		beego.Error(err.Error)
 		return []string{}, err
 	}
-	return regions, nil
+	return regions,types.CustomCPError{}
 }
-func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region string, ctx utils.Context) error {
+
+func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region string, ctx utils.Context) types.CustomCPError {
 
 	azure := AZURE{
 		ID:           clientId,
@@ -697,17 +696,18 @@ func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region st
 		Region:       region,
 	}
 	err := azure.init()
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return err
 	}
 
 	_, err = azure.getRegions(ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		beego.Error("Profile is not valid")
 		return err
 	}
-	return nil
+	return types.CustomCPError{}
 }
+
 func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId

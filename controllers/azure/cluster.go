@@ -5,6 +5,7 @@ import (
 	"antelope/models/azure"
 	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -725,10 +726,10 @@ func (c *AzureClusterController) GetStatus() {
 
 	ctx.SendLogs("AzureClusterController: Fetching cluster status of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil{
-		c.Ctx.Output.SetStatus(int(models.BadRequest))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	cluster, err1 := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
+	if err1 != (types.CustomCPError{}){
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1086,6 +1087,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 512 {object} types.CustomCPError
 // @router /getAllInstances [get]
 func (c *AzureClusterController) GetInstances() {
 	ctx := new(utils.Context)
@@ -1134,10 +1136,10 @@ func (c *AzureClusterController) GetInstances() {
 	}
 	ctx.SendLogs("AZURENetworkController:: Get all instances ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	instances, err := azure.GetInstances(azureProfile, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(int(models.InternalServerError))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	instances, err1 := azure.GetInstances(azureProfile, *ctx)
+	if err1 != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1204,10 +1206,10 @@ func (c *AzureClusterController) GetRegions() {
 
 	ctx.SendLogs("AzureClusterController:: Getting all instances ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	reg, err := azure.GetRegions(azureProfile, *ctx)
-	if err != nil {
+	reg, err1 := azure.GetRegions(azureProfile, *ctx)
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": err1.Error}
 		c.ServeJSON()
 		return
 	}
@@ -1227,10 +1229,10 @@ func (c *AzureClusterController) GetRegions() {
 // @router /getallmachines [get]
 func (c *AzureClusterController) GetAllMachines() {
 
-	instances, err := azure.GetAllMachines()
-	if err != nil {
+	instances, err1 := azure.GetAllMachines()
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": err1.Error}
 		c.ServeJSON()
 		return
 	}
@@ -1286,15 +1288,15 @@ func (c *AzureClusterController) ValidateProfile() {
 	ctx.SendLogs("Checking Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	for _, region := range regions {
-		err = azure.ValidateProfile(credentials.ClientId, credentials.ClientSecret, credentials.SubscriptionId, credentials.TenantId, region.Location, *ctx)
-		if err != nil {
+		err1 := azure.ValidateProfile(credentials.ClientId, credentials.ClientSecret, credentials.SubscriptionId, credentials.TenantId, region.Location, *ctx)
+		if err1 !=(types.CustomCPError{}) {
 			ctx.SendLogs("AzureClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(int(models.InternalServerError))
-			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.Ctx.Output.SetStatus(err1.StatusCode)
+			c.Data["json"] =err1
 			c.ServeJSON()
 			return
 		}
-		if err == nil {
+		if err1 == (types.CustomCPError{}) {
 			break
 		}
 	}
