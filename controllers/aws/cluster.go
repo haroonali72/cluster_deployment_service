@@ -22,7 +22,7 @@ type AWSClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -101,7 +101,7 @@ func (c *AWSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []aws.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -155,7 +155,7 @@ func (c *AWSClusterController) GetAll() {
 // @Title Create
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Success 400 {"msg": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -260,7 +260,7 @@ func (c *AWSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -361,9 +361,9 @@ func (c *AWSClusterController) Patch() {
 
 // @Title Delete
 // @Description delete a cluster
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path 	string	true	"project id of the cluster"
-// @Param	forceDelete path    boolean	true    ""
+// @Param	forceDelete path    boolean	true    "deleting cluster forcefully"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -475,8 +475,8 @@ func (c *AWSClusterController) Delete() {
 
 // @Title Start
 // @Description starts a  cluster
-// @Param	X-Auth-Token	header	string	token ""
-// @Param	X-Profile-Id	header	string	profileId	""
+// @Param	X-Auth-Token	header	string	true "token"
+// @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 401 {"error": "error msg"}
@@ -614,8 +614,8 @@ func (c *AWSClusterController) StartCluster() {
 
 // @Title Status
 // @Description returns status of nodes
-// @Param	X-Auth-Token	header	string	token ""
-// @Param	X-Profile-Id	header	string	profileId	""
+// @Param	X-Auth-Token	header	string	true "token"
+// @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
 // @Failure 400 {"error": "error msg"}
@@ -712,8 +712,8 @@ func (c *AWSClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param	X-Profile-Id header	X-Profile-Id	string	profileId	""
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Profile-Id header	X-Profile-Id	string	true "profileId"
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "error msg"}
@@ -839,7 +839,7 @@ func (c *AWSClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	region  path	string	true	"region"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
@@ -896,8 +896,8 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 // @Title AwsAmis
 // @Description returns aws ami details
-// @Param	X-Profile-Id	header	string	profileId	""
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Profile-Id	header	string	true "profileId"
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	region	path	string	true	"cloud region"
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
@@ -989,9 +989,9 @@ func (c *AWSClusterController) GetAMI() {
 
 // @Title EnableScaling
 // @Description enables autoscaling
-// @Param	X-Profile-Id	header	string	profileId	""
+// @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -1097,9 +1097,9 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Description Generates new SSH key
 // @Param	projectId		path	string	true		"Id of the project"
 // @Param	keyname	 		path	string	true		"SSHKey"
-// @Param	X-Profile-Id	header	string	profileId	""
-// @Param	X-Auth-Token			header	string	token 		""
-// @Param	teams			header	string	teams 		""
+// @Param	X-Profile-Id	header	string	true "profileId"
+// @Param	X-Auth-Token			header	string	true "token"
+// @Param	teams			header	string	true "teams"
 // @Param	region		path	string	true	"cloud region"
 // @Success 200 			{object} key_utils.AWSKey
 // @Failure 400 			{"error": "error msg"}
@@ -1213,9 +1213,9 @@ func (c *AWSClusterController) GetCores() {
 
 // @Title DeleteSSHKey
 // @Description Delete SSH key
-// @Param	keyname	 		path	string	true		""
-// @Param	X-Profile-Id	header	string	profileId	""
-// @Param	X-Auth-Token			header	string	token 		""
+// @Param	keyname	 		path	string	true		"keyname"
+// @Param	X-Profile-Id	header	string	true "profileId"
+// @Param	X-Auth-Token			header	string	true "token"
 // @Param	region		path	string	true	"cloud region"
 // @Success 200 			{"msg": "key deleted successfully"}
 // @Failure 400 			{"error": "error msg"}
@@ -1327,9 +1327,9 @@ func (c *AWSClusterController) GetAllRegions() {
 
 // @Title Get Availability Zone
 // @Description return zones against a region
-// @Param	X-Auth-Token	header	string	token true""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	region	path	string	true	"region of AWS"
-// @Param	X-Profile-Id	header	string	profileId	true""
+// @Param	X-Profile-Id	header	string	true "profileId"
 // @Success 200 			[]*string
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -1424,7 +1424,7 @@ func (c *AWSClusterController) GetAllMachines() {
 
 // @Title Validate Profile
 // @Description check if profile is valid
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	vault.AwsCredentials		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -1492,11 +1492,11 @@ func (c *AWSClusterController) ValidateProfile() {
 
 // @Title Start
 // @Description Apply cloudplex Agent file to eks cluster
-// @Param	clusterName	header	string	clusterName ""
-// @Param	X-Auth-Token	header	string	token ""
-// @Success 200 {"msg": "Agent Applied successfully"}
+// @Param	clusterName	header	string	true "clusterName"
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}

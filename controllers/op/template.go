@@ -18,7 +18,7 @@ type OPTemplateController struct {
 // @Title Get
 // @Description get template
 // @Param	templateId	path	string	true	"Template Id of the template"
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} op.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -42,7 +42,7 @@ func (c *OPTemplateController) Get() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -55,7 +55,7 @@ func (c *OPTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.OP, "clusterTemplate", templateId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.OP, "clusterTemplate", templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -87,7 +87,7 @@ func (c *OPTemplateController) Get() {
 
 // @Title Get All
 // @Description get all the templates
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []op.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -102,7 +102,7 @@ func (c *OPTemplateController) GetAll() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -116,7 +116,7 @@ func (c *OPTemplateController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DO, *ctx)
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DO, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -141,8 +141,8 @@ func (c *OPTemplateController) GetAll() {
 
 // @Title Create
 // @Description create a new template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	teams ""
+// @Param	token	header	string	true "token"
+// @Param	teams	header	string	true "teams"
 // @Param	body	body	op.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -176,7 +176,7 @@ func (c *OPTemplateController) Post() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -253,8 +253,8 @@ func (c *OPTemplateController) Post() {
 
 // @Title Update
 // @Description update an existing template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	token ""
+// @Param	token	header	string	true "token"
+// @Param	teams	header	string	true "token"
 // @Param	body	body	op.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -281,7 +281,7 @@ func (c *OPTemplateController) Patch() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -294,7 +294,7 @@ func (c *OPTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -355,7 +355,7 @@ func (c *OPTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete a template
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -381,7 +381,7 @@ func (c *OPTemplateController) Delete() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -394,7 +394,7 @@ func (c *OPTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.DO, "clusterTemplate", templateId, "Delete", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.DO, "clusterTemplate", templateId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)

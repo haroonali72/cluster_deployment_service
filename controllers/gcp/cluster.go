@@ -20,7 +20,7 @@ type GcpClusterController struct {
 // @Title Get
 // @Description get cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -94,7 +94,7 @@ func (c *GcpClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []gcp.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -151,7 +151,7 @@ func (c *GcpClusterController) GetAll() {
 
 // @Title Create
 // @Description create a new cluster
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -252,7 +252,7 @@ func (c *GcpClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -357,8 +357,8 @@ func (c *GcpClusterController) Patch() {
 // @Title Delete
 // @Description delete a cluster
 // @Param	projectId	path	string	true	"project id of the cluster"
-// @Param	forceDelete path  boolean	true ""
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	forceDelete path  boolean	true "deleting cluster forcefully"
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -468,7 +468,7 @@ func (c *GcpClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -609,7 +609,7 @@ func (c *GcpClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 206 {object} gcp.Cluster_Def
@@ -710,7 +710,7 @@ func (c *GcpClusterController) GetStatus() {
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
 // @Failure 400 {"error": "error_msg"}
@@ -841,7 +841,7 @@ func (c *GcpClusterController) TerminateCluster() {
 
 // @Title SSHKeyPair
 // @Description returns ssh key pairs
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -890,7 +890,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 
 // @Title ListServiceAccounts
 // @Description returns list of service account emails
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "profile id is empty"}
@@ -960,8 +960,8 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	keyname	 	path	string	true	"SSHKey"
 // @Param	username	path	string	true	"UserName"
-// @Param	X-Auth-Token		header	string	token 	""
-// @Param	teams		header	string	teams 	""
+// @Param	X-Auth-Token		header	string	true "token"
+// @Param	teams		header	string	true "teams"
 // @Success 200 		{object} key_utils.AZUREKey
 // @Failure 400 		{"error": "error msg"}
 // @Failure 404 		{"error": "error msg"}
@@ -1039,8 +1039,8 @@ func (c *GcpClusterController) PostSSHKey() {
 
 // @Title DeleteSSHKey
 // @Description Delete SSH key
-// @Param	keyname	 	path	string	true	""
-// @Param	X-Auth-Token		header	string	token 	""
+// @Param	keyname	 	path	string	true	"keyname"
+// @Param	X-Auth-Token		header	string	true "token"
 // @Success 200 		{"msg": key deleted successfully}
 // @Failure 400 		{"error": "error msg"}
 // @Failure 404 		{"error": error msg}
@@ -1100,8 +1100,8 @@ func (c *GcpClusterController) DeleteSSHKey() {
 
 // @Title GetAllMachines
 // @Description return machines against a region and zone
-// @Param	X-Profile-Id	header	string	profileId	true""
-// @Param	X-Auth-Token	header	string	token  true""
+// @Param	X-Profile-Id	header	string	true "profileId"
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
 // @Success 200 []string
@@ -1203,7 +1203,7 @@ func (c *GcpClusterController) GetAllRegions() {
 
 // @Title Validate Profile
 // @Description check if profile is valid
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.GcpCredentials	true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -1274,8 +1274,8 @@ func (c *GcpClusterController) ValidateProfile() {
 
 // @Title GetZonesAgainstRegion
 // @Description return zones against a region
-// @Param	X-Profile-Id	header	string	X-Profile-Id	true""
-// @Param	X-Auth-Token	header	string	token  true""
+// @Param	X-Profile-Id	header	string	true "X-Profile-Id"
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	region	path	string	true	"region of GCP"
 // @Success 200 {object} []string
 // @Failure 400 {"error": "error msg"}
