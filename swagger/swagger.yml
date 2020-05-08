@@ -37,7 +37,8 @@ paths:
         "401":
           description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -129,7 +130,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/aks/all:
@@ -142,6 +144,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -1748,7 +1751,7 @@ paths:
     put:
       tags:
       - cluster/doks
-      description: Update an existing kubernetes cluster
+      description: Update a saved kubernetes cluster
       operationId: DOKSClusterController.Update
       parameters:
       - in: header
@@ -1772,7 +1775,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -1809,7 +1813,7 @@ paths:
     get:
       tags:
       - cluster/doks
-      description: Get cluster against the projectId
+      description: Get saved cluster against the projectId
       operationId: DOKSClusterController.Get
       parameters:
       - in: path
@@ -1862,14 +1866,15 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/doks/all:
     get:
       tags:
       - cluster/doks
-      description: get all the clusters
+      description: Get all the saved clusters
       operationId: DOKSClusterController.Get All
       parameters:
       - in: header
@@ -1883,7 +1888,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/doks.KubernetesCluster'
+              $ref: '#/definitions/doks.DOKSCluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2057,7 +2062,7 @@ paths:
     post:
       tags:
       - cluster/doks
-      description: Terminate a running cluster
+      description: Terminate a running cluster from cloud
       operationId: DOKSClusterController.Terminate
       parameters:
       - in: header
@@ -2641,7 +2646,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/gke.GKECluster'
+              $ref: '#/definitions/gke.Cluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2857,7 +2862,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": ""Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -2937,7 +2943,8 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: "true"
+        description: Forcefully delete cluster
+        required: true
         type: boolean
       responses:
         "204":
@@ -2947,7 +2954,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/iks/all:
@@ -2968,7 +2976,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/iks.Cluster_Def'
+              $ref: '#/definitions/iks.Cluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -3044,7 +3052,7 @@ paths:
           description: '{"error": "Unauthorized"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/iks/getallmachines/{region}/:
+  /cluster/iks/getallmachines/{zone}/:
     get:
       tags:
       - cluster/iks
@@ -3064,7 +3072,7 @@ paths:
         required: true
         type: string
       - in: path
-        name: region
+        name: zone
         description: Region of the cloud
         required: true
         type: string
@@ -3183,6 +3191,7 @@ paths:
       - in: header
         name: X-Profile-Id
         description: Vault credentials profile Id
+        required: true
         type: string
       - in: path
         name: projectId
@@ -3414,6 +3423,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -6163,28 +6173,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00156d890.false:
+  482.0xc0015834d0.false:
     title: "false"
     type: object
-  605.0xc000e3a720.false:
+  605.0xc000e47d40.false:
     title: "false"
     type: object
-  644.0xc00113f470.false:
+  644.0xc001168c60.false:
     title: "false"
     type: object
-  667.0xc00148fad0.false:
+  667.0xc0014af6e0.false:
     title: "false"
     type: object
-  7814.string:
+  7855.string:
     title: string
     type: object
-  13859.0xc0015b1620.false:
+  14479.0xc0015c1440.false:
     title: "false"
     type: object
-  51327.0xc00153ee10.false:
+  51490.0xc001554a50.false:
     title: "false"
     type: object
-  55892.string:
+  55857.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6293,7 +6303,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55892.string'
+        $ref: '#/definitions/55857.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6444,7 +6454,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000e3a720.false'
+        $ref: '#/definitions/605.0xc000e47d40.false'
       name:
         type: string
       network_name:
@@ -6825,7 +6835,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc00113f470.false'
+        $ref: '#/definitions/644.0xc001168c60.false'
       name:
         type: string
       network_name:
@@ -7007,6 +7017,17 @@ definitions:
         $ref: '#/definitions/doks.Context'
       name:
         type: string
+  doks.DOKSCluster:
+    title: DOKSCluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   doks.KubernetesCluster:
     title: KubernetesCluster
     type: object
@@ -7074,9 +7095,8 @@ definitions:
     title: KubernetesNode
     type: object
     properties:
-      id:
-        type: string
       name:
+        description: Name of the node [optional]
         type: string
   doks.KubernetesNodePool:
     title: KubernetesNodePool
@@ -7453,6 +7473,17 @@ definitions:
     properties:
       issue_client_certificate:
         type: boolean
+  gke.Cluster:
+    title: Cluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   gke.ConsumptionMeteringConfig:
     title: ConsumptionMeteringConfig
     type: object
@@ -7588,7 +7619,7 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/models.Type'
-        description: Status of cluster [required]
+        description: Status of cluster [optional]
       status_message:
         description: Additional information about the current status [readonly]
         type: string
@@ -7987,6 +8018,17 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/iks.InstanceProfile'
+  iks.Cluster:
+    title: Cluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   iks.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -8106,7 +8148,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51327.0xc00153ee10.false'
+        $ref: '#/definitions/51490.0xc001554a50.false'
       kube_version:
         type: string
       name:
@@ -8370,7 +8412,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13859.0xc0015b1620.false'
+        $ref: '#/definitions/14479.0xc0015c1440.false'
       name:
         type: string
       node_pools:

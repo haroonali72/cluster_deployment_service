@@ -30,7 +30,7 @@ type AKSCluster struct {
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new" description:"Status of cluster [required]"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
 	ProvisioningState      string                               `json:"-" bson:"provisioning_state,omitempty"`
 	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" validate:"required" description:"Kubernetes version to be provisioned ['required' if advance settings enabled]"`
 	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" validate:"required" description:"Cluster DNS prefix ['required' if advance settings enabled]"`
@@ -88,6 +88,11 @@ type AzureRegion struct {
 	location string
 }
 
+type Cluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -115,7 +120,8 @@ func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (clust
 	return cluster, nil
 }
 
-func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters []AKSCluster, err error) {
+func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClusters []Cluster, err error) {
+	var clusters []AKSCluster
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
@@ -128,23 +134,27 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return clusters, err1
+		return aksClusters, err1
 	}
 
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return clusters, err
+		return aksClusters, err
+	}
+	for _,cluster := range clusters{
+		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.Status}
+		aksClusters =append(aksClusters,temp)
 	}
 
-	return clusters, nil
+	return aksClusters, nil
 }
 
 func AddAKSCluster(cluster AKSCluster, ctx utils.Context) error {
@@ -196,31 +206,6 @@ func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
-
-	//if oldCluster.Status == string(models.Deploying) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in deploying state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in deploying state")
-	//}
-	//if oldCluster.Status == string(models.Terminating) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in terminating state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in terminating state")
-	//}
-	//if strings.ToLower(oldCluster.Status) == strings.ToLower(string(models.ClusterCreated)) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in running state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in running state")
-	//}
 
 	err = DeleteAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
@@ -346,10 +331,11 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	if AgentErr != nil {
 		cpErr := ApiError(AgentErr, "agent deployment failed", 500)
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Agent deployment failed : "+cpErr.Error+ cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
-		TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
+		cluster.Status = models.AgentDeploymentFailed
+		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
+		_ = TerminateCluster(credentials,cluster.ProjectId,companyId,ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)

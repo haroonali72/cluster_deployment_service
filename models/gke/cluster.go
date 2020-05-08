@@ -23,7 +23,7 @@ type GKECluster struct {
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud" validate:"eq=gcp|eq=GCP"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new" description:"Status of cluster [required]"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [optional]"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
@@ -248,6 +248,12 @@ type AutoUpgradeOptions struct {
 	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
+type Cluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
+
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -275,7 +281,8 @@ func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	return cluster, nil
 }
 
-func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (clusters []GKECluster, err error) {
+func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClusters []Cluster, err error) {
+	var clusters []GKECluster
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
@@ -288,23 +295,27 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return clusters, err1
+		return gkeClusters, err1
 	}
 
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return clusters, err
+		return gkeClusters, err
 	}
 
-	return clusters, nil
+	for _,cluster := range clusters{
+		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.CloudplexStatus}
+		gkeClusters =append(gkeClusters,temp)
+	}
+	return gkeClusters, nil
 }
 
 func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
@@ -333,6 +344,7 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 			cluster.CloudplexStatus = "new"
 		}
 		cluster.Cloud = models.GKE
+		cluster.CompanyId=ctx.Data.Company
 	}
 
 	mc := db.GetMongoConf()
@@ -369,6 +381,8 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
+	cluster.CompanyId=oldCluster.CompanyId
+	cluster.CloudplexStatus=oldCluster.CloudplexStatus
 
 	err = AddGKECluster(cluster, ctx)
 	if err != nil {
@@ -473,6 +487,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
+			PrintError(confError, cluster.Name, ctx)
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
@@ -488,15 +503,12 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
-		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-		utils.SendLog(ctx.Data.Company, confError.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
-		cluster.CloudplexStatus = models.ClusterCreationFailed
-		TerminateCluster(credentials, ctx)
-		err := UpdateGKECluster(cluster, ctx)
-		if err != nil {
-			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
-		err = db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
+		cluster.CloudplexStatus = models.AgentDeploymentFailed
+		PrintError( errors.New(confError.Error), cluster.Name,ctx)
+		_=TerminateCluster(credentials,ctx)
+		PrintError( errors.New("Cleaning up resources"), cluster.Name,ctx)
+		_ = UpdateGKECluster(cluster, ctx)
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
