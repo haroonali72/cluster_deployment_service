@@ -253,7 +253,7 @@ func (c *DOKSClusterController) Get() {
 // @Title Get All
 // @Description Get all the saved clusters
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {object} []doks.KubernetesCluster
+// @Success 200 {object} []doks.DOKSCluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
@@ -295,7 +295,7 @@ func (c *DOKSClusterController) GetAll() {
 	}
 
 	ctx.SendLogs("DOKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.Data.Company=userInfo.CompanyId
 	clusters, err := doks.GetAllKubernetesCluster(data, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

@@ -59,6 +59,12 @@ type Regions struct {
 	Zones    []string `json:"Zones"`
 }
 
+type Cluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
+
 func getNetworkHost(cloudType, projectId string) string {
 
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
@@ -107,7 +113,13 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	}
 	return cluster, nil
 }
-func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (iksClusters []Cluster, err error) {
+	var clusters []Cluster_Def
+	var copyData []string
+
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -118,13 +130,18 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	return clusters, nil
+	for _,cluster := range clusters{
+		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.Status}
+		iksClusters =append(iksClusters,temp)
+	}
+
+	return iksClusters, nil
 }
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 

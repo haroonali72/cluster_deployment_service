@@ -371,7 +371,7 @@ func (c *OPClusterController) GetAll() {
 	}
 	//====================================================================================//
 	ctx.SendLogs("OPClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.Data.Company=userInfo.CompanyId
 	clusters, err := op.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)

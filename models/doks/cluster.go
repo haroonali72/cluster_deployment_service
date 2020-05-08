@@ -148,6 +148,11 @@ type KubernetesNodeSize struct {
 	Slug string `json:"slug"`
 }
 
+type DOKSCluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
 func GetKubernetesCluster(ctx utils.Context) (cluster KubernetesCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -166,7 +171,8 @@ func GetKubernetesCluster(ctx utils.Context) (cluster KubernetesCluster, err err
 	return cluster, nil
 }
 
-func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (clusters []KubernetesCluster, err error) {
+func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (dokscluster []DOKSCluster, err error) {
+	var clusters []KubernetesCluster
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
@@ -175,19 +181,22 @@ func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (c
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("DOKSGetAllClusterModel:  GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return clusters, err1
+		return []DOKSCluster{}, err1
 	}
 
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("DOKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return clusters, err
+		return dokscluster, err
 	}
-
-	return clusters, nil
+	for _,cluster := range clusters{
+		temp:=DOKSCluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.CloudplexStatus}
+		dokscluster =append(dokscluster,temp)
+	}
+	return dokscluster, nil
 }
 
 func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
