@@ -40,11 +40,6 @@ func init() {
 				&op.OPTemplateController{},
 			),
 		),
-		beego.NSNamespace("/cluster/op",
-			beego.NSInclude(
-				&op.OPClusterController{},
-			),
-		),
 		beego.NSNamespace("/template/aws",
 			beego.NSInclude(
 				&aws.AWSTemplateController{},
@@ -113,11 +108,6 @@ func init() {
 		beego.NSNamespace("/template/doks",
 			beego.NSInclude(
 				&doks.DOKSTemplateController{},
-			),
-		),
-		beego.NSNamespace("/template/op",
-			beego.NSInclude(
-				&op.OPTemplateController{},
 			),
 		),
 		beego.NSNamespace("/cluster/op",

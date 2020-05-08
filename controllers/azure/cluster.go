@@ -349,7 +349,7 @@ func (c *AzureClusterController) Patch() {
 // @Description delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"project id of the cluster"
-// @Param	forceDelete path    boolean	true     ""
+// @Param	forceDelete path    boolean	true     "deleting cluster forcefully"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -457,7 +457,7 @@ func (c *AzureClusterController) Delete() {
 // @Description starts a  cluster
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Profile-Id	header	string	true	"profile id"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -595,7 +595,7 @@ func (c *AzureClusterController) StartCluster() {
 // @Description returns status of nodes
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Profile-Id	header	string	true	"profile id"
 // @Success 200 {object} azure.Cluster_Def
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -688,7 +688,7 @@ func (c *AzureClusterController) GetStatus() {
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	X-Profile-Id	header	string	false	""
+// @Param	X-Profile-Id	header	string	true	"profile id"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 404 {"error": "project id is empty"}
@@ -863,7 +863,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	keyname	 	path	string	true	"SSHKey"
 // @Param	-Auth-Token		header	string	true 	"token"
-// @Param	teams		header	string	teams 	""
+// @Param	teams		header	string	true "teams"
 // @Success 200 		{object} key_utils.AZUREKey
 // @Failure 404 		{"error": "error message"}
 // @Failure 500 		{"error": "error msg"}
@@ -947,7 +947,7 @@ func (c *AzureClusterController) GetCores() {
 
 // @Title DeleteSSHKey
 // @Description Delete SSH key
-// @Param	keyname	 	path	string	true	""
+// @Param	keyname	 	path	string	true	"keyname"
 // @Param	X-Auth-Token		header	string	true 	"token"
 // @Success 200 		{"msg": key deleted successfully}
 // @Failure 400 		{"error": "error msg"}
@@ -1009,8 +1009,8 @@ func (c *AzureClusterController) DeleteSSHKey() {
 // @Title Get Instances
 // @Description Getting All Instances
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	X-Profile-Id	header	string	false	""
-// @Param	region	path	string	ture	"Cloud region"
+// @Param	X-Profile-Id	header	string	true	"profile id"
+// @Param	region	path	string	true	"Cloud region"
 // @Success 200 []compute.VirtualMachines
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -1081,7 +1081,7 @@ func (c *AzureClusterController) GetInstances() {
 // @Title Get Azure Regions
 // @Description Get Azure Regions
 // @Param	X-Auth-Token	header	string	true	"Token"
-// @Param	X-Profile-Id	header	string	true	""
+// @Param	X-Profile-Id	header	string	true	"profile id"
 // @Success 200 []model.Region
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -1242,12 +1242,12 @@ func (c *AzureClusterController) ValidateProfile() {
 
 // @Title Start
 // @Description Apply cloudplex Agent file to a aks cluster
-// @Param	clusterName	header	string	clusterName ""
-// @Param	resourceGroup	header	string	resourceGroup ""
+// @Param	clusterName	header	string	true "clusterName"
+// @Param	resourceGroup	header	string	true "resourceGroup"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Success 200 {"msg": "Agent Applied successfully"}
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
+// @Success 200 {"msg": "Agent Applied successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}

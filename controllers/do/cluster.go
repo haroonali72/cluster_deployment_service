@@ -350,7 +350,7 @@ func (c *DOClusterController) Patch() {
 // @Description delete a cluster
 // @Param X-Auth-Token header string true "Token"
 // @Param projectId path string true "project id of the cluster"
-// @Param forceDelete path boolean true ""
+// @Param forceDelete path boolean true "deleting cluster forcefully"
 // @Success 200 {"msg": "cluster deleted successfully"}
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -463,7 +463,7 @@ func (c *DOClusterController) Delete() {
 // @Title Start
 // @Description starts a  cluster
 // @Param X-Auth-Token header string true "Token"
-// @Param X-Profile-Id header string profileId ""
+// @Param X-Profile-Id header string true "profileId"
 // @Param projectId path string	true "Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
 // @Failure 401 {"error": "error msg"}
@@ -602,7 +602,7 @@ func (c *DOClusterController) StartCluster() {
 // @Title Status
 // @Description returns status of nodes
 // @Param X-Auth-Token header string true "Token"
-// @Param X-Profile-Id header string profileId ""
+// @Param X-Profile-Id header string true "profileId"
 // @Param projectId path string	true "Id of the project"
 // @Success 200 {object} do.Cluster_Def
 // @Failure 400 {"error": "error msg"}
@@ -699,7 +699,7 @@ func (c *DOClusterController) GetStatus() {
 
 // @Title Terminate
 // @Description terminates a  cluster
-// @Param X-Profile-Id header X-Profile-Id string profileId	""
+// @Param X-Profile-Id header X-Profile-Id string true "profileId"
 // @Param X-Auth-Token header string true "Token"
 // @Param projectId path string true "Id of the project"
 // @Success 200 {"msg": "cluster terminated successfully"}
@@ -876,9 +876,9 @@ func (c *DOClusterController) GetSSHKeys() {
 // @Description Generates new SSH key
 // @Param projectId path string true "Id of the project"
 // @Param keyname path string true "SSHKey"
-// @Param X-Profile-Id header string profileId	""
+// @Param X-Profile-Id header string true "profileId"
 // @Param X-Auth-Token header string true "Token"
-// @Param teams header string teams ""
+// @Param teams header string true "teams"
 // @Param region path string true "region"
 // @Success 200 {object} key_utils.AZUREKey
 // @Failure 400 {"error": "error msg"}
@@ -974,7 +974,7 @@ func (c *DOClusterController) PostSSHKey() {
 
 // @Title GetRegions
 // @Description return regions and their supported machine sizes
-// @Param X-Profile-Id header string X-Profile-Id "DO profile"
+// @Param X-Profile-Id header string true "X-Profile-Id"
 // @Param X-Auth-Token header string true "Token"
 // @Success 200 {object} []godo.Region
 // @Failure 400 {"error": "error msg"}
@@ -1036,8 +1036,8 @@ func (c *DOClusterController) GetRegions() {
 
 // @Title DeleteSSHKey
 // @Description Delete SSH key
-// @Param keyname path string true ""
-// @Param X-Profile-Id header string profileId ""
+// @Param keyname path string true "keyname"
+// @Param X-Profile-Id header string true "profileId"
 // @Param X-Auth-Token header string true "Token"
 // @Param region path string true "region"
 // @Success 200 {"msg": "key deleted successfully"}
