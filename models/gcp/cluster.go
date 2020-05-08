@@ -170,13 +170,13 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, string, erro
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", "", err
 	}
 	var project Project
 	err = json.Unmarshal(data.([]byte), &project)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", "", err
 	}
 	return project.ProjectData.Region, project.ProjectData.Zone, nil
@@ -194,7 +194,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Context) (bool, GcpCredentials) {
 	credentials := GcpResponse{}
 
-	response, err := vault.GetCredentialProfile("gcp", profileId, token, ctx)
+	_,response, err := vault.GetCredentialProfile("gcp", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return false, GcpCredentials{}

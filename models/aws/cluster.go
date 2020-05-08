@@ -116,28 +116,20 @@ func checkMasterPools(cluster Cluster_Def) error {
 	return nil
 }
 
-func checkClusterSize(cluster Cluster_Def, ctx utils.Context) error {
-	for _, pools := range cluster.NodePools {
-		if pools.NodeCount > 3 {
-			return errors.New("Nodepool can't have more than 3 nodes")
-		}
-	}
-	return nil
-}
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (vault.AwsProfile, error) {
-	data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.AwsProfile, error) {
+	statusCode,data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.AwsProfile{}, err
+		return statusCode,vault.AwsProfile{}, err
 	}
 	awsProfile := vault.AwsProfile{}
 	err = json.Unmarshal(data, &awsProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return vault.AwsProfile{}, err
+		return 500,vault.AwsProfile{}, err
 	}
 	awsProfile.Profile.Region = region
-	return awsProfile, nil
+	return 0,awsProfile, nil
 
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
@@ -147,13 +139,13 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
 	var region Project
 	err = json.Unmarshal(data.([]byte), &region)
 	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return region.ProjectData.Region, err
 	}
 	return region.ProjectData.Region, nil
@@ -189,14 +181,6 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
-	/*
-		err = checkClusterSize(cluster, ctx)
-		if err != nil { //cluster size limit exceed
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}
-	*/
-
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoAwsClusterCollection, cluster)
 	if err != nil {

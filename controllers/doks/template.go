@@ -18,7 +18,7 @@ type DOKSTemplateController struct {
 // @Title Get
 // @Description get kubernetes cluster template
 // @Param	templateId	path	string	true	"Template Id of the template"
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -43,10 +43,10 @@ func (c *DOKSTemplateController) Get() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -56,10 +56,10 @@ func (c *DOKSTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "View", token, *ctx)
+	statusCode, _, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -88,7 +88,7 @@ func (c *DOKSTemplateController) Get() {
 
 // @Title Get All
 // @Description get all kubernetes cluster templates
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -103,10 +103,10 @@ func (c *DOKSTemplateController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -117,10 +117,10 @@ func (c *DOKSTemplateController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DOKS, *ctx)
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DOKS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -142,8 +142,8 @@ func (c *DOKSTemplateController) GetAll() {
 
 // @Title Create
 // @Description create a new kubernetes cluster template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	teams ""
+// @Param	token	header	string	true "token"
+// @Param	teams	header	string	true "teams"
 // @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -177,10 +177,10 @@ func (c *DOKSTemplateController) Post() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -233,10 +233,10 @@ func (c *DOKSTemplateController) Post() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.DOKS, *ctx)
+	statusCode, err = rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.DOKS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
 		c.ServeJSON()
 		return
@@ -255,8 +255,8 @@ func (c *DOKSTemplateController) Post() {
 
 // @Title Update
 // @Description update an existing kubernetes template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	token ""
+// @Param	token	header	string	true "token"
+// @Param	teams	header	string	true "token"
 // @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -283,10 +283,10 @@ func (c *DOKSTemplateController) Patch() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -296,10 +296,10 @@ func (c *DOKSTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	statusCode, _, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -335,7 +335,7 @@ func (c *DOKSTemplateController) Patch() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.DOKS, *ctx)
+	statusCode, err = rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.DOKS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -357,7 +357,7 @@ func (c *DOKSTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete kubernetes template
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -383,10 +383,10 @@ func (c *DOKSTemplateController) Delete() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -396,10 +396,10 @@ func (c *DOKSTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	_, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "Delete", token, *ctx)
+	statusCode, _, err = rbac_athentication.Authenticate(models.DOKS, "clusterTemplate", templateId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -445,7 +445,7 @@ func (c *DOKSTemplateController) Delete() {
 
 // @Title Create Customer Template
 // @Description create a new customer template
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "customer template created successfully"}
 // @Failure 400 {"error": "error message"}
@@ -517,7 +517,7 @@ func (c *DOKSTemplateController) PostCustomerTemplate() {
 // @Title Get customer template
 // @Description get customer template
 // @Param	templateId	path	string	true	"Template Id of the template"
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -541,10 +541,10 @@ func (c *DOKSTemplateController) GetCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -582,7 +582,7 @@ func (c *DOKSTemplateController) GetCustomerTemplate() {
 
 // @Title Update customer kubernetes template
 // @Description update an existing kubernetes customer template
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	body	body	doks.KubernetesTemplate	true	"body for template content"
 // @Success 200 {"msg": "customer template updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -610,10 +610,10 @@ func (c *DOKSTemplateController) PatchCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -665,7 +665,7 @@ func (c *DOKSTemplateController) PatchCustomerTemplate() {
 
 // @Title Delete customer template
 // @Description delete a customer template
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "customer template deleted successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -691,10 +691,10 @@ func (c *DOKSTemplateController) DeleteCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -739,7 +739,7 @@ func (c *DOKSTemplateController) DeleteCustomerTemplate() {
 
 // @Title Get All Customer Template
 // @Description get all the customer templates
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []doks.KubernetesTemplate
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -755,10 +755,10 @@ func (c *DOKSTemplateController) AllCustomerTemplates() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -795,7 +795,7 @@ func (c *DOKSTemplateController) AllCustomerTemplates() {
 
 // @Title   GetAllKubernetesTemplateInfo
 // @Description get all kubernetes templates info
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []doks.KubernetesTemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -813,10 +813,10 @@ func (c *DOKSTemplateController) GetAllTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -826,10 +826,10 @@ func (c *DOKSTemplateController) GetAllTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DOKS, utils.Context{})
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.DOKS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -851,7 +851,7 @@ func (c *DOKSTemplateController) GetAllTemplateInfo() {
 
 // @Title   GetAllCustomerTemplateInfo
 // @Description get all the customer templates info
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []doks.KubernetesTemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -869,10 +869,10 @@ func (c *DOKSTemplateController) GetAllCustomerTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -882,10 +882,10 @@ func (c *DOKSTemplateController) GetAllCustomerTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

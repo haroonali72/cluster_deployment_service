@@ -14,7 +14,7 @@ type CustomerTempalteController struct {
 
 // @Title Post
 // @Description register customer templates
-// @Param	token	header	string	token ""
+// @Param token header string true "token"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 404 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -29,10 +29,10 @@ func (c *CustomerTempalteController) Post() {
 		return
 	}
 
-	userInfo, err := rbac.GetInfo(token)
+	statusCode, userInfo, err := rbac.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

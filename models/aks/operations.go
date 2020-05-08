@@ -48,15 +48,15 @@ type SkuResp struct {
 	ResourceType string
 }
 
-func (cloud *AKS) init() error {
+func (cloud *AKS) init() types.CustomCPError {
 	if cloud.Authorizer != nil {
-		return nil
+		return types.CustomCPError{}
 	}
 
 	if cloud.ID == "" || cloud.Key == "" || cloud.Tenant == "" || cloud.Subscription == "" || cloud.Region == "" {
 		text := "invalid cloud credentials"
 		beego.Error(text)
-		return errors.New(text)
+		return ApiError(errors.New(text), text, 401)
 	}
 
 	oauthConfig, err := adal.NewOAuthConfig(azure.PublicCloud.ActiveDirectoryEndpoint, cloud.Tenant)
@@ -66,7 +66,7 @@ func (cloud *AKS) init() error {
 
 	spt, err := adal.NewServicePrincipalToken(*oauthConfig, cloud.ID, cloud.Key, azure.PublicCloud.ResourceManagerEndpoint)
 	if err != nil {
-		return err
+		return ApiError(err, "", 502)
 	}
 	cloud.Context = context.Background()
 	cloud.Authorizer = autorest.NewBearerAuthorizer(spt)
@@ -89,14 +89,14 @@ func (cloud *AKS) init() error {
 	cloud.Resources = make(map[string]interface{})
 	cloud.Location = subscriptions.NewClient()
 	cloud.Location.Authorizer = cloud.Authorizer
-	return nil
+	return types.CustomCPError{}
 }
 
-func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupName string) ([]AKSCluster, error) {
+func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupName string) ([]AKSCluster, types.CustomCPError) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -109,7 +109,7 @@ func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupNa
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, err
+		return nil, ApiError(err, "Error while getting cluster list", 502)
 	}
 
 	result := []AKSCluster{}
@@ -120,14 +120,14 @@ func (cloud *AKS) ListClustersByResourceGroup(ctx utils.Context, resourceGroupNa
 		_ = pages.Next()
 	}
 
-	return result, nil
+	return result, types.CustomCPError{}
 }
 
-func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, error) {
+func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, types.CustomCPError) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -140,7 +140,7 @@ func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, error) {
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, err
+		return nil, ApiError(err, "Error while getting cluster list", 502)
 	}
 
 	result := []AKSCluster{}
@@ -151,14 +151,14 @@ func (cloud *AKS) ListClusters(ctx utils.Context) ([]AKSCluster, error) {
 		_ = pages.Next()
 	}
 
-	return result, nil
+	return result, types.CustomCPError{}
 }
 
-func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName string) (*AKSCluster, error) {
+func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName string) (*AKSCluster, types.CustomCPError) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -171,11 +171,11 @@ func (cloud *AKS) GetCluster(ctx utils.Context, resourceGroupName, clusterName s
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, err
+		return nil, ApiError(err, "Error while getting cluster", 502)
 	}
 
 	aksCluster := cloud.generateClusterFromResponse(result)
-	return &aksCluster, nil
+	return &aksCluster, types.CustomCPError{}
 }
 
 func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.Context) error {
@@ -247,11 +247,11 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 	return nil
 }
 
-func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) error {
+func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) types.CustomCPError {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -264,7 +264,7 @@ func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) error 
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return err
+		return ApiError(err, "", 502)
 	}
 
 	//for {
@@ -299,17 +299,17 @@ func (cloud *AKS) TerminateCluster(cluster AKSCluster, ctx utils.Context) error 
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return err
+		return ApiError(err, "", 502)
 	}
 
-	return nil
+	return types.CustomCPError{}
 }
 
-func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*containerservice.CredentialResult, error) {
+func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*containerservice.CredentialResult, types.CustomCPError) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -322,14 +322,14 @@ func (cloud *AKS) GetKubeConfig(ctx utils.Context, cluster AKSCluster) (*contain
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, err
+		return nil, ApiError(err, "Error while getting kube config", 502)
 	}
 
 	for _, kubeconfig := range *results.Kubeconfigs {
-		return &kubeconfig, nil
+		return &kubeconfig, types.CustomCPError{}
 	}
 
-	return nil, nil
+	return nil, types.CustomCPError{}
 }
 
 func (cloud *AKS) getAzureNetwork(token string, ctx utils.Context) (azureNetwork types.AzureNetwork) {
@@ -367,29 +367,27 @@ func (cloud *AKS) generateClusterFromResponse(v containerservice.ManagedCluster)
 	}
 
 	return AKSCluster{
-		ProjectId: cloud.ProjectId,
-		Cloud:     models.AKS,
-		ClusterProperties: ManagedClusterProperties{
-			ProvisioningState: *v.ProvisioningState,
-			KubernetesVersion: *v.KubernetesVersion,
-			AgentPoolProfiles: agentPoolArr,
-			EnableRBAC:        *v.EnableRBAC,
-		},
-		ResourceID: *v.ID,
-		Name:       *v.Name,
-		Type:       *v.Type,
-		Location:   *v.Location,
+		ProjectId:         cloud.ProjectId,
+		Cloud:             models.AKS,
+		ProvisioningState: *v.ProvisioningState,
+		KubernetesVersion: *v.KubernetesVersion,
+		AgentPoolProfiles: agentPoolArr,
+		EnableRBAC:        *v.EnableRBAC,
+		ResourceID:        *v.ID,
+		Name:              *v.Name,
+		Type:              *v.Type,
+		Location:          *v.Location,
 	}
 }
 
 func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAgentPoolProfile {
-	AKSNodePools := make([]containerservice.ManagedClusterAgentPoolProfile, len(c.ClusterProperties.AgentPoolProfiles))
-	if c.ClusterProperties.IsAdvanced {
-		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+	AKSNodePools := make([]containerservice.ManagedClusterAgentPoolProfile, len(c.AgentPoolProfiles))
+	if c.IsAdvanced {
+		for i, nodepool := range c.AgentPoolProfiles {
 			AKSNodePools[i].Name = nodepool.Name
 			AKSNodePools[i].Count = nodepool.Count
 			AKSNodePools[i].OsType = "Linux"
-			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].VMSize = containerservice.VMSizeTypes(*nodepool.VMSize)
 			AKSNodePools[i].OsDiskSizeGB = nodepool.OsDiskSizeGB
 			AKSNodePools[i].MaxPods = nodepool.MaxPods
 			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
@@ -415,7 +413,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 
 		}
 	} else {
-		for i, nodepool := range c.ClusterProperties.AgentPoolProfiles {
+		for i, nodepool := range c.AgentPoolProfiles {
 			if nodepool.Name == nil {
 				AKSNodePools[i].Name = to.StringPtr("pool0")
 			} else {
@@ -423,7 +421,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			}
 			AKSNodePools[i].Count = nodepool.Count
 			AKSNodePools[i].OsType = "Linux"
-			AKSNodePools[i].VMSize = *nodepool.VMSize
+			AKSNodePools[i].VMSize = containerservice.VMSizeTypes(*nodepool.VMSize)
 			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
 
@@ -439,15 +437,15 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 func generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClusterAPIServerAccessProfile {
 	var AKSapiServerAccessProfile containerservice.ManagedClusterAPIServerAccessProfile
 
-	if c.ClusterProperties.IsAdvanced {
-		if c.ClusterProperties.APIServerAccessProfile.EnablePrivateCluster {
+	if c.IsAdvanced {
+		if c.APIServerAccessProfile.EnablePrivateCluster {
 			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(true)
 		} else {
 			AKSapiServerAccessProfile.EnablePrivateCluster = to.BoolPtr(false)
 		}
 
 		var authIpRanges []string
-		for _, val := range c.ClusterProperties.APIServerAccessProfile.AuthorizedIPRanges {
+		for _, val := range c.APIServerAccessProfile.AuthorizedIPRanges {
 			authIpRanges = append(authIpRanges, val)
 		}
 
@@ -461,9 +459,9 @@ func generateApiServerAccessProfile(c AKSCluster) *containerservice.ManagedClust
 
 func (cloud *AKS) generateServicePrincipal(c AKSCluster) *containerservice.ManagedClusterServicePrincipalProfile {
 	var AKSservicePrincipal containerservice.ManagedClusterServicePrincipalProfile
-	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsServicePrincipal {
-		AKSservicePrincipal.ClientID = &c.ClusterProperties.ClientID
-		AKSservicePrincipal.Secret = &c.ClusterProperties.Secret
+	if c.IsAdvanced && c.IsServicePrincipal {
+		AKSservicePrincipal.ClientID = &c.ClientID
+		AKSservicePrincipal.Secret = &c.Secret
 	} else {
 		AKSservicePrincipal.ClientID = &cloud.ID
 		AKSservicePrincipal.Secret = &cloud.Key
@@ -481,7 +479,7 @@ func (cloud *AKS) generateClusterCreateRequest(c AKSCluster) *containerservice.M
 			AgentPoolProfiles:       generateClusterNodePools(c),
 			ServicePrincipalProfile: cloud.generateServicePrincipal(c),
 			APIServerAccessProfile:  generateApiServerAccessProfile(c),
-			EnableRBAC:              &c.ClusterProperties.EnableRBAC,
+			EnableRBAC:              &c.EnableRBAC,
 			AddonProfiles:           generateAddonProfiles(c),
 			NetworkProfile:          generateNetworkProfile(c),
 
@@ -500,11 +498,11 @@ func generateWindowsProfile() *containerservice.ManagedClusterWindowsProfile {
 	return &AKSwindowProfile
 }
 
-func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.OrchestratorVersionProfileListResult, error) {
+func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.OrchestratorVersionProfileListResult, types.CustomCPError) {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return nil, err
 		}
 	}
@@ -513,23 +511,23 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "Microsoft.ContainerService")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, err
+		return nil, ApiError(err, "Error while getting kubernetes version", 502)
 	}
 
-	return &result, nil
+	return &result, types.CustomCPError{}
 }
 
 func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
 
 	var AKSnetworkProfile containerservice.NetworkProfileType
-	if c.ClusterProperties.IsExpert {
-		AKSnetworkProfile.PodCidr = &c.ClusterProperties.PodCidr
-		AKSnetworkProfile.DNSServiceIP = &c.ClusterProperties.DNSServiceIP
-		AKSnetworkProfile.ServiceCidr = &c.ClusterProperties.ServiceCidr
-		AKSnetworkProfile.DockerBridgeCidr = &c.ClusterProperties.DockerBridgeCidr
+	if c.IsExpert {
+		AKSnetworkProfile.PodCidr = &c.PodCidr
+		AKSnetworkProfile.DNSServiceIP = &c.DNSServiceIP
+		AKSnetworkProfile.ServiceCidr = &c.ServiceCidr
+		AKSnetworkProfile.DockerBridgeCidr = &c.DockerBridgeCidr
 	}
 
-	if c.ClusterProperties.IsAdvanced && len(c.ClusterProperties.APIServerAccessProfile.AuthorizedIPRanges) > 0 {
+	if c.IsAdvanced && len(c.APIServerAccessProfile.AuthorizedIPRanges) > 0 { //standard load balancer is used if AuthorizedIpRanges defined
 		AKSnetworkProfile.LoadBalancerSku = "standard"
 	}
 	return &AKSnetworkProfile
@@ -538,8 +536,8 @@ func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {
 
 func generateClusterTags(c AKSCluster) map[string]*string {
 	AKSclusterTags := make(map[string]*string)
-	if c.ClusterProperties.IsAdvanced {
-		for _, tag := range c.ClusterProperties.ClusterTags {
+	if c.IsAdvanced {
+		for _, tag := range c.ClusterTags {
 			AKSclusterTags[tag.Key] = &tag.Value
 		}
 	} else {
@@ -557,7 +555,7 @@ func generateClusterIdentity() *containerservice.ManagedClusterIdentity {
 
 func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClusterAddonProfile {
 	AKSaddon := make(map[string]*containerservice.ManagedClusterAddonProfile)
-	if c.ClusterProperties.IsAdvanced && c.ClusterProperties.IsHttpRouting {
+	if c.IsAdvanced && c.IsHttpRouting {
 		var httpAddOn containerservice.ManagedClusterAddonProfile
 		httpAddOn.Enabled = to.BoolPtr(true)
 		AKSaddon["httpApplicationRouting"] = &httpAddOn
@@ -571,26 +569,26 @@ func generateAddonProfiles(c AKSCluster) map[string]*containerservice.ManagedClu
 }
 
 func generateKubernetesVersion(c AKSCluster) *string {
-	if c.ClusterProperties.IsAdvanced {
-		return to.StringPtr(c.ClusterProperties.KubernetesVersion)
+	if c.IsAdvanced {
+		return to.StringPtr(c.KubernetesVersion)
 	} else {
 		return to.StringPtr("1.15.10")
 	}
 }
 
 func generateDnsPrefix(c AKSCluster) *string {
-	if c.ClusterProperties.IsAdvanced {
-		return to.StringPtr(c.ClusterProperties.DNSPrefix + "-dns")
+	if c.IsAdvanced {
+		return to.StringPtr(c.DNSPrefix + "-dns")
 	} else {
 		return to.StringPtr(c.Name + "-dns")
 	}
 }
 
-func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) error {
+func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) types.CustomCPError {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -603,31 +601,32 @@ func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) err
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return err
+		return ApiError(err, "", 502)
 	}
 
 	for index, agentPool := range *AKScluster.AgentPoolProfiles {
-		cluster.ClusterProperties.AgentPoolProfiles[index].Name = agentPool.Name
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
-		cluster.ClusterProperties.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
-		cluster.ClusterProperties.AgentPoolProfiles[index].VMSize = &agentPool.VMSize
-		cluster.ClusterProperties.AgentPoolProfiles[index].OsType = &agentPool.OsType
-		cluster.ClusterProperties.AgentPoolProfiles[index].Count = agentPool.Count
+		cluster.AgentPoolProfiles[index].Name = agentPool.Name
+		cluster.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
+		cluster.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
+		vm := string(agentPool.VMSize)
+		cluster.AgentPoolProfiles[index].VMSize = &vm
+		cluster.AgentPoolProfiles[index].OsType = &agentPool.OsType
+		cluster.AgentPoolProfiles[index].Count = agentPool.Count
 	}
 	cluster.ResourceID = *AKScluster.ID
 	cluster.Type = *AKScluster.Type
-	cluster.ClusterProperties.ProvisioningState = *AKScluster.ProvisioningState
-	cluster.ClusterProperties.KubernetesVersion = *AKScluster.KubernetesVersion
-	cluster.ClusterProperties.DNSPrefix = *AKScluster.DNSPrefix
-	cluster.ClusterProperties.Fqdn = *AKScluster.Fqdn
-	cluster.ClusterProperties.EnableRBAC = *AKScluster.EnableRBAC
+	cluster.ProvisioningState = *AKScluster.ProvisioningState
+	cluster.KubernetesVersion = *AKScluster.KubernetesVersion
+	cluster.DNSPrefix = *AKScluster.DNSPrefix
+	cluster.Fqdn = *AKScluster.Fqdn
+	cluster.EnableRBAC = *AKScluster.EnableRBAC
 
-	cluster.ClusterProperties.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
-	cluster.ClusterProperties.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
-	cluster.ClusterProperties.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
-	cluster.ClusterProperties.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
+	cluster.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
+	cluster.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
+	cluster.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
+	cluster.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
 
-	return nil
+	return types.CustomCPError{}
 }
 
 func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
@@ -653,8 +652,8 @@ func GetVmSkus(ctx utils.Context) ([]SkuResp, error) {
 func (cloud *AKS) WriteAzureSkus() {
 	if cloud == nil {
 		err := cloud.init()
-		if err != nil {
-			fmt.Println(err.Error())
+		if err != (types.CustomCPError{}) {
+			fmt.Println(err.Description)
 			return
 		}
 	}

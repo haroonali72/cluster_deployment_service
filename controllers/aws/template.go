@@ -18,7 +18,7 @@ type AWSTemplateController struct {
 // @Title Get
 // @Description get template
 // @Param	templateId	path	string	true	"Template Id of the template"
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} aws.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -43,10 +43,10 @@ func (c *AWSTemplateController) Get() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -56,10 +56,10 @@ func (c *AWSTemplateController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", templateId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", templateId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -88,7 +88,7 @@ func (c *AWSTemplateController) Get() {
 
 // @Title Get All
 // @Description get all the templates
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []aws.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -103,10 +103,10 @@ func (c *AWSTemplateController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -117,10 +117,10 @@ func (c *AWSTemplateController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AWS, *ctx)
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AWS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -142,8 +142,8 @@ func (c *AWSTemplateController) GetAll() {
 
 // @Title Create
 // @Description create a new template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	teams ""
+// @Param	token	header	string	true "token"
+// @Param	teams	header	string	true "teams"
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template created successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -170,10 +170,10 @@ func (c *AWSTemplateController) Post() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -226,11 +226,11 @@ func (c *AWSTemplateController) Post() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.AWS, *ctx)
+	statusCode, err = rbac_athentication.CreatePolicy(id, token, userInfo.UserId, userInfo.CompanyId, models.POST, teams, models.AWS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -248,8 +248,8 @@ func (c *AWSTemplateController) Post() {
 
 // @Title Update
 // @Description update an existing template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	token ""
+// @Param	token	header	string	true "token"
+// @Param	teams	header	string	true "teams"
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "template updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -276,10 +276,10 @@ func (c *AWSTemplateController) Patch() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -289,10 +289,10 @@ func (c *AWSTemplateController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, template.TemplateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", template.TemplateId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -328,11 +328,11 @@ func (c *AWSTemplateController) Patch() {
 		teams = strings.Split(team, ";")
 	}
 
-	statusCode, err := rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AWS, *ctx)
+	statusCode, err = rbac_athentication.CreatePolicy(template.TemplateId, token, userInfo.UserId, userInfo.CompanyId, models.PUT, teams, models.AWS, *ctx)
 	if err != nil {
 		beego.Error("error" + err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Policy creation failed"}
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -350,7 +350,7 @@ func (c *AWSTemplateController) Patch() {
 
 // @Title Delete
 // @Description delete a templates
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "template deleted successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -376,10 +376,10 @@ func (c *AWSTemplateController) Delete() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -389,10 +389,10 @@ func (c *AWSTemplateController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, templateId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", templateId, "Delete", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "clusterTemplate", templateId, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -438,7 +438,7 @@ func (c *AWSTemplateController) Delete() {
 
 // @Title Create Customer Template
 // @Description create a new customer template
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "customer template created successfully"}
 // @Failure 400 {"error": "error message"}
@@ -510,7 +510,7 @@ func (c *AWSTemplateController) PostCustomerTemplate() {
 // @Title Get customer template
 // @Description get customer template
 // @Param	templateId	path	string	true	"Template Id of the template"
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} aws.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 401 {"error": "error msg"}
@@ -534,10 +534,10 @@ func (c *AWSTemplateController) GetCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -575,8 +575,8 @@ func (c *AWSTemplateController) GetCustomerTemplate() {
 
 // @Title Update customer templates
 // @Description update an existing customer template
-// @Param	token	header	string	token ""
-// @Param	teams	header	string	token ""
+// @Param	token	header	string	true "token"
+// @Param	teams	header	string	true "teams"
 // @Param	body	body	aws.Template	true	"body for template content"
 // @Success 200 {"msg": "customer template updated successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -604,10 +604,10 @@ func (c *AWSTemplateController) PatchCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -659,7 +659,7 @@ func (c *AWSTemplateController) PatchCustomerTemplate() {
 
 // @Title Delete customer template
 // @Description delete a customer template
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Param	templateId	path	string	true	"template id of the template"
 // @Success 200 {"msg": "customer template deleted successfully"}
 // @Failure 400 {"error": "error msg"}
@@ -685,10 +685,10 @@ func (c *AWSTemplateController) DeleteCustomerTemplate() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -733,7 +733,7 @@ func (c *AWSTemplateController) DeleteCustomerTemplate() {
 
 // @Title Get All Customer Template
 // @Description get all the customer templates
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []aws.Template
 // @Failure 400 {"error": "error msg"}
 // @Failure 404 {"error": "error msg"}
@@ -749,10 +749,10 @@ func (c *AWSTemplateController) AllCustomerTemplates() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -789,7 +789,7 @@ func (c *AWSTemplateController) AllCustomerTemplates() {
 
 // @Title   GetAllTemplateInfo
 // @Description get all the templates info
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []gcp.TemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -807,10 +807,10 @@ func (c *AWSTemplateController) GetAllTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -820,10 +820,10 @@ func (c *AWSTemplateController) GetAllTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AWS, utils.Context{})
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.AWS, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -845,7 +845,7 @@ func (c *AWSTemplateController) GetAllTemplateInfo() {
 
 // @Title   GetAllCustomerTemplateInfo
 // @Description get all the customer templates info
-// @Param	token	header	string	token ""
+// @Param	token	header	string	true "token"
 // @Success 200 {object} []aws.TemplateMetadata
 // @Failure 400 {"error": "error msg"}
 // @Failure 500 {"error": "error msg"}
@@ -863,10 +863,10 @@ func (c *AWSTemplateController) GetAllCustomerTemplateInfo() {
 		return
 	}
 
-	userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -876,10 +876,10 @@ func (c *AWSTemplateController) GetAllCustomerTemplateInfo() {
 
 	//==========================RBAC Authentication==============================//
 
-	err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("clusterTemplate", userInfo.CompanyId, token, models.GCP, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

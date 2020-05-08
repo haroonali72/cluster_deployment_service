@@ -24,6 +24,7 @@ import (
 
 func init() {
 	ns := beego.NewNamespace("/antelope",
+
 		beego.NSNamespace("/health",
 			beego.NSInclude(
 				&controllers.HealthController{},
@@ -37,11 +38,6 @@ func init() {
 		beego.NSNamespace("/template/op",
 			beego.NSInclude(
 				&op.OPTemplateController{},
-			),
-		),
-		beego.NSNamespace("/cluster/op",
-			beego.NSInclude(
-				&op.OPClusterController{},
 			),
 		),
 		beego.NSNamespace("/template/aws",
@@ -112,11 +108,6 @@ func init() {
 		beego.NSNamespace("/template/doks",
 			beego.NSInclude(
 				&doks.DOKSTemplateController{},
-			),
-		),
-		beego.NSNamespace("/template/op",
-			beego.NSInclude(
-				&op.OPTemplateController{},
 			),
 		),
 		beego.NSNamespace("/cluster/op",

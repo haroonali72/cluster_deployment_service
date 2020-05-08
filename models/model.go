@@ -9,12 +9,21 @@ import (
 type Type string
 
 const (
-	Existing       Type = "existing"
-	New            Type = "new"
-	Created        Type = "created"
-	ClusterCreated Type = "cluster created"
-	Deploying      Type = "deploying"
-	Terminating    Type = "terminating"
+	New                      Type = "New"
+	Created                  Type = "created"
+	ClusterCreated           Type = "Cluster Created"
+	ClusterCreationFailed    Type = "Cluster Creation Failed"
+	ClusterTerminationFailed Type = "Cluster Termination Failed"
+	ClusterTerminated        Type = "Cluster Terminated"
+	Deploying                Type = "Creating"
+	Terminating              Type = "Terminating"
+	AgentDeploymentFailed    Type = "Agent Deployment Failed"
+)
+
+type StatusCode int
+
+const (
+	CloudStatusCode StatusCode = 512
 )
 
 type RequestType string
@@ -38,6 +47,8 @@ const (
 	Admin     Role = "Admin"
 )
 
+// cloud type of the cluster
+// swagger:enum Cloud
 type Cloud string
 
 const (

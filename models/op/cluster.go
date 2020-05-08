@@ -13,35 +13,39 @@ import (
 )
 
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
-	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(OP|op)"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
+	Name             string        `json:"name" bson:"name" validate:"required" description:"Name of cluster [required]"`
+	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]"`
+	Cloud            models.Cloud  `json:"-" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-	TokenName        string        `json:"token_name" bson:"token_name"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	CompanyId        string        `json:"company_id" bson:"company_id" description:"ID of company which you are belong to [optional]"`
+	TokenName        string        `json:"-" bson:"token_name"`
 }
 
 type NodePool struct {
-	ID        bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name      string             `json:"name" bson:"name" valid:"required"`
-	NodeCount int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	Nodes     []*Node            `json:"nodes" bson:"nodes"`
-	KeyInfo   key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	PoolRole  models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
+	ID        bson.ObjectId      `json:"-" bson:"_id,omitempty"`
+	Name      string             `json:"name" bson:"name" validate:"required" description:"Name of node pool [required]"`
+	NodeCount int64              `json:"node_count" bson:"node_count" validate:"required,gte=0" description:"Count of node pool [required]"`
+	Nodes     []*Node            `json:"nodes" bson:"nodes" validate:"required,dive"`
+	KeyInfo   key_utils.AZUREKey `json:"key_info" bson:"key_info" validate:"required,dive"`
+	PoolRole  models.PoolRole    `json:"pool_role" bson:"pool_role" validate:"required" description:"Pool role can be master or slave [required]"`
 }
 
 type Node struct {
-	Name      string `json:"name" bson:"name",omitempty"`
-	PrivateIP string `json:"private_ip" bson:"private_ip",omitempty"`
-	PublicIP  string `json:"public_ip" bson:"public_ip",omitempty"`
-	UserName  string `json:"user_name" bson:"user_name",omitempty"`
+	Name      string `json:"name" bson:"name,omitempty" validate:"required" description:"Name of node [required]"`
+	PrivateIP string `json:"private_ip" bson:"private_ip,omitempty" description:"Private IP of node [readonly]"`
+	PublicIP  string `json:"public_ip" bson:"public_ip,omitempty" description:"Public IP of node [readonly]"`
+	UserName  string `json:"user_name" bson:"user_name,omitempty" validate:"required" description:"User name which will be used for ssh into machine [required]"`
 }
-
+type Cluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -60,7 +64,12 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	}
 	return cluster, nil
 }
-func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (opClusters []Cluster, err error) {
+	var clusters []Cluster_Def
+	var copyData []string
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -68,17 +77,19 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 
 		return nil, err1
 	}
+
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	return clusters, nil
+	return opClusters, nil
 }
+
 func checkMasterPools(cluster Cluster_Def) error {
 	noOfMasters := 0
 	for _, pools := range cluster.NodePools {
@@ -97,14 +108,9 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams s
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
-	err = checkMasterPools(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
 	/*
 		inserting key in vault
-		**/
+	**/
 	for index, pool := range cluster.NodePools {
 
 		_, err := vault.PostSSHKey(pool.KeyInfo, pool.KeyInfo.KeyName, models.OP, ctx, token, teams, "")
@@ -207,7 +213,6 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 func CheckCluster(projectId, companyId string, ctx utils.Context) error {
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
-
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
