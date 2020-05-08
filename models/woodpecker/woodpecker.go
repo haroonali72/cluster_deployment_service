@@ -26,7 +26,7 @@ func GetCertificate(projectID, token string, ctx utils.Context) (string, error) 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 	}
-	req.Header.Set("token", token)
+	req.Header.Set("X-Auth-Token", token)
 	response, err := client.SendRequest(req)
 	if err != nil {
 		beego.Info(err.Error())
