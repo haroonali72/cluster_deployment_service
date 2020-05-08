@@ -59,7 +59,7 @@ func (c *AKSClusterController) Get() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -132,7 +132,7 @@ func (c *AKSClusterController) GetAll() {
 
 	statusCode, err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.AKS, *ctx)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -212,7 +212,7 @@ func (c *AKSClusterController) Post() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -330,7 +330,7 @@ func (c *AKSClusterController) Patch() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -436,7 +436,7 @@ func (c *AKSClusterController) Delete() {
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -453,7 +453,7 @@ func (c *AKSClusterController) Delete() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -579,7 +579,7 @@ func (c *AKSClusterController) StartCluster() {
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -596,7 +596,7 @@ func (c *AKSClusterController) StartCluster() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -745,7 +745,7 @@ func (c *AKSClusterController) GetStatus() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -855,7 +855,7 @@ func (c *AKSClusterController) TerminateCluster() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.AKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -984,7 +984,7 @@ func (c *AKSClusterController) GetAKSVms() {
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -1052,7 +1052,7 @@ func (c *AKSClusterController) GetKubeConfig() {
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -1149,7 +1149,7 @@ func (c *AKSClusterController) FetchKubeVersions() {
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()

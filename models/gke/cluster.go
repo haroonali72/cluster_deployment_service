@@ -329,7 +329,9 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
 		cluster.ModificationDate = time.Now()
-		cluster.CloudplexStatus = models.New
+		if cluster.CloudplexStatus == "" {
+			cluster.CloudplexStatus = "new"
+		}
 		cluster.Cloud = models.GKE
 		cluster.CompanyId=ctx.Data.Company
 	}
@@ -482,6 +484,9 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
+		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}

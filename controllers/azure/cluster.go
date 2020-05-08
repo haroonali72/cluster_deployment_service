@@ -46,7 +46,7 @@ func (c *AzureClusterController) Get() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -60,7 +60,7 @@ func (c *AzureClusterController) Get() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -108,7 +108,7 @@ func (c *AzureClusterController) GetAll() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -121,7 +121,7 @@ func (c *AzureClusterController) GetAll() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.Azure, *ctx)
+	statusCode, err, data := rbac_athentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.Azure, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -171,7 +171,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -184,7 +184,7 @@ func (c *AzureClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Create", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -270,7 +270,7 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -283,7 +283,7 @@ func (c *AzureClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Update", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -381,7 +381,7 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -394,7 +394,7 @@ func (c *AzureClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", id, "Delete", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -482,7 +482,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -495,7 +495,7 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Start", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -563,7 +563,7 @@ func (c *AzureClusterController) StartCluster() {
 		return
 	}
 
-	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		utils.SendLog(userInfo.CompanyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
@@ -620,7 +620,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(400)
@@ -633,7 +633,7 @@ func (c *AzureClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -664,7 +664,7 @@ func (c *AzureClusterController) GetStatus() {
 		return
 	}
 
-	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -714,7 +714,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -728,7 +728,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Terminate", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -761,7 +761,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		return
 	}
 
-	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -829,7 +829,7 @@ func (c *AzureClusterController) GetSSHKeys() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -892,7 +892,7 @@ func (c *AzureClusterController) PostSSHKey() {
 	teams := c.Ctx.Input.Header("teams")
 
 	//==========================RBAC Authentication==============================//
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -966,7 +966,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 		return
 	}
 	//==========================RBAC Authentication==============================//
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1035,7 +1035,7 @@ func (c *AzureClusterController) GetInstances() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1057,7 +1057,7 @@ func (c *AzureClusterController) GetInstances() {
 		return
 	}
 
-	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1105,7 +1105,7 @@ func (c *AzureClusterController) GetRegions() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1119,8 +1119,6 @@ func (c *AzureClusterController) GetRegions() {
 
 	beego.Info("AzureClusterController: Get All Regions.")
 
-
-
 	var regions []models.Region
 	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {
 		beego.Error("Unmarshalling of regions failed ", err.Error())
@@ -1130,7 +1128,7 @@ func (c *AzureClusterController) GetRegions() {
 		return
 	}
 
-	statusCode,azureProfile, err := azure.GetProfile(profileId, "useast", token, *ctx)
+	statusCode, azureProfile, err := azure.GetProfile(profileId, "useast", token, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1200,7 +1198,7 @@ func (c *AzureClusterController) ValidateProfile() {
 		return
 	}
 
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1301,7 +1299,7 @@ func (c *AzureClusterController) ApplyAgent() {
 		c.ServeJSON()
 		return
 	}
-	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1313,7 +1311,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GKEClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -1328,7 +1326,7 @@ func (c *AzureClusterController) ApplyAgent() {
 		return
 	}
 
-	statusCode,azureProfile, err := azure.GetProfile(profileId, "", token, *ctx)
+	statusCode, azureProfile, err := azure.GetProfile(profileId, "", token, *ctx)
 	if err != nil {
 		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
 		c.Ctx.Output.SetStatus(statusCode)

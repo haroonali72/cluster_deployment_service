@@ -208,9 +208,11 @@ func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 	if cluster.CreationDate.IsZero() {
 		cluster.CreationDate = time.Now()
 		cluster.ModificationDate = time.Now()
+		if cluster.CloudplexStatus == "" {
+			cluster.CloudplexStatus = "new"
+		}
+		cluster.Cloud = models.DOKS
 	}
-	cluster.CloudplexStatus=models.New
-	cluster.Cloud = models.DOKS
 
 	mc := db.GetMongoConf()
 	err = db.InsertInMongo(mc.MongoDOKSClusterCollection, cluster)
@@ -305,7 +307,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	err1 := doksOps.init(ctx)
-	if err1 !=	(types.CustomCPError{}){
+	if err1 != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = "Cluster creation failed"
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
@@ -499,7 +501,7 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return cpErr
 	}
 	errr := doksOps.init(ctx)
-	if errr  != (types.CustomCPError{}) {
+	if errr != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.ClusterTerminationFailed
 		err = UpdateKubernetesCluster(cluster, ctx)
 		if err != nil {
