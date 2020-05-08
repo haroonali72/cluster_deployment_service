@@ -120,8 +120,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: Forcefully delete cluster
-        required: true
+        description: "true"
         type: boolean
       responses:
         "204":
@@ -1857,8 +1856,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: Forcefully delete cluster
-        required: true
+        description: "true"
         type: boolean
       responses:
         "204":
@@ -1890,7 +1888,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/doks.KubernetesCluster'
+              $ref: '#/definitions/doks.DOKSCluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2648,7 +2646,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/gke.GKECluster'
+              $ref: '#/definitions/gke.Cluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2978,7 +2976,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/iks.Cluster_Def'
+              $ref: '#/definitions/iks.Cluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -3400,8 +3398,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: Forcefully delete cluster
-        required: true
+        description: "true"
         type: boolean
       responses:
         "204":
@@ -6176,28 +6173,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0015e0060.false:
+  482.0xc0015834d0.false:
     title: "false"
     type: object
-  518.0xc0014ea480.false:
+  605.0xc000e47d40.false:
     title: "false"
     type: object
-  1559.string:
+  644.0xc001168c60.false:
+    title: "false"
+    type: object
+  667.0xc0014af6e0.false:
+    title: "false"
+    type: object
+  7855.string:
     title: string
     type: object
-  6000.0xc0015e1560.false:
+  14479.0xc0015c1440.false:
     title: "false"
     type: object
-  13335.0xc001505e90.false:
+  51490.0xc001554a50.false:
     title: "false"
     type: object
-  13385.0xc000ebe840.false:
-    title: "false"
-    type: object
-  13438.0xc0011c7770.false:
-    title: "false"
-    type: object
-  22162.string:
+  55857.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6306,7 +6303,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/55857.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6457,7 +6454,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000ebe840.false'
+        $ref: '#/definitions/605.0xc000e47d40.false'
       name:
         type: string
       network_name:
@@ -6838,7 +6835,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc0011c7770.false'
+        $ref: '#/definitions/644.0xc001168c60.false'
       name:
         type: string
       network_name:
@@ -7020,6 +7017,17 @@ definitions:
         $ref: '#/definitions/doks.Context'
       name:
         type: string
+  doks.DOKSCluster:
+    title: DOKSCluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   doks.KubernetesCluster:
     title: KubernetesCluster
     type: object
@@ -7465,6 +7473,17 @@ definitions:
     properties:
       issue_client_certificate:
         type: boolean
+  gke.Cluster:
+    title: Cluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   gke.ConsumptionMeteringConfig:
     title: ConsumptionMeteringConfig
     type: object
@@ -7999,6 +8018,17 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/iks.InstanceProfile'
+  iks.Cluster:
+    title: Cluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   iks.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -8118,7 +8148,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0014ea480.false'
+        $ref: '#/definitions/51490.0xc001554a50.false'
       kube_version:
         type: string
       name:
@@ -8382,7 +8412,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0015e0060.false'
+        $ref: '#/definitions/14479.0xc0015c1440.false'
       name:
         type: string
       node_pools:

@@ -106,6 +106,7 @@ func (c *AKSClusterController) Get() {
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
 func (c *AKSClusterController) GetAll() {
+
 	ctx := new(utils.Context)
 	ctx.SendLogs("AKSClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
@@ -144,7 +145,7 @@ func (c *AKSClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-
+	ctx.Data.Company=userInfo.CompanyId
 	clusters, err := aks.GetAllAKSCluster(data, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

@@ -248,6 +248,12 @@ type AutoUpgradeOptions struct {
 	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
+type Cluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
+
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -275,7 +281,8 @@ func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	return cluster, nil
 }
 
-func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (clusters []GKECluster, err error) {
+func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClusters []Cluster, err error) {
+	var clusters []GKECluster
 	var copyData []string
 	for _, d := range data.Data {
 		copyData = append(copyData, d)
@@ -288,23 +295,27 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (clusters
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return clusters, err1
+		return gkeClusters, err1
 	}
 
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return clusters, err
+		return gkeClusters, err
 	}
 
-	return clusters, nil
+	for _,cluster := range clusters{
+		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.CloudplexStatus}
+		gkeClusters =append(gkeClusters,temp)
+	}
+	return gkeClusters, nil
 }
 
 func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
