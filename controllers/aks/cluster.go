@@ -355,19 +355,19 @@ func (c *AKSClusterController) Patch() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.Terminating) {
+	} else if cluster.Status == (models.Terminating) {
 		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.ClusterCreated) {
+	} else if cluster.Status == (models.ClusterCreated) {
 		ctx.SendLogs("AKSClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.ClusterTerminationFailed) {
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
 		ctx.SendLogs("AKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
@@ -399,7 +399,7 @@ func (c *AKSClusterController) Patch() {
 // @Description Delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path 	string	true	"Project id of the cluster"
-// @Param	forceDelete path    boolean	true    ""
+// @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
@@ -492,19 +492,19 @@ func (c *AKSClusterController) Delete() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.Deploying) && !forceDelete {
+	} else if cluster.Status == (models.Deploying) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.Terminating) && !forceDelete {
+	} else if cluster.Status == (models.Terminating) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.ClusterTerminationFailed) && !forceDelete{
+	} else if cluster.Status == (models.ClusterTerminationFailed) && !forceDelete {
 		ctx.SendLogs("AKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster creation is in termination failed state"}

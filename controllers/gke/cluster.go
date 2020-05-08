@@ -116,7 +116,7 @@ func (c *GKEClusterController) Get() {
 	}
 
 	ctx.Data.Company = userInfo.CompanyId
-	ctx.Data.ProjectId=projectId
+	ctx.Data.ProjectId = projectId
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "View", token, utils.Context{})
@@ -450,19 +450,19 @@ func (c *GKEClusterController) Patch() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.Terminating) {
+	} else if cluster.CloudplexStatus == (models.Terminating) {
 		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterCreated) {
+	} else if cluster.CloudplexStatus == (models.ClusterCreated) {
 		ctx.SendLogs("GKEClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
 		ctx.SendLogs("GKEClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
@@ -502,7 +502,7 @@ func (c *GKEClusterController) Patch() {
 // @Description Delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Project id of the cluster"
-// @Param	forceDelete path  boolean	true ""
+// @Param	forceDelete path  boolean	true "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
@@ -550,7 +550,7 @@ func (c *GKEClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, ctx.Data.Company, userInfo.UserId)
 
 	ctx.Data.Company = userInfo.CompanyId
-	ctx.Data.ProjectId=id
+	ctx.Data.ProjectId = id
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
@@ -590,19 +590,19 @@ func (c *GKEClusterController) Delete() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == models.Deploying && !forceDelete {
+	} else if cluster.CloudplexStatus == models.Deploying && !forceDelete {
 		ctx.SendLogs("GKEClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.Terminating) && !forceDelete {
+	} else if cluster.CloudplexStatus == (models.Terminating) && !forceDelete {
 		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) && !forceDelete{
+	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) && !forceDelete {
 		ctx.SendLogs("DOKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
@@ -686,7 +686,7 @@ func (c *GKEClusterController) StartCluster() {
 	ctx.SendLogs("GKEClusterController: Strat cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	ctx.Data.Company = userInfo.CompanyId
-	ctx.Data.ProjectId=projectId
+	ctx.Data.ProjectId = projectId
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
@@ -946,7 +946,7 @@ func (c *GKEClusterController) TerminateCluster() {
 	}
 
 	ctx.Data.Company = userInfo.CompanyId
-	ctx.Data.ProjectId=projectId
+	ctx.Data.ProjectId = projectId
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.GKE, "cluster", projectId, "Terminate", token, utils.Context{})
