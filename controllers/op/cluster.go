@@ -327,13 +327,12 @@ func (c *OPClusterController) Patch() {
 
 // @Title Get All
 // @Description get all the company's clusters
-// @Param	X-Auth-Token	header	string	token ""
-// @Success 200 {object} []op.Cluster
+// @Param	X-Auth-Token	header	string	true "token"
+// @Success 200 {object} []op.Cluster_Def
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
 func (c *OPClusterController) GetAll() {
-
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)

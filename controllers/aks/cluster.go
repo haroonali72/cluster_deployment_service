@@ -100,8 +100,8 @@ func (c *AKSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {object} []aks.Cluster
+// @Param	X-Auth-Token	header	string	true "token"
+// @Success 200 {object} []aks.AKSCluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]

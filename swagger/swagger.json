@@ -51,7 +51,7 @@
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "402": {
-                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
@@ -118,7 +118,7 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "Token",
+                        "description": "token",
                         "required": true,
                         "type": "string"
                     }
@@ -129,7 +129,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/aks.Cluster"
+                                "$ref": "#/definitions/aks.AKSCluster"
                             }
                         }
                     },
@@ -535,7 +535,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2631,7 +2631,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "Update a saved kubernetes cluster",
+                "description": "Update an existing kubernetes cluster",
                 "operationId": "DOKSClusterController.Update",
                 "parameters": [
                     {
@@ -2665,7 +2665,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -2723,7 +2723,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "Get all the saved clusters",
+                "description": "get all the clusters",
                 "operationId": "DOKSClusterController.Get All",
                 "parameters": [
                     {
@@ -2740,7 +2740,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/doks.DOKSCluster"
+                                "$ref": "#/definitions/doks.KubernetesCluster"
                             }
                         }
                     },
@@ -3002,7 +3002,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "Terminate a running cluster from cloud",
+                "description": "Terminate a running cluster",
                 "operationId": "DOKSClusterController.Terminate",
                 "parameters": [
                     {
@@ -3057,7 +3057,7 @@
                 "tags": [
                     "cluster/doks"
                 ],
-                "description": "Get saved cluster against the projectId",
+                "description": "Get cluster against the projectId",
                 "operationId": "DOKSClusterController.Get",
                 "parameters": [
                     {
@@ -3134,7 +3134,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -3924,7 +3924,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/gke.Cluster"
+                                "$ref": "#/definitions/gke.GKECluster"
                             }
                         }
                     },
@@ -4288,7 +4288,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"\"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in running/deploying/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4363,7 +4363,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/iks.Cluster"
+                                "$ref": "#/definitions/iks.Cluster_Def"
                             }
                         }
                     },
@@ -4481,7 +4481,7 @@
                 }
             }
         },
-        "/cluster/iks/getallmachines/{region}/": {
+        "/cluster/iks/getallmachines/{zone}/": {
             "get": {
                 "tags": [
                     "cluster/iks"
@@ -4508,7 +4508,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "region",
+                        "name": "zone",
                         "description": "Region of the cloud",
                         "required": true,
                         "type": "string"
@@ -4685,8 +4685,7 @@
                         "name": "X-Profile-Id",
                         "description": "Vault credentials profile Id",
                         "required": true,
-                        "type": "string",
-                        "default": "profileId"
+                        "type": "string"
                     },
                     {
                         "in": "path",
@@ -4893,8 +4892,7 @@
                     {
                         "in": "path",
                         "name": "forceDelete",
-                        "description": "Forcefully delete cluster",
-                        "required": true,
+                        "description": "true",
                         "type": "boolean"
                     }
                 ],
@@ -4909,7 +4907,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -5030,6 +5028,7 @@
                         "in": "header",
                         "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -5039,7 +5038,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/op.Cluster"
+                                "$ref": "#/definitions/op.Cluster_Def"
                             }
                         }
                     },
@@ -9321,36 +9320,36 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14479.0xc0015e68a0.false": {
+        "13335.0xc001481da0.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0015b8930.false": {
+        "13385.0xc000e3a930.false": {
             "title": "false",
             "type": "object"
         },
-        "51490.0xc001567e90.false": {
+        "13438.0xc0011436b0.false": {
             "title": "false",
             "type": "object"
         },
-        "55857.string": {
+        "1559.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc000e6f1a0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "644.0xc0011940c0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "667.0xc0014d2b40.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "7855.string": {
+        "22121.string": {
             "title": "string",
+            "type": "object"
+        },
+        "434.0xc001562240.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "518.0xc001466390.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "6000.0xc001563740.false": {
+            "title": "false",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -9490,7 +9489,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/55857.string"
+                    "$ref": "#/definitions/1559.string"
                 },
                 "type": {
                     "type": "string"
@@ -9500,22 +9499,6 @@
         "aks.AKSClusterTemplateMetadata": {
             "title": "AKSClusterTemplateMetadata",
             "type": "object"
-        },
-        "aks.Cluster": {
-            "title": "Cluster",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "project_id": {
-                    "description": "ID of project",
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.Type"
-                }
-            }
         },
         "aks.ManagedClusterAPIServerAccessProfile": {
             "title": "ManagedClusterAPIServerAccessProfile",
@@ -9719,7 +9702,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000e6f1a0.false"
+                    "$ref": "#/definitions/13385.0xc000e3a930.false"
                 },
                 "name": {
                     "type": "string"
@@ -10284,7 +10267,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/644.0xc0011940c0.false"
+                    "$ref": "#/definitions/13438.0xc0011436b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10556,22 +10539,6 @@
                 }
             }
         },
-        "doks.DOKSCluster": {
-            "title": "DOKSCluster",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "project_id": {
-                    "description": "ID of project",
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.Type"
-                }
-            }
-        },
         "doks.KubernetesCluster": {
             "title": "KubernetesCluster",
             "type": "object",
@@ -10667,8 +10634,10 @@
             "title": "KubernetesNode",
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "name": {
-                    "description": "Name of the node [optional]",
                     "type": "string"
                 }
             }
@@ -11223,22 +11192,6 @@
                 }
             }
         },
-        "gke.Cluster": {
-            "title": "Cluster",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "project_id": {
-                    "description": "ID of project",
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.Type"
-                }
-            }
-        },
         "gke.ConsumptionMeteringConfig": {
             "title": "ConsumptionMeteringConfig",
             "type": "object",
@@ -11422,7 +11375,7 @@
                 },
                 "status": {
                     "$ref": "#/definitions/models.Type",
-                    "description": "Status of cluster [optional]"
+                    "description": "Status of cluster [required]"
                 },
                 "status_message": {
                     "description": "Additional information about the current status [readonly]",
@@ -12010,22 +11963,6 @@
                 }
             }
         },
-        "iks.Cluster": {
-            "title": "Cluster",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "project_id": {
-                    "description": "ID of project",
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.Type"
-                }
-            }
-        },
         "iks.Cluster_Def": {
             "title": "Cluster_Def",
             "type": "object",
@@ -12192,7 +12129,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/51490.0xc001567e90.false"
+                    "$ref": "#/definitions/518.0xc001466390.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12415,22 +12352,6 @@
             ],
             "example": "New"
         },
-        "op.Cluster": {
-            "title": "Cluster",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "project_id": {
-                    "description": "ID of project",
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.Type"
-                }
-            }
-        },
         "op.Cluster_Def": {
             "title": "Cluster_Def",
             "type": "object",
@@ -12569,7 +12490,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14479.0xc0015e68a0.false"
+                    "$ref": "#/definitions/434.0xc001562240.false"
                 },
                 "name": {
                     "type": "string"
