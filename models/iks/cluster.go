@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New" description:"Status of cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -160,23 +160,6 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == (models.Deploying) && update {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in deploying state")
-	}
-	if oldCluster.Status == (models.Terminating) && update {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in terminating state")
-	}
-
-	if oldCluster.Status == "Cluster Created" && update {
-		//if !checkScalingChanges(&oldCluster, &cluster) {
-		ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("Cluster is in runnning state")
-		//} else {
-		//	cluster = oldCluster
-		//}
-	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -312,10 +295,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
-		profile := vault.IBMProfile{Profile: credentials}
-		TerminateCluster(cluster, profile, ctx, companyId, token)
-
+		cluster.Status = models.AgentDeploymentFailed
+		profile := vault.IBMProfile{Profile:credentials,}
+		_ =TerminateCluster(cluster,profile,ctx,companyId,token)
+		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)

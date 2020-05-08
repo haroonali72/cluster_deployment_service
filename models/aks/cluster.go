@@ -30,7 +30,7 @@ type AKSCluster struct {
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new" description:"Status of cluster [required]"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
 	ProvisioningState      string                               `json:"-" bson:"provisioning_state,omitempty"`
 	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" validate:"required" description:"Kubernetes version to be provisioned ['required' if advance settings enabled]"`
 	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" validate:"required" description:"Cluster DNS prefix ['required' if advance settings enabled]"`
@@ -197,31 +197,6 @@ func UpdateAKSCluster(cluster AKSCluster, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	//if oldCluster.Status == string(models.Deploying) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in deploying state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in deploying state")
-	//}
-	//if oldCluster.Status == string(models.Terminating) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in terminating state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in terminating state")
-	//}
-	//if strings.ToLower(oldCluster.Status) == strings.ToLower(string(models.ClusterCreated)) {
-	//	ctx.SendLogs(
-	//		"AKSUpdateClusterModel:  Update - Cluster is in running state.",
-	//		models.LOGGING_LEVEL_ERROR,
-	//		models.Backend_Logging,
-	//	)
-	//	return errors.New("cluster is in running state")
-	//}
-
 	err = DeleteAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs(
@@ -346,10 +321,11 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	if AgentErr != nil {
 		cpErr := ApiError(AgentErr, "agent deployment failed", 500)
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Agent deployment failed : "+cpErr.Error+ cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
-		TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
+		cluster.Status = models.AgentDeploymentFailed
+		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
+		_ = TerminateCluster(credentials,cluster.ProjectId,companyId,ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
