@@ -166,11 +166,12 @@ func (c *GKEClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {object} []gke.GKECluster
+// @Success 200 {object} []gke.Cluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
 func (c *GKEClusterController) GetAll() {
+
 	ctx := new(utils.Context)
 
 	ctx.SendLogs("GKEClusterController: Get all clusters", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -208,7 +209,7 @@ func (c *GKEClusterController) GetAll() {
 	}
 
 	ctx.SendLogs("GKEClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.Data.Company=userInfo.CompanyId
 	clusters, err := gke.GetAllGKECluster(data, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

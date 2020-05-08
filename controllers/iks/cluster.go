@@ -361,11 +361,12 @@ func (c *IKSClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {object} []iks.Cluster_Def
+// @Success 200 {object} []iks.Cluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Erorr"}
 // @router /all [get]
 func (c *IKSClusterController) GetAll() {
+
 	ctx := new(utils.Context)
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
@@ -398,7 +399,7 @@ func (c *IKSClusterController) GetAll() {
 	//====================================================================================//
 
 	ctx.SendLogs("IKSClusterController: Getting all clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.Data.Company=userInfo.CompanyId
 	clusters, err := iks.GetAllCluster(*ctx, data)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

@@ -41,7 +41,11 @@ type Node struct {
 	PublicIP  string `json:"public_ip" bson:"public_ip,omitempty" description:"Public IP of node [readonly]"`
 	UserName  string `json:"user_name" bson:"user_name,omitempty" validate:"required" description:"User name which will be used for ssh into machine [required]"`
 }
-
+type Cluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -60,7 +64,12 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	}
 	return cluster, nil
 }
-func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (opClusters []Cluster, err error) {
+	var clusters []Cluster_Def
+	var copyData []string
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -68,17 +77,19 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 
 		return nil, err1
 	}
+
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	return clusters, nil
+	return opClusters, nil
 }
+
 func checkMasterPools(cluster Cluster_Def) error {
 	noOfMasters := 0
 	for _, pools := range cluster.NodePools {
