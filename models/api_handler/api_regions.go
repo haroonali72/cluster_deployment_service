@@ -46,7 +46,7 @@ func GetAwsRegions() (reg []models.Region, err error) {
 			break
 		}
 		regionInfo := strings.Split(info, "| ")
-		if strings.Contains(regionInfo[2],"(") {
+		if strings.Contains(regionInfo[2], "(") {
 			loc := strings.Split(regionInfo[2], "(")
 			loca := strings.Split(loc[1], ")")
 			//region[loca[0]]=regionInfo[1]

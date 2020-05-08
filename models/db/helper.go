@@ -97,9 +97,16 @@ func CreateError(projectId, companyId string, cloud models.Cloud, ctx utils.Cont
 			)
 			return err
 		}
-
-	} else {
-		return err
+	} else if err == nil && obj == (types.ClusterError{}) {
+		err = AddError(ctx, customErr)
+		if err != nil {
+			ctx.SendLogs(
+				"Add - Got error while inserting cluster to the database:  "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
 	}
 	return nil
 }
@@ -116,8 +123,8 @@ func GetError(projectId, companyId string, cloud models.Cloud, ctx utils.Context
 	c := session.DB(mc.MongoDb).C(mc.MongoClusterErrorCollection)
 	err1 = c.Find(bson.M{"project_id": projectId, "company_id": companyId, "cloud": cloud}).One(&err)
 	if err1 != nil {
-		if err1 != nil &&  strings.Contains(strings.ToLower(err1.Error()),"not found"){
-			return err,nil
+		if err1 != nil && strings.Contains(strings.ToLower(err1.Error()), "not found") {
+			return err, nil
 		}
 		ctx.SendLogs("Cluster model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return types.ClusterError{}, err1
