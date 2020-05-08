@@ -388,7 +388,7 @@ func (c *OPClusterController) GetAll() {
 // @Description delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path 	string	true	"Project id of the cluster"
-// @Param	forceDelete path    boolean	true    ""
+// @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
