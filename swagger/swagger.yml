@@ -932,23 +932,24 @@ paths:
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/azure.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/azure
@@ -962,30 +963,28 @@ paths:
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/azure.Cluster_Def'
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"msg": "error message"}'
+          description: '{"msg": "Bad Request"}'
         "401":
-          description: '{"msg": "error message"}'
+          description: '{"msg": "Unauthorized"}'
         "404":
-          description: '{"msg": "error message"}'
+          description: '{"msg": "Not Found"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against same project id already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/{projectId}/:
     get:
       tags:
       - cluster/azure
-      description: get cluster
+      description: Get cluster against the projectId
       operationId: AzureClusterController.Get
       parameters:
       - in: path
@@ -1003,12 +1002,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/azure.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/{projectId}/{forceDelete}: {}
   /cluster/azure/all:
     get:
@@ -1019,7 +1018,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
@@ -1029,10 +1028,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/azure.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/applyagent/{projectId}:
     post:
       tags:
@@ -1042,20 +1041,22 @@ paths:
       parameters:
       - in: header
         name: clusterName
-        description: clusterName
+        description: Cluster Name
+        required: true
         type: string
       - in: header
         name: resourceGroup
-        description: resourceGroup
+        description: ResourceGroup
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: path
@@ -1066,19 +1067,17 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
-  /cluster/azure/getAllInstances/{region}:
+          description: '{"error": "Runtime Error"}'
+  /cluster/azure/getAllInstances:
     get:
       tags:
       - cluster/azure
-      description: Getting All Instances
+      description: Get All Instances
       operationId: AzureClusterController.Get Instances
       parameters:
       - in: header
@@ -1088,45 +1087,45 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
-      - in: path
+      - in: header
         name: region
         description: Cloud region
+        required: true
         type: string
       responses:
         "200":
           description: '[]compute.VirtualMachines'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/getallmachines:
     get:
       tags:
       - cluster/azure
-      description: Get Azure VM Sizes
+      description: Get list of azure VM sizes
       operationId: AzureClusterController.Get VM Sizes
       responses:
         "200":
           description: '[]string'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/getallregions:
     get:
       tags:
       - cluster/azure
-      description: Get Azure Regions
+      description: Get List of the Azure Regions
       operationId: AzureClusterController.Get Azure Regions
       parameters:
       - in: header
@@ -1136,32 +1135,18 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "true"
+        description: Vault credentials profile id
+        required: true
         type: string
       responses:
         "200":
           description: '[]model.Region'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": "error msg"}'
-  /cluster/azure/machine/info:
-    get:
-      tags:
-      - cluster/azure
-      description: Get Azure Machine instance cores
-      operationId: AzureClusterController.GetCores
-      responses:
-        "200":
-          description: ""
-          schema:
-            $ref: '#/definitions/models.Machine'
-        "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/sshkey/{keyname}:
     delete:
       tags:
@@ -1171,20 +1156,23 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: "true"
+        description: Unique name of the key
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": key deleted successfully}'
-        "400":
-          description: '{"error": "error msg"}'
+        "204":
+          description: '{"msg": Key deleted successfully}'
+        "401":
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -1203,8 +1191,8 @@ paths:
         required: true
         type: string
       - in: header
-        name: -Auth-Token
-        description: token
+        name: X-Auth-Token
+        description: Token
         required: true
         type: string
       - in: header
@@ -1217,9 +1205,9 @@ paths:
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
         "404":
-          description: '{"error": "error message"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/sshkeys:
     get:
       tags:
@@ -1229,7 +1217,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
@@ -1239,16 +1227,16 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/start/{projectId}:
     post:
       tags:
       - cluster/azure
-      description: starts a  cluster
-      operationId: AzureClusterController.Start
+      description: Deploy a  cluster
+      operationId: AzureClusterController.Create
       parameters:
       - in: path
         name: projectId
@@ -1257,34 +1245,40 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
+        "202":
+          description: '{"msg": "Cluster creation initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/status/{projectId}/:
     get:
       tags:
       - cluster/azure
-      description: returns status of nodes
+      description: Get live status of the cluster
       operationId: AzureClusterController.Status
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: path
@@ -1294,26 +1288,29 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/azure.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in creating/terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/terminate/{projectId}/:
     post:
       tags:
       - cluster/azure
-      description: terminates a  cluster
+      description: terminates a running cluster
       operationId: AzureClusterController.Terminate
       parameters:
       - in: path
@@ -1323,55 +1320,56 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster terminated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "202":
+          description: '{"msg": "Cluster termination initialized"}'
+        "204":
+          description: '{"msg": "Cluster terminated successfully"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/validateProfile/:
     post:
       tags:
       - cluster/azure
-      description: check if profile is valid
+      description: Check if profile is valid
       operationId: AzureClusterController.Validate Profile
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/vault.AzureCredentials'
       responses:
         "200":
           description: '{"msg": "Profile is valid"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "409":
-          description: '{"error": "profile is invalid"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/:
     put:
       tags:
@@ -1381,8 +1379,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: body
         name: body
@@ -1392,19 +1389,17 @@ paths:
           $ref: '#/definitions/do.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/do
@@ -1419,24 +1414,21 @@ paths:
           $ref: '#/definitions/do.Cluster_Def'
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster added successfully"}'
         "400":
-          description: body not found
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: token not found
+          description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against same project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/{projectId}/:
     get:
       tags:
@@ -1459,13 +1451,43 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-  /cluster/do/{projectId}/{forceDelete}: {}
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/do/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/do
+      description: delete a cluster
+      operationId: DOClusterController.Delete
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/do/all:
     get:
       tags:
@@ -1476,7 +1498,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -1485,10 +1506,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/getallregions/:
     get:
       tags:
@@ -1502,8 +1523,7 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: "true"
         type: string
       responses:
         "200":
@@ -1512,11 +1532,13 @@ paths:
             type: array
             items:
               $ref: '#/definitions/godo.Region'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
-  /cluster/do/sshkey/{keyname}/{region}:
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime error"}'
+        "512":
+          description: '{object} types.CustomCPError'
+  /cluster/do/sshkey/{keyname}:
     delete:
       tags:
       - cluster/do
@@ -1533,23 +1555,19 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
-        type: string
-      - in: path
-        name: region
-        description: region
-        required: true
+        description: token
         type: string
       responses:
         "200":
           description: '{"msg": "key deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "User is unauthorized to perform this action"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "key is in used by some projects"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/do/sshkey/{projectId}/{keyname}/{region}:
     post:
       tags:
@@ -1573,8 +1591,7 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: header
         name: teams
@@ -1591,13 +1608,15 @@ paths:
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/sshkeys:
     get:
       tags:
@@ -1607,8 +1626,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       responses:
         "200":
@@ -1617,12 +1635,10 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/start/{projectId}:
     post:
       tags:
@@ -1632,8 +1648,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: header
         name: X-Profile-Id
@@ -1645,16 +1660,19 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "202":
+          description: '{"msg": "Cluster creation initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/status/{projectId}/:
     get:
       tags:
@@ -1664,8 +1682,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: header
         name: X-Profile-Id
@@ -1681,14 +1698,14 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/terminate/{projectId}/:
     post:
       tags:
@@ -1703,8 +1720,7 @@ paths:
           $ref: '#/definitions/X-Profile-Id'
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: path
         name: projectId
@@ -1712,14 +1728,17 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster terminated successfully"}'
+        "202":
+          description: '{"msg": "cluster termination initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/validateProfile/:
     post:
       tags:
@@ -1729,8 +1748,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: "true"
         type: string
       - in: vault.DOCredentials
         name: body
@@ -1741,9 +1759,11 @@ paths:
         "200":
           description: '{"msg": "Profile is valid"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Invalid Profile"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
   /cluster/doks/:
     put:
       tags:
@@ -2003,8 +2023,6 @@ paths:
         required: true
         type: string
       responses:
-        "201":
-          description: '{"msg": "Cluster created successfully"}'
         "202":
           description: '{"msg": "Cluster creation initiated"}'
         "401":
@@ -2047,6 +2065,8 @@ paths:
             $ref: '#/definitions/doks.KubernetesCluster'
         "401":
           description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
@@ -6163,28 +6183,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00156d890.false:
+  482.0xc0015c7c20.false:
     title: "false"
     type: object
-  605.0xc000e3a720.false:
+  605.0xc000e725a0.false:
     title: "false"
     type: object
-  644.0xc00113f470.false:
+  667.0xc0014efe60.false:
     title: "false"
     type: object
-  667.0xc00148fad0.false:
+  937.0xc0011b2090.false:
     title: "false"
     type: object
   7814.string:
     title: string
     type: object
-  13859.0xc0015b1620.false:
+  13859.0xc00160f9b0.false:
     title: "false"
     type: object
-  51327.0xc00153ee10.false:
+  51332.0xc0015931a0.false:
     title: "false"
     type: object
-  55892.string:
+  55891.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6293,7 +6313,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55892.string'
+        $ref: '#/definitions/55891.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6444,7 +6464,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000e3a720.false'
+        $ref: '#/definitions/605.0xc000e725a0.false'
       name:
         type: string
       network_name:
@@ -6629,7 +6649,7 @@ definitions:
       resource_group:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
   azure.DiagnosticsProfile:
@@ -6825,7 +6845,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc00113f470.false'
+        $ref: '#/definitions/937.0xc0011b2090.false'
       name:
         type: string
       network_name:
@@ -6837,7 +6857,7 @@ definitions:
       project_id:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
   do.ImageReference:
@@ -7074,9 +7094,8 @@ definitions:
     title: KubernetesNode
     type: object
     properties:
-      id:
-        type: string
       name:
+        description: Name of the node [optional]
         type: string
   doks.KubernetesNodePool:
     title: KubernetesNodePool
@@ -8106,7 +8125,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51327.0xc00153ee10.false'
+        $ref: '#/definitions/51332.0xc0015931a0.false'
       kube_version:
         type: string
       name:
@@ -8269,7 +8288,6 @@ definitions:
     - ClusterTerminated = "Cluster Terminated"
     - Deploying = "Creating"
     - Terminating = "Terminating"
-    - AgentDeploymentFailed = "Agent Deployment Failed"
     example: New
   op.Cluster_Def:
     title: Cluster_Def
@@ -8370,7 +8388,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13859.0xc0015b1620.false'
+        $ref: '#/definitions/13859.0xc00160f9b0.false'
       name:
         type: string
       node_pools:

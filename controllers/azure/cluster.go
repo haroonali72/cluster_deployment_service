@@ -550,7 +550,6 @@ func (c *AzureClusterController) StartCluster() {
 	//==========================RBAC Authentication==============================//
 
 	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, *ctx)
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1131,15 +1130,7 @@ func (c *AzureClusterController) GetInstances() {
 	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	beego.Info("AzureClusterController: Get All Instances..")
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode, azureProfile, err = azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
