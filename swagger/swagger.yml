@@ -37,7 +37,8 @@ paths:
         "401":
           description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -119,7 +120,8 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: "true"
+        description: Forcefully delete cluster
+        required: true
         type: boolean
       responses:
         "204":
@@ -129,7 +131,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/aks/all:
@@ -1749,7 +1752,7 @@ paths:
     put:
       tags:
       - cluster/doks
-      description: Update an existing kubernetes cluster
+      description: Update a saved kubernetes cluster
       operationId: DOKSClusterController.Update
       parameters:
       - in: header
@@ -1773,7 +1776,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -1810,7 +1814,7 @@ paths:
     get:
       tags:
       - cluster/doks
-      description: Get cluster against the projectId
+      description: Get saved cluster against the projectId
       operationId: DOKSClusterController.Get
       parameters:
       - in: path
@@ -1853,7 +1857,8 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: "true"
+        description: Forcefully delete cluster
+        required: true
         type: boolean
       responses:
         "204":
@@ -1863,14 +1868,15 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/doks/all:
     get:
       tags:
       - cluster/doks
-      description: get all the clusters
+      description: Get all the saved clusters
       operationId: DOKSClusterController.Get All
       parameters:
       - in: header
@@ -2058,7 +2064,7 @@ paths:
     post:
       tags:
       - cluster/doks
-      description: Terminate a running cluster
+      description: Terminate a running cluster from cloud
       operationId: DOKSClusterController.Terminate
       parameters:
       - in: header
@@ -2858,7 +2864,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": ""Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -2938,7 +2945,8 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: "true"
+        description: Forcefully delete cluster
+        required: true
         type: boolean
       responses:
         "204":
@@ -2948,7 +2956,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/iks/all:
@@ -3391,7 +3400,8 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: "true"
+        description: Forcefully delete cluster
+        required: true
         type: boolean
       responses:
         "204":
@@ -6166,28 +6176,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc001562240.false:
+  434.0xc0015e0060.false:
     title: "false"
     type: object
-  518.0xc001466390.false:
+  518.0xc0014ea480.false:
     title: "false"
     type: object
   1559.string:
     title: string
     type: object
-  6000.0xc001563740.false:
+  6000.0xc0015e1560.false:
     title: "false"
     type: object
-  13335.0xc001481da0.false:
+  13335.0xc001505e90.false:
     title: "false"
     type: object
-  13385.0xc000e3a930.false:
+  13385.0xc000ebe840.false:
     title: "false"
     type: object
-  13438.0xc0011436b0.false:
+  13438.0xc0011c7770.false:
     title: "false"
     type: object
-  22121.string:
+  22162.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6447,7 +6457,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000e3a930.false'
+        $ref: '#/definitions/13385.0xc000ebe840.false'
       name:
         type: string
       network_name:
@@ -6828,7 +6838,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc0011436b0.false'
+        $ref: '#/definitions/13438.0xc0011c7770.false'
       name:
         type: string
       network_name:
@@ -7077,9 +7087,8 @@ definitions:
     title: KubernetesNode
     type: object
     properties:
-      id:
-        type: string
       name:
+        description: Name of the node [optional]
         type: string
   doks.KubernetesNodePool:
     title: KubernetesNodePool
@@ -7591,7 +7600,7 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/models.Type'
-        description: Status of cluster [required]
+        description: Status of cluster [optional]
       status_message:
         description: Additional information about the current status [readonly]
         type: string
@@ -8109,7 +8118,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc001466390.false'
+        $ref: '#/definitions/518.0xc0014ea480.false'
       kube_version:
         type: string
       name:
@@ -8373,7 +8382,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001562240.false'
+        $ref: '#/definitions/434.0xc0015e0060.false'
       name:
         type: string
       node_pools:
