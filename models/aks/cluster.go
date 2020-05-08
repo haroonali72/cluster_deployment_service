@@ -140,7 +140,7 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Find(bson.M{"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),

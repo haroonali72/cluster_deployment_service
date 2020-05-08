@@ -301,7 +301,7 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Find(bson.M{"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
