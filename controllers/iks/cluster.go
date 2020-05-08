@@ -680,7 +680,7 @@ func (c *IKSClusterController) Patch() {
 // @Description delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path 	string	true	"Project id of the cluster"
-// @Param	forceDelete path    boolean	true    ""
+// @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
@@ -976,7 +976,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Title Status
 // @Description Get live status of the running cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	X-Profile-Id	header	string	profileId	"Vault credentials profile Id"
+// @Param	X-Profile-Id	header	string	profileId	true "Vault credentials profile Id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} []iks.KubeWorkerPoolStatus
 // @Failure 401 {"error": "Unauthorized"}
