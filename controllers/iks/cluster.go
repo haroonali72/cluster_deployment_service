@@ -23,12 +23,12 @@ type IKSClusterController struct {
 // @Description Get all available instance list
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	region	path	string	true	"Region of the cloud"
+// @Param	zone	path	string	true	"Region of the cloud"
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime error"}
 // @Failure 512 {object} types.CustomCPError
-// @router /getallmachines/:region/ [get]
+// @router /getallmachines/:zone/ [get]
 func (c *IKSClusterController) GetAllMachineTypes() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("IKSClusterController: Get All Machines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -59,7 +59,7 @@ func (c *IKSClusterController) GetAllMachineTypes() {
 
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -315,7 +315,7 @@ func (c *IKSClusterController) Get() {
 
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -483,7 +483,7 @@ func (c *IKSClusterController) Post() {
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -607,7 +607,7 @@ func (c *IKSClusterController) Patch() {
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -722,12 +722,12 @@ func (c *IKSClusterController) Delete() {
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", id, "Delete", token, *ctx)
 	if err != nil {
-	if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
-		c.ServeJSON()
-		return
-	}
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -846,20 +846,20 @@ func (c *IKSClusterController) StartCluster() {
 	}
 
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
-/*	if err != nil {
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-*/
+	/*	if err != nil {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+	*/
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode,allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, *ctx)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -899,19 +899,19 @@ func (c *IKSClusterController) StartCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.Deploying) {
+	} else if cluster.Status == (models.Deploying) {
 		ctx.SendLogs("cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.Terminating) {
+	} else if cluster.Status == (models.Terminating) {
 		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.ClusterTerminationFailed) {
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
 		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
@@ -967,7 +967,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Title Status
 // @Description Get live status of the running cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	X-Profile-Id	header	string	profileId	"Vault credentials profile Id"
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile Id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} []iks.KubeWorkerPoolStatus
 // @Failure 401 {"error": "Unauthorized"}
@@ -1018,7 +1018,7 @@ func (c *IKSClusterController) GetStatus() {
 
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "View", token, *ctx)
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()
@@ -1131,12 +1131,12 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Terminate", token, *ctx)
 	if err != nil {
-	if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
-		c.ServeJSON()
-		return
-	}
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1189,25 +1189,25 @@ func (c *IKSClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is not in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.Deploying) {
+	} else if cluster.Status == (models.Deploying) {
 		ctx.SendLogs("IKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.Terminating) {
+	} else if cluster.Status == (models.Terminating) {
 		ctx.SendLogs("IKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.ClusterTerminated) {
+	} else if cluster.Status == (models.ClusterTerminated) {
 		ctx.SendLogs("IKSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == (models.ClusterCreationFailed) {
+	} else if cluster.Status == (models.ClusterCreationFailed) {
 		ctx.SendLogs("IKSClusterController: Cluster  creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster  creation is in failed state"}
@@ -1325,7 +1325,7 @@ func (c *IKSClusterController) ApplyAgent() {
 
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.IKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		if statusCode==404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
 			c.Ctx.Output.SetStatus(statusCode)
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
 			c.ServeJSON()

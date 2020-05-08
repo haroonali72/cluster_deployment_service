@@ -327,7 +327,7 @@ func (c *OPClusterController) Patch() {
 
 // @Title Get All
 // @Description get all the company's clusters
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []op.Cluster_Def
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}

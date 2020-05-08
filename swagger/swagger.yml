@@ -142,6 +142,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3044,7 +3045,7 @@ paths:
           description: '{"error": "Unauthorized"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/iks/getallmachines/{region}/:
+  /cluster/iks/getallmachines/{zone}/:
     get:
       tags:
       - cluster/iks
@@ -3064,7 +3065,7 @@ paths:
         required: true
         type: string
       - in: path
-        name: region
+        name: zone
         description: Region of the cloud
         required: true
         type: string
@@ -3183,6 +3184,7 @@ paths:
       - in: header
         name: X-Profile-Id
         description: Vault credentials profile Id
+        required: true
         type: string
       - in: path
         name: projectId
@@ -3414,6 +3416,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -6163,28 +6166,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00158f710.false:
+  434.0xc001562240.false:
     title: "false"
     type: object
-  605.0xc000e605a0.false:
+  518.0xc001466390.false:
     title: "false"
     type: object
-  644.0xc0011652f0.false:
-    title: "false"
-    type: object
-  667.0xc0014b1950.false:
-    title: "false"
-    type: object
-  7814.string:
+  1559.string:
     title: string
     type: object
-  13859.0xc0015d54a0.false:
+  6000.0xc001563740.false:
     title: "false"
     type: object
-  51327.0xc00155ec90.false:
+  13335.0xc001481da0.false:
     title: "false"
     type: object
-  55892.string:
+  13385.0xc000e3a930.false:
+    title: "false"
+    type: object
+  13438.0xc0011436b0.false:
+    title: "false"
+    type: object
+  22121.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6293,7 +6296,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55892.string'
+        $ref: '#/definitions/1559.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6444,7 +6447,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000e605a0.false'
+        $ref: '#/definitions/13385.0xc000e3a930.false'
       name:
         type: string
       network_name:
@@ -6825,7 +6828,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc0011652f0.false'
+        $ref: '#/definitions/13438.0xc0011436b0.false'
       name:
         type: string
       network_name:
@@ -8106,7 +8109,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51327.0xc00155ec90.false'
+        $ref: '#/definitions/518.0xc001466390.false'
       kube_version:
         type: string
       name:
@@ -8370,7 +8373,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13859.0xc0015d54a0.false'
+        $ref: '#/definitions/434.0xc001562240.false'
       name:
         type: string
       node_pools:
