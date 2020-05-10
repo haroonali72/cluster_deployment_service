@@ -3,7 +3,6 @@ package eks
 import (
 	"antelope/models"
 	"antelope/models/db"
-	"antelope/models/gcp"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"antelope/models/vault"
@@ -24,28 +23,35 @@ type EKSCluster struct {
 	Status           string        `json:"status" bson:"status"`
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 
-	ClientRequestToken *string             `json:"client_request_token,omitempty" bson:"client_request_token,omitempty"`
-	EncryptionConfig   []*EncryptionConfig `json:"encryption_config,omitempty" bson:"encryption_config,omitempty"`
-	Logging            *Logging            `json:"logging,omitempty" bson:"logging,omitempty"`
-	Name               string              `json:"name" bson:"name"`
-	ResourcesVpcConfig VpcConfigRequest    `json:"resources_vpc_config" bson:"resources_vpc_config"`
-	RoleArn            string              `json:"role_arn" bson:"role_arn"`
-	Tags               map[string]*string  `json:"tags,omitempty" bson:"tags,omitempty"`
-	Version            *string             `json:"version,omitempty" bson:"version,omitempty"`
-	Nodegroups         []*Nodegroup        `json:"node_groups" bson:"node_groups"`
+	OutputArn          *string            `json:"output_arn,omitempty" bson:"output_arn,omitempty"`
+	EncryptionConfig   *EncryptionConfig  `json:"encryption_config,omitempty" bson:"encryption_config,omitempty"`
+	Logging            Logging            `json:"logging" bson:"logging"`
+	Name               string             `json:"name" bson:"name"`
+	ResourcesVpcConfig VpcConfigRequest   `json:"resources_vpc_config" bson:"resources_vpc_config"`
+	RoleArn            *string            `json:"-" bson:"role_arn"`
+	RoleName           *string            `json:"-" bson:"role_name"`
+	Tags               map[string]*string `json:"tags,omitempty" bson:"tags,omitempty"`
+	Version            *string            `json:"version,omitempty" bson:"version,omitempty"`
+	NodePools          []*NodePool        `json:"node_pools" bson:"node_pools"`
 }
 
 type EncryptionConfig struct {
-	Provider  *Provider `json:"provider" bson:"provider"`
-	Resources []*string `json:"resources" bson:"resources"`
+	EnableEncryption bool      `json:"enable_encryption" bson:"enable_encryption"`
+	Provider         *Provider `json:"-" bson:"provider"`
+	Resources        []*string `json:"-" bson:"resources"`
 }
 
 type Provider struct {
-	KeyArn *string `json:"key_arn" bson:"key_arn"`
+	KeyArn *string `json:"-" bson:"key_arn"`
+	KeyId  *string `json:"-" bson:"key_id"`
 }
 
 type Logging struct {
-	ClusterLogging []*LogSetup `json:"cluster_logging" bson:"cluster_logging"`
+	EnableApi               bool `json:"enable_api" bson:"enable_api"`
+	EnableAudit             bool `json:"enable_audit" bson:"enable_audit"`
+	EnableAuthenticator     bool `json:"enable_authenticator" bson:"enable_authenticator"`
+	EnableControllerManager bool `json:"enable_controller_manager" bson:"enable_controller_manager"`
+	EnableScheduler         bool `json:"enable_scheduler" bson:"enable_scheduler"`
 }
 
 type LogSetup struct {
@@ -57,32 +63,32 @@ type VpcConfigRequest struct {
 	EndpointPrivateAccess *bool     `json:"endpoint_private_access" bson:"endpoint_private_access"`
 	EndpointPublicAccess  *bool     `json:"endpoint_public_access" bson:"endpoint_public_access"`
 	PublicAccessCidrs     []*string `json:"public_access_cidrs" bson:"public_access_cidrs"`
-	SecurityGroupIds      []*string `json:"security_group_ids" bson:"security_group_ids"`
-	SubnetIds             []*string `json:"subnet_ids" bson:"subnet_ids"`
+	SecurityGroupIds      []*string `json:"-" bson:"security_group_ids"`
+	SubnetIds             []*string `json:"-" bson:"subnet_ids"`
 }
 
-type Nodegroup struct {
-	AmiType            *string                 `json:"ami_type,omitempty" bson:"ami_type,omitempty"`
-	ClientRequestToken *string                 `json:"client_request_token,omitempty" bson:"client_request_token,omitempty"`
-	DiskSize           *int64                  `json:"disk_size,omitempty" bson:"disk_size,omitempty"`
-	InstanceTypes      []*string               `json:"instance_types,omitempty" bson:"instance_types,omitempty"`
-	Labels             map[string]*string      `json:"labels,omitempty" bson:"labels,omitempty"`
-	NodeRole           *string                 `json:"node_role" bson:"node_role"`
-	NodegroupName      *string                 `json:"nodegroup_name" bson:"nodegroup_name"`
-	ReleaseVersion     *string                 `json:"release_version,omitempty" bson:"release_version,omitempty"`
-	RemoteAccess       *RemoteAccessConfig     `json:"remote_access,omitempty" bson:"remote_access,omitempty"`
-	ScalingConfig      *NodegroupScalingConfig `json:"scaling_config,omitempty" bson:"scaling_config,omitempty"`
-	Subnets            []*string               `json:"subnets" bson:"subnets"`
-	Tags               map[string]*string      `json:"tags" bson:"tags"`
-	Version            *string                 `json:"version,omitempty" bson:"version,omitempty"`
+type NodePool struct {
+	OutputArn     *string                `json:"output_arn,omitempty" bson:"output_arn,omitempty"`
+	AmiType       *string                `json:"ami_type,omitempty" bson:"ami_type,omitempty"`
+	DiskSize      *int64                 `json:"disk_size,omitempty" bson:"disk_size,omitempty"`
+	InstanceType  *string                `json:"instance_type,omitempty" bson:"instance_type,omitempty"`
+	Labels        map[string]*string     `json:"labels,omitempty" bson:"labels,omitempty"`
+	NodeRole      *string                `json:"-" bson:"node_role"`
+	RoleName      *string                `json:"-" bson:"role_name"`
+	NodePoolName  string                 `json:"node_pool_name" bson:"node_pool_name"`
+	RemoteAccess  *RemoteAccessConfig    `json:"remote_access,omitempty" bson:"remote_access,omitempty"`
+	ScalingConfig *NodePoolScalingConfig `json:"scaling_config,omitempty" bson:"scaling_config,omitempty"`
+	Subnets       []*string              `json:"-" bson:"subnets"`
+	Tags          map[string]*string     `json:"tags" bson:"tags"`
 }
 
 type RemoteAccessConfig struct {
-	Ec2SshKey            *string   `json:"ec2_ssh_key" bson:"ec2_ssh_key"`
-	SourceSecurityGroups []*string `json:"source_security_groups" bson:"source_security_groups"`
+	EnableRemoteAccess   bool      `json:"enable_remote_access" bson:"enable_remote_access"`
+	Ec2SshKey            *string   `json:"-" bson:"ec2_ssh_key"`
+	SourceSecurityGroups []*string `json:"-" bson:"source_security_groups"`
 }
 
-type NodegroupScalingConfig struct {
+type NodePoolScalingConfig struct {
 	DesiredSize *int64 `json:"desired_size" bson:"desired_size"`
 	MaxSize     *int64 `json:"max_size" bson:"max_size"`
 	MinSize     *int64 `json:"min_size" bson:"min_size"`
@@ -276,7 +282,6 @@ func DeleteEKSCluster(projectId, companyId string, ctx utils.Context) error {
 }
 
 func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyId string, token string, ctx utils.Context) (confError error) {
-
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 
@@ -286,7 +291,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		return confError
 	}
 
-	eksOps, err := GetEKS(credentials)
+	eksOps, err := GetEKS(cluster.ProjectId, credentials.Profile)
 	if err != nil {
 		ctx.SendLogs("EKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -306,7 +311,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	}
 
 	_, _ = utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	confError = eksOps.CreateCluster(cluster, token, ctx)
+	confError = eksOps.CreateCluster(&cluster, token, ctx)
 
 	if confError != nil {
 		ctx.SendLogs("EKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -337,34 +342,6 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	return nil
 }
 
-func FetchStatus(credentials vault.AwsProfile, token, projectId, companyId string, ctx utils.Context) (EKSCluster, error) {
-	cluster, err := GetEKSCluster(projectId, companyId, ctx)
-	if err != nil {
-		ctx.SendLogs("EKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
-	}
-
-	eksOps, err := GetEKS(credentials)
-	if err != nil {
-		ctx.SendLogs("EKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
-	}
-
-	err = eksOps.init()
-	if err != nil {
-		ctx.SendLogs("EKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
-	}
-
-	err = eksOps.fetchClusterStatus(&cluster, ctx)
-	if err != nil {
-		ctx.SendLogs("EKSClusterModel:  Fetch - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
-	}
-
-	return cluster, nil
-}
-
 func TerminateCluster(credentials vault.AwsProfile, projectId, companyId string, ctx utils.Context) error {
 	publisher := utils.Notifier{}
 	pubErr := publisher.Init_notifier()
@@ -386,7 +363,7 @@ func TerminateCluster(credentials vault.AwsProfile, projectId, companyId string,
 		return errors.New(text)
 	}
 
-	eksOps, err := GetEKS(credentials)
+	eksOps, err := GetEKS(projectId, credentials.Profile)
 	if err != nil {
 		ctx.SendLogs("EKSClusterModel : Terminate - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
@@ -410,7 +387,7 @@ func TerminateCluster(credentials vault.AwsProfile, projectId, companyId string,
 		return err
 	}
 
-	err = eksOps.deleteCluster(cluster, ctx)
+	err = eksOps.DeleteCluster(&cluster, ctx)
 	if err != nil {
 		_, _ = utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 

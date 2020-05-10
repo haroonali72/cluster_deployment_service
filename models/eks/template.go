@@ -22,15 +22,16 @@ type EKSClusterTemplate struct {
 	CompanyId        string        `json:"company_id" bson:"company_id"`
 	IsCloudplex      bool          `json:"is_cloudplex" bson:"is_cloudplex"`
 
-	ClientRequestToken *string             `json:"client_request_token,omitempty" bson:"client_request_token,omitempty"`
-	EncryptionConfig   []*EncryptionConfig `json:"encryption_config,omitempty" bson:"encryption_config,omitempty"`
-	Logging            *Logging            `json:"logging,omitempty" bson:"logging,omitempty"`
-	Name               string              `json:"name" bson:"name"`
-	ResourcesVpcConfig VpcConfigRequest    `json:"resources_vpc_config" bson:"resources_vpc_config"`
-	RoleArn            string              `json:"role_arn" bson:"role_arn"`
-	Tags               map[string]*string  `json:"tags,omitempty" bson:"tags,omitempty"`
-	Version            *string             `json:"version,omitempty" bson:"version,omitempty"`
-	Nodegroups         []*Nodegroup        `json:"node_groups" bson:"node_groups"`
+	OutputArn          *string            `json:"output_arn,omitempty" bson:"output_arn,omitempty"`
+	EncryptionConfig   *EncryptionConfig  `json:"encryption_config,omitempty" bson:"encryption_config,omitempty"`
+	Logging            Logging            `json:"logging" bson:"logging"`
+	Name               string             `json:"name" bson:"name"`
+	ResourcesVpcConfig VpcConfigRequest   `json:"resources_vpc_config" bson:"resources_vpc_config"`
+	RoleArn            *string            `json:"-" bson:"role_arn"`
+	RoleName           *string            `json:"-" bson:"role_name"`
+	Tags               map[string]*string `json:"tags,omitempty" bson:"tags,omitempty"`
+	Version            *string            `json:"version,omitempty" bson:"version,omitempty"`
+	NodePools          []*NodePool        `json:"node_pools" bson:"node_pools"`
 }
 
 type TemplateMetadata struct {
@@ -319,7 +320,7 @@ func GetEKSTemplatesMetadata(ctx utils.Context, data rbacAuthentication.List, co
 			templateMetadata[i].IsCloudplex = false
 		}
 
-		for range template.Nodegroups {
+		for range template.NodePools {
 			templateMetadata[i].PoolCount++
 		}
 	}
@@ -361,7 +362,7 @@ func GetEKSCustomerTemplatesMetadata(ctx utils.Context, data rbacAuthentication.
 			templateMetadata[i].IsCloudplex = false
 		}
 
-		for range template.Nodegroups {
+		for range template.NodePools {
 			templateMetadata[i].PoolCount++
 		}
 	}

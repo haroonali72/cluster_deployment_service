@@ -2789,7 +2789,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/doks.KubernetesCluster"
+                                "$ref": "#/definitions/doks.DOKSCluster"
                             }
                         }
                     },
@@ -3192,6 +3192,271 @@
                 }
             }
         },
+        "/cluster/eks/": {
+            "put": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "update an existing cluster",
+                "operationId": "EKSClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "add a new cluster",
+                "operationId": "EKSClusterController.Add",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for cluster content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/eks/all": {
+            "get": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "get all the clusters",
+                "operationId": "EKSClusterController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/eks.EKSCluster"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/eks/start/{projectId}": {
+            "post": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "starts a  cluster",
+                "operationId": "EKSClusterController.Start",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/eks/terminate/{projectId}/": {
+            "post": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "terminates a  cluster",
+                "operationId": "EKSClusterController.Terminate",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error_msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/eks/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "get cluster",
+                "operationId": "EKSClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSCluster"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/eks/{projectId}/{forceDelete}": {},
         "/cluster/gcp/": {
             "put": {
                 "tags": [
@@ -3992,7 +4257,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/gke.GKECluster"
+                                "$ref": "#/definitions/gke.Cluster"
                             }
                         }
                     },
@@ -4431,7 +4696,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/iks.Cluster_Def"
+                                "$ref": "#/definitions/iks.Cluster"
                             }
                         }
                     },
@@ -7815,6 +8080,482 @@
                 }
             }
         },
+        "/template/eks/": {
+            "put": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "update an existing template",
+                "operationId": "EKSTemplateController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSClusterTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "create a new template",
+                "operationId": "EKSTemplateController.Create",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSClusterTemplate"
+                        }
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "teams",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/eks/all": {
+            "get": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "get all the templates",
+                "operationId": "EKSTemplateController.Get All",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/eks.EKSClusterTemplate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/eks/allCustomerTemplates": {
+            "get": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "get all the customer templates",
+                "operationId": "EKSTemplateController.Get All Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/eks.EKSClusterTemplate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/eks/allCustomerTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "get all the customer templates info",
+                "operationId": "EKSTemplateController.GetAllCustomerTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/eks.EKSClusterTemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/eks/allTemplatesInfo": {
+            "get": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "get all the templates info",
+                "operationId": "EKSTemplateController.GetAllTemplateInfo",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/eks.EKSClusterTemplateMetadata"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/eks/customerTemplate": {
+            "put": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "update an existing customer template",
+                "operationId": "EKSTemplateController.Update customer templates",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "teams",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSClusterTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template updated successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"no template exists with this name\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "create a new customer template",
+                "operationId": "EKSTemplateController.Create Customer Template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body for template content",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSClusterTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template created successfully\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"template with same name already exists\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/eks/customerTemplate/{templateId}": {
+            "get": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "get customer template",
+                "operationId": "EKSTemplateController.Get customer template",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Template Id of the template",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSClusterTemplate"
+                        }
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "delete a customer template",
+                "operationId": "EKSTemplateController.Delete customer template",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "template id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"customer template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"project id is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
+        "/template/eks/{templateId}": {
+            "get": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "get template",
+                "operationId": "EKSTemplateController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Id of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/eks.EKSClusterTemplate"
+                        }
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "template/eks"
+                ],
+                "description": "delete a templates",
+                "operationId": "EKSTemplateController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "templateId",
+                        "description": "Name of the template",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"msg\": \"template deleted successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"name is empty\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"error msg\"}"
+                    }
+                }
+            }
+        },
         "/template/gcp/": {
             "put": {
                 "tags": [
@@ -9516,36 +10257,52 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13335.0xc0014ec5a0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "13385.0xc000e92f30.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "13438.0xc001195e60.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "1559.string": {
+        "1384.string": {
             "title": "string",
             "type": "object"
         },
-        "22162.string": {
+        "14857.0xc0015ddf80.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "3420.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc0015ae750.false": {
+        "38498.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "4001.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "499.0xc0015c6030.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0014bcb70.false": {
+        "53246.0xc00156b860.false": {
             "title": "false",
             "type": "object"
         },
-        "6000.0xc0015afc50.false": {
+        "58652.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "629.0xc000de8a20.false": {
             "title": "false",
+            "type": "object"
+        },
+        "668.0xc0010ef6e0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "690.0xc0014e8300.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "7937.string": {
+            "title": "string",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -9685,7 +10442,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/58652.string"
                 },
                 "type": {
                     "type": "string"
@@ -9898,7 +10655,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000e92f30.false"
+                    "$ref": "#/definitions/629.0xc000de8a20.false"
                 },
                 "name": {
                     "type": "string"
@@ -10463,7 +11220,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13438.0xc001195e60.false"
+                    "$ref": "#/definitions/668.0xc0010ef6e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10735,6 +11492,22 @@
                 }
             }
         },
+        "doks.DOKSCluster": {
+            "title": "DOKSCluster",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "ID of project",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
+                }
+            }
+        },
         "doks.KubernetesCluster": {
             "title": "KubernetesCluster",
             "type": "object",
@@ -10989,6 +11762,220 @@
                     "$ref": "#/definitions/doks.User"
                 }
             }
+        },
+        "eks.EKSCluster": {
+            "title": "EKSCluster",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "encryption_config": {
+                    "$ref": "#/definitions/eks.EncryptionConfig"
+                },
+                "logging": {
+                    "$ref": "#/definitions/eks.Logging"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/eks.NodePool"
+                    }
+                },
+                "output_arn": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "resources_vpc_config": {
+                    "$ref": "#/definitions/eks.VpcConfigRequest"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "$ref": "#/definitions/1384.string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "eks.EKSClusterTemplate": {
+            "title": "EKSClusterTemplate",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud"
+                },
+                "company_id": {
+                    "type": "string"
+                },
+                "encryption_config": {
+                    "$ref": "#/definitions/eks.EncryptionConfig"
+                },
+                "is_cloudplex": {
+                    "type": "boolean"
+                },
+                "logging": {
+                    "$ref": "#/definitions/eks.Logging"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/eks.NodePool"
+                    }
+                },
+                "output_arn": {
+                    "type": "string"
+                },
+                "resources_vpc_config": {
+                    "$ref": "#/definitions/eks.VpcConfigRequest"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "$ref": "#/definitions/38498.string"
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "eks.EKSClusterTemplateMetadata": {
+            "title": "EKSClusterTemplateMetadata",
+            "type": "object"
+        },
+        "eks.EncryptionConfig": {
+            "title": "EncryptionConfig",
+            "type": "object",
+            "properties": {
+                "enable_encryption": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "eks.Logging": {
+            "title": "Logging",
+            "type": "object",
+            "properties": {
+                "enable_api": {
+                    "type": "boolean"
+                },
+                "enable_audit": {
+                    "type": "boolean"
+                },
+                "enable_authenticator": {
+                    "type": "boolean"
+                },
+                "enable_controller_manager": {
+                    "type": "boolean"
+                },
+                "enable_scheduler": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "eks.NodePool": {
+            "title": "NodePool",
+            "type": "object",
+            "properties": {
+                "ami_type": {
+                    "type": "string"
+                },
+                "disk_size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "instance_type": {
+                    "type": "string"
+                },
+                "labels": {
+                    "$ref": "#/definitions/3420.string"
+                },
+                "node_pool_name": {
+                    "type": "string"
+                },
+                "output_arn": {
+                    "type": "string"
+                },
+                "remote_access": {
+                    "$ref": "#/definitions/eks.RemoteAccessConfig"
+                },
+                "scaling_config": {
+                    "$ref": "#/definitions/eks.NodePoolScalingConfig"
+                },
+                "tags": {
+                    "$ref": "#/definitions/4001.string"
+                }
+            }
+        },
+        "eks.NodePoolScalingConfig": {
+            "title": "NodePoolScalingConfig",
+            "type": "object",
+            "properties": {
+                "desired_size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "max_size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "min_size": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "eks.Provider": {
+            "title": "Provider",
+            "type": "object"
+        },
+        "eks.RemoteAccessConfig": {
+            "title": "RemoteAccessConfig",
+            "type": "object",
+            "properties": {
+                "enable_remote_access": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "eks.VpcConfigRequest": {
+            "title": "VpcConfigRequest",
+            "type": "object",
+            "properties": {
+                "endpoint_private_access": {
+                    "type": "boolean"
+                },
+                "endpoint_public_access": {
+                    "type": "boolean"
+                },
+                "public_access_cidrs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/eks.string"
+                    }
+                }
+            }
+        },
+        "eks.string": {
+            "title": "string",
+            "type": "object"
         },
         "gcp.AccountData": {
             "title": "AccountData",
@@ -11383,6 +12370,22 @@
             "properties": {
                 "issue_client_certificate": {
                     "type": "boolean"
+                }
+            }
+        },
+        "gke.Cluster": {
+            "title": "Cluster",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "ID of project",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -12157,6 +13160,22 @@
                 }
             }
         },
+        "iks.Cluster": {
+            "title": "Cluster",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "ID of project",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
+                }
+            }
+        },
         "iks.Cluster_Def": {
             "title": "Cluster_Def",
             "type": "object",
@@ -12323,7 +13342,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0014bcb70.false"
+                    "$ref": "#/definitions/53246.0xc00156b860.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12460,6 +13479,7 @@
                 "Azure = \"azure\"",
                 "GCP = \"gcp\"",
                 "GKE = \"gke\"",
+                "EKS = \"eks\"",
                 "DO = \"do\"",
                 "DOKS = \"doks\"",
                 "IKS = \"iks\"",
@@ -12684,7 +13704,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0015ae750.false"
+                    "$ref": "#/definitions/14857.0xc0015ddf80.false"
                 },
                 "name": {
                     "type": "string"
@@ -12807,6 +13827,14 @@
         {
             "name": "template/gke",
             "description": "Operations about GKE template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
+        },
+        {
+            "name": "cluster/eks",
+            "description": "Operations about EKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]\n"
+        },
+        {
+            "name": "template/eks",
+            "description": "Operations about EKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]\n"
         },
         {
             "name": "template/do",

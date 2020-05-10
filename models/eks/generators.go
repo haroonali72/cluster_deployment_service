@@ -6,21 +6,26 @@ import (
 	"github.com/google/uuid"
 )
 
-func GenerateClusterCreateRequest(project, region, zone string, c EKSCluster) *eks.CreateClusterInput {
+func GenerateClusterCreateRequest(c EKSCluster) *eks.CreateClusterInput {
 	id, _ := uuid.NewRandom()
-	return &eks.CreateClusterInput{
+	input := &eks.CreateClusterInput{
 		ClientRequestToken: aws.String(id.String()),
 		Name:               aws.String(c.Name),
-		RoleArn:            aws.String(c.RoleArn),
+		RoleArn:            c.RoleArn,
 		Tags:               c.Tags,
 		Version:            c.Version,
-		EncryptionConfig:   GenerateEncryptionConfigFromRequest(c.EncryptionConfig),
-		Logging:            GenerateLoggingFromRequest(c.Logging),
-		ResourcesVpcConfig: GenerateResourcesVpcConfigFromRequest(c.ResourcesVpcConfig),
+		Logging:            generateLoggingFromRequest(c.Logging),
+		ResourcesVpcConfig: generateResourcesVpcConfigFromRequest(c.ResourcesVpcConfig),
 	}
+
+	if c.EncryptionConfig != nil && c.EncryptionConfig.EnableEncryption {
+		input.EncryptionConfig = generateEncryptionConfigFromRequest([]*EncryptionConfig{c.EncryptionConfig})
+	}
+
+	return input
 }
 
-func GenerateEncryptionConfigFromRequest(v []*EncryptionConfig) []*eks.EncryptionConfig {
+func generateEncryptionConfigFromRequest(v []*EncryptionConfig) []*eks.EncryptionConfig {
 	encryptionConfigs := []*eks.EncryptionConfig{}
 
 	for _, i := range v {
@@ -36,29 +41,85 @@ func GenerateEncryptionConfigFromRequest(v []*EncryptionConfig) []*eks.Encryptio
 	return encryptionConfigs
 }
 
-func GenerateLoggingFromRequest(v *Logging) *eks.Logging {
-	if v == nil {
-		return nil
+func generateLoggingFromRequest(v Logging) *eks.Logging {
+	return &eks.Logging{
+		ClusterLogging: []*eks.LogSetup{
+			{
+				Enabled: aws.Bool(v.EnableApi),
+				Types:   []*string{aws.String("api")},
+			},
+			{
+				Enabled: aws.Bool(v.EnableAudit),
+				Types:   []*string{aws.String("audit")},
+			},
+			{
+				Enabled: aws.Bool(v.EnableAuthenticator),
+				Types:   []*string{aws.String("authenticator")},
+			},
+			{
+				Enabled: aws.Bool(v.EnableControllerManager),
+				Types:   []*string{aws.String("controllerManager")},
+			},
+			{
+				Enabled: aws.Bool(v.EnableScheduler),
+				Types:   []*string{aws.String("scheduler")},
+			},
+		},
 	}
-
-	clusterLogging := []*eks.LogSetup{}
-
-	for _, i := range v.ClusterLogging {
-		clusterLogging = append(clusterLogging, &eks.LogSetup{
-			Enabled: i.Enabled,
-			Types:   i.Types,
-		})
-	}
-
-	return &eks.Logging{ClusterLogging: clusterLogging}
 }
 
-func GenerateResourcesVpcConfigFromRequest(v VpcConfigRequest) *eks.VpcConfigRequest {
+func generateResourcesVpcConfigFromRequest(v VpcConfigRequest) *eks.VpcConfigRequest {
 	return &eks.VpcConfigRequest{
 		EndpointPrivateAccess: v.EndpointPrivateAccess,
 		EndpointPublicAccess:  v.EndpointPublicAccess,
 		PublicAccessCidrs:     v.PublicAccessCidrs,
 		SecurityGroupIds:      v.SecurityGroupIds,
 		SubnetIds:             v.SubnetIds,
+	}
+}
+
+func GenerateNodePoolCreateRequest(n NodePool, clusterName string) *eks.CreateNodegroupInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.CreateNodegroupInput{
+		AmiType:            n.AmiType,
+		ClientRequestToken: aws.String(id.String()),
+		ClusterName:        aws.String(clusterName),
+		DiskSize:           n.DiskSize,
+		InstanceTypes:      []*string{n.InstanceType},
+		Labels:             n.Labels,
+		NodeRole:           n.NodeRole,
+		NodegroupName:      aws.String(n.NodePoolName),
+		ScalingConfig:      generateScalingConfigFromRequest(n.ScalingConfig),
+		Subnets:            n.Subnets,
+		Tags:               n.Tags,
+	}
+
+	if n.RemoteAccess != nil && n.RemoteAccess.EnableRemoteAccess {
+		input.RemoteAccess = generateRemoteAccessFromRequest(n.RemoteAccess)
+	}
+
+	return input
+}
+
+func generateRemoteAccessFromRequest(v *RemoteAccessConfig) *eks.RemoteAccessConfig {
+	if v == nil {
+		return nil
+	}
+
+	return &eks.RemoteAccessConfig{
+		Ec2SshKey:            v.Ec2SshKey,
+		SourceSecurityGroups: v.SourceSecurityGroups,
+	}
+}
+
+func generateScalingConfigFromRequest(v *NodePoolScalingConfig) *eks.NodegroupScalingConfig {
+	if v == nil {
+		return nil
+	}
+
+	return &eks.NodegroupScalingConfig{
+		DesiredSize: v.DesiredSize,
+		MaxSize:     v.MaxSize,
+		MinSize:     v.MinSize,
 	}
 }

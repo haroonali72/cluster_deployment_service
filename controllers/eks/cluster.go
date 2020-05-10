@@ -46,10 +46,10 @@ func (c *EKSClusterController) Get() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -58,10 +58,10 @@ func (c *EKSClusterController) Get() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: Get cluster with project id "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "View", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -108,10 +108,10 @@ func (c *EKSClusterController) GetAll() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -121,10 +121,10 @@ func (c *EKSClusterController) GetAll() {
 
 	ctx.SendLogs("EKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.EKS, *ctx)
+	statusCode, err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.EKS, *ctx)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -179,10 +179,10 @@ func (c *EKSClusterController) Post() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -191,10 +191,10 @@ func (c *EKSClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -269,10 +269,10 @@ func (c *EKSClusterController) Patch() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -281,10 +281,10 @@ func (c *EKSClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: update cluster cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -373,10 +373,10 @@ func (c *EKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -385,10 +385,10 @@ func (c *EKSClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "DELETE", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: Delete cluster with id "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", id, "Delete", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -488,10 +488,10 @@ func (c *EKSClusterController) StartCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -499,10 +499,10 @@ func (c *EKSClusterController) StartCluster() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
-	allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -522,10 +522,10 @@ func (c *EKSClusterController) StartCluster() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
@@ -583,104 +583,6 @@ func (c *EKSClusterController) StartCluster() {
 	c.ServeJSON()
 }
 
-// @Title Status
-// @Description returns status of nodes
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	token ""
-// @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} eks.EKSCluster
-// @Failure 206 {object} eks.EKSCluster
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "authorization params missing or invalid"}
-// @Failure 500 {"error": "error msg"}
-// @router /status/:projectId/ [get]
-func (c *EKSClusterController) GetStatus() {
-	ctx := new(utils.Context)
-	ctx.SendLogs("EKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		ctx.SendLogs("EKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("EKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	userInfo, err := rbacAuthentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("EKSClusterController: FetchStatus.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "View", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-
-	region, err := aws.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
-	if err != nil {
-		ctx.SendLogs("EKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.SendLogs("EKSClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	cluster, err := eks.FetchStatus(awsProfile, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil {
-		ctx.SendLogs("EKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(206)
-	}
-
-	c.Data["json"] = cluster
-	c.ServeJSON()
-}
-
 // @Title Terminate
 // @Description terminates a  cluster
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
@@ -722,10 +624,10 @@ func (c *EKSClusterController) TerminateCluster() {
 		return
 	}
 
-	userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -734,10 +636,10 @@ func (c *EKSClusterController) TerminateCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("EKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "Terminate", token, utils.Context{})
+	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
 		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -757,10 +659,10 @@ func (c *EKSClusterController) TerminateCluster() {
 		return
 	}
 
-	awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(401)
+		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
 		return
