@@ -20,7 +20,7 @@ import (
 type GKECluster struct {
 	ID                             bson.ObjectId                   `json:"-" bson:"_id,omitempty"`
 	ProjectId                      string                          `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud" validate:"eq=gcp|eq=GCP"`
+	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
 	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [optional]"`
@@ -101,17 +101,17 @@ type MaxPodsConstraint struct {
 }
 
 type IPAllocationPolicy struct {
-	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty" validate:"cidrv4"`
-	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block,omitempty" bson:"cluster_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr" bson:"cluster_ipv4_cidr" validate:"cidrv4"`
+	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block" bson:"cluster_ipv4_cidr_block" validate:"cidrv4"`
 	ClusterSecondaryRangeName  string `json:"cluster_secondary_range_name,omitempty" bson:"cluster_secondary_range_name,omitempty"`
 	CreateSubnetwork           bool   `json:"create_subnetwork,omitempty" bson:"create_subnetwork,omitempty"`
-	NodeIpv4Cidr               string `json:"node_ipv4_cidr,omitempty" bson:"node_ipv4_cidr,omitempty" validate:"cidrv4"`
-	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block,omitempty" bson:"node_ipv4_cidr_block,omitempty" validate:"cidrv4"`
-	ServicesIpv4Cidr           string `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty" validate:"cidrv4"`
-	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block,omitempty" bson:"services_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	NodeIpv4Cidr               string `json:"node_ipv4_cidr" bson:"node_ipv4_cidr" validate:"cidrv4"`
+	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block" bson:"node_ipv4_cidr_block" validate:"cidrv4"`
+	ServicesIpv4Cidr           string `json:"services_ipv4_cidr" bson:"services_ipv4_cidr" validate:"cidrv4"`
+	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block" bson:"services_ipv4_cidr_block" validate:"cidrv4"`
 	ServicesSecondaryRangeName string `json:"services_secondary_range_name,omitempty" bson:"services_secondary_range_name,omitempty"`
 	SubnetworkName             string `json:"subnetwork_name,omitempty" bson:"subnetwork_name,omitempty"`
-	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block" bson:"tpu_ipv4_cidr_block" validate:"cidrv4"`
 	UseIpAliases               bool   `json:"use_ip_aliases,omitempty" bson:"use_ip_aliases,omitempty"`
 }
 
