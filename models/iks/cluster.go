@@ -651,18 +651,6 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 
 		return errors.New("cluster name is empty")
 
-	} else if cluster.KubeVersion == "" {
-
-		return errors.New("kubernetes version is empty")
-
-	} else if cluster.NetworkName == "" {
-
-		return errors.New("network name is empty")
-
-	} else if cluster.VPCId == "" {
-
-		return errors.New("VPC name is empty")
-
 	} else if len(cluster.NodePools) == 0 {
 
 		return errors.New("node pool length must be greater than zero")
@@ -682,10 +670,6 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 			} else if nodepool.MachineType == "" {
 
 				return errors.New("machine type is empty")
-
-			} else if nodepool.SubnetID == "" {
-
-				return errors.New("subnet Id is empty")
 
 			} else if nodepool.AvailabilityZone == "" {
 
