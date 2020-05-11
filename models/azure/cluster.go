@@ -27,7 +27,7 @@ type Cluster_Def struct {
 	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status          models.Type        `json:"status" bson:"status" valid:"in(NEW|new|New)"`
+	Status           models.Type   `json:"status" bson:"status" valid:"in(NEW|new|New)"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AZURE|azure)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -180,20 +180,20 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	}
 	return network, nil
 }
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.AzureProfile, error) {
-	statusCode,data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.AzureProfile, error) {
+	statusCode, data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return statusCode,vault.AzureProfile{}, err
+		return statusCode, vault.AzureProfile{}, err
 	}
 	azureProfile := vault.AzureProfile{}
 	err = json.Unmarshal(data, &azureProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,vault.AzureProfile{}, err
+		return 500, vault.AzureProfile{}, err
 	}
 	azureProfile.Profile.Location = region
-	return 0,azureProfile, nil
+	return 0, azureProfile, nil
 
 }
 func checkClusterSize(cluster Cluster_Def) error {
@@ -291,13 +291,13 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	if oldCluster.Status == models.Deploying && update {
 		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in creating state")
-	}else if oldCluster.Status == models.Terminating && update {
+	} else if oldCluster.Status == models.Terminating && update {
 		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in terminating state")
-	}else if oldCluster.Status == models.ClusterTerminationFailed && update {
+	} else if oldCluster.Status == models.ClusterTerminationFailed && update {
 		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in termination failed state")
-	}else if oldCluster.Status == models.ClusterCreated && update {
+	} else if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return errors.New("Cluster is in created state")
@@ -314,8 +314,8 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
-	cluster.CompanyId=oldCluster.CompanyId
-	cluster.Status=oldCluster.Status
+	cluster.CompanyId = oldCluster.CompanyId
+	cluster.Status = oldCluster.Status
 	err = CreateCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

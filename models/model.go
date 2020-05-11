@@ -5,10 +5,13 @@ import (
 	"golang.org/x/crypto/ssh"
 	"net"
 )
+
 type ResouceType string
-const(
-	Cluster ResouceType ="cluster"
+
+const (
+	Cluster ResouceType = "cluster"
 )
+
 type Type string
 
 const (
@@ -26,16 +29,18 @@ const (
 type StatusCode int
 
 const (
-	CloudStatusCode 	StatusCode 	= 512
-	ParamMissing    	StatusCode 	= 404
-	StateConflict      	StatusCode  = 409
-	Unauthorized    	StatusCode  = 401
-	InternalServerError StatusCode 	= 500
-	BadRequest     		StatusCode 	= 400
-	Conflict      		StatusCode 	= 409
-	NotFound      		StatusCode 	= 404
+	CloudStatusCode     StatusCode = 512
+	ParamMissing        StatusCode = 404
+	StateConflict       StatusCode = 409
+	Unauthorized        StatusCode = 401
+	InternalServerError StatusCode = 500
+	BadRequest          StatusCode = 400
+	Conflict            StatusCode = 409
+	NotFound            StatusCode = 404
 )
+
 type ErrorMessage string
+
 const (
 	IsEmpty  ErrorMessage = "is empty"
 	Notauthorized ErrorMessage= "User is unauthorized to perform this action"
@@ -55,20 +60,20 @@ const (
 type HeaderVariable string
 
 const (
-	Token 	HeaderVariable = "X-Auth-Token"
-	ProfileId	HeaderVariable = "X-Profile-Id"
-	ProjectId	HeaderVariable = "Project Id"
-
-
+	Token     HeaderVariable = "X-Auth-Token"
+	ProfileId HeaderVariable = "X-Profile-Id"
+	ProjectId HeaderVariable = "Project Id"
 )
+
 type PathVariable string
-const (
-	KeyName PathVariable ="keyname"
-	RegionV PathVariable ="region"
-	ClusterName	PathVariable = "clusterName"
-	ResourceGroup PathVariable ="resourceGroup"
 
+const (
+	KeyName       PathVariable = "keyname"
+	RegionV       PathVariable = "region"
+	ClusterName   PathVariable = "clusterName"
+	ResourceGroup PathVariable = "resourceGroup"
 )
+
 type RequestType string
 
 const (

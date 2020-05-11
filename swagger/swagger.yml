@@ -37,8 +37,7 @@ paths:
         "401":
           description: '{"error": "Unauthorized"}'
         "402":
-          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
-            Failed state"}'
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -120,8 +119,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: Forcefully delete cluster
-        required: true
+        description: "true"
         type: boolean
       responses:
         "204":
@@ -131,8 +129,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
-            Failed state"}'
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/aks/all:
@@ -145,7 +142,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -379,7 +375,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -417,7 +412,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -449,7 +443,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -472,7 +465,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -495,12 +487,10 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: path
         name: region
@@ -535,12 +525,10 @@ paths:
       - in: header
         name: clusterName
         description: clusterName
-        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -573,7 +561,6 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: path
         name: projectId
@@ -583,7 +570,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -633,8 +619,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
-        required: true
+        description: "true"
         type: string
       - in: path
         name: region
@@ -643,8 +628,7 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: profileId
-        required: true
+        description: "true"
         type: string
       responses:
         "200":
@@ -679,18 +663,15 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: keyname
-        required: true
+        description: "true"
         type: string
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: path
         name: region
@@ -726,17 +707,14 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: path
         name: region
@@ -766,7 +744,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: path
         name: region
@@ -796,12 +773,10 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: path
         name: projectId
@@ -829,12 +804,10 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: path
         name: projectId
@@ -864,14 +837,11 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         schema:
           $ref: '#/definitions/X-Profile-Id'
-        default: string
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -897,7 +867,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -928,7 +897,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -937,8 +905,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: deleting cluster forcefully
-        required: true
+        description: "true"
         type: boolean
       responses:
         "200":
@@ -1076,12 +1043,10 @@ paths:
       - in: header
         name: clusterName
         description: clusterName
-        required: true
         type: string
       - in: header
         name: resourceGroup
         description: resourceGroup
-        required: true
         type: string
       - in: header
         name: X-Auth-Token
@@ -1123,13 +1088,11 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: profile id
-        required: true
+        description: "false"
         type: string
       - in: path
         name: region
         description: Cloud region
-        required: true
         type: string
       responses:
         "200":
@@ -1173,8 +1136,7 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: profile id
-        required: true
+        description: "true"
         type: string
       responses:
         "200":
@@ -1209,8 +1171,7 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: keyname
-        required: true
+        description: "true"
         type: string
       - in: header
         name: X-Auth-Token
@@ -1249,7 +1210,6 @@ paths:
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       responses:
         "200":
@@ -1302,8 +1262,7 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: profile id
-        required: true
+        description: "false"
         type: string
       responses:
         "200":
@@ -1335,8 +1294,7 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: profile id
-        required: true
+        description: "false"
         type: string
       responses:
         "200":
@@ -1365,8 +1323,7 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: profile id
-        required: true
+        description: "false"
         type: string
       - in: header
         name: X-Auth-Token
@@ -1541,8 +1498,7 @@ paths:
       parameters:
       - in: header
         name: X-Profile-Id
-        description: X-Profile-Id
-        required: true
+        description: DO profile
         type: string
       - in: header
         name: X-Auth-Token
@@ -1569,13 +1525,11 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: keyname
-        required: true
+        description: "true"
         type: string
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: header
         name: X-Auth-Token
@@ -1616,7 +1570,6 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: header
         name: X-Auth-Token
@@ -1626,7 +1579,6 @@ paths:
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: path
         name: region
@@ -1686,7 +1638,6 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: path
         name: projectId
@@ -1719,7 +1670,6 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         type: string
       - in: path
         name: projectId
@@ -1749,10 +1699,8 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
-        required: true
         schema:
           $ref: '#/definitions/X-Profile-Id'
-        default: string
       - in: header
         name: X-Auth-Token
         description: Token
@@ -1800,7 +1748,7 @@ paths:
     put:
       tags:
       - cluster/doks
-      description: Update a saved kubernetes cluster
+      description: Update an existing kubernetes cluster
       operationId: DOKSClusterController.Update
       parameters:
       - in: header
@@ -1824,8 +1772,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
-            Failed state"}'
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -1862,7 +1809,7 @@ paths:
     get:
       tags:
       - cluster/doks
-      description: Get saved cluster against the projectId
+      description: Get cluster against the projectId
       operationId: DOKSClusterController.Get
       parameters:
       - in: path
@@ -1905,8 +1852,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: Forcefully delete cluster
-        required: true
+        description: "true"
         type: boolean
       responses:
         "204":
@@ -1916,15 +1862,14 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
-            Failed state"}'
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/doks/all:
     get:
       tags:
       - cluster/doks
-      description: Get all the saved clusters
+      description: get all the clusters
       operationId: DOKSClusterController.Get All
       parameters:
       - in: header
@@ -1938,7 +1883,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/doks.DOKSCluster'
+              $ref: '#/definitions/doks.KubernetesCluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2112,7 +2057,7 @@ paths:
     post:
       tags:
       - cluster/doks
-      description: Terminate a running cluster from cloud
+      description: Terminate a running cluster
       operationId: DOKSClusterController.Terminate
       parameters:
       - in: header
@@ -2156,7 +2101,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -2186,7 +2130,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -2222,7 +2165,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -2248,7 +2190,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -2270,13 +2211,11 @@ paths:
       parameters:
       - in: header
         name: X-Profile-Id
-        description: profileId
-        required: true
+        description: "true"
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
-        required: true
+        description: "true"
         type: string
       - in: path
         name: region
@@ -2325,13 +2264,11 @@ paths:
       parameters:
       - in: header
         name: X-Profile-Id
-        description: X-Profile-Id
-        required: true
+        description: "true"
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
-        required: true
+        description: "true"
         type: string
       - in: path
         name: region
@@ -2361,7 +2298,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -2390,13 +2326,11 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: keyname
-        required: true
+        description: "true"
         type: string
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -2430,12 +2364,10 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       responses:
         "200":
@@ -2458,7 +2390,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -2486,7 +2417,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -2519,7 +2449,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: path
         name: projectId
@@ -2561,7 +2490,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -2585,7 +2513,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -2714,7 +2641,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/gke.Cluster'
+              $ref: '#/definitions/gke.GKECluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2930,8 +2857,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": ""Cluster is in Cluster Created/Creating/Terminating/Termination
-            Failed state"}'
+          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -3011,8 +2937,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: Forcefully delete cluster
-        required: true
+        description: "true"
         type: boolean
       responses:
         "204":
@@ -3022,8 +2947,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
-            Failed state"}'
+          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/iks/all:
@@ -3044,7 +2968,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/iks.Cluster'
+              $ref: '#/definitions/iks.Cluster_Def'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -3120,7 +3044,7 @@ paths:
           description: '{"error": "Unauthorized"}'
         "512":
           description: '{object} types.CustomCPError'
-  /cluster/iks/getallmachines/{zone}/:
+  /cluster/iks/getallmachines/{region}/:
     get:
       tags:
       - cluster/iks
@@ -3140,7 +3064,7 @@ paths:
         required: true
         type: string
       - in: path
-        name: zone
+        name: region
         description: Region of the cloud
         required: true
         type: string
@@ -3259,7 +3183,6 @@ paths:
       - in: header
         name: X-Profile-Id
         description: Vault credentials profile Id
-        required: true
         type: string
       - in: path
         name: projectId
@@ -3466,8 +3389,7 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: Forcefully delete cluster
-        required: true
+        description: "true"
         type: boolean
       responses:
         "204":
@@ -3492,7 +3414,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -3543,7 +3464,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -3571,12 +3491,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -3610,12 +3528,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       responses:
         "200":
@@ -3638,7 +3554,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -3663,7 +3578,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -3691,7 +3605,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -3714,7 +3627,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -3739,7 +3651,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -3762,7 +3673,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -3785,12 +3695,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -3818,7 +3726,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -3848,7 +3755,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -3870,7 +3776,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -3898,12 +3803,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
-        description: teams
-        required: true
+        description: token
         type: string
       - in: body
         name: body
@@ -3931,12 +3834,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -3965,7 +3866,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -3998,7 +3898,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4023,7 +3922,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4046,7 +3944,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4071,7 +3968,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4094,7 +3990,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4117,12 +4012,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
-        description: teams
-        required: true
+        description: token
         type: string
       - in: body
         name: body
@@ -4150,7 +4043,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -4186,7 +4078,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4208,7 +4099,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -4236,12 +4126,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -4275,12 +4163,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       responses:
         "200":
@@ -4308,7 +4194,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4337,7 +4222,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4360,7 +4244,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4383,7 +4266,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4408,7 +4290,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4433,7 +4314,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4458,12 +4338,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
-        description: teams
-        required: true
+        description: token
         type: string
       - in: body
         name: body
@@ -4491,7 +4369,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -4527,7 +4404,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4551,7 +4427,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -4579,12 +4454,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
-        description: teams
-        required: true
+        description: token
         type: string
       - in: body
         name: body
@@ -4612,12 +4485,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -4646,7 +4517,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -4679,7 +4549,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4704,7 +4573,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4727,7 +4595,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4752,7 +4619,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4775,7 +4641,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4798,7 +4663,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -4826,7 +4690,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -4862,7 +4725,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -4884,7 +4746,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -4912,12 +4773,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -4945,12 +4804,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -4979,7 +4836,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5012,7 +4868,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5037,7 +4892,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5060,7 +4914,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5085,7 +4938,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5108,7 +4960,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5131,7 +4982,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -5159,7 +5009,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -5195,7 +5044,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5217,7 +5065,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5245,12 +5092,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -5284,12 +5129,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       responses:
         "200":
@@ -5312,7 +5155,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5337,7 +5179,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5365,7 +5206,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5388,7 +5228,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5413,7 +5252,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5436,7 +5274,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5459,12 +5296,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -5492,7 +5327,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -5522,7 +5356,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5544,7 +5377,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5572,12 +5404,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -5611,12 +5441,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       responses:
         "200":
@@ -5639,7 +5467,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5664,7 +5491,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5692,7 +5518,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5715,7 +5540,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5740,7 +5564,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5763,7 +5586,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5786,12 +5608,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -5819,7 +5639,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -5849,7 +5668,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -5871,7 +5689,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5899,12 +5716,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -5938,12 +5753,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       responses:
         "200":
@@ -5966,7 +5779,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -5991,7 +5803,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -6019,7 +5830,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -6042,7 +5852,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -6067,7 +5876,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -6090,7 +5898,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -6113,12 +5920,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -6146,7 +5951,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -6176,7 +5980,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -6198,7 +6001,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -6226,12 +6028,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: token
-        required: true
         type: string
       - in: body
         name: body
@@ -6259,12 +6059,10 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: header
         name: teams
         description: teams
-        required: true
         type: string
       - in: body
         name: body
@@ -6293,7 +6091,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       - in: path
         name: templateId
@@ -6326,7 +6123,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -6351,7 +6147,6 @@ paths:
       - in: header
         name: token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -6368,28 +6163,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0015e2bd0.false:
+  482.0xc00156d890.false:
     title: "false"
     type: object
-  518.0xc001502cf0.false:
+  605.0xc000e3a720.false:
     title: "false"
     type: object
-  1559.string:
+  644.0xc00113f470.false:
+    title: "false"
+    type: object
+  667.0xc00148fad0.false:
+    title: "false"
+    type: object
+  7814.string:
     title: string
     type: object
-  6000.0xc0016080f0.false:
+  13859.0xc0015b1620.false:
     title: "false"
     type: object
-  13335.0xc001534720.false:
+  51327.0xc00153ee10.false:
     title: "false"
     type: object
-  13385.0xc000edecc0.false:
-    title: "false"
-    type: object
-  13438.0xc0011ddbf0.false:
-    title: "false"
-    type: object
-  22102.string:
+  55892.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6498,7 +6293,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/55892.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6649,7 +6444,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000edecc0.false'
+        $ref: '#/definitions/605.0xc000e3a720.false'
       name:
         type: string
       network_name:
@@ -7030,7 +6825,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc0011ddbf0.false'
+        $ref: '#/definitions/644.0xc00113f470.false'
       name:
         type: string
       network_name:
@@ -7212,17 +7007,6 @@ definitions:
         $ref: '#/definitions/doks.Context'
       name:
         type: string
-  doks.DOKSCluster:
-    title: DOKSCluster
-    type: object
-    properties:
-      name:
-        type: string
-      project_id:
-        description: ID of project
-        type: string
-      status:
-        $ref: '#/definitions/models.Type'
   doks.KubernetesCluster:
     title: KubernetesCluster
     type: object
@@ -7290,8 +7074,9 @@ definitions:
     title: KubernetesNode
     type: object
     properties:
+      id:
+        type: string
       name:
-        description: Name of the node [optional]
         type: string
   doks.KubernetesNodePool:
     title: KubernetesNodePool
@@ -7668,17 +7453,6 @@ definitions:
     properties:
       issue_client_certificate:
         type: boolean
-  gke.Cluster:
-    title: Cluster
-    type: object
-    properties:
-      name:
-        type: string
-      project_id:
-        description: ID of project
-        type: string
-      status:
-        $ref: '#/definitions/models.Type'
   gke.ConsumptionMeteringConfig:
     title: ConsumptionMeteringConfig
     type: object
@@ -7708,7 +7482,7 @@ definitions:
         description: The IP address range of the container pods in this cluster [optional]
         type: string
       company_id:
-        description: ID of company [optional]
+        description: ID of compnay [optional]
         type: string
       conditions:
         type: array
@@ -7724,7 +7498,7 @@ definitions:
         description: The number of nodes currently in the cluster [readonly]
         type: integer
         format: int64
-      default_max_pods_constrainty:
+      default_max_pods_constraint:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
         description: An optional description of this cluster [optional]
@@ -7814,7 +7588,7 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/models.Type'
-        description: Status of cluster [optional]
+        description: Status of cluster [required]
       status_message:
         description: Additional information about the current status [readonly]
         type: string
@@ -8213,17 +7987,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/iks.InstanceProfile'
-  iks.Cluster:
-    title: Cluster
-    type: object
-    properties:
-      name:
-        type: string
-      project_id:
-        description: ID of project
-        type: string
-      status:
-        $ref: '#/definitions/models.Type'
   iks.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -8239,7 +8002,7 @@ definitions:
       is_advance:
         type: boolean
       kube_version:
-        description: Kubernetes version to be provisioned [optional]
+        description: Kubernetes version to be provisioned [required]
         type: string
       name:
         description: Cluster name [required]
@@ -8343,7 +8106,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc001502cf0.false'
+        $ref: '#/definitions/51327.0xc00153ee10.false'
       kube_version:
         type: string
       name:
@@ -8607,7 +8370,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0015e2bd0.false'
+        $ref: '#/definitions/13859.0xc0015b1620.false'
       name:
         type: string
       node_pools:
@@ -8669,6 +8432,9 @@ tags:
 - name: template/op
   description: |
     Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: cluster/op
+  description: |
+    Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
 - name: template/aws
   description: |
     Operations about AWS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
@@ -8708,6 +8474,9 @@ tags:
 - name: template/doks
   description: |
     Operations about DOKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: template/op
+  description: |
+    Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
 - name: cluster/op
   description: |
     Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
