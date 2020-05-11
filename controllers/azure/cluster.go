@@ -1184,13 +1184,7 @@ func (c *AzureClusterController) GetRegions() {
 	}
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		c.Ctx.Output.SetStatus(int(models.ParamMissing))
-		c.Data["json"] = map[string]string{"error": string(models.ProfileId) + string(models.IsEmpty)}
-		c.ServeJSON()
-		return
-	}
+
 
 	var regions []models.Region
 	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {

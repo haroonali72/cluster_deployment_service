@@ -36,10 +36,11 @@ paths:
           description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
-        "402":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
         "404":
           description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -129,7 +130,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/aks/all:
@@ -286,8 +288,6 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/aks/status/{projectId}/:
     get:
       tags:
@@ -359,12 +359,10 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in New/Creating/Cluster Creation Failed
-            /Terminated/Terminating state"}'
+          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/aws/:
     put:
       tags:
@@ -375,6 +373,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -412,6 +411,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -443,6 +443,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -465,6 +466,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -487,10 +489,12 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: region
@@ -525,10 +529,12 @@ paths:
       - in: header
         name: clusterName
         description: clusterName
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -561,6 +567,7 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
+        required: true
         type: string
       - in: path
         name: projectId
@@ -570,6 +577,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -619,7 +627,8 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: "true"
+        description: token
+        required: true
         type: string
       - in: path
         name: region
@@ -628,7 +637,8 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "true"
+        description: profileId
+        required: true
         type: string
       responses:
         "200":
@@ -663,15 +673,18 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: "true"
+        description: keyname
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
         description: profileId
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: region
@@ -707,14 +720,17 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: path
         name: region
@@ -744,6 +760,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: region
@@ -773,10 +790,12 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
         description: profileId
+        required: true
         type: string
       - in: path
         name: projectId
@@ -804,10 +823,12 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
         description: profileId
+        required: true
         type: string
       - in: path
         name: projectId
@@ -837,11 +858,14 @@ paths:
       - in: header
         name: X-Profile-Id
         description: profileId
+        required: true
         schema:
           $ref: '#/definitions/X-Profile-Id'
+        default: string
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -867,6 +891,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -897,6 +922,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -905,7 +931,8 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: "true"
+        description: deleting cluster forcefully
+        required: true
         type: boolean
       responses:
         "200":
@@ -932,23 +959,24 @@ paths:
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/azure.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/azure
@@ -962,30 +990,28 @@ paths:
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/azure.Cluster_Def'
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"msg": "error message"}'
+          description: '{"msg": "Bad Request"}'
         "401":
-          description: '{"msg": "error message"}'
+          description: '{"msg": "Unauthorized"}'
         "404":
-          description: '{"msg": "error message"}'
+          description: '{"msg": "Not Found"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against same project id already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/{projectId}/:
     get:
       tags:
       - cluster/azure
-      description: get cluster
+      description: Get cluster against the projectId
       operationId: AzureClusterController.Get
       parameters:
       - in: path
@@ -1003,12 +1029,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/azure.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/{projectId}/{forceDelete}: {}
   /cluster/azure/all:
     get:
@@ -1019,7 +1045,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
@@ -1029,10 +1055,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/azure.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/applyagent/{projectId}:
     post:
       tags:
@@ -1042,20 +1068,22 @@ paths:
       parameters:
       - in: header
         name: clusterName
-        description: clusterName
+        description: Cluster Name
+        required: true
         type: string
       - in: header
         name: resourceGroup
-        description: resourceGroup
+        description: ResourceGroup
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       - in: path
@@ -1066,19 +1094,17 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
-  /cluster/azure/getAllInstances/{region}:
+          description: '{"error": "Runtime Error"}'
+  /cluster/azure/getAllInstances:
     get:
       tags:
       - cluster/azure
-      description: Getting All Instances
+      description: Get All Instances
       operationId: AzureClusterController.Get Instances
       parameters:
       - in: header
@@ -1088,45 +1114,45 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
-      - in: path
+      - in: header
         name: region
         description: Cloud region
+        required: true
         type: string
       responses:
         "200":
           description: '[]compute.VirtualMachines'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/getallmachines:
     get:
       tags:
       - cluster/azure
-      description: Get Azure VM Sizes
+      description: Get list of azure VM sizes
       operationId: AzureClusterController.Get VM Sizes
       responses:
         "200":
           description: '[]string'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/getallregions:
     get:
       tags:
       - cluster/azure
-      description: Get Azure Regions
+      description: Get List of the Azure Regions
       operationId: AzureClusterController.Get Azure Regions
       parameters:
       - in: header
@@ -1136,32 +1162,18 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "true"
+        description: Vault credentials profile id
+        required: true
         type: string
       responses:
         "200":
           description: '[]model.Region'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not found"}'
         "500":
-          description: '{"error": "error msg"}'
-  /cluster/azure/machine/info:
-    get:
-      tags:
-      - cluster/azure
-      description: Get Azure Machine instance cores
-      operationId: AzureClusterController.GetCores
-      responses:
-        "200":
-          description: ""
-          schema:
-            $ref: '#/definitions/models.Machine'
-        "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/sshkey/{keyname}:
     delete:
       tags:
@@ -1171,20 +1183,23 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: "true"
+        description: Unique name of the key
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": key deleted successfully}'
-        "400":
-          description: '{"error": "error msg"}'
+        "204":
+          description: '{"msg": Key deleted successfully}'
+        "401":
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/sshkey/{keyname}/{projectId}:
     post:
       tags:
@@ -1203,8 +1218,8 @@ paths:
         required: true
         type: string
       - in: header
-        name: -Auth-Token
-        description: token
+        name: X-Auth-Token
+        description: Token
         required: true
         type: string
       - in: header
@@ -1217,9 +1232,9 @@ paths:
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
         "404":
-          description: '{"error": "error message"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/sshkeys:
     get:
       tags:
@@ -1229,7 +1244,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
@@ -1239,16 +1254,16 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/start/{projectId}:
     post:
       tags:
       - cluster/azure
-      description: starts a  cluster
-      operationId: AzureClusterController.Start
+      description: Deploy a  cluster
+      operationId: AzureClusterController.Create
       parameters:
       - in: path
         name: projectId
@@ -1257,34 +1272,40 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
+        "202":
+          description: '{"msg": "Cluster creation initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/status/{projectId}/:
     get:
       tags:
       - cluster/azure
-      description: returns status of nodes
+      description: Get live status of the cluster
       operationId: AzureClusterController.Status
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: path
@@ -1294,26 +1315,29 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
       responses:
         "200":
           description: ""
           schema:
             $ref: '#/definitions/azure.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in creating/terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/terminate/{projectId}/:
     post:
       tags:
       - cluster/azure
-      description: terminates a  cluster
+      description: terminates a running cluster
       operationId: AzureClusterController.Terminate
       parameters:
       - in: path
@@ -1323,55 +1347,56 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: "false"
+        description: Vault credentials profile id
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster terminated successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "202":
+          description: '{"msg": "Cluster termination initialized"}'
+        "204":
+          description: '{"msg": "Cluster terminated successfully"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/validateProfile/:
     post:
       tags:
       - cluster/azure
-      description: check if profile is valid
+      description: Check if profile is valid
       operationId: AzureClusterController.Validate Profile
       parameters:
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: body
         name: body
-        description: body for cluster content
+        description: Body for cluster content
         required: true
         schema:
           $ref: '#/definitions/vault.AzureCredentials'
       responses:
         "200":
           description: '{"msg": "Profile is valid"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "409":
-          description: '{"error": "profile is invalid"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/:
     put:
       tags:
@@ -1381,8 +1406,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: body
         name: body
@@ -1392,19 +1416,18 @@ paths:
           $ref: '#/definitions/do.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/do
@@ -1419,24 +1442,21 @@ paths:
           $ref: '#/definitions/do.Cluster_Def'
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster added successfully"}'
         "400":
-          description: body not found
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: token not found
+          description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Cluster against same project already exists"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/{projectId}/:
     get:
       tags:
@@ -1459,13 +1479,44 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-  /cluster/do/{projectId}/{forceDelete}: {}
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/do/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/do
+      description: delete a cluster
+      operationId: DOClusterController.Delete
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: token
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: "true"
+        type: boolean
+      responses:
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/do/all:
     get:
       tags:
@@ -1476,7 +1527,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
         type: string
       responses:
         "200":
@@ -1485,10 +1535,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/getallregions/:
     get:
       tags:
@@ -1502,8 +1552,7 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: "true"
         type: string
       responses:
         "200":
@@ -1512,11 +1561,13 @@ paths:
             type: array
             items:
               $ref: '#/definitions/godo.Region'
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
-  /cluster/do/sshkey/{keyname}/{region}:
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime error"}'
+        "512":
+          description: '{object} types.CustomCPError'
+  /cluster/do/sshkey/{keyname}:
     delete:
       tags:
       - cluster/do
@@ -1533,23 +1584,19 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
-        type: string
-      - in: path
-        name: region
-        description: region
-        required: true
+        description: token
         type: string
       responses:
         "200":
           description: '{"msg": "key deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "User is unauthorized to perform this action"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "key is in used by some projects"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/do/sshkey/{projectId}/{keyname}/{region}:
     post:
       tags:
@@ -1573,8 +1620,7 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: header
         name: teams
@@ -1591,13 +1637,15 @@ paths:
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/do/sshkeys:
     get:
       tags:
@@ -1607,8 +1655,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       responses:
         "200":
@@ -1617,12 +1664,10 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/start/{projectId}:
     post:
       tags:
@@ -1632,8 +1677,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: header
         name: X-Profile-Id
@@ -1645,16 +1689,17 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "202":
+          description: '{"msg": "Cluster creation initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/status/{projectId}/:
     get:
       tags:
@@ -1664,8 +1709,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: header
         name: X-Profile-Id
@@ -1681,14 +1725,14 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/do.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/terminate/{projectId}/:
     post:
       tags:
@@ -1703,8 +1747,7 @@ paths:
           $ref: '#/definitions/X-Profile-Id'
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: token
         type: string
       - in: path
         name: projectId
@@ -1712,14 +1755,17 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster terminated successfully"}'
+        "202":
+          description: '{"msg": "cluster termination initiated"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}/'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/do/validateProfile/:
     post:
       tags:
@@ -1729,8 +1775,7 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: Token
-        required: true
+        description: "true"
         type: string
       - in: vault.DOCredentials
         name: body
@@ -1741,9 +1786,11 @@ paths:
         "200":
           description: '{"msg": "Profile is valid"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Invalid Profile"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
   /cluster/doks/:
     put:
       tags:
@@ -1772,7 +1819,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -2003,8 +2051,6 @@ paths:
         required: true
         type: string
       responses:
-        "201":
-          description: '{"msg": "Cluster created successfully"}'
         "202":
           description: '{"msg": "Cluster creation initiated"}'
         "401":
@@ -2016,8 +2062,6 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/doks/status/{projectId}/:
     get:
       tags:
@@ -2047,6 +2091,8 @@ paths:
             $ref: '#/definitions/doks.KubernetesCluster'
         "401":
           description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
@@ -2085,12 +2131,10 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in New/Creating/Cluster Creation Failed
-            /Terminated/Terminating state"}'
+          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/gcp/:
     put:
       tags:
@@ -2101,6 +2145,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -2130,6 +2175,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -2165,6 +2211,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -2190,6 +2237,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -2211,11 +2259,13 @@ paths:
       parameters:
       - in: header
         name: X-Profile-Id
-        description: "true"
+        description: profileId
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: "true"
+        description: token
+        required: true
         type: string
       - in: path
         name: region
@@ -2264,11 +2314,13 @@ paths:
       parameters:
       - in: header
         name: X-Profile-Id
-        description: "true"
+        description: X-Profile-Id
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
-        description: "true"
+        description: token
+        required: true
         type: string
       - in: path
         name: region
@@ -2298,6 +2350,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: X-Profile-Id
@@ -2326,11 +2379,13 @@ paths:
       parameters:
       - in: path
         name: keyname
-        description: "true"
+        description: keyname
+        required: true
         type: string
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -2364,10 +2419,12 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       responses:
         "200":
@@ -2390,6 +2447,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -2417,6 +2475,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -2449,6 +2508,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: path
         name: projectId
@@ -2490,6 +2550,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -2513,6 +2574,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -2561,7 +2623,8 @@ paths:
         "404":
           description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -2641,7 +2704,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/gke.GKECluster'
+              $ref: '#/definitions/gke.Cluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2750,8 +2813,6 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/gke/status/{projectId}/:
     get:
       tags:
@@ -2821,12 +2882,10 @@ paths:
         "404":
           description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "Cluster is in New/Creating/Cluster Creation Failed
-            /Terminated/Terminating state"}'
+          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/iks/:
     put:
       tags:
@@ -2852,12 +2911,11 @@ paths:
           description: '{"error": "Bad Request"}'
         "401":
           description: '{"error": "Unauthorized"}'
-        "402":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in running/deploying/terminating state"}'
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -2947,7 +3005,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in deploying/running/terminating state"}'
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/iks/all:
@@ -3166,8 +3225,6 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/iks/status/{projectId}/:
     get:
       tags:
@@ -3240,12 +3297,10 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in New/Creating/Cluster Creation Failed
-            /Terminated/Terminating state"}'
+          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/iks/validateProfile:
     post:
       tags:
@@ -3306,6 +3361,9 @@ paths:
           description: '{"error": "Unauthorized"}'
         "404":
           description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -3389,7 +3447,8 @@ paths:
         type: string
       - in: path
         name: forceDelete
-        description: "true"
+        description: Forcefully delete cluster
+        required: true
         type: boolean
       responses:
         "204":
@@ -3401,7 +3460,8 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Creating/Created/Terminating state"}'
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/op/all:
@@ -3414,6 +3474,7 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3464,6 +3525,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3491,10 +3553,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -3528,10 +3592,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       responses:
         "200":
@@ -3554,6 +3620,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -3578,6 +3645,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -3605,6 +3673,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3627,6 +3696,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3651,6 +3721,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3673,6 +3744,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3695,10 +3767,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -3726,6 +3800,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -3755,6 +3830,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3776,6 +3852,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -3803,10 +3880,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
-        description: token
+        description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -3834,10 +3913,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -3866,6 +3947,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -3898,6 +3980,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3922,6 +4005,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3944,6 +4028,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3968,6 +4053,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -3990,6 +4076,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4012,10 +4099,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
-        description: token
+        description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -4043,6 +4132,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -4078,6 +4168,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4099,6 +4190,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -4126,10 +4218,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -4163,10 +4257,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       responses:
         "200":
@@ -4194,6 +4290,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4222,6 +4319,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4244,6 +4342,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4266,6 +4365,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4290,6 +4390,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4314,6 +4415,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4338,10 +4440,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
-        description: token
+        description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -4369,6 +4473,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -4404,6 +4509,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4427,6 +4533,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -4454,10 +4561,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
-        description: token
+        description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -4485,10 +4594,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -4517,6 +4628,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -4549,6 +4661,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4573,6 +4686,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4595,6 +4709,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4619,6 +4734,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4641,6 +4757,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4663,6 +4780,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -4690,6 +4808,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -4725,6 +4844,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4746,6 +4866,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -4773,10 +4894,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -4804,10 +4927,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -4836,6 +4961,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -4868,6 +4994,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4892,6 +5019,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4914,6 +5042,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4938,6 +5067,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4960,6 +5090,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -4982,6 +5113,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5009,6 +5141,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5044,6 +5177,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5065,6 +5199,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5092,10 +5227,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -5129,10 +5266,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       responses:
         "200":
@@ -5155,6 +5294,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5179,6 +5319,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5206,6 +5347,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5228,6 +5370,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5252,6 +5395,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5274,6 +5418,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5296,10 +5441,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5327,6 +5474,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5356,6 +5504,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5377,6 +5526,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5404,10 +5554,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -5441,10 +5593,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       responses:
         "200":
@@ -5467,6 +5621,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5491,6 +5646,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5518,6 +5674,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5540,6 +5697,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5564,6 +5722,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5586,6 +5745,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5608,10 +5768,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5639,6 +5801,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5668,6 +5831,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5689,6 +5853,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5716,10 +5881,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -5753,10 +5920,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       responses:
         "200":
@@ -5779,6 +5948,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5803,6 +5973,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -5830,6 +6001,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5852,6 +6024,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5876,6 +6049,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5898,6 +6072,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -5920,10 +6095,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5951,6 +6128,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -5980,6 +6158,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -6001,6 +6180,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -6028,10 +6208,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: token
+        required: true
         type: string
       - in: body
         name: body
@@ -6059,10 +6241,12 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: header
         name: teams
         description: teams
+        required: true
         type: string
       - in: body
         name: body
@@ -6091,6 +6275,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       - in: path
         name: templateId
@@ -6123,6 +6308,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -6147,6 +6333,7 @@ paths:
       - in: header
         name: token
         description: token
+        required: true
         type: string
       responses:
         "200":
@@ -6163,28 +6350,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00156d890.false:
+  482.0xc001639440.false:
     title: "false"
     type: object
-  605.0xc000e3a720.false:
+  605.0xc000ec8b10.false:
     title: "false"
     type: object
-  644.0xc00113f470.false:
+  667.0xc001557650.false:
     title: "false"
     type: object
-  667.0xc00148fad0.false:
+  964.0xc001200600.false:
     title: "false"
     type: object
-  7814.string:
+  8119.string:
     title: string
     type: object
-  13859.0xc0015b1620.false:
+  14466.0xc0016793b0.false:
     title: "false"
     type: object
-  51327.0xc00153ee10.false:
+  51374.0xc00160e9c0.false:
     title: "false"
     type: object
-  55892.string:
+  56023.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6293,7 +6480,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55892.string'
+        $ref: '#/definitions/56023.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6444,7 +6631,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000e3a720.false'
+        $ref: '#/definitions/605.0xc000ec8b10.false'
       name:
         type: string
       network_name:
@@ -6629,7 +6816,7 @@ definitions:
       resource_group:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
   azure.DiagnosticsProfile:
@@ -6816,16 +7003,12 @@ definitions:
     title: Cluster_Def
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
+      _:
+        type: string
       cloud:
         $ref: '#/definitions/models.Cloud'
-      company_id:
-        type: string
-      do_project_id:
-        type: string
       kube_credentials:
-        $ref: '#/definitions/644.0xc00113f470.false'
+        $ref: '#/definitions/964.0xc001200600.false'
       name:
         type: string
       network_name:
@@ -6837,19 +7020,20 @@ definitions:
       project_id:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
   do.ImageReference:
     title: ImageReference
     type: object
     properties:
-      _id:
+      _:
         $ref: '#/definitions/bson.ObjectId'
       image_id:
         type: integer
         format: int64
       slug:
+        description: Image Slug Information ['optional' if ImageId is provided']
         type: string
   do.Node:
     title: Node
@@ -6878,21 +7062,28 @@ definitions:
     title: NodePool
     type: object
     properties:
-      _id:
+      _:
         $ref: '#/definitions/bson.ObjectId'
       external_volume:
         $ref: '#/definitions/do.Volume'
+        description: Block Store Volume Information ['required' if external volume
+          is enabled']
       image:
         $ref: '#/definitions/do.ImageReference'
+        description: Image Information for cluster [required]
       is_external:
+        description: Enable Volume Option, possible values 'true' or 'false'  [optional]
         type: boolean
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
+        description: SSH Key information [required]
       machine_type:
+        description: Machine type for pool [required]
         type: string
       name:
         type: string
       node_count:
+        description: Pool node count [required]
         type: integer
         format: int64
       nodes:
@@ -6901,9 +7092,12 @@ definitions:
           $ref: '#/definitions/do.Node'
       pool_role:
         $ref: '#/definitions/models.PoolRole'
+        description: Pool role, possible values 'master' or 'slave'. [required]
       private_networking:
+        description: Option to enable private networking [optional]
         type: boolean
       security_group_id:
+        description: Security Group for cluster [required]
         type: array
         items:
           $ref: '#/definitions/do.string'
@@ -7074,9 +7268,8 @@ definitions:
     title: KubernetesNode
     type: object
     properties:
-      id:
-        type: string
       name:
+        description: Name of the node [optional]
         type: string
   doks.KubernetesNodePool:
     title: KubernetesNodePool
@@ -7453,6 +7646,9 @@ definitions:
     properties:
       issue_client_certificate:
         type: boolean
+  gke.Cluster:
+    title: Cluster
+    type: object
   gke.ConsumptionMeteringConfig:
     title: ConsumptionMeteringConfig
     type: object
@@ -7476,8 +7672,8 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       cloud_status:
+        $ref: '#/definitions/models.Type'
         description: The current status of this cluster [readonly]
-        type: string
       cluster_ipv4_cidr:
         description: The IP address range of the container pods in this cluster [optional]
         type: string
@@ -8002,7 +8198,7 @@ definitions:
       is_advance:
         type: boolean
       kube_version:
-        description: Kubernetes version to be provisioned [required]
+        description: Kubernetes version to be provisioned [optional]
         type: string
       name:
         description: Cluster name [required]
@@ -8106,7 +8302,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/51327.0xc00153ee10.false'
+        $ref: '#/definitions/51374.0xc00160e9c0.false'
       kube_version:
         type: string
       name:
@@ -8289,9 +8485,9 @@ definitions:
         description: ID of project [required]
         type: string
       status:
+        $ref: '#/definitions/models.Type'
         description: Cluster status can be New, Cluster Created, Cluster Terminated.
           By default value will be 'New' [readonly]
-        type: string
   op.Node:
     title: Node
     type: object
@@ -8370,7 +8566,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13859.0xc0015b1620.false'
+        $ref: '#/definitions/14466.0xc0016793b0.false'
       name:
         type: string
       node_pools:
@@ -8432,9 +8628,6 @@ tags:
 - name: template/op
   description: |
     Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
-- name: cluster/op
-  description: |
-    Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
 - name: template/aws
   description: |
     Operations about AWS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
@@ -8474,9 +8667,6 @@ tags:
 - name: template/doks
   description: |
     Operations about DOKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
-- name: template/op
-  description: |
-    Operations about OP template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
 - name: cluster/op
   description: |
     Operations about OP cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
