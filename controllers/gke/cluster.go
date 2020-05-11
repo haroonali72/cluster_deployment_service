@@ -248,6 +248,14 @@ func (c *GKEClusterController) Post() {
 	var cluster gke.GKECluster
 	ctx := new(utils.Context)
 
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("GKEClusterController: Add cluster", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
@@ -259,7 +267,7 @@ func (c *GKEClusterController) Post() {
 	}
 
 	validate := validator.New()
-	err := validate.Struct(cluster)
+	err = validate.Struct(cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
