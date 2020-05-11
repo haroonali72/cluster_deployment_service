@@ -40,6 +40,9 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	q.Add("resource_type", resourceType)
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
+	ctx.SendLogs("RBAC- Request_URL:" + getRbacHost() + models.RbacEndpoint + models.RbacListURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Parameters: "+companyId +" ,resource_type: "+resourceType, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
@@ -48,6 +51,10 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 		return 500, err, List{}
 	}
 	defer response.Body.Close()
+	ctx.SendLogs("RBAC- Response Code" + string(response.StatusCode) + models.RbacEndpoint + models.RbacListURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+//	json.Unmarshal(response.Body,d)
+//	ctx.SendLogs( "RBAC- Response Body" + string(response.Body.Read()) , models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 	if response.StatusCode != 200 {
 		return response.StatusCode, errors.New(response.Status), List{}
 	}
@@ -89,6 +96,11 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	q.Add("action", action)
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
+
+	ctx.SendLogs("RBAC- Request_URL:" + getRbacHost() + models.RbacEndpoint + models.RbacListURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC: Request Header :"+" resource_id: "+resourceId +" ,resource_type"+resourceType+" ,action "+action+" ,X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
 
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
