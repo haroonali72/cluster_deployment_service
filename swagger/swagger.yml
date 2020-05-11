@@ -1938,7 +1938,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/doks.KubernetesCluster'
+              $ref: '#/definitions/doks.DOKSCluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -2714,7 +2714,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/gke.GKECluster'
+              $ref: '#/definitions/gke.Cluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -3044,7 +3044,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/iks.Cluster_Def'
+              $ref: '#/definitions/iks.Cluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -6368,28 +6368,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0015ae750.false:
+  434.0xc0015e2bd0.false:
     title: "false"
     type: object
-  518.0xc0014bcb70.false:
+  518.0xc001502cf0.false:
     title: "false"
     type: object
   1559.string:
     title: string
     type: object
-  6000.0xc0015afc50.false:
+  6000.0xc0016080f0.false:
     title: "false"
     type: object
-  13335.0xc0014ec5a0.false:
+  13335.0xc001534720.false:
     title: "false"
     type: object
-  13385.0xc000e92f30.false:
+  13385.0xc000edecc0.false:
     title: "false"
     type: object
-  13438.0xc001195e60.false:
+  13438.0xc0011ddbf0.false:
     title: "false"
     type: object
-  22162.string:
+  22102.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6649,7 +6649,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000e92f30.false'
+        $ref: '#/definitions/13385.0xc000edecc0.false'
       name:
         type: string
       network_name:
@@ -7030,7 +7030,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc001195e60.false'
+        $ref: '#/definitions/13438.0xc0011ddbf0.false'
       name:
         type: string
       network_name:
@@ -7212,6 +7212,17 @@ definitions:
         $ref: '#/definitions/doks.Context'
       name:
         type: string
+  doks.DOKSCluster:
+    title: DOKSCluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   doks.KubernetesCluster:
     title: KubernetesCluster
     type: object
@@ -7657,6 +7668,17 @@ definitions:
     properties:
       issue_client_certificate:
         type: boolean
+  gke.Cluster:
+    title: Cluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   gke.ConsumptionMeteringConfig:
     title: ConsumptionMeteringConfig
     type: object
@@ -7686,7 +7708,7 @@ definitions:
         description: The IP address range of the container pods in this cluster [optional]
         type: string
       company_id:
-        description: ID of compnay [optional]
+        description: ID of company [optional]
         type: string
       conditions:
         type: array
@@ -7702,7 +7724,7 @@ definitions:
         description: The number of nodes currently in the cluster [readonly]
         type: integer
         format: int64
-      default_max_pods_constraint:
+      default_max_pods_constrainty:
         $ref: '#/definitions/gke.MaxPodsConstraint'
       description:
         description: An optional description of this cluster [optional]
@@ -8191,6 +8213,17 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/iks.InstanceProfile'
+  iks.Cluster:
+    title: Cluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   iks.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -8206,7 +8239,7 @@ definitions:
       is_advance:
         type: boolean
       kube_version:
-        description: Kubernetes version to be provisioned [required]
+        description: Kubernetes version to be provisioned [optional]
         type: string
       name:
         description: Cluster name [required]
@@ -8310,7 +8343,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0014bcb70.false'
+        $ref: '#/definitions/518.0xc001502cf0.false'
       kube_version:
         type: string
       name:
@@ -8574,7 +8607,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0015ae750.false'
+        $ref: '#/definitions/434.0xc0015e2bd0.false'
       name:
         type: string
       node_pools:

@@ -251,7 +251,6 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 	cluster.CompanyId=oldCluster.CompanyId
-	cluster.CloudplexStatus= oldCluster.CloudplexStatus
 
 	err = AddKubernetesCluster(cluster, ctx)
 	if err != nil {

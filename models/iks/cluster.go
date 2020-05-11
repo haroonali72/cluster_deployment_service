@@ -30,7 +30,7 @@ type Cluster_Def struct {
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
 	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required" description:"Network name in which cluster will be provisioned [required]"`
 	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint" description:"[optional]"`
-	KubeVersion      string        `json:"kube_version" bson:"kube_version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version" description:"Kubernetes version to be provisioned [optional]"`
 	CompanyId        string        `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	TokenName        string        `json:"-" bson:"token_name"`
 	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required" description:"Virtual private cloud ID in which cluster will be provisioned [required]"`
@@ -59,10 +59,10 @@ type Regions struct {
 	Zones    []string `json:"Zones"`
 }
 
-type Cluster struct{
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+type Cluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -130,15 +130,15 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (iksCluster
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	for _,cluster := range clusters{
-		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.Status}
-		iksClusters =append(iksClusters,temp)
+	for _, cluster := range clusters {
+		temp := Cluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		iksClusters = append(iksClusters, temp)
 	}
 
 	return iksClusters, nil
@@ -313,8 +313,8 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
 		cluster.Status = models.AgentDeploymentFailed
-		profile := vault.IBMProfile{Profile:credentials,}
-		_ =TerminateCluster(cluster,profile,ctx,companyId,token)
+		profile := vault.IBMProfile{Profile: credentials}
+		_ = TerminateCluster(cluster, profile, ctx, companyId, token)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {

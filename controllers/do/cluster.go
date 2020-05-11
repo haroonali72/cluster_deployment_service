@@ -911,7 +911,7 @@ func (c *DOClusterController) PostSSHKey() {
 
 	teams := c.Ctx.Input.Header("teams")
 
-	region := c.GetString("region")
+	region := c.GetString(":region")
 	if region == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "region id is empty"}

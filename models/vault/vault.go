@@ -43,7 +43,7 @@ type DOProfile struct {
 }
 type DOCredentials struct {
 	AccessKey string `json:"access_token" validate:"required" description:"Access key [required]"`
-	Region    string `json:"region" validate:"required" description:"Cloud Region [required]"`
+	Region    string `json:"region"  description:"Cloud Region [optional]"`
 }
 type IBMProfile struct {
 	Profile IBMCredentials `json:"credentials" validate:"required,dive" description:"IBM Credentials [required]"`
