@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New" description:"Status of cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -57,6 +57,12 @@ type Regions struct {
 	Name     string   `json:"Name"`
 	Location string   `json:"Location"`
 	Zones    []string `json:"Zones"`
+}
+
+type Cluster struct{
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -107,7 +113,13 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	}
 	return cluster, nil
 }
-func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (iksClusters []Cluster, err error) {
+	var clusters []Cluster_Def
+	var copyData []string
+
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -118,13 +130,18 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	return clusters, nil
+	for _,cluster := range clusters{
+		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.Status}
+		iksClusters =append(iksClusters,temp)
+	}
+
+	return iksClusters, nil
 }
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
@@ -160,23 +177,6 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == (models.Deploying) && update {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in deploying state")
-	}
-	if oldCluster.Status == (models.Terminating) && update {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in terminating state")
-	}
-
-	if oldCluster.Status == "Cluster Created" && update {
-		//if !checkScalingChanges(&oldCluster, &cluster) {
-		ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("Cluster is in runnning state")
-		//} else {
-		//	cluster = oldCluster
-		//}
-	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -312,10 +312,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
-		profile := vault.IBMProfile{Profile: credentials}
-		TerminateCluster(cluster, profile, ctx, companyId, token)
-
+		cluster.Status = models.AgentDeploymentFailed
+		profile := vault.IBMProfile{Profile:credentials,}
+		_ =TerminateCluster(cluster,profile,ctx,companyId,token)
+		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)

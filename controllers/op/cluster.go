@@ -327,7 +327,7 @@ func (c *OPClusterController) Patch() {
 
 // @Title Get All
 // @Description get all the company's clusters
-// @Param	X-Auth-Token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []op.Cluster_Def
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
@@ -371,7 +371,7 @@ func (c *OPClusterController) GetAll() {
 	}
 	//====================================================================================//
 	ctx.SendLogs("OPClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.Data.Company=userInfo.CompanyId
 	clusters, err := op.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -388,7 +388,7 @@ func (c *OPClusterController) GetAll() {
 // @Description delete a cluster
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path 	string	true	"Project id of the cluster"
-// @Param	forceDelete path    boolean	true    ""
+// @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
