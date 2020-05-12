@@ -6368,28 +6368,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc0015e2bd0.false:
+  482.0xc0015c6180.false:
     title: "false"
     type: object
-  518.0xc001502cf0.false:
+  605.0xc000e4acf0.false:
     title: "false"
     type: object
-  1559.string:
+  644.0xc001145bf0.false:
+    title: "false"
+    type: object
+  667.0xc0014b6690.false:
+    title: "false"
+    type: object
+  7795.string:
     title: string
     type: object
-  6000.0xc0016080f0.false:
+  14479.0xc0015ea0f0.false:
     title: "false"
     type: object
-  13335.0xc001534720.false:
+  51035.0xc00155f6e0.false:
     title: "false"
     type: object
-  13385.0xc000edecc0.false:
-    title: "false"
-    type: object
-  13438.0xc0011ddbf0.false:
-    title: "false"
-    type: object
-  22102.string:
+  55699.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6498,7 +6498,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/55699.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6649,7 +6649,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000edecc0.false'
+        $ref: '#/definitions/605.0xc000e4acf0.false'
       name:
         type: string
       network_name:
@@ -7030,7 +7030,7 @@ definitions:
       do_project_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13438.0xc0011ddbf0.false'
+        $ref: '#/definitions/644.0xc001145bf0.false'
       name:
         type: string
       network_name:
@@ -8343,7 +8343,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc001502cf0.false'
+        $ref: '#/definitions/51035.0xc00155f6e0.false'
       kube_version:
         type: string
       name:
@@ -8607,7 +8607,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0015e2bd0.false'
+        $ref: '#/definitions/14479.0xc0015ea0f0.false'
       name:
         type: string
       node_pools:
