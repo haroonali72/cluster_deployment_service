@@ -134,7 +134,7 @@ func (c *DOKSClusterController) GetKubeConfig() {
 	}
 
 	ctx.Data.ProjectId = projectId
-	ctx.Data.Company= userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -311,7 +311,7 @@ func (c *DOKSClusterController) GetAll() {
 	}
 
 	ctx.SendLogs("DOKSClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 	clusters, err := doks.GetAllKubernetesCluster(data, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -1144,20 +1144,20 @@ func (c *DOKSClusterController) TerminateCluster() {
 
 	ctx.SendLogs("DOKSClusterController: Cluster"+cluster.Name+" of project"+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = doks.UpdateKubernetesCluster(cluster, *ctx)
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			c.Ctx.Output.SetStatus(404)
+	/*	err = doks.UpdateKubernetesCluster(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
+	*/
 	ctx.SendLogs(" DOKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)

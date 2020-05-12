@@ -812,13 +812,13 @@ func (c *DOClusterController) TerminateCluster() {
 
 	go do.TerminateCluster(cluster, doProfile, *ctx, userInfo.CompanyId, token)
 
-	err = do.UpdateCluster(cluster, false, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	/*	err = do.UpdateCluster(cluster, false, *ctx)
+		if err != nil {
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}*/
 	ctx.SendLogs(" DO cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
