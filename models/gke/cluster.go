@@ -43,19 +43,19 @@ type GKECluster struct {
 	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy,omitempty" bson:"ip_allocation_policy,omitempty"`
 	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty" description:"The fingerprint of the set of labels for this cluster [optional]"`
 	LegacyAbac                     *LegacyAbac                     `json:"legacy_abac,omitempty" bson:"legacy_abac,omitempty"`
-	Location                       string                          `json:"location,omitempty" bson:"location,omitempty" description:"The name of GCP zone or region in which cluster resides [required]"`
+	Location                       string                          `json:"location" bson:"location" validate:"required" description:"The name of GCP zone or region in which cluster resides [required]"`
 	Locations                      []string                        `json:"locations,omitempty" bson:"locations,omitempty" description:"The name of GCP zones in which cluster nodes located [optional]"`
 	LoggingService                 string                          `json:"logging_service,omitempty" bson:"logging_service,omitempty" description:"The logging service the cluster should use to write logs [optional]"`
 	MaintenancePolicy              *MaintenancePolicy              `json:"maintenance_policy,omitempty" bson:"maintenance_policy,omitempty"`
 	MasterAuth                     *MasterAuth                     `json:"master_auth,omitempty" bson:"master_auth,omitempty"`
 	MasterAuthorizedNetworksConfig *MasterAuthorizedNetworksConfig `json:"master_authorized_networks_config,omitempty" bson:"master_authorized_networks_config,omitempty"`
 	MonitoringService              string                          `json:"monitoring_service,omitempty" bson:"monitoring_service,omitempty" description:"The monitoring service the cluster should use to write metrics [optional]"`
-	Name                           string                          `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"The name of this cluster [required]"`
-	Network                        string                          `json:"network,omitempty" bson:"network,omitempty" description:"The name of GCP network to which the cluster connected [required]"`
+	Name                           string                          `json:"name" bson:"name" validate:"required" description:"The name of this cluster [required]"`
+	Network                        string                          `json:"network" bson:"network" description:"The name of GCP network to which the cluster connected [required]"`
 	NetworkConfig                  *NetworkConfig                  `json:"network_config,omitempty" bson:"network_config,omitempty"`
 	NetworkPolicy                  *NetworkPolicy                  `json:"network_policy,omitempty" bson:"network_policy,omitempty"`
 	NodeIpv4CidrSize               int64                           `json:"node_ipv4_cidr_size,omitempty" bson:"node_ipv4_cidr_size,omitempty" description:"The size of the address space on each node [readonly]"`
-	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty" validate:"required,dive"`
+	NodePools                      []*NodePool                     `json:"node_pools" bson:"node_pools" validate:"required,dive"`
 	PrivateClusterConfig           *PrivateClusterConfig           `json:"private_cluster_config,omitempty" bson:"private_cluster_config,omitempty"`
 	ResourceLabels                 map[string]string               `json:"resource_labels,omitempty" bson:"resource_labels,omitempty"`
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
@@ -65,7 +65,7 @@ type GKECluster struct {
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty" description:"Additional information about the current status [readonly]"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty" description:"The name of the GCP subnetwork cluster is connected to [required]"`
 	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" description:"The IP address range of the Cloud TPUs in the cluster [readonly]"`
-	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty" validate:"required" description:"Name of GCP zone in which cluster resides [required]"`
+	Zone                           string                          `json:"zone" bson:"zone" validate:"required" description:"Name of GCP zone in which cluster resides [required]"`
 }
 
 type AddonsConfig struct {
@@ -190,12 +190,12 @@ type ConsumptionMeteringConfig struct {
 type NodePool struct {
 	Autoscaling       *NodePoolAutoscaling `json:"autoscaling,omitempty" bson:"autoscaling,omitempty"`
 	Conditions        []*StatusCondition   `json:"conditions,omitempty" bson:"conditions,omitempty"`
-	Config            *NodeConfig          `json:"config,omitempty" bson:"config,omitempty" validate:"required,dive"`
-	InitialNodeCount  int64                `json:"initial_node_count,omitempty" bson:"initial_node_count,omitempty" validate:"required,gte=1"`
+	Config            *NodeConfig          `json:"config" bson:"config" validate:"required,dive"`
+	InitialNodeCount  int64                `json:"initial_node_count" bson:"initial_node_count" validate:"required,gte=1"`
 	InstanceGroupUrls []string             `json:"instance_group_urls,omitempty" bson:"instance_group_urls,omitempty"`
 	Management        *NodeManagement      `json:"management,omitempty" bson:"management,omitempty"`
-	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty" validate:"required,dive"`
-	Name              string               `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
+	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint" bson:"max_pods_constraint" validate:"required,dive"`
+	Name              string               `json:"name" bson:"name" validate:"required"`
 	PodIpv4CidrSize   int64                `json:"pod_ipv4_cidr_size,omitempty" bson:"pod_ipv4_cidr_size,omitempty"`
 	SelfLink          string               `json:"self_link,omitempty" bson:"self_link,omitempty"`
 	Status            string               `json:"status,omitempty" bson:"status,omitempty"`
@@ -204,7 +204,7 @@ type NodePool struct {
 }
 
 type NodePoolAutoscaling struct {
-	Enabled      bool  `json:"enabled,omitempty" bson:"enabled,omitempty"`
+	Enabled      bool  `json:"enabled" bson:"enabled"`
 	MaxNodeCount int64 `json:"max_node_count,omitempty" bson:"max_node_count,omitempty"`
 	MinNodeCount int64 `json:"min_node_count,omitempty" bson:"min_node_count,omitempty"`
 }
