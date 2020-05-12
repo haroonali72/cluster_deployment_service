@@ -216,7 +216,7 @@ type NodeConfig struct {
 	ImageType      string               `json:"image_type" bson:"image_type" validate:"required"`
 	Labels         map[string]string    `json:"labels,omitempty" bson:"labels,omitempty"`
 	LocalSsdCount  int64                `json:"local_ssd_count,omitempty" bson:"local_ssd_count,omitempty"`
-	MachineType    string               `json:"machinetype" bson:"machinetype" validate:"required"`
+	MachineType    string               `json:"machine_type" bson:"machine_type" validate:"required"`
 	Metadata       map[string]string    `json:"metadata,omitempty" bson:"metadata,omitempty"`
 	MinCpuPlatform string               `json:"min_cpu_platform,omitempty" bson:"min_cpu_platform,omitempty"`
 	OauthScopes    []string             `json:"oauth_scopes,omitempty" bson:"oauth_scopes,omitempty"`
