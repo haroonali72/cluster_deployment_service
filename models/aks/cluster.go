@@ -45,10 +45,10 @@ type AKSCluster struct {
 	ClusterTags            []Tag                                `json:"tags" bson:"tags" description:"Cluster tags [optional]"`
 	IsAdvanced             bool                                 `json:"is_advance" bson:"is_advance" description:"Cluster advance level settings possible value 'true' or 'false'"`
 	IsExpert               bool                                 `json:"is_expert" bson:"is_expert" description:"Cluster expert level settings possible value 'true' or 'false'"`
-	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty" validate:"cidrv4" description:"Pod CIDR for cluster ['required' if expert settings enabled]"`
-	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" validate:"cidrv4" description:"Service CIDR for cluster ['required' if expert settings enabled]"`
-	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" validate:"ipv4" description:"DNS service IP for cluster ['required' if expert settings enabled]"`
-	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" validate:"cidrv4" description:"Docker bridge CIDR for cluster ['required' if expert settings enabled]"`
+	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty" description:"Pod CIDR for cluster ['required' if expert settings enabled]"`
+	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" description:"Service CIDR for cluster ['required' if expert settings enabled]"`
+	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" description:"DNS service IP for cluster ['required' if expert settings enabled]"`
+	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" description:"Docker bridge CIDR for cluster ['required' if expert settings enabled]"`
 	ResourceGoup           string                               `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
 	ResourceID             string                               `json:"-" bson:"cluster_id,omitempty"`
 	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster name [required]"`
