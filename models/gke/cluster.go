@@ -97,7 +97,7 @@ type StatusCondition struct {
 }
 
 type MaxPodsConstraint struct {
-	MaxPodsPerNode int64 `json:"max_pods_per_node,omitempty" bson:"max_pods_per_node,omitempty" validate:"required" description:"Constraint enforced on the max num of pods per node [required]"`
+	MaxPodsPerNode int64 `json:"max_pods_per_node" bson:"max_pods_per_node" validate:"required" description:"Constraint enforced on the max num of pods per node [required]"`
 }
 
 type IPAllocationPolicy struct {
@@ -194,7 +194,7 @@ type NodePool struct {
 	InitialNodeCount  int64                `json:"initial_node_count" bson:"initial_node_count" validate:"required,gte=1"`
 	InstanceGroupUrls []string             `json:"instance_group_urls,omitempty" bson:"instance_group_urls,omitempty"`
 	Management        *NodeManagement      `json:"management,omitempty" bson:"management,omitempty"`
-	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint" bson:"max_pods_constraint" validate:"required,dive"`
+	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty" validate:"required,dive"`
 	Name              string               `json:"name" bson:"name" validate:"required"`
 	PodIpv4CidrSize   int64                `json:"pod_ipv4_cidr_size,omitempty" bson:"pod_ipv4_cidr_size,omitempty"`
 	SelfLink          string               `json:"self_link,omitempty" bson:"self_link,omitempty"`
@@ -211,17 +211,17 @@ type NodePoolAutoscaling struct {
 
 type NodeConfig struct {
 	Accelerators   []*AcceleratorConfig `json:"accelerators,omitempty" bson:"accelerators,omitempty"`
-	DiskSizeGb     int64                `json:"disk_size_gb,omitempty" bson:"disk_size_gb,omitempty" validate:"required,gte=30"`
-	DiskType       string               `json:"disk_type,omitempty" bson:"disk_type,omitempty" validate:"required"`
-	ImageType      string               `json:"image_type,omitempty" bson:"image_type,omitempty" validate:"required"`
+	DiskSizeGb     int64                `json:"disk_size_gb" bson:"disk_size_gb" validate:"required,gte=30"`
+	DiskType       string               `json:"disk_type" bson:"disk_type" validate:"required"`
+	ImageType      string               `json:"image_type" bson:"image_type" validate:"required"`
 	Labels         map[string]string    `json:"labels,omitempty" bson:"labels,omitempty"`
 	LocalSsdCount  int64                `json:"local_ssd_count,omitempty" bson:"local_ssd_count,omitempty"`
-	MachineType    string               `json:"machine_type,omitempty" bson:"machine_type,omitempty" validate:"required"`
+	MachineType    string               `json:"machine_type bson:"machine_type" validate:"required"`
 	Metadata       map[string]string    `json:"metadata,omitempty" bson:"metadata,omitempty"`
 	MinCpuPlatform string               `json:"min_cpu_platform,omitempty" bson:"min_cpu_platform,omitempty"`
 	OauthScopes    []string             `json:"oauth_scopes,omitempty" bson:"oauth_scopes,omitempty"`
 	Preemptible    bool                 `json:"preemptible,omitempty" bson:"preemptible,omitempty"`
-	ServiceAccount string               `json:"service_account,omitempty" bson:"service_account,omitempty" validate:"required"`
+	ServiceAccount string               `json:"service_account" bson:"service_account" validate:"required"`
 	Tags           []string             `json:"tags,omitempty" bson:"tags,omitempty"`
 	Taints         []*NodeTaint         `json:"taints,omitempty" bson:"taints,omitempty"`
 }
