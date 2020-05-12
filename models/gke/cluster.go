@@ -23,7 +23,7 @@ type GKECluster struct {
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [optional]"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Created" description:"Status of cluster [optional]"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of company [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
@@ -40,7 +40,7 @@ type GKECluster struct {
 	Endpoint                       string                          `json:"endpoint,omitempty" bson:"endpoint,omitempty" description:"IP address of this cluster's master endpoint [readonly]"`
 	ExpireTime                     string                          `json:"expire_time,omitempty" bson:"expire_time,omitempty" description:"Time the cluster will be automatically deleted [readonly]"`
 	InitialClusterVersion          string                          `json:"initial_cluster_version,omitempty" bson:"initial_cluster_version,omitempty" description:"Initial kubernetes version for this cluster [optional]"`
-	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy" bson:"ip_allocation_policy" validate="dive"`
+	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy" bson:"ip_allocation_policy" validate:"dive"`
 	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty" description:"The fingerprint of the set of labels for this cluster [optional]"`
 	LegacyAbac                     *LegacyAbac                     `json:"legacy_abac,omitempty" bson:"legacy_abac,omitempty"`
 	Location                       string                          `json:"location" bson:"location"  description:"The name of GCP zone or region in which cluster resides [required]"`
@@ -216,7 +216,7 @@ type NodeConfig struct {
 	ImageType      string               `json:"image_type" bson:"image_type" validate:"required"`
 	Labels         map[string]string    `json:"labels,omitempty" bson:"labels,omitempty"`
 	LocalSsdCount  int64                `json:"local_ssd_count,omitempty" bson:"local_ssd_count,omitempty"`
-	MachineType    string               `json:"machine_type bson:"machine_type" validate:"required"`
+	MachineType    string               `json:"machine_type" bson:"machine_type" validate:"required"`
 	Metadata       map[string]string    `json:"metadata,omitempty" bson:"metadata,omitempty"`
 	MinCpuPlatform string               `json:"min_cpu_platform,omitempty" bson:"min_cpu_platform,omitempty"`
 	OauthScopes    []string             `json:"oauth_scopes,omitempty" bson:"oauth_scopes,omitempty"`
@@ -248,10 +248,10 @@ type AutoUpgradeOptions struct {
 	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
-type Cluster struct{
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+type Cluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
@@ -301,7 +301,7 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
@@ -311,9 +311,9 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClust
 		return gkeClusters, err
 	}
 
-	for _,cluster := range clusters{
-		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.CloudplexStatus}
-		gkeClusters =append(gkeClusters,temp)
+	for _, cluster := range clusters {
+		temp := Cluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.CloudplexStatus}
+		gkeClusters = append(gkeClusters, temp)
 	}
 	return gkeClusters, nil
 }
@@ -344,7 +344,7 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 			cluster.CloudplexStatus = "new"
 		}
 		cluster.Cloud = models.GKE
-		cluster.CompanyId=ctx.Data.Company
+		cluster.CompanyId = ctx.Data.Company
 	}
 
 	mc := db.GetMongoConf()
@@ -381,7 +381,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
-	cluster.CompanyId=oldCluster.CompanyId
+	cluster.CompanyId = oldCluster.CompanyId
 
 	err = AddGKECluster(cluster, ctx)
 	if err != nil {
@@ -503,9 +503,9 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.AgentDeploymentFailed
-		PrintError( errors.New(confError.Error), cluster.Name,ctx)
-		_=TerminateCluster(credentials,ctx)
-		PrintError( errors.New("Cleaning up resources"), cluster.Name,ctx)
+		PrintError(errors.New(confError.Error), cluster.Name, ctx)
+		_ = TerminateCluster(credentials, ctx)
+		PrintError(errors.New("Cleaning up resources"), cluster.Name, ctx)
 		_ = UpdateGKECluster(cluster, ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {

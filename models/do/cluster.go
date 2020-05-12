@@ -295,6 +295,8 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	cluster, confError = do.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(companyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		confError = do.CleanUp(ctx)
 		if confError != nil {
 			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
