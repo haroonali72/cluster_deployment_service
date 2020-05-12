@@ -867,21 +867,21 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	cluster.CloudplexStatus = (models.Deploying)
+	/*	cluster.CloudplexStatus = (models.Deploying)
 
-	err = doks.UpdateKubernetesCluster(cluster, *ctx)
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			c.Ctx.Output.SetStatus(404)
+		err = doks.UpdateKubernetesCluster(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
-		}
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+		}*/
 
 	ctx.SendLogs("DOKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1084,6 +1084,8 @@ func (c *DOKSClusterController) TerminateCluster() {
 	}
 
 	ctx.Data.Company = userInfo.CompanyId
+	beego.Info(userInfo.CompanyId + "======" + projectId)
+	beego.Info(ctx.Data.Company + "======" + ctx.Data.ProjectId)
 	cluster, err := doks.GetKubernetesCluster(*ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

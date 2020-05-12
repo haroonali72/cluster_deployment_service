@@ -946,20 +946,20 @@ func (c *IKSClusterController) StartCluster() {
 		return
 	}
 
-	cluster.Status = (models.Deploying)
-	err = iks.UpdateCluster(cluster, false, *ctx)
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			c.Ctx.Output.SetStatus(404)
+	/*	cluster.Status = (models.Deploying)
+		err = iks.UpdateCluster(cluster, false, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
-		}
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+		}*/
 
 	ctx.SendLogs("IKSClusterController: Creating Cluster. "+cluster.Name+" of project"+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -1231,19 +1231,19 @@ func (c *IKSClusterController) TerminateCluster() {
 
 	ctx.SendLogs("IKSClusterController: Cluster "+cluster.Name+" of project"+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = iks.UpdateCluster(cluster, false, *ctx)
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			c.Ctx.Output.SetStatus(404)
+	/*	err = iks.UpdateCluster(cluster, false, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
-		}
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+		}*/
 
 	ctx.SendLogs("IKSClusterController: Cluster "+cluster.Name+" of project"+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 

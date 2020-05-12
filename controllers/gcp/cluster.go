@@ -824,9 +824,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
-	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
-
+	cluster.Status = string(models.Terminating)
 	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -834,6 +832,8 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
+
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()
