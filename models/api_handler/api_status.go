@@ -9,13 +9,6 @@ import (
 
 func GetAPIStatus(token, host string, ctx utils.Context) (interface{}, error) {
 
-	//ctx.SendLogs(types.ReqResPayload{
-	//	Token:   token,
-	//	Url:     host,
-	//	ReqBody: "",
-	//	Resp:    "",
-	//	ReqType: "",
-	//}, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	client := utils.InitReq()
 
 	req, err := utils.CreateGetRequest(host)

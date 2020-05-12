@@ -2,6 +2,7 @@ package vault
 
 import (
 	"antelope/models"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
 	"errors"
@@ -72,6 +73,12 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 		return 400, err
 	}
 
+	ctx.SendLogs(ctx.ReqRespData(types.ReqResPayload{
+		Token:   token,
+		Url:     getVaultHost() + models.VaultCreateKeyURI,
+		ReqType: types.POST,
+		ReqBody: string(request_data),
+	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	req, err := utils.CreatePostRequest(request_data, getVaultHost()+models.VaultCreateKeyURI)
 	if err != nil {
 
@@ -112,6 +119,12 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 	if strings.Contains(host, "{keyName}") {
 		host = strings.Replace(host, "{keyName}", keyName, -1)
 	}
+
+	ctx.SendLogs(ctx.ReqRespData(types.ReqResPayload{
+		Token:   token,
+		Url:     host,
+		ReqType: types.GET,
+	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -141,6 +154,13 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []byte{}, err
 	}
+
+	ctx.SendLogs(ctx.ReqRespData(types.ReqResPayload{
+		Token:   token,
+		Url:     host,
+		ReqType: types.GET,
+		Resp:    string(contents),
+	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	return contents, nil
 
 }
@@ -205,6 +225,12 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 	if strings.Contains(host, "{profileId}") {
 		host = strings.Replace(host, "{profileId}", profileId, -1)
 	}
+
+	ctx.SendLogs(ctx.ReqRespData(types.ReqResPayload{
+		Token:   token,
+		Url:     host,
+		ReqType: types.GET,
+	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	req, err := utils.CreateGetRequest(host)
 
 	if err != nil {
@@ -237,6 +263,12 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 500, []byte{}, err
 	}
+	ctx.SendLogs(ctx.ReqRespData(types.ReqResPayload{
+		Token:   token,
+		Url:     host,
+		ReqType: types.GET,
+		Resp:    string(contents),
+	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	return 0, contents, nil
 
 }
@@ -257,6 +289,11 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region st
 		host = strings.Replace(host, "{name}", keyName, -1)
 	}
 
+	ctx.SendLogs(ctx.ReqRespData(types.ReqResPayload{
+		Token:   token,
+		Url:     host,
+		ReqType: types.DELETE,
+	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	req, err := utils.CreateDeleteRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
