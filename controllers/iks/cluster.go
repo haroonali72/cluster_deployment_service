@@ -22,7 +22,7 @@ type IKSClusterController struct {
 // @Title Get Instance List
 // @Description Get all available instance list
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile id"
-// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	X-Auth-Token header	string	true "Token"
 // @Param	zone	path	string	true	"Region of the cloud"
 // @Success 200 {object} iks.AllInstancesResponse
 // @Failure 404 {"error": "Not Found"}
