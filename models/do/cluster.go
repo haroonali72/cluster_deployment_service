@@ -235,7 +235,7 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 	fmt.Println(ctx.Data.ProjectId)
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
 	if strings.Contains(url, "{projectId}") {
-		url = strings.Replace(url, "{projectId}",ctx.Data.ProjectId, -1)
+		url = strings.Replace(url, "{projectId}", ctx.Data.ProjectId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -252,19 +252,19 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.DOProfile, error) {
-	statusCode,data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
+	statusCode, data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return statusCode,vault.DOProfile{}, err
+		return statusCode, vault.DOProfile{}, err
 	}
 	doProfile := vault.DOProfile{}
 	err = json.Unmarshal(data, &doProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,vault.DOProfile{}, err
+		return 500, vault.DOProfile{}, err
 	}
 	doProfile.Profile.Region = region
-	return 0,doProfile, nil
+	return 0, doProfile, nil
 
 }
 func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
@@ -382,7 +382,6 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		Region:    profile.Profile.Region,
 	}
 
-	cluster.Status = string(models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
 	err = do.init(ctx)

@@ -472,7 +472,6 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		Region:       credentials.Profile.Location,
 	}
 
-	cluster.Status = string(models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
 	err = azure.init()
