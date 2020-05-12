@@ -174,7 +174,7 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, string, erro
 		return "", "", err
 	}
 	var project Project
-	err = json.Unmarshal(data.([]byte), &project)
+	err = json.Unmarshal(data.([]byte), &project.ProjectData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", "", err
