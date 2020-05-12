@@ -32,8 +32,8 @@ type AKSCluster struct {
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
 	ProvisioningState      string                               `json:"-" bson:"provisioning_state,omitempty"`
-	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" validate:"required" description:"Kubernetes version to be provisioned ['required' if advance settings enabled]"`
-	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" validate:"required" description:"Cluster DNS prefix ['required' if advance settings enabled]"`
+	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" description:"Kubernetes version to be provisioned ['required' if advance settings enabled]"`
+	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" description:"Cluster DNS prefix ['required' if advance settings enabled]"`
 	Fqdn                   string                               `json:"-" bson:"fqdn,omitempty"`
 	AgentPoolProfiles      []ManagedClusterAgentPoolProfile     `json:"node_pools,omitempty" bson:"node_pools,omitempty" validate:"required,dive"`
 	APIServerAccessProfile ManagedClusterAPIServerAccessProfile `json:"api_server_access_profile,omitempty" bson:"api_server_access_profile,omitempty"`
@@ -74,7 +74,7 @@ type ManagedClusterAgentPoolProfile struct {
 	VMSize            *string            `json:"vm_size,omitempty" bson:"vm_size,omitempty" validate:"required" description:"Machine type for pool [required]"`
 	OsDiskSizeGB      *int32             `json:"os_disk_size_gb,omitempty" bson:"os_disk_size_gb,omitempty" description:"Disk size for VMs [required]"`
 	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool will be created [required]"`
-	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty" validate:"required" description:"Max pods per node [required]"`
+	MaxPods           *int32             `json:"max_pods,omitempty" bson:"max_pods,omitempty" description:"Max pods per node [required]"`
 	OsType            *aks.OSType        `json:"-" bson:"os_type,omitempty"`
 	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty" description:"Min VM count ['required' if autoscaling is enabled]"`
@@ -88,11 +88,12 @@ type AzureRegion struct {
 	location string
 }
 
-type Cluster struct{
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+type Cluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
+
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -140,7 +141,7 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"AKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
@@ -149,9 +150,9 @@ func GetAllAKSCluster(data rbacAuthentication.List, ctx utils.Context) (aksClust
 		)
 		return aksClusters, err
 	}
-	for _,cluster := range clusters{
-		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.Status}
-		aksClusters =append(aksClusters,temp)
+	for _, cluster := range clusters {
+		temp := Cluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		aksClusters = append(aksClusters, temp)
 	}
 
 	return aksClusters, nil
@@ -331,11 +332,11 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	if AgentErr != nil {
 		cpErr := ApiError(AgentErr, "agent deployment failed", 500)
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
-		_, _ = utils.SendLog(companyId, "Agent deployment failed : "+cpErr.Error+ cpErr.Description, "error", cluster.ProjectId)
+		_, _ = utils.SendLog(companyId, "Agent deployment failed : "+cpErr.Error+cpErr.Description, "error", cluster.ProjectId)
 
 		cluster.Status = models.AgentDeploymentFailed
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
-		_ = TerminateCluster(credentials,cluster.ProjectId,companyId,ctx)
+		_ = TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
 		if UpdationErr != nil {
 			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)

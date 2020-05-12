@@ -2789,7 +2789,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/doks.KubernetesCluster"
+                                "$ref": "#/definitions/doks.DOKSCluster"
                             }
                         }
                     },
@@ -3992,7 +3992,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/gke.GKECluster"
+                                "$ref": "#/definitions/gke.Cluster"
                             }
                         }
                     },
@@ -4431,7 +4431,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/iks.Cluster_Def"
+                                "$ref": "#/definitions/iks.Cluster"
                             }
                         }
                     },
@@ -9516,15 +9516,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13335.0xc0014ec5a0.false": {
+        "13335.0xc001534720.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000e92f30.false": {
+        "13385.0xc000edecc0.false": {
             "title": "false",
             "type": "object"
         },
-        "13438.0xc001195e60.false": {
+        "13438.0xc0011ddbf0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9532,19 +9532,19 @@
             "title": "string",
             "type": "object"
         },
-        "22162.string": {
+        "22102.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc0015ae750.false": {
+        "434.0xc0015e2bd0.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0014bcb70.false": {
+        "518.0xc001502cf0.false": {
             "title": "false",
             "type": "object"
         },
-        "6000.0xc0015afc50.false": {
+        "6000.0xc0016080f0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9898,7 +9898,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000e92f30.false"
+                    "$ref": "#/definitions/13385.0xc000edecc0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10463,7 +10463,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13438.0xc001195e60.false"
+                    "$ref": "#/definitions/13438.0xc0011ddbf0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10732,6 +10732,22 @@
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "doks.DOKSCluster": {
+            "title": "DOKSCluster",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "ID of project",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -11386,6 +11402,22 @@
                 }
             }
         },
+        "gke.Cluster": {
+            "title": "Cluster",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "ID of project",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
+                }
+            }
+        },
         "gke.ConsumptionMeteringConfig": {
             "title": "ConsumptionMeteringConfig",
             "type": "object",
@@ -11426,7 +11458,7 @@
                     "type": "string"
                 },
                 "company_id": {
-                    "description": "ID of compnay [optional]",
+                    "description": "ID of company [optional]",
                     "type": "string"
                 },
                 "conditions": {
@@ -11448,7 +11480,7 @@
                     "type": "integer",
                     "format": "int64"
                 },
-                "default_max_pods_constraint": {
+                "default_max_pods_constrainty": {
                     "$ref": "#/definitions/gke.MaxPodsConstraint"
                 },
                 "description": {
@@ -12157,6 +12189,22 @@
                 }
             }
         },
+        "iks.Cluster": {
+            "title": "Cluster",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "ID of project",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type"
+                }
+            }
+        },
         "iks.Cluster_Def": {
             "title": "Cluster_Def",
             "type": "object",
@@ -12176,7 +12224,7 @@
                     "type": "boolean"
                 },
                 "kube_version": {
-                    "description": "Kubernetes version to be provisioned [required]",
+                    "description": "Kubernetes version to be provisioned [optional]",
                     "type": "string"
                 },
                 "name": {
@@ -12323,7 +12371,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0014bcb70.false"
+                    "$ref": "#/definitions/518.0xc001502cf0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12684,7 +12732,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0015ae750.false"
+                    "$ref": "#/definitions/434.0xc0015e2bd0.false"
                 },
                 "name": {
                     "type": "string"

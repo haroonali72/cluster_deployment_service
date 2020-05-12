@@ -20,11 +20,11 @@ import (
 type GKECluster struct {
 	ID                             bson.ObjectId                   `json:"-" bson:"_id,omitempty"`
 	ProjectId                      string                          `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud" validate:"eq=gcp|eq=GCP"`
+	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
 	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [optional]"`
-	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
+	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of company [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
 	AddonsConfig                   *AddonsConfig                   `json:"addons_config,omitempty" bson:"addons_config,omitempty"`
@@ -33,14 +33,14 @@ type GKECluster struct {
 	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty" description:"The time the cluster was created [readonly]"`
 	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty" description:"The current software version of master endpoint [readonly]"`
 	CurrentNodeCount               int64                           `json:"current_node_count,omitempty" bson:"current_node_count,omitempty" description:"The number of nodes currently in the cluster [readonly]"`
-	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constraint,omitempty" bson:"default_max_pods_constraint,omitempty" validate:"dive"`
+	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constrainty" bson:"default_max_pods_constraint" `
 	Description                    string                          `json:"description,omitempty" bson:"description,omitempty" description:"An optional description of this cluster [optional]"`
 	EnableKubernetesAlpha          bool                            `json:"enable_kubernetes_alpha,omitempty" bson:"enable_kubernetes_alpha,omitempty" description:"Alpha enabled clusters are automatically deleted thirty days after [optional]"`
 	EnableTpu                      bool                            `json:"enable_tpu,omitempty" bson:"enable_tpu,omitempty" description:"Enable the ability to use Cloud TPUs in this cluster [optional]"`
 	Endpoint                       string                          `json:"endpoint,omitempty" bson:"endpoint,omitempty" description:"IP address of this cluster's master endpoint [readonly]"`
 	ExpireTime                     string                          `json:"expire_time,omitempty" bson:"expire_time,omitempty" description:"Time the cluster will be automatically deleted [readonly]"`
 	InitialClusterVersion          string                          `json:"initial_cluster_version,omitempty" bson:"initial_cluster_version,omitempty" description:"Initial kubernetes version for this cluster [optional]"`
-	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy,omitempty" bson:"ip_allocation_policy,omitempty"`
+	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy" bson:"ip_allocation_policy" validate="dive"`
 	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty" description:"The fingerprint of the set of labels for this cluster [optional]"`
 	LegacyAbac                     *LegacyAbac                     `json:"legacy_abac,omitempty" bson:"legacy_abac,omitempty"`
 	Location                       string                          `json:"location" bson:"location" validate:"required" description:"The name of GCP zone or region in which cluster resides [required]"`
@@ -101,17 +101,17 @@ type MaxPodsConstraint struct {
 }
 
 type IPAllocationPolicy struct {
-	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty" validate:"cidrv4"`
-	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block,omitempty" bson:"cluster_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr" bson:"cluster_ipv4_cidr" `
+	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block" bson:"cluster_ipv4_cidr_block" `
 	ClusterSecondaryRangeName  string `json:"cluster_secondary_range_name,omitempty" bson:"cluster_secondary_range_name,omitempty"`
 	CreateSubnetwork           bool   `json:"create_subnetwork,omitempty" bson:"create_subnetwork,omitempty"`
-	NodeIpv4Cidr               string `json:"node_ipv4_cidr,omitempty" bson:"node_ipv4_cidr,omitempty" validate:"cidrv4"`
-	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block,omitempty" bson:"node_ipv4_cidr_block,omitempty" validate:"cidrv4"`
-	ServicesIpv4Cidr           string `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty" validate:"cidrv4"`
-	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block,omitempty" bson:"services_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	NodeIpv4Cidr               string `json:"node_ipv4_cidr" bson:"node_ipv4_cidr" `
+	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block" bson:"node_ipv4_cidr_block" `
+	ServicesIpv4Cidr           string `json:"services_ipv4_cidr" bson:"services_ipv4_cidr" `
+	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block" bson:"services_ipv4_cidr_block" `
 	ServicesSecondaryRangeName string `json:"services_secondary_range_name,omitempty" bson:"services_secondary_range_name,omitempty"`
 	SubnetworkName             string `json:"subnetwork_name,omitempty" bson:"subnetwork_name,omitempty"`
-	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block" bson:"tpu_ipv4_cidr_block" `
 	UseIpAliases               bool   `json:"use_ip_aliases,omitempty" bson:"use_ip_aliases,omitempty"`
 }
 
@@ -382,7 +382,6 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 	cluster.CompanyId=oldCluster.CompanyId
-	cluster.CloudplexStatus=oldCluster.CloudplexStatus
 
 	err = AddGKECluster(cluster, ctx)
 	if err != nil {
