@@ -145,7 +145,7 @@ func (c *AKSClusterController) GetAll() {
 		c.ServeJSON()
 		return
 	}
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 	clusters, err := aks.GetAllAKSCluster(data, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -673,7 +673,7 @@ func (c *AKSClusterController) StartCluster() {
 		return
 	}
 
-	cluster.Status = models.Deploying
+	//cluster.Status = models.Deploying
 	//err = aks.UpdateAKSCluster(cluster, *ctx)
 	//if err != nil {
 	//	c.Ctx.Output.SetStatus(500)
@@ -937,7 +937,7 @@ func (c *AKSClusterController) TerminateCluster() {
 		return
 	}
 
-	cluster.Status = models.Terminating
+	//cluster.Status = models.Terminating
 	//err = aks.UpdateAKSCluster(cluster, *ctx)
 	//if err != nil {
 	//	c.Ctx.Output.SetStatus(500)
