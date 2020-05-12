@@ -84,8 +84,8 @@ type ManagedClusterAgentPoolProfile struct {
 }
 
 type AzureRegion struct {
-	region   string
-	location string
+	Region   string `json:"region"`
+	Location string `json:"location"`
 }
 
 type Cluster struct {
@@ -769,14 +769,14 @@ func validateAKSRegion(region string) (bool, error) {
 	}
 
 	for _, v1 := range regionList {
-		if v1.location == region {
+		if v1.Location == region {
 			return true, nil
 		}
 	}
 
 	var errData string
 	for _, v1 := range regionList {
-		errData += v1.location + ", "
+		errData += v1.Location + ", "
 	}
 
 	return false, errors.New(errData)

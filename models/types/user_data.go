@@ -23,3 +23,19 @@ type ConfigFile struct {
 	ClientCert          string `json:"client_cert"`
 	ClientKey           string `json:"client_key"`
 }
+
+type ReqResPayload struct {
+	Token   string      `json:"X-Auth-Token"`
+	Url     string      `json:"url"`
+	ReqBody string      `json:"request_body"`
+	Resp    string      `json:"response_data"`
+	ReqType RequestType `json:"request_type"`
+}
+
+type RequestType string
+
+const (
+	GET    RequestType = "GET"
+	DELETE RequestType = "DELETE"
+	POST   RequestType = "POST"
+)

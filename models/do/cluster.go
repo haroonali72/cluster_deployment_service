@@ -235,7 +235,7 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 	fmt.Println(ctx.Data.ProjectId)
 	url := beego.AppConfig.String("raccoon_url") + models.ProjectGetEndpoint
 	if strings.Contains(url, "{projectId}") {
-		url = strings.Replace(url, "{projectId}",ctx.Data.ProjectId, -1)
+		url = strings.Replace(url, "{projectId}", ctx.Data.ProjectId, -1)
 	}
 	data, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
@@ -252,34 +252,27 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 
 }
 func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.DOProfile, error) {
-	statusCode,data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
+	statusCode, data, err := vault.GetCredentialProfile("do", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return statusCode,vault.DOProfile{}, err
+		return statusCode, vault.DOProfile{}, err
 	}
 	doProfile := vault.DOProfile{}
 	err = json.Unmarshal(data, &doProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,vault.DOProfile{}, err
+		return 500, vault.DOProfile{}, err
 	}
 	doProfile.Profile.Region = region
-	return 0,doProfile, nil
+	return 0, doProfile, nil
 
 }
-func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
-	if confError != nil {
-		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
-		utils.SendLog(companyId, confError.Error(), "error", projectId)
 
-	}
-}
 func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx utils.Context, companyId string, token string) (confError error) {
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return confError
 	}
 	do := DO{
@@ -288,11 +281,11 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	}
 	confError = do.init(ctx)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
@@ -301,16 +294,16 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	cluster, confError = do.createCluster(cluster, ctx, companyId, token)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		confError = do.CleanUp(ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
 		cluster.Status = "Cluster Creation Failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
@@ -319,7 +312,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	cluster.Status = "Cluster Created"
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
