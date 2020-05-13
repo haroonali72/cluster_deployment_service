@@ -2,6 +2,8 @@ package utils
 
 import (
 	"antelope/models"
+	"antelope/models/types"
+	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/google/uuid"
 	"runtime"
@@ -108,6 +110,11 @@ func (c *Context) InitializeLogger(requestURL, method, path string, projectId st
 	c.Data.Company = companyId
 	c.Data.UserId = userId
 
+}
+
+func (c *Context) ReqRespData(payload types.ReqResPayload) string {
+	bytes, _ := json.Marshal(payload)
+	return string(bytes)
 }
 
 func (c *Context) getHost() string {

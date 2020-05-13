@@ -822,9 +822,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	}
 
 	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
-
+	cluster.Status = string(models.Terminating)
 	err = aws.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -832,6 +830,8 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
+
 	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
 	c.ServeJSON()

@@ -209,7 +209,7 @@ func (c *GKEClusterController) GetAll() {
 	}
 
 	ctx.SendLogs("GKEClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 	clusters, err := gke.GetAllGKECluster(data, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -790,7 +790,7 @@ func (c *GKEClusterController) StartCluster() {
 		return
 	}
 
-	cluster.CloudplexStatus = (models.Deploying)
+	/*cluster.CloudplexStatus = (models.Deploying)
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -803,7 +803,7 @@ func (c *GKEClusterController) StartCluster() {
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
 	go gke.DeployGKECluster(cluster, credentials, token, *ctx)
 
@@ -1059,7 +1059,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	go gke.TerminateCluster(credentials, *ctx)
 
-	err = gke.UpdateGKECluster(cluster, *ctx)
+	/*err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -1071,7 +1071,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
 	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of project "+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

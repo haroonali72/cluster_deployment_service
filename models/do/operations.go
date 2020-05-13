@@ -186,7 +186,7 @@ func (cloud *DO) getKey(pool NodePool, projectId string, ctx utils.Context, comp
 		return key_utils.AZUREKey{}, err
 	}
 
-	if existingKey.ID != 0 && existingKey.FingerPrint != "" {
+	if existingKey.ID != 0 || existingKey.FingerPrint != "" {
 
 		return existingKey, types.CustomCPError{}
 	}

@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Created" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -223,7 +223,7 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 		return "", err
 	}
 	var region Project
-	err = json.Unmarshal(data.([]byte), &region)
+	err = json.Unmarshal(data.([]byte), &region.ProjectData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return region.ProjectData.Region, err
@@ -651,18 +651,6 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 
 		return errors.New("cluster name is empty")
 
-	} else if cluster.KubeVersion == "" {
-
-		return errors.New("kubernetes version is empty")
-
-	} else if cluster.NetworkName == "" {
-
-		return errors.New("network name is empty")
-
-	} else if cluster.VPCId == "" {
-
-		return errors.New("VPC name is empty")
-
 	} else if len(cluster.NodePools) == 0 {
 
 		return errors.New("node pool length must be greater than zero")
@@ -682,10 +670,6 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 			} else if nodepool.MachineType == "" {
 
 				return errors.New("machine type is empty")
-
-			} else if nodepool.SubnetID == "" {
-
-				return errors.New("subnet Id is empty")
 
 			} else if nodepool.AvailabilityZone == "" {
 

@@ -6,7 +6,6 @@ import (
 	"antelope/models/db"
 	"antelope/models/key_utils"
 	rbac_athentication "antelope/models/rbac_authentication"
-	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -20,34 +19,34 @@ import (
 )
 
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]`
-	DOProjectId      string        `json:"_" bson:"do_project_id"`
+	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	DOProjectId      string        `json:"do_project_id" bson:"do_project_id"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster Name [required]`
-	Status           models.Type   `json:"status" bson:"status" validate:"in(New|new) description:"Status of cluster  [required]"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"in(DO|do)"`
+	Name             string        `json:"name" bson:"name" valid:"required"`
+	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(DO|do)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
-	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required" description:"Network name of corresponding project [required]`
-	CompanyId        string        `json:"_" bson:"company_id"`
-	TokenName        string        `json:"token_name" bson:"token_name" description:"Rbac Token for Scaling Cluster [required]`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
+	CompanyId        string        `json:"company_id" bson:"company_id"`
+	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId      `json:"_" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name" validate:"required" description:"Name of pool [required]`
-	NodeCount          int64              `json:"node_count"  bson:"node_count" validate:"required,gte=1" description:"Pool node count [required]"`
-	MachineType        string             `json:"machine_type"  bson:"machine_type" validate:"required" description:"Machine type for pool [required]"` //machine size
-	Image              ImageReference     `json:"image" bson:"image" description:"Image Information for cluster [required]"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" validate:"required" description:"Security Group for cluster [required]"`
-	Nodes              []*Node            `json:"nodes,omitempty" bson:"nodes"`
-	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info" description:"SSH Key information [required]"`
-	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" validate:"required" description:"Pool role, possible values 'master' or 'slave'. [required]"`
-	IsExternal         bool               `json:"is_external" bson:"is_external" description:"Enable Volume Option, possible values 'true' or 'false'  [optional]"`
-	ExternalVolume     Volume             `json:"external_volume" bson:"external_volume" description:"Block Store Volume Information ['required' if external volume is enabled']"`
-	PrivateNetworking  bool               `json:"private_networking" bson:"private_networking" description:"Option to enable private networking [optional]"`
+	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
+	Name               string             `json:"name" bson:"name" valid:"required"`
+	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
+	Image              ImageReference     `json:"image" bson:"image"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
+	Nodes              []*Node            `json:"nodes" bson:"nodes"`
+	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info"`
+	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
+	IsExternal         bool               `json:"is_external" bson:"is_external"`
+	ExternalVolume     Volume             `json:"external_volume" bson:"external_volume"`
+	PrivateNetworking  bool               `json:"private_networking" bson:"private_networking"`
 }
 
 type Node struct {
@@ -63,12 +62,12 @@ type Node struct {
 }
 
 type ImageReference struct {
-	ID      bson.ObjectId `json:"_" bson:"_id,omitempty"`
-	Slug    string        `json:"slug" bson:"slug" description:"Image Slug Information ['optional' if ImageId is provided']"`
-	ImageId int           `json:"image_id" bson:"image_id" Image ID ['optional' if Slug is provided']`
+	ID      bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+	Slug    string        `json:"slug" bson:"slug,omitempty"`
+	ImageId int           `json:"image_id" bson:"image_id,omitempty"`
 }
 type Volume struct {
-	VolumeSize int64 `json:"volume_size" bson:"volume_size" description:"Block Store Volume Size ['required' if external volume is enabled']`
+	VolumeSize int64 `json:"volume_size" bson:"volume_size"`
 }
 type Project struct {
 	ProjectData Data `json:"data"`
@@ -145,11 +144,11 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 		ctx.SendLogs("Cluster model: Create - Cluster  already exists in the database: "+cluster.Name, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster model: Create - Cluster  already exists in the database: " + cluster.Name)
 	}
-	/*	err = checkMasterPools(cluster)
-		if err != nil { //cluster found
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
-		}*/
+	err = checkMasterPools(cluster)
+	if err != nil { //cluster found
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
 
 	//err = checkClusterSize(cluster, ctx)
 	//if err != nil { //cluster size limit exceed
@@ -180,11 +179,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == (models.Deploying) && update {
+	if oldCluster.Status == string(models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == (models.Terminating) && update {
+	if oldCluster.Status == string(models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}
@@ -244,7 +243,7 @@ func GetRegion(token string, ctx utils.Context) (string, error) {
 		return "", err
 	}
 	var region Project
-	err = json.Unmarshal(data.([]byte), &region)
+	err = json.Unmarshal(data.([]byte), &region.ProjectData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return region.ProjectData.Region, err
@@ -268,32 +267,25 @@ func GetProfile(profileId string, region string, token string, ctx utils.Context
 	return 0, doProfile, nil
 
 }
-func PrintError(confError error, name, projectId string, ctx utils.Context, companyId string) {
+
+func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx utils.Context, companyId string, token string) (confError error) {
+	publisher := utils.Notifier{}
+	confError = publisher.Init_notifier()
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
-		utils.SendLog(companyId, confError.Error(), "error", projectId)
-
+		return confError
 	}
-}
-func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx utils.Context, companyId string, token string) types.CustomCPError {
-	publisher := utils.Notifier{}
-	publisher.Init_notifier()
-
 	do := DO{
 		AccessKey: credentials.AccessKey,
 		Region:    credentials.Region,
 	}
-	confError := do.init(ctx)
-	if confError != (types.CustomCPError{}) {
+	confError = do.init(ctx)
+	if confError != nil {
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Creation Failed"
-		err := UpdateCluster(cluster, false, ctx)
-		if err != nil {
-			PrintError(err, cluster.Name, cluster.ProjectId, ctx, companyId)
-		}
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, confError)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		confError = UpdateCluster(cluster, false, ctx)
+		if confError != nil {
+			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
@@ -301,123 +293,83 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	cluster, confError = do.createCluster(cluster, ctx, companyId, token)
-	if confError != (types.CustomCPError{}) {
-		PrintError(errors.New(confError.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
-		confError_ := do.CleanUp(ctx)
-		if confError_ != (types.CustomCPError{}) {
-			PrintError(errors.New(confError_.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
+	if confError != nil {
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(companyId, "Cluster creation failed: "+cluster.Name, "error", cluster.ProjectId)
+		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		confError = do.CleanUp(ctx)
+		if confError != nil {
+			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
 		cluster.Status = "Cluster Creation Failed"
-		err := UpdateCluster(cluster, false, ctx)
-		if err != nil {
-			PrintError(err, cluster.Name, cluster.ProjectId, ctx, companyId)
-		}
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, confError)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		confError = UpdateCluster(cluster, false, ctx)
+		if confError != nil {
+			ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
 	cluster.Status = "Cluster Created"
-	err := UpdateCluster(cluster, false, ctx)
-	if err != nil {
-		confError = types.CustomCPError{StatusCode: 500, Error: "Error occured in updating cluster status in database", Description: "Error occured in updating cluster status in database"}
-		PrintError(err, cluster.Name, cluster.ProjectId, ctx, companyId)
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, confError)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
+	confError = UpdateCluster(cluster, false, ctx)
+	if confError != nil {
+		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
-
+		return confError
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-	return types.CustomCPError{}
+	return nil
 }
-func FetchStatus(credentials vault.DOProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, types.CustomCPError) {
+func FetchStatus(credentials vault.DOProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
-		cpErr := types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in getting cluster"}
-		if strings.Contains(err.Error(), "not found") {
-			cpErr.StatusCode = 404
-		}
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, cpErr
+		return Cluster_Def{}, err
 	}
-	if string(cluster.Status) == strings.ToLower(string(models.New)) {
-		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return Cluster_Def{}, cpErr
-	}
-	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
-		cpErr := types.CustomCPError{Error: "Cluster is in " +
-			string(cluster.Status) + " state", Description: "Cluster is in " +
-			string(cluster.Status) + " state", StatusCode: 409}
-		return Cluster_Def{}, cpErr
-	}
-	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
-	if err != nil {
-		return Cluster_Def{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
-			Description: "Error occurred while getting cluster status from database",
-			StatusCode:  500}
-	}
-	if customErr.Err != (types.CustomCPError{}) {
-		return Cluster_Def{}, customErr.Err
-	}
+	//splits := strings.Split(credentials, ":")
 	do := DO{
 		AccessKey: credentials.Profile.AccessKey,
 		Region:    credentials.Profile.Region,
 	}
-	err_ := do.init(ctx)
-	if err_ != (types.CustomCPError{}) {
-		return Cluster_Def{}, err_
+	err = do.init(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return Cluster_Def{}, err
 	}
 
 	e := do.fetchStatus(&cluster, ctx, companyId, token)
-	if e != (types.CustomCPError{}) {
+	if e != nil {
 
-		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, e
 	}
-	return cluster, (types.CustomCPError{})
+	return cluster, nil
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Context, companyId, token string) types.CustomCPError {
+func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Context, companyId, token string) error {
 
 	publisher := utils.Notifier{}
 
-	publisher.Init_notifier()
+	pub_err := publisher.Init_notifier()
+	if pub_err != nil {
+		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return pub_err
+	}
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
-		cpErr := types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in getting cluster"}
-
-		if strings.Contains(err.Error(), "not found") {
-			cpErr.StatusCode = 404
-		}
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, cpErr)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return cpErr
+		return err
 	}
 
 	if cluster.Status == "" || cluster.Status == "new" {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("DOClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := types.CustomCPError{StatusCode: 409, Description: text, Error: text}
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, cpErr)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return cpErr
+		return errors.New(text)
 	}
 
 	do := DO{
@@ -425,12 +377,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		Region:    profile.Profile.Region,
 	}
 
-	cluster.Status = (models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err_ := do.init(ctx)
-	if err_ != (types.CustomCPError{}) {
-		ctx.SendLogs(err_.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	err = do.init(ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
@@ -438,17 +389,13 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		}
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, err_)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err_
+		return err
 	}
 
-	err_ = do.terminateCluster(&cluster, ctx, companyId)
-	if err_ != (types.CustomCPError{}) {
-		utils.SendLog(companyId, "Cluster termination failed: "+err_.Description+cluster.Name, "error", cluster.ProjectId)
+	err = do.terminateCluster(&cluster, ctx, companyId)
+	if err != nil {
+		utils.SendLog(companyId, "Cluster termination failed: "+err.Error()+cluster.Name, "error", cluster.ProjectId)
 
 		cluster.Status = "Cluster Termination Failed"
 		err = UpdateCluster(cluster, false, ctx)
@@ -456,15 +403,33 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-
-		}
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, err_)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			return err
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err_
+		return nil
 	}
+
+	//var flagcheck bool
+	//for {
+	//	flagcheck = false
+	//	err = do.fetchStatus(&cluster, ctx, companyId, token)
+	//	if err != nil {
+	//		beego.Error(err)
+	//	}
+	//	for _, nodePools := range cluster.NodePools {
+	//		for _, node := range nodePools.Nodes {
+	//			if node.NodeState != "terminated" {
+	//				flagcheck = true
+	//				break
+	//			}
+	//		}
+	//	}
+	//	if !flagcheck {
+	//		break
+	//	}
+	//	time.Sleep(time.Second * 5)
+	//}
 
 	for _, pools := range cluster.NodePools {
 		var nodes []*Node
@@ -478,16 +443,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		cpErr := types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
-		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, cpErr)
-		if err != nil {
-			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
-		return cpErr
+		return err
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return types.CustomCPError{}
+	return nil
 }
 func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {
 
@@ -498,168 +458,104 @@ func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err er
 	}
 	return keys, nil
 }
-func CreateSSHkey(keyName string, credentials vault.DOCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err types.CustomCPError) {
+func CreateSSHkey(keyName string, credentials vault.DOCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err error) {
 
-	keyInfo, err_ := key_utils.GenerateKey(models.DO, keyName, "do@example.com", token, teams, ctx)
-	if err_ != nil {
-		return "", types.CustomCPError{StatusCode: 500, Description: err_.Error(), Error: "Error occurred in key generation"}
+	keyInfo, err := key_utils.GenerateKey(models.DO, keyName, "do@example.com", token, teams, ctx)
+	if err != nil {
+		return "", err
 	}
 	do := DO{
 		AccessKey: credentials.AccessKey,
 		Region:    credentials.Region,
 	}
 	err = do.init(ctx)
-	if err != (types.CustomCPError{}) {
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return "", err
 
 	}
 	err, key := do.importKey(keyInfo.KeyName, keyInfo.PublicKey, ctx)
-	if err != (types.CustomCPError{}) {
+	if err != nil {
 		return "", err
 
 	}
 	keyInfo.FingerPrint = key.Fingerprint
 	keyInfo.ID = key.ID
-	_, err_ = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
-	if err_ != nil {
-		return "", types.CustomCPError{StatusCode: 500, Description: err_.Error(), Error: "Error occurred in key generation"}
+	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
+	if err != nil {
+		return "", err
 	}
+
 	return keyInfo.PrivateKey, err
 }
 
-func DeleteSSHkey(keyName, token string, credentials vault.DOCredentials, ctx utils.Context) types.CustomCPError {
+func DeleteSSHkey(keyName, token string, credentials vault.DOCredentials, ctx utils.Context) error {
 
 	bytes, err := vault.GetSSHKey(string(models.DO), keyName, token, ctx, "")
 
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "not found") {
-		return types.CustomCPError{StatusCode: 404, Description: err.Error(), Error: "key not found"}
+		return err
 	}
 
 	key, err := key_utils.AzureKeyConversion(bytes, ctx)
 	if err != nil {
-		return types.CustomCPError{StatusCode: 404, Description: err.Error(), Error: "key not found"}
+		return err
 	}
 
 	err = vault.DeleteSSHkey(string(models.DO), keyName, token, ctx, credentials.Region)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			return types.CustomCPError{StatusCode: 404, Description: err.Error(), Error: "key not found"}
-		} else if strings.Contains(err.Error(), "not authorized") {
-			return types.CustomCPError{StatusCode: 401, Description: err.Error(), Error: err.Error()}
-		} else {
-			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occured in deleting key"}
-		}
-
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
 	}
+
 	do := DO{
 		AccessKey: credentials.AccessKey,
 		Region:    credentials.Region,
 	}
 
 	confError := do.init(ctx)
-	if confError != (types.CustomCPError{}) {
+	if confError != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return confError
 	}
 
-	cpErr := do.deleteKey(key.ID, ctx)
-	if cpErr != (types.CustomCPError{}) {
-		return cpErr
+	err = do.deleteKey(key.ID, ctx)
+	if err != nil {
+		return err
 	}
 
-	return types.CustomCPError{}
+	return nil
 }
-func GetRegionsAndCores(credentials vault.DOCredentials, ctx utils.Context) ([]godo.Region, types.CustomCPError) {
+func GetRegionsAndCores(credentials vault.DOCredentials, ctx utils.Context) ([]godo.Region, error) {
 	do := DO{
 		AccessKey: credentials.AccessKey,
 	}
 	err := do.init(ctx)
-	if err != (types.CustomCPError{}) {
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 	regions, err := do.getCores(ctx)
-	if err != (types.CustomCPError{}) {
+	if err != nil {
 
 		return nil, err
 	}
 	return regions, err
 }
 
-func ValidateProfile(key string, ctx utils.Context) types.CustomCPError {
+func ValidateProfile(key string, ctx utils.Context) error {
 	do := DO{
 		AccessKey: key,
 	}
 	err := do.init(ctx)
-	if err != (types.CustomCPError{}) {
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	_, err = do.getCores(ctx)
-	if err != (types.CustomCPError{}) {
+	if err != nil {
+
 		return err
 	}
-	return types.CustomCPError{}
-}
-func ValidateDOData(cluster Cluster_Def, ctx utils.Context) error {
-	if cluster.ProjectId == "" {
-
-		return errors.New("project Id is empty")
-
-	} else if cluster.Name == "" {
-
-		return errors.New("cluster name is empty")
-
-	} else if cluster.NetworkName == "" {
-
-		return errors.New("kubernetes version is empty")
-
-	} else if len(cluster.NodePools) == 0 {
-
-		return errors.New("node pool length must not be zero")
-
-	} else {
-
-		for _, nodepool := range cluster.NodePools {
-
-			if nodepool.Name == "" {
-
-				return errors.New("node pool name is empty")
-
-			} else if nodepool.MachineType == "" {
-
-				return errors.New("machine type is empty")
-
-			} else if nodepool.NodeCount == 0 {
-
-				return errors.New("node count must be greater than zero")
-
-			} else if nodepool.PoolRole == "" {
-
-				return errors.New("pool role is empty")
-
-			} else if nodepool.KeyInfo.KeyName == "" {
-
-				return errors.New("key name is empty")
-
-			} else if len(nodepool.PoolSecurityGroups) == 0 {
-
-				return errors.New("security group is empty")
-
-			} else if nodepool.Image.Slug == "" && nodepool.Image.ImageId == 0 {
-
-				if nodepool.Image.Slug == "" {
-
-					return errors.New("image slug is empty")
-
-				} else {
-
-					return errors.New("image id is empty")
-
-				}
-
-			}
-
-		}
-
-	}
-
-	return nil
+	return err
 }

@@ -31,7 +31,7 @@ type AKSCluster struct {
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
+	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Created" description:"Status of cluster [required]"`
 	ProvisioningState      string                               `json:"-" bson:"provisioning_state,omitempty"`
 	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" description:"Kubernetes version to be provisioned ['required' if advance settings enabled]"`
 	DNSPrefix              string                               `json:"dns_prefix,omitempty" bson:"dns_prefix,omitempty" description:"Cluster DNS prefix ['required' if advance settings enabled]"`
@@ -46,10 +46,10 @@ type AKSCluster struct {
 	ClusterTags            []Tag                                `json:"tags" bson:"tags" description:"Cluster tags [optional]"`
 	IsAdvanced             bool                                 `json:"is_advance" bson:"is_advance" description:"Cluster advance level settings possible value 'true' or 'false'"`
 	IsExpert               bool                                 `json:"is_expert" bson:"is_expert" description:"Cluster expert level settings possible value 'true' or 'false'"`
-	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty" validate:"cidrv4" description:"Pod CIDR for cluster ['required' if expert settings enabled]"`
-	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" validate:"cidrv4" description:"Service CIDR for cluster ['required' if expert settings enabled]"`
-	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" validate:"ipv4" description:"DNS service IP for cluster ['required' if expert settings enabled]"`
-	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" validate:"cidrv4" description:"Docker bridge CIDR for cluster ['required' if expert settings enabled]"`
+	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty" description:"Pod CIDR for cluster ['required' if expert settings enabled]"`
+	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" description:"Service CIDR for cluster ['required' if expert settings enabled]"`
+	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" description:"DNS service IP for cluster ['required' if expert settings enabled]"`
+	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" description:"Docker bridge CIDR for cluster ['required' if expert settings enabled]"`
 	ResourceGoup           string                               `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
 	ResourceID             string                               `json:"-" bson:"cluster_id,omitempty"`
 	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster name [required]"`
@@ -98,8 +98,8 @@ type ManagedClusterAgentPoolProfile struct {
 }
 
 type AzureRegion struct {
-	region   string
-	location string
+	Region   string `json:"region"`
+	Location string `json:"location"`
 }
 
 type Cluster struct {
@@ -783,14 +783,14 @@ func validateAKSRegion(region string) (bool, error) {
 	}
 
 	for _, v1 := range regionList {
-		if v1.location == region {
+		if v1.Location == region {
 			return true, nil
 		}
 	}
 
 	var errData string
 	for _, v1 := range regionList {
-		errData += v1.location + ", "
+		errData += v1.Location + ", "
 	}
 
 	return false, errors.New(errData)
