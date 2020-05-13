@@ -23,7 +23,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Created" description:"Status of cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`

@@ -17,7 +17,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Name of cluster [required]"`
-	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new" description:"Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]"`
+	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new||eq=Cluster Creation Failed" description:"Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]"`
 	Cloud            models.Cloud  `json:"-" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -41,11 +41,12 @@ type Node struct {
 	PublicIP  string `json:"public_ip" bson:"public_ip,omitempty" description:"Public IP of node [readonly]"`
 	UserName  string `json:"user_name" bson:"user_name,omitempty" validate:"required" description:"User name which will be used for ssh into machine [required]"`
 }
-type Cluster struct{
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+type Cluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
+
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -81,7 +82,7 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (opClusters
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoOPClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
