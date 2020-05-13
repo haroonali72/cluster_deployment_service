@@ -70,7 +70,7 @@ type KubernetesCluster struct {
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Created" description:"Status of cluster [required]"`
+	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
 	Name             string                `json:"name,omitempty" bson:"name" validate:"required" description:"Cluster name [required]"`
 	Region           string                `json:"region,omitempty" bson:"region" validate:"required" description:"Location for cluster provisioning [required]"`
 	KubeVersion      string                `json:"version,omitempty" bson:"version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
