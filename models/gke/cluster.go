@@ -23,7 +23,7 @@ type GKECluster struct {
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Created" description:"Status of cluster [optional]"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [optional]"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of company [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
@@ -249,9 +249,9 @@ type AutoUpgradeOptions struct {
 }
 
 type Cluster struct {
-	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
 	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {

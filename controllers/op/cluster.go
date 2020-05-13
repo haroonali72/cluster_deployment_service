@@ -287,6 +287,33 @@ func (c *OPClusterController) Patch() {
 
 	//=============================================================================//
 
+	ctx.SendLogs("OPClusterController:Update cluster "+cluster.Name+" of project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("OPClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("OPClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterCreated) {
+		ctx.SendLogs("OPClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("OPClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("OPClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = op.UpdateCluster(cluster, true, *ctx, teams, token)
@@ -371,7 +398,7 @@ func (c *OPClusterController) GetAll() {
 	}
 	//====================================================================================//
 	ctx.SendLogs("OPClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 	clusters, err := op.GetAllCluster(*ctx, data)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
