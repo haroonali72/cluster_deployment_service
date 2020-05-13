@@ -73,7 +73,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/iks:IKSClusterController"],
         beego.ControllerComments{
             Method: "GetAllMachineTypes",
-            Router: `/getallmachines/:zone/`,
+            Router: `/getallmachines/:region/`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

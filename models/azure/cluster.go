@@ -23,86 +23,89 @@ type SSHKeyPair struct {
 	Name        string `json:"name" bson:"name",omitempty"`
 	FingerPrint string `json:"fingerprint" bson:"fingerprint"`
 }
+
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           models.Type   `json:"status" bson:"status" valid:"in(NEW|new|New)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AZURE|azure)"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of project [required]"`
+	Name             string        `json:"name" bson:"name" valid:"required" description:"Unique name of the cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" valid:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|Cluster Terminated" description:"Status of the cluster [optional]"`
+	Cloud            models.Cloud  `json:"-" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
-	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-	TokenName        string        `json:"token_name" bson:"token_name"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required,dive" description:"Nodepools of the cluster.Atleast 1 nodepool [required]"`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required" description:"Network name to deploy the cluster [required]"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required" description:"Resource group to deploy the cluster [required]"`
+	CompanyId        string        `json:"-" bson:"company_id"  description:"Id of the company [optional]"`
+	TokenName        string        `json:"-" bson:"token_name"`
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
-	Image              ImageReference     `json:"image" bson:"image" valid:"required"`
-	Volume             Volume             `json:"volume" bson:"volume"`
-	EnableVolume       bool               `json:"is_external" bson:"is_external"`
-	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" valid:"required"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
-	Nodes              []*VM              `json:"nodes" bson:"nodes"`
-	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role"`
-	AdminUser          string             `json:"user_name" bson:"user_name,omitempty"`
-	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
-	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required, in(standard hdd|standard ssd|premium ssd)"`
-	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
-	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"`
+	ID                 bson.ObjectId      `json:"-" bson:"_id,omitempty"`
+	Name               string             `json:"name" bson:"name" valid:"required" description:"Unique name of the nodepool.[required]"`
+	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[1-9]+$)" description:"Count of the nodepool. Atleast 1 [required]"`
+	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required" description:"Machine type of the nodepool.[required]"`
+	Image              ImageReference     `json:"image" bson:"image" valid:"required" description:"VM image of the nodepool.[required]"`
+	Volume             Volume             `json:"volume" bson:"volume" description:"Volume to attach with the nodepool.[required]"`
+	EnableVolume       bool               `json:"is_external" bson:"is_external"  valid:"required" description:"Enable if volume is external [required]"`
+	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" description:"Subnet to deploy the nodepool of the cluster.[required]"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" description:"Security group to attach with the nodepool.[required]"`
+	Nodes              []*VM              `json:"nodes" bson:"nodes" valid:"required" description:"Nodes in the nodepool.Atleast 1 [required]"`
+	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required,eq=master|eq=slave" description:"Role of the nodepool.Valid values are 'master' and 'slave'[required]"`
+	AdminUser          string             `json:"user_name" bson:"user_name"  valid:"required" description:"User of the nodepool.[optional]"`
+	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info" valid:"required" description:"SSH key details.[requiredl]"`
+	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics" description:"Storage account details.[optional]"`
+	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required,eq=standard hdd|standard ssd|premium ssd" description:"Type of the OS disk.[requiredl]`
+	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"  valid:"required" description:"For enabling scaling [required]"`
+	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"  valid:"required"  description:"Details of auto scaling [required]"`
+	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"  valid:"required" description:"Enable to assign public Ip to the nodepool [required]"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
-	State               models.Type `json:"status" bson:"status"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size" valid:"required" description:"Max count for scaling [required]"`
+	State               models.Type  `json:"status" bson:"status" description:"Status of scaling [required]"`
 }
 type Key struct {
-	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" valid:"required, in(password|key)"`
-	NewKey         models.KeyType         `json:"key_type"  bson:"key_type" valid:"required in(new|cp|azure|user")"`
-	KeyName        string                 `json:"key_name" bson:"key_name" valid:"required"`
-	AdminPassword  string                 `json:"admin_password" bson:"admin_password",omitempty"`
-	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty"`
-	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty"`
-	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
+	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" valid:"required,eq=password|eq=key" description:"Credentials type to connect to the VM.Valid values are 'key' and 'password' [required]"`
+	NewKey         models.KeyType         `json:"key_type"  bson:"key_type" valid:"required in(new|cp|azure|user")" description:"Type of key to use.Valid values are 'new','cp','azure' and 'user' [required]"`
+	KeyName        string                 `json:"key_name" bson:"key_name" valid:"required" description:"Unique name of the key [required]"`
+	AdminPassword  string                 `json:"admin_password" bson:"admin_password",omitempty" description:"Password to log in [required]"`
+	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty" description:"Private SSH key [required]"`
+	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty" description:"Public SSH key [required]"`
+	Cloud          models.Cloud           `json:"cloud" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
 }
 type Volume struct {
-	DataDisk models.OsDiskType `json:"disk_type" bson:"disk_type"`
-	Size     int32             `json:"disk_size" bson:"disk_size"`
+	DataDisk models.OsDiskType `json:"disk_type" bson:"disk_type" valid:"required,eq=standard hdd|standard ssd|premium ssd" description:"Type of the OS disk.[required]"`
+	Size     int32             `json:"disk_size" bson:"disk_size" valid:"required" description:"Size of the disk.[required]"`
 }
 type VM struct {
-	CloudId             *string `json:"cloud_id" bson:"cloud_id,omitempty"`
-	NodeState           *string `json:"node_state" bson:"node_state,omitempty"`
+	CloudId             *string `json:"-" bson:"cloud_id,omitempty"`
+	NodeState           *string `json:"-" bson:"node_state,omitempty"`
 	Name                *string `json:"name" bson:"name,omitempty"`
-	PrivateIP           *string `json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP            *string `json:"public_ip" bson:"public_ip,omitempty"`
-	UserName            *string `json:"user_name" bson:"user_name,omitempty"`
-	PAssword            *string `json:"password" bson:"password,omitempty"`
-	ComputerName        *string `json:"computer_name" bson:"computer_name,omitempty"`
-	IdentityPrincipalId *string `json:"identity_principal_id" bson:"identity_principal_id"`
+	PrivateIP           *string `json:"-" bson:"private_ip,omitempty"`
+	PublicIP            *string `json:"-" bson:"public_ip,omitempty"`
+	UserName            *string `json:"-" bson:"user_name,omitempty"`
+	PAssword            *string `json:"-" bson:"password,omitempty"`
+	ComputerName        *string `json:"-" bson:"computer_name,omitempty"`
+	IdentityPrincipalId *string `json:"-" bson:"identity_principal_id"`
 }
+
 type DiagnosticsProfile struct {
-	Enable            bool   `json:"enable" bson:"enable"`
-	NewStroageAccount bool   `json:"new_storage_account" bson:"new_storage_account"`
-	StorageAccountId  string `json:"storage_account_id" bson:"storage_account_id"`
+	Enable            bool   `json:"enable" bson:"enable" valid:"required" description:"To enable diagnostics profile [required]`
+	NewStroageAccount bool   `json:"new_storage_account" bson:"new_storage_account" valid:"required" description:"Enable to make new storage account[required]`
+	StorageAccountId  string `json:"-" bson:"storage_account_id" description:"Id of the storage account [optional]`
 }
 
 type ImageReference struct {
-	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Publisher string        `json:"publisher" bson:"publisher,omitempty" valid:"required"`
-	Offer     string        `json:"offer" bson:"offer,omitempty" valid:"required"`
-	Sku       string        `json:"sku" bson:"sku,omitempty" valid:"required"`
-	Version   string        `json:"version" bson:"version,omitempty" valid:"required"`
-	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
+	ID        bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Publisher string        `json:"publisher" bson:"publisher" valid:"required" description:"Publisher of the VM image [required]"`
+	Offer     string        `json:"offer" bson:"offer,omitempty" valid:"required" description:"Offer of the VM image [required]"`
+	Sku       string        `json:"sku" bson:"sku,omitempty" valid:"required" description:"Sku of the Vm image [required]"`
+	Version   string        `json:"version" bson:"version,omitempty" valid:"required" description:"Version of the Vm image [required]"`
+	ImageId   string        `json:"-" bson:"image_id,omitempty"`
 }
 type Project struct {
 	ProjectData Data `json:"data"`
 }
+
 type Data struct {
 	Region string `json:"region"`
 }
