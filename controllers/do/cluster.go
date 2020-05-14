@@ -629,14 +629,14 @@ func (c *DOClusterController) StartCluster() {
 		return
 	}
 
-	/*cluster.Status = (models.Deploying)
+	cluster.Status = (models.Deploying)
 	err = do.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
-	}*/
+	}
 
 	ctx.SendLogs("DOClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

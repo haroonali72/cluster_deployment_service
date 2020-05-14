@@ -371,7 +371,7 @@ func (c *GKEClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
+// @Failure 409 {"error": "Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]

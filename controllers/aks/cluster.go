@@ -518,13 +518,6 @@ func (c *AKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("AKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
 	err = aks.DeleteAKSCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

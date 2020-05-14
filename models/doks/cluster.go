@@ -391,7 +391,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	if confErr != (types.CustomCPError{}) {
 		PrintError(ctx, confErr.Description, cluster.Name)
 		utils.SendLog(ctx.Data.Company, "Cleaning up resources", "info", cluster.ProjectId)
-		cluster.CloudplexStatus = models.AgentDeploymentFailed
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		_ = TerminateCluster(credentials, ctx)
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
