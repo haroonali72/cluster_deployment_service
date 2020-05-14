@@ -504,6 +504,7 @@ const (
 	IBM_IAM_Endpoint                 = "https://iam.cloud.ibm.com/identity/token"
 	IBM_Kube_Cluster_Endpoint        = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
 	IBM_Kube_GetWorker_Endpoint      = "https://containers.cloud.ibm.com/global/v2/getWorkerPools"
+	IBM_Kube_GetNodes_Endpoint       = "https://containers.cloud.ibm.com/global/v1/clusters/"
 	IBM_Kube_GetCluster_Endpoint     = "https://containers.cloud.ibm.com/global/v2/getCluster"
 	IBM_Kube_Delete_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v1/clusters/"
 	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
