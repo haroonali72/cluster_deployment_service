@@ -469,7 +469,13 @@ func (c *IKSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
-
+	err = iks.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	//custom data validation
 	err = iks.ValidateIKSData(cluster, *ctx)
 	if err != nil {
@@ -506,13 +512,6 @@ func (c *IKSClusterController) Post() {
 
 	ctx.SendLogs("IKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	err = iks.GetNetwork(token, cluster.ProjectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
 	cluster.CompanyId = userInfo.CompanyId
 
 	ctx.SendLogs("IKSClusterController: Add new cluster "+cluster.Name+" in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -550,10 +549,9 @@ func (c *IKSClusterController) Post() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	iks.Cluster_Def	true	"Body for cluster content"
 // @Success 200 {"msg": "Cluster updated successfully"}
-// @Failure 409 {"error": ""Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "Cluster is in deploying/running/terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -627,7 +625,13 @@ func (c *IKSClusterController) Patch() {
 	}
 
 	//=============================================================================//
-
+	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
+		ctx.SendLogs("IKSClusterController : Cluster is in "+string(cluster.Status)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("IKSClusterController:Update cluster "+cluster.Name+" of project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	if cluster.Status == (models.Deploying) {
 		ctx.SendLogs("IKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -684,7 +688,7 @@ func (c *IKSClusterController) Patch() {
 // @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
 // @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete [delete]
@@ -787,7 +791,13 @@ func (c *IKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-
+	if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("IKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("IKSClusterController: Delete cluster with project id: "+id, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = iks.DeleteCluster(id, userInfo.CompanyId, *ctx)
@@ -824,7 +834,6 @@ func (c *IKSClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *IKSClusterController) StartCluster() {
 	var cluster iks.Cluster_Def
@@ -1094,10 +1103,9 @@ func (c *IKSClusterController) GetStatus() {
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *IKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
@@ -1192,7 +1200,6 @@ func (c *IKSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
 	if string(cluster.Status) == strings.ToLower(string(models.New)) {
 		ctx.SendLogs("IKSClusterController: Cluster is not in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
