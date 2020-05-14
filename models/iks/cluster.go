@@ -349,44 +349,44 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) ([]KubeWorkerPoolStatus, types.CustomCPError) {
+func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) (KubeClusterStatus, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	if string(cluster.Status) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 
 	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
 		cpErr := ApiError(errors.New("Cluster is in "+
 			string(cluster.Status)), "Cluster is in "+
 			string(cluster.Status)+" state", 409)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	if customErr.Err != (types.CustomCPError{}) {
-		return []KubeWorkerPoolStatus{}, customErr.Err
+		return KubeClusterStatus{}, customErr.Err
 	}
 	iks := GetIBM(credentials.Profile)
 
 	cpErr := iks.init(credentials.Profile.Region, ctx)
 	if cpErr != (types.CustomCPError{}) {
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 
 	response, e := iks.fetchStatus(&cluster, ctx, companyId)
 	if e != (types.CustomCPError{}) {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []KubeWorkerPoolStatus{}, e
+		return KubeClusterStatus{}, e
 	}
 	return response, types.CustomCPError{}
 }
