@@ -3062,7 +3062,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/godo.KubernetesCluster"
+                            "$ref": "#/definitions/doks.KubernetesCluster"
                         }
                     },
                     "401": {
@@ -3078,7 +3078,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "512": {
-                        "description": "{object} doks.KubernetesCluster"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -9535,15 +9535,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc0016a4390.false": {
+        "14379.0xc0016e0750.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001674420.false": {
+        "482.0xc0016a67e0.false": {
             "title": "false",
             "type": "object"
         },
-        "53724.0xc00161d980.false": {
+        "53724.0xc001651d40.false": {
             "title": "false",
             "type": "object"
         },
@@ -9551,11 +9551,11 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000ed6a50.false": {
+        "605.0xc000f0ce10.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0015820f0.false": {
+        "667.0xc0015b64b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9563,7 +9563,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc00120ce70.false": {
+        "964.0xc00123f230.false": {
             "title": "false",
             "type": "object"
         },
@@ -9917,7 +9917,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000ed6a50.false"
+                    "$ref": "#/definitions/605.0xc000f0ce10.false"
                 },
                 "name": {
                     "type": "string"
@@ -10474,7 +10474,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00120ce70.false"
+                    "$ref": "#/definitions/964.0xc00123f230.false"
                 },
                 "name": {
                     "type": "string"
@@ -12196,10 +12196,6 @@
                 }
             }
         },
-        "godo.KubernetesCluster": {
-            "title": "KubernetesCluster",
-            "type": "object"
-        },
         "godo.Region": {
             "title": "Region",
             "type": "object"
@@ -12462,7 +12458,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/53724.0xc00161d980.false"
+                    "$ref": "#/definitions/53724.0xc001651d40.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12818,7 +12814,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc0016a4390.false"
+                    "$ref": "#/definitions/14379.0xc0016e0750.false"
                 },
                 "name": {
                     "type": "string"
