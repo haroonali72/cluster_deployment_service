@@ -96,7 +96,7 @@ func (c *AzureClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {object} []azure.Cluster_Def
+// @Success 200 {object} []azure.AzureCluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
@@ -188,6 +188,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -866,7 +867,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	cluster.Status = string(models.Terminating)
+	cluster.Status = models.Terminating
 	err = azure.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
