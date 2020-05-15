@@ -345,7 +345,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 
 	err1 := doksOps.init(ctx)
 	if err1 != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(ctx, confError.Error(), cluster.Name)
@@ -374,7 +374,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 	cluster, errr := doksOps.createCluster(cluster, ctx, token, credentials)
 	if errr != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(ctx, confError.Error(), cluster.Name)
