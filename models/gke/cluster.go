@@ -502,7 +502,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = models.AgentDeploymentFailed
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		PrintError(errors.New(confError.Error), cluster.Name, ctx)
 		_ = TerminateCluster(credentials, ctx)
 		PrintError(errors.New("Cleaning up resources"), cluster.Name, ctx)

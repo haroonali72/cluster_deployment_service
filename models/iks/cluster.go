@@ -312,7 +312,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = models.AgentDeploymentFailed
+		cluster.Status = models.ClusterCreationFailed
 		profile := vault.IBMProfile{Profile: credentials}
 		_ = TerminateCluster(cluster, profile, ctx, companyId, token)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
