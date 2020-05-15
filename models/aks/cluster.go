@@ -64,7 +64,7 @@ type Tag struct {
 
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
-	url := getNetworkHost("aks", projectId)
+	url := getNetworkHost("azure", projectId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {

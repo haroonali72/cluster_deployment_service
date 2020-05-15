@@ -257,7 +257,7 @@ type Cluster struct {
 
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
-	url := getNetworkHost("gke", projectId)
+	url := getNetworkHost("gcp", projectId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
