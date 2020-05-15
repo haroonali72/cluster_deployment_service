@@ -255,6 +255,35 @@ type Cluster struct {
 	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
+type KubeClusterStatus struct {
+	ID                string                 `json:"id"`
+	Name              string                 `json:"name"`
+	Region            string                 `json:"region"`
+	ResourceGroupName string                 `json:"resourceGroupName"`
+	State             string                 `json:"state"`
+	WorkerCount       int64                    `json:"workerCount"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"workerPools"`
+}
+
+type KubeWorkerPoolStatus struct {
+	ID      string                  `json:"id"`
+	Name    string                  `json:"poolName"`
+	Flavour string                  `json:"flavour"`
+	State   string                  `json:"state"`
+	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
+}
+
+type KubeWorkerNodesStatus struct {
+	ID          string `json:"id"`
+	Flavour     string `json:"machineType"`
+	PrivateIp   string `json:"privateIp"`
+	PublicIp    string `json:"publicIp"`
+	State       string `json:"state"`
+	KubeVersion string `json:"kubeVersion"`
+	Status      string `json:"status"`
+}
+
+
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	url := getNetworkHost("gke", projectId)
@@ -598,6 +627,8 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 	latestCluster.IsExpert = cluster.IsExpert
 	latestCluster.IsAdvance = cluster.IsAdvance
 
+	customStatus,err := fillStatusInfo(latestCluster)
+
 	return latestCluster, types.CustomCPError{}
 }
 
@@ -841,4 +872,30 @@ func validateGKEImageType(imageType string) (bool, error) {
 	}
 
 	return false, errors.New(errData)
+}
+
+func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
+	status.ID=string(cluster.ID)
+	status.Name=cluster.Name
+	status.Region=cluster.Location
+	status.State=string(cluster.CloudplexStatus)
+	status.ResourceGroupName=cluster.Network
+	status.WorkerCount = cluster.CurrentNodeCount
+		for i, pool :=range status.WorkerPools{
+			status.WorkerPools[i].Flavour=pool.Flavour
+			status.WorkerPools[i].State=pool.State
+			status.WorkerPools[i].Name=pool.Name
+			status.WorkerPools[i].ID=pool.ID
+			for j,node := range pool.Nodes{
+				status.WorkerPools[i].Nodes[j].ID=node.ID
+				status.WorkerPools[i].Nodes[j].State=node.State
+				status.WorkerPools[i].Nodes[j].Flavour=node.Flavour
+				status.WorkerPools[i].Nodes[j].PrivateIp=node.PrivateIp
+				status.WorkerPools[i].Nodes[j].PublicIp=node.PublicIp
+				status.WorkerPools[i].Nodes[j].KubeVersion=node.KubeVersion
+				status.WorkerPools[i].Nodes[j].Status=node.Status
+			}
+		}
+
+	return status
 }
