@@ -348,7 +348,7 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+cpErr.Error, "error", cluster.ProjectId)
 		_, _ = utils.SendLog(companyId, "Agent deployment failed : "+cpErr.Error+cpErr.Description, "error", cluster.ProjectId)
 
-		cluster.Status = models.ClusterCreationFailed
+		cluster.Status = models.AgentDeploymentFailed
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
 		_ = TerminateCluster(credentials, cluster.ProjectId, companyId, ctx)
 		UpdationErr := UpdateAKSCluster(cluster, ctx)
