@@ -2876,7 +2876,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/gke.GKECluster'
+            $ref: '#/definitions/gke.KubeClusterStatus'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -6387,25 +6387,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0016ce8a0.false:
+  482.0xc0016b6480.false:
     title: "false"
     type: object
-  605.0xc000f2e7b0.false:
+  605.0xc000f16810.false:
     title: "false"
     type: object
-  667.0xc0015d6570.false:
+  667.0xc0015ca150.false:
     title: "false"
     type: object
-  964.0xc00126ebd0.false:
+  964.0xc001254c30.false:
     title: "false"
     type: object
   8051.string:
     title: string
     type: object
-  14379.0xc001702810.false:
+  14379.0xc0016ea3f0.false:
     title: "false"
     type: object
-  53724.0xc001675e00.false:
+  53724.0xc0016659e0.false:
     title: "false"
     type: object
   55989.string:
@@ -6668,7 +6668,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000f2e7b0.false'
+        $ref: '#/definitions/605.0xc000f16810.false'
       name:
         type: string
       network_name:
@@ -7054,7 +7054,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00126ebd0.false'
+        $ref: '#/definitions/964.0xc001254c30.false'
       name:
         type: string
       network_name:
@@ -8009,6 +8009,44 @@ definitions:
         type: string
       use_ip_aliases:
         type: boolean
+  gke.KubeClusterStatus:
+    title: KubeClusterStatus
+    type: object
+    properties:
+      cluster_ip:
+        type: string
+      kubernetes_dashboard:
+        type: boolean
+      kubernetes_version:
+        type: string
+      name:
+        type: string
+      network:
+        type: string
+      region:
+        type: string
+      state:
+        type: string
+      worker_count:
+        type: integer
+        format: int64
+      worker_pools:
+        type: array
+        items:
+          $ref: '#/definitions/gke.KubeWorkerPoolStatus'
+  gke.KubeWorkerPoolStatus:
+    title: KubeWorkerPoolStatus
+    type: object
+    properties:
+      flavour:
+        type: string
+      id:
+        type: integer
+        format: int64
+      pool_name:
+        type: string
+      state:
+        type: string
   gke.KubernetesDashboard:
     title: KubernetesDashboard
     type: object
@@ -8426,7 +8464,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/53724.0xc001675e00.false'
+        $ref: '#/definitions/53724.0xc0016659e0.false'
       kube_version:
         type: string
       name:
@@ -8686,7 +8724,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc001702810.false'
+        $ref: '#/definitions/14379.0xc0016ea3f0.false'
       name:
         type: string
       node_pools:
