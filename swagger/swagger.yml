@@ -1056,7 +1056,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/azure.Cluster_Def'
+              $ref: '#/definitions/azure.AzureCluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -1133,6 +1133,8 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/azure/getallmachines:
     get:
       tags:
@@ -2086,6 +2088,8 @@ paths:
         required: true
         type: string
       responses:
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "202":
           description: '{"msg": "Cluster creation initiated"}'
         "401":
@@ -2097,6 +2101,8 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/doks/status/{projectId}/:
     get:
       tags:
@@ -2126,8 +2132,6 @@ paths:
             $ref: '#/definitions/godo.KubernetesCluster'
         "401":
           description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
@@ -2166,10 +2170,12 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
-            state"}'
+          description: '{"error": "Cluster is in New/Creating/Cluster Creation Failed
+            /Terminated/Terminating state"}'
         "500":
           description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
   /cluster/gcp/:
     put:
       tags:
@@ -6385,28 +6391,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  434.0xc00166f7d0.false:
+  482.0xc00167d5c0.false:
     title: "false"
     type: object
-  518.0xc0015873b0.false:
+  605.0xc000ef5bf0.false:
     title: "false"
     type: object
-  1559.string:
+  667.0xc001595290.false:
+    title: "false"
+    type: object
+  964.0xc001256030.false:
+    title: "false"
+    type: object
+  8049.string:
     title: string
     type: object
-  6000.0xc001694cf0.false:
+  14380.0xc0016c1530.false:
     title: "false"
     type: object
-  13335.0xc0015bede0.false:
+  53724.0xc001646b40.false:
     title: "false"
     type: object
-  13385.0xc000f2c930.false:
-    title: "false"
-    type: object
-  13490.0xc001255860.false:
-    title: "false"
-    type: object
-  22356.string:
+  55987.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6515,7 +6521,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/55987.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6666,7 +6672,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/13385.0xc000f2c930.false'
+        $ref: '#/definitions/605.0xc000ef5bf0.false'
       name:
         type: string
       network_name:
@@ -6824,36 +6830,47 @@ definitions:
     type: object
     properties:
       max_scaling_group_size:
+        description: Max count for scaling [required]
         type: integer
         format: int64
+      status:
+        $ref: '#/definitions/models.Type'
+        description: Status of scaling [required]
+  azure.AzureCluster:
+    title: AzureCluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
       status:
         $ref: '#/definitions/models.Type'
   azure.Cluster_Def:
     title: Cluster_Def
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
-      cloud:
-        $ref: '#/definitions/models.Cloud'
-      company_id:
-        type: string
       name:
+        description: Unique name of the cluster [required]
         type: string
       network_name:
+        description: Network name to deploy the cluster [required]
         type: string
       node_pools:
+        description: Nodepools of the cluster.Atleast 1 nodepool [required]
         type: array
         items:
           $ref: '#/definitions/azure.NodePool'
       project_id:
+        description: Id of project [required]
         type: string
       resource_group:
+        description: Resource group to deploy the cluster [required]
         type: string
       status:
         $ref: '#/definitions/models.Type'
-      token_name:
-        type: string
+        description: Status of the cluster [optional]
   azure.DiagnosticsProfile:
     title: DiagnosticsProfile
     type: object
@@ -6862,52 +6879,59 @@ definitions:
         type: boolean
       new_storage_account:
         type: boolean
-      storage_account_id:
-        type: string
   azure.ImageReference:
     title: ImageReference
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
-      image_id:
-        type: string
       offer:
+        description: Offer of the VM image [required]
         type: string
       publisher:
+        description: Publisher of the VM image [required]
         type: string
       sku:
+        description: Sku of the Vm image [required]
         type: string
       version:
+        description: Version of the Vm image [required]
         type: string
   azure.NodePool:
     title: NodePool
     type: object
     properties:
-      _id:
-        $ref: '#/definitions/bson.ObjectId'
       auto_scaling:
         $ref: '#/definitions/azure.AutoScaling'
+        description: Details of auto scaling [required]
       boot_diagnostics:
         $ref: '#/definitions/azure.DiagnosticsProfile'
+        description: Storage account details.[optional]
       enable_public_ip:
+        description: Enable to assign public Ip to the nodepool [required]
         type: boolean
       enable_scaling:
+        description: For enabling scaling [required]
         type: boolean
       image:
         $ref: '#/definitions/azure.ImageReference'
+        description: VM image of the nodepool.[required]
       is_external:
+        description: Enable if volume is external [required]
         type: boolean
       key_info:
         $ref: '#/definitions/key_utils.AZUREKey'
+        description: SSH key details.[requiredl]
       machine_type:
+        description: Machine type of the nodepool.[required]
         type: string
       name:
+        description: Unique name of the nodepool.[required]
         type: string
       node_count:
+        description: Count of the nodepool. Atleast 1 [required]
         type: integer
         format: int64
       nodes:
+        description: Nodes in the nodepool.Atleast 1 [required]
         type: array
         items:
           $ref: '#/definitions/azure.VM'
@@ -6915,16 +6939,21 @@ definitions:
         $ref: '#/definitions/models.OsDiskType'
       pool_role:
         $ref: '#/definitions/models.PoolRole'
+        description: Role of the nodepool.Valid values are 'master' and 'slave'[required]
       security_group_id:
+        description: Security group to attach with the nodepool.[required]
         type: array
         items:
           $ref: '#/definitions/azure.string'
       subnet_id:
+        description: Subnet to deploy the nodepool of the cluster.[required]
         type: string
       user_name:
+        description: User of the nodepool.[optional]
         type: string
       volume:
         $ref: '#/definitions/azure.Volume'
+        description: Volume to attach with the nodepool.[required]
   azure.NodePoolT:
     title: NodePoolT
     type: object
@@ -7001,33 +7030,19 @@ definitions:
     title: VM
     type: object
     properties:
-      cloud_id:
-        type: string
-      computer_name:
-        type: string
-      identity_principal_id:
-        type: string
       name:
-        type: string
-      node_state:
-        type: string
-      password:
-        type: string
-      private_ip:
-        type: string
-      public_ip:
-        type: string
-      user_name:
         type: string
   azure.Volume:
     title: Volume
     type: object
     properties:
       disk_size:
+        description: Size of the disk.[required]
         type: integer
         format: int32
       disk_type:
         $ref: '#/definitions/models.OsDiskType'
+        description: Type of the OS disk.[required]
   azure.string:
     title: string
     type: object
@@ -7043,7 +7058,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/13490.0xc001255860.false'
+        $ref: '#/definitions/964.0xc001256030.false'
       name:
         type: string
       network_name:
@@ -7728,8 +7743,8 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       cloud_status:
+        $ref: '#/definitions/models.Type'
         description: The current status of this cluster [readonly]
-        type: string
       cluster_ipv4_cidr:
         description: The IP address range of the container pods in this cluster [optional]
         type: string
@@ -8415,7 +8430,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0015873b0.false'
+        $ref: '#/definitions/53724.0xc001646b40.false'
       kube_version:
         type: string
       name:
@@ -8481,28 +8496,25 @@ definitions:
         type: string
       cloud:
         $ref: '#/definitions/models.Cloud'
-        description: Type of cloud [optional]
+        description: Name of the cloud [optional]
       credential_type:
         $ref: '#/definitions/models.CredentialsType'
-        description: It is type of credentials used for ssh. By default value is 'key'
-          [optional]
+        description: Type of credentials used for SSH.Valid values are 'key' and 'password'.Default
+          value is 'key'. [optional]
       finger_print:
         description: Finger prints for the key [optional]
         type: string
       key_name:
-        description: Name of the key. By default value is 'new' [required]
+        description: Name of the key.[required]
         type: string
       key_type:
         $ref: '#/definitions/models.KeyType'
-        description: It is type key. By default value is 'new' [required]
+        description: Type of key. By default value is 'new' [required]
       private_key:
-        description: Private key for ssh ['required' if credentials_type is 'key']
-        type: string
-      public_key:
-        description: Public key for ssh [readonly]
+        description: Private key for SSH ['required'] if credentials_type is 'key']
         type: string
       username:
-        description: It is the user name ['required' if credentials_type is 'password']
+        description: Name of the user ['required']
         type: string
   models.Cloud:
     title: Cloud
@@ -8578,7 +8590,6 @@ definitions:
     - ClusterTerminated = "Cluster Terminated"
     - Deploying = "Creating"
     - Terminating = "Terminating"
-    - AgentDeploymentFailed = "Agent Deployment Failed"
     example: New
   op.Cluster_Def:
     title: Cluster_Def
@@ -8679,7 +8690,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc00166f7d0.false'
+        $ref: '#/definitions/14380.0xc0016c1530.false'
       name:
         type: string
       node_pools:

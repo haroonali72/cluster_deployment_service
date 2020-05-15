@@ -29,7 +29,7 @@ func GenerateClusterFromResponse(v gke.Cluster) GKECluster {
 		ResourceLabels:                 v.ResourceLabels,
 		SelfLink:                       v.SelfLink,
 		ServicesIpv4Cidr:               v.ServicesIpv4Cidr,
-		Status:                         v.Status,
+		Status:                         models.Type(v.Status),
 		StatusMessage:                  v.StatusMessage,
 		Subnetwork:                     v.Subnetwork,
 		TpuIpv4CidrBlock:               v.TpuIpv4CidrBlock,

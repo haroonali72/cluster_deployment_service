@@ -5,6 +5,7 @@ import (
 	"antelope/models/azure"
 	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -69,7 +70,7 @@ func (c *AzureClusterController) Get() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -95,7 +96,7 @@ func (c *AzureClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {object} []azure.Cluster_Def
+// @Success 200 {object} []azure.AzureCluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
@@ -187,6 +188,7 @@ func (c *AzureClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
@@ -198,7 +200,8 @@ func (c *AzureClusterController) Post() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Create", token, *ctx)
+
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.ProjectId, "Create", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -207,7 +210,7 @@ func (c *AzureClusterController) Post() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -237,7 +240,7 @@ func (c *AzureClusterController) Post() {
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(int(models.Conflict))
-			c.Data["json"] = map[string]string{"error": "Cluster against same project id already exists"}
+			c.Data["json"] = map[string]string{"error": string(models.AlreadyExist)}
 			c.ServeJSON()
 			return
 		}
@@ -251,7 +254,7 @@ func (c *AzureClusterController) Post() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(201)
-	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
+	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyAdded)}
 	c.ServeJSON()
 }
 
@@ -287,7 +290,8 @@ func (c *AzureClusterController) Patch() {
 		return
 	}
 
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -298,8 +302,8 @@ func (c *AzureClusterController) Patch() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", cluster.ProjectId, "Update", token, *ctx)
 
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -308,7 +312,7 @@ func (c *AzureClusterController) Patch() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -369,7 +373,7 @@ func (c *AzureClusterController) Patch() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
+	c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyUpdated)}
 	c.ServeJSON()
 }
 
@@ -411,7 +415,8 @@ func (c *AzureClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -422,7 +427,8 @@ func (c *AzureClusterController) Delete() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, id, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", id, "Delete", token, *ctx)
+
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), id, "Delete", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -431,7 +437,7 @@ func (c *AzureClusterController) Delete() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -485,7 +491,7 @@ func (c *AzureClusterController) Delete() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project  "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(204)
-	c.Data["json"] = map[string]string{"msg": "Cluster deleted successfully"}
+	c.Data["json"] = map[string]string{"msg":string(models.SuccessfullyDeleted)}
 	c.ServeJSON()
 }
 
@@ -541,7 +547,8 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Start", token, *ctx)
+
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -550,7 +557,7 @@ func (c *AzureClusterController) StartCluster() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -629,7 +636,7 @@ func (c *AzureClusterController) StartCluster() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
+	c.Data["json"] = map[string]string{"msg": string(models.CreationInitialised)}
 	c.ServeJSON()
 }
 
@@ -676,7 +683,7 @@ func (c *AzureClusterController) GetStatus() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
 	//==========================RBAC Authentication==============================//
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "View", token, *ctx)
+	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "View", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -685,7 +692,7 @@ func (c *AzureClusterController) GetStatus() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -717,13 +724,14 @@ func (c *AzureClusterController) GetStatus() {
 
 	ctx.SendLogs("AzureClusterController: Fetching cluster status of project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "was not found.") {
-		c.Ctx.Output.SetStatus(int(models.BadRequest))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	cluster, err1 := azure.FetchStatus(azureProfile, token, projectId, userInfo.CompanyId, *ctx)
+	if err1 != (types.CustomCPError{}){
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("AzureClusterController:Cluster status of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("AzureClusterController:Cluster status of project "+projectId+" fetched", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
@@ -785,7 +793,7 @@ func (c *AzureClusterController) TerminateCluster() {
 
 	//==========================RBAC Authentication==============================//
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.Azure, "cluster", projectId, "Terminate", token, *ctx)
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Terminate", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -794,7 +802,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}
@@ -859,7 +867,7 @@ func (c *AzureClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-	cluster.Status = (models.Terminating)
+	cluster.Status = models.Terminating
 	err = azure.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
@@ -873,7 +881,7 @@ func (c *AzureClusterController) TerminateCluster() {
 	ctx.SendLogs(" Azure cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "Cluster termination initialized"}
+	c.Data["json"] = map[string]string{"msg": string(models.TerminationInitialised)}
 	c.ServeJSON()
 }
 
@@ -965,8 +973,7 @@ func (c *AzureClusterController) PostSSHKey() {
 
 	teams := c.Ctx.Input.Header("teams")
 
-	//==========================RBAC Authentication==============================//
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1046,7 +1053,9 @@ func (c *AzureClusterController) DeleteSSHKey() {
 	}
 
 	//==========================RBAC Authentication==============================//
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+	//==========================================================================//
+
+	statusCode,userInfo, err := rbac_athentication.GetInfo(token)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1077,7 +1086,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 	ctx.SendLogs("AZURENetworkController:: Key "+keyName+" deleted ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs(" Azure cluster key "+keyName+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Ctx.Output.SetStatus(204)
-	c.Data["json"] = map[string]string{"msg": "Key deleted successfully"}
+	c.Data["json"] = map[string]string{"msg": string(models.KeySuccessfullyDeleted)}
 	c.ServeJSON()
 }
 
@@ -1090,6 +1099,7 @@ func (c *AzureClusterController) DeleteSSHKey() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
+// @Failure 512 {object} types.CustomCPError
 // @router /getAllInstances [get]
 func (c *AzureClusterController) GetInstances() {
 	ctx := new(utils.Context)
@@ -1129,9 +1139,10 @@ func (c *AzureClusterController) GetInstances() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
+	statusCode,azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
 	beego.Info("AzureClusterController: Get All Instances..")
 
-	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
+	statusCode, azureProfile, err = azure.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1140,10 +1151,10 @@ func (c *AzureClusterController) GetInstances() {
 	}
 	ctx.SendLogs("AZURENetworkController:: Get all instances ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	instances, err := azure.GetInstances(azureProfile, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(int(models.InternalServerError))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	instances, err1 := azure.GetInstances(azureProfile, *ctx)
+	if err1 != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1189,7 +1200,7 @@ func (c *AzureClusterController) GetRegions() {
 	}
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	beego.Info("AzureClusterController: Get All Regions.")
+
 
 	var regions []models.Region
 	if err := json.Unmarshal(cores.AzureRegions, &regions); err != nil {
@@ -1210,10 +1221,10 @@ func (c *AzureClusterController) GetRegions() {
 
 	ctx.SendLogs("AzureClusterController:: Getting all instances ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	reg, err := azure.GetRegions(azureProfile, *ctx)
-	if err != nil {
+	reg, err1 := azure.GetRegions(azureProfile, *ctx)
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": err1.Error}
 		c.ServeJSON()
 		return
 	}
@@ -1233,10 +1244,10 @@ func (c *AzureClusterController) GetRegions() {
 // @router /getallmachines [get]
 func (c *AzureClusterController) GetAllMachines() {
 
-	instances, err := azure.GetAllMachines()
-	if err != nil {
+	instances, err1 := azure.GetAllMachines()
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(int(models.InternalServerError))
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": err1.Error}
 		c.ServeJSON()
 		return
 	}
@@ -1292,22 +1303,22 @@ func (c *AzureClusterController) ValidateProfile() {
 	ctx.SendLogs("Checking Profile Validity", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	for _, region := range regions {
-		err = azure.ValidateProfile(credentials.ClientId, credentials.ClientSecret, credentials.SubscriptionId, credentials.TenantId, region.Location, *ctx)
-		if err != nil {
+		err1 := azure.ValidateProfile(credentials.ClientId, credentials.ClientSecret, credentials.SubscriptionId, credentials.TenantId, region.Location, *ctx)
+		if err1 !=(types.CustomCPError{}) {
 			ctx.SendLogs("AzureClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(int(models.InternalServerError))
-			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.Ctx.Output.SetStatus(err1.StatusCode)
+			c.Data["json"] =err1
 			c.ServeJSON()
 			return
 		}
-		if err == nil {
+		if err1 == (types.CustomCPError{}) {
 			break
 		}
 	}
 	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	c.Data["json"] = map[string]string{"msg": "Profile is valid"}
+	c.Data["json"] = map[string]string{"msg": string(models.ValidProfile)}
 	c.ServeJSON()
 }
 
@@ -1381,7 +1392,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("AzureClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	statusCode,allowed, err := rbac_athentication.Authenticate(models.Azure, string(models.Cluster), projectId, "Start", token, utils.Context{})
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -1390,7 +1401,7 @@ func (c *AzureClusterController) ApplyAgent() {
 	}
 	if !allowed {
 		c.Ctx.Output.SetStatus(int(models.Unauthorized))
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+		c.Data["json"] = map[string]string{"error": string(models.Notauthorized)}
 		c.ServeJSON()
 		return
 	}

@@ -39,6 +39,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	q.Add("companyId", companyId)
 	q.Add("resource_type", resourceType)
 	req.Header.Set("X-Auth-Token", token)
+	//q.Add("sub_type", string(cloudType))
 	req.URL.RawQuery = q.Encode()
 
 	ctx.SendLogs("RBAC- Request_URL:" + getRbacHost() + models.RbacEndpoint + models.RbacListURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
