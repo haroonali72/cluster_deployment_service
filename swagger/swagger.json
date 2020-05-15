@@ -3010,9 +3010,6 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "{\"msg\": \"Cluster created successfully\"}"
-                    },
                     "202": {
                         "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
@@ -3027,9 +3024,6 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -3068,11 +3062,14 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/godo.KubernetesCluster"
+                            "$ref": "#/definitions/doks.KubernetesCluster"
                         }
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
                         "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
@@ -3081,7 +3078,7 @@
                         "description": "{\"error\": \"Runtime Error\"}"
                     },
                     "512": {
-                        "description": "{object} doks.KubernetesCluster"
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -3130,13 +3127,10 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -9541,35 +9535,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14380.0xc0016c1530.false": {
+        "14379.0xc0016f24b0.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc00167d5c0.false": {
+        "482.0xc0016c4540.false": {
             "title": "false",
             "type": "object"
         },
-        "53724.0xc001646b40.false": {
+        "53724.0xc001669aa0.false": {
             "title": "false",
             "type": "object"
         },
-        "55987.string": {
+        "55989.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc000ef5bf0.false": {
+        "605.0xc000f24b70.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc001595290.false": {
+        "667.0xc0015d6210.false": {
             "title": "false",
             "type": "object"
         },
-        "8049.string": {
+        "8051.string": {
             "title": "string",
             "type": "object"
         },
-        "964.0xc001256030.false": {
+        "964.0xc001258f90.false": {
             "title": "false",
             "type": "object"
         },
@@ -9710,7 +9704,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/55987.string"
+                    "$ref": "#/definitions/55989.string"
                 },
                 "type": {
                     "type": "string"
@@ -9923,7 +9917,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000ef5bf0.false"
+                    "$ref": "#/definitions/605.0xc000f24b70.false"
                 },
                 "name": {
                     "type": "string"
@@ -10480,7 +10474,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001256030.false"
+                    "$ref": "#/definitions/964.0xc001258f90.false"
                 },
                 "name": {
                     "type": "string"
@@ -12202,10 +12196,6 @@
                 }
             }
         },
-        "godo.KubernetesCluster": {
-            "title": "KubernetesCluster",
-            "type": "object"
-        },
         "godo.Region": {
             "title": "Region",
             "type": "object"
@@ -12468,7 +12458,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/53724.0xc001646b40.false"
+                    "$ref": "#/definitions/53724.0xc001669aa0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12588,7 +12578,7 @@
                     "type": "string"
                 },
                 "username": {
-                    "description": "Name of the user ['required']",
+                    "description": "Name of the user ['optional']",
                     "type": "string"
                 }
             }
@@ -12824,7 +12814,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14380.0xc0016c1530.false"
+                    "$ref": "#/definitions/14379.0xc0016f24b0.false"
                 },
                 "name": {
                     "type": "string"
