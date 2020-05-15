@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/digitalocean/godo"
 	gke "google.golang.org/api/container/v1"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
@@ -259,28 +260,23 @@ type KubeClusterStatus struct {
 	ID                string                 `json:"id"`
 	Name              string                 `json:"name"`
 	Region            string                 `json:"region"`
-	ResourceGroupName string                 `json:"resourceGroupName"`
+	Network           string                 `json:"network"`
 	State             string                 `json:"state"`
-	WorkerCount       int64                    `json:"workerCount"`
-	WorkerPools       []KubeWorkerPoolStatus `json:"workerPools"`
+	WorkerCount       int64                  `json:"worker_count"`
+	ClusterIP         string                 `json:"id"`
+	KubernetesVersion string				 `json:"kubernetes_version"`
+	KubernetesDashboard bool				 `json:"kubernetes_dashboard"`
+	NetworkPolicyConfig bool				 `json:"network_policy_config"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"worker_pools"`
 }
 
 type KubeWorkerPoolStatus struct {
 	ID      string                  `json:"id"`
-	Name    string                  `json:"poolName"`
+	Name    string                  `json:"pool_name"`
+	NodeCount string				 `json:"id"`
+	MaxPosPerNode int64             `json:"flavour"`
 	Flavour string                  `json:"flavour"`
 	State   string                  `json:"state"`
-	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
-}
-
-type KubeWorkerNodesStatus struct {
-	ID          string `json:"id"`
-	Flavour     string `json:"machineType"`
-	PrivateIp   string `json:"privateIp"`
-	PublicIp    string `json:"publicIp"`
-	State       string `json:"state"`
-	KubeVersion string `json:"kubeVersion"`
-	Status      string `json:"status"`
 }
 
 
