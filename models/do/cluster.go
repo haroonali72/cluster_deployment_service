@@ -173,6 +173,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 
 	return nil
 }
+
 func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	oldCluster, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
@@ -194,8 +195,8 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in runnning state")
 		//} else {
-		//	cluster = oldCluster
-		//}
+		//		cluster = oldCluster
+		//	}
 	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {

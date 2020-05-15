@@ -80,18 +80,30 @@ type WorkerPoolResponse struct {
 	ID string `json:"workerPoolID"`
 }
 type KubeClusterStatus struct {
-	ID                string `json:"id"`
-	Name              string `json:"name"`
-	Region            string `json:"region"`
-	ResourceGroupName string `json:"resourceGroupName"`
-	State             string `json:"state"`
-	WorkerCount       int    `json:"workerCount"`
+	ID                string                 `json:"id"`
+	Name              string                 `json:"name"`
+	Region            string                 `json:"region"`
+	ResourceGroupName string                 `json:"resourceGroupName"`
+	State             string                 `json:"state"`
+	WorkerCount       int                    `json:"workerCount"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"workerPools"`
 }
+
 type KubeWorkerPoolStatus struct {
-	ID     string `json:"id"`
-	Name   string `json:"poolName"`
-	Region string `json:"flavour"`
-	State  string `json:"state"`
+	ID      string                  `json:"id"`
+	Name    string                  `json:"poolName"`
+	Flavour string                  `json:"flavour"`
+	State   string                  `json:"state"`
+	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
+}
+type KubeWorkerNodesStatus struct {
+	ID          string `json:"id"`
+	Flavour     string `json:"machineType"`
+	PrivateIp   string `json:"privateIp"`
+	PublicIp    string `json:"publicIp"`
+	State       string `json:"state"`
+	KubeVersion string `json:"kubeVersion"`
+	Status      string `json:"status"`
 }
 type AllInstancesResponse struct {
 	Profile []InstanceProfile
@@ -625,8 +637,12 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 	}
 	return response, types.CustomCPError{}
 }
-func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) ([]KubeWorkerPoolStatus, types.CustomCPError) {
+func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, types.CustomCPError) {
 
+	kubeCluster, cperr := cloud.fetchClusterStatus(cluster, ctx, companyId)
+	if cperr != (types.CustomCPError{}) {
+		return KubeClusterStatus{}, cperr
+	}
 	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetWorker_Endpoint + "?cluster=" + cluster.ClusterId)
 
 	m := make(map[string]string)
@@ -645,7 +661,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 
 	defer res.Body.Close()
@@ -657,7 +673,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 
 	beego.Info(string(body))
@@ -665,18 +681,26 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	if res.StatusCode != 200 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", 502)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 
-	var response []KubeWorkerPoolStatus
-	err = json.Unmarshal([]byte(body), &response)
+	err = json.Unmarshal([]byte(body), &kubeCluster.WorkerPools)
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
-	return response, types.CustomCPError{}
+	for index, poolId := range kubeCluster.WorkerPools {
+		{
+			nodes, err_ := cloud.fetchNodes(cluster, poolId.ID, ctx, companyId)
+			if err_ != (types.CustomCPError{}) {
+				return KubeClusterStatus{}, types.CustomCPError{}
+			}
+			kubeCluster.WorkerPools[index].Nodes = nodes
+		}
+	}
+	return kubeCluster, types.CustomCPError{}
 }
 func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, types.CustomCPError) {
 	url := models.IBM_All_Instances_Endpoint + cloud.Region + "&provider=vpc-classic"
@@ -715,4 +739,57 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	}
 
 	return InstanceList, types.CustomCPError{}
+}
+func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Context, companyId string) ([]KubeWorkerNodesStatus, types.CustomCPError) {
+
+	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetNodes_Endpoint + "/" + cluster.ClusterId + "/workers?pool=" + poolId)
+
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Region"] = cloud.Region
+	m["X-Auth-Resource-Group"] = cluster.ResourceGroup
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+
+	res, err := client.SendRequest(req)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
+		return []KubeWorkerNodesStatus{}, cpErr
+	}
+
+	defer res.Body.Close()
+
+	beego.Info(res.Status)
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
+		return []KubeWorkerNodesStatus{}, cpErr
+	}
+
+	beego.Info(string(body))
+
+	if res.StatusCode != 200 {
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", 502)
+		return []KubeWorkerNodesStatus{}, cpErr
+	}
+
+	var response []KubeWorkerNodesStatus
+	err = json.Unmarshal([]byte(body), &response)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
+		return []KubeWorkerNodesStatus{}, cpErr
+	}
+	return response, types.CustomCPError{}
 }
