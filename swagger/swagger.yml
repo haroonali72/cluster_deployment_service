@@ -2088,8 +2088,6 @@ paths:
         required: true
         type: string
       responses:
-        "201":
-          description: '{"msg": "Cluster created successfully"}'
         "202":
           description: '{"msg": "Cluster creation initiated"}'
         "401":
@@ -2101,8 +2099,6 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/doks/status/{projectId}/:
     get:
       tags:
@@ -2132,6 +2128,8 @@ paths:
             $ref: '#/definitions/godo.KubernetesCluster'
         "401":
           description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in deploying/terminating state"}'
         "500":
@@ -2170,12 +2168,10 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in New/Creating/Cluster Creation Failed
-            /Terminated/Terminating state"}'
+          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
-        "512":
-          description: '{object} types.CustomCPError'
   /cluster/gcp/:
     put:
       tags:
@@ -6391,28 +6387,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00167d5c0.false:
+  482.0xc001674420.false:
     title: "false"
     type: object
-  605.0xc000ef5bf0.false:
+  605.0xc000ed6a50.false:
     title: "false"
     type: object
-  667.0xc001595290.false:
+  667.0xc0015820f0.false:
     title: "false"
     type: object
-  964.0xc001256030.false:
+  964.0xc00120ce70.false:
     title: "false"
     type: object
-  8049.string:
+  8051.string:
     title: string
     type: object
-  14380.0xc0016c1530.false:
+  14379.0xc0016a4390.false:
     title: "false"
     type: object
-  53724.0xc001646b40.false:
+  53724.0xc00161d980.false:
     title: "false"
     type: object
-  55987.string:
+  55989.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6521,7 +6517,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/55987.string'
+        $ref: '#/definitions/55989.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6672,7 +6668,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000ef5bf0.false'
+        $ref: '#/definitions/605.0xc000ed6a50.false'
       name:
         type: string
       network_name:
@@ -7058,7 +7054,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001256030.false'
+        $ref: '#/definitions/964.0xc00120ce70.false'
       name:
         type: string
       network_name:
@@ -8430,7 +8426,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/53724.0xc001646b40.false'
+        $ref: '#/definitions/53724.0xc00161d980.false'
       kube_version:
         type: string
       name:
@@ -8514,7 +8510,7 @@ definitions:
         description: Private key for SSH ['required'] if credentials_type is 'key']
         type: string
       username:
-        description: Name of the user ['required']
+        description: Name of the user ['optional']
         type: string
   models.Cloud:
     title: Cloud
@@ -8690,7 +8686,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14380.0xc0016c1530.false'
+        $ref: '#/definitions/14379.0xc0016a4390.false'
       name:
         type: string
       node_pools:
