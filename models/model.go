@@ -23,7 +23,7 @@ const (
 	ClusterTerminated        Type = "Cluster Terminated"
 	Deploying                Type = "Creating"
 	Terminating              Type = "Terminating"
-	AgentDeploymentFailed    Type = "Agent Deployment Failed"
+//	AgentDeploymentFailed    Type = "Agent Deployment Failed"
 )
 
 type StatusCode int
@@ -42,9 +42,20 @@ const (
 type ErrorMessage string
 
 const (
-	IsEmpty       ErrorMessage = "is empty"
-	Notauthorized ErrorMessage = "User is unauthorized to perform this action"
-)
+	IsEmpty  ErrorMessage = "is empty"
+	Notauthorized ErrorMessage= "User is unauthorized to perform this action"
+	AlreadyExist  ErrorMessage= "Cluster against same project id already exists"
+	SuccessfullyAdded ErrorMessage= "Cluster added successfully"
+	SuccessfullyUpdated ErrorMessage= "Cluster updated successfully"
+	SuccessfullyDeleted ErrorMessage=  "Cluster deleted successfully"
+	CreationInitialised ErrorMessage=  "Cluster creation initiated"
+	TerminationInitialised ErrorMessage=  "Cluster termination initialized"
+	KeySuccessfullyDeleted ErrorMessage=  "Key deleted successfully"
+	KeySuccessfullyAdded ErrorMessage= "Key added successfully"
+	ValidProfile ErrorMessage= "Profile is valid"
+
+
+	)
 
 type HeaderVariable string
 

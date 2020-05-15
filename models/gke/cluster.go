@@ -62,7 +62,7 @@ type GKECluster struct {
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
 	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty" description:"Server-defined URL for the resource [readonly]"`
 	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty" description:"The IP address range of the kubernetes services in the cluster [readonly]"`
-	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty" description:"The current status of this cluster [readonly]"`
+	Status                         models.Type                     `json:"cloud_status,omitempty" bson:"cloud_status,omitempty" description:"The current status of this cluster [readonly]"`
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty" description:"Additional information about the current status [readonly]"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty" description:"The name of the GCP subnetwork cluster is connected to [required]"`
 	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" description:"The IP address range of the Cloud TPUs in the cluster [readonly]"`
@@ -257,7 +257,7 @@ type Cluster struct {
 
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
-	url := getNetworkHost("gke", projectId)
+	url := getNetworkHost("gcp", projectId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {

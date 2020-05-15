@@ -50,11 +50,11 @@
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
-                    "402": {
-                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
-                    },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -333,9 +333,6 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -442,13 +439,10 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -1430,7 +1424,7 @@
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/azure.Cluster_Def"
@@ -1439,22 +1433,22 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -1475,7 +1469,7 @@
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/azure.Cluster_Def"
@@ -1483,26 +1477,23 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"msg\": \"error message\"}"
+                        "description": "{\"msg\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"msg\": \"error message\"}"
+                        "description": "{\"msg\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"msg\": \"error message\"}"
+                        "description": "{\"msg\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against same project id already exists\"}"
-                    },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
+                        "description": "{\"error\": \"Cluster against same project id already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -1518,7 +1509,7 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
@@ -1529,15 +1520,15 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/azure.Cluster_Def"
+                                "$ref": "#/definitions/azure.AzureCluster"
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -1553,28 +1544,28 @@
                     {
                         "in": "header",
                         "name": "clusterName",
-                        "description": "clusterName",
+                        "description": "Cluster Name",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "resourceGroup",
-                        "description": "resourceGroup",
+                        "description": "ResourceGroup",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
@@ -1590,27 +1581,24 @@
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
         },
-        "/cluster/azure/getAllInstances/{region}": {
+        "/cluster/azure/getAllInstances": {
             "get": {
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "Getting All Instances",
+                "description": "Get All Instances",
                 "operationId": "AzureClusterController.Get Instances",
                 "parameters": [
                     {
@@ -1639,17 +1627,17 @@
                     "200": {
                         "description": "[]compute.VirtualMachines"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -1659,23 +1647,20 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "Get Azure VM Sizes",
+                "description": "Get list of azure VM sizes",
                 "operationId": "AzureClusterController.Get VM Sizes",
                 "responses": {
                     "200": {
                         "description": "[]string"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -1685,7 +1670,7 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "Get Azure Regions",
+                "description": "Get List of the Azure Regions",
                 "operationId": "AzureClusterController.Get Azure Regions",
                 "parameters": [
                     {
@@ -1698,7 +1683,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     }
@@ -1707,17 +1692,14 @@
                     "200": {
                         "description": "[]model.Region"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -1753,27 +1735,30 @@
                     {
                         "in": "path",
                         "name": "keyname",
-                        "description": "keyname",
+                        "description": "Unique name of the key",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": key deleted successfully}"
+                    "204": {
+                        "description": "{\"msg\": Key deleted successfully}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -1802,8 +1787,8 @@
                     },
                     {
                         "in": "header",
-                        "name": "-Auth-Token",
-                        "description": "token",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -1811,7 +1796,6 @@
                         "in": "header",
                         "name": "teams",
                         "description": "teams",
-                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -1823,10 +1807,10 @@
                         }
                     },
                     "404": {
-                        "description": "{\"error\": \"error message\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -1842,7 +1826,7 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
@@ -1857,11 +1841,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -1871,8 +1855,8 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "starts a  cluster",
-                "operationId": "AzureClusterController.Start",
+                "description": "Deploy a  cluster",
+                "operationId": "AzureClusterController.Create",
                 "parameters": [
                     {
                         "in": "path",
@@ -1884,33 +1868,39 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "202": {
+                        "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -1920,13 +1910,13 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "returns status of nodes",
+                "description": "Get live status of the cluster",
                 "operationId": "AzureClusterController.Status",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
@@ -1940,7 +1930,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     }
@@ -1952,17 +1942,20 @@
                             "$ref": "#/definitions/azure.Cluster_Def"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in creating/terminating state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -1972,7 +1965,7 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "terminates a  cluster",
+                "description": "terminates a running cluster",
                 "operationId": "AzureClusterController.Terminate",
                 "parameters": [
                     {
@@ -1985,33 +1978,36 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    "202": {
+                        "description": "{\"msg\": \"Cluster termination initialized\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "204": {
+                        "description": "{\"msg\": \"Cluster terminated successfully\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2021,20 +2017,20 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "check if profile is valid",
+                "description": "Check if profile is valid",
                 "operationId": "AzureClusterController.Validate Profile",
                 "parameters": [
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "body for cluster content",
+                        "description": "Body for cluster content",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/vault.AzureCredentials"
@@ -2045,20 +2041,17 @@
                     "200": {
                         "description": "{\"msg\": \"Profile is valid\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"profile is invalid\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2068,7 +2061,7 @@
                 "tags": [
                     "cluster/azure"
                 ],
-                "description": "get cluster",
+                "description": "Get cluster against the projectId",
                 "operationId": "AzureClusterController.Get",
                 "parameters": [
                     {
@@ -2093,14 +2086,14 @@
                             "$ref": "#/definitions/azure.Cluster_Def"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2117,8 +2110,7 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
+                        "description": "token",
                         "type": "string"
                     },
                     {
@@ -2133,25 +2125,22 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
-                    "405": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -2174,32 +2163,28 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
+                        "description": "token",
                         "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster added successfully\"}"
                     },
                     "400": {
-                        "description": "body not found"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "token not found"
+                        "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against this project already exists\"}"
-                    },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
+                        "description": "{\"error\": \"Cluster against same project already exists\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2216,7 +2201,6 @@
                         "in": "header",
                         "name": "X-Auth-Token",
                         "description": "token",
-                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -2230,11 +2214,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2272,16 +2256,19 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
         },
-        "/cluster/do/sshkey/{keyname}/{region}": {
+        "/cluster/do/sshkey/{keyname}": {
             "delete": {
                 "tags": [
                     "cluster/do"
@@ -2322,14 +2309,17 @@
                     "200": {
                         "description": "{\"msg\": \"key deleted successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"User is unauthorized to perform this action\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"key is in used by some projects\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2393,16 +2383,19 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    },
+                    "512": {
+                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -2418,8 +2411,7 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
+                        "description": "token",
                         "type": "string"
                     }
                 ],
@@ -2433,14 +2425,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2476,20 +2465,20 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "202": {
+                        "description": "{\"msg\": \"Cluster creation initiated\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Created/Creating/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2531,17 +2520,17 @@
                             "$ref": "#/definitions/do.Cluster_Def"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in deploying/terminating state\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2580,17 +2569,20 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    "202": {
+                        "description": "{\"msg\": \"cluster termination initiated\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"project id is empty\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed /Terminated/Terminating state\"}/"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -2606,8 +2598,7 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
+                        "description": "true",
                         "type": "string"
                     },
                     {
@@ -2624,10 +2615,13 @@
                         "description": "{\"msg\": \"Profile is valid\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Invalid Profile\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     }
                 }
             }
@@ -2662,19 +2656,65 @@
                             "$ref": "#/definitions/do.Cluster_Def"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
         },
-        "/cluster/do/{projectId}/{forceDelete}": {},
+        "/cluster/do/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/do"
+                ],
+                "description": "delete a cluster",
+                "operationId": "DOClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "token",
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "true",
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating/TerminationFailed state\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/doks/": {
             "put": {
                 "tags": [
@@ -3028,7 +3068,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/doks.KubernetesCluster"
+                            "$ref": "#/definitions/godo.KubernetesCluster"
                         }
                     },
                     "401": {
@@ -3917,7 +3957,7 @@
                         "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4154,9 +4194,6 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4260,13 +4297,10 @@
                         "description": "{\"error\": \"Not found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4349,14 +4383,11 @@
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
                     },
-                    "402": {
-                        "description": "{\"error\": \"Cluster is in deploying/running/terminating state\"}"
-                    },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"\"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -4726,9 +4757,6 @@
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4767,10 +4795,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/iks.KubeWorkerPoolStatus"
-                            }
+                            "$ref": "#/definitions/iks.KubeClusterStatus"
                         }
                     },
                     "401": {
@@ -4838,13 +4863,10 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed /Terminated/Terminating state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
-                    },
-                    "512": {
-                        "description": "{object} types.CustomCPError"
                     }
                 }
             }
@@ -4976,7 +4998,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in Cluster Created/Creating/Terminating/Termination Failed state\"}"
+                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -5027,6 +5049,9 @@
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -5248,7 +5273,7 @@
                         "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating state\"}"
+                        "description": "{\"error\": \"Cluster is in Creating/Created/Terminating/TerminationFailed state\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -9516,35 +9541,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "13335.0xc0015173e0.false": {
+        "14380.0xc0016c1530.false": {
             "title": "false",
             "type": "object"
         },
-        "13385.0xc000eb3b60.false": {
+        "482.0xc00167d5c0.false": {
             "title": "false",
             "type": "object"
         },
-        "13438.0xc0011d6ab0.false": {
+        "53724.0xc001646b40.false": {
             "title": "false",
             "type": "object"
         },
-        "1559.string": {
+        "55987.string": {
             "title": "string",
             "type": "object"
         },
-        "22032.string": {
+        "605.0xc000ef5bf0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "667.0xc001595290.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "8049.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc0015d3590.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "518.0xc0014e19b0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "6000.0xc0015f8ab0.false": {
+        "964.0xc001256030.false": {
             "title": "false",
             "type": "object"
         },
@@ -9685,7 +9710,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/55987.string"
                 },
                 "type": {
                     "type": "string"
@@ -9898,7 +9923,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13385.0xc000eb3b60.false"
+                    "$ref": "#/definitions/605.0xc000ef5bf0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10132,8 +10157,26 @@
             "type": "object",
             "properties": {
                 "max_scaling_group_size": {
+                    "description": "Max count for scaling [required]",
                     "type": "integer",
                     "format": "int64"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of scaling [required]"
+                }
+            }
+        },
+        "azure.AzureCluster": {
+            "title": "AzureCluster",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "ID of project",
+                    "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/models.Type"
@@ -10144,38 +10187,32 @@
             "title": "Cluster_Def",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "cloud": {
-                    "$ref": "#/definitions/models.Cloud"
-                },
-                "company_id": {
-                    "type": "string"
-                },
                 "name": {
+                    "description": "Unique name of the cluster [required]",
                     "type": "string"
                 },
                 "network_name": {
+                    "description": "Network name to deploy the cluster [required]",
                     "type": "string"
                 },
                 "node_pools": {
+                    "description": "Nodepools of the cluster.Atleast 1 nodepool [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/azure.NodePool"
                     }
                 },
                 "project_id": {
+                    "description": "Id of project [required]",
                     "type": "string"
                 },
                 "resource_group": {
+                    "description": "Resource group to deploy the cluster [required]",
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "token_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of the cluster [optional]"
                 }
             }
         },
@@ -10188,9 +10225,6 @@
                 },
                 "new_storage_account": {
                     "type": "boolean"
-                },
-                "storage_account_id": {
-                    "type": "string"
                 }
             }
         },
@@ -10198,22 +10232,20 @@
             "title": "ImageReference",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
-                "image_id": {
-                    "type": "string"
-                },
                 "offer": {
+                    "description": "Offer of the VM image [required]",
                     "type": "string"
                 },
                 "publisher": {
+                    "description": "Publisher of the VM image [required]",
                     "type": "string"
                 },
                 "sku": {
+                    "description": "Sku of the Vm image [required]",
                     "type": "string"
                 },
                 "version": {
+                    "description": "Version of the Vm image [required]",
                     "type": "string"
                 }
             }
@@ -10222,41 +10254,49 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
-                },
                 "auto_scaling": {
-                    "$ref": "#/definitions/azure.AutoScaling"
+                    "$ref": "#/definitions/azure.AutoScaling",
+                    "description": "Details of auto scaling [required]"
                 },
                 "boot_diagnostics": {
-                    "$ref": "#/definitions/azure.DiagnosticsProfile"
+                    "$ref": "#/definitions/azure.DiagnosticsProfile",
+                    "description": "Storage account details.[optional]"
                 },
                 "enable_public_ip": {
+                    "description": "Enable to assign public Ip to the nodepool [required]",
                     "type": "boolean"
                 },
                 "enable_scaling": {
+                    "description": "For enabling scaling [required]",
                     "type": "boolean"
                 },
                 "image": {
-                    "$ref": "#/definitions/azure.ImageReference"
+                    "$ref": "#/definitions/azure.ImageReference",
+                    "description": "VM image of the nodepool.[required]"
                 },
                 "is_external": {
+                    "description": "Enable if volume is external [required]",
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey"
+                    "$ref": "#/definitions/key_utils.AZUREKey",
+                    "description": "SSH key details.[requiredl]"
                 },
                 "machine_type": {
+                    "description": "Machine type of the nodepool.[required]",
                     "type": "string"
                 },
                 "name": {
+                    "description": "Unique name of the nodepool.[required]",
                     "type": "string"
                 },
                 "node_count": {
+                    "description": "Count of the nodepool. Atleast 1 [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "nodes": {
+                    "description": "Nodes in the nodepool.Atleast 1 [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/azure.VM"
@@ -10266,22 +10306,27 @@
                     "$ref": "#/definitions/models.OsDiskType"
                 },
                 "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
+                    "$ref": "#/definitions/models.PoolRole",
+                    "description": "Role of the nodepool.Valid values are 'master' and 'slave'[required]"
                 },
                 "security_group_id": {
+                    "description": "Security group to attach with the nodepool.[required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/azure.string"
                     }
                 },
                 "subnet_id": {
+                    "description": "Subnet to deploy the nodepool of the cluster.[required]",
                     "type": "string"
                 },
                 "user_name": {
+                    "description": "User of the nodepool.[optional]",
                     "type": "string"
                 },
                 "volume": {
-                    "$ref": "#/definitions/azure.Volume"
+                    "$ref": "#/definitions/azure.Volume",
+                    "description": "Volume to attach with the nodepool.[required]"
                 }
             }
         },
@@ -10396,31 +10441,7 @@
             "title": "VM",
             "type": "object",
             "properties": {
-                "cloud_id": {
-                    "type": "string"
-                },
-                "computer_name": {
-                    "type": "string"
-                },
-                "identity_principal_id": {
-                    "type": "string"
-                },
                 "name": {
-                    "type": "string"
-                },
-                "node_state": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "private_ip": {
-                    "type": "string"
-                },
-                "public_ip": {
-                    "type": "string"
-                },
-                "user_name": {
                     "type": "string"
                 }
             }
@@ -10430,11 +10451,13 @@
             "type": "object",
             "properties": {
                 "disk_size": {
+                    "description": "Size of the disk.[required]",
                     "type": "integer",
                     "format": "int32"
                 },
                 "disk_type": {
-                    "$ref": "#/definitions/models.OsDiskType"
+                    "$ref": "#/definitions/models.OsDiskType",
+                    "description": "Type of the OS disk.[required]"
                 }
             }
         },
@@ -10450,20 +10473,14 @@
             "title": "Cluster_Def",
             "type": "object",
             "properties": {
-                "_id": {
-                    "$ref": "#/definitions/bson.ObjectId"
+                "_": {
+                    "type": "string"
                 },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
-                "company_id": {
-                    "type": "string"
-                },
-                "do_project_id": {
-                    "type": "string"
-                },
                 "kube_credentials": {
-                    "$ref": "#/definitions/13438.0xc0011d6ab0.false"
+                    "$ref": "#/definitions/964.0xc001256030.false"
                 },
                 "name": {
                     "type": "string"
@@ -10481,7 +10498,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type"
                 },
                 "token_name": {
                     "type": "string"
@@ -10492,7 +10509,7 @@
             "title": "ImageReference",
             "type": "object",
             "properties": {
-                "_id": {
+                "_": {
                     "$ref": "#/definitions/bson.ObjectId"
                 },
                 "image_id": {
@@ -10500,6 +10517,7 @@
                     "format": "int64"
                 },
                 "slug": {
+                    "description": "Image Slug Information ['optional' if ImageId is provided']",
                     "type": "string"
                 }
             }
@@ -10542,28 +10560,34 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "_id": {
+                "_": {
                     "$ref": "#/definitions/bson.ObjectId"
                 },
                 "external_volume": {
-                    "$ref": "#/definitions/do.Volume"
+                    "$ref": "#/definitions/do.Volume",
+                    "description": "Block Store Volume Information ['required' if external volume is enabled']"
                 },
                 "image": {
-                    "$ref": "#/definitions/do.ImageReference"
+                    "$ref": "#/definitions/do.ImageReference",
+                    "description": "Image Information for cluster [required]"
                 },
                 "is_external": {
+                    "description": "Enable Volume Option, possible values 'true' or 'false'  [optional]",
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey"
+                    "$ref": "#/definitions/key_utils.AZUREKey",
+                    "description": "SSH Key information [required]"
                 },
                 "machine_type": {
+                    "description": "Machine type for pool [required]",
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
                 "node_count": {
+                    "description": "Pool node count [required]",
                     "type": "integer",
                     "format": "int64"
                 },
@@ -10574,12 +10598,15 @@
                     }
                 },
                 "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole"
+                    "$ref": "#/definitions/models.PoolRole",
+                    "description": "Pool role, possible values 'master' or 'slave'. [required]"
                 },
                 "private_networking": {
+                    "description": "Option to enable private networking [optional]",
                     "type": "boolean"
                 },
                 "security_group_id": {
+                    "description": "Security Group for cluster [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/do.string"
@@ -11407,6 +11434,7 @@
             "type": "object",
             "properties": {
                 "name": {
+                    "description": "Cluster name",
                     "type": "string"
                 },
                 "project_id": {
@@ -11414,7 +11442,8 @@
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.Type"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of cluster"
                 }
             }
         },
@@ -11450,8 +11479,8 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "cloud_status": {
-                    "description": "The current status of this cluster [readonly]",
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "The current status of this cluster [readonly]"
                 },
                 "cluster_ipv4_cidr": {
                     "description": "The IP address range of the container pods in this cluster [optional]",
@@ -12173,6 +12202,10 @@
                 }
             }
         },
+        "godo.KubernetesCluster": {
+            "title": "KubernetesCluster",
+            "type": "object"
+        },
         "godo.Region": {
             "title": "Region",
             "type": "object"
@@ -12271,6 +12304,64 @@
                 }
             }
         },
+        "iks.KubeClusterStatus": {
+            "title": "KubeClusterStatus",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "resourceGroupName": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "workerCount": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "workerPools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/iks.KubeWorkerPoolStatus"
+                    }
+                }
+            }
+        },
+        "iks.KubeWorkerNodesStatus": {
+            "title": "KubeWorkerNodesStatus",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kubeVersion": {
+                    "type": "string"
+                },
+                "machineType": {
+                    "type": "string"
+                },
+                "privateIp": {
+                    "type": "string"
+                },
+                "publicIp": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "iks.KubeWorkerPoolStatus": {
             "title": "KubeWorkerPoolStatus",
             "type": "object",
@@ -12280,6 +12371,12 @@
                 },
                 "id": {
                     "type": "string"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/iks.KubeWorkerNodesStatus"
+                    }
                 },
                 "poolName": {
                     "type": "string"
@@ -12371,7 +12468,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0014e19b0.false"
+                    "$ref": "#/definitions/53724.0xc001646b40.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12468,34 +12565,30 @@
                 },
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud",
-                    "description": "Type of cloud [optional]"
+                    "description": "Name of the cloud [optional]"
                 },
                 "credential_type": {
                     "$ref": "#/definitions/models.CredentialsType",
-                    "description": "It is type of credentials used for ssh. By default value is 'key' [optional]"
+                    "description": "Type of credentials used for SSH.Valid values are 'key' and 'password'.Default value is 'key'. [optional]"
                 },
                 "finger_print": {
                     "description": "Finger prints for the key [optional]",
                     "type": "string"
                 },
                 "key_name": {
-                    "description": "Name of the key. By default value is 'new' [required]",
+                    "description": "Name of the key.[required]",
                     "type": "string"
                 },
                 "key_type": {
                     "$ref": "#/definitions/models.KeyType",
-                    "description": "It is type key. By default value is 'new' [required]"
+                    "description": "Type of key. By default value is 'new' [required]"
                 },
                 "private_key": {
-                    "description": "Private key for ssh ['required' if credentials_type is 'key']",
-                    "type": "string"
-                },
-                "public_key": {
-                    "description": "Public key for ssh [readonly]",
+                    "description": "Private key for SSH ['required'] if credentials_type is 'key']",
                     "type": "string"
                 },
                 "username": {
-                    "description": "It is the user name ['required' if credentials_type is 'password']",
+                    "description": "Name of the user ['required']",
                     "type": "string"
                 }
             }
@@ -12589,8 +12682,7 @@
                 "ClusterTerminationFailed = \"Cluster Termination Failed\"",
                 "ClusterTerminated = \"Cluster Terminated\"",
                 "Deploying = \"Creating\"",
-                "Terminating = \"Terminating\"",
-                "AgentDeploymentFailed = \"Agent Deployment Failed\""
+                "Terminating = \"Terminating\""
             ],
             "example": "New"
         },
@@ -12617,8 +12709,8 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]",
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]"
                 }
             }
         },
@@ -12732,7 +12824,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0015d3590.false"
+                    "$ref": "#/definitions/14380.0xc0016c1530.false"
                 },
                 "name": {
                     "type": "string"
