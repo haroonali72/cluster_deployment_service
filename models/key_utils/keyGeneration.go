@@ -22,7 +22,7 @@ type AZUREKey struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" description:"Type of credentials used for SSH.Valid values are 'key' and 'password'.Default value is 'key'. [optional]"`
 	KeyType        models.KeyType         `json:"key_type" bson:"key_type" validate:"required,eq=new|eq=cp|eq=aws|eq=user" description:"Type of key. By default value is 'new' [required]"`
 	KeyName        string                 `json:"key_name" bson:"key_name" validate:"required" description:"Name of the key.[required]"`
-	Username       string                 `json:"username" bson:"username" validate:"required" description:"Name of the user ['required']"`
+	Username       string                 `json:"username" bson:"username"  description:"Name of the user ['optional']"`
 	AdminPassword  string                 `json:"admin_password" bson:"admin_password" description:"It is the password ['required' if credentials_type is 'password']"`
 	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty" validate:"required" description:"Private key for SSH ['required'] if credentials_type is 'key']"`
 	PublicKey      string                 `json:"-" bson:"public_key,omitempty" description:"Public key for ssh [readonly]"`
