@@ -194,7 +194,7 @@ func checkClusterSize(cluster Cluster_Def) error {
 func IsValidGcpCredentials(profileId, region, token, zone string, ctx utils.Context) (bool, GcpCredentials) {
 	credentials := GcpResponse{}
 
-	_,response, err := vault.GetCredentialProfile("gcp", profileId, token, ctx)
+	_, response, err := vault.GetCredentialProfile("gcp", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return false, GcpCredentials{}
@@ -329,11 +329,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New("cluster is in terminating state")
 	}
 
-	err = checkMasterPools(cluster)
+	/*err = checkMasterPools(cluster)
 	if err != nil { //cluster found
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
-	}
+	}*/
 	if oldCluster.Status == "Cluster Created" && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
