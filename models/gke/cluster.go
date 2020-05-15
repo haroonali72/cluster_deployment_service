@@ -2,6 +2,7 @@ package gke
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/gcp"
 	rbacAuthentication "antelope/models/rbac_authentication"
@@ -254,6 +255,18 @@ type Cluster struct {
 	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("gke", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -502,7 +515,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = models.AgentDeploymentFailed
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		PrintError(errors.New(confError.Error), cluster.Name, ctx)
 		_ = TerminateCluster(credentials, ctx)
 		PrintError(errors.New("Cleaning up resources"), cluster.Name, ctx)

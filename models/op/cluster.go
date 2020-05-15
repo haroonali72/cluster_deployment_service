@@ -17,7 +17,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Name of cluster [required]"`
-	Status           string        `json:"status" bson:"status" validate:"eq=New|eq=new||eq=Cluster Creation Failed" description:"Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=New|eq=new||eq=Cluster Creation Failed" description:"Cluster status can be New, Cluster Created, Cluster Terminated. By default value will be 'New' [readonly]"`
 	Cloud            models.Cloud  `json:"-" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -140,11 +140,11 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context, teams, t
 		return err
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
+	if oldCluster.Status == (models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
+	if oldCluster.Status == (models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
 	}

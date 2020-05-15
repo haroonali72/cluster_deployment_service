@@ -2,6 +2,7 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/cores"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
@@ -146,6 +147,33 @@ type KubernetesRegion struct {
 type KubernetesNodeSize struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
+}
+
+func getNetworkHost(cloudType, projectId string) string {
+
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", projectId, -1)
+	}
+
+	return host
+}
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("doks", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
 }
 
 type DOKSCluster struct {
@@ -363,7 +391,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	if confErr != (types.CustomCPError{}) {
 		PrintError(ctx, confErr.Description, cluster.Name)
 		utils.SendLog(ctx.Data.Company, "Cleaning up resources", "info", cluster.ProjectId)
-		cluster.CloudplexStatus = models.AgentDeploymentFailed
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		_ = TerminateCluster(credentials, ctx)
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {

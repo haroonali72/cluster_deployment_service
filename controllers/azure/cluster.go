@@ -1003,6 +1003,25 @@ func (c *AzureClusterController) PostSSHKey() {
 	c.ServeJSON()
 }
 
+// @Title GetCores
+// @Description Get Azure Machine instance cores
+// @Success 200 			{object} models.Machine
+// @Failure 500 			{"error": "error msg"}
+// @router /machine/info [get]
+func (c *AzureClusterController) GetCores() {
+
+	var machine []models.Machine
+	if err := json.Unmarshal(cores.AzureCores, &machine); err != nil {
+		beego.Error("Unmarshalling of machine instances failed ", err.Error())
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	c.Data["json"] = machine
+	c.ServeJSON()
+}
+
 // @Title DeleteSSHKey
 // @Description Delete SSH key
 // @Param	keyname	 	path	string	true	"Unique name of the key"
@@ -1074,8 +1093,8 @@ func (c *AzureClusterController) DeleteSSHKey() {
 // @Title Get Instances
 // @Description Get All Instances
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-// @Param	region	header	string	true	"Cloud region"
+// @Param	X-Profile-Id	header	string	true	"profile id"
+// @Param	region	path	string	true	"Cloud region"
 // @Success 200 []compute.VirtualMachines
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}

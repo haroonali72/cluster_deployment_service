@@ -512,7 +512,7 @@ func (c *OPClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == models.Deploying && !forceDelete {
+	if cluster.Status == (models.Deploying) && !forceDelete {
 		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
@@ -520,7 +520,7 @@ func (c *OPClusterController) Delete() {
 		return
 	}
 
-	if cluster.Status == models.Terminating && !forceDelete {
+	if cluster.Status == (models.Terminating) && !forceDelete {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
