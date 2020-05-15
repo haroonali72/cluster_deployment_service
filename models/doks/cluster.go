@@ -165,7 +165,7 @@ func getNetworkHost(cloudType, projectId string) string {
 }
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
-	url := getNetworkHost("doks", projectId)
+	url := getNetworkHost("do", projectId)
 
 	_, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
