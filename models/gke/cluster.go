@@ -255,6 +255,27 @@ type Cluster struct {
 	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
+type KubeClusterStatus struct {
+	Name              string                 `json:"name"`
+	Region            string                 `json:"region"`
+	Network           string                 `json:"network"`
+	State             string                 `json:"state"`
+	WorkerCount       int64                  `json:"worker_count"`
+	ClusterIP         string                 `json:"cluster_ip"`
+	KubernetesVersion string				 `json:"kubernetes_version"`
+	KubernetesDashboard bool				 `json:"kubernetes_dashboard"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"worker_pools"`
+}
+
+type KubeWorkerPoolStatus struct {
+	Name    string                  `json:"pool_name"`
+	NodeCount int64				 `json:"id"`
+	MaxPosPerNode int64             `json:"flavour"`
+	Flavour string                  `json:"flavour"`
+	State   string                  `json:"state"`
+}
+
+
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	url := getNetworkHost("gcp", projectId)
@@ -548,48 +569,48 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (GKECluster, types.CustomCPError) {
+func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (KubeClusterStatus, types.CustomCPError) {
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
+		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
 	}
 	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return GKECluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	if cluster.CloudplexStatus == models.Deploying || cluster.CloudplexStatus == models.Terminating || cluster.CloudplexStatus == models.ClusterTerminated {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", Description: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
-		return GKECluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 	if err != nil {
-		return GKECluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
+		return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 			Description: "Error occurred while getting cluster status in database",
 			StatusCode:  500}
 	}
 	if customErr.Err != (types.CustomCPError{}) {
-		return GKECluster{}, customErr.Err
+		return KubeClusterStatus{}, customErr.Err
 	}
 	gkeOps, err1 := GetGKE(credentials)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err1
+		return KubeClusterStatus{}, err1
 	}
 
 	err1 = gkeOps.init()
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err1
+		return KubeClusterStatus{}, err1
 	}
 
 	latestCluster, err1 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err1
+		return KubeClusterStatus{}, err1
 	}
 
 	latestCluster.ProjectId = ctx.Data.ProjectId
@@ -598,7 +619,9 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 	latestCluster.IsExpert = cluster.IsExpert
 	latestCluster.IsAdvance = cluster.IsAdvance
 
-	return latestCluster, types.CustomCPError{}
+	customStatus := fillStatusInfo(latestCluster)
+
+	return customStatus, types.CustomCPError{}
 }
 
 func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.CustomCPError {
@@ -841,4 +864,29 @@ func validateGKEImageType(imageType string) (bool, error) {
 	}
 
 	return false, errors.New(errData)
+}
+
+func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
+
+	status.Name=cluster.Name
+	status.Region=cluster.Location
+	status.State=string(cluster.CloudplexStatus)
+	status.Network=cluster.Network
+	status.WorkerCount = cluster.CurrentNodeCount
+	status.KubernetesVersion =cluster.CurrentMasterVersion
+	status.ClusterIP=cluster.ClusterIpv4Cidr
+	status.KubernetesDashboard=cluster.AddonsConfig.KubernetesDashboard.Disabled
+
+	for _, pool :=range cluster.NodePools{
+		workerpool := KubeWorkerPoolStatus{}
+		workerpool.Name=pool.Name
+		workerpool.Flavour=pool.Version
+		workerpool.State=pool.Status
+		workerpool.NodeCount=pool.InitialNodeCount
+		workerpool.MaxPosPerNode=pool.MaxPodsConstraint.MaxPodsPerNode
+		status.WorkerPools=append(status.WorkerPools ,workerpool)
+
+	}
+
+	return status
 }

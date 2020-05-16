@@ -4226,7 +4226,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/gke.GKECluster"
+                            "$ref": "#/definitions/gke.KubeClusterStatus"
                         }
                     },
                     "401": {
@@ -9535,15 +9535,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc0016e0750.false": {
+        "14379.0xc00167bc50.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0016a67e0.false": {
+        "482.0xc001639ce0.false": {
             "title": "false",
             "type": "object"
         },
-        "53724.0xc001651d40.false": {
+        "53724.0xc001605260.false": {
             "title": "false",
             "type": "object"
         },
@@ -9551,11 +9551,11 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000f0ce10.false": {
+        "605.0xc000eca090.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0015b64b0.false": {
+        "667.0xc00155d9b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9563,7 +9563,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc00123f230.false": {
+        "964.0xc0011f84b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9917,7 +9917,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f0ce10.false"
+                    "$ref": "#/definitions/605.0xc000eca090.false"
                 },
                 "name": {
                     "type": "string"
@@ -10474,7 +10474,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00123f230.false"
+                    "$ref": "#/definitions/964.0xc0011f84b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11857,6 +11857,62 @@
                 }
             }
         },
+        "gke.KubeClusterStatus": {
+            "title": "KubeClusterStatus",
+            "type": "object",
+            "properties": {
+                "cluster_ip": {
+                    "type": "string"
+                },
+                "kubernetes_dashboard": {
+                    "type": "boolean"
+                },
+                "kubernetes_version": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "network": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "worker_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "worker_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gke.KubeWorkerPoolStatus"
+                    }
+                }
+            }
+        },
+        "gke.KubeWorkerPoolStatus": {
+            "title": "KubeWorkerPoolStatus",
+            "type": "object",
+            "properties": {
+                "flavour": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "pool_name": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
         "gke.KubernetesDashboard": {
             "title": "KubernetesDashboard",
             "type": "object",
@@ -12458,7 +12514,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/53724.0xc001651d40.false"
+                    "$ref": "#/definitions/53724.0xc001605260.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12814,7 +12870,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc0016e0750.false"
+                    "$ref": "#/definitions/14379.0xc00167bc50.false"
                 },
                 "name": {
                     "type": "string"
