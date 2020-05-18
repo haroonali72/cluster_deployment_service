@@ -585,7 +585,7 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
 		return KubeClusterStatus{}, cpErr
 	}
-	if cluster.Status != models.ClusterCreated {
+	if cluster.CloudplexStatus != models.ClusterCreated {
 		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 		if err != nil {
 			return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",

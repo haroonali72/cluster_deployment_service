@@ -157,14 +157,15 @@ type KubeClusterStatus struct {
 	ServiceSubnet string                 `json:"service_subnet,omitempty"`
 	IPv4          string                 `json:"ipv4,omitempty"`
 	Endpoint      string                 `json:"endpoint,omitempty"`
-	WorkerPools   []KubeWorkerPoolStatus `json:"worker_pools"`
+	WorkerPools   []KubeWorkerPoolStatus `json:"node_pools"`
 }
 
 type KubeWorkerPoolStatus struct {
 	ID    string      `json:"id,omitempty"`
 	Name  string      `json:"name,omitempty"`
-	Size  string      `json:"size,omitempty"`
+	Size  string      `json:"machine_type,omitempty"`
 	Nodes []PoolNodes `json:"nodes"`
+	Count int       `json:"node_count,omitempty"`
 }
 type PoolNodes struct {
 	ID        string `json:"id,omitempty"`
