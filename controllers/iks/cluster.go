@@ -988,7 +988,7 @@ func (c *IKSClusterController) StartCluster() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile Id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} iks.KubeClusterStatus
+// @Success 200 {object} iks.KubeClusterStatus1
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}

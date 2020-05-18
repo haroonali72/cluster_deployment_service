@@ -4789,7 +4789,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/iks.KubeClusterStatus"
+                            "$ref": "#/definitions/iks.KubeClusterStatus1"
                         }
                     },
                     "401": {
@@ -9535,36 +9535,36 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc0016f0c60.false": {
+        "14758.0xc0433d54a0.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0016bccf0.false": {
+        "499.0xc043393530.false": {
             "title": "false",
             "type": "object"
         },
-        "53800.0xc001680270.false": {
+        "56067.0xc043364d80.false": {
             "title": "false",
             "type": "object"
         },
-        "56068.string": {
+        "58879.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc000f1aba0.false": {
+        "629.0xc042bf3590.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0015c6900.false": {
+        "667.0xc0432b2f30.false": {
             "title": "false",
             "type": "object"
         },
-        "8073.string": {
+        "721.0xc042f1f500.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "8169.string": {
             "title": "string",
-            "type": "object"
-        },
-        "964.0xc001254fc0.false": {
-            "title": "false",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -9704,7 +9704,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/56068.string"
+                    "$ref": "#/definitions/58879.string"
                 },
                 "type": {
                     "type": "string"
@@ -9917,7 +9917,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f1aba0.false"
+                    "$ref": "#/definitions/629.0xc042bf3590.false"
                 },
                 "name": {
                     "type": "string"
@@ -10474,7 +10474,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001254fc0.false"
+                    "$ref": "#/definitions/721.0xc042f1f500.false"
                 },
                 "name": {
                     "type": "string"
@@ -12434,8 +12434,8 @@
                 }
             }
         },
-        "iks.KubeClusterStatus": {
-            "title": "KubeClusterStatus",
+        "iks.KubeClusterStatus1": {
+            "title": "KubeClusterStatus1",
             "type": "object",
             "properties": {
                 "id": {
@@ -12444,44 +12444,44 @@
                 "name": {
                     "type": "string"
                 },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/iks.KubeWorkerPoolStatus1"
+                    }
+                },
                 "region": {
                     "type": "string"
                 },
-                "resourceGroupName": {
+                "resource_group_name": {
                     "type": "string"
                 },
                 "state": {
                     "type": "string"
                 },
-                "workerCount": {
+                "worker_count": {
                     "type": "integer",
                     "format": "int64"
-                },
-                "workerPools": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/iks.KubeWorkerPoolStatus"
-                    }
                 }
             }
         },
-        "iks.KubeWorkerNodesStatus": {
-            "title": "KubeWorkerNodesStatus",
+        "iks.KubeWorkerNodesStatus1": {
+            "title": "KubeWorkerNodesStatus1",
             "type": "object",
             "properties": {
                 "id": {
                     "type": "string"
                 },
-                "kubeVersion": {
+                "kube_version": {
                     "type": "string"
                 },
-                "machineType": {
+                "machine_type": {
                     "type": "string"
                 },
-                "privateIp": {
+                "private_ip": {
                     "type": "string"
                 },
-                "publicIp": {
+                "public_ip": {
                     "type": "string"
                 },
                 "state": {
@@ -12492,8 +12492,8 @@
                 }
             }
         },
-        "iks.KubeWorkerPoolStatus": {
-            "title": "KubeWorkerPoolStatus",
+        "iks.KubeWorkerPoolStatus1": {
+            "title": "KubeWorkerPoolStatus1",
             "type": "object",
             "properties": {
                 "flavour": {
@@ -12505,10 +12505,10 @@
                 "nodes": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/iks.KubeWorkerNodesStatus"
+                        "$ref": "#/definitions/iks.KubeWorkerNodesStatus1"
                     }
                 },
-                "poolName": {
+                "pool_name": {
                     "type": "string"
                 },
                 "state": {
@@ -12598,7 +12598,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/53800.0xc001680270.false"
+                    "$ref": "#/definitions/56067.0xc043364d80.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12954,7 +12954,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc0016f0c60.false"
+                    "$ref": "#/definitions/14758.0xc0433d54a0.false"
                 },
                 "name": {
                     "type": "string"
