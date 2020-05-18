@@ -3062,7 +3062,7 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/doks.KubernetesCluster"
+                            "$ref": "#/definitions/doks.KubeClusterStatus"
                         }
                     },
                     "401": {
@@ -9535,15 +9535,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc00167bc50.false": {
+        "14379.0xc0016e3140.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001639ce0.false": {
+        "482.0xc0016a11d0.false": {
             "title": "false",
             "type": "object"
         },
-        "53724.0xc001605260.false": {
+        "53724.0xc00166a750.false": {
             "title": "false",
             "type": "object"
         },
@@ -9551,11 +9551,11 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000eca090.false": {
+        "605.0xc000f112c0.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc00155d9b0.false": {
+        "667.0xc0015c0ea0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9563,7 +9563,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc0011f84b0.false": {
+        "964.0xc0012456e0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9917,7 +9917,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000eca090.false"
+                    "$ref": "#/definitions/605.0xc000f112c0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10474,7 +10474,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0011f84b0.false"
+                    "$ref": "#/definitions/964.0xc0012456e0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10772,6 +10772,63 @@
                 }
             }
         },
+        "doks.KubeClusterStatus": {
+            "title": "KubeClusterStatus",
+            "type": "object",
+            "properties": {
+                "cluster_subnet": {
+                    "type": "string"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ipv4": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "service_subnet": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "worker_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.KubeWorkerPoolStatus"
+                    }
+                }
+            }
+        },
+        "doks.KubeWorkerPoolStatus": {
+            "title": "KubeWorkerPoolStatus",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/doks.PoolNodes"
+                    }
+                },
+                "size": {
+                    "type": "string"
+                }
+            }
+        },
         "doks.KubernetesCluster": {
             "title": "KubernetesCluster",
             "type": "object",
@@ -10994,6 +11051,24 @@
                     "format": "int64"
                 },
                 "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "doks.PoolNodes": {
+            "title": "PoolNodes",
+            "type": "object",
+            "properties": {
+                "droplet_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "state": {
                     "type": "string"
                 }
             }
@@ -12514,7 +12589,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/53724.0xc001605260.false"
+                    "$ref": "#/definitions/53724.0xc00166a750.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12870,7 +12945,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc00167bc50.false"
+                    "$ref": "#/definitions/14379.0xc0016e3140.false"
                 },
                 "name": {
                     "type": "string"
