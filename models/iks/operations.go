@@ -695,7 +695,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		{
 			nodes, err_ := cloud.fetchNodes(cluster, poolId.ID, ctx, companyId)
 			if err_ != (types.CustomCPError{}) {
-				return KubeClusterStatus{}, types.CustomCPError{}
+				return KubeClusterStatus{}, err_
 			}
 			kubeCluster.WorkerPools[index].Nodes = nodes
 		}
@@ -742,7 +742,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 }
 func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Context, companyId string) ([]KubeWorkerNodesStatus, types.CustomCPError) {
 
-	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetNodes_Endpoint + "/" + cluster.ClusterId + "/workers?pool=" + poolId)
+	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetNodes_Endpoint + cluster.ClusterId + "/workers?pool=" + poolId)
 
 	m := make(map[string]string)
 
