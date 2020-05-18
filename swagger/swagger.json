@@ -9535,15 +9535,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc0017247b0.false": {
+        "14379.0xc0016f0c60.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0016f0840.false": {
+        "482.0xc0016bccf0.false": {
             "title": "false",
             "type": "object"
         },
-        "53800.0xc00169dda0.false": {
+        "53800.0xc001680270.false": {
             "title": "false",
             "type": "object"
         },
@@ -9551,11 +9551,11 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000f526f0.false": {
+        "605.0xc000f1aba0.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0015fe450.false": {
+        "667.0xc0015c6900.false": {
             "title": "false",
             "type": "object"
         },
@@ -9563,7 +9563,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc001290b10.false": {
+        "964.0xc001254fc0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9917,7 +9917,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f526f0.false"
+                    "$ref": "#/definitions/605.0xc000f1aba0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10474,7 +10474,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001290b10.false"
+                    "$ref": "#/definitions/964.0xc001254fc0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10492,7 +10492,8 @@
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.Type"
+                    "$ref": "#/definitions/models.Type",
+                    "description": "Status of cluster  [required]"
                 },
                 "token_name": {
                     "type": "string"
@@ -11955,6 +11956,12 @@
                 "network": {
                     "type": "string"
                 },
+                "node_pools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gke.KubeWorkerPoolStatus"
+                    }
+                },
                 "region": {
                     "type": "string"
                 },
@@ -11964,12 +11971,6 @@
                 "worker_count": {
                     "type": "integer",
                     "format": "int64"
-                },
-                "worker_pools": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/gke.KubeWorkerPoolStatus"
-                    }
                 }
             }
         },
@@ -11980,7 +11981,11 @@
                 "flavour": {
                     "type": "string"
                 },
-                "id": {
+                "max_pod_per_node": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "node_count": {
                     "type": "integer",
                     "format": "int64"
                 },
@@ -12593,7 +12598,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/53800.0xc00169dda0.false"
+                    "$ref": "#/definitions/53800.0xc001680270.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12949,7 +12954,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc0017247b0.false"
+                    "$ref": "#/definitions/14379.0xc0016f0c60.false"
                 },
                 "name": {
                     "type": "string"
