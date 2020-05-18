@@ -86,7 +86,7 @@ type KubeClusterStatus struct {
 	ResourceGroupName string                 `json:"resourceGroupName"`
 	State             string                 `json:"state"`
 	WorkerCount       int                    `json:"workerCount"`
-	WorkerPools       []KubeWorkerPoolStatus `json:"workerPools"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"nodePools"`
 }
 
 type KubeWorkerPoolStatus struct {
@@ -103,6 +103,32 @@ type KubeWorkerNodesStatus struct {
 	PublicIp    string `json:"publicIp"`
 	State       string `json:"state"`
 	KubeVersion string `json:"kubeVersion"`
+	Status      string `json:"status"`
+}
+type KubeClusterStatus1 struct {
+	ID                string                  `json:"id"`
+	Name              string                  `json:"name"`
+	Region            string                  `json:"region"`
+	ResourceGroupName string                  `json:"resource_group_name"`
+	State             string                  `json:"state"`
+	WorkerCount       int                     `json:"worker_count"`
+	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
+}
+
+type KubeWorkerPoolStatus1 struct {
+	ID      string                   `json:"id"`
+	Name    string                   `json:"pool_name"`
+	Flavour string                   `json:"flavour"`
+	State   string                   `json:"state"`
+	Nodes   []KubeWorkerNodesStatus1 `json:"nodes"`
+}
+type KubeWorkerNodesStatus1 struct {
+	ID          string `json:"id"`
+	Flavour     string `json:"machine_type"`
+	PrivateIp   string `json:"private_ip"`
+	PublicIp    string `json:"public_ip"`
+	State       string `json:"state"`
+	KubeVersion string `json:"kube_version"`
 	Status      string `json:"status"`
 }
 type AllInstancesResponse struct {
