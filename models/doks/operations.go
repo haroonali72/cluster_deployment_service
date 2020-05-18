@@ -215,12 +215,13 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 	response.ServiceSubnet = status.ServiceSubnet
 	response.IPv4 = status.IPv4
 	response.Endpoint = status.Endpoint
-
 	for _, pool := range status.NodePools {
+
 		var workerPool KubeWorkerPoolStatus
 		workerPool.Name = pool.Name
 		workerPool.ID = pool.ID
 		workerPool.Size = pool.Size
+		workerPool.Count =pool.Count
 		for _, nodes := range pool.Nodes {
 			var poolNodes PoolNodes
 			poolNodes.DropletID = nodes.ID
