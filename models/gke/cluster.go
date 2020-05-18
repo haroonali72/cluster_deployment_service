@@ -264,13 +264,13 @@ type KubeClusterStatus struct {
 	ClusterIP         string                 `json:"cluster_ip"`
 	KubernetesVersion string				 `json:"kubernetes_version"`
 	KubernetesDashboard bool				 `json:"kubernetes_dashboard"`
-	WorkerPools       []KubeWorkerPoolStatus `json:"worker_pools"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools"`
 }
 
 type KubeWorkerPoolStatus struct {
 	Name    string                  `json:"pool_name"`
-	NodeCount int64				 `json:"id"`
-	MaxPosPerNode int64             `json:"flavour"`
+	NodeCount int64				 	`json:"node_count"`
+	MaxPosPerNode int64             `json:"max_pod_per_node"`
 	Flavour string                  `json:"flavour"`
 	State   string                  `json:"state"`
 }
