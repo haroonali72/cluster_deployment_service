@@ -914,12 +914,12 @@ func (c *DOKSClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} godo.KubernetesCluster
+// @Success 200 {object} doks.KubeClusterStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} doks.KubernetesCluster
+// @Failure 512 {object} types.CustomCPError
 // @router /status/:projectId/ [get]
 func (c *DOKSClusterController) GetStatus() {
 

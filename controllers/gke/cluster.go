@@ -809,7 +809,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} gke.GKECluster
+// @Success 200 {object} gke.KubeClusterStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}

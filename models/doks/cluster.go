@@ -148,6 +148,30 @@ type KubernetesNodeSize struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
+type KubeClusterStatus struct {
+	ID            string                 `json:"id,omitempty"`
+	Name          string                 `json:"name,omitempty"`
+	RegionSlug    string                 `json:"region,omitempty"`
+	VersionSlug   string                 `json:"version,omitempty"`
+	ClusterSubnet string                 `json:"cluster_subnet,omitempty"`
+	ServiceSubnet string                 `json:"service_subnet,omitempty"`
+	IPv4          string                 `json:"ipv4,omitempty"`
+	Endpoint      string                 `json:"endpoint,omitempty"`
+	WorkerPools   []KubeWorkerPoolStatus `json:"worker_pools"`
+}
+
+type KubeWorkerPoolStatus struct {
+	ID    string      `json:"id,omitempty"`
+	Name  string      `json:"name,omitempty"`
+	Size  string      `json:"size,omitempty"`
+	Nodes []PoolNodes `json:"nodes"`
+}
+type PoolNodes struct {
+	ID        string `json:"id,omitempty"`
+	Name      string `json:"name,omitempty"`
+	State     string `json:"state,omitempty"`
+	DropletID string `json:"droplet_id,omitempty"`
+}
 
 func getNetworkHost(cloudType, projectId string) string {
 
@@ -428,46 +452,46 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.KubernetesCluster, types.CustomCPError) {
+func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeClusterStatus, types.CustomCPError) {
 
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
+		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
 	}
 	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return &godo.KubernetesCluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	if cluster.CloudplexStatus == models.Deploying || cluster.CloudplexStatus == models.Terminating || cluster.CloudplexStatus == models.ClusterTerminated {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", Description: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
-		return &godo.KubernetesCluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
 	if err != nil {
-		return &godo.KubernetesCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
+		return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
 			Description: "Error occurred while getting cluster status from database",
 			StatusCode:  500}
 	}
 	if customErr.Err != (types.CustomCPError{}) {
-		return &godo.KubernetesCluster{}, customErr.Err
+		return KubeClusterStatus{}, customErr.Err
 	}
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching cluster status ", Description: err.Error()}
+		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching cluster status ", Description: err.Error()}
 	}
 
 	err1 := doksOps.init(ctx)
 	if err1 != (types.CustomCPError{}) {
-		return &godo.KubernetesCluster{}, err1
+		return KubeClusterStatus{}, err1
 	}
 
 	status, errr := doksOps.fetchStatus(ctx, cluster.ID)
 	if errr != (types.CustomCPError{}) {
-		return &godo.KubernetesCluster{}, errr
+		return KubeClusterStatus{}, errr
 	}
 
 	return status, errr
