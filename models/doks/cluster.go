@@ -469,14 +469,17 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
 		return KubeClusterStatus{}, cpErr
 	}
-	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
-	if err != nil {
-		return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
-			Description: "Error occurred while getting cluster status from database",
-			StatusCode:  500}
-	}
-	if customErr.Err != (types.CustomCPError{}) {
-		return KubeClusterStatus{}, customErr.Err
+
+	if cluster.CloudplexStatus != models.ClusterCreated {
+		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
+		if err != nil {
+			return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
+				Description: "Error occurred while getting cluster status from database",
+				StatusCode:  500}
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return KubeClusterStatus{}, customErr.Err
+		}
 	}
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {

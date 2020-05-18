@@ -402,15 +402,16 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 			string(cluster.Status) + " state", StatusCode: 409}
 		return AKSCluster{}, cpErr
 	}
-
-	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
-	if err != nil {
-		return AKSCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
-			Description: "Error occurred while getting cluster status in database",
-			StatusCode:  500}
-	}
-	if customErr.Err != (types.CustomCPError{}) {
-		return AKSCluster{}, customErr.Err
+	if cluster.Status != models.ClusterCreated {
+		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
+		if err != nil {
+			return AKSCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
+				Description: "Error occurred while getting cluster status in database",
+				StatusCode:  500}
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return AKSCluster{}, customErr.Err
+		}
 	}
 	aksOps, _ := GetAKS(credentials)
 

@@ -367,6 +367,7 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 			string(cluster.Status)+" state", 409)
 		return KubeClusterStatus{}, cpErr
 	}
+	if cluster.Status != models.ClusterCreated{
 	customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
@@ -374,6 +375,7 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 	}
 	if customErr.Err != (types.CustomCPError{}) {
 		return KubeClusterStatus{}, customErr.Err
+	}
 	}
 	iks := GetIBM(credentials.Profile)
 
