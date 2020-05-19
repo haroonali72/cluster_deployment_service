@@ -107,8 +107,8 @@ type LifeCycle struct {
 	State string `json:"actualState"`
 }
 type NetworkInfo struct {
-	PrivateIp string `json:"privateIp"`
-	PublicIp  string `json:"publicIp"`
+	PrivateIp string `json:"privateIP"`
+	PublicIp  string `json:"publicIP"`
 }
 type KubeClusterStatus1 struct {
 	ID                string                  `json:"id"`
