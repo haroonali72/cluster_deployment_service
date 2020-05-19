@@ -404,6 +404,32 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
+	if cluster.CloudplexStatus == (models.Deploying) {
+		ctx.SendLogs("GKEClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.CloudplexStatus == (models.Terminating) {
+		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.CloudplexStatus == (models.ClusterCreated) {
+		ctx.SendLogs("GKEClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("GKEClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
+
 	validate := validator.New()
 	err = validate.Struct(cluster)
 	if err != nil {
@@ -459,31 +485,6 @@ func (c *GKEClusterController) Patch() {
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster.CompanyId = userInfo.CompanyId
 
-	if cluster.CloudplexStatus == (models.Deploying) {
-		ctx.SendLogs("GKEClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.CloudplexStatus == (models.Terminating) {
-		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.CloudplexStatus == (models.ClusterCreated) {
-		ctx.SendLogs("GKEClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
-		c.ServeJSON()
-		return
-	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("GKEClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {

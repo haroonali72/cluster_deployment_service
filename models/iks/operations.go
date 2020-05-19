@@ -97,13 +97,18 @@ type KubeWorkerPoolStatus struct {
 	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
 }
 type KubeWorkerNodesStatus struct {
-	ID          string `json:"id"`
-	Flavour     string `json:"machineType"`
-	PrivateIp   string `json:"privateIp"`
-	PublicIp    string `json:"publicIp"`
-	State       string `json:"state"`
-	KubeVersion string `json:"kubeVersion"`
-	Status      string `json:"status"`
+	ID        string      `json:"id"`
+	Flavour   string      `json:"flavor"`
+	Network   NetworkInfo `json:"networkInformation"`
+	Lifecycle LifeCycle   `json:"lifecycle"`
+	Location  string      `json:"location"`
+}
+type LifeCycle struct {
+	State string `json:"actualState"`
+}
+type NetworkInfo struct {
+	PrivateIp string `json:"privateIP"`
+	PublicIp  string `json:"publicIP"`
 }
 type KubeClusterStatus1 struct {
 	ID                string                  `json:"id"`
@@ -123,13 +128,12 @@ type KubeWorkerPoolStatus1 struct {
 	Nodes   []KubeWorkerNodesStatus1 `json:"nodes"`
 }
 type KubeWorkerNodesStatus1 struct {
-	ID          string `json:"id"`
-	Flavour     string `json:"machine_type"`
-	PrivateIp   string `json:"private_ip"`
-	PublicIp    string `json:"public_ip"`
-	State       string `json:"state"`
-	KubeVersion string `json:"kube_version"`
-	Status      string `json:"status"`
+	ID        string `json:"id"`
+	Flavour   string `json:"machine_type"`
+	PrivateIp string `json:"private_ip"`
+	PublicIp  string `json:"public_ip"`
+	State     string `json:"state"`
+	Location  string `json:"location"`
 }
 type AllInstancesResponse struct {
 	Profile []InstanceProfile
@@ -768,14 +772,14 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 }
 func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Context, companyId string) ([]KubeWorkerNodesStatus, types.CustomCPError) {
 
-	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetNodes_Endpoint + cluster.ClusterId + "/workers?pool=" + poolId)
+	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetNodes_Endpoint + "?cluster=" + cluster.ClusterId + "&pool=" + poolId)
 
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
 	m["Accept"] = "application/json"
 	m["Authorization"] = cloud.IAMToken
-	m["X-Region"] = cloud.Region
+	//m["X-Region"] = cloud.Region
 	m["X-Auth-Resource-Group"] = cluster.ResourceGroup
 	utils.SetHeaders(req, m)
 

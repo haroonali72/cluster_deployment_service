@@ -583,6 +583,39 @@ func (c *IKSClusterController) Patch() {
 		return
 	}
 
+	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
+		ctx.SendLogs("IKSClusterController : Cluster is in "+string(cluster.Status)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}
+		c.ServeJSON()
+		return
+	}
+	if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("IKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("IKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterCreated) {
+		ctx.SendLogs("IKSClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("IKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
+
 	validate := validator.New()
 	err = validate.Struct(cluster)
 	if err != nil {
@@ -625,39 +658,8 @@ func (c *IKSClusterController) Patch() {
 	}
 
 	//=============================================================================//
-	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
-		ctx.SendLogs("IKSClusterController : Cluster is in "+string(cluster.Status)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}
-		c.ServeJSON()
-		return
-	}
+
 	ctx.SendLogs("IKSClusterController:Update cluster "+cluster.Name+" of project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	if cluster.Status == (models.Deploying) {
-		ctx.SendLogs("IKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.Terminating) {
-		ctx.SendLogs("IKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.ClusterCreated) {
-		ctx.SendLogs("IKSClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("IKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
 
 	cluster.CompanyId = userInfo.CompanyId
 	err = iks.UpdateCluster(cluster, true, *ctx)
