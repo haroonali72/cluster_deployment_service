@@ -327,7 +327,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 	cluster.CompanyId = oldCluster.CompanyId
-	cluster.Status = oldCluster.Status
+
 	err = CreateCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error creating cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

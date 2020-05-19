@@ -26,7 +26,7 @@ type Cluster_Def struct {
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster Name [required]`
 	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of cluster  [required]"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"in(DO|do)"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=DO|eq=do|eq=Do)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
