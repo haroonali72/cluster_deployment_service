@@ -81,7 +81,6 @@ func setEnv() {
 	os.Setenv("mongo_aks_template_collection", "aks_template")
 	os.Setenv("mongo_aks_cluster_collection", "aks_cluster")
 	os.Setenv("mongo_iks_template_collection", "iks_template")
-	os.Setenv("mongo_default_template_collection", "default_template")
 	os.Setenv("mongo_iks_cluster_collection", "iks_cluster")
 	os.Setenv("mongo_default_template_collection", "default_template")
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")

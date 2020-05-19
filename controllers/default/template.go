@@ -35,7 +35,7 @@ func (c *DefaultTemplateController) Get() {
 	cloudtype := c.GetString(":cloudtype")
 	if cloudtype == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "Cloudtype must is empty"}
+		c.Data["json"] = map[string]string{"error": "Cloudtype is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -58,12 +58,12 @@ func (c *DefaultTemplateController) Get() {
 	}
 
 	ctx := new(utils.Context)
-	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", "", "")
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI,"" , userInfo.UserId, userInfo.CompanyId)
 
 	//====================================================================================//
 	ctx.SendLogs("DefaultTemplateController: Get template for: "+cloudtype, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	if strings.ToLower(cloudtype) == "aws" {
+	if strings.ToLower(cloudtype) == string(models.AWS) {
 		template, err := aws.GetAWSDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -73,7 +73,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	}else if strings.ToLower(cloudtype) == "azure" {
+	}else if strings.ToLower(cloudtype) == string(models.Azure) {
 		template, err := azure.GetAzureDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -83,7 +83,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	} else if strings.ToLower(cloudtype) == "do" {
+	} else if strings.ToLower(cloudtype) == string(models.DO) {
 		template, err := do.GetDoDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -93,7 +93,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	}else if strings.ToLower(cloudtype) == "gcp" {
+	}else if strings.ToLower(cloudtype) == string(models.GCP) {
 		template, err := gcp.GetGcpDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -103,7 +103,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	}else if strings.ToLower(cloudtype) == "op" {
+	}else if strings.ToLower(cloudtype) == string(models.OP) {
 		template, err := op.GetOPDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -113,7 +113,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	}else if strings.ToLower(cloudtype) == "doks" {
+	}else if strings.ToLower(cloudtype) == string(models.DOKS) {
 		template, err := doks.GetDOKSDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -123,7 +123,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	}else if strings.ToLower(cloudtype) == "iks" {
+	}else if strings.ToLower(cloudtype) == string(models.IKS) {
 		template, err := iks.GetIKSDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -133,7 +133,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	}else if strings.ToLower(cloudtype) == "aks"{
+	}else if strings.ToLower(cloudtype) == string(models.AKS){
 		template, err := aks.GetAKSDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
@@ -143,7 +143,7 @@ func (c *DefaultTemplateController) Get() {
 		}
 		c.Data["json"] = template
 		c.ServeJSON()
-	}else if strings.ToLower(cloudtype) == "gke" {
+	}else if strings.ToLower(cloudtype) == string(models.GKE) {
 		template, err := gke.GetGKEDefault(*ctx)
 		if err != nil {
 			c.Ctx.Output.SetStatus(404)
