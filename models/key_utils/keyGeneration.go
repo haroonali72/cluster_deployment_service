@@ -24,7 +24,7 @@ type AZUREKey struct {
 	KeyName        string                 `json:"key_name" bson:"key_name" validate:"required" description:"Name of the key.[required]"`
 	Username       string                 `json:"username" bson:"username"  description:"Name of the user ['optional']"`
 	AdminPassword  string                 `json:"admin_password" bson:"admin_password" description:"It is the password ['required' if credentials_type is 'password']"`
-	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty" validate:"required" description:"Private key for SSH ['required'] if credentials_type is 'key']"`
+	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty" description:"Private key for SSH ['required'] if credentials_type is 'key']"`
 	PublicKey      string                 `json:"-" bson:"public_key,omitempty" description:"Public key for ssh [readonly]"`
 	ID             int                    `json:"-" bson:"id,omitempty"`
 	FingerPrint    string                 `json:"finger_print" bson:"finger_print,omitempty" description:"Finger prints for the key [optional]"`
