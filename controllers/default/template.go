@@ -11,6 +11,7 @@ import (
 	"antelope/models/gke"
 	"antelope/models/iks"
 	"antelope/models/op"
+	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/utils"
 	"github.com/astaxie/beego"
 	"strings"
@@ -47,7 +48,7 @@ func (c *DefaultTemplateController) Get() {
 		return
 	}
 
-	/*statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
@@ -55,7 +56,7 @@ func (c *DefaultTemplateController) Get() {
 		c.ServeJSON()
 		return
 	}
-*/
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", "", "")
 
