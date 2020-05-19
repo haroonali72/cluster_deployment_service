@@ -312,7 +312,7 @@ func (c *AKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	
+
 	if cluster.Status == (models.Deploying) {
 		ctx.SendLogs("AKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)

@@ -78,7 +78,7 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 		Url:     getVaultHost() + models.VaultCreateKeyURI,
 		ReqType: types.POST,
 		ReqBody: string(request_data),
-	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	req, err := utils.CreatePostRequest(request_data, getVaultHost()+models.VaultCreateKeyURI)
 	if err != nil {
 
@@ -124,7 +124,7 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 		Token:   token,
 		Url:     host,
 		ReqType: types.GET,
-	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -160,7 +160,7 @@ func GetSSHKey(cloudType, keyName, token string, ctx utils.Context, region strin
 		Url:     host,
 		ReqType: types.GET,
 		Resp:    string(contents),
-	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return contents, nil
 
 }
@@ -230,7 +230,7 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 		Token:   token,
 		Url:     host,
 		ReqType: types.GET,
-	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	req, err := utils.CreateGetRequest(host)
 
 	if err != nil {
@@ -268,7 +268,7 @@ func GetCredentialProfile(cloudType string, profileId string, token string, ctx 
 		Url:     host,
 		ReqType: types.GET,
 		Resp:    string(contents),
-	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	return 0, contents, nil
 
 }
@@ -293,7 +293,7 @@ func DeleteSSHkey(cloudType, keyName, token string, ctx utils.Context, region st
 		Token:   token,
 		Url:     host,
 		ReqType: types.DELETE,
-	}), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	req, err := utils.CreateDeleteRequest(host)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
