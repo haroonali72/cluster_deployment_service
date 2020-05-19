@@ -13,6 +13,7 @@ import (
 	"antelope/controllers/aws"
 	"antelope/controllers/azure"
 	"antelope/controllers/customer_template"
+	_default "antelope/controllers/default"
 	"antelope/controllers/do"
 	"antelope/controllers/doks"
 	"antelope/controllers/gcp"
@@ -123,6 +124,11 @@ func init() {
 		beego.NSNamespace("/cluster/aks",
 			beego.NSInclude(
 				&aks.AKSClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/default",
+			beego.NSInclude(
+				&_default.DefaultTemplateController{},
 			),
 		),
 	)
