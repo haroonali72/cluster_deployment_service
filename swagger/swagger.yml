@@ -4588,6 +4588,34 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/default/{cloudtype}:
+    get:
+      tags:
+      - template/default
+      description: get template
+      operationId: DefaultTemplateController.Get
+      parameters:
+      - in: header
+        name: token
+        description: token
+        required: true
+        type: string
+      - in: path
+        name: cloudtype
+        description: type of cloud provider
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/aws.Template'
+        "400":
+          description: '{"error": "cloud type must not be empty"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "No template exists for this cloud type"}'
   /template/do/:
     put:
       tags:
@@ -6387,28 +6415,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  499.0xc0433a8db0.false:
+  482.0xc00171cb40.false:
     title: "false"
     type: object
-  629.0xc042beae10.false:
+  605.0xc000f65170.false:
     title: "false"
     type: object
-  667.0xc0432be7b0.false:
+  667.0xc00162e120.false:
     title: "false"
     type: object
-  721.0xc042f2cd80.false:
+  964.0xc00129fbc0.false:
     title: "false"
     type: object
-  8169.string:
+  8073.string:
     title: string
     type: object
-  14758.0xc0433d8d20.false:
+  14379.0xc00174eab0.false:
     title: "false"
     type: object
-  56067.0xc043376600.false:
+  55764.0xc0016bfda0.false:
     title: "false"
     type: object
-  58879.string:
+  56068.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6517,7 +6545,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/58879.string'
+        $ref: '#/definitions/56068.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6668,7 +6696,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/629.0xc042beae10.false'
+        $ref: '#/definitions/605.0xc000f65170.false'
       name:
         type: string
       network_name:
@@ -7054,7 +7082,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/721.0xc042f2cd80.false'
+        $ref: '#/definitions/964.0xc00129fbc0.false'
       name:
         type: string
       network_name:
@@ -8431,7 +8459,7 @@ definitions:
     properties:
       id:
         type: string
-      kube_version:
+      location:
         type: string
       machine_type:
         type: string
@@ -8440,8 +8468,6 @@ definitions:
       public_ip:
         type: string
       state:
-        type: string
-      status:
         type: string
   iks.KubeWorkerPoolStatus1:
     title: KubeWorkerPoolStatus1
@@ -8518,7 +8544,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/56067.0xc043376600.false'
+        $ref: '#/definitions/55764.0xc0016bfda0.false'
       kube_version:
         type: string
       name:
@@ -8778,7 +8804,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14758.0xc0433d8d20.false'
+        $ref: '#/definitions/14379.0xc00174eab0.false'
       name:
         type: string
       node_pools:

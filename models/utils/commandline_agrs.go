@@ -32,6 +32,7 @@ var (
 	mongo_aks_cluster_collection    = ""
 	mongo_iks_template_collection   = ""
 	mongo_iks_cluster_collection    = ""
+	mongo_default_template_collection=""
 	redis_url                       = ""
 	logger_url                      = ""
 	vault_url                       = ""
@@ -59,6 +60,12 @@ func InitFlags() error {
 			Usage:       "kill_bill_user",
 			Destination: &kill_bill_user,
 			EnvVar:      "kill_bill_user",
+		},
+		cli.StringFlag{
+			Name:        "mongo_default_template_collection",
+			Usage:       "mongo_default_template_collection",
+			Destination: &mongo_default_template_collection,
+			EnvVar:      "mongo_default_template_collection",
 		},
 		cli.StringFlag{
 			Name:        "kill_bill_api_key",
@@ -342,6 +349,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_aks_template_collection", mongo_aks_template_collection)
 	beego.AppConfig.Set("mongo_iks_template_collection", mongo_iks_template_collection)
 	beego.AppConfig.Set("mongo_iks_cluster_collection", mongo_iks_cluster_collection)
+	beego.AppConfig.Set("mongo_default_template_collection", mongo_default_template_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)
 	beego.AppConfig.Set("network_url", network_url)
