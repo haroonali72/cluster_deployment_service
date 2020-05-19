@@ -232,10 +232,11 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 	//sgIds = append(sgIds, &sid)
 	if pool.PoolRole == "master" {
 		var publicIPaddress network.PublicIPAddress
+		var err types.CustomCPError
 		if pool.EnablePublicIP {
 			IPname := "pip-" + pool.Name
 			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
-			_, err := cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
+			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
 			if err != (types.CustomCPError{}) {
 				return nil, "", err
 			}
@@ -1021,7 +1022,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
 	storage = append(storage, staticVolume)
-
+	password := "Cloudplex1"
 	vm := compute.VirtualMachine{
 		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
@@ -1045,9 +1046,11 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 				OsDisk: osDisk,
 				//DataDisks: &storage,
 			},
+
 			OsProfile: &compute.OSProfile{
 				ComputerName:  to.StringPtr(pool.Name),
 				AdminUsername: to.StringPtr(pool.AdminUser),
+				AdminPassword :  to.StringPtr(password),
 			},
 			NetworkProfile: &compute.NetworkProfile{
 
@@ -1080,6 +1083,8 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	}
 
 	vm.StorageProfile.DataDisks = &storage
+
+
 	private := ""
 	public := ""
 	if pool.KeyInfo.CredentialType == models.SSHKey {
