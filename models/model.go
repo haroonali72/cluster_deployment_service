@@ -23,6 +23,7 @@ const (
 	ClusterTerminated        Type = "Cluster Terminated"
 	Deploying                Type = "Creating"
 	Terminating              Type = "Terminating"
+
 //	AgentDeploymentFailed    Type = "Agent Deployment Failed"
 )
 
@@ -42,20 +43,18 @@ const (
 type ErrorMessage string
 
 const (
-	IsEmpty  ErrorMessage = "is empty"
-	Notauthorized ErrorMessage= "User is unauthorized to perform this action"
-	AlreadyExist  ErrorMessage= "Cluster against same project id already exists"
-	SuccessfullyAdded ErrorMessage= "Cluster added successfully"
-	SuccessfullyUpdated ErrorMessage= "Cluster updated successfully"
-	SuccessfullyDeleted ErrorMessage=  "Cluster deleted successfully"
-	CreationInitialised ErrorMessage=  "Cluster creation initiated"
-	TerminationInitialised ErrorMessage=  "Cluster termination initialized"
-	KeySuccessfullyDeleted ErrorMessage=  "Key deleted successfully"
-	KeySuccessfullyAdded ErrorMessage= "Key added successfully"
-	ValidProfile ErrorMessage= "Profile is valid"
-
-
-	)
+	IsEmpty                ErrorMessage = "is empty"
+	Notauthorized          ErrorMessage = "User is unauthorized to perform this action"
+	AlreadyExist           ErrorMessage = "Cluster against same project id already exists"
+	SuccessfullyAdded      ErrorMessage = "Cluster added successfully"
+	SuccessfullyUpdated    ErrorMessage = "Cluster updated successfully"
+	SuccessfullyDeleted    ErrorMessage = "Cluster deleted successfully"
+	CreationInitialised    ErrorMessage = "Cluster creation initiated"
+	TerminationInitialised ErrorMessage = "Cluster termination initialized"
+	KeySuccessfullyDeleted ErrorMessage = "Key deleted successfully"
+	KeySuccessfullyAdded   ErrorMessage = "Key added successfully"
+	ValidProfile           ErrorMessage = "Profile is valid"
+)
 
 type HeaderVariable string
 
@@ -515,7 +514,7 @@ const (
 	IBM_IAM_Endpoint                 = "https://iam.cloud.ibm.com/identity/token"
 	IBM_Kube_Cluster_Endpoint        = "https://containers.cloud.ibm.com/global/v2/vpc/createCluster"
 	IBM_Kube_GetWorker_Endpoint      = "https://containers.cloud.ibm.com/global/v2/getWorkerPools"
-	IBM_Kube_GetNodes_Endpoint       = "https://containers.cloud.ibm.com/global/v1/clusters/"
+	IBM_Kube_GetNodes_Endpoint       = "https://containers.cloud.ibm.com/global/v2/vpc/getWorkers"
 	IBM_Kube_GetCluster_Endpoint     = "https://containers.cloud.ibm.com/global/v2/getCluster"
 	IBM_Kube_Delete_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v1/clusters/"
 	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"

@@ -408,12 +408,11 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 			var node1 KubeWorkerNodesStatus1
 
 			node1.Flavour = node.Flavour
-			node1.State = node.State
+			node1.State = node.Lifecycle.State
 			node1.ID = node.ID
-			node1.Status = node.Status
-			node1.KubeVersion = node.KubeVersion
-			node1.PrivateIp = node.PrivateIp
-			node1.PublicIp = node.PublicIp
+			node1.PrivateIp = node.Network.PrivateIp
+			node1.PublicIp = node.Network.PublicIp
+			node1.Location = node.Location
 			response1.WorkerPools[index].Nodes = append(response1.WorkerPools[index].Nodes, node1)
 		}
 		response1.WorkerPools = append(response1.WorkerPools, pool1)
