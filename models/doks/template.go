@@ -369,3 +369,24 @@ func GetCustomerTemplatesMetadata(ctx utils.Context, data rbac_athentication.Lis
 
 	return templatemetadata, nil
 }
+
+
+func GetDOKSDefault(ctx utils.Context) (template KubernetesTemplate, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
+		return KubernetesTemplate{}, err1
+	}
+	defer session.Close()
+	conf := db.GetMongoConf()
+
+	c := session.DB(conf.MongoDb).C(conf.MongoDefaultTemplateCollection)
+	err = c.Find(bson.M{"cloud": "doks"}).One(&template)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		return KubernetesTemplate{}, err
+	}
+	return template, nil
+}

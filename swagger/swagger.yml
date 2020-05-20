@@ -1810,13 +1810,15 @@ paths:
       parameters:
       - in: header
         name: X-Auth-Token
-        description: "true"
+        description: token
+        required: true
         type: string
-      - in: vault.DOCredentials
+      - in: body
         name: body
         description: body for cluster content
+        required: true
         schema:
-          $ref: '#/definitions/true'
+          $ref: '#/definitions/vault.DOCredentials'
       responses:
         "200":
           description: '{"msg": "Profile is valid"}'
@@ -4588,6 +4590,34 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/default/{cloudtype}:
+    get:
+      tags:
+      - template/default
+      description: get template
+      operationId: DefaultTemplateController.Get
+      parameters:
+      - in: header
+        name: token
+        description: token
+        required: true
+        type: string
+      - in: path
+        name: cloudtype
+        description: type of cloud provider
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/aws.Template'
+        "400":
+          description: '{"error": "cloud type must not be empty"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "No template exists for this cloud type"}'
   /template/do/:
     put:
       tags:
@@ -6387,28 +6417,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  499.0xc0433a8db0.false:
+  482.0xc0016cbb90.false:
     title: "false"
     type: object
-  629.0xc042beae10.false:
+  605.0xc000f1dec0.false:
     title: "false"
     type: object
-  667.0xc0432be7b0.false:
+  667.0xc0015dd170.false:
     title: "false"
     type: object
-  721.0xc042f2cd80.false:
+  964.0xc00126e930.false:
     title: "false"
     type: object
-  8169.string:
+  8073.string:
     title: string
     type: object
-  14758.0xc0433d8d20.false:
+  14379.0xc00170db00.false:
     title: "false"
     type: object
-  56067.0xc043376600.false:
+  55764.0xc00168ee10.false:
     title: "false"
     type: object
-  58879.string:
+  56068.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6517,7 +6547,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/58879.string'
+        $ref: '#/definitions/56068.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6668,7 +6698,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/629.0xc042beae10.false'
+        $ref: '#/definitions/605.0xc000f1dec0.false'
       name:
         type: string
       network_name:
@@ -6867,6 +6897,8 @@ definitions:
       status:
         $ref: '#/definitions/models.Type'
         description: Status of the cluster [optional]
+      token_name:
+        type: string
   azure.DiagnosticsProfile:
     title: DiagnosticsProfile
     type: object
@@ -7054,7 +7086,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/721.0xc042f2cd80.false'
+        $ref: '#/definitions/964.0xc00126e930.false'
       name:
         type: string
       network_name:
@@ -8431,7 +8463,7 @@ definitions:
     properties:
       id:
         type: string
-      kube_version:
+      location:
         type: string
       machine_type:
         type: string
@@ -8440,8 +8472,6 @@ definitions:
       public_ip:
         type: string
       state:
-        type: string
-      status:
         type: string
   iks.KubeWorkerPoolStatus1:
     title: KubeWorkerPoolStatus1
@@ -8518,7 +8548,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/56067.0xc043376600.false'
+        $ref: '#/definitions/55764.0xc00168ee10.false'
       kube_version:
         type: string
       name:
@@ -8778,7 +8808,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14758.0xc0433d8d20.false'
+        $ref: '#/definitions/14379.0xc00170db00.false'
       name:
         type: string
       node_pools:
@@ -8791,9 +8821,6 @@ definitions:
         type: string
       token_name:
         type: string
-  "true":
-    title: "true"
-    type: object
   vault.AwsCredentials:
     title: AwsCredentials
     type: object
@@ -8819,6 +8846,16 @@ definitions:
       subscription_id:
         type: string
       tenant_id:
+        type: string
+  vault.DOCredentials:
+    title: DOCredentials
+    type: object
+    properties:
+      access_token:
+        description: Access key [required]
+        type: string
+      region:
+        description: Cloud Region [optional]
         type: string
   vault.IBMCredentials:
     title: IBMCredentials

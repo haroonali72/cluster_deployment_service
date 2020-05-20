@@ -897,7 +897,7 @@ func (c *GKEClusterController) GetStatus() {
 	cluster, cpErr := gke.FetchStatus(credentials, token, *ctx)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = cpErr.Description
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	} else if cpErr != (types.CustomCPError{}) {
@@ -906,7 +906,6 @@ func (c *GKEClusterController) GetStatus() {
 		c.ServeJSON()
 	}
 	ctx.SendLogs("GKEClusterController: Status Fetched of "+cluster.Name+" of the project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }

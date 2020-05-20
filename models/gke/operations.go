@@ -347,7 +347,7 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return cluster, ApiErrors(err1,"Error in fetching cluster status")
+		return cluster, ApiErrors(err1,"Cluster is not in running state")
 	}
 
 	if latestCluster == nil {
