@@ -4596,7 +4596,7 @@ paths:
       operationId: DefaultTemplateController.Get
       parameters:
       - in: header
-        name: token
+        name: X-Auth-Token
         description: token
         required: true
         type: string
@@ -6415,25 +6415,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc001685c80.false:
+  482.0xc0016fa9f0.false:
     title: "false"
     type: object
-  605.0xc000eec2d0.false:
+  605.0xc000f43020.false:
     title: "false"
     type: object
-  667.0xc001595260.false:
+  667.0xc0015f1fb0.false:
     title: "false"
     type: object
-  964.0xc001228d20.false:
+  964.0xc001279a70.false:
     title: "false"
     type: object
   8073.string:
     title: string
     type: object
-  14379.0xc0016cdbf0.false:
+  14379.0xc001738960.false:
     title: "false"
     type: object
-  55764.0xc001646f00.false:
+  55764.0xc001699c50.false:
     title: "false"
     type: object
   56068.string:
@@ -6696,7 +6696,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000eec2d0.false'
+        $ref: '#/definitions/605.0xc000f43020.false'
       name:
         type: string
       network_name:
@@ -7082,7 +7082,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001228d20.false'
+        $ref: '#/definitions/964.0xc001279a70.false'
       name:
         type: string
       network_name:
@@ -8544,7 +8544,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/55764.0xc001646f00.false'
+        $ref: '#/definitions/55764.0xc001699c50.false'
       kube_version:
         type: string
       name:
@@ -8804,7 +8804,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc0016cdbf0.false'
+        $ref: '#/definitions/14379.0xc001738960.false'
       name:
         type: string
       node_pools:
