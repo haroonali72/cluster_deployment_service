@@ -28,7 +28,7 @@ type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of project [required]"`
 	Name             string        `json:"name" bson:"name" valid:"required" description:"Unique name of the cluster [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of the cluster [optional]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of the cluster [optional]"`
 	Cloud            models.Cloud  `json:"-" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -383,7 +383,8 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	err := azure.init()
 	if err != (types.CustomCPError{}) {
 		PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
-		cluster.Status = "Cluster creation failed"
+		PrintError(errors.New(err.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -401,14 +402,15 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	cluster, err = azure.createCluster(cluster, ctx, companyId, token)
 	if err !=(types.CustomCPError {}){
 		PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
-		cluster.Status = "Cluster creation failed"
+		PrintError(errors.New(err.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = models.ClusterCreationFailed
 		beego.Info("going to cleanup")
 		err = azure.CleanUp(cluster, ctx, companyId)
 		if err != (types.CustomCPError {}) {
 			PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -422,7 +424,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		return err
 	}
 
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
@@ -520,7 +522,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	err1 := azure.init()
 	if err1 != (types.CustomCPError{}) {
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -542,7 +544,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -562,7 +564,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		return types.CustomCPError{}
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 
 	for _, pools := range cluster.NodePools {
 		var nodes []*VM
