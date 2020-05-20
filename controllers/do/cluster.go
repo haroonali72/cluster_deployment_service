@@ -1216,8 +1216,8 @@ func (c *DOClusterController) DeleteSSHKey() {
 
 // @Title ValidateProfile
 // @Description validate if profile is valid
-// @Param X-Auth-Token header string token true ""
-// @Param body vault.DOCredentials true	"body for cluster content"
+// @Param X-Auth-Token header string true "token"
+// @Param body body vault.DOCredentials true	"body for cluster content"
 // @Success 200 {"msg": "Profile is valid"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Invalid Profile"}
