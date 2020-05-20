@@ -36,7 +36,7 @@ type Cluster_Def struct {
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required" description:"Network name to deploy the cluster [required]"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required" description:"Resource group to deploy the cluster [required]"`
 	CompanyId        string        `json:"-" bson:"company_id"  description:"Id of the company [optional]"`
-	TokenName        string        `json:"-" bson:"token_name"`
+	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
 type NodePool struct {
