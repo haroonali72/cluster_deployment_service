@@ -6415,25 +6415,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc001685c80.false:
+  482.0xc001722d20.false:
     title: "false"
     type: object
-  605.0xc000eec2d0.false:
+  605.0xc000f61350.false:
     title: "false"
     type: object
-  667.0xc001595260.false:
+  667.0xc001636300.false:
     title: "false"
     type: object
-  964.0xc001228d20.false:
+  964.0xc001299da0.false:
     title: "false"
     type: object
   8073.string:
     title: string
     type: object
-  14379.0xc0016cdbf0.false:
+  14379.0xc00175cc90.false:
     title: "false"
     type: object
-  55764.0xc001646f00.false:
+  55764.0xc0016c9f80.false:
     title: "false"
     type: object
   56068.string:
@@ -6696,7 +6696,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000eec2d0.false'
+        $ref: '#/definitions/605.0xc000f61350.false'
       name:
         type: string
       network_name:
@@ -6895,6 +6895,8 @@ definitions:
       status:
         $ref: '#/definitions/models.Type'
         description: Status of the cluster [optional]
+      token_name:
+        type: string
   azure.DiagnosticsProfile:
     title: DiagnosticsProfile
     type: object
@@ -7082,7 +7084,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001228d20.false'
+        $ref: '#/definitions/964.0xc001299da0.false'
       name:
         type: string
       network_name:
@@ -8544,7 +8546,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/55764.0xc001646f00.false'
+        $ref: '#/definitions/55764.0xc0016c9f80.false'
       kube_version:
         type: string
       name:
@@ -8804,7 +8806,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc0016cdbf0.false'
+        $ref: '#/definitions/14379.0xc00175cc90.false'
       name:
         type: string
       node_pools:
