@@ -41,7 +41,7 @@ type GKECluster struct {
 	Endpoint                       string                          `json:"endpoint,omitempty" bson:"endpoint,omitempty" description:"IP address of this cluster's master endpoint [readonly]"`
 	ExpireTime                     string                          `json:"expire_time,omitempty" bson:"expire_time,omitempty" description:"Time the cluster will be automatically deleted [readonly]"`
 	InitialClusterVersion          string                          `json:"initial_cluster_version,omitempty" bson:"initial_cluster_version,omitempty" description:"Initial kubernetes version for this cluster [optional]"`
-	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy" bson:"ip_allocation_policy" validate:"dive"`
+	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy" bson:"ip_allocation_policy"`
 	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty" description:"The fingerprint of the set of labels for this cluster [optional]"`
 	LegacyAbac                     *LegacyAbac                     `json:"legacy_abac,omitempty" bson:"legacy_abac,omitempty"`
 	Location                       string                          `json:"location" bson:"location"  description:"The name of GCP zone or region in which cluster resides [required]"`
