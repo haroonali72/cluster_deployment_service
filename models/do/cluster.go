@@ -77,6 +77,11 @@ type Data struct {
 	Region string `json:"region"`
 }
 
+type Cluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -95,8 +100,12 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	}
 	return cluster, nil
 }
-func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
-
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (doClusters []Cluster, err error) {
+	var copyData []string
+	var clusters []Cluster_Def
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -106,13 +115,16 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters [
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-
-	return clusters, nil
+	for _, cluster := range clusters {
+		temp := Cluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		doClusters = append(doClusters, temp)
+	}
+	return doClusters, nil
 }
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 

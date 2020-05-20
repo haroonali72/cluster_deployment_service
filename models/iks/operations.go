@@ -170,7 +170,7 @@ func (cloud *IBM) init(region string, ctx utils.Context) types.CustomCPError {
 		}
 		beego.Info(string(body))
 		ctx.SendLogs("Error while getting IBM Auth Token: "+string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "Error while getting IBM Auth Token", 502)
+		cpErr := ApiError(errors.New(string(body)), "Error while getting IBM Auth Token", 502)
 		return cpErr
 	}
 	defer res.Body.Close()
