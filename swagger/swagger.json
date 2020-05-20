@@ -2598,15 +2598,17 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "true",
+                        "description": "token",
+                        "required": true,
                         "type": "string"
                     },
                     {
-                        "in": "vault.DOCredentials",
+                        "in": "body",
                         "name": "body",
                         "description": "body for cluster content",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/true"
+                            "$ref": "#/definitions/vault.DOCredentials"
                         }
                     }
                 ],
@@ -6842,7 +6844,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "X-Auth-Token",
+                        "name": "token",
                         "description": "token",
                         "required": true,
                         "type": "string"
@@ -9577,15 +9579,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc001738960.false": {
+        "14379.0xc00170db00.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0016fa9f0.false": {
+        "482.0xc0016cbb90.false": {
             "title": "false",
             "type": "object"
         },
-        "55764.0xc001699c50.false": {
+        "55764.0xc00168ee10.false": {
             "title": "false",
             "type": "object"
         },
@@ -9593,11 +9595,11 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000f43020.false": {
+        "605.0xc000f1dec0.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0015f1fb0.false": {
+        "667.0xc0015dd170.false": {
             "title": "false",
             "type": "object"
         },
@@ -9605,7 +9607,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc001279a70.false": {
+        "964.0xc00126e930.false": {
             "title": "false",
             "type": "object"
         },
@@ -9959,7 +9961,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f43020.false"
+                    "$ref": "#/definitions/605.0xc000f1dec0.false"
                 },
                 "name": {
                     "type": "string"
@@ -10249,6 +10251,9 @@
                 "status": {
                     "$ref": "#/definitions/models.Type",
                     "description": "Status of the cluster [optional]"
+                },
+                "token_name": {
+                    "type": "string"
                 }
             }
         },
@@ -10516,7 +10521,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001279a70.false"
+                    "$ref": "#/definitions/964.0xc00126e930.false"
                 },
                 "name": {
                     "type": "string"
@@ -12637,7 +12642,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/55764.0xc001699c50.false"
+                    "$ref": "#/definitions/55764.0xc00168ee10.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12993,7 +12998,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc001738960.false"
+                    "$ref": "#/definitions/14379.0xc00170db00.false"
                 },
                 "name": {
                     "type": "string"
@@ -13014,10 +13019,6 @@
                     "type": "string"
                 }
             }
-        },
-        "true": {
-            "title": "true",
-            "type": "object"
         },
         "vault.AwsCredentials": {
             "title": "AwsCredentials",
@@ -13053,6 +13054,20 @@
                     "type": "string"
                 },
                 "tenant_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "vault.DOCredentials": {
+            "title": "DOCredentials",
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "description": "Access key [required]",
+                    "type": "string"
+                },
+                "region": {
+                    "description": "Cloud Region [optional]",
                     "type": "string"
                 }
             }

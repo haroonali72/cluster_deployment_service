@@ -480,7 +480,7 @@ func (c *DOClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.ClusterTerminationFailed) {
+	if cluster.Status == (models.ClusterTerminationFailed) && !forceDelete {
 		ctx.SendLogs("DOClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
@@ -1216,8 +1216,8 @@ func (c *DOClusterController) DeleteSSHKey() {
 
 // @Title ValidateProfile
 // @Description validate if profile is valid
-// @Param X-Auth-Token header string token true ""
-// @Param body vault.DOCredentials true	"body for cluster content"
+// @Param X-Auth-Token header string true "token"
+// @Param body body vault.DOCredentials true	"body for cluster content"
 // @Success 200 {"msg": "Profile is valid"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Invalid Profile"}
