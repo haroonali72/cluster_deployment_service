@@ -23,7 +23,7 @@ type DefaultTemplateController struct {
 
 // @Title Get
 // @Description get template
-// @Param	token	header	string	true "token"
+// @Param	X-Auth-Token	header	string	true "token"
 // @Param	cloudtype	path	string	true	"type of cloud provider"
 // @Success 200 {object} aws.Template
 // @Failure 400 {"error": "cloud type must not be empty"}
@@ -40,7 +40,7 @@ func (c *DefaultTemplateController) Get() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "Token is empty"}
