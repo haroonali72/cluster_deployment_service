@@ -6417,25 +6417,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc001778510.false:
+  482.0xc0016cfc50.false:
     title: "false"
     type: object
-  605.0xc000fb2840.false:
+  605.0xc000f1ff80.false:
     title: "false"
     type: object
-  667.0xc00166dad0.false:
+  667.0xc0015e5230.false:
     title: "false"
     type: object
-  964.0xc0012f9290.false:
+  964.0xc0012789f0.false:
     title: "false"
     type: object
   8073.string:
     title: string
     type: object
-  14379.0xc0017b4480.false:
+  14379.0xc001715bc0.false:
     title: "false"
     type: object
-  55785.0xc00171f770.false:
+  55785.0xc001690ed0.false:
     title: "false"
     type: object
   56068.string:
@@ -6698,7 +6698,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000fb2840.false'
+        $ref: '#/definitions/605.0xc000f1ff80.false'
       name:
         type: string
       network_name:
@@ -6877,6 +6877,18 @@ definitions:
     title: Cluster_Def
     type: object
     properties:
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+        description: Name of the cloud [optional]
+      company_id:
+        description: Id of the company [optional]
+        type: string
+      creation_date:
+        type: string
+        format: datetime
+      modification_date:
+        type: string
+        format: datetime
       name:
         description: Unique name of the cluster [required]
         type: string
@@ -6907,10 +6919,14 @@ definitions:
         type: boolean
       new_storage_account:
         type: boolean
+      storage_account_id:
+        type: string
   azure.ImageReference:
     title: ImageReference
     type: object
     properties:
+      image_id:
+        type: string
       offer:
         description: Offer of the VM image [required]
         type: string
@@ -7058,7 +7074,23 @@ definitions:
     title: VM
     type: object
     properties:
+      cloud_id:
+        type: string
+      computer_name:
+        type: string
+      identity_principal_id:
+        type: string
       name:
+        type: string
+      node_state:
+        type: string
+      password:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
+        type: string
+      user_name:
         type: string
   azure.Volume:
     title: Volume
@@ -7086,7 +7118,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0012f9290.false'
+        $ref: '#/definitions/964.0xc0012789f0.false'
       name:
         type: string
       network_name:
@@ -8548,7 +8580,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/55785.0xc00171f770.false'
+        $ref: '#/definitions/55785.0xc001690ed0.false'
       kube_version:
         type: string
       name:
@@ -8808,7 +8840,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc0017b4480.false'
+        $ref: '#/definitions/14379.0xc001715bc0.false'
       name:
         type: string
       node_pools:

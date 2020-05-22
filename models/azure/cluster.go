@@ -29,13 +29,13 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of project [required]"`
 	Name             string        `json:"name" bson:"name" valid:"required" description:"Unique name of the cluster [required]"`
 	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of the cluster [optional]"`
-	Cloud            models.Cloud  `json:"-" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
+	CreationDate     time.Time     `json:"creation_date" bson:"creation_date"`
+	ModificationDate time.Time     `json:"modification_date" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive" description:"Nodepools of the cluster.Atleast 1 nodepool [required]"`
 	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required" description:"Network name to deploy the cluster [required]"`
 	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required" description:"Resource group to deploy the cluster [required]"`
-	CompanyId        string        `json:"-" bson:"company_id"  description:"Id of the company [optional]"`
+	CompanyId        string        `json:"company_id" bson:"company_id"  description:"Id of the company [optional]"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
@@ -77,21 +77,21 @@ type Volume struct {
 	Size     int32             `json:"disk_size" bson:"disk_size" valid:"required" description:"Size of the disk.[required]"`
 }
 type VM struct {
-	CloudId             *string `json:"-" bson:"cloud_id,omitempty"`
-	NodeState           *string `json:"-" bson:"node_state,omitempty"`
+	CloudId             *string `json:"cloud_id" bson:"cloud_id,omitempty"`
+	NodeState           *string `json:"node_state" bson:"node_state,omitempty"`
 	Name                *string `json:"name" bson:"name,omitempty"`
-	PrivateIP           *string `json:"-" bson:"private_ip,omitempty"`
-	PublicIP            *string `json:"-" bson:"public_ip,omitempty"`
-	UserName            *string `json:"-" bson:"user_name,omitempty"`
-	PAssword            *string `json:"-" bson:"password,omitempty"`
-	ComputerName        *string `json:"-" bson:"computer_name,omitempty"`
-	IdentityPrincipalId *string `json:"-" bson:"identity_principal_id"`
+	PrivateIP           *string `json:"private_ip" bson:"private_ip,omitempty"`
+	PublicIP            *string `json:"public_ip" bson:"public_ip,omitempty"`
+	UserName            *string `json:"user_name" bson:"user_name,omitempty"`
+	PAssword            *string `json:"password" bson:"password,omitempty"`
+	ComputerName        *string `json:"computer_name" bson:"computer_name,omitempty"`
+	IdentityPrincipalId *string `json:"identity_principal_id" bson:"identity_principal_id"`
 }
 
 type DiagnosticsProfile struct {
 	Enable            bool   `json:"enable" bson:"enable" valid:"required" description:"To enable diagnostics profile [required]`
 	NewStroageAccount bool   `json:"new_storage_account" bson:"new_storage_account" valid:"required" description:"Enable to make new storage account[required]`
-	StorageAccountId  string `json:"-" bson:"storage_account_id" description:"Id of the storage account [optional]`
+	StorageAccountId  string `json:"storage_account_id" bson:"storage_account_id" description:"Id of the storage account [optional]`
 }
 
 type ImageReference struct {
@@ -100,7 +100,7 @@ type ImageReference struct {
 	Offer     string        `json:"offer" bson:"offer,omitempty" valid:"required" description:"Offer of the VM image [required]"`
 	Sku       string        `json:"sku" bson:"sku,omitempty" valid:"required" description:"Sku of the Vm image [required]"`
 	Version   string        `json:"version" bson:"version,omitempty" valid:"required" description:"Version of the Vm image [required]"`
-	ImageId   string        `json:"-" bson:"image_id,omitempty"`
+	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
 type Project struct {
 	ProjectData Data `json:"data"`
