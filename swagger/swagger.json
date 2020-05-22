@@ -9579,15 +9579,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc001715bc0.false": {
+        "14379.0xc001774840.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0016cfc50.false": {
+        "482.0xc00173a8d0.false": {
             "title": "false",
             "type": "object"
         },
-        "55785.0xc001690ed0.false": {
+        "55785.0xc0016dbb30.false": {
             "title": "false",
             "type": "object"
         },
@@ -9595,11 +9595,11 @@
             "title": "string",
             "type": "object"
         },
-        "605.0xc000f1ff80.false": {
+        "605.0xc000f74c00.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0015e5230.false": {
+        "667.0xc00162fe90.false": {
             "title": "false",
             "type": "object"
         },
@@ -9607,7 +9607,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc0012789f0.false": {
+        "964.0xc0012b3650.false": {
             "title": "false",
             "type": "object"
         },
@@ -9961,7 +9961,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f1ff80.false"
+                    "$ref": "#/definitions/605.0xc000f74c00.false"
                 },
                 "name": {
                     "type": "string"
@@ -10567,7 +10567,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0012789f0.false"
+                    "$ref": "#/definitions/964.0xc0012b3650.false"
                 },
                 "name": {
                     "type": "string"
@@ -12688,7 +12688,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/55785.0xc001690ed0.false"
+                    "$ref": "#/definitions/55785.0xc0016dbb30.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12795,6 +12795,10 @@
                     "description": "Finger prints for the key [optional]",
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "key_name": {
                     "description": "Name of the key.[required]",
                     "type": "string"
@@ -12805,6 +12809,10 @@
                 },
                 "private_key": {
                     "description": "Private key for SSH ['required'] if credentials_type is 'key']",
+                    "type": "string"
+                },
+                "public_key": {
+                    "description": "Public key for ssh [readonly]",
                     "type": "string"
                 },
                 "username": {
@@ -13044,7 +13052,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc001715bc0.false"
+                    "$ref": "#/definitions/14379.0xc001774840.false"
                 },
                 "name": {
                     "type": "string"
