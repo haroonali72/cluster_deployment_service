@@ -761,7 +761,7 @@ func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region st
 	_, err = azure.getRegions(ctx)
 	if err != (types.CustomCPError{}) {
 		beego.Error("Profile is not valid")
-		return err
+		return ApiError(errors.New("Profile is not valid"),"Profile is not valid",int(models.CloudStatusCode))
 	}
 	return types.CustomCPError{}
 }
