@@ -6417,25 +6417,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0016cfc50.false:
+  482.0xc00173a8d0.false:
     title: "false"
     type: object
-  605.0xc000f1ff80.false:
+  605.0xc000f74c00.false:
     title: "false"
     type: object
-  667.0xc0015e5230.false:
+  667.0xc00162fe90.false:
     title: "false"
     type: object
-  964.0xc0012789f0.false:
+  964.0xc0012b3650.false:
     title: "false"
     type: object
   8073.string:
     title: string
     type: object
-  14379.0xc001715bc0.false:
+  14379.0xc001774840.false:
     title: "false"
     type: object
-  55785.0xc001690ed0.false:
+  55785.0xc0016dbb30.false:
     title: "false"
     type: object
   56068.string:
@@ -6698,7 +6698,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000f1ff80.false'
+        $ref: '#/definitions/605.0xc000f74c00.false'
       name:
         type: string
       network_name:
@@ -7118,7 +7118,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0012789f0.false'
+        $ref: '#/definitions/964.0xc0012b3650.false'
       name:
         type: string
       network_name:
@@ -8580,7 +8580,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/55785.0xc001690ed0.false'
+        $ref: '#/definitions/55785.0xc0016dbb30.false'
       kube_version:
         type: string
       name:
@@ -8654,6 +8654,9 @@ definitions:
       finger_print:
         description: Finger prints for the key [optional]
         type: string
+      id:
+        type: integer
+        format: int64
       key_name:
         description: Name of the key.[required]
         type: string
@@ -8662,6 +8665,9 @@ definitions:
         description: Type of key. By default value is 'new' [required]
       private_key:
         description: Private key for SSH ['required'] if credentials_type is 'key']
+        type: string
+      public_key:
+        description: Public key for ssh [readonly]
         type: string
       username:
         description: Name of the user ['optional']
@@ -8840,7 +8846,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc001715bc0.false'
+        $ref: '#/definitions/14379.0xc001774840.false'
       name:
         type: string
       node_pools:
