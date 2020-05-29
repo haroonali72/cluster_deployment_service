@@ -258,21 +258,36 @@ type Cluster struct {
 type KubeClusterStatus struct {
 	Name              string                 `json:"name"`
 	Region            string                 `json:"region"`
+	Status             	string                	`json:"status"`
+	KubernetesVersion 	string				 	`json:"kubernetes_version"`
 	Network           string                 `json:"network"`
-	State             string                 `json:"state"`
-	WorkerCount       int64                  `json:"worker_count"`
+	PoolCount       	int64                  	`json:"pool_count"`
 	ClusterIP         string                 `json:"cluster_ip"`
-	KubernetesVersion string				 `json:"kubernetes_version"`
 	KubernetesDashboard bool				 `json:"kubernetes_dashboard"`
 	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools"`
+	DefaultMaxContraint int64          			`json:"default_max_pods_constrainty"`
+	Endpoint			string					`json:"endpoint"`
+	ServiceIP			string					`json:"service_ip"`
+	LabelFingerprint	string					 `json:"label_fingerprint"`
+	LegacyAbac			bool					`json:"legacy_abac"`
+
 }
 
 type KubeWorkerPoolStatus struct {
-	Name    string                  `json:"pool_name"`
+	Name    			string                  `json:"name"`
 	NodeCount int64				 	`json:"node_count"`
-	MaxPosPerNode int64             `json:"max_pod_per_node"`
-	Flavour string                  `json:"flavour"`
+	MaxPodPerNode 		int64             		`json:"max_pods_per_node"`
+	Version 			string                  `json:"version"`
 	State   string                  `json:"state"`
+	SelfLink			string					`json:"self_link"`
+	MachineType 		string					`json:"machine_type"`
+	ServiceAccount 		string					`json:"service_account"`
+	DiskType 			string					`json:"disk_type"`
+	DiskSize			int64					`json:"disk_size"`
+	ImageType			string					`json:"image_type"`
+	AutoScale			bool       			    `json:"auto_scaling"`
+	MinCount 			int64					`json:"min_count"`
+	MaxCount            int64   				`json:"max_count"`
 }
 
 
@@ -871,20 +886,38 @@ func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
 
 	status.Name=cluster.Name
 	status.Region=cluster.Location
-	status.State=string(cluster.CloudplexStatus)
+	status.Status=string(cluster.CloudplexStatus)
 	status.Network=cluster.Network
-	status.WorkerCount = cluster.CurrentNodeCount
+	status.PoolCount = cluster.CurrentNodeCount
 	status.KubernetesVersion =cluster.CurrentMasterVersion
 	status.ClusterIP=cluster.ClusterIpv4Cidr
 	status.KubernetesDashboard=cluster.AddonsConfig.KubernetesDashboard.Disabled
-
+	status.PoolCount=cluster.CurrentNodeCount
+	status.ClusterIP=cluster.ClusterIpv4Cidr
+	status.Endpoint=cluster.Endpoint
+	status.DefaultMaxContraint=cluster.DefaultMaxPodsConstraint.MaxPodsPerNode
+	status.LabelFingerprint=cluster.LabelFingerprint
+	status.LegacyAbac=cluster.LegacyAbac.Enabled
 	for _, pool :=range cluster.NodePools{
 		workerpool := KubeWorkerPoolStatus{}
 		workerpool.Name=pool.Name
-		workerpool.Flavour=pool.Version
+		workerpool.Version=pool.Version
 		workerpool.State=pool.Status
 		workerpool.NodeCount=pool.InitialNodeCount
-		workerpool.MaxPosPerNode=pool.MaxPodsConstraint.MaxPodsPerNode
+		workerpool.MaxPodPerNode=pool.MaxPodsConstraint.MaxPodsPerNode
+		if pool.Autoscaling.Enabled {
+			workerpool.AutoScale = pool.Autoscaling.Enabled
+			workerpool.MinCount = pool.Autoscaling.MinNodeCount
+			workerpool.MaxCount = pool.Autoscaling.MaxNodeCount
+		} else {
+			workerpool.AutoScale =false
+		}
+		workerpool.SelfLink=pool.SelfLink
+//		workerpool.MachineType=pool.Config.MachineType
+//		workerpool.ServiceAccount=pool.Config.ServiceAccount
+//		workerpool.DiskSize=pool.Config.DiskSizeGb
+//		workerpool.DiskType=pool.Config.DiskType
+//		workerpool.ImageType=pool.Config.ImageType
 		status.WorkerPools=append(status.WorkerPools ,workerpool)
 
 	}
