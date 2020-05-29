@@ -83,8 +83,6 @@ type  KubeClusterStatus struct {
 	ProvisioningState      string 								`json:"provision_state" bson:"provision_state" description:"Kubernetes provision state"`
 	NodePoolCount      	   int32   								`json:"nodepool_count" bson:"nodepool_count" description:"Node pool count"`
 	ResourceGoup           string                               `json:"resource_group" bson:"resource_group"description:"Resources would be created within resource_group"`
-	DNSPrefix              string                               `json:"dns_prefix" bson:"dns_prefix" description:"Cluster DNS prefix"`
-	Fqdn              string             						`json:"fqdn" bson:"fqdn" description:"Fqdn"`
 	AgentPoolProfiles      []ManagedClusterAgentPoolStatus     	`json:"node_pools" bson:"node_pools" `
 	EnableRBAC             bool                                 `json:"enable_rbac" bson:"enable_rbac" description:"Cluster RBAC configuration"`
 	IsHttpRouting          bool                                 `json:"enable_http_routing" bson:"enable_http_routing" description:"Cluster Http Routing configuration"`
@@ -111,8 +109,6 @@ type ManagedClusterAgentPoolStatus struct {
 	Name              *string            `json:"name,omitempty" bson:"name,omitempty"  description:"Cluster pool name "`
 	Count             *int32             `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
 	VMSize            *string            `json:"machine_type,omitempty" bson:"vm_size,omitempty" description:"Machine type for pool"`
-	OsDiskSizeGB      *int32             `json:"disk_size" bson:"os_disk_size_gb,omitempty" description:"Disk size for VMs"`
-	MaxPods           *int32             `json:"max_pods_per_node,omitempty" bson:"max_pods,omitempty" description:"Max pods per node"`
 	OsType            *aks.OSType        `json:"disk_type" bson:"os_type,omitempty"`
 	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty" description:"Max VM count"`
 	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty" description:"Min VM count"`

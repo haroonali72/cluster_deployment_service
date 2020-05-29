@@ -607,8 +607,6 @@ func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (c
 	for _, agentPool := range *AKScluster.AgentPoolProfiles {
 		agentPoolProfiles := ManagedClusterAgentPoolStatus{}
 		agentPoolProfiles.Name = agentPool.Name
-		agentPoolProfiles.OsDiskSizeGB = agentPool.OsDiskSizeGB
-		agentPoolProfiles.MaxPods=agentPool.MaxPods
 		vm := string(agentPool.VMSize)
 		agentPoolProfiles.VMSize = &vm
 		agentPoolProfiles.OsType = &agentPool.OsType
@@ -632,8 +630,6 @@ func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (c
 	cluster.NodePoolCount=*AKScluster.MaxAgentPools
 	cluster.ProvisioningState = *AKScluster.ProvisioningState
 	cluster.KubernetesVersion = *AKScluster.KubernetesVersion
-	cluster.DNSPrefix = *AKScluster.DNSPrefix
-	cluster.Fqdn = *AKScluster.Fqdn
 	cluster.EnableRBAC = *AKScluster.EnableRBAC
 	cluster.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
 	cluster.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
