@@ -392,31 +392,40 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		return KubeClusterStatus1{}, e
 	}
 	var response1 KubeClusterStatus1
-	response1.State = response.State
 	response1.ID = response.ID
 	response1.Name = response.Name
 	response1.Region = response.Region
-	response1.ResourceGroupName = response.ResourceGroupName
-	response1.WorkerCount = response.WorkerCount
+	response1.ResourceGroup= response.ResourceGroupName
+	response1.PoolCount = response.WorkerCount
+	response1.KubernetesVersion=response.KubernetesVersion
+	response1.State=response.State
+	response1.Crn=response.Crn
+	response1.EtcdPort=response.EtcdPort
 	for _, pool := range response.WorkerPools {
 		var pool1 KubeWorkerPoolStatus1
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID
-		pool1.State = pool.State
 		pool1.Flavour = pool.Flavour
-		for _, node := range pool.Nodes {
+		pool1.Autoscaling=pool.Autoscaling
+		pool1.Count=pool.Count
+		for i, node := range pool.Nodes {
 			var node1 KubeWorkerNodesStatus1
-
-			node1.Flavour = node.Flavour
 			node1.State = node.Lifecycle.State
 			node1.ID = node.ID
-			node1.PrivateIp = node.Network.PrivateIp
-			node1.PublicIp = node.Network.PublicIp
-			node1.Location = node.Location
+			node1.PoolId=node.PoolId
+			node1.NetworkInterfaces[i] = networkInterfacesStatus{}
+			for _, ni := range node1.NetworkInterfaces {
+				networkI := networkInterfacesStatus{}
+				networkI.SubnetId = ni.SubnetId
+				networkI.Cidr=ni.Cidr
+				networkI.IpAddress=ni.IpAddress
+				node1.NetworkInterfaces= append(node1.NetworkInterfaces,networkI)
+			}
 			pool1.Nodes = append(pool1.Nodes, node1)
 		}
 		response1.WorkerPools = append(response1.WorkerPools, pool1)
 	}
+	response1.Status =cluster.Status
 	return response1, types.CustomCPError{}
 }
 func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.Context, companyId, token string) types.CustomCPError {

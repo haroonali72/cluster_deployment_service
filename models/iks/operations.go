@@ -85,16 +85,48 @@ type KubeClusterStatus struct {
 	Region            string                 `json:"region"`
 	ResourceGroupName string                 `json:"resourceGroupName"`
 	State             string                 `json:"state"`
+	KubernetesVersion string 				 `json:"masterKubeVersion"`
 	WorkerCount       int                    `json:"workerCount"`
 	WorkerPools       []KubeWorkerPoolStatus `json:"nodePools"`
+	EtcdPort          string                 `json:"etcdPort"`
+	Crn               string                 `json:"crn"`
+	Status            models.Type 			  `json:"status"`
+}
+type KubeClusterStatus1 struct {
+	ID      		  string                  `json:"id"`
+	Name              string                  `json:"name"`
+	Region            string                  `json:"region"`
+	Status            models.Type             `json:"status"`
+	ResourceGroup	  string                  `json:"resource_group"`
+	State             string                  `json:"state"`
+	KubernetesVersion string 				  `json:"kubernetes_version"`
+	PoolCount       int                       `json:"pool_count"`
+	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
+	EtcdPort          string                  `json:"etcd_port"`
+	Crn               string                  `json:"crn"`
 }
 
 type KubeWorkerPoolStatus struct {
 	ID      string                  `json:"id"`
 	Name    string                  `json:"poolName"`
-	Flavour string                  `json:"flavour"`
-	State   string                  `json:"state"`
+	Flavour string                  `json:"flavor"`
+	Autoscaling   bool              `json:"autoscaleEnabled""`
+	Count  int                      `json:"workerCount"`
 	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
+}
+type KubeWorkerPoolStatus1 struct {
+	ID      string                   	`json:"id"`
+	Name    string                    	`json:"name"`
+	Flavour string                    	`json:"machine_type"`
+	Autoscaling bool 				  	`json:"autoscaling"`
+	Nodes   []KubeWorkerNodesStatus1  	`json:"nodes"`
+	Count    int                   	 	`json:"node_count"`
+}
+type KubeWorkerNodesStatus1 struct {
+	ID        			string 						`json:"id"`
+	State     			string 						`json:"state"`
+	PoolId   			string       				`json:"pool_id"`
+	NetworkInterfaces 	[]networkInterfacesStatus   `json:"network_interfaces"`
 }
 type KubeWorkerNodesStatus struct {
 	ID        string      `json:"id"`
@@ -102,6 +134,18 @@ type KubeWorkerNodesStatus struct {
 	Network   NetworkInfo `json:"networkInformation"`
 	Lifecycle LifeCycle   `json:"lifecycle"`
 	Location  string      `json:"location"`
+	PoolId   string      				   `json:"poolID"`
+	NetworkInterfaces []networkInterfaces  `json:"networkInterfaces"`
+}
+type networkInterfaces struct{
+	SubnetId string    	  `json:"subnetID"`
+	IpAddress string	  `json:"ipAddress"`
+	Cidr      string      `json:"cidr"`
+}
+type networkInterfacesStatus struct{
+	SubnetId string    	  `json:"subnet_id"`
+	IpAddress string	  `json:"ip_address"`
+	Cidr      string      `json:"cidr"`
 }
 type LifeCycle struct {
 	State string `json:"actualState"`
@@ -110,31 +154,8 @@ type NetworkInfo struct {
 	PrivateIp string `json:"privateIP"`
 	PublicIp  string `json:"publicIP"`
 }
-type KubeClusterStatus1 struct {
-	ID                string                  `json:"id"`
-	Name              string                  `json:"name"`
-	Region            string                  `json:"region"`
-	ResourceGroupName string                  `json:"resource_group_name"`
-	State             string                  `json:"state"`
-	WorkerCount       int                     `json:"worker_count"`
-	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
-}
 
-type KubeWorkerPoolStatus1 struct {
-	ID      string                   `json:"id"`
-	Name    string                   `json:"pool_name"`
-	Flavour string                   `json:"flavour"`
-	State   string                   `json:"state"`
-	Nodes   []KubeWorkerNodesStatus1 `json:"nodes"`
-}
-type KubeWorkerNodesStatus1 struct {
-	ID        string `json:"id"`
-	Flavour   string `json:"machine_type"`
-	PrivateIp string `json:"private_ip"`
-	PublicIp  string `json:"public_ip"`
-	State     string `json:"state"`
-	Location  string `json:"location"`
-}
+
 type AllInstancesResponse struct {
 	Profile []InstanceProfile
 }
