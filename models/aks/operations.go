@@ -584,49 +584,63 @@ func generateDnsPrefix(c AKSCluster) *string {
 	}
 }
 
-func (cloud *AKS) fetchClusterStatus(cluster *AKSCluster, ctx utils.Context) types.CustomCPError {
+func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (cluster KubeClusterStatus,error types.CustomCPError) {
 	if cloud == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return err
+			return KubeClusterStatus{},err
 		}
 	}
 
 	cloud.Context = context.Background()
-	AKScluster, err := cloud.MCClient.Get(cloud.Context, cluster.ResourceGoup, cluster.Name)
+	AKScluster, err := cloud.MCClient.Get(cloud.Context, cluster1.ResourceGoup, cluster1.Name)
 	if err != nil {
 		ctx.SendLogs(
 			"AKS get cluster within resource group '"+cluster.ResourceGoup+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiError(err, "", 502)
+		return KubeClusterStatus{},ApiError(err, "Error in fetching statud", 512)
 	}
 
-	for index, agentPool := range *AKScluster.AgentPoolProfiles {
-		cluster.AgentPoolProfiles[index].Name = agentPool.Name
-		cluster.AgentPoolProfiles[index].OsDiskSizeGB = agentPool.OsDiskSizeGB
-		cluster.AgentPoolProfiles[index].VnetSubnetID = agentPool.VnetSubnetID
+	for _, agentPool := range *AKScluster.AgentPoolProfiles {
+		agentPoolProfiles := ManagedClusterAgentPoolStatus{}
+		agentPoolProfiles.Name = agentPool.Name
+		agentPoolProfiles.OsDiskSizeGB = agentPool.OsDiskSizeGB
+		agentPoolProfiles.MaxPods=agentPool.MaxPods
 		vm := string(agentPool.VMSize)
-		cluster.AgentPoolProfiles[index].VMSize = &vm
-		cluster.AgentPoolProfiles[index].OsType = &agentPool.OsType
-		cluster.AgentPoolProfiles[index].Count = agentPool.Count
+		agentPoolProfiles.VMSize = &vm
+		agentPoolProfiles.OsType = &agentPool.OsType
+		agentPoolProfiles.Count = agentPool.Count
+		if *agentPool.EnableAutoScaling{
+			agentPoolProfiles.EnableAutoScaling =agentPool.EnableAutoScaling
+			agentPoolProfiles.MaxCount=agentPool.MaxCount
+			agentPoolProfiles.MinCount=agentPool.MinCount
+		}else {
+			scaling:=false
+			agentPoolProfiles.EnableAutoScaling=&scaling
 	}
-	cluster.ResourceID = *AKScluster.ID
-	cluster.Type = *AKScluster.Type
+		cluster.AgentPoolProfiles = append(cluster.AgentPoolProfiles,agentPoolProfiles)
+	}
+	cluster.Name=*AKScluster.Name
+	cluster.Status=cluster1.Status
+
+	cluster.Region=*AKScluster.Location
+	cluster.ResourceGoup=*AKScluster.NodeResourceGroup
+
+	cluster.NodePoolCount=*AKScluster.MaxAgentPools
 	cluster.ProvisioningState = *AKScluster.ProvisioningState
 	cluster.KubernetesVersion = *AKScluster.KubernetesVersion
 	cluster.DNSPrefix = *AKScluster.DNSPrefix
 	cluster.Fqdn = *AKScluster.Fqdn
 	cluster.EnableRBAC = *AKScluster.EnableRBAC
-
 	cluster.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
 	cluster.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
 	cluster.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
 	cluster.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
 
-	return types.CustomCPError{}
+	return cluster,types.CustomCPError{}
 }
 
 func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
