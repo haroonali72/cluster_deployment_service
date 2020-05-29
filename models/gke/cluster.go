@@ -268,8 +268,7 @@ type KubeClusterStatus struct {
 	DefaultMaxContraint int64          			`json:"default_max_pods_constrainty"`
 	Endpoint			string					`json:"endpoint"`
 	ServiceIP			string					`json:"service_ip"`
-	LabelFingerprint	string					 `json:"label_fingerprint"`
-	LegacyAbac			bool					`json:"legacy_abac"`
+
 
 }
 
@@ -281,7 +280,6 @@ type KubeWorkerPoolStatus struct {
 	State   string                  `json:"state"`
 	SelfLink			string					`json:"self_link"`
 	MachineType 		string					`json:"machine_type"`
-	ServiceAccount 		string					`json:"service_account"`
 	DiskType 			string					`json:"disk_type"`
 	DiskSize			int64					`json:"disk_size"`
 	ImageType			string					`json:"image_type"`
@@ -896,8 +894,7 @@ func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
 	status.ClusterIP=cluster.ClusterIpv4Cidr
 	status.Endpoint=cluster.Endpoint
 	status.DefaultMaxContraint=cluster.DefaultMaxPodsConstraint.MaxPodsPerNode
-	status.LabelFingerprint=cluster.LabelFingerprint
-	status.LegacyAbac=cluster.LegacyAbac.Enabled
+
 	for _, pool :=range cluster.NodePools{
 		workerpool := KubeWorkerPoolStatus{}
 		workerpool.Name=pool.Name
