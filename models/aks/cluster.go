@@ -80,17 +80,10 @@ type  KubeClusterStatus struct {
 	Region               string                                 `json:"region" bson:"region"  description:"Region for cluster provisioning"`
 	Status                 models.Type                          `json:"status" bson:"status"  description:"Status of cluster"`
 	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" description:"Kubernetes version to be provisioned"`
-	ProvisioningState      string 								`json:"provision_state" bson:"provision_state" description:"Kubernetes provision state"`
+	ProvisioningState      string 								`json:"state" bson:"state" description:"Kubernetes state"`
 	NodePoolCount      	   int32   								`json:"nodepool_count" bson:"nodepool_count" description:"Node pool count"`
 	ResourceGoup           string                               `json:"resource_group" bson:"resource_group"description:"Resources would be created within resource_group"`
 	AgentPoolProfiles      []ManagedClusterAgentPoolStatus     	`json:"node_pools" bson:"node_pools" `
-	EnableRBAC             bool                                 `json:"enable_rbac" bson:"enable_rbac" description:"Cluster RBAC configuration"`
-	IsHttpRouting          bool                                 `json:"enable_http_routing" bson:"enable_http_routing" description:"Cluster Http Routing configuration"`
-	IsServicePrincipal     bool                                 `json:"enable_service_principal" bson:"enable_service_principal" description:"Service principal configurations"`
-	PodCidr                string                               `json:"pod_cidr,omitempty" bson:"pod_cidr,omitempty" description:"Pod CIDR for cluster"`
-	ServiceCidr            string                               `json:"service_cidr,omitempty" bson:"service_cidr,omitempty" description:"Service CIDR for cluster"`
-	DNSServiceIP           string                               `json:"dns_service_ip,omitempty" bson:"dns_service_ip,omitempty" description:"DNS service IP for cluster"`
-	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" description:"Docker bridge CIDR for cluster"`
 
 
 }
@@ -109,7 +102,6 @@ type ManagedClusterAgentPoolStatus struct {
 	Name              *string            `json:"name,omitempty" bson:"name,omitempty"  description:"Cluster pool name "`
 	Count             *int32             `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
 	VMSize            *string            `json:"machine_type,omitempty" bson:"vm_size,omitempty" description:"Machine type for pool"`
-	OsType            *aks.OSType        `json:"disk_type" bson:"os_type,omitempty"`
 	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty" description:"Max VM count"`
 	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty" description:"Min VM count"`
 	EnableAutoScaling *bool              `json:"auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty" description:"Autoscaling configuration"`

@@ -609,7 +609,6 @@ func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (c
 		agentPoolProfiles.Name = agentPool.Name
 		vm := string(agentPool.VMSize)
 		agentPoolProfiles.VMSize = &vm
-		agentPoolProfiles.OsType = &agentPool.OsType
 		agentPoolProfiles.Count = agentPool.Count
 		if *agentPool.EnableAutoScaling{
 			agentPoolProfiles.EnableAutoScaling =agentPool.EnableAutoScaling
@@ -630,11 +629,7 @@ func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (c
 	cluster.NodePoolCount=*AKScluster.MaxAgentPools
 	cluster.ProvisioningState = *AKScluster.ProvisioningState
 	cluster.KubernetesVersion = *AKScluster.KubernetesVersion
-	cluster.EnableRBAC = *AKScluster.EnableRBAC
-	cluster.DNSServiceIP = *AKScluster.ManagedClusterProperties.NetworkProfile.DNSServiceIP
-	cluster.PodCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.PodCidr
-	cluster.ServiceCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.ServiceCidr
-	cluster.DockerBridgeCidr = *AKScluster.ManagedClusterProperties.NetworkProfile.DockerBridgeCidr
+
 
 	return cluster,types.CustomCPError{}
 }
