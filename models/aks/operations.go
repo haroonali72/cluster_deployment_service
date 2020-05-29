@@ -11,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-09-01/skus"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-02-01/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-02-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/go-autorest/autorest"
@@ -28,6 +30,9 @@ type AKS struct {
 	Authorizer        *autorest.BearerAuthorizer
 	Location          subscriptions.Client
 	MCClient          containerservice.ManagedClustersClient
+	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
+	AddressClient    network.PublicIPAddressesClient
+	InterfacesClient network.InterfacesClient
 	KubeVersionClient containerservice.ContainerServicesClient
 	ResourceSkuClient skus.ResourceSkusClient
 	Context           context.Context
@@ -89,6 +94,14 @@ func (cloud *AKS) init() types.CustomCPError {
 	cloud.Resources = make(map[string]interface{})
 	cloud.Location = subscriptions.NewClient()
 	cloud.Location.Authorizer = cloud.Authorizer
+
+	cloud.VMSSVMClient = compute.NewVirtualMachineScaleSetVMsClient(cloud.Subscription)
+	cloud.VMSSVMClient.Authorizer = cloud.Authorizer
+	cloud.InterfacesClient = network.NewInterfacesClient(cloud.Subscription)
+	cloud.InterfacesClient.Authorizer = cloud.Authorizer
+	cloud.AddressClient = network.NewPublicIPAddressesClient(cloud.Subscription)
+	cloud.AddressClient.Authorizer = cloud.Authorizer
+
 	return types.CustomCPError{}
 }
 
@@ -392,7 +405,7 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].MaxPods = nodepool.MaxPods
 			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
-
+			AKSNodePools[i].EnableNodePublicIP= nodepool.EnablePublicIp
 			nodelabels := make(map[string]*string)
 			for _, label := range nodepool.NodeLabels {
 				nodelabels[label.Key] = &label.Value
@@ -584,7 +597,8 @@ func generateDnsPrefix(c AKSCluster) *string {
 	}
 }
 
-func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (cluster KubeClusterStatus,error types.CustomCPError) {
+func (cloud *AKS) fetchClusterStatus(credentials vault.AzureCredentials,cluster1 *AKSCluster, ctx utils.Context) (cluster KubeClusterStatus,error types.CustomCPError) {
+	aksOps, _ := GetAKS(credentials)
 	if cloud == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
@@ -594,6 +608,7 @@ func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (c
 	}
 
 	cloud.Context = context.Background()
+
 	AKScluster, err := cloud.MCClient.Get(cloud.Context, cluster1.ResourceGoup, cluster1.Name)
 	if err != nil {
 		ctx.SendLogs(
@@ -603,37 +618,102 @@ func (cloud *AKS) fetchClusterStatus(cluster1 *AKSCluster, ctx utils.Context) (c
 		)
 		return KubeClusterStatus{},ApiError(err, "Error in fetching statud", 512)
 	}
-
 	for _, agentPool := range *AKScluster.AgentPoolProfiles {
 		agentPoolProfiles := ManagedClusterAgentPoolStatus{}
+		agentPoolProfiles.Id = agentPool.Name
+		agentPoolProfiles.VnetSubnetID = agentPool.VnetSubnetID
 		agentPoolProfiles.Name = agentPool.Name
 		vm := string(agentPool.VMSize)
 		agentPoolProfiles.VMSize = &vm
 		agentPoolProfiles.Count = agentPool.Count
-		if *agentPool.EnableAutoScaling{
-			agentPoolProfiles.EnableAutoScaling =agentPool.EnableAutoScaling
-			agentPoolProfiles.MaxCount=agentPool.MaxCount
-			agentPoolProfiles.MinCount=agentPool.MinCount
-		}else {
-			scaling:=false
-			agentPoolProfiles.EnableAutoScaling=&scaling
+		if *agentPool.EnableAutoScaling {
+			agentPoolProfiles.EnableAutoScaling = agentPool.EnableAutoScaling
+			agentPoolProfiles.MaxCount = agentPool.MaxCount
+			agentPoolProfiles.MinCount = agentPool.MinCount
+		} else {
+			scaling := false
+			agentPoolProfiles.EnableAutoScaling = &scaling
+		}
+
+		 CpErr := aksOps.fetchNodeStatus(cluster1, ctx,&agentPoolProfiles,*AKScluster.NodeResourceGroup)
+		if CpErr != (types.CustomCPError{}) {
+			return KubeClusterStatus{}, CpErr
+		}
+
+
+
+		cluster.AgentPoolProfiles = append(cluster.AgentPoolProfiles, agentPoolProfiles)
 	}
-		cluster.AgentPoolProfiles = append(cluster.AgentPoolProfiles,agentPoolProfiles)
-	}
+
 	cluster.Name=*AKScluster.Name
 	cluster.Status=cluster1.Status
-
 	cluster.Region=*AKScluster.Location
 	cluster.ResourceGoup=*AKScluster.NodeResourceGroup
-
 	cluster.NodePoolCount=*AKScluster.MaxAgentPools
 	cluster.ProvisioningState = *AKScluster.ProvisioningState
 	cluster.KubernetesVersion = *AKScluster.KubernetesVersion
 
-
 	return cluster,types.CustomCPError{}
 }
+func (cloud *AKS) fetchNodeStatus( cluster1 *AKSCluster, ctx utils.Context,pool *ManagedClusterAgentPoolStatus,rg string ) (error types.CustomCPError) {
+	if cloud.Authorizer == nil {
+		err := cloud.init()
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return err
+		}
+	}
 
+	cloud.Context = context.Background()
+
+	var cpVms []*KubeNodesStatus
+
+	vms, err := cloud.VMSSVMClient.List(cloud.Context, rg , "", "", "","")
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return ApiError(err,"Error in fetching status",int(models.CloudStatusCode))
+	}
+
+	for _, vm := range vms.Values() {
+		var vmObj KubeNodesStatus
+
+		vmObj.Id=vm.InstanceID
+		vmObj.Name = vm.Name
+		nicId := ""
+		for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
+			nicId = *nic.ID
+			break
+		}
+		arr := strings.Split(nicId, "/")
+		nicName := arr[12]
+		nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.Context, "MC_application-efg3gj_cluster-azure-va2lrq_eastasia", "aks-pool0-24224467-vmss", arr[10], nicName, "")
+		if err != nil {
+			return  error
+		}
+		vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+		if  (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress !=nil {
+			pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
+			arr = strings.Split(pipId, "/")
+			pipConf := arr[14]
+			pipAddress := arr[16]
+			publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.Context, "MC_application-efg3gj_cluster-azure-va2lrq_eastasia", "aks-pool0-24224467-vmss", arr[10], nicName, pipConf, pipAddress, "")
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return ApiError(err, "Error in status fetching", int(models.CloudStatusCode))
+			}
+			vmObj.PublicIP = publicIPaddress.IPAddress
+		}
+
+		vmObj.NodeState = vm.ProvisioningState
+		cpVms = append(cpVms, &vmObj)
+
+		pool.KubeNodes=append(pool.KubeNodes,vmObj)
+
+	}
+
+
+	return  error
+}
 func GetAKSSupportedVms(ctx utils.Context) []containerservice.VMSizeTypes {
 	return containerservice.PossibleVMSizeTypesValues()
 }
