@@ -149,33 +149,32 @@ type KubernetesNodeSize struct {
 	Slug string `json:"slug"`
 }
 type KubeClusterStatus struct {
-	ID        		string `json:"id"`
+	ID        			string 				   `json:"id"`
 	Name          		string                 `json:"name"`
-	Status				models.Type  			   `json:"status"`
+	Status				models.Type  		   `json:"status"`
 	RegionSlug    		string                 `json:"region"`
 	KubernetesVersion   string                 `json:"kubernetes_version"`
-	Subnet	 			string                 `json:"subnet"`
 	ClusterIp          	string                 `json:"cluster_ip"`
+	NodePoolCount       int                 `json:"nodepool_count"`
 	Endpoint      		string                 `json:"endpoint"`
-	CpuId               string				   `json:"cpu_id"`
-	WorkerPools   []KubeWorkerPoolStatus `json:"node_pools"`
+	WorkerPools   		[]KubeWorkerPoolStatus `json:"node_pools"`
 }
 
 type KubeWorkerPoolStatus struct {
-	ID      string      `json:"id"`
-	Name  	string      `json:"name"`
-	Size  	string      `json:"machine_type"`
-	Nodes []PoolNodes `json:"nodes"`
-	Count	int       	`json:"node_count"`
-	AutoScale bool		`json:"auto_scale"`
-	MinCount int		`json:"min_count"`
-	MaxCount int		`json:"max_count"`
+	ID      	string      `json:"id"`
+	Name  		string      `json:"name"`
+	Size  		string      `json:"machine_type"`
+	Nodes 		[]PoolNodes `json:"nodes"`
+	Count		int       	`json:"node_count"`
+	AutoScale 	bool		`json:"auto_scaling"`
+	MinCount 	int			`json:"min_count"`
+	MaxCount 	int			`json:"max_count"`
 }
+
 type PoolNodes struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	State     string `json:"state"`
-	DropletID string `json:"droplet_id"`
+	ID        	string 		`json:"id"`
+	Name      	string 		`json:"name"`
+	State     	string 		`json:"state"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
