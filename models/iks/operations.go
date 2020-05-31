@@ -100,10 +100,8 @@ type KubeClusterStatus1 struct {
 	ResourceGroup	  string                  `json:"resource_group"`
 	State             string                  `json:"state"`
 	KubernetesVersion string 				  `json:"kubernetes_version"`
-	PoolCount       int                       `json:"pool_count"`
+	PoolCount       int                       `json:"nodepool_count"`
 	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
-	EtcdPort          string                  `json:"etcd_port"`
-	Crn               string                  `json:"crn"`
 }
 
 type KubeWorkerPoolStatus struct {
@@ -121,12 +119,13 @@ type KubeWorkerPoolStatus1 struct {
 	Autoscaling bool 				  	`json:"autoscaling"`
 	Nodes   []KubeWorkerNodesStatus1  	`json:"nodes"`
 	Count    int                   	 	`json:"node_count"`
+	SubnetId 			string   		`json:"subnet_id"`
 }
 type KubeWorkerNodesStatus1 struct {
-	ID        			string 						`json:"id"`
+	PoolId   			string       				`json:"id"`
+	Name                string    					`json:"name"`
 	State     			string 						`json:"state"`
-	PoolId   			string       				`json:"pool_id"`
-	NetworkInterfaces 	[]networkInterfacesStatus   `json:"network_interfaces"`
+
 }
 type KubeWorkerNodesStatus struct {
 	ID        string      `json:"id"`
@@ -142,11 +141,7 @@ type networkInterfaces struct{
 	IpAddress string	  `json:"ipAddress"`
 	Cidr      string      `json:"cidr"`
 }
-type networkInterfacesStatus struct{
-	SubnetId string    	  `json:"subnet_id"`
-	IpAddress string	  `json:"ip_address"`
-	Cidr      string      `json:"cidr"`
-}
+
 type LifeCycle struct {
 	State string `json:"actualState"`
 }

@@ -399,8 +399,6 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 	response1.PoolCount = response.WorkerCount
 	response1.KubernetesVersion=response.KubernetesVersion
 	response1.State=response.State
-	response1.Crn=response.Crn
-	response1.EtcdPort=response.EtcdPort
 	for _, pool := range response.WorkerPools {
 		var pool1 KubeWorkerPoolStatus1
 		pool1.Name = pool.Name
@@ -408,19 +406,12 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		pool1.Flavour = pool.Flavour
 		pool1.Autoscaling=pool.Autoscaling
 		pool1.Count=pool.Count
-		for i, node := range pool.Nodes {
+		pool1.SubnetId = pool.Nodes[0].NetworkInterfaces[0].SubnetId
+		for _, node := range pool.Nodes {
 			var node1 KubeWorkerNodesStatus1
 			node1.State = node.Lifecycle.State
-			node1.ID = node.ID
 			node1.PoolId=node.PoolId
-			node1.NetworkInterfaces[i] = networkInterfacesStatus{}
-			for _, ni := range node1.NetworkInterfaces {
-				networkI := networkInterfacesStatus{}
-				networkI.SubnetId = ni.SubnetId
-				networkI.Cidr=ni.Cidr
-				networkI.IpAddress=ni.IpAddress
-				node1.NetworkInterfaces= append(node1.NetworkInterfaces,networkI)
-			}
+			node1.Name=node.PoolId
 			pool1.Nodes = append(pool1.Nodes, node1)
 		}
 		response1.WorkerPools = append(response1.WorkerPools, pool1)
