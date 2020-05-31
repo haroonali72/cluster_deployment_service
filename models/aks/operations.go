@@ -659,7 +659,7 @@ func (cloud *AKS) fetchClusterStatus(credentials vault.AzureCredentials,cluster1
 		count++
 	}
 
-
+	cluster.Id=*AKScluster.Name
 	cluster.Name=*AKScluster.Name
 	cluster.Status=cluster1.Status
 	cluster.Region=*AKScluster.Location

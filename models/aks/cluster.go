@@ -76,6 +76,7 @@ func GetNetwork(token, projectId string, ctx utils.Context) error {
 	return nil
 }
 type  KubeClusterStatus struct {
+	Id                   string                               	`json:"id" bson:"id"  description:"Cluster id"`
 	Name                   string                               `json:"name" bson:"name"  description:"Cluster name"`
 	Region               string                                 `json:"region" bson:"region"  description:"Region for cluster provisioning"`
 	Status                 models.Type                          `json:"status" bson:"status"  description:"Status of cluster"`
