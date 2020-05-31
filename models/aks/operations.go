@@ -30,6 +30,7 @@ type AKS struct {
 	Authorizer        *autorest.BearerAuthorizer
 	Location          subscriptions.Client
 	MCClient          containerservice.ManagedClustersClient
+	VMSSCLient       compute.VirtualMachineScaleSetsClient
 	VMSSVMClient     compute.VirtualMachineScaleSetVMsClient
 	AddressClient    network.PublicIPAddressesClient
 	InterfacesClient network.InterfacesClient
@@ -94,7 +95,8 @@ func (cloud *AKS) init() types.CustomCPError {
 	cloud.Resources = make(map[string]interface{})
 	cloud.Location = subscriptions.NewClient()
 	cloud.Location.Authorizer = cloud.Authorizer
-
+	cloud.VMSSCLient = compute.NewVirtualMachineScaleSetsClient(cloud.Subscription)
+	cloud.VMSSCLient.Authorizer = cloud.Authorizer
 	cloud.VMSSVMClient = compute.NewVirtualMachineScaleSetVMsClient(cloud.Subscription)
 	cloud.VMSSVMClient.Authorizer = cloud.Authorizer
 	cloud.InterfacesClient = network.NewInterfacesClient(cloud.Subscription)
@@ -598,6 +600,7 @@ func generateDnsPrefix(c AKSCluster) *string {
 }
 
 func (cloud *AKS) fetchClusterStatus(credentials vault.AzureCredentials,cluster1 *AKSCluster, ctx utils.Context) (cluster KubeClusterStatus,error types.CustomCPError) {
+	count :=0
 	aksOps, _ := GetAKS(credentials)
 	if cloud == nil {
 		err := cloud.init()
@@ -618,44 +621,56 @@ func (cloud *AKS) fetchClusterStatus(credentials vault.AzureCredentials,cluster1
 		)
 		return KubeClusterStatus{},ApiError(err, "Error in fetching statud", 512)
 	}
-	for _, agentPool := range *AKScluster.AgentPoolProfiles {
+	vm, err := cloud.VMSSCLient.List(cloud.Context,*AKScluster.NodeResourceGroup)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster,ApiError(err,"Error in fetching status",int(models.CloudStatusCode))
+	}
+	for _, agentPool := range vm.Values() {
 		agentPoolProfiles := ManagedClusterAgentPoolStatus{}
 		agentPoolProfiles.Id = agentPool.Name
-		agentPoolProfiles.VnetSubnetID = agentPool.VnetSubnetID
+		subnet:=(*(*agentPool.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations)[0].VirtualMachineScaleSetNetworkConfigurationProperties.IPConfigurations)[0].Subnet.ID
+		subnet1 := strings.Split(*subnet, "/")
+		agentPoolProfiles.VnetSubnetID =&subnet1[10]
+	//	sg :=(*agentPool.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations)[0].VirtualMachineScaleSetNetworkConfigurationProperties.NetworkSecurityGroup.ID
+	//	sg1 :=strings.Split(*sg, "/")
+	//	agentPoolProfiles.SecurityGroup = &sg1[8]
 		agentPoolProfiles.Name = agentPool.Name
-		vm := string(agentPool.VMSize)
-		agentPoolProfiles.VMSize = &vm
-		agentPoolProfiles.Count = agentPool.Count
-		if *agentPool.EnableAutoScaling {
-			agentPoolProfiles.EnableAutoScaling = agentPool.EnableAutoScaling
-			agentPoolProfiles.MaxCount = agentPool.MaxCount
-			agentPoolProfiles.MinCount = agentPool.MinCount
-		} else {
+		agentPoolProfiles.VMSize = agentPool.Sku.Name
+		agentPoolProfiles.Count = agentPool.Sku.Capacity
+		for _,scaling :=range *AKScluster.AgentPoolProfiles{
+			a:=*agentPool.Name
+			b:=*scaling.Name
+		if strings.Contains(a,b) && scaling.EnableAutoScaling!=nil && *scaling.EnableAutoScaling==true {
+			agentPoolProfiles.EnableAutoScaling = scaling.EnableAutoScaling
+			agentPoolProfiles.MaxCount = scaling.MaxCount
+			agentPoolProfiles.MinCount = scaling.MinCount
+		} else if strings.Contains(*agentPool.Name,*scaling.Name){
 			scaling := false
 			agentPoolProfiles.EnableAutoScaling = &scaling
 		}
-
-		 CpErr := aksOps.fetchNodeStatus(cluster1, ctx,&agentPoolProfiles,*AKScluster.NodeResourceGroup)
-		if CpErr != (types.CustomCPError{}) {
-			return KubeClusterStatus{}, CpErr
 		}
-
-
+			CpErr := aksOps.fetchNodeStatus(cluster1, ctx,&agentPoolProfiles,*AKScluster.NodeResourceGroup,*agentPool.Name)
+			if CpErr != (types.CustomCPError{}) {
+				return KubeClusterStatus{}, CpErr
+			}
 
 		cluster.AgentPoolProfiles = append(cluster.AgentPoolProfiles, agentPoolProfiles)
+		count++
 	}
+
 
 	cluster.Name=*AKScluster.Name
 	cluster.Status=cluster1.Status
 	cluster.Region=*AKScluster.Location
 	cluster.ResourceGoup=*AKScluster.NodeResourceGroup
-	cluster.NodePoolCount=*AKScluster.MaxAgentPools
+	cluster.NodePoolCount=int32(count)
 	cluster.ProvisioningState = *AKScluster.ProvisioningState
 	cluster.KubernetesVersion = *AKScluster.KubernetesVersion
 
 	return cluster,types.CustomCPError{}
 }
-func (cloud *AKS) fetchNodeStatus( cluster1 *AKSCluster, ctx utils.Context,pool *ManagedClusterAgentPoolStatus,rg string ) (error types.CustomCPError) {
+func (cloud *AKS) fetchNodeStatus( cluster1 *AKSCluster, ctx utils.Context,pool *ManagedClusterAgentPoolStatus,rg,vmName string ) (error types.CustomCPError) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
@@ -668,48 +683,47 @@ func (cloud *AKS) fetchNodeStatus( cluster1 *AKSCluster, ctx utils.Context,pool 
 
 	var cpVms []*KubeNodesStatus
 
-	vms, err := cloud.VMSSVMClient.List(cloud.Context, rg , "", "", "","")
+	vms, err := cloud.VMSSVMClient.List(cloud.Context, rg, vmName, "", "", "")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return ApiError(err,"Error in fetching status",int(models.CloudStatusCode))
+		return ApiError(err, "Error in fetching status", int(models.CloudStatusCode))
 	}
+		for _, vm := range vms.Values() {
+			var vmObj KubeNodesStatus
 
-	for _, vm := range vms.Values() {
-		var vmObj KubeNodesStatus
-
-		vmObj.Id=vm.InstanceID
-		vmObj.Name = vm.Name
-		nicId := ""
-		for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
-			nicId = *nic.ID
-			break
-		}
-		arr := strings.Split(nicId, "/")
-		nicName := arr[12]
-		nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.Context, "MC_application-efg3gj_cluster-azure-va2lrq_eastasia", "aks-pool0-24224467-vmss", arr[10], nicName, "")
-		if err != nil {
-			return  error
-		}
-		vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
-		if  (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress !=nil {
-			pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
-			arr = strings.Split(pipId, "/")
-			pipConf := arr[14]
-			pipAddress := arr[16]
-			publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.Context, "MC_application-efg3gj_cluster-azure-va2lrq_eastasia", "aks-pool0-24224467-vmss", arr[10], nicName, pipConf, pipAddress, "")
-			if err != nil {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return ApiError(err, "Error in status fetching", int(models.CloudStatusCode))
+			vmObj.Id = vm.Name
+			vmObj.Name = vm.Name
+			nicId := ""
+			for _, nic := range *vm.NetworkProfile.NetworkInterfaces {
+				nicId = *nic.ID
+				break
 			}
-			vmObj.PublicIP = publicIPaddress.IPAddress
+			arr := strings.Split(nicId, "/")
+			nicName := arr[12]
+			nicParameters, err := cloud.InterfacesClient.GetVirtualMachineScaleSetNetworkInterface(cloud.Context, rg, vmName, arr[10], nicName, "")
+			if err != nil {
+				return error
+			}
+			vmObj.PrivateIP = (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PrivateIPAddress
+			if (*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress != nil {
+				pipId := *(*nicParameters.InterfacePropertiesFormat.IPConfigurations)[0].PublicIPAddress.ID
+				arr = strings.Split(pipId, "/")
+				pipConf := arr[14]
+				pipAddress := arr[16]
+				publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.Context, "MC_application-efg3gj_cluster-azure-va2lrq_eastasia", "aks-pool0-24224467-vmss", arr[10], nicName, pipConf, pipAddress, "")
+				if err != nil {
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					return ApiError(err, "Error in status fetching", int(models.CloudStatusCode))
+				}
+				vmObj.PublicIP = publicIPaddress.IPAddress
+			}
+
+			vmObj.NodeState = vm.ProvisioningState
+			cpVms = append(cpVms, &vmObj)
+
+			pool.KubeNodes = append(pool.KubeNodes, vmObj)
+
 		}
-
-		vmObj.NodeState = vm.ProvisioningState
-		cpVms = append(cpVms, &vmObj)
-
-		pool.KubeNodes=append(pool.KubeNodes,vmObj)
-
-	}
 
 
 	return  error

@@ -111,7 +111,7 @@ type ManagedClusterAgentPoolStatus struct {
 	Id 				  *string            `json:"id" bson:"id" description:"Cluster pool id"`
 	Name              *string            `json:"name,omitempty" bson:"name,omitempty"  description:"Cluster pool name "`
 	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool is created"`
-	Count             *int32             `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
+	Count             *int64             `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
 	VMSize            *string            `json:"machine_type,omitempty" bson:"vm_size,omitempty" description:"Machine type for pool"`
 	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty" description:"Max VM count"`
 	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty" description:"Min VM count"`
