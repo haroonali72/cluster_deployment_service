@@ -402,7 +402,6 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		var pool1 KubeWorkerPoolStatus1
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID
-		pool1.State = pool.State
 		pool1.Flavour = pool.Flavour
 		for _, node := range pool.Nodes {
 			var node1 KubeWorkerNodesStatus1
@@ -410,9 +409,9 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 			node1.Flavour = node.Flavour
 			node1.State = node.Lifecycle.State
 			node1.ID = node.ID
-			node1.PrivateIp = node.Network.PrivateIp
-			node1.PublicIp = node.Network.PublicIp
+			node1.Name=node.ID
 			node1.Location = node.Location
+			node1.PublicIp=node.NetworkInterfaces[0].IpAddress
 			pool1.Nodes = append(pool1.Nodes, node1)
 		}
 		response1.WorkerPools = append(response1.WorkerPools, pool1)

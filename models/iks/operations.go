@@ -92,8 +92,7 @@ type KubeClusterStatus struct {
 type KubeWorkerPoolStatus struct {
 	ID      string                  `json:"id"`
 	Name    string                  `json:"poolName"`
-	Flavour string                  `json:"flavour"`
-	State   string                  `json:"state"`
+	Flavour string                  `json:"flavor"`
 	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
 }
 type KubeWorkerNodesStatus struct {
@@ -102,6 +101,12 @@ type KubeWorkerNodesStatus struct {
 	Network   NetworkInfo `json:"networkInformation"`
 	Lifecycle LifeCycle   `json:"lifecycle"`
 	Location  string      `json:"location"`
+	NetworkInterfaces []networkInterfaces  `json:"networkInterfaces"`
+}
+type networkInterfaces struct{
+	SubnetId string    	  `json:"subnetID"`
+	IpAddress string	  `json:"ipAddress"`
+	Cidr      string      `json:"cidr"`
 }
 type LifeCycle struct {
 	State string `json:"actualState"`
@@ -124,15 +129,14 @@ type KubeWorkerPoolStatus1 struct {
 	ID      string                   `json:"id"`
 	Name    string                   `json:"pool_name"`
 	Flavour string                   `json:"flavour"`
-	State   string                   `json:"state"`
 	Nodes   []KubeWorkerNodesStatus1 `json:"nodes"`
 }
 type KubeWorkerNodesStatus1 struct {
 	ID        string `json:"id"`
+	Name     string `json:"name"`
 	Flavour   string `json:"machine_type"`
-	PrivateIp string `json:"private_ip"`
+	State     string `json:"machine_type"`
 	PublicIp  string `json:"public_ip"`
-	State     string `json:"state"`
 	Location  string `json:"location"`
 }
 type AllInstancesResponse struct {
