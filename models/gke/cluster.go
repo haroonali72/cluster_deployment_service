@@ -24,7 +24,7 @@ type GKECluster struct {
 	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of cluster [optional]"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [optional]"`
 	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of company [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
