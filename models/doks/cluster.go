@@ -152,6 +152,7 @@ type KubeClusterStatus struct {
 	ID        			string 				   `json:"id"`
 	Name          		string                 `json:"name"`
 	Status				models.Type  		   `json:"status"`
+	State               string        		   `json:"status"`
 	RegionSlug    		string                 `json:"region"`
 	KubernetesVersion   string                 `json:"kubernetes_version"`
 	ClusterIp          	string                 `json:"cluster_ip"`
@@ -503,6 +504,9 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 		return KubeClusterStatus{}, errr
 	}
 	status.Status=cluster.CloudplexStatus
+	if cluster.CloudplexStatus ==models.ClusterCreated{
+		status.State="running"
+	}
 	return status, errr
 }
 
