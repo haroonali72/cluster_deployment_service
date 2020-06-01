@@ -28,7 +28,7 @@ type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of project [required]"`
 	Name             string        `json:"name" bson:"name" valid:"required" description:"Unique name of the cluster [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of the cluster [optional]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of the cluster [optional]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
 	CreationDate     time.Time     `json:"creation_date" bson:"creation_date"`
 	ModificationDate time.Time     `json:"modification_date" bson:"modification_date"`
