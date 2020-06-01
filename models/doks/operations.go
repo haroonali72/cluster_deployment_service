@@ -213,6 +213,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 	response.KubernetesVersion = status.VersionSlug
 	response.ClusterIp = status.IPv4
 	response.Endpoint = status.Endpoint
+	response.State=status.NodePools[0].Nodes[0].Status.State
 	for _, pool := range status.NodePools {
 		count++
 		var workerPool KubeWorkerPoolStatus
@@ -229,6 +230,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 			poolNodes.Name = nodes.Name
 			poolNodes.ID = nodes.DropletID
 			poolNodes.State = nodes.Status.State
+
 			workerPool.Nodes = append(workerPool.Nodes, poolNodes)
 		}
 		response.WorkerPools = append(response.WorkerPools, workerPool)

@@ -152,7 +152,7 @@ type KubeClusterStatus struct {
 	ID        			string 				   `json:"id"`
 	Name          		string                 `json:"name"`
 	Status				models.Type  		   `json:"status"`
-	State               string        		   `json:"status"`
+	State               string        		   `json:"state"`
 	RegionSlug    		string                 `json:"region"`
 	KubernetesVersion   string                 `json:"kubernetes_version"`
 	ClusterIp          	string                 `json:"cluster_ip"`
