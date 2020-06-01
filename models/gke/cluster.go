@@ -256,33 +256,25 @@ type Cluster struct {
 }
 
 type KubeClusterStatus struct {
+	Id              string                 	 `json:"id"`
 	Name              string                 `json:"name"`
 	Region            string                 `json:"region"`
-	Status             	string                	`json:"status"`
-	KubernetesVersion 	string				 	`json:"kubernetes_version"`
+	Status             	string               `json:"status"`
+	State             	string               `json:"state"`
+	KubernetesVersion 	string				 `json:"kubernetes_version"`
 	Network           string                 `json:"network"`
-	PoolCount       	int64                  	`json:"pool_count"`
+	PoolCount       	int64                `json:"nodepool_count"`
 	ClusterIP         string                 `json:"cluster_ip"`
-	KubernetesDashboard bool				 `json:"kubernetes_dashboard"`
 	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools"`
-	DefaultMaxContraint int64          			`json:"default_max_pods_constrainty"`
-	Endpoint			string					`json:"endpoint"`
-	ServiceIP			string					`json:"service_ip"`
-
-
+	Endpoint			string				 `json:"endpoint"`
 }
 
 type KubeWorkerPoolStatus struct {
+	Id    				string                  `json:"id"`
 	Name    			string                  `json:"name"`
-	NodeCount int64				 	`json:"node_count"`
-	MaxPodPerNode 		int64             		`json:"max_pods_per_node"`
-	Version 			string                  `json:"version"`
-	State   string                  `json:"state"`
-	SelfLink			string					`json:"self_link"`
+	NodeCount 			int64				 	`json:"node_count"`
+	State   			string                  `json:"state"`
 	MachineType 		string					`json:"machine_type"`
-	DiskType 			string					`json:"disk_type"`
-	DiskSize			int64					`json:"disk_size"`
-	ImageType			string					`json:"image_type"`
 	AutoScale			bool       			    `json:"auto_scaling"`
 	MinCount 			int64					`json:"min_count"`
 	MaxCount            int64   				`json:"max_count"`
@@ -889,19 +881,16 @@ func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
 	status.PoolCount = cluster.CurrentNodeCount
 	status.KubernetesVersion =cluster.CurrentMasterVersion
 	status.ClusterIP=cluster.ClusterIpv4Cidr
-	status.KubernetesDashboard=cluster.AddonsConfig.KubernetesDashboard.Disabled
 	status.PoolCount=cluster.CurrentNodeCount
 	status.ClusterIP=cluster.ClusterIpv4Cidr
 	status.Endpoint=cluster.Endpoint
-	status.DefaultMaxContraint=cluster.DefaultMaxPodsConstraint.MaxPodsPerNode
 
 	for _, pool :=range cluster.NodePools{
 		workerpool := KubeWorkerPoolStatus{}
 		workerpool.Name=pool.Name
-		workerpool.Version=pool.Version
+
 		workerpool.State=pool.Status
 		workerpool.NodeCount=pool.InitialNodeCount
-		workerpool.MaxPodPerNode=pool.MaxPodsConstraint.MaxPodsPerNode
 		if pool.Autoscaling.Enabled {
 			workerpool.AutoScale = pool.Autoscaling.Enabled
 			workerpool.MinCount = pool.Autoscaling.MinNodeCount
@@ -909,12 +898,6 @@ func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
 		} else {
 			workerpool.AutoScale =false
 		}
-		workerpool.SelfLink=pool.SelfLink
-//		workerpool.MachineType=pool.Config.MachineType
-//		workerpool.ServiceAccount=pool.Config.ServiceAccount
-//		workerpool.DiskSize=pool.Config.DiskSizeGb
-//		workerpool.DiskType=pool.Config.DiskType
-//		workerpool.ImageType=pool.Config.ImageType
 		status.WorkerPools=append(status.WorkerPools ,workerpool)
 
 	}
