@@ -259,27 +259,35 @@ type KubeClusterStatus struct {
 	Id              string                 	 `json:"id"`
 	Name              string                 `json:"name"`
 	Region            string                 `json:"region"`
-	Status             	string               `json:"status"`
+	Status            models.Type            `json:"status"`
 	State             	string               `json:"state"`
 	KubernetesVersion 	string				 `json:"kubernetes_version"`
 	Network           string                 `json:"network"`
 	PoolCount       	int64                `json:"nodepool_count"`
 	ClusterIP         string                 `json:"cluster_ip"`
 	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools"`
-	Endpoint			string				 `json:"endpoint"`
 }
 
 type KubeWorkerPoolStatus struct {
 	Id    				string                  `json:"id"`
 	Name    			string                  `json:"name"`
+	Link 			    string					`json:"-"`
 	NodeCount 			int64				 	`json:"node_count"`
-	State   			string                  `json:"state"`
 	MachineType 		string					`json:"machine_type"`
 	AutoScale			bool       			    `json:"auto_scaling"`
 	MinCount 			int64					`json:"min_count"`
 	MaxCount            int64   				`json:"max_count"`
+	Subnet				string   				`json:"subnet_id"`
+	Nodes               []KubeNodesStatus       `json:"nodes"`
 }
+type KubeNodesStatus struct {
+	Id    				string                  `json:"id"`
+	Name    			string                  `json:"name"`
+	State 				string				 	`json:"state"`
+	PrivateIp 			string					`json:"private_ip"`
+	PublicIp			string       			`json:"public_ip"`
 
+}
 
 func GetNetwork(token, projectId string, ctx utils.Context) error {
 
@@ -574,60 +582,66 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (KubeClusterStatus, types.CustomCPError) {
+func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (*KubeClusterStatus, types.CustomCPError) {
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
+		return &KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
 	}
 	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return KubeClusterStatus{}, cpErr
+		return &KubeClusterStatus{}, cpErr
 	}
 	if cluster.CloudplexStatus == models.Deploying || cluster.CloudplexStatus == models.Terminating || cluster.CloudplexStatus == models.ClusterTerminated {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", Description: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
-		return KubeClusterStatus{}, cpErr
+		return &KubeClusterStatus{}, cpErr
 	}
 	if cluster.CloudplexStatus != models.ClusterCreated {
 		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 		if err != nil {
-			return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
+			return &KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 				Description: "Error occurred while getting cluster status in database",
 				StatusCode:  500}
 		}
 		if customErr.Err != (types.CustomCPError{}) {
-			return KubeClusterStatus{}, customErr.Err
+			return &KubeClusterStatus{}, customErr.Err
 		}
 	}
 	gkeOps, err1 := GetGKE(credentials)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err1
+		return &KubeClusterStatus{}, err1
 	}
 
 	err1 = gkeOps.init()
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err1
+		return &KubeClusterStatus{}, err1
 	}
 
 	latestCluster, err1 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, err1
+		return &KubeClusterStatus{}, err1
 	}
-
+	customStatus := fillStatusInfo(latestCluster)
+	err1 = gkeOps.fetchNodePool(latestCluster, &customStatus,ctx)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &KubeClusterStatus{}, err1
+	}
+	customStatus.Status=cluster.Status
 	latestCluster.ProjectId = ctx.Data.ProjectId
 	latestCluster.CompanyId = ctx.Data.Company
 	latestCluster.CloudplexStatus = cluster.CloudplexStatus
 	latestCluster.IsExpert = cluster.IsExpert
 	latestCluster.IsAdvance = cluster.IsAdvance
 
-	customStatus := fillStatusInfo(latestCluster)
 
-	return customStatus, types.CustomCPError{}
+
+	return &customStatus, types.CustomCPError{}
 }
 
 func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.CustomCPError {
@@ -873,28 +887,30 @@ func validateGKEImageType(imageType string) (bool, error) {
 }
 
 func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
-
+	status.Id=cluster.Name
 	status.Name=cluster.Name
 	status.Region=cluster.Location
-	status.Status=string(cluster.CloudplexStatus)
+	status.Status=cluster.CloudplexStatus
 	status.Network=cluster.Network
 	status.PoolCount = cluster.CurrentNodeCount
 	status.KubernetesVersion =cluster.CurrentMasterVersion
 	status.ClusterIP=cluster.ClusterIpv4Cidr
 	status.PoolCount=cluster.CurrentNodeCount
 	status.ClusterIP=cluster.ClusterIpv4Cidr
-	status.Endpoint=cluster.Endpoint
-
+	status.State=cluster.NodePools[0].Status
 	for _, pool :=range cluster.NodePools{
 		workerpool := KubeWorkerPoolStatus{}
 		workerpool.Name=pool.Name
-
-		workerpool.State=pool.Status
+		workerpool.Id=pool.Name
 		workerpool.NodeCount=pool.InitialNodeCount
+		workerpool.MachineType=pool.Config.MachineType
+		workerpool.Link=pool.InstanceGroupUrls[0]
 		if pool.Autoscaling.Enabled {
 			workerpool.AutoScale = pool.Autoscaling.Enabled
 			workerpool.MinCount = pool.Autoscaling.MinNodeCount
 			workerpool.MaxCount = pool.Autoscaling.MaxNodeCount
+
+			workerpool.Subnet= cluster.Subnetwork
 		} else {
 			workerpool.AutoScale =false
 		}
