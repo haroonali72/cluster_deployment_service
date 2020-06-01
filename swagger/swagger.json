@@ -6844,7 +6844,7 @@
                 "parameters": [
                     {
                         "in": "header",
-                        "name": "token",
+                        "name": "X-Auth-Token",
                         "description": "token",
                         "required": true,
                         "type": "string"
@@ -9579,35 +9579,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "14379.0xc00170db00.false": {
+        "14379.0xc0017c85a0.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0016cbb90.false": {
+        "482.0xc001794630.false": {
             "title": "false",
             "type": "object"
         },
-        "55764.0xc00168ee10.false": {
+        "55804.0xc001735890.false": {
             "title": "false",
             "type": "object"
         },
-        "56068.string": {
+        "56088.string": {
             "title": "string",
             "type": "object"
         },
-        "605.0xc000f1dec0.false": {
+        "605.0xc000fc8960.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0015dd170.false": {
+        "667.0xc001687bf0.false": {
             "title": "false",
             "type": "object"
         },
-        "8073.string": {
+        "8093.string": {
             "title": "string",
             "type": "object"
         },
-        "964.0xc00126e930.false": {
+        "964.0xc0013093b0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9748,7 +9748,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/56068.string"
+                    "$ref": "#/definitions/56088.string"
                 },
                 "type": {
                     "type": "string"
@@ -9961,7 +9961,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/605.0xc000f1dec0.false"
+                    "$ref": "#/definitions/605.0xc000fc8960.false"
                 },
                 "name": {
                     "type": "string"
@@ -10225,6 +10225,22 @@
             "title": "Cluster_Def",
             "type": "object",
             "properties": {
+                "cloud": {
+                    "$ref": "#/definitions/models.Cloud",
+                    "description": "Name of the cloud [optional]"
+                },
+                "company_id": {
+                    "description": "Id of the company [optional]",
+                    "type": "string"
+                },
+                "creation_date": {
+                    "type": "string",
+                    "format": "datetime"
+                },
+                "modification_date": {
+                    "type": "string",
+                    "format": "datetime"
+                },
                 "name": {
                     "description": "Unique name of the cluster [required]",
                     "type": "string"
@@ -10266,6 +10282,9 @@
                 },
                 "new_storage_account": {
                     "type": "boolean"
+                },
+                "storage_account_id": {
+                    "type": "string"
                 }
             }
         },
@@ -10273,6 +10292,9 @@
             "title": "ImageReference",
             "type": "object",
             "properties": {
+                "image_id": {
+                    "type": "string"
+                },
                 "offer": {
                     "description": "Offer of the VM image [required]",
                     "type": "string"
@@ -10482,7 +10504,31 @@
             "title": "VM",
             "type": "object",
             "properties": {
+                "cloud_id": {
+                    "type": "string"
+                },
+                "computer_name": {
+                    "type": "string"
+                },
+                "identity_principal_id": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "node_state": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "private_ip": {
+                    "type": "string"
+                },
+                "public_ip": {
+                    "type": "string"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }
@@ -10521,7 +10567,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00126e930.false"
+                    "$ref": "#/definitions/964.0xc0013093b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12642,7 +12688,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/55764.0xc00168ee10.false"
+                    "$ref": "#/definitions/55804.0xc001735890.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12749,6 +12795,10 @@
                     "description": "Finger prints for the key [optional]",
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "key_name": {
                     "description": "Name of the key.[required]",
                     "type": "string"
@@ -12759,6 +12809,10 @@
                 },
                 "private_key": {
                     "description": "Private key for SSH ['required'] if credentials_type is 'key']",
+                    "type": "string"
+                },
+                "public_key": {
+                    "description": "Public key for ssh [readonly]",
                     "type": "string"
                 },
                 "username": {
@@ -12998,7 +13052,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc00170db00.false"
+                    "$ref": "#/definitions/14379.0xc0017c85a0.false"
                 },
                 "name": {
                     "type": "string"

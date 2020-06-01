@@ -1261,7 +1261,7 @@ func (c *DOClusterController) ValidateProfile() {
 	err_ := do.ValidateProfile(credentials.AccessKey, *ctx)
 	if err_ != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = map[string]string{"error": "Profile is not valid"}
 		c.ServeJSON()
 		return
 	}
