@@ -256,36 +256,36 @@ type Cluster struct {
 }
 
 type KubeClusterStatus struct {
-	Id              string                 	 `json:"id"`
-	Name              string                 `json:"name"`
-	Region            string                 `json:"region"`
-	Status            models.Type            `json:"status"`
-	State             	string               `json:"state"`
-	KubernetesVersion 	string				 `json:"kubernetes_version"`
-	Network           string                 `json:"network"`
-	PoolCount       	int64                `json:"nodepool_count"`
-	ClusterIP         string                 `json:"cluster_ip"`
-	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools"`
+	Id              string                 	 `json:"id,omitempty"`
+	Name              string                 `json:"name,omitempty"`
+	Region            string                 `json:"region,omitempty"`
+	Status            models.Type            `json:"status,omitempty"`
+	State             	string               `json:"state,omitempty"`
+	KubernetesVersion 	string				 `json:"kubernetes_version,omitempty"`
+	Network           string                 `json:"network,omitempty"`
+	PoolCount       	int64                `json:"nodepool_count,omitempty"`
+	ClusterIP         string                 `json:"cluster_ip,omitempty"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools,omitempty"`
 }
 
 type KubeWorkerPoolStatus struct {
-	Id    				string                  `json:"id"`
-	Name    			string                  `json:"name"`
+	Id    				string                  `json:"id,omitempty"`
+	Name    			string                  `json:"name,omitempty"`
 	Link 			    string					`json:"-"`
-	NodeCount 			int64				 	`json:"node_count"`
-	MachineType 		string					`json:"machine_type"`
-	AutoScale			bool       			    `json:"auto_scaling"`
-	MinCount 			int64					`json:"min_count"`
-	MaxCount            int64   				`json:"max_count"`
-	Subnet				string   				`json:"subnet_id"`
+	NodeCount 			int64				 	`json:"node_count,omitempty"`
+	MachineType 		string					`json:"machine_type,omitempty"`
+	AutoScale			bool       			    `json:"auto_scaling,omitempty"`
+	MinCount 			int64					`json:"min_count,omitempty"`
+	MaxCount            int64   				`json:"max_count,omitempty"`
+	Subnet				string   				`json:"subnet_id,omitempty"`
 	Nodes               []KubeNodesStatus       `json:"nodes"`
 }
 type KubeNodesStatus struct {
-	Id    				string                  `json:"id"`
-	Name    			string                  `json:"name"`
-	State 				string				 	`json:"state"`
-	PrivateIp 			string					`json:"private_ip"`
-	PublicIp			string       			`json:"public_ip"`
+	Id    				string                  `json:"id,omitempty"`
+	Name    			string                  `json:"name,omitempty"`
+	State 				string				 	`json:"state,omitempty"`
+	PrivateIp 			string					`json:"private_ip,omitempty"`
+	PublicIp			string       			`json:"public_ip,omitempty"`
 
 }
 
