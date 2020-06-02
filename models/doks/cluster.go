@@ -504,9 +504,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 		return KubeClusterStatus{}, errr
 	}
 	status.Status=cluster.CloudplexStatus
-	if cluster.CloudplexStatus ==models.ClusterCreated{
-		status.State="running"
-	}
+
 	return status, errr
 }
 
