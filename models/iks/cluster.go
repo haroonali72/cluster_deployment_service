@@ -412,6 +412,7 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 			node1.State = node.Lifecycle.State
 			node1.PoolId=node.PoolId
 			node1.PrivateIp = node.NetworkInterfaces[0].IpAddress
+			node1.PublicIp = node.NetworkInterfaces[0].IpAddress
 			node1.Name=node.PoolId
 			pool1.Nodes = append(pool1.Nodes, node1)
 		}

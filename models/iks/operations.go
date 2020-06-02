@@ -93,14 +93,14 @@ type KubeClusterStatus struct {
 	Status            models.Type 			  `json:"status"`
 }
 type KubeClusterStatus1 struct {
-	ID      		  string                  `json:"id"`
-	Name              string                  `json:"name"`
-	Region            string                  `json:"region"`
-	Status            models.Type             `json:"status"`
-	ResourceGroup	  string                  `json:"resource_group"`
-	State             string                  `json:"state"`
-	KubernetesVersion string 				  `json:"kubernetes_version"`
-	PoolCount       int                       `json:"nodepool_count"`
+	ID      		  string                  `json:"id,omitempty"`
+	Name              string                  `json:"name,omitempty"`
+	Region            string                  `json:"region,omitempty"`
+	Status            models.Type             `json:"status,omitempty"`
+	ResourceGroup	  string                  `json:"resource_group,omitempty"`
+	State             string                  `json:"state,omitempty"`
+	KubernetesVersion string 				  `json:"kubernetes_version,omitempty"`
+	PoolCount       int                       `json:"nodepool_count,omitempty"`
 	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
 }
 
@@ -113,19 +113,20 @@ type KubeWorkerPoolStatus struct {
 	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
 }
 type KubeWorkerPoolStatus1 struct {
-	ID      string                   	`json:"id"`
-	Name    string                    	`json:"name"`
-	Flavour string                    	`json:"machine_type"`
-	Autoscaling bool 				  	`json:"autoscaling"`
+	ID      string                   	`json:"id,omitempty"`
+	Name    string                    	`json:"name,omitempty"`
+	Flavour string                    	`json:"machine_type,omitempty"`
+	Autoscaling bool 				  	`json:"autoscaling,omitempty"`
 	Nodes   []KubeWorkerNodesStatus1  	`json:"nodes"`
-	Count    int                   	 	`json:"node_count"`
-	SubnetId 			string   		`json:"subnet_id"`
+	Count    int                   	 	`json:"node_count,omitempty"`
+	SubnetId 			string   		`json:"subnet_id,omitempty"`
 }
 type KubeWorkerNodesStatus1 struct {
-	PoolId   			string       				`json:"id"`
-	Name                string    					`json:"name"`
-	State     			string 						`json:"state"`
-	PrivateIp            string 						`json:"private_ip"`
+	PoolId   			string       				`json:"id,omitempty"`
+	Name                string    					`json:"name,omitempty"`
+	State     			string 						`json:"state,omitempty"`
+	PrivateIp           string 						`json:"private_ip,omitempty"`
+	PublicIp            string 						`json:"public_ip,omitempty"`
 }
 type KubeWorkerNodesStatus struct {
 	ID        string      `json:"id"`
@@ -137,9 +138,9 @@ type KubeWorkerNodesStatus struct {
 	NetworkInterfaces []networkInterfaces  `json:"networkInterfaces"`
 }
 type networkInterfaces struct{
-	SubnetId string    	  `json:"subnetID"`
-	IpAddress string	  `json:"ipAddress"`
-	Cidr      string      `json:"cidr"`
+	SubnetId string    	  `json:"subnetID,omitempty"`
+	IpAddress string	  `json:"ipAddress,omitempty"`
+	Cidr      string      `json:"cidr,omitempty"`
 }
 
 type LifeCycle struct {
