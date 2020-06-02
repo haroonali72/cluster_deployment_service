@@ -129,14 +129,16 @@ type KubeWorkerPoolStatus1 struct {
 	ID      string                   `json:"id"`
 	Name    string                   `json:"pool_name"`
 	Flavour string                   `json:"flavour"`
+	State   string                   `json:"state"`
 	Nodes   []KubeWorkerNodesStatus1 `json:"nodes"`
 }
 type KubeWorkerNodesStatus1 struct {
 	ID        string `json:"id"`
 	Name     string `json:"name"`
 	Flavour   string `json:"machine_type"`
-	State     string `json:"machine_type"`
+	PrivateIp string `json:"private_ip"`
 	PublicIp  string `json:"public_ip"`
+	State   string   `json:"state"`
 	Location  string `json:"location"`
 }
 type AllInstancesResponse struct {

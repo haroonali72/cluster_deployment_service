@@ -632,28 +632,25 @@ func (cloud *AKS) fetchClusterStatus(credentials vault.AzureCredentials,cluster1
 		subnet:=(*(*agentPool.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations)[0].VirtualMachineScaleSetNetworkConfigurationProperties.IPConfigurations)[0].Subnet.ID
 		subnet1 := strings.Split(*subnet, "/")
 		agentPoolProfiles.VnetSubnetID =&subnet1[10]
-	//	sg :=(*agentPool.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations)[0].VirtualMachineScaleSetNetworkConfigurationProperties.NetworkSecurityGroup.ID
-	//	sg1 :=strings.Split(*sg, "/")
-	//	agentPoolProfiles.SecurityGroup = &sg1[8]
 		agentPoolProfiles.Name = agentPool.Name
 		agentPoolProfiles.VMSize = agentPool.Sku.Name
 		agentPoolProfiles.Count = agentPool.Sku.Capacity
 		for _,scaling :=range *AKScluster.AgentPoolProfiles{
 			a:=*agentPool.Name
 			b:=*scaling.Name
-		if strings.Contains(a,b) && scaling.EnableAutoScaling!=nil && *scaling.EnableAutoScaling==true {
-			agentPoolProfiles.EnableAutoScaling = scaling.EnableAutoScaling
-			agentPoolProfiles.MaxCount = scaling.MaxCount
-			agentPoolProfiles.MinCount = scaling.MinCount
-		} else if strings.Contains(*agentPool.Name,*scaling.Name){
-			scaling := false
-			agentPoolProfiles.EnableAutoScaling = &scaling
-		}
-		}
-			CpErr := aksOps.fetchNodeStatus(cluster1, ctx,&agentPoolProfiles,*AKScluster.NodeResourceGroup,*agentPool.Name)
-			if CpErr != (types.CustomCPError{}) {
-				return KubeClusterStatus{}, CpErr
+			if strings.Contains(a,b) && scaling.EnableAutoScaling!=nil && *scaling.EnableAutoScaling==true {
+				agentPoolProfiles.EnableAutoScaling = scaling.EnableAutoScaling
+				agentPoolProfiles.MaxCount = scaling.MaxCount
+				agentPoolProfiles.MinCount = scaling.MinCount
+			} else if strings.Contains(*agentPool.Name,*scaling.Name){
+				scaling := false
+				agentPoolProfiles.EnableAutoScaling = &scaling
 			}
+		}
+		CpErr := aksOps.fetchNodeStatus(cluster1, ctx,&agentPoolProfiles,*AKScluster.NodeResourceGroup,*agentPool.Name)
+		if CpErr != (types.CustomCPError{}) {
+				return KubeClusterStatus{}, CpErr
+		}
 
 		cluster.AgentPoolProfiles = append(cluster.AgentPoolProfiles, agentPoolProfiles)
 		count++
