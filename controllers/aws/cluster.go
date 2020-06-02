@@ -24,9 +24,9 @@ type AWSClusterController struct {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} aws.Cluster_Def
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/ [get]
 func (c *AWSClusterController) Get() {
 
@@ -87,10 +87,9 @@ func (c *AWSClusterController) Get() {
 	}
 
 	cluster, err := aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
-
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -103,8 +102,8 @@ func (c *AWSClusterController) Get() {
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []aws.Cluster_Def
-// @Failure 400 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
 func (c *AWSClusterController) GetAll() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
@@ -156,13 +155,12 @@ func (c *AWSClusterController) GetAll() {
 // @Description create a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Success 400 {"msg": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 409 {"error": "cluster against this project already exists"}
-// @Failure 410 {"error": "Core limit exceeded"}
-// @Failure 500 {"error": "error msg"}
+// @Success 201 {"msg": "cluster created successfully"}
+// @Success 400 {"msg": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *AWSClusterController) Post() {
 
@@ -170,7 +168,7 @@ func (c *AWSClusterController) Post() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -193,6 +191,7 @@ func (c *AWSClusterController) Post() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -226,7 +225,7 @@ func (c *AWSClusterController) Post() {
 	}
 	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -239,12 +238,7 @@ func (c *AWSClusterController) Post() {
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster against this project id  already exists"}
-			c.ServeJSON()
-			return
-		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
-			c.Ctx.Output.SetStatus(410)
-			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
+			c.Data["json"] = map[string]string{"error": "Cluster against this project id  already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -254,7 +248,8 @@ func (c *AWSClusterController) Post() {
 		return
 	}
 	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
+	c.Ctx.Output.SetStatus(201)
+	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
 	c.ServeJSON()
 }
 
@@ -262,20 +257,25 @@ func (c *AWSClusterController) Post() {
 // @Description update an existing cluster
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	aws.Cluster_Def	true	"body for cluster content"
-// @Success 200 {"msg": "cluster updated successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 402 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 405 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Success 200 {"msg": "Cluster updated successfully"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+
+	err :=json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
-
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
@@ -291,9 +291,23 @@ func (c *AWSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
+	if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("DOKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
@@ -315,37 +329,32 @@ func (c *AWSClusterController) Patch() {
 	ctx.SendLogs("AWSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+
 	for _, node := range cluster.NodePools {
 		node.EnablePublicIP = !network.IsPrivate
 	}
 	err = aws.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "does not exist") {
+		if strings.Contains(err.Error(), "does not exist")|| strings.Contains(err.Error(), "not found"){
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
+			c.Data["json"] = map[string]string{"error": "No cluster exists with this name"}
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "Cluster is in runnning state") {
-			c.Ctx.Output.SetStatus(402)
-			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
+		if strings.Contains(err.Error(), "Cluster is in created state") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
-		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
+		if strings.Contains(err.Error(), "Cluster creation is in termination failed state") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "Cluster creation is in termination failed state"}
 			c.ServeJSON()
 			return
 		}
@@ -364,11 +373,10 @@ func (c *AWSClusterController) Patch() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path 	string	true	"project id of the cluster"
 // @Param	forceDelete path    boolean	true    "deleting cluster forcefully"
-// @Success 200 {"msg": "cluster deleted successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
+// @Success 204 {"msg": "Cluster deleted successfully"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router delete/:projectId/:forceDelete [delete]
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
@@ -433,30 +441,32 @@ func (c *AWSClusterController) Delete() {
 
 	cluster, err := aws.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == "Cluster Created" && !forceDelete {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in running state"}
+	if cluster.Status == models.ClusterCreated && !forceDelete {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in creaated state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Deploying) && !forceDelete {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	}else if cluster.Status == models.Deploying && !forceDelete {
+		ctx.SendLogs("cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in deploying state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Terminating) && !forceDelete {
+	}else if cluster.Status == models.Terminating && !forceDelete {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminationFailed && !forceDelete {
+		ctx.SendLogs(" Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
@@ -468,8 +478,10 @@ func (c *AWSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
+	c.Ctx.Output.SetStatus(204)
+	c.Data["json"] = map[string]string{"msg": "Cluster deleted successfully"}
 	c.ServeJSON()
 }
 
@@ -478,11 +490,12 @@ func (c *AWSClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 202 {"msg": "Cluster creation started successfully"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /start/:projectId [post]
 func (c *AWSClusterController) StartCluster() {
 
@@ -536,7 +549,7 @@ func (c *AWSClusterController) StartCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -546,7 +559,6 @@ func (c *AWSClusterController) StartCluster() {
 	ctx.SendLogs("AWSClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	cluster, err = aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -554,25 +566,27 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Cluster Created" {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+	if cluster.Status == models.ClusterCreated {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	}else if cluster.Status == models.Deploying {
+		ctx.SendLogs("cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+	}else if cluster.Status == models.Terminating {
+		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminationFailed {
+		ctx.SendLogs(": Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": ": Cluster is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
@@ -594,7 +608,7 @@ func (c *AWSClusterController) StartCluster() {
 		return
 	}
 
-	cluster.Status = string(models.Deploying)
+	cluster.Status = models.Deploying
 	err = aws.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -608,7 +622,8 @@ func (c *AWSClusterController) StartCluster() {
 	go aws.DeployCluster(cluster, awsProfile.Profile, *ctx, userInfo.CompanyId, token)
 
 	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
 }
 
@@ -618,10 +633,9 @@ func (c *AWSClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} aws.Cluster_Def
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /status/:projectId/ [get]
 func (c *AWSClusterController) GetStatus() {
 
@@ -649,6 +663,7 @@ func (c *AWSClusterController) GetStatus() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx := new(utils.Context)
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
 
@@ -662,7 +677,6 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 	if !allowed {
-
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
 		c.ServeJSON()
@@ -675,7 +689,7 @@ func (c *AWSClusterController) GetStatus() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -700,6 +714,11 @@ func (c *AWSClusterController) GetStatus() {
 
 	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "nodes not found") {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}else if err != nil{
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -715,10 +734,11 @@ func (c *AWSClusterController) GetStatus() {
 // @Param	X-Profile-Id header	X-Profile-Id	string	true "profileId"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
+// @Success 202 {"msg": "Cluster termination initiated"}
+// @Success 204 {"msg": "Cluster terminated successfully"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /terminate/:projectId/ [post]
 func (c *AWSClusterController) TerminateCluster() {
 
@@ -772,7 +792,7 @@ func (c *AWSClusterController) TerminateCluster() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -805,24 +825,40 @@ func (c *AWSClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("AWSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	if cluster.Status == models.Deploying {
+		ctx.SendLogs("AWSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Terminating) {
+	}else if cluster.Status == models.Terminating {
 		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminated {
+		ctx.SendLogs("AWSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in terminated state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterCreationFailed {
+		ctx.SendLogs("AWSClusterController: Cluster is in cluster creation failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in cluster creation failed state"}
+		c.ServeJSON()
+		return
+	}else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		ctx.SendLogs("AWSClusterController: Cluster is not in created status", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is not in created status"}
 		c.ServeJSON()
 		return
 	}
 
 	ctx.SendLogs("AWSClusterController: Terminating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	cluster.Status = string(models.Terminating)
+	cluster.Status = models.Terminating
 	err = aws.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -830,10 +866,12 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
 	go aws.TerminateCluster(cluster, awsProfile, *ctx, userInfo.CompanyId, token)
 
 	ctx.SendLogs(" AWS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "cluster termination initiated"}
 	c.ServeJSON()
 }
 
@@ -842,9 +880,9 @@ func (c *AWSClusterController) TerminateCluster() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	region  path	string	true	"region"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /sshkeys/:region [get]
 func (c *AWSClusterController) GetSSHKeys() {
 
@@ -882,7 +920,6 @@ func (c *AWSClusterController) GetSSHKeys() {
 
 	ctx.SendLogs("AWSClusterController: FetchExistingSSHKeys.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	keys, err := aws.GetAllSSHKeyPair(*ctx, token, region)
-
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -901,9 +938,9 @@ func (c *AWSClusterController) GetSSHKeys() {
 // @Param	region	path	string	true	"cloud region"
 // @Param	amiId	path	string	true	"Id of the ami"
 // @Success 200 {object} []*ec2.BlockDeviceMapping
-// @Failure 404 {"error": "ami id is empty"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /amis/:amiId/:region [get]
 func (c *AWSClusterController) GetAMI() {
 
@@ -943,7 +980,7 @@ func (c *AWSClusterController) GetAMI() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -994,10 +1031,9 @@ func (c *AWSClusterController) GetAMI() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} aws.AutoScaling
 // @Success 200 {"msg": "cluster autoscaled successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "Unathorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /enablescaling/:projectId/ [post]
 func (c *AWSClusterController) EnableAutoScaling() {
 
@@ -1050,7 +1086,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1089,6 +1125,7 @@ func (c *AWSClusterController) EnableAutoScaling() {
 		return
 	}
 	*/
+
 	c.Data["json"] = map[string]string{"msg": "cluster autoscaled successfully"}
 	c.ServeJSON()
 }
@@ -1101,11 +1138,11 @@ func (c *AWSClusterController) EnableAutoScaling() {
 // @Param	X-Auth-Token			header	string	true "token"
 // @Param	teams			header	string	true "teams"
 // @Param	region		path	string	true	"cloud region"
-// @Success 200 			{object} key_utils.AWSKey
-// @Failure 400 			{"error": "error msg"}
-// @Failure 401 			{"error": "error msg"}
-// @Failure 404 			{"error": "error msg"}
-// @Failure 500 			{"error": "error msg"}
+// @Success 201 			{object} key_utils.AWSKey
+// @Failure 401 			{"error": "Unauthorized"}
+// @Failure 404 			{"error": "Not Found"}
+// @Failure 409 			{"error": "Conflict"}
+// @Failure 500 			{"error": "Runtime Error"}
 // @router /sshkey/:projectId/:keyname/:region [post]
 func (c *AWSClusterController) PostSSHKey() {
 
@@ -1166,7 +1203,7 @@ func (c *AWSClusterController) PostSSHKey() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1188,26 +1225,10 @@ func (c *AWSClusterController) PostSSHKey() {
 		c.ServeJSON()
 		return
 	}
+
+	c.Ctx.Output.SetStatus(201)
 	ctx.SendLogs(" AWS cluster key "+keyName+" created in region "+region, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = keyMaterial
-	c.ServeJSON()
-}
-
-// @Title GetCores
-// @Description Get AWS Machine instance cores
-// @Success 200 			{object} models.Machine
-// @Failure 500 			{"error": "error msg"}
-// @router /machine/info [get]
-func (c *AWSClusterController) GetCores() {
-	var machine []models.Machine
-	if err := json.Unmarshal(cores.AWSCores, &machine); err != nil {
-		beego.Error("Unmarshalling of machine instances failed ", err.Error())
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	c.Data["json"] = machine
 	c.ServeJSON()
 }
 
@@ -1217,10 +1238,10 @@ func (c *AWSClusterController) GetCores() {
 // @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	X-Auth-Token			header	string	true "token"
 // @Param	region		path	string	true	"cloud region"
-// @Success 200 			{"msg": "key deleted successfully"}
-// @Failure 400 			{"error": "error msg"}
-// @Failure 401 			{"error": "User is unauthorized to perform this action"}
-// @Failure 404 			{"error": "error msg"}
+// @Success 204 {"msg": "Cluster deleted successfully"}
+// @Failure 401 			{"error": "Unauthorized"}
+// @Failure 404 			{"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
 // @router /sshkey/:keyname/:region [delete]
 func (c *AWSClusterController) DeleteSSHKey() {
 
@@ -1268,8 +1289,8 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	}
 	alreadyUsed := aws.CheckKeyUsage(keyName, userInfo.CompanyId, *ctx)
 	if alreadyUsed {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Key is used in other projects and can't be deleted"}
 		c.ServeJSON()
 		return
 	}
@@ -1277,7 +1298,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1292,20 +1313,22 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 	err = aws.DeleteSSHkey(keyName, token, awsProfile.Profile, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 	ctx.SendLogs(" AWS cluster key "+keyName+"of region"+region+" deleted", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
+	c.Ctx.Output.SetStatus(204)
+	c.Data["json"] = map[string]string{"msg": "Key deleted successfully"}
 	c.ServeJSON()
 }
 
 // @Title GetRegions
 // @Description Get AWS Regions
 // @Success 200  []models.Region
-// @Failure 500  {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 500  {"error": "Runtime Error"}
 // @router /getallregions [get]
 func (c *AWSClusterController) GetAllRegions() {
 
@@ -1331,10 +1354,10 @@ func (c *AWSClusterController) GetAllRegions() {
 // @Param	region	path	string	true	"region of AWS"
 // @Param	X-Profile-Id	header	string	true "profileId"
 // @Success 200 			[]*string
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 			{"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 			{"error": "Bad Request"}
 // @router /getzones/:region [get]
 func (c *AWSClusterController) GetZones() {
 	ctx := new(utils.Context)
@@ -1363,7 +1386,7 @@ func (c *AWSClusterController) GetZones() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1400,10 +1423,10 @@ func (c *AWSClusterController) GetZones() {
 // @Title Get Machine Types
 // @Description Get AWS  Machine Types
 // @Success 200 []string
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 			{"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 			{"error": "Runtime Error"}
 // @router /getallmachines [get]
 func (c *AWSClusterController) GetAllMachines() {
 	ctx := new(utils.Context)
@@ -1426,12 +1449,10 @@ func (c *AWSClusterController) GetAllMachines() {
 // @Description check if profile is valid
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	vault.AwsCredentials		true	"body for cluster content"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 409 {"error": "profile is invalid"}
-// @Failure 500 {"error": "error msg"}
+// @Success 200 {"msg": "Cluster created successfully"}
+// @Failure 401 {"error": "Profile is invalid"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /validateProfile/ [post]
 func (c *AWSClusterController) ValidateProfile() {
 
@@ -1490,17 +1511,16 @@ func (c *AWSClusterController) ValidateProfile() {
 	c.ServeJSON()
 }
 
-// @Title Start
+// @Title Start Agent
 // @Description Apply cloudplex Agent file to eks cluster
 // @Param	clusterName	header	string	true "clusterName"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "Agent Applied successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /applyagent/:projectId [post]
 func (c *AWSClusterController) ApplyAgent() {
 	ctx := new(utils.Context)
@@ -1508,9 +1528,8 @@ func (c *AWSClusterController) ApplyAgent() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("EKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
