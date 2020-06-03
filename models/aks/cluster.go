@@ -57,6 +57,7 @@ type AKSCluster struct {
 	Location               string                               `json:"location,omitempty" bson:"location,omitempty" validate:"required" description:"Location for cluster provisioning [required]"`
 }
 
+
 type Tag struct {
 	Key   string `json:"key" bson:"key"`
 	Value string `json:"value" bson:"value"`
@@ -74,7 +75,50 @@ func GetNetwork(token, projectId string, ctx utils.Context) error {
 
 	return nil
 }
+type  KubeClusterStatus struct {
+	Id                   string                               	`json:"id" bson:"id"  description:"Cluster id"`
+	Name                   string                               `json:"name" bson:"name"  description:"Cluster name"`
+	Region               string                                 `json:"region" bson:"region"  description:"Region for cluster provisioning"`
+	Status                 models.Type                          `json:"status" bson:"status"  description:"Status of cluster"`
+	KubernetesVersion      string                               `json:"kubernetes_version" bson:"kubernetes_version" description:"Kubernetes version to be provisioned"`
+	ProvisioningState      string 								`json:"state" bson:"state" description:"Kubernetes state"`
+	NodePoolCount      	   int32   								`json:"nodepool_count" bson:"nodepool_count" description:"Node pool count"`
+	ResourceGoup           string                               `json:"resource_group" bson:"resource_group"description:"Resources would be created within resource_group"`
+	AgentPoolProfiles      []ManagedClusterAgentPoolStatus     	`json:"node_pools" bson:"node_pools" `
 
+}
+type  KubeWorkerPoolStatus struct {
+	Name              *string            `json:"name" bson:"name" description:"Cluster pool name"`
+	Count             *int32             `json:"node_count" bson:"node_count" description:"Pool node count"`
+	VMSize            *string            `json:"vm_size" bson:"vm_size"  description:"Machine type for pool"`
+	OsDiskSizeGB      *int32             `json:"os_disk_size_gb" bson:"os_disk_size_gb" description:"Disk size for VMs"`
+	Subnet		      *string            `json:"subnet" bson:"subnet" description:"ID of subnet in which pool will be created"`
+	MaxPodsPerNode    *int32      	     `json:"max_pods_per_node" bson:"max_pods_per_node" description:"Max pods per node [required]"`
+	MaxCount          *int32             `json:"max_count" bson:"max_count" description:"Max VM count, must be greater than min count"`
+	MinCount          *int32             `json:"min_count" bson:"min_count" description:"Min VM count"`
+	EnableAutoScaling *bool              `json:"auto_scaling" bson:"auto_scaling" description:"Autoscaling configuration"`
+
+}
+type KubeNodesStatus struct{
+	Id             		*string `json:"id" bson:"id,omitempty"`
+	NodeState           *string `json:"state" bson:"state,omitempty"`
+	Name                *string `json:"name" bson:"name,omitempty"`
+	PrivateIP           *string `json:"private_ip,omitempty"" bson:"private_ip,omitempty"`
+	PublicIP            *string `json:"public_ip,omitempty"" bson:"public_ip,omitempty"`
+
+}
+
+type ManagedClusterAgentPoolStatus struct {
+	Id 				  *string            `json:"id" bson:"id" description:"Cluster pool id"`
+	Name              *string            `json:"name,omitempty" bson:"name,omitempty"  description:"Cluster pool name "`
+	VnetSubnetID      *string            `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool is created"`
+	Count             *int64             `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
+	VMSize            *string            `json:"machine_type,omitempty" bson:"vm_size,omitempty" description:"Machine type for pool"`
+	MaxCount          *int32             `json:"max_count,omitempty" bson:"max_count,omitempty" description:"Max VM count"`
+	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty" description:"Min VM count"`
+	EnableAutoScaling *bool              `json:"auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty" description:"Autoscaling configuration"`
+	KubeNodes         []KubeNodesStatus  `json:"nodes" bson:"nodes" description:"Nodes "`
+}
 // ManagedClusterAPIServerAccessProfile access profile for managed cluster API server.
 type ManagedClusterAPIServerAccessProfile struct {
 	AuthorizedIPRanges   []string `json:"authorized_ip_ranges,omitempty" description:"Authorized IP ranges for accessing kube server [optional]"`
@@ -94,8 +138,10 @@ type ManagedClusterAgentPoolProfile struct {
 	MinCount          *int32             `json:"min_count,omitempty" bson:"min_count,omitempty" description:"Min VM count ['required' if autoscaling is enabled]"`
 	EnableAutoScaling *bool              `json:"enable_auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
 	NodeLabels        []Tag              `json:"node_labels,omitempty" bson:"node_labels,omitempty"`
-	NodeTaints        map[string]*string `json:"-" bson:"node_taints,omitempty"`
+	NodeTaints        map[string]*string  `json:"-" bson:"node_taints,omitempty"`
+	EnablePublicIp	  *bool                `json:"enable_public_ip" bson:"enable_public_ip"`
 }
+
 
 type AzureRegion struct {
 	Region   string `json:"region"`
@@ -385,32 +431,32 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (AKSCluster, types.CustomCPError) {
+func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId string, ctx utils.Context) (KubeClusterStatus, types.CustomCPError) {
 	cluster, err := GetAKSCluster(projectId, companyId, ctx)
 	if err != nil {
-		return cluster, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
+		return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 			Description: err.Error(),
 			StatusCode:  500}
 	}
 	if string(cluster.Status) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return AKSCluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
 			string(cluster.Status) + " state", Description: "Cluster is in " +
 			string(cluster.Status) + " state", StatusCode: 409}
-		return AKSCluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	if cluster.Status != models.ClusterCreated {
 		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
 		if err != nil {
-			return AKSCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
+			return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
 				Description: "Error occurred while getting cluster status in database",
 				StatusCode:  500}
 		}
 		if customErr.Err != (types.CustomCPError{}) {
-			return AKSCluster{}, customErr.Err
+			return KubeClusterStatus{}, customErr.Err
 		}
 	}
 	aksOps, _ := GetAKS(credentials)
@@ -418,15 +464,15 @@ func FetchStatus(credentials vault.AzureCredentials, token, projectId, companyId
 	CpErr := aksOps.init()
 	if CpErr != (types.CustomCPError{}) {
 		ctx.SendLogs("AKSClusterModel:  Fetch -"+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return AKSCluster{}, CpErr
+		return KubeClusterStatus{}, CpErr
 	}
 
-	CpErr = aksOps.fetchClusterStatus(&cluster, ctx)
+	clusterstatus,CpErr := aksOps.fetchClusterStatus(credentials, &cluster, ctx)
 	if CpErr != (types.CustomCPError{}) {
-		return cluster, CpErr
+		return KubeClusterStatus{}, CpErr
 	}
 
-	return cluster, types.CustomCPError{}
+	return clusterstatus, types.CustomCPError{}
 }
 
 func TerminateCluster(credentials vault.AzureProfile, projectId, companyId string, ctx utils.Context) types.CustomCPError {

@@ -195,7 +195,7 @@ func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Contex
 
 func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeClusterStatus, types.CustomCPError) {
 	var response KubeClusterStatus
-
+	count :=0
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err.Description != "" {
@@ -211,21 +211,25 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 	response.Name = status.Name
 	response.ID = status.ID
 	response.RegionSlug = status.RegionSlug
-	response.VersionSlug = status.VersionSlug
-	response.ClusterSubnet = status.ClusterSubnet
-	response.ServiceSubnet = status.ServiceSubnet
-	response.IPv4 = status.IPv4
+	response.KubernetesVersion = status.VersionSlug
+	response.ClusterIp = status.IPv4
 	response.Endpoint = status.Endpoint
+	response.State=status.NodePools[0].Nodes[0].Status.State
 	for _, pool := range status.NodePools {
-
+		count++
 		var workerPool KubeWorkerPoolStatus
 		workerPool.Name = pool.Name
 		workerPool.ID = pool.ID
 		workerPool.Size = pool.Size
 		workerPool.Count =pool.Count
+		workerPool.AutoScale=pool.AutoScale
+		workerPool.MinCount=pool.MinNodes
+		workerPool.MaxCount=pool.MaxNodes
+
 		for _, nodes := range pool.Nodes {
 
 			var poolNodes PoolNodes
+			poolNodes.Name = nodes.Name
 			poolNodes.DropletID = nodes.DropletID
 			dropletId,_ := strconv.ParseInt(nodes.DropletID,10,64)
 			droplet, _, err := cloud.Client.Droplets.Get(context.Background(), int(dropletId))
@@ -238,11 +242,12 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 			poolNodes.PrivateIp,_= droplet.PrivateIPv4()
 			poolNodes.PublicIp,_=droplet.PublicIPv4()
 			poolNodes.State = nodes.Status.State
+
 			workerPool.Nodes = append(workerPool.Nodes, poolNodes)
 		}
 		response.WorkerPools = append(response.WorkerPools, workerPool)
 	}
-
+	response.NodePoolCount=count
 	return response, types.CustomCPError{}
 }
 

@@ -149,24 +149,29 @@ type KubernetesNodeSize struct {
 	Slug string `json:"slug"`
 }
 type KubeClusterStatus struct {
-	ID            string                 `json:"id,omitempty"`
-	Name          string                 `json:"name,omitempty"`
-	RegionSlug    string                 `json:"region,omitempty"`
-	VersionSlug   string                 `json:"version,omitempty"`
-	ClusterSubnet string                 `json:"cluster_subnet,omitempty"`
-	ServiceSubnet string                 `json:"service_subnet,omitempty"`
-	IPv4          string                 `json:"ipv4,omitempty"`
-	Endpoint      string                 `json:"endpoint,omitempty"`
-	WorkerPools   []KubeWorkerPoolStatus `json:"node_pools"`
+	ID        			string 				   `json:"id"`
+	Name          		string                 `json:"name"`
+	Status				models.Type  		   `json:"status"`
+	State               string        		   `json:"state"`
+	RegionSlug    		string                 `json:"region"`
+	KubernetesVersion   string                 `json:"kubernetes_version"`
+	ClusterIp          	string                 `json:"cluster_ip"`
+	NodePoolCount       int                 `json:"nodepool_count"`
+	Endpoint      		string                 `json:"endpoint"`
+	WorkerPools   		[]KubeWorkerPoolStatus `json:"node_pools"`
 }
 
 type KubeWorkerPoolStatus struct {
-	ID    string      `json:"id,omitempty"`
-	Name  string      `json:"name,omitempty"`
-	Size  string      `json:"machine_type,omitempty"`
-	Nodes []PoolNodes `json:"nodes"`
-	Count int       `json:"node_count,omitempty"`
+	ID      	string      `json:"id"`
+	Name  		string      `json:"name"`
+	Size  		string      `json:"machine_type"`
+	Nodes 		[]PoolNodes `json:"nodes"`
+	Count		int       	`json:"node_count"`
+	AutoScale 	bool		`json:"auto_scaling"`
+	MinCount 	int			`json:"min_count"`
+	MaxCount 	int			`json:"max_count"`
 }
+
 type PoolNodes struct {
 	Name      string `json:"name,omitempty"`
 	State     string `json:"state,omitempty"`
@@ -461,7 +466,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
+		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Got error while connecting to the database", Description: err.Error()}
 	}
 	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
@@ -500,6 +505,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 	if errr != (types.CustomCPError{}) {
 		return KubeClusterStatus{}, errr
 	}
+	status.Status=cluster.CloudplexStatus
 
 	return status, errr
 }
