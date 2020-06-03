@@ -103,8 +103,8 @@ type KubeNodesStatus struct{
 	Id             		*string `json:"id" bson:"id,omitempty"`
 	NodeState           *string `json:"state" bson:"state,omitempty"`
 	Name                *string `json:"name" bson:"name,omitempty"`
-	PrivateIP           *string `json:"private_ip" bson:"private_ip,omitempty"`
-	PublicIP            *string `json:"public_ip" bson:"public_ip,omitempty"`
+	PrivateIP           *string `json:"private_ip,omitempty"" bson:"private_ip,omitempty"`
+	PublicIP            *string `json:"public_ip,omitempty"" bson:"public_ip,omitempty"`
 
 }
 
