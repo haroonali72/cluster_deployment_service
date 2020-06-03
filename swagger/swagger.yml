@@ -6417,28 +6417,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc001794630.false:
+  482.0xc0017904e0.false:
     title: "false"
     type: object
-  605.0xc000fc8960.false:
+  605.0xc000fbb6b0.false:
     title: "false"
     type: object
-  667.0xc001687bf0.false:
+  667.0xc00167f950.false:
     title: "false"
     type: object
-  964.0xc0013093b0.false:
+  964.0xc001322120.false:
     title: "false"
     type: object
-  8093.string:
+  11811.string:
     title: string
     type: object
-  14379.0xc0017c85a0.false:
+  14379.0xc0017c6450.false:
     title: "false"
     type: object
-  55804.0xc001735890.false:
+  56985.0xc001735740.false:
     title: "false"
     type: object
-  56088.string:
+  64174.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6547,7 +6547,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/56088.string'
+        $ref: '#/definitions/64174.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6582,6 +6582,8 @@ definitions:
         format: int32
       enable_auto_scaling:
         description: Autoscaling configuration, possible value 'true' or 'false' [required]
+        type: boolean
+      enable_public_ip:
         type: boolean
       max_count:
         description: Max VM count, must be greater than min count ['required' if autoscaling
@@ -6698,7 +6700,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000fc8960.false'
+        $ref: '#/definitions/605.0xc000fbb6b0.false'
       name:
         type: string
       network_name:
@@ -7118,7 +7120,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0013093b0.false'
+        $ref: '#/definitions/964.0xc001322120.false'
       name:
         type: string
       network_name:
@@ -7327,13 +7329,13 @@ definitions:
     title: KubeClusterStatus
     type: object
     properties:
-      cluster_subnet:
+      cluster_ip:
         type: string
       endpoint:
         type: string
       id:
         type: string
-      ipv4:
+      kubernetes_version:
         type: string
       name:
         type: string
@@ -7341,20 +7343,31 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/doks.KubeWorkerPoolStatus'
+      nodepool_count:
+        type: integer
+        format: int64
       region:
         type: string
-      service_subnet:
+      state:
         type: string
-      version:
-        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   doks.KubeWorkerPoolStatus:
     title: KubeWorkerPoolStatus
     type: object
     properties:
+      auto_scaling:
+        type: boolean
       id:
         type: string
       machine_type:
         type: string
+      max_count:
+        type: integer
+        format: int64
+      min_count:
+        type: integer
+        format: int64
       name:
         type: string
       node_count:
@@ -7527,11 +7540,13 @@ definitions:
     title: PoolNodes
     type: object
     properties:
-      droplet_id:
-        type: string
       id:
         type: string
       name:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
         type: string
       state:
         type: string
@@ -8133,8 +8148,8 @@ definitions:
     properties:
       cluster_ip:
         type: string
-      kubernetes_dashboard:
-        type: boolean
+      id:
+        type: string
       kubernetes_version:
         type: string
       name:
@@ -8145,28 +8160,55 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/gke.KubeWorkerPoolStatus'
+      nodepool_count:
+        type: integer
+        format: int64
       region:
         type: string
       state:
         type: string
-      worker_count:
-        type: integer
-        format: int64
+      status:
+        $ref: '#/definitions/models.Type'
+  gke.KubeNodesStatus:
+    title: KubeNodesStatus
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
+        type: string
+      state:
+        type: string
   gke.KubeWorkerPoolStatus:
     title: KubeWorkerPoolStatus
     type: object
     properties:
-      flavour:
+      auto_scaling:
+        type: boolean
+      id:
         type: string
-      max_pod_per_node:
+      machine_type:
+        type: string
+      max_count:
         type: integer
         format: int64
+      min_count:
+        type: integer
+        format: int64
+      name:
+        type: string
       node_count:
         type: integer
         format: int64
-      pool_name:
-        type: string
-      state:
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/gke.KubeNodesStatus'
+      subnet_id:
         type: string
   gke.KubernetesDashboard:
     title: KubernetesDashboard
@@ -8474,30 +8516,32 @@ definitions:
     properties:
       id:
         type: string
+      kubernetes_version:
+        type: string
       name:
         type: string
       node_pools:
         type: array
         items:
           $ref: '#/definitions/iks.KubeWorkerPoolStatus1'
+      nodepool_count:
+        type: integer
+        format: int64
       region:
         type: string
-      resource_group_name:
+      resource_group:
         type: string
       state:
         type: string
-      worker_count:
-        type: integer
-        format: int64
+      status:
+        $ref: '#/definitions/models.Type'
   iks.KubeWorkerNodesStatus1:
     title: KubeWorkerNodesStatus1
     type: object
     properties:
       id:
         type: string
-      location:
-        type: string
-      machine_type:
+      name:
         type: string
       private_ip:
         type: string
@@ -8509,17 +8553,22 @@ definitions:
     title: KubeWorkerPoolStatus1
     type: object
     properties:
-      flavour:
-        type: string
+      autoscaling:
+        type: boolean
       id:
         type: string
+      machine_type:
+        type: string
+      name:
+        type: string
+      node_count:
+        type: integer
+        format: int64
       nodes:
         type: array
         items:
           $ref: '#/definitions/iks.KubeWorkerNodesStatus1'
-      pool_name:
-        type: string
-      state:
+      subnet_id:
         type: string
   iks.Kubernetes:
     title: Kubernetes
@@ -8580,7 +8629,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/55804.0xc001735890.false'
+        $ref: '#/definitions/56985.0xc001735740.false'
       kube_version:
         type: string
       name:
@@ -8846,7 +8895,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc0017c85a0.false'
+        $ref: '#/definitions/14379.0xc0017c6450.false'
       name:
         type: string
       node_pools:
