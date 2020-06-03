@@ -173,9 +173,11 @@ type KubeWorkerPoolStatus struct {
 }
 
 type PoolNodes struct {
-	ID        	string 		`json:"id"`
-	Name      	string 		`json:"name"`
-	State     	string 		`json:"state"`
+	Name      string `json:"name,omitempty"`
+	State     string `json:"state,omitempty"`
+	DropletID string `json:"id,omitempty"`
+	PublicIp  string `json:"public_ip,omitempty"`
+	PrivateIp string `json:"private_ip,omitempty"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {

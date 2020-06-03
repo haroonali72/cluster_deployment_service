@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -226,6 +227,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 		workerPool.MaxCount=pool.MaxNodes
 
 		for _, nodes := range pool.Nodes {
+
 			var poolNodes PoolNodes
 			poolNodes.Name = nodes.Name
 			poolNodes.ID = nodes.DropletID

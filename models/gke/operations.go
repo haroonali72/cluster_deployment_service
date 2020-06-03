@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"google.golang.org/api/compute/v1"
 	gke "google.golang.org/api/container/v1"
 	"google.golang.org/api/option"
 	"strings"
@@ -21,6 +22,7 @@ const (
 
 type GKE struct {
 	Client      *gke.Service
+	Compute     *compute.Service
 	Credentials string
 	ProjectId   string
 	Region      string
@@ -328,6 +330,11 @@ func (cloud *GKE) init() types.CustomCPError {
 		return ApiErrors(err,"Error in initializing cloud credentials")
 	}
 
+	cloud.Compute, err = compute.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
+	if err != nil {
+		beego.Error(err.Error())
+		return ApiErrors(err,"Error in initializing cloud credentials")
+	}
 	return types.CustomCPError{}
 }
 
@@ -349,7 +356,6 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 		)
 		return cluster, ApiErrors(err1,"Cluster is not in running state")
 	}
-
 	if latestCluster == nil {
 		ctx.SendLogs(
 			err1.Error(),
@@ -359,7 +365,58 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 		return cluster, ApiErrors(err1,"Error in fetching cluster status")
 	}
 
-	return GenerateClusterFromResponse(*latestCluster), types.CustomCPError{}
+
+		return GenerateClusterFromResponse(*latestCluster), types.CustomCPError{}
+}
+func (cloud *GKE) fetchNodePool(cluster GKECluster,status *KubeClusterStatus ,ctx utils.Context) (types.CustomCPError) {
+
+	if cloud.Client == nil {
+		err := cloud.init()
+		if err != (types.CustomCPError{}) {
+			ctx.SendLogs("GKE get status for '"+cloud.ProjectId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return   err
+		}
+	}
+
+	for _, pool := range cluster.NodePools {
+		npool := pool.InstanceGroupUrls[0]
+		arr := strings.Split(npool, "/")
+		createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return  ApiErrors(err, "Error in fetching cluster status")
+		}
+		nodes := []KubeNodesStatus{}
+		for _, node := range createdNodes.ManagedInstances {
+
+			splits := strings.Split(node.Instance, "/")
+			nodeName := splits[len(splits)-1]
+			createdNode, err := cloud.Compute.Instances.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, nodeName).Context(context.Background()).Do()
+			if err != nil {
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return  ApiErrors(err, "Error in fetching cluster status")
+			}
+			node := KubeNodesStatus{}
+			node.Id = createdNode.Name
+			node.Name = createdNode.Name
+			node.State = createdNode.Status
+			if len(createdNode.NetworkInterfaces) > 0 {
+				node.PrivateIp = createdNode.NetworkInterfaces[0].NetworkIP
+				if len(createdNode.NetworkInterfaces[0].AccessConfigs) > 0 {
+					node.PublicIp = createdNode.NetworkInterfaces[0].AccessConfigs[0].NatIP
+				}
+			}
+			nodes = append(nodes, node)
+		}
+		for i,statuspool :=range status.WorkerPools {
+			if statuspool.Link == pool.InstanceGroupUrls[0] {
+
+				status.WorkerPools[i].Nodes=nodes
+			}
+		}
+	}
+
+	return  types.CustomCPError{}
 }
 
 func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.CustomCPError {
