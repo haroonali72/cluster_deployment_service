@@ -85,15 +85,48 @@ type KubeClusterStatus struct {
 	Region            string                 `json:"region"`
 	ResourceGroupName string                 `json:"resourceGroupName"`
 	State             string                 `json:"state"`
+	KubernetesVersion string 				 `json:"masterKubeVersion"`
 	WorkerCount       int                    `json:"workerCount"`
 	WorkerPools       []KubeWorkerPoolStatus `json:"nodePools"`
+	EtcdPort          string                 `json:"etcdPort"`
+	Crn               string                 `json:"crn"`
+	Status            models.Type 			  `json:"status"`
+}
+type KubeClusterStatus1 struct {
+	ID      		  string                  `json:"id,omitempty"`
+	Name              string                  `json:"name,omitempty"`
+	Region            string                  `json:"region,omitempty"`
+	Status            models.Type             `json:"status,omitempty"`
+	ResourceGroup	  string                  `json:"resource_group,omitempty"`
+	State             string                  `json:"state,omitempty"`
+	KubernetesVersion string 				  `json:"kubernetes_version,omitempty"`
+	PoolCount       int                       `json:"nodepool_count,omitempty"`
+	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
 }
 
 type KubeWorkerPoolStatus struct {
 	ID      string                  `json:"id"`
 	Name    string                  `json:"poolName"`
 	Flavour string                  `json:"flavor"`
+	Autoscaling   bool              `json:"autoscaleEnabled""`
+	Count  int                      `json:"workerCount"`
 	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
+}
+type KubeWorkerPoolStatus1 struct {
+	ID      string                   	`json:"id,omitempty"`
+	Name    string                    	`json:"name,omitempty"`
+	Flavour string                    	`json:"machine_type,omitempty"`
+	Autoscaling bool 				  	`json:"autoscaling,omitempty"`
+	Nodes   []KubeWorkerNodesStatus1  	`json:"nodes"`
+	Count    int                   	 	`json:"node_count,omitempty"`
+	SubnetId 			string   		`json:"subnet_id,omitempty"`
+}
+type KubeWorkerNodesStatus1 struct {
+	PoolId   			string       				`json:"id,omitempty"`
+	Name                string    					`json:"name,omitempty"`
+	State     			string 						`json:"state,omitempty"`
+	PrivateIp           string 						`json:"private_ip,omitempty"`
+	PublicIp            string 						`json:"public_ip,omitempty"`
 }
 type KubeWorkerNodesStatus struct {
 	ID        string      `json:"id"`
@@ -101,13 +134,15 @@ type KubeWorkerNodesStatus struct {
 	Network   NetworkInfo `json:"networkInformation"`
 	Lifecycle LifeCycle   `json:"lifecycle"`
 	Location  string      `json:"location"`
+	PoolId   string      				   `json:"poolID"`
 	NetworkInterfaces []networkInterfaces  `json:"networkInterfaces"`
 }
 type networkInterfaces struct{
-	SubnetId string    	  `json:"subnetID"`
-	IpAddress string	  `json:"ipAddress"`
-	Cidr      string      `json:"cidr"`
+	SubnetId string    	  `json:"subnetID,omitempty"`
+	IpAddress string	  `json:"ipAddress,omitempty"`
+	Cidr      string      `json:"cidr,omitempty"`
 }
+
 type LifeCycle struct {
 	State string `json:"actualState"`
 }
@@ -115,32 +150,8 @@ type NetworkInfo struct {
 	PrivateIp string `json:"privateIP"`
 	PublicIp  string `json:"publicIP"`
 }
-type KubeClusterStatus1 struct {
-	ID                string                  `json:"id"`
-	Name              string                  `json:"name"`
-	Region            string                  `json:"region"`
-	ResourceGroupName string                  `json:"resource_group_name"`
-	State             string                  `json:"state"`
-	WorkerCount       int                     `json:"worker_count"`
-	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
-}
 
-type KubeWorkerPoolStatus1 struct {
-	ID      string                   `json:"id"`
-	Name    string                   `json:"pool_name"`
-	Flavour string                   `json:"flavour"`
-	State   string                   `json:"state"`
-	Nodes   []KubeWorkerNodesStatus1 `json:"nodes"`
-}
-type KubeWorkerNodesStatus1 struct {
-	ID        string `json:"id"`
-	Name     string `json:"name"`
-	Flavour   string `json:"machine_type"`
-	PrivateIp string `json:"private_ip"`
-	PublicIp  string `json:"public_ip"`
-	State   string   `json:"state"`
-	Location  string `json:"location"`
-}
+
 type AllInstancesResponse struct {
 	Profile []InstanceProfile
 }
@@ -821,7 +832,6 @@ func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Cont
 
 	var response []KubeWorkerNodesStatus
 	err = json.Unmarshal([]byte(body), &response)
-
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
