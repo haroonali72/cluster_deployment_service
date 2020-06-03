@@ -121,7 +121,6 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 			return cluster, cpErr
 		}
 		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
-
 		var nodes []*Node
 		if droplets != nil && len(droplets) > 0 {
 			var dropletsIds []int
