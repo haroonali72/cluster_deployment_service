@@ -88,6 +88,12 @@ func (c *AWSClusterController) Get() {
 
 	cluster, err := aws.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -141,6 +147,12 @@ func (c *AWSClusterController) GetAll() {
 
 	clusters, err := aws.GetAllCluster(*ctx, data)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
