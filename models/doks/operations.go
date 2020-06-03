@@ -11,7 +11,6 @@ import (
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"log"
-	"strconv"
 	"time"
 )
 
@@ -230,7 +229,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 
 			var poolNodes PoolNodes
 			poolNodes.Name = nodes.Name
-			poolNodes.ID = nodes.DropletID
+			poolNodes.DropletID = nodes.DropletID
 			poolNodes.State = nodes.Status.State
 
 			workerPool.Nodes = append(workerPool.Nodes, poolNodes)
