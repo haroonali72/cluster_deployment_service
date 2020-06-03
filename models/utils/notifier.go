@@ -52,8 +52,10 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 				beego.Error(cmd.Err().Error())
 			} else if cmd != nil && cmd.Val() == 0 {
 				beego.Info(*cmd)
-				published = true
+
 			} else if cmd != nil && cmd.Val() > 0 {
+
+				published = true
 				break
 			} else {
 
