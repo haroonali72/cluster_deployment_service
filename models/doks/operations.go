@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -223,10 +224,19 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 		workerPool.Size = pool.Size
 		workerPool.Count =pool.Count
 		for _, nodes := range pool.Nodes {
+
 			var poolNodes PoolNodes
-			poolNodes.DropletID = nodes.ID
-			poolNodes.Name = nodes.Name
 			poolNodes.DropletID = nodes.DropletID
+			dropletId,_ := strconv.ParseInt(nodes.DropletID,10,64)
+			droplet, _, err := cloud.Client.Droplets.Get(context.Background(), int(dropletId))
+			if err != nil {
+				ctx.SendLogs("Error in getting droplet status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				cpErr := ApiError(err, "Error in getting droplet status",vault.DOCredentials{}, ctx)
+				 return KubeClusterStatus{}, cpErr
+			}
+			poolNodes.Name = nodes.Name
+			poolNodes.PrivateIp,_= droplet.PrivateIPv4()
+			poolNodes.PublicIp,_=droplet.PublicIPv4()
 			poolNodes.State = nodes.Status.State
 			workerPool.Nodes = append(workerPool.Nodes, poolNodes)
 		}
