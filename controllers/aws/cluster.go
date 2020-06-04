@@ -5,6 +5,7 @@ import (
 	"antelope/models/aws"
 	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
@@ -724,8 +725,8 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	cluster, err := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
-	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "nodes not found") {
+	cluster, err1 := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
+	if err1 != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(err1.Description), "nodes not found") {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -1024,10 +1025,10 @@ func (c *AWSClusterController) GetAMI() {
 
 	ctx.SendLogs("AWSClusterController: Get Ami from AWS", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	keys, err := aws.GetAWSAmi(awsProfile, amiId, *ctx, token)
-	if err != nil {
+	keys, err1 := aws.GetAWSAmi(awsProfile, amiId, *ctx, token)
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1229,11 +1230,11 @@ func (c *AWSClusterController) PostSSHKey() {
 	}
 	//==========================RBAC Authentication==============================//
 
-	keyMaterial, err := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, region, *ctx)
-	if err != nil {
-		ctx.SendLogs("AWSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	keyMaterial, err1 := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, region, *ctx)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("AWSClusterController :"+err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1323,10 +1324,10 @@ func (c *AWSClusterController) DeleteSSHKey() {
 		return
 	}
 
-	err = aws.DeleteSSHkey(keyName, token, awsProfile.Profile, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	err1 := aws.DeleteSSHkey(keyName, token, awsProfile.Profile, *ctx)
+	if err1 !=(types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1347,10 +1348,10 @@ func (c *AWSClusterController) GetAllRegions() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("AWSClusterController: Fetch regions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	regions, err := aws.GetRegions(*ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	regions, err1 := aws.GetRegions(*ctx)
+	if err1 != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] =err1
 		c.ServeJSON()
 		return
 	}
@@ -1420,10 +1421,10 @@ func (c *AWSClusterController) GetZones() {
 		return
 	}
 
-	az, err := aws.GetZones(awsProfile, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	az, err1 := aws.GetZones(awsProfile, *ctx)
+	if err1 != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1504,15 +1505,15 @@ func (c *AWSClusterController) ValidateProfile() {
 	}
 
 	for _, region := range regions {
-		err = aws.ValidateProfile(credentials.AccessKey, credentials.SecretKey, region.Location, *ctx)
-		if err != nil {
+		err := aws.ValidateProfile(credentials.AccessKey, credentials.SecretKey, region.Location, *ctx)
+		if err != (types.CustomCPError{}) {
 			ctx.SendLogs("AWSClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.Ctx.Output.SetStatus(err.StatusCode)
+			c.Data["json"] = err
 			c.ServeJSON()
 			return
 		}
-		if err == nil {
+		if err == (types.CustomCPError{}) {
 			break
 		}
 	}

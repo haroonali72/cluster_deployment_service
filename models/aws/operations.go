@@ -265,8 +265,8 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 				if m[pool.Name+"_iamProfile"] != "" {
 					cloud.Resources[pool.Name+"_scale_iamProfile"] = pool.Name + "-scale"
 				}
-				if err != (types.CustomCPError{}) {
-					return nil, err
+				if err != nil {
+					return nil,cloud.DecodeErrorMessage(err,"Error in enabling scaling")
 				}
 
 			}
@@ -381,7 +381,7 @@ func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 			beego.Info("getting scaler nodes")
 			err, instances := cloud.Scaler.GetAutoScaler(cluster.ProjectId, pool.Name, ctx)
 			if err != nil {
-				return &Cluster_Def{}, err
+				return &Cluster_Def{}, cloud.DecodeErrorMessage(err,"Error in enabling scaling")
 			}
 			if instances != nil {
 				for _, inst := range instances {
@@ -1321,11 +1321,11 @@ func (cloud *AWS) enableScaling(cluster Cluster_Def, ctx utils.Context, token st
 						return cloud.DecodeErrorMessage(err,"Error in enabling scaling")
 					}
 				}
-				return err
+				return cloud.DecodeErrorMessage(err,"Error in enabling scaling")
 			}
 		}
 	}
-	return nil
+	return types.CustomCPError{}
 }
 func fileWrite(key string, keyName string) types.CustomCPError {
 
