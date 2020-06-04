@@ -24,7 +24,7 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           models.Type        `json:"status" bson:"status" valid:"in(New|new)"`
+	Status           models.Type   `json:"status" bson:"status" valid:"in(New|new)"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AWS|aws)"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -299,7 +299,7 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string, token string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string, token string) (confError types.CustomCPError) {
 	publisher := utils.Notifier{}
 	confError = publisher.Init_notifier()
 	if confError != nil {
@@ -364,7 +364,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 
 	return nil
 }
-func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
@@ -396,7 +396,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		}*/
 	return cluster, nil
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId, token string) error {
+func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId, token string) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 
@@ -577,7 +577,7 @@ func InsertSSHKeyPair(key key_utils.AWSKey) (err error) {
 	}
 	return nil
 }
-func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
+func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, types.CustomCPError) {
 
 	splits := strings.Split(credentials, ":")
 	aws := AWS{
@@ -598,7 +598,7 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 
 	return keys, nil
 }
-func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, token string) ([]*ec2.BlockDeviceMapping, error) {
+func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, token string) ([]*ec2.BlockDeviceMapping, types.CustomCPError) {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -619,7 +619,7 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, to
 	}
 	return amis, nil
 }
-func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.Context, token string) error {
+func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.Context, token string) types.CustomCPError {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -653,7 +653,7 @@ func UpdateScalingStatus(cluster *Cluster_Def) {
 		pool.Scaling.State = models.Created
 	}
 }
-func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err error) {
+func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err types.CustomCPError) {
 
 	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, region, ctx)
 	if err != nil {
@@ -663,7 +663,7 @@ func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams
 	return keyMaterial, err
 }
 
-func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) error {
+func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) types.CustomCPError {
 
 	err := DeleteAWSKey(keyName, token, credentials, ctx)
 	if err != nil {
@@ -707,17 +707,18 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	return false
 }
 
-func GetRegions(ctx utils.Context) ([]models.Region, error) {
+func GetRegions(ctx utils.Context) ([]models.Region, types.CustomCPError) {
 
 	regions, err := api_handler.GetAwsRegions()
 	if err != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []models.Region{}, err
+		return []models.Region{}, ApiError(err,"Error in fetching region")
 	}
 
-	return regions, nil
+	return regions, types.CustomCPError{}
 }
-func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error) {
+
+func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, types.CustomCPError) {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -725,14 +726,14 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error
 		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	zones, e := aws.GetZones(ctx)
-	if e != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if e != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+e.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return nil, e
 	}
@@ -741,8 +742,9 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error
 		z := z[len(z)-1:]
 		zone = append(zone,*z)
 	}*/
-	return zones, nil
+	return zones,types.CustomCPError{}
 }
+
 func GetAllMachines() ([]string, error) {
 	machines, err := api_handler.GetAwsMachines()
 	if err != nil {
@@ -752,27 +754,29 @@ func GetAllMachines() ([]string, error) {
 	return machines, nil
 }
 
-func ValidateProfile(key, secret, region string, ctx utils.Context) error {
+func ValidateProfile(key, secret, region string, ctx utils.Context) types.CustomCPError {
 
 	aws := AWS{
 		AccessKey: key,
 		SecretKey: secret,
 		Region:    region,
 	}
+
 	err := aws.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
 	err = aws.validateProfile(ctx)
-	if err != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	return nil
+	return types.CustomCPError{}
 }
+
 func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, clusterName string) (confError error) {
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId

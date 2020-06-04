@@ -81,9 +81,8 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 	}), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	req, err := utils.CreatePostRequest(request_data, getVaultHost()+models.VaultCreateKeyURI)
 	if err != nil {
-
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
+		return 500, err
 	}
 	m := make(map[string]string)
 
@@ -94,10 +93,10 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 400, err
+		return 500, err
 	}
 	if response.StatusCode == 500 {
-		return 0, errors.New("error in saving key")
+		return 500, errors.New("Error in saving key")
 	}
 	return response.StatusCode, err
 

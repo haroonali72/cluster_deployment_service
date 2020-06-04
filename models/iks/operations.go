@@ -108,7 +108,7 @@ type KubeWorkerPoolStatus struct {
 	ID      string                  `json:"id"`
 	Name    string                  `json:"poolName"`
 	Flavour string                  `json:"flavor"`
-	Autoscaling   bool              `json:"autoscaleEnabled""`
+	Autoscaling   bool              `json:"autoscaleEnabled"`
 	Count  int                      `json:"workerCount"`
 	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
 }
