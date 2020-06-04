@@ -314,7 +314,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	err = aws.init()
 	if err !=(types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -411,7 +411,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		return  ApiError(err,"Error in terminating cluster")
 	}
 
-	if cluster.Status == "" || cluster.Status == "new" {
+	if cluster.Status == "" || cluster.Status == models.New {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AwsClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
@@ -429,7 +429,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	err1 := aws.init()
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs(err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status =models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -532,7 +532,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.C
 		ctx.SendLogs("Cluster model: updated nodes in pools", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.NodePools[index].Nodes = updatedNodes
 	}
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 	return cluster
 }
 func GetAllSSHKeyPair(ctx utils.Context, token, region string) (keys interface{}, err error) {
