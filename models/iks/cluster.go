@@ -44,9 +44,9 @@ type NodePool struct {
 	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required" description:"Machine type for pool [required]"`
 	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required" description:"ID of subnet in which pool will be created [required]"`
 	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
-	AutoScale        bool          `json:"auto_scale,omitempty"  bson:"auto_scale" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
-	MinNodes         int           `json:"min_nodes,omitempty"  bson:"min_nodes" description:"Min VM count ['required' if autoscaling is enabled]"`
-	MaxNodes         int           `json:"max_nodes,omitempty"  bson:"max_nodes" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
+	AutoScale        bool          `json:"autoscaling,omitempty"  bson:"autoscaling" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
+	MinNodes         int           `json:"min_node_count,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
+	MaxNodes         int           `json:"max_node_count,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 }
 
 type Project struct {
