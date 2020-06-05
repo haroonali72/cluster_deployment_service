@@ -385,24 +385,22 @@ paths:
           $ref: '#/definitions/aws.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "405":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/aws
-      description: create a new cluster
-      operationId: AWSClusterController.Create
+      description: add a new cluster
+      operationId: AWSClusterController.Add
       parameters:
       - in: body
         name: body
@@ -416,20 +414,18 @@ paths:
         required: true
         type: string
       responses:
-        "200":
+        "201":
           description: '{"msg": "cluster created successfully"}'
         "400":
-          description: '{"msg": "error msg"}'
+          description: '{"msg": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against this project already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/{projectId}/:
     get:
       tags:
@@ -452,12 +448,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aws.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/all:
     get:
       tags:
@@ -476,11 +472,11 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/aws.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+              $ref: '#/definitions/aws.AwsCluster'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/amis/{amiId}/{region}:
     get:
       tags:
@@ -515,18 +511,18 @@ paths:
             type: array
             items:
               $ref: '#/definitions/*ec2.BlockDeviceMapping'
-        "400":
-          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "ami id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/applyagent/{projectId}:
     post:
       tags:
       - cluster/aws
       description: Apply cloudplex Agent file to eks cluster
-      operationId: AWSClusterController.Start
+      operationId: AWSClusterController.Start Agent
       parameters:
       - in: header
         name: clusterName
@@ -551,14 +547,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/enablescaling/{projectId}/:
     post:
       tags:
@@ -584,14 +578,12 @@ paths:
       responses:
         "200":
           description: '{"msg": "cluster autoscaled successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unathorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/getallmachines:
     get:
       tags:
@@ -602,13 +594,13 @@ paths:
         "200":
           description: '[]string'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/getallregions:
     get:
       tags:
@@ -618,8 +610,10 @@ paths:
       responses:
         "200":
           description: '[]models.Region'
+        "400":
+          description: '{"error": "Bad Request"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/getzones/{region}:
     get:
       tags:
@@ -646,26 +640,13 @@ paths:
         "200":
           description: '[]*string'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
-  /cluster/aws/machine/info:
-    get:
-      tags:
-      - cluster/aws
-      description: Get AWS Machine instance cores
-      operationId: AWSClusterController.GetCores
-      responses:
-        "200":
-          description: ""
-          schema:
-            $ref: '#/definitions/models.Machine'
-        "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
   /cluster/aws/sshkey/{keyname}/{region}:
     delete:
       tags:
@@ -694,14 +675,14 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "key deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "204":
+          description: '{"msg": "SSH key deleted successfully"}'
         "401":
-          description: '{"error": "User is unauthorized to perform this action"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
   /cluster/aws/sshkey/{projectId}/{keyname}/{region}:
     post:
       tags:
@@ -740,18 +721,18 @@ paths:
         required: true
         type: string
       responses:
-        "200":
+        "201":
           description: ""
           schema:
             $ref: '#/definitions/key_utils.AWSKey'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/sshkeys/{region}:
     get:
       tags:
@@ -776,12 +757,12 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/start/{projectId}:
     post:
       tags:
@@ -805,16 +786,18 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
+        "202":
+          description: '{"msg": "Cluster creation started successfully"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/status/{projectId}/:
     get:
       tags:
@@ -842,14 +825,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/aws.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/terminate/{projectId}/:
     post:
       tags:
@@ -875,14 +856,16 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster terminated successfully"}'
+        "202":
+          description: '{"msg": "Cluster termination initiated"}'
+        "204":
+          description: '{"msg": "Cluster terminated successfully"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/validateProfile/:
     post:
       tags:
@@ -903,17 +886,13 @@ paths:
           $ref: '#/definitions/vault.AwsCredentials'
       responses:
         "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+          description: '{"msg": "Cluster created successfully"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Profile is invalid"}'
         "404":
-          description: '{"error": "error msg"}'
-        "409":
-          description: '{"error": "profile is invalid"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/awsdelete/{projectId}/{forceDelete}:
     delete:
       tags:
@@ -937,16 +916,14 @@ paths:
         required: true
         type: boolean
       responses:
-        "200":
-          description: '{"msg": "cluster deleted successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "project id is empty"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/azure/:
     put:
       tags:
@@ -6417,28 +6394,28 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0017904e0.false:
+  482.0xc0017ce600.false:
     title: "false"
     type: object
-  605.0xc000fbb6b0.false:
+  605.0xc000fe6ae0.false:
     title: "false"
     type: object
-  667.0xc00167f950.false:
+  667.0xc0016bba70.false:
     title: "false"
     type: object
-  964.0xc001322120.false:
+  964.0xc00135e090.false:
     title: "false"
     type: object
-  11811.string:
+  11833.string:
     title: string
     type: object
-  14379.0xc0017c6450.false:
+  14379.0xc001804570.false:
     title: "false"
     type: object
-  56985.0xc001735740.false:
+  57486.0xc001773860.false:
     title: "false"
     type: object
-  64174.string:
+  64196.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6547,7 +6524,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/64174.string'
+        $ref: '#/definitions/64196.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6691,6 +6668,17 @@ definitions:
         format: int64
       status:
         $ref: '#/definitions/models.Type'
+  aws.AwsCluster:
+    title: AwsCluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   aws.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -6700,7 +6688,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/605.0xc000fbb6b0.false'
+        $ref: '#/definitions/605.0xc000fe6ae0.false'
       name:
         type: string
       network_name:
@@ -6712,7 +6700,7 @@ definitions:
       project_id:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
   aws.Node:
@@ -7120,7 +7108,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001322120.false'
+        $ref: '#/definitions/964.0xc00135e090.false'
       name:
         type: string
       network_name:
@@ -8587,11 +8575,23 @@ definitions:
     title: NodePool
     type: object
     properties:
+      auto_scale:
+        description: Autoscaling configuration, possible value 'true' or 'false' [required]
+        type: boolean
       availability_zone:
         type: string
       machine_type:
         description: Machine type for pool [required]
         type: string
+      max_nodes:
+        description: Max VM count, must be greater than min count ['required' if autoscaling
+          is enabled]
+        type: integer
+        format: int64
+      min_nodes:
+        description: Min VM count ['required' if autoscaling is enabled]
+        type: integer
+        format: int64
       name:
         description: Cluster pool name [required]
         type: string
@@ -8629,7 +8629,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/56985.0xc001735740.false'
+        $ref: '#/definitions/57486.0xc001773860.false'
       kube_version:
         type: string
       name:
@@ -8895,7 +8895,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc0017c6450.false'
+        $ref: '#/definitions/14379.0xc001804570.false'
       name:
         type: string
       node_pools:

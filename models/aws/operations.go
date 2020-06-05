@@ -476,7 +476,7 @@ func (cloud *AWS) KeyPairGenerator(keyName string) (string, string, types.Custom
 	}
 	resp, err := cloud.Client.CreateKeyPair(params)
 	if err != nil {
-		return "", "", cloud.DecodeErrorMessage(err, "Error in Key Creationn")
+		return "", "", cloud.DecodeErrorMessage(err, "Error in Key Creation")
 	}
 
 	return *resp.KeyMaterial, *resp.KeyFingerprint, types.CustomCPError{}
@@ -1073,7 +1073,7 @@ func (cloud *AWS) describeAmi(ami *string, ctx utils.Context) ([]*ec2.BlockDevic
 	res, err := cloud.Client.DescribeImages(amiInput)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return ebsVolumes, cloud.DecodeErrorMessage(err,"Error in cluster creation")
+		return ebsVolumes, cloud.DecodeErrorMessage(err,"Error in fetching AMI")
 	}
 
 	if len(res.Images) <= 0 {

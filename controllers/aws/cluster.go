@@ -108,7 +108,7 @@ func (c *AWSClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "token"
-// @Success 200 {object} []aws.Cluster_Def
+// @Success 200 {object} []aws.AwsCluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
@@ -164,8 +164,8 @@ func (c *AWSClusterController) GetAll() {
 	c.ServeJSON()
 }
 
-// @Title Create
-// @Description create a new cluster
+// @Title Add
+// @Description add a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 201 {"msg": "cluster created successfully"}
@@ -1251,7 +1251,7 @@ func (c *AWSClusterController) PostSSHKey() {
 // @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	X-Auth-Token			header	string	true "token"
 // @Param	region		path	string	true	"cloud region"
-// @Success 204 {"msg": "Cluster deleted successfully"}
+// @Success 204 {"msg": "SSH key deleted successfully"}
 // @Failure 401 			{"error": "Unauthorized"}
 // @Failure 404 			{"error": "Not Found"}
 // @Failure 409 {"error": "Conflict"}
