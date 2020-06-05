@@ -9544,35 +9544,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "11833.string": {
+        "11832.string": {
             "title": "string",
             "type": "object"
         },
-        "14379.0xc0017fb1d0.false": {
+        "14379.0xc0017e30b0.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0017b7260.false": {
+        "482.0xc0017a5140.false": {
             "title": "false",
             "type": "object"
         },
-        "57486.0xc00177a4e0.false": {
+        "57508.0xc00176e3c0.false": {
             "title": "false",
             "type": "object"
         },
-        "64196.string": {
+        "64195.string": {
             "title": "string",
             "type": "object"
         },
-        "648.0xc000fcda40.false": {
+        "648.0xc000faf0b0.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0016ba6f0.false": {
+        "667.0xc0016a25d0.false": {
             "title": "false",
             "type": "object"
         },
-        "964.0xc001332cf0.false": {
+        "964.0xc00131abd0.false": {
             "title": "false",
             "type": "object"
         },
@@ -9713,7 +9713,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/64196.string"
+                    "$ref": "#/definitions/64195.string"
                 },
                 "type": {
                     "type": "string"
@@ -9936,7 +9936,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/648.0xc000fcda40.false"
+                    "$ref": "#/definitions/648.0xc000faf0b0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -10563,7 +10563,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001332cf0.false"
+                    "$ref": "#/definitions/964.0xc00131abd0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12692,7 +12692,7 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "auto_scale": {
+                "autoscaling": {
                     "description": "Autoscaling configuration, possible value 'true' or 'false' [required]",
                     "type": "boolean"
                 },
@@ -12703,12 +12703,12 @@
                     "description": "Machine type for pool [required]",
                     "type": "string"
                 },
-                "max_nodes": {
+                "max_node_count": {
                     "description": "Max VM count, must be greater than min count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
                 },
-                "min_nodes": {
+                "min_node_count": {
                     "description": "Min VM count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
@@ -12766,7 +12766,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/57486.0xc00177a4e0.false"
+                    "$ref": "#/definitions/57508.0xc00176e3c0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -13133,7 +13133,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc0017fb1d0.false"
+                    "$ref": "#/definitions/14379.0xc0017e30b0.false"
                 },
                 "name": {
                     "type": "string"
