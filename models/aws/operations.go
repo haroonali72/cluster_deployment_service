@@ -809,7 +809,6 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 
 	input := &ec2.RunInstancesInput{
 		ImageId: aws.String(pool.Ami.AmiId),
-
 		MaxCount:     aws.Int64(pool.NodeCount),
 		KeyName:      aws.String(pool.KeyInfo.KeyName),
 		MinCount:     aws.Int64(1),

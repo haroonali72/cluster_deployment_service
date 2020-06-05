@@ -12,9 +12,9 @@ import (
 )
 
 type AWSKey struct {
-	KeyName     string         `json:"key_name" bson:"key_name" valid:"required"`
-	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required, in(new|cp|aws|user)"`
-	KeyMaterial string         `json:"private_key" bson:"private_key"`
+	KeyName     string         `json:"key_name" bson:"key_name" valid:"required" description:"Name of the Key [required]"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required, eq=new|eq=cp|eq=aws|eq=user" description:"Type of key [required]"`
+	KeyMaterial string         `json:"private_key" bson:"private_key" description:"Private key [optional]"`
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 
