@@ -205,7 +205,7 @@ type NodePool struct {
 }
 
 type NodePoolAutoscaling struct {
-	Enabled      bool  `json:"enabled" bson:"enabled"`
+	Enabled      bool  `json:"enabled,omitempty" bson:"enabled"`
 	MaxNodeCount int64 `json:"max_node_count,omitempty" bson:"max_node_count,omitempty"`
 	MinNodeCount int64 `json:"min_node_count,omitempty" bson:"min_node_count,omitempty"`
 }
@@ -905,7 +905,7 @@ func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
 		workerpool.NodeCount=pool.InitialNodeCount
 		workerpool.MachineType=pool.Config.MachineType
 		workerpool.Link=pool.InstanceGroupUrls[0]
-		if pool.Autoscaling.Enabled {
+		if pool.Autoscaling !=nil && pool.Autoscaling.Enabled==true  {
 			workerpool.AutoScale = pool.Autoscaling.Enabled
 			workerpool.MinCount = pool.Autoscaling.MinNodeCount
 			workerpool.MaxCount = pool.Autoscaling.MaxNodeCount
