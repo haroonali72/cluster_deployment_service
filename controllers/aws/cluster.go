@@ -9,8 +9,8 @@ import (
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
 )
@@ -186,6 +186,16 @@ func (c *AWSClusterController) Post() {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+
 	cluster.CreationDate = time.Now()
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
@@ -228,14 +238,6 @@ func (c *AWSClusterController) Post() {
 
 	ctx.SendLogs("AWSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	_, err = govalidator.ValidateStruct(cluster)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
 	network, err := aws.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -284,6 +286,15 @@ func (c *AWSClusterController) Patch() {
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}

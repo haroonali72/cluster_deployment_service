@@ -21,71 +21,71 @@ import (
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of the project [required]"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           models.Type   `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AWS|aws)"`
+	Name             string        `json:"name" bson:"name" valid:"required" description:"Name of the project [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"required,eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"eq=AWS|aws|Aws"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-	TokenName        string        `json:"token_name" bson:"token_name"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required,dive" description:"Nodepools info [required]`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required" description:"Network to create cluster [required]"`
+	CompanyId        string        `json:"company_id" bson:"company_id" description:"Company Id of the project [optional]"`
+	TokenName        string        `json:"token_name" bson:"token_name" description:"Token name [optional]"`
 }
 
 type NodePool struct {
 	ID                 bson.ObjectId    `json:"-" bson:"_id,omitempty"`
-	Name               string           `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64            `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType        string           `json:"machine_type" bson:"machine_type" valid:"required"`
-	Ami                Ami              `json:"ami" bson:"ami"`
-	PoolSubnet         string           `json:"subnet_id" bson:"subnet_id" valid:"required"`
-	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"required"`
-	Nodes              []*Node          `json:"nodes" bson:"nodes"`
-	KeyInfo            key_utils.AWSKey `json:"key_info" bson:"key_info"`
-	PoolRole           models.PoolRole  `json:"pool_role" bson:"pool_role" valid:"required"`
-	EnableScaling      bool             `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling            AutoScaling      `json:"auto_scaling" bson:"auto_scaling"`
+	Name               string           `json:"name" bson:"name" valid:"required" description:"Name of the nodepool [required]"`
+	NodeCount          int64            `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)" description:"Number of nodes in nodepool [required]"`
+	MachineType        string           `json:"machine_type" bson:"machine_type" valid:"required" description:"Machine type of nodes in nodepool [required]"`
+	Ami                Ami              `json:"ami" bson:"ami" valid:"required" description:"Ami to create nodes od nodepool [required]"`
+	PoolSubnet         string           `json:"subnet_id" bson:"subnet_id" valid:"required" description:"Subnet to create nodepool [required]"`
+	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"gt=0,required,dive" description:"Security groups attached with the nodepool [required]"`
+	Nodes              []*Node          `json:"nodes" bson:"nodes" valid:"required,dive" description:"Nodes in the nodepool [required]"`
+	KeyInfo            key_utils.AWSKey `json:"key_info" bson:"key_info" valid:"required,dive" description:"Information of SSH key [required]"`
+	PoolRole           models.PoolRole  `json:"pool_role" bson:"pool_role" valid:"required,dive" description:"Role of pool.Valid values are master and slave [required]"`
+	EnableScaling      bool             `json:"enable_scaling" bson:"enable_scaling" description:"To enable scalimng of nodepool [optional]"`
+	Scaling            AutoScaling      `json:"auto_scaling" bson:"auto_scaling" description:"Autoscaling details [optional]"`
 	IsExternal         bool             `json:"is_external" bson:"is_external"`
-	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume"`
-	EnablePublicIP     bool             `json:"enable_public_ip" bson:"enable_public_ip"`
+	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume" description:"External volume details [optional]"`
+	EnablePublicIP     bool             `json:"enable_public_ip" bson:"enable_public_ip" description:"Assign public ip to nodepool's node [optional]"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
-	State               models.Type `json:"status" bson:"status"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size" valid:"required" description:"Max count of node for scaling [required]"`
+	State               models.Type `json:"status" bson:"status" description:"Status of autoscaling [optional]"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
-	KeyName    string `json:"key_name" bson:"key_name",omitempty"`
-	SSHKey     string `json:"ssh_key" bson:"ssh_key",omitempty"`
-	NodeState  string `json:"node_state" bson:"node_state",omitempty"`
-	Name       string `json:"name" bson:"name",omitempty"`
-	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty"`
-	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty"`
-	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty"`
-	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
-	UserName   string `json:"user_name" bson:"user_name",omitempty"`
+	KeyName    string `json:"key_name" bson:"key_name",omitempty" description:"Name of the key to be used with node [required]"`
+	SSHKey     string `json:"ssh_key" bson:"ssh_key",omitempty" description:"Key to be used with node [optional]"`
+	NodeState  string `json:"node_state" bson:"node_state",omitempty" description:"Current state of the node [optional]"`
+	Name       string `json:"name" bson:"name",omitempty" valid:"required" description:"Name of the node [optional]"`
+	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty" description:"PrivateIp of the node [optional]"`
+	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty" description:"PrivateIp of the node [optional]"`
+	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty" description:"PublicDNS of the node [optional]"`
+	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty" description:"PrivateDNS of the node [optional]"`
+	UserName   string `json:"user_name" bson:"user_name",omitempty" description:"User name to use with node [optional]"`
 }
 
 type Ami struct {
 	ID         bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name       string        `json:"name" bson:"name"`
-	AmiId      string        `json:"ami_id" bson:"ami_id" valid:"required"`
-	Username   string        `json:"username" bson:"username" valid:"required"`
-	RootVolume Volume        `json:"root_volume" bson:"root_volume" valid:"required"`
+	Name       string        `json:"name" bson:"name" description:"Name of the AMI [required]"`
+	AmiId      string        `json:"ami_id" bson:"ami_id" valid:"required" description:"Ami id of the instance [required]"`
+	Username   string        `json:"username" bson:"username" valid:"required" description:"Username of the instance [required]"`
+	RootVolume Volume        `json:"root_volume" bson:"root_volume" valid:"required,dive" description:"Instance root volume details [required]"`
 }
 type Volume struct {
-	VolumeType          string `json:"volume_type" bson:"volume_type"`
-	VolumeSize          int64  `json:"volume_size" bson:"volume_size"`
-	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination"`
-	Iops                int64  `json:"iops" bson:"iops"`
+	VolumeType          string `json:"volume_type" bson:"volume_type" valid:"required" description:"Type of the volume.Valid values are General Purpose SSD,IOPS SSD,Magnetic volumes[required]"`
+	VolumeSize          int64  `json:"volume_size" bson:"volume_size" valid:"required" description:"Size of the volume [required]"`
+	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination" description:"Select if volume should terminate on deletion [optional]"`
+	Iops                int64  `json:"iops" bson:"iops" valid:"required" description:"IOPS of volume [required]"`
 }
 type Project struct {
-	ProjectData Data `json:"data"`
+	ProjectData Data `json:"data" description:"Project data of the cluster [optional]"`
 }
 type Data struct {
-	Region string `json:"region"`
+	Region string `json:"region" description:"Region of the cluster [optional]"`
 }
 
 type AwsCluster struct {
@@ -317,7 +317,12 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		return ApiError(confError,"Error in deploying cluster")
+		confErr:= ApiError(confError,"Error in deploying cluster")
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		if err != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return confErr
 	}
 	aws := AWS{
 		AccessKey: credentials.AccessKey,
@@ -332,6 +337,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
@@ -341,6 +350,11 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	if err != (types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = models.ClusterCreationFailed
+		err1:=ApiError(confError,"Error in cluster creation")
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,err1)
+		if err != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		confErr := aws.CleanUp(cluster, ctx)
 		if confErr != (types.CustomCPError{}) {
 			PrintError(errors.New(confErr.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -351,8 +365,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return ApiError(confError,"Error in cluster creation")
+		return err1
 	}
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
@@ -369,9 +384,16 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		confErr:=ApiError(confError,"Error in cluster creation")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return ApiError(confError,"Error in cluster creation")
+
+		return confErr
 	}
+
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
@@ -415,13 +437,23 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return ApiError(pub_err,"Error in terminating cluster")
+		confErr:=ApiError(pub_err,"Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return confErr
 	}
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return  ApiError(err,"Error in terminating cluster")
+		confErr:=ApiError(err,"Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return  confErr
 	}
 
 	if cluster.Status == "" || cluster.Status == models.New {
@@ -449,6 +481,10 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,err1)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err1
 	}
@@ -465,6 +501,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return ApiError(err,"Error in terminating cluster")
+		}
+		confErr:=ApiError(err,"Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
@@ -502,8 +543,13 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		confErr:=ApiError(err,"Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return ApiError(err,"Error in cluster termination")
+		return confErr
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
