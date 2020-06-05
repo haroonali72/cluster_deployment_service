@@ -88,6 +88,11 @@ type Data struct {
 	Region string `json:"region" description:"Region of the cluster [optional]"`
 }
 
+type AwsCluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
 func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	update := false
 	for index, node_pool := range existingCluster.NodePools {
@@ -210,24 +215,32 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	return cluster, nil
 }
 
-func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
-
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (awsclusters []AwsCluster, err error) {
+	var copyData []string
+	var clusters []Cluster_Def
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 		return nil, err1
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	return clusters, nil
+	for _, cluster := range clusters {
+		temp := AwsCluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		awsclusters = append(awsclusters, temp)
+	}
+
+	return awsclusters, nil
 }
 
 func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {

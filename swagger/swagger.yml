@@ -399,8 +399,8 @@ paths:
     post:
       tags:
       - cluster/aws
-      description: create a new cluster
-      operationId: AWSClusterController.Create
+      description: add a new cluster
+      operationId: AWSClusterController.Add
       parameters:
       - in: body
         name: body
@@ -472,7 +472,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/aws.Cluster_Def'
+              $ref: '#/definitions/aws.AwsCluster'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -676,7 +676,7 @@ paths:
         type: string
       responses:
         "204":
-          description: '{"msg": "Cluster deleted successfully"}'
+          description: '{"msg": "SSH key deleted successfully"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -6394,25 +6394,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0017a5140.false:
+  482.0xc0017c7d70.false:
     title: "false"
     type: object
-  648.0xc000faf0b0.false:
+  648.0xc000fd99e0.false:
     title: "false"
     type: object
-  667.0xc0016a25d0.false:
+  667.0xc0016cd200.false:
     title: "false"
     type: object
-  964.0xc00131abd0.false:
+  964.0xc00133b800.false:
     title: "false"
     type: object
   11832.string:
     title: string
     type: object
-  14379.0xc0017e30b0.false:
+  14379.0xc00180bce0.false:
     title: "false"
     type: object
-  57508.0xc00176e3c0.false:
+  57508.0xc00178aff0.false:
     title: "false"
     type: object
   64195.string:
@@ -6674,6 +6674,17 @@ definitions:
       status:
         $ref: '#/definitions/models.Type'
         description: Status of autoscaling [optional]
+  aws.AwsCluster:
+    title: AwsCluster
+    type: object
+    properties:
+      name:
+        type: string
+      project_id:
+        description: ID of project
+        type: string
+      status:
+        $ref: '#/definitions/models.Type'
   aws.Cluster_Def:
     title: Cluster_Def
     type: object
@@ -6684,7 +6695,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/648.0xc000faf0b0.false'
+        $ref: '#/definitions/648.0xc000fd99e0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7126,7 +7137,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00131abd0.false'
+        $ref: '#/definitions/964.0xc00133b800.false'
       name:
         type: string
       network_name:
@@ -8647,7 +8658,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57508.0xc00176e3c0.false'
+        $ref: '#/definitions/57508.0xc00178aff0.false'
       kube_version:
         type: string
       name:
@@ -8916,7 +8927,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc0017e30b0.false'
+        $ref: '#/definitions/14379.0xc00180bce0.false'
       name:
         type: string
       node_pools:

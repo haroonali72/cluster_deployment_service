@@ -588,8 +588,8 @@
                 "tags": [
                     "cluster/aws"
                 ],
-                "description": "create a new cluster",
-                "operationId": "AWSClusterController.Create",
+                "description": "add a new cluster",
+                "operationId": "AWSClusterController.Add",
                 "parameters": [
                     {
                         "in": "body",
@@ -957,7 +957,7 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
+                        "description": "{\"msg\": \"SSH key deleted successfully\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -9544,35 +9544,35 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "11832.string": {
+        "11833.string": {
             "title": "string",
             "type": "object"
         },
-        "14379.0xc0017e30b0.false": {
+        "14379.0xc0017c3650.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0017a5140.false": {
+        "482.0xc0017776e0.false": {
             "title": "false",
             "type": "object"
         },
-        "57508.0xc00176e3c0.false": {
+        "57486.0xc00173c960.false": {
             "title": "false",
             "type": "object"
         },
-        "64195.string": {
+        "605.0xc000f91c20.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "64196.string": {
             "title": "string",
             "type": "object"
         },
-        "648.0xc000faf0b0.false": {
+        "667.0xc001680b70.false": {
             "title": "false",
             "type": "object"
         },
-        "667.0xc0016a25d0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "964.0xc00131abd0.false": {
+        "964.0xc0012ed170.false": {
             "title": "false",
             "type": "object"
         },
@@ -9713,7 +9713,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/64195.string"
+                    "$ref": "#/definitions/64196.string"
                 },
                 "type": {
                     "type": "string"
@@ -9892,19 +9892,15 @@
             "type": "object",
             "properties": {
                 "ami_id": {
-                    "description": "Ami id of the instance [required]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the AMI [required]",
                     "type": "string"
                 },
                 "root_volume": {
-                    "$ref": "#/definitions/aws.Volume",
-                    "description": "Instance root volume details [required]"
+                    "$ref": "#/definitions/aws.Volume"
                 },
                 "username": {
-                    "description": "Username of the instance [required]",
                     "type": "string"
                 }
             }
@@ -9914,13 +9910,11 @@
             "type": "object",
             "properties": {
                 "max_scaling_group_size": {
-                    "description": "Max count of node for scaling [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.Type",
-                    "description": "Status of autoscaling [optional]"
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -9932,18 +9926,15 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "company_id": {
-                    "description": "Company Id of the project [optional]",
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/648.0xc000faf0b0.false"
+                    "$ref": "#/definitions/605.0xc000f91c20.false"
                 },
                 "name": {
-                    "description": "Name of the project [required]",
                     "type": "string"
                 },
                 "network_name": {
-                    "description": "Network to create cluster [required]",
                     "type": "string"
                 },
                 "node_pools": {
@@ -9953,14 +9944,12 @@
                     }
                 },
                 "project_id": {
-                    "description": "Id of the project [required]",
                     "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/models.Type"
                 },
                 "token_name": {
-                    "description": "Token name [optional]",
                     "type": "string"
                 }
             }
@@ -10006,65 +9995,52 @@
             "type": "object",
             "properties": {
                 "ami": {
-                    "$ref": "#/definitions/aws.Ami",
-                    "description": "Ami to create nodes od nodepool [required]"
+                    "$ref": "#/definitions/aws.Ami"
                 },
                 "auto_scaling": {
-                    "$ref": "#/definitions/aws.AutoScaling",
-                    "description": "Autoscaling details [optional]"
+                    "$ref": "#/definitions/aws.AutoScaling"
                 },
                 "enable_public_ip": {
-                    "description": "Assign public ip to nodepool's node [optional]",
                     "type": "boolean"
                 },
                 "enable_scaling": {
-                    "description": "To enable scalimng of nodepool [optional]",
                     "type": "boolean"
                 },
                 "external_volume": {
-                    "$ref": "#/definitions/aws.Volume",
-                    "description": "External volume details [optional]"
+                    "$ref": "#/definitions/aws.Volume"
                 },
                 "is_external": {
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/key_utils.AWSKey",
-                    "description": "Information of SSH key [required]"
+                    "$ref": "#/definitions/key_utils.AWSKey"
                 },
                 "machine_type": {
-                    "description": "Machine type of nodes in nodepool [required]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the nodepool [required]",
                     "type": "string"
                 },
                 "node_count": {
-                    "description": "Number of nodes in nodepool [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "nodes": {
-                    "description": "Nodes in the nodepool [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/aws.Node"
                     }
                 },
                 "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole",
-                    "description": "Role of pool.Valid values are master and slave [required]"
+                    "$ref": "#/definitions/models.PoolRole"
                 },
                 "security_group_id": {
-                    "description": "Security groups attached with the nodepool [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/aws.string"
                     }
                 },
                 "subnet_id": {
-                    "description": "Subnet to create nodepool [required]",
                     "type": "string"
                 }
             }
@@ -10163,21 +10139,17 @@
             "type": "object",
             "properties": {
                 "delete_on_termination": {
-                    "description": "Select if volume should terminate on deletion [optional]",
                     "type": "boolean"
                 },
                 "iops": {
-                    "description": "IOPS of volume [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "volume_size": {
-                    "description": "Size of the volume [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "volume_type": {
-                    "description": "Type of the volume.Valid values are General Purpose SSD,IOPS SSD,Magnetic volumes[required]",
                     "type": "string"
                 }
             }
@@ -10563,7 +10535,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00131abd0.false"
+                    "$ref": "#/definitions/964.0xc0012ed170.false"
                 },
                 "name": {
                     "type": "string"
@@ -12692,7 +12664,7 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "autoscaling": {
+                "auto_scale": {
                     "description": "Autoscaling configuration, possible value 'true' or 'false' [required]",
                     "type": "boolean"
                 },
@@ -12703,12 +12675,12 @@
                     "description": "Machine type for pool [required]",
                     "type": "string"
                 },
-                "max_node_count": {
+                "max_nodes": {
                     "description": "Max VM count, must be greater than min count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
                 },
-                "min_node_count": {
+                "min_nodes": {
                     "description": "Min VM count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
@@ -12766,7 +12738,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/57508.0xc00176e3c0.false"
+                    "$ref": "#/definitions/57486.0xc00173c960.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -12843,15 +12815,12 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "key_name": {
-                    "description": "Name of the Key [required]",
                     "type": "string"
                 },
                 "key_type": {
-                    "$ref": "#/definitions/models.KeyType",
-                    "description": "Type of key [required]"
+                    "$ref": "#/definitions/models.KeyType"
                 },
                 "private_key": {
-                    "description": "Private key [optional]",
                     "type": "string"
                 }
             }
@@ -13133,7 +13102,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14379.0xc0017e30b0.false"
+                    "$ref": "#/definitions/14379.0xc0017c3650.false"
                 },
                 "name": {
                     "type": "string"
