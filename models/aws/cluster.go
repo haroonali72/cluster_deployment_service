@@ -41,7 +41,7 @@ type NodePool struct {
 	MachineType        string           `json:"machine_type" bson:"machine_type" valid:"required" description:"Machine type of nodes in nodepool [required]"`
 	Ami                Ami              `json:"ami" bson:"ami" valid:"required" description:"Ami to create nodes od nodepool [required]"`
 	PoolSubnet         string           `json:"subnet_id" bson:"subnet_id" valid:"required" description:"Subnet to create nodepool [required]"`
-	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"required" description:"Security groups attached with the nodepool [required]"`
+	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"gt=0,required,dive" description:"Security groups attached with the nodepool [required]"`
 	Nodes              []*Node          `json:"nodes" bson:"nodes" valid:"required,dive" description:"Nodes in the nodepool [required]"`
 	KeyInfo            key_utils.AWSKey `json:"key_info" bson:"key_info" valid:"required,dive" description:"Information of SSH key [required]"`
 	PoolRole           models.PoolRole  `json:"pool_role" bson:"pool_role" valid:"required,dive" description:"Role of pool.Valid values are master and slave [required]"`
