@@ -28,12 +28,12 @@ type Template struct {
 }
 
 type NodePoolT struct {
-	ID          bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name        string             `json:"name" bson:"name" valid:"required"`
-	NodeCount   int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	Nodes       []*NodeT           `json:"nodes" bson:"nodes"`
-	KeyInfo     key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	PoolRole    models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
+	ID        bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
+	Name      string             `json:"name" bson:"name" valid:"required"`
+	NodeCount int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	Nodes     []*NodeT           `json:"nodes" bson:"nodes"`
+	KeyInfo   key_utils.AZUREKey `json:"key_info" bson:"key_info"`
+	PoolRole  models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
 }
 
 type NodeT struct {
@@ -142,4 +142,24 @@ func DeleteTemplate(templateId, companyId string, ctx utils.Context) error {
 		return err
 	}
 	return nil
+}
+
+func GetOPDefault(ctx utils.Context) (template Template, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
+		return Template{}, err1
+	}
+	defer session.Close()
+	conf := db.GetMongoConf()
+
+	c := session.DB(conf.MongoDb).C(conf.MongoDefaultTemplateCollection)
+	err = c.Find(bson.M{"cloud": "op"}).One(&template)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		return Template{}, err
+	}
+	return template, nil
 }

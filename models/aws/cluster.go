@@ -21,71 +21,71 @@ import (
 
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of the project [required]"`
 	Kube_Credentials interface{}   `json:"kube_credentials" bson:"kube_credentials"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           string        `json:"status" bson:"status" valid:"in(New|new)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AWS|aws)"`
+	Name             string        `json:"name" bson:"name" valid:"required" description:"Name of the project [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"required,eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"eq=AWS|aws|Aws"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-	TokenName        string        `json:"token_name" bson:"token_name"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required,dive" description:"Nodepools info [required]`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required" description:"Network to create cluster [required]"`
+	CompanyId        string        `json:"company_id" bson:"company_id" description:"Company Id of the project [optional]"`
+	TokenName        string        `json:"token_name" bson:"token_name" description:"Token name [optional]"`
 }
 
 type NodePool struct {
 	ID                 bson.ObjectId    `json:"-" bson:"_id,omitempty"`
-	Name               string           `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64            `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType        string           `json:"machine_type" bson:"machine_type" valid:"required"`
-	Ami                Ami              `json:"ami" bson:"ami"`
-	PoolSubnet         string           `json:"subnet_id" bson:"subnet_id" valid:"required"`
-	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"required"`
-	Nodes              []*Node          `json:"nodes" bson:"nodes"`
-	KeyInfo            key_utils.AWSKey `json:"key_info" bson:"key_info"`
-	PoolRole           models.PoolRole  `json:"pool_role" bson:"pool_role" valid:"required"`
-	EnableScaling      bool             `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling            AutoScaling      `json:"auto_scaling" bson:"auto_scaling"`
+	Name               string           `json:"name" bson:"name" valid:"required" description:"Name of the nodepool [required]"`
+	NodeCount          int64            `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)" description:"Number of nodes in nodepool [required]"`
+	MachineType        string           `json:"machine_type" bson:"machine_type" valid:"required" description:"Machine type of nodes in nodepool [required]"`
+	Ami                Ami              `json:"ami" bson:"ami" valid:"required" description:"Ami to create nodes od nodepool [required]"`
+	PoolSubnet         string           `json:"subnet_id" bson:"subnet_id" valid:"required" description:"Subnet to create nodepool [required]"`
+	PoolSecurityGroups []*string        `json:"security_group_id" bson:"security_group_id" valid:"gt=0,required,dive" description:"Security groups attached with the nodepool [required]"`
+	Nodes              []*Node          `json:"nodes" bson:"nodes" valid:"required,dive" description:"Nodes in the nodepool [required]"`
+	KeyInfo            key_utils.AWSKey `json:"key_info" bson:"key_info" valid:"required,dive" description:"Information of SSH key [required]"`
+	PoolRole           models.PoolRole  `json:"pool_role" bson:"pool_role" valid:"required,dive" description:"Role of pool.Valid values are master and slave [required]"`
+	EnableScaling      bool             `json:"enable_scaling" bson:"enable_scaling" description:"To enable scalimng of nodepool [optional]"`
+	Scaling            AutoScaling      `json:"auto_scaling" bson:"auto_scaling" description:"Autoscaling details [optional]"`
 	IsExternal         bool             `json:"is_external" bson:"is_external"`
-	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume"`
-	EnablePublicIP     bool             `json:"enable_public_ip" bson:"enable_public_ip"`
+	ExternalVolume     Volume           `json:"external_volume" bson:"external_volume" description:"External volume details [optional]"`
+	EnablePublicIP     bool             `json:"enable_public_ip" bson:"enable_public_ip" description:"Assign public ip to nodepool's node [optional]"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
-	State               models.Type `json:"status" bson:"status"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size" valid:"required" description:"Max count of node for scaling [required]"`
+	State               models.Type `json:"status" bson:"status" description:"Status of autoscaling [optional]"`
 }
 type Node struct {
 	CloudId    string `json:"cloud_id" bson:"cloud_id",omitempty"`
-	KeyName    string `json:"key_name" bson:"key_name",omitempty"`
-	SSHKey     string `json:"ssh_key" bson:"ssh_key",omitempty"`
-	NodeState  string `json:"node_state" bson:"node_state",omitempty"`
-	Name       string `json:"name" bson:"name",omitempty"`
-	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty"`
-	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty"`
-	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty"`
-	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty"`
-	UserName   string `json:"user_name" bson:"user_name",omitempty"`
+	KeyName    string `json:"key_name" bson:"key_name",omitempty" description:"Name of the key to be used with node [required]"`
+	SSHKey     string `json:"ssh_key" bson:"ssh_key",omitempty" description:"Key to be used with node [optional]"`
+	NodeState  string `json:"node_state" bson:"node_state",omitempty" description:"Current state of the node [optional]"`
+	Name       string `json:"name" bson:"name",omitempty" valid:"required" description:"Name of the node [optional]"`
+	PrivateIP  string `json:"private_ip" bson:"private_ip",omitempty" description:"PrivateIp of the node [optional]"`
+	PublicIP   string `json:"public_ip" bson:"public_ip",omitempty" description:"PrivateIp of the node [optional]"`
+	PublicDNS  string `json:"public_dns" bson:"public_dns",omitempty" description:"PublicDNS of the node [optional]"`
+	PrivateDNS string `json:"private_dns" bson:"private_dns",omitempty" description:"PrivateDNS of the node [optional]"`
+	UserName   string `json:"user_name" bson:"user_name",omitempty" description:"User name to use with node [optional]"`
 }
 
 type Ami struct {
 	ID         bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Name       string        `json:"name" bson:"name"`
-	AmiId      string        `json:"ami_id" bson:"ami_id" valid:"required"`
-	Username   string        `json:"username" bson:"username" valid:"required"`
-	RootVolume Volume        `json:"root_volume" bson:"root_volume" valid:"required"`
+	Name       string        `json:"name" bson:"name" description:"Name of the AMI [required]"`
+	AmiId      string        `json:"ami_id" bson:"ami_id" valid:"required" description:"Ami id of the instance [required]"`
+	Username   string        `json:"username" bson:"username" valid:"required" description:"Username of the instance [required]"`
+	RootVolume Volume        `json:"root_volume" bson:"root_volume" valid:"required,dive" description:"Instance root volume details [required]"`
 }
 type Volume struct {
-	VolumeType          string `json:"volume_type" bson:"volume_type"`
-	VolumeSize          int64  `json:"volume_size" bson:"volume_size"`
-	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination"`
-	Iops                int64  `json:"iops" bson:"iops"`
+	VolumeType          string `json:"volume_type" bson:"volume_type" valid:"required" description:"Type of the volume.Valid values are General Purpose SSD,IOPS SSD,Magnetic volumes[required]"`
+	VolumeSize          int64  `json:"volume_size" bson:"volume_size" valid:"required" description:"Size of the volume [required]"`
+	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination" description:"Select if volume should terminate on deletion [optional]"`
+	Iops                int64  `json:"iops" bson:"iops" valid:"required" description:"IOPS of volume [required]"`
 }
 type Project struct {
-	ProjectData Data `json:"data"`
+	ProjectData Data `json:"data" description:"Project data of the cluster [optional]"`
 }
 type Data struct {
-	Region string `json:"region"`
+	Region string `json:"region" description:"Region of the cluster [optional]"`
 }
 
 func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
@@ -116,20 +116,20 @@ func checkMasterPools(cluster Cluster_Def) error {
 	return nil
 }
 
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.AwsProfile, error) {
-	statusCode,data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.AwsProfile, error) {
+	statusCode, data, err := vault.GetCredentialProfile("aws", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return statusCode,vault.AwsProfile{}, err
+		return statusCode, vault.AwsProfile{}, err
 	}
 	awsProfile := vault.AwsProfile{}
 	err = json.Unmarshal(data, &awsProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,vault.AwsProfile{}, err
+		return 500, vault.AwsProfile{}, err
 	}
 	awsProfile.Profile.Region = region
-	return 0,awsProfile, nil
+	return 0, awsProfile, nil
 
 }
 func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
@@ -143,7 +143,7 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 		return "", err
 	}
 	var region Project
-	err = json.Unmarshal(data.([]byte), &region)
+	err = json.Unmarshal(data.([]byte), &region.ProjectData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return region.ProjectData.Region, err
@@ -237,16 +237,16 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return err
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
+	/*if oldCluster.Status == string(models.Deploying) && update {
 		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in deploying state")
-	}
-	if oldCluster.Status == string(models.Terminating) && update {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in terminating state")
+	}*/
+	if oldCluster.Status == models.ClusterTerminationFailed && update {
+		ctx.SendLogs("Cluster creation is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster creation is in termination failed state")
 	}
 
-	if oldCluster.Status == "Cluster Created" && update {
+	if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
 			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return errors.New("Cluster is in runnning state")
@@ -254,6 +254,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 			cluster = oldCluster
 		}
 	}
+
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -298,47 +299,62 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string, token string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx utils.Context, companyId string, token string) (err types.CustomCPError) {
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
+	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		return confError
+		confErr := ApiError(confError, "Error in deploying cluster")
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
+		if err != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return confErr
 	}
 	aws := AWS{
 		AccessKey: credentials.AccessKey,
 		SecretKey: credentials.SecretKey,
 		Region:    credentials.Region,
 	}
-	confError = aws.init()
-	if confError != nil {
+	err = aws.init()
+	if err != (types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return err
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	createdPools, confError := aws.createCluster(cluster, ctx, companyId, token)
-	if confError != nil {
+	createdPools, err := aws.createCluster(cluster, ctx, companyId, token)
+	if err != (types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		cluster.Status = "Cluster creation failed"
-		confError = aws.CleanUp(cluster, ctx)
-		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = models.ClusterCreationFailed
+		err1 := ApiError(confError, "Error in cluster creation")
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err1)
+		if err != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		confErr := aws.CleanUp(cluster, ctx)
+		if confErr != (types.CustomCPError{}) {
+			PrintError(errors.New(confErr.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return err1
 	}
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
@@ -355,20 +371,27 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		confErr := ApiError(confError, "Error in cluster creation")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+
+		return confErr
 	}
+
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-	return nil
+	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, err
+		return Cluster_Def{}, ApiError(err, "Error in fetching cluster")
 	}
 	//splits := strings.Split(credentials, ":")
 	aws := AWS{
@@ -376,16 +399,15 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		SecretKey: credentials.Profile.SecretKey,
 		Region:    credentials.Profile.Region,
 	}
-	err = aws.init()
-	if err != nil {
+	err1 := aws.init()
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, err
+		return Cluster_Def{}, ApiError(err, "Error in fetching cluster")
 	}
 
 	_, e := aws.fetchStatus(&cluster, ctx, companyId, token)
-	if e != nil {
-
-		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if e != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, e
 	}
 	/*	err = UpdateCluster(c)
@@ -393,29 +415,39 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 			beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 			return Cluster_Def{}, err
 		}*/
-	return cluster, nil
+	return cluster, types.CustomCPError{}
 }
-func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId, token string) error {
+func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.Context, companyId, token string) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return pub_err
+		confErr := ApiError(pub_err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return confErr
 	}
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		confErr := ApiError(err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return confErr
 	}
 
-	if cluster.Status == "" || cluster.Status == "new" {
+	if cluster.Status == "" || cluster.Status == models.New {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AwsClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return errors.New(text)
+		return ApiError(errors.New(text), "Error in terminating cluster")
 	}
 
 	aws := AWS{
@@ -424,46 +456,54 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		Region:    profile.Profile.Region,
 	}
 
-	cluster.Status = string(models.Terminating)
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = aws.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status = "Cluster Termination Failed"
+	err1 := aws.init()
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs(err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err1)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return err1
 	}
 
 	flag := aws.terminateCluster(cluster, ctx, companyId)
 	if flag {
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return err
+			return ApiError(err, "Error in terminating cluster")
+		}
+		confErr := ApiError(err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return types.CustomCPError{}
 	}
 
 	var flagcheck bool
 	for {
 		flagcheck = false
-		_, err = aws.fetchStatus(&cluster, ctx, companyId, token)
-		if err != nil {
-			beego.Error(err)
+		_, err1 = aws.fetchStatus(&cluster, ctx, companyId, token)
+		if err1 != (types.CustomCPError{}) {
+			beego.Error(err1)
 		}
 		for _, nodePools := range cluster.NodePools {
 			for _, node := range nodePools.Nodes {
@@ -484,18 +524,23 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		pools.Nodes = nodes
 		pools.KeyInfo.KeyType = models.CPKey
 	}
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 	err = UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		confErr := ApiError(err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return confErr
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+	return types.CustomCPError{}
 }
 func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.Context) Cluster_Def {
 	for index, nodepool := range cluster.NodePools {
@@ -533,7 +578,7 @@ func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.C
 		ctx.SendLogs("Cluster model: updated nodes in pools", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.NodePools[index].Nodes = updatedNodes
 	}
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 	return cluster
 }
 func GetAllSSHKeyPair(ctx utils.Context, token, region string) (keys interface{}, err error) {
@@ -577,7 +622,7 @@ func InsertSSHKeyPair(key key_utils.AWSKey) (err error) {
 	}
 	return nil
 }
-func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
+func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, types.CustomCPError) {
 
 	splits := strings.Split(credentials, ":")
 	aws := AWS{
@@ -586,19 +631,19 @@ func GetAwsSSHKeyPair(credentials string) ([]*ec2.KeyPairInfo, error) {
 		Region:    splits[2],
 	}
 	err := aws.init()
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return nil, err
 	}
 
 	keys, e := aws.getSSHKey()
-	if e != nil {
-		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", e.Error())
+	if e != (types.CustomCPError{}) {
+		beego.Error("Cluster model: Status - Failed to get ssh key pairs ", e.Error)
 		return nil, e
 	}
 
-	return keys, nil
+	return keys, types.CustomCPError{}
 }
-func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, token string) ([]*ec2.BlockDeviceMapping, error) {
+func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, token string) ([]*ec2.BlockDeviceMapping, types.CustomCPError) {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -606,20 +651,21 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, to
 		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	amis, e := aws.describeAmi(&amiId, ctx)
-	if e != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to get ami details "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if e != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get ami details "+e.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return nil, e
 	}
-	return amis, nil
+	return amis, types.CustomCPError{}
 }
-func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.Context, token string) error {
+
+func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.Context, token string) types.CustomCPError {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -627,46 +673,47 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return err
 	}
 
 	e := aws.enableScaling(cluster, ctx, token)
-	if e != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if e != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+e.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return e
 	}
 	UpdateScalingStatus(&cluster)
-	err = UpdateCluster(cluster, false, ctx)
-	if e != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	err1 := UpdateCluster(cluster, false, ctx)
+	if err1 != nil {
+		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return ApiError(err1, "")
 	}
 
-	return nil
+	return (types.CustomCPError{})
 }
+
 func UpdateScalingStatus(cluster *Cluster_Def) {
 	for _, pool := range cluster.NodePools {
 		pool.Scaling.State = models.Created
 	}
 }
-func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err error) {
+func CreateSSHkey(keyName string, credentials vault.AwsCredentials, token, teams, region string, ctx utils.Context) (keyMaterial string, err types.CustomCPError) {
 
 	keyMaterial, err = GenerateAWSKey(keyName, credentials, token, teams, region, ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return "", err
 	}
 
 	return keyMaterial, err
 }
 
-func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) error {
+func DeleteSSHkey(keyName, token string, credentials vault.AwsCredentials, ctx utils.Context) types.CustomCPError {
 
 	err := DeleteAWSKey(keyName, token, credentials, ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return err
 	}
 
@@ -707,17 +754,18 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	return false
 }
 
-func GetRegions(ctx utils.Context) ([]models.Region, error) {
+func GetRegions(ctx utils.Context) ([]models.Region, types.CustomCPError) {
 
 	regions, err := api_handler.GetAwsRegions()
 	if err != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []models.Region{}, err
+		return []models.Region{}, ApiError(err, "Error in fetching region")
 	}
 
-	return regions, nil
+	return regions, types.CustomCPError{}
 }
-func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error) {
+
+func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, types.CustomCPError) {
 
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,
@@ -725,14 +773,14 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error
 		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	zones, e := aws.GetZones(ctx)
-	if e != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if e != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+e.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return nil, e
 	}
@@ -741,8 +789,9 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, error
 		z := z[len(z)-1:]
 		zone = append(zone,*z)
 	}*/
-	return zones, nil
+	return zones, types.CustomCPError{}
 }
+
 func GetAllMachines() ([]string, error) {
 	machines, err := api_handler.GetAwsMachines()
 	if err != nil {
@@ -752,27 +801,29 @@ func GetAllMachines() ([]string, error) {
 	return machines, nil
 }
 
-func ValidateProfile(key, secret, region string, ctx utils.Context) error {
+func ValidateProfile(key, secret, region string, ctx utils.Context) types.CustomCPError {
 
 	aws := AWS{
 		AccessKey: key,
 		SecretKey: secret,
 		Region:    region,
 	}
+
 	err := aws.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
 	err = aws.validateProfile(ctx)
-	if err != nil {
-		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
-	return nil
+	return types.CustomCPError{}
 }
+
 func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, clusterName string) (confError error) {
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId

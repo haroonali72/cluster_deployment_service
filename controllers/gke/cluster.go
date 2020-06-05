@@ -209,7 +209,7 @@ func (c *GKEClusterController) GetAll() {
 	}
 
 	ctx.SendLogs("GKEClusterController: Getting all clusters ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.Data.Company=userInfo.CompanyId
+	ctx.Data.Company = userInfo.CompanyId
 	clusters, err := gke.GetAllGKECluster(data, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -248,6 +248,14 @@ func (c *GKEClusterController) Post() {
 	var cluster gke.GKECluster
 	ctx := new(utils.Context)
 
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("GKEClusterController: Add cluster", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
@@ -259,7 +267,7 @@ func (c *GKEClusterController) Post() {
 	}
 
 	validate := validator.New()
-	err := validate.Struct(cluster)
+	err = validate.Struct(cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -319,7 +327,13 @@ func (c *GKEClusterController) Post() {
 	beego.Info("GKEClusterController: JSON Payload: ", cluster)
 
 	cluster.CompanyId = ctx.Data.Company
-
+	err = gke.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	ctx.SendLogs("GKEClusterController: Adding new cluster with name: "+cluster.Name+" in project "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = gke.AddGKECluster(cluster, *ctx)
@@ -357,7 +371,7 @@ func (c *GKEClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in deploying/running/terminating state"}
+// @Failure 409 {"error": "Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -386,6 +400,32 @@ func (c *GKEClusterController) Patch() {
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	if cluster.CloudplexStatus == (models.Deploying) {
+		ctx.SendLogs("GKEClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.CloudplexStatus == (models.Terminating) {
+		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.CloudplexStatus == (models.ClusterCreated) {
+		ctx.SendLogs("GKEClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("GKEClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
@@ -444,32 +484,6 @@ func (c *GKEClusterController) Patch() {
 
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster.CompanyId = userInfo.CompanyId
-
-	if cluster.CloudplexStatus == (models.Deploying) {
-		ctx.SendLogs("GKEClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.CloudplexStatus == (models.Terminating) {
-		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.CloudplexStatus == (models.ClusterCreated) {
-		ctx.SendLogs("GKEClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
-		c.ServeJSON()
-		return
-	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("GKEClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
 
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
@@ -645,7 +659,6 @@ func (c *GKEClusterController) Delete() {
 // @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /start/:projectId [post]
 func (c *GKEClusterController) StartCluster() {
 	ctx := new(utils.Context)
@@ -739,7 +752,7 @@ func (c *GKEClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.CloudplexStatus == "Cluster Created" {
+	if cluster.CloudplexStatus == models.ClusterCreated {
 		ctx.SendLogs("GKEClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is already in running state"}
@@ -765,7 +778,7 @@ func (c *GKEClusterController) StartCluster() {
 		return
 	}
 
-	cluster.CloudplexStatus = (models.Deploying)
+	/*cluster.CloudplexStatus = (models.Deploying)
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -778,7 +791,7 @@ func (c *GKEClusterController) StartCluster() {
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
 	go gke.DeployGKECluster(cluster, credentials, token, *ctx)
 
@@ -796,7 +809,7 @@ func (c *GKEClusterController) StartCluster() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} gke.GKECluster
+// @Success 200 {object} gke.KubeClusterStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}
@@ -883,7 +896,7 @@ func (c *GKEClusterController) GetStatus() {
 	cluster, cpErr := gke.FetchStatus(credentials, token, *ctx)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
-		c.Data["json"] = cpErr.Description
+		c.Data["json"] = cpErr
 		c.ServeJSON()
 		return
 	} else if cpErr != (types.CustomCPError{}) {
@@ -892,7 +905,6 @@ func (c *GKEClusterController) GetStatus() {
 		c.ServeJSON()
 	}
 	ctx.SendLogs("GKEClusterController: Status Fetched of "+cluster.Name+" of the project "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
 	c.Data["json"] = cluster
 	c.ServeJSON()
 }
@@ -905,10 +917,9 @@ func (c *GKEClusterController) GetStatus() {
 // @Success 202 {"msg": "Cluster termination initiated"}
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in New/Creating/Cluster Creation Failed /Terminated/Terminating state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @Failure 512 {object} types.CustomCPError
 // @router /terminate/:projectId/ [post]
 func (c *GKEClusterController) TerminateCluster() {
 
@@ -1035,7 +1046,7 @@ func (c *GKEClusterController) TerminateCluster() {
 
 	go gke.TerminateCluster(credentials, *ctx)
 
-	err = gke.UpdateGKECluster(cluster, *ctx)
+	/*err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
@@ -1047,7 +1058,7 @@ func (c *GKEClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
-	}
+	}*/
 
 	ctx.SendLogs("GKEClusterController: Cluster "+cluster.Name+" of project "+projectId+" terminated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

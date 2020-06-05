@@ -10,6 +10,7 @@ func ApiErrors(err error, message string) (cError types.CustomCPError) {
 	errr := strings.Fields(err.Error())
 	cError.StatusCode = int(models.CloudStatusCode)
 	cError.Description = err.Error()
+	cError.Error = message
 	if errr[2] == "304" {
 		cError.Error = NotModified(err.Error())
 	} else if errr[2] == "400" {

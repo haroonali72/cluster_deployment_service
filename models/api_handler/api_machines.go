@@ -10,7 +10,7 @@ import (
 func GetAwsMachines() ([]string, error) {
 
 	client := utils.InitReq()
-	host := "https://raw.githubusercontent.com/awsdocs/amazon-ec2-user-guide/master/doc_source/instance-types.md"
+	host := "https://raw.githubusercontent.com/awsdocs/amazon-ec2-user-guide/master/doc_source/general-purpose-instances.md"
 	req, err := utils.CreateGetRequest(host)
 	if err != nil {
 		return []string{}, err
@@ -29,8 +29,8 @@ func GetAwsMachines() ([]string, error) {
 	md := blackfriday.MarkdownBasic(contents)
 
 	s := string(md)
-	first_index := strings.Index(s, "| General purpose |")
-	last_index := strings.LastIndex(s, "| General purpose |")
+	first_index := strings.Index(s, "| Instance type |")
+	last_index := strings.LastIndex(s, "For more information about the hardware specifications")
 	regionsInfo := s[first_index : last_index+1]
 	regionsInfo = strings.TrimSpace(regionsInfo)
 	regionsInfo = strings.ReplaceAll(regionsInfo, "<code>", "")
@@ -38,19 +38,26 @@ func GetAwsMachines() ([]string, error) {
 	information := strings.Split(regionsInfo, "\n")
 	var mach []string
 	for _, info := range information {
-
+		if info == "" {
+			break
+		}
 		machineInfo := strings.Split(info, "| ")
 
-		for _, machine := range machineInfo {
+		if machineInfo[1] == "" || machineInfo[1] == "--- " || machineInfo[1] == "|" || machineInfo[1] == "Instance type " || machineInfo[1] == "Default vCPUs" || machineInfo[1] == "Memory(GiB)|" {
+			continue
+		}
+		mach = append(mach, machineInfo[1])
+
+		/*for _, machine := range machineInfo {
 			machine := strings.TrimSpace(machine)
-			if machine == "" || machine == "General purpose" || machine == "Compute optimized" || machine == "Memory optimized" || machine == "Storage optimized" || machine == "Accelerated computing" {
+			if machine == "" || machine == "Instance type" || machine == "Default vCPUs" || machine == "Memory(GiB)|" {
 				continue
 			}
 			if machine[len(machine)-1] == '|' || machine[len(machine)-1] == '>' || machine[len(machine)-1] == '-' {
 				break
 			}
 			mach = append(mach, machine)
-		}
+		} */
 
 	}
 	return mach, nil

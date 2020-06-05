@@ -23,14 +23,14 @@ type Cluster_Def struct {
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	Kube_Credentials interface{}   `json:"-" bson:"kube_credentials"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=IKS|eq=iks"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive"`
 	NetworkName      string        `json:"network_name" bson:"network_name" validate:"required" description:"Network name in which cluster will be provisioned [required]"`
 	PublicEndpoint   bool          `json:"disable_public_service_endpoint" bson:"disable_public_service_endpoint" description:"[optional]"`
-	KubeVersion      string        `json:"kube_version" bson:"kube_version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
+	KubeVersion      string        `json:"kube_version" bson:"kube_version" description:"Kubernetes version to be provisioned [optional]"`
 	CompanyId        string        `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	TokenName        string        `json:"-" bson:"token_name"`
 	VPCId            string        `json:"vpc_id" bson:"vpc_id" validate:"required" description:"Virtual private cloud ID in which cluster will be provisioned [required]"`
@@ -44,6 +44,9 @@ type NodePool struct {
 	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required" description:"Machine type for pool [required]"`
 	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required" description:"ID of subnet in which pool will be created [required]"`
 	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
+	AutoScale        bool          `json:"autoscaling,omitempty"  bson:"autoscaling" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
+	MinNodes         int           `json:"min_node_count,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
+	MaxNodes         int           `json:"max_node_count,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 }
 
 type Project struct {
@@ -59,10 +62,10 @@ type Regions struct {
 	Zones    []string `json:"Zones"`
 }
 
-type Cluster struct{
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+type Cluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
 func getNetworkHost(cloudType, projectId string) string {
@@ -130,15 +133,15 @@ func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (iksCluster
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoIKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	for _,cluster := range clusters{
-		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.Status}
-		iksClusters =append(iksClusters,temp)
+	for _, cluster := range clusters {
+		temp := Cluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		iksClusters = append(iksClusters, temp)
 	}
 
 	return iksClusters, nil
@@ -223,7 +226,7 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 		return "", err
 	}
 	var region Project
-	err = json.Unmarshal(data.([]byte), &region)
+	err = json.Unmarshal(data.([]byte), &region.ProjectData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return region.ProjectData.Region, err
@@ -244,7 +247,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		utils.SendLog(companyId, cpError.Description, "error", cluster.ProjectId)
 		utils.SendLog(companyId, "Cluster creation failed : "+cluster.Name, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError := UpdateCluster(cluster, false, ctx)
 
 		if confError != nil {
@@ -284,7 +287,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 			iks.terminateCluster(&cluster, ctx)
 
 		}
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError := UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 
@@ -312,9 +315,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = models.AgentDeploymentFailed
-		profile := vault.IBMProfile{Profile:credentials,}
-		_ =TerminateCluster(cluster,profile,ctx,companyId,token)
+		cluster.Status = models.ClusterCreationFailed
+		profile := vault.IBMProfile{Profile: credentials}
+		_ = TerminateCluster(cluster, profile, ctx, companyId, token)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
@@ -349,46 +352,77 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) ([]KubeWorkerPoolStatus, types.CustomCPError) {
+func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) (KubeClusterStatus1, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus1{}, cpErr
 	}
 	if string(cluster.Status) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus1{}, cpErr
 	}
 
 	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
 		cpErr := ApiError(errors.New("Cluster is in "+
 			string(cluster.Status)), "Cluster is in "+
 			string(cluster.Status)+" state", 409)
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus1{}, cpErr
 	}
-	customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
-	if err != nil {
-		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
-		return []KubeWorkerPoolStatus{}, cpErr
-	}
-	if customErr.Err != (types.CustomCPError{}) {
-		return []KubeWorkerPoolStatus{}, customErr.Err
+	if cluster.Status != models.ClusterCreated {
+		customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
+		if err != nil {
+			cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
+			return KubeClusterStatus1{}, cpErr
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return KubeClusterStatus1{}, customErr.Err
+		}
 	}
 	iks := GetIBM(credentials.Profile)
 
 	cpErr := iks.init(credentials.Profile.Region, ctx)
 	if cpErr != (types.CustomCPError{}) {
-		return []KubeWorkerPoolStatus{}, cpErr
+		return KubeClusterStatus1{}, cpErr
 	}
 
 	response, e := iks.fetchStatus(&cluster, ctx, companyId)
+
 	if e != (types.CustomCPError{}) {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []KubeWorkerPoolStatus{}, e
+		return KubeClusterStatus1{}, e
 	}
-	return response, types.CustomCPError{}
+	var response1 KubeClusterStatus1
+	response1.ID = response.ID
+	response1.Name = response.Name
+	response1.Region = response.Region
+	response1.ResourceGroup = response.ResourceGroupName
+	response1.PoolCount = response.WorkerCount
+	response1.KubernetesVersion = response.KubernetesVersion
+	response1.State = response.State
+	for _, pool := range response.WorkerPools {
+		var pool1 KubeWorkerPoolStatus1
+		pool1.Name = pool.Name
+		pool1.ID = pool.ID
+		pool1.Flavour = pool.Flavour
+		pool1.Autoscaling = pool.Autoscaling
+		pool1.Count = pool.Count
+		pool1.SubnetId = pool.Nodes[0].NetworkInterfaces[0].SubnetId
+		for _, node := range pool.Nodes {
+			var node1 KubeWorkerNodesStatus1
+			node1.State = node.Lifecycle.State
+			node1.PoolId = node.PoolId
+			node1.PrivateIp = node.NetworkInterfaces[0].IpAddress
+			node1.PublicIp = node.NetworkInterfaces[0].IpAddress
+			node1.Name = node.PoolId
+			pool1.Nodes = append(pool1.Nodes, node1)
+		}
+		response1.WorkerPools = append(response1.WorkerPools, pool1)
+	}
+	response1.Status = cluster.Status
+	return response1, types.CustomCPError{}
 }
 func TerminateCluster(cluster Cluster_Def, profile vault.IBMProfile, ctx utils.Context, companyId, token string) types.CustomCPError {
 
@@ -651,18 +685,6 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 
 		return errors.New("cluster name is empty")
 
-	} else if cluster.KubeVersion == "" {
-
-		return errors.New("kubernetes version is empty")
-
-	} else if cluster.NetworkName == "" {
-
-		return errors.New("network name is empty")
-
-	} else if cluster.VPCId == "" {
-
-		return errors.New("VPC name is empty")
-
 	} else if len(cluster.NodePools) == 0 {
 
 		return errors.New("node pool length must be greater than zero")
@@ -682,10 +704,6 @@ func ValidateIKSData(cluster Cluster_Def, ctx utils.Context) error {
 			} else if nodepool.MachineType == "" {
 
 				return errors.New("machine type is empty")
-
-			} else if nodepool.SubnetID == "" {
-
-				return errors.New("subnet Id is empty")
 
 			} else if nodepool.AvailabilityZone == "" {
 

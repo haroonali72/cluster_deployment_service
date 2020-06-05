@@ -12,23 +12,23 @@ import (
 )
 
 type AWSKey struct {
-	KeyName     string         `json:"key_name" bson:"key_name" valid:"required"`
-	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required, in(new|cp|aws|user)"`
-	KeyMaterial string         `json:"private_key" bson:"private_key"`
+	KeyName     string         `json:"key_name" bson:"key_name" valid:"required" description:"Name of the Key [required]"`
+	KeyType     models.KeyType `json:"key_type" bson:"key_type" valid:"required, eq=new|eq=cp|eq=aws|eq=user" description:"Type of key [required]"`
+	KeyMaterial string         `json:"private_key" bson:"private_key" description:"Private key [optional]"`
 	Cloud       models.Cloud   `json:"cloud" bson:"cloud"`
 }
 
 type AZUREKey struct {
-	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" description:"It is type of credentials used for ssh. By default value is 'key' [optional]"`
-	KeyType        models.KeyType         `json:"key_type" bson:"key_type" validate:"required,eq=new|eq=cp|eq=aws|eq=user" description:"It is type key. By default value is 'new' [required]"`
-	KeyName        string                 `json:"key_name" bson:"key_name" validate:"required" description:"Name of the key. By default value is 'new' [required]"`
-	Username       string                 `json:"username" bson:"username,omitempty" description:"It is the user name ['required' if credentials_type is 'password']"`
-	AdminPassword  string                 `json:"admin_password" bson:"admin_password,omitempty" description:"It is the password ['required' if credentials_type is 'password']"`
-	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty" validate:"required" description:"Private key for ssh ['required' if credentials_type is 'key']"`
+	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" description:"Type of credentials used for SSH.Valid values are 'key' and 'password'.Default value is 'key'. [optional]"`
+	KeyType        models.KeyType         `json:"key_type" bson:"key_type" validate:"required,eq=new|eq=cp|eq=aws|eq=user" description:"Type of key. By default value is 'new' [required]"`
+	KeyName        string                 `json:"key_name" bson:"key_name" validate:"required" description:"Name of the key.[required]"`
+	Username       string                 `json:"username" bson:"username"  description:"Name of the user ['optional']"`
+	AdminPassword  string                 `json:"admin_password" bson:"admin_password" description:"It is the password ['required' if credentials_type is 'password']"`
+	PrivateKey     string                 `json:"private_key" bson:"private_key,omitempty" description:"Private key for SSH ['required'] if credentials_type is 'key']"`
 	PublicKey      string                 `json:"public_key" bson:"public_key,omitempty" description:"Public key for ssh [readonly]"`
-	ID             int                    `json:"-" bson:"id,omitempty"`
+	ID             int                    `json:"id" bson:"id,omitempty"`
 	FingerPrint    string                 `json:"finger_print" bson:"finger_print,omitempty" description:"Finger prints for the key [optional]"`
-	Cloud          models.Cloud           `json:"cloud" bson:"cloud" description:"Type of cloud [optional]"`
+	Cloud          models.Cloud           `json:"cloud" bson:"cloud" description:"Name of the cloud [optional]"`
 }
 
 type KeyPairResponse struct {

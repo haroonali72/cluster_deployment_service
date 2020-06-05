@@ -23,57 +23,58 @@ type SSHKeyPair struct {
 	Name        string `json:"name" bson:"name",omitempty"`
 	FingerPrint string `json:"fingerprint" bson:"fingerprint"`
 }
+
 type Cluster_Def struct {
-	ID               bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required"`
-	Name             string        `json:"name" bson:"name" valid:"required"`
-	Status           string        `json:"status" bson:"status" valid:"in(NEW|new|New)"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" valid:"in(AZURE|azure)"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" valid:"required"`
-	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required"`
-	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
+	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	ProjectId        string        `json:"project_id" bson:"project_id" valid:"required" description:"Id of project [required]"`
+	Name             string        `json:"name" bson:"name" valid:"required" description:"Unique name of the cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of the cluster [optional]"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
+	CreationDate     time.Time     `json:"creation_date" bson:"creation_date"`
+	ModificationDate time.Time     `json:"modification_date" bson:"modification_date"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive" description:"Nodepools of the cluster.Atleast 1 nodepool [required]"`
+	NetworkName      string        `json:"network_name" bson:"network_name" valid:"required" description:"Network name to deploy the cluster [required]"`
+	ResourceGroup    string        `json:"resource_group" bson:"resource_group" valid:"required" description:"Resource group to deploy the cluster [required]"`
+	CompanyId        string        `json:"company_id" bson:"company_id"  description:"Id of the company [optional]"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name" valid:"required"`
-	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required"`
-	Image              ImageReference     `json:"image" bson:"image" valid:"required"`
-	Volume             Volume             `json:"volume" bson:"volume"`
-	EnableVolume       bool               `json:"is_external" bson:"is_external"`
-	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" valid:"required"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" valid:"required"`
-	Nodes              []*VM              `json:"nodes" bson:"nodes"`
-	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role"`
-	AdminUser          string             `json:"user_name" bson:"user_name,omitempty"`
-	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics"`
-	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required, in(standard hdd|standard ssd|premium ssd)"`
-	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"`
-	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
-	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"`
+	ID                 bson.ObjectId      `json:"-" bson:"_id,omitempty"`
+	Name               string             `json:"name" bson:"name" valid:"required" description:"Unique name of the nodepool.[required]"`
+	NodeCount          int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[1-9]+$)" description:"Count of the nodepool. Atleast 1 [required]"`
+	MachineType        string             `json:"machine_type" bson:"machine_type" valid:"required" description:"Machine type of the nodepool.[required]"`
+	Image              ImageReference     `json:"image" bson:"image" valid:"required,dive" description:"VM image of the nodepool.[required]"`
+	Volume             Volume             `json:"volume" bson:"volume" description:"Volume to attach with the nodepool.[required]"`
+	EnableVolume       bool               `json:"is_external" bson:"is_external"  valid:"required" description:"Enable if volume is external [required]"`
+	PoolSubnet         string             `json:"subnet_id" bson:"subnet_id" description:"Subnet to deploy the nodepool of the cluster.[required]"`
+	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" description:"Security group to attach with the nodepool.[required]"`
+	Nodes              []*VM              `json:"nodes" bson:"nodes" valid:"required" description:"Nodes in the nodepool.Atleast 1 [required]"`
+	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required,eq=master|eq=slave" description:"Role of the nodepool.Valid values are 'master' and 'slave'[required]"`
+	AdminUser          string             `json:"user_name" bson:"user_name"  valid:"required" description:"User of the nodepool.[optional]"`
+	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info" valid:"required" description:"SSH key details.[requiredl]"`
+	BootDiagnostics    DiagnosticsProfile `json:"boot_diagnostics" bson:"boot_diagnostics" description:"Storage account details.[optional]"`
+	OsDisk             models.OsDiskType  `json:"os_disk_type" bson:"os_disk_type" valid:"required,eq=standard hdd|standard ssd|premium ssd" description:"Type of the OS disk.[requiredl]`
+	EnableScaling      bool               `json:"enable_scaling" bson:"enable_scaling"  valid:"required" description:"For enabling scaling [required]"`
+	Scaling            AutoScaling        `json:"auto_scaling" bson:"auto_scaling"  valid:"required"  description:"Details of auto scaling [required]"`
+	EnablePublicIP     bool               `json:"enable_public_ip" bson:"enable_public_ip"  valid:"required" description:"Enable to assign public Ip to the nodepool [required]"`
 }
 type AutoScaling struct {
-	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
-	State               models.Type `json:"status" bson:"status"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size" valid:"required" description:"Max count for scaling [required]"`
+	State               models.Type `json:"status" bson:"status" description:"Status of scaling [required]"`
 }
 type Key struct {
-	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" valid:"required, in(password|key)"`
-	NewKey         models.KeyType         `json:"key_type"  bson:"key_type" valid:"required in(new|cp|azure|user")"`
-	KeyName        string                 `json:"key_name" bson:"key_name" valid:"required"`
-	AdminPassword  string                 `json:"admin_password" bson:"admin_password",omitempty"`
-	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty"`
-	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty"`
-	Cloud          models.Cloud           `json:"cloud" bson:"cloud"`
+	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" valid:"required,eq=password|eq=key" description:"Credentials type to connect to the VM.Valid values are 'key' and 'password' [required]"`
+	NewKey         models.KeyType         `json:"key_type"  bson:"key_type" valid:"required in(new|cp|azure|user")" description:"Type of key to use.Valid values are 'new','cp','azure' and 'user' [required]"`
+	KeyName        string                 `json:"key_name" bson:"key_name" valid:"required" description:"Unique name of the key [required]"`
+	AdminPassword  string                 `json:"admin_password" bson:"admin_password",omitempty" description:"Password to log in [required]"`
+	PrivateKey     string                 `json:"private_key" bson:"private_key",omitempty" description:"Private SSH key [required]"`
+	PublicKey      string                 `json:"public_key" bson:"public_key",omitempty" description:"Public SSH key [required]"`
+	Cloud          models.Cloud           `json:"cloud" bson:"cloud" validate:"eq=AZURE|eq=azure|eq=Azure" description:"Name of the cloud [optional]"`
 }
 type Volume struct {
-	DataDisk models.OsDiskType `json:"disk_type" bson:"disk_type"`
-	Size     int32             `json:"disk_size" bson:"disk_size"`
+	DataDisk models.OsDiskType `json:"disk_type" bson:"disk_type" valid:"required,eq=standard hdd|standard ssd|premium ssd" description:"Type of the OS disk.[required]"`
+	Size     int32             `json:"disk_size" bson:"disk_size" valid:"required" description:"Size of the disk.[required]"`
 }
 type VM struct {
 	CloudId             *string `json:"cloud_id" bson:"cloud_id,omitempty"`
@@ -86,25 +87,33 @@ type VM struct {
 	ComputerName        *string `json:"computer_name" bson:"computer_name,omitempty"`
 	IdentityPrincipalId *string `json:"identity_principal_id" bson:"identity_principal_id"`
 }
+
 type DiagnosticsProfile struct {
-	Enable            bool   `json:"enable" bson:"enable"`
-	NewStroageAccount bool   `json:"new_storage_account" bson:"new_storage_account"`
-	StorageAccountId  string `json:"storage_account_id" bson:"storage_account_id"`
+	Enable            bool   `json:"enable" bson:"enable" valid:"required" description:"To enable diagnostics profile [required]`
+	NewStroageAccount bool   `json:"new_storage_account" bson:"new_storage_account" valid:"required" description:"Enable to make new storage account[required]`
+	StorageAccountId  string `json:"storage_account_id" bson:"storage_account_id" description:"Id of the storage account [optional]`
 }
 
 type ImageReference struct {
-	ID        bson.ObjectId `json:"_id" bson:"_id,omitempty"`
-	Publisher string        `json:"publisher" bson:"publisher,omitempty" valid:"required"`
-	Offer     string        `json:"offer" bson:"offer,omitempty" valid:"required"`
-	Sku       string        `json:"sku" bson:"sku,omitempty" valid:"required"`
-	Version   string        `json:"version" bson:"version,omitempty" valid:"required"`
+	ID        bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Publisher string        `json:"publisher" bson:"publisher" valid:"required" description:"Publisher of the VM image [required]"`
+	Offer     string        `json:"offer" bson:"offer,omitempty" valid:"required" description:"Offer of the VM image [required]"`
+	Sku       string        `json:"sku" bson:"sku,omitempty" valid:"required" description:"Sku of the Vm image [required]"`
+	Version   string        `json:"version" bson:"version,omitempty" valid:"required" description:"Version of the Vm image [required]"`
 	ImageId   string        `json:"image_id" bson:"image_id,omitempty"`
 }
 type Project struct {
 	ProjectData Data `json:"data"`
 }
+
 type Data struct {
 	Region string `json:"region"`
+}
+
+type AzureCluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
 func checkMasterPools(cluster Cluster_Def) error {
@@ -145,7 +154,7 @@ func GetRegion(token, projectId string, ctx utils.Context) (string, error) {
 		return "", err
 	}
 	var region Project
-	err = json.Unmarshal(data.([]byte), &region)
+	err = json.Unmarshal(data.([]byte), &region.ProjectData)
 	if err != nil {
 		ctx.SendLogs("Error in fetching region"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return region.ProjectData.Region, err
@@ -173,27 +182,27 @@ func GetNetwork(projectId string, ctx utils.Context, resourceGroup string, token
 	if network.Definition != nil {
 		if network.Definition[0].ResourceGroup != resourceGroup {
 			ctx.SendLogs("Resource group is incorrect", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return types.AzureNetwork{}, errors.New("Resource Group is in correct")
+			return types.AzureNetwork{}, errors.New("Resource Group is incorrect")
 		}
 	} else {
 		return types.AzureNetwork{}, errors.New("Network not found")
 	}
 	return network, nil
 }
-func GetProfile(profileId string, region string, token string, ctx utils.Context) (int,vault.AzureProfile, error) {
-	statusCode,data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
+func GetProfile(profileId string, region string, token string, ctx utils.Context) (int, vault.AzureProfile, error) {
+	statusCode, data, err := vault.GetCredentialProfile("azure", profileId, token, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return statusCode,vault.AzureProfile{}, err
+		return statusCode, vault.AzureProfile{}, err
 	}
 	azureProfile := vault.AzureProfile{}
 	err = json.Unmarshal(data, &azureProfile)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return 500,vault.AzureProfile{}, err
+		return 500, vault.AzureProfile{}, err
 	}
 	azureProfile.Profile.Location = region
-	return 0,azureProfile, nil
+	return 0, azureProfile, nil
 
 }
 func checkClusterSize(cluster Cluster_Def) error {
@@ -209,7 +218,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	_, err := GetCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err == nil { //cluster found
 		text := fmt.Sprintf("Cluster model: Create - Cluster for project'%s' already exists in the database: ", cluster.Name)
-		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
 	err = checkMasterPools(cluster)
@@ -239,7 +248,6 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context) error {
 	}
 	return nil
 }
-
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err := db.GetMongoSession(ctx)
@@ -259,8 +267,9 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	return cluster, nil
 }
 
-func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []Cluster_Def, err error) {
+func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (azurecluster []AzureCluster, err error) {
 	var copyData []string
+	var clusters []Cluster_Def
 	for _, d := range list.Data {
 		copyData = append(copyData, d)
 	}
@@ -272,13 +281,16 @@ func GetAllCluster(ctx utils.Context, list rbac_athentication.List) (clusters []
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAzureClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
-
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
-	return clusters, nil
+	for _, cluster := range clusters {
+		temp := AzureCluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		azurecluster = append(azurecluster, temp)
+	}
+	return azurecluster, nil
 }
 
 func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
@@ -289,23 +301,24 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in deploying state")
-	}
-	if oldCluster.Status == string(models.Terminating) && update {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in terminating state")
-	}
-
-	if oldCluster.Status == "Cluster Created" && update {
+	if oldCluster.Status == models.Deploying && update {
+		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in creating state")
+	} else if oldCluster.Status == models.Terminating && update {
+		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in terminating state")
+	} else if oldCluster.Status == models.ClusterTerminationFailed && update {
+		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in termination failed state")
+	} else if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
-			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Cluster is in runnning state")
+			ctx.SendLogs("Cluster is in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("Cluster is in created state")
 		} else {
 			cluster = oldCluster
 		}
 	}
+
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -314,6 +327,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
+	cluster.CompanyId = oldCluster.CompanyId
 
 	err = CreateCluster(cluster, ctx)
 	if err != nil {
@@ -346,13 +360,18 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 		utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) types.CustomCPError {
 
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
+	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		return confError
+		customError := ApiError(confError, "Error in cluster creation", int(models.CloudStatusCode))
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
+		if err != nil {
+			ctx.SendLogs("AzureClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return customError
 	}
 
 	azure := AZURE{
@@ -362,58 +381,75 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		Subscription: credentials.Profile.SubscriptionId,
 		Region:       credentials.Profile.Location,
 	}
-	confError = azure.init()
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-
-		cluster.Status = "Cluster creation failed"
+	err := azure.init()
+	if err != (types.CustomCPError{}) {
+		PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
+		PrintError(errors.New(err.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
+
+		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.Azure, ctx, err)
+		if err1 != nil {
+			ctx.SendLogs("AzureClusterModel:  Deploy - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return err
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = azure.createCluster(cluster, ctx, companyId, token)
-	if confError != nil {
-		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		cluster.Status = "Cluster creation failed"
+	cluster, err = azure.createCluster(cluster, ctx, companyId, token)
+	if err != (types.CustomCPError{}) {
+		PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
+		PrintError(errors.New(err.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
+		cluster.Status = models.ClusterCreationFailed
 		beego.Info("going to cleanup")
-		confError = azure.CleanUp(cluster, ctx, companyId)
-		if confError != nil {
-			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
+		err = azure.CleanUp(cluster, ctx, companyId)
+		if err != (types.CustomCPError{}) {
+			PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.Azure, ctx, err)
+		if err1 != nil {
+			ctx.SendLogs("AzureClusterModel:  Deploy - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return err
 	}
-	cluster.Status = "Cluster Created"
+
+	cluster.Status = models.ClusterCreated
 
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		customError := ApiError(confError, "Error in cluster creation", int(models.CloudStatusCode))
+		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
+		if err1 != nil {
+			ctx.SendLogs("AzureClusterModel:  Deploy - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return customError
 	}
+
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-	return nil
+	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.AzureProfile, token, projectId string, companyId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials vault.AzureProfile, token, projectId string, companyId string, ctx utils.Context) (Cluster_Def, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, err
+		return Cluster_Def{}, ApiError(err, "Error in fetching status.", int(models.CloudStatusCode))
 	}
 
 	azure := AZURE{
@@ -423,16 +459,14 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		Subscription: credentials.Profile.SubscriptionId,
 		Region:       credentials.Profile.Location,
 	}
-	err = azure.init()
-	if err != nil {
-		return Cluster_Def{}, err
+	err1 := azure.init()
+	if err1 != (types.CustomCPError{}) {
+		return Cluster_Def{}, err1
 	}
 
 	_, e := azure.fetchStatus(&cluster, token, ctx)
-	if e != nil {
-
-		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
+	if e != (types.CustomCPError{}) {
+		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, e
 	}
 	/*err = UpdateCluster(c)
@@ -440,28 +474,39 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 		beego.Error("Cluster model: Deploy - Got error while connecting to the database: ", err.Error())
 		return Cluster_Def{}, err
 	}*/
-	return cluster, nil
+	return cluster, types.CustomCPError{}
 }
-func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) error {
+func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return pub_err
+		customError := ApiError(pub_err, "Error in cluster termination", int(models.CloudStatusCode))
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
+		if err != nil {
+			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return customError
 	}
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
+		customError := ApiError(pub_err, "Error in cluster termination", int(models.CloudStatusCode))
+		err1 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
+		if err1 != nil {
+			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return customError
 	}
 
 	if cluster.Status == "" || cluster.Status == "new" {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AzureClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return errors.New(text)
+		return ApiError(errors.New("Error in cluster termination"), text, int(models.CloudStatusCode))
 	}
 
 	azure := AZURE{
@@ -472,36 +517,35 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		Region:       credentials.Profile.Location,
 	}
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = models.Terminating
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = azure.init()
-	if err != nil {
+	err1 := azure.init()
+	if err1 != (types.CustomCPError{}) {
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-
-			return err
+			return err1
+		}
+		err2 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, err1)
+		if err2 != nil {
+			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err2.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return err1
 	}
 
-	err = azure.terminateCluster(cluster, ctx, companyId)
-
-	if err != nil {
-
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
+	err1 = azure.terminateCluster(cluster, ctx, companyId)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs(err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -509,14 +553,19 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return err
+			return ApiError(err, "Error in cluster termination", int(models.CloudStatusCode))
 		}
+		err2 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, err1)
+		if err2 != nil {
+			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err2.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-		return nil
+		return types.CustomCPError{}
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 
 	for _, pools := range cluster.NodePools {
 		var nodes []*VM
@@ -528,13 +577,19 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		customError := ApiError(err, "Error in cluster deletion", int(models.CloudStatusCode))
+		err1 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
+		if err1 != nil {
+			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return customError
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
-	return nil
+	return types.CustomCPError{}
 }
 func InsertSSHKeyPair(key key_utils.AZUREKey) (err error) {
 	key.Cloud = models.Azure
@@ -638,7 +693,7 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	return false
 }
 
-func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM, error) {
+func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM, types.CustomCPError) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -648,18 +703,18 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 		Region:       credentials.Profile.Location,
 	}
 	err := azure.init()
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return []azureVM{}, err
 	}
 
 	instances, err := azure.getAllInstances()
-	if err != nil {
-		beego.Error(err.Error())
+	if err != (types.CustomCPError{}) {
+		beego.Error(err.Error)
 		return []azureVM{}, err
 	}
-	return instances, nil
+	return instances, types.CustomCPError{}
 }
-func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, error) {
+func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Region, types.CustomCPError) {
 
 	azure := AZURE{
 		ID:           credentials.Profile.ClientId,
@@ -669,27 +724,28 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Reg
 		Region:       credentials.Profile.Location,
 	}
 	err := azure.init()
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return []models.Region{}, err
 	}
 
 	regions, err := azure.getRegions(ctx)
-	if err != nil {
-		beego.Error(err.Error())
+	if err != (types.CustomCPError{}) {
+		beego.Error(err.Error)
 		return []models.Region{}, err
 	}
-	return regions, nil
+	return regions, types.CustomCPError{}
 }
-func GetAllMachines() ([]string, error) {
+func GetAllMachines() ([]string, types.CustomCPError) {
 
 	regions, err := getAllVMSizes()
-	if err != nil {
-		beego.Error(err.Error())
+	if err != (types.CustomCPError{}) {
+		beego.Error(err.Error)
 		return []string{}, err
 	}
-	return regions, nil
+	return regions, types.CustomCPError{}
 }
-func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region string, ctx utils.Context) error {
+
+func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region string, ctx utils.Context) types.CustomCPError {
 
 	azure := AZURE{
 		ID:           clientId,
@@ -699,17 +755,18 @@ func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region st
 		Region:       region,
 	}
 	err := azure.init()
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return err
 	}
 
 	_, err = azure.getRegions(ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		beego.Error("Profile is not valid")
-		return err
+		return ApiError(errors.New("Profile is not valid"), "Profile is not valid", int(models.CloudStatusCode))
 	}
-	return nil
+	return types.CustomCPError{}
 }
+
 func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context, clusterName, resourceGroup string) (confError error) {
 	companyId := ctx.Data.Company
 	projetcID := ctx.Data.ProjectId

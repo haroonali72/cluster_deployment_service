@@ -397,3 +397,23 @@ func GetGKECustomerTemplatesMetadata(ctx utils.Context, data rbacAuthentication.
 
 	return templateMetadata, nil
 }
+
+func GetGKEDefault(ctx utils.Context) (template GKEClusterTemplate, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs("Template model: Get - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error("Template model: Get - Got error while connecting to the database: ", err1)
+		return GKEClusterTemplate{}, err1
+	}
+	defer session.Close()
+	conf := db.GetMongoConf()
+
+	c := session.DB(conf.MongoDb).C(conf.MongoDefaultTemplateCollection)
+	err = c.Find(bson.M{"cloud": "gke"}).One(&template)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Error(err.Error())
+		return GKEClusterTemplate{}, err
+	}
+	return template, nil
+}

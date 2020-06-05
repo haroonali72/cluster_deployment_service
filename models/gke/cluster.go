@@ -2,6 +2,7 @@ package gke
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/db"
 	"antelope/models/gcp"
 	rbacAuthentication "antelope/models/rbac_authentication"
@@ -20,11 +21,11 @@ import (
 type GKECluster struct {
 	ID                             bson.ObjectId                   `json:"-" bson:"_id,omitempty"`
 	ProjectId                      string                          `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud" validate:"eq=gcp|eq=GCP"`
+	Cloud                          models.Cloud                    `json:"cloud" bson:"cloud"`
 	CreationDate                   time.Time                       `json:"-" bson:"creation_date"`
 	ModificationDate               time.Time                       `json:"-" bson:"modification_date"`
-	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [optional]"`
-	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
+	CloudplexStatus                models.Type                     `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [optional]"`
+	CompanyId                      string                          `json:"company_id" bson:"company_id" description:"ID of company [optional]"`
 	IsExpert                       bool                            `json:"is_expert" bson:"is_expert"`
 	IsAdvance                      bool                            `json:"is_advance" bson:"is_advance"`
 	AddonsConfig                   *AddonsConfig                   `json:"addons_config,omitempty" bson:"addons_config,omitempty"`
@@ -33,39 +34,39 @@ type GKECluster struct {
 	CreateTime                     string                          `json:"create_time,omitempty" bson:"create_time,omitempty" description:"The time the cluster was created [readonly]"`
 	CurrentMasterVersion           string                          `json:"current_master_version,omitempty" bson:"current_master_version,omitempty" description:"The current software version of master endpoint [readonly]"`
 	CurrentNodeCount               int64                           `json:"current_node_count,omitempty" bson:"current_node_count,omitempty" description:"The number of nodes currently in the cluster [readonly]"`
-	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constraint,omitempty" bson:"default_max_pods_constraint,omitempty" validate:"dive"`
+	DefaultMaxPodsConstraint       *MaxPodsConstraint              `json:"default_max_pods_constrainty" bson:"default_max_pods_constraint" `
 	Description                    string                          `json:"description,omitempty" bson:"description,omitempty" description:"An optional description of this cluster [optional]"`
 	EnableKubernetesAlpha          bool                            `json:"enable_kubernetes_alpha,omitempty" bson:"enable_kubernetes_alpha,omitempty" description:"Alpha enabled clusters are automatically deleted thirty days after [optional]"`
 	EnableTpu                      bool                            `json:"enable_tpu,omitempty" bson:"enable_tpu,omitempty" description:"Enable the ability to use Cloud TPUs in this cluster [optional]"`
 	Endpoint                       string                          `json:"endpoint,omitempty" bson:"endpoint,omitempty" description:"IP address of this cluster's master endpoint [readonly]"`
 	ExpireTime                     string                          `json:"expire_time,omitempty" bson:"expire_time,omitempty" description:"Time the cluster will be automatically deleted [readonly]"`
 	InitialClusterVersion          string                          `json:"initial_cluster_version,omitempty" bson:"initial_cluster_version,omitempty" description:"Initial kubernetes version for this cluster [optional]"`
-	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy,omitempty" bson:"ip_allocation_policy,omitempty"`
+	IpAllocationPolicy             *IPAllocationPolicy             `json:"ip_allocation_policy" bson:"ip_allocation_policy"`
 	LabelFingerprint               string                          `json:"label_fingerprint,omitempty" bson:"label_fingerprint,omitempty" description:"The fingerprint of the set of labels for this cluster [optional]"`
 	LegacyAbac                     *LegacyAbac                     `json:"legacy_abac,omitempty" bson:"legacy_abac,omitempty"`
-	Location                       string                          `json:"location,omitempty" bson:"location,omitempty" description:"The name of GCP zone or region in which cluster resides [required]"`
+	Location                       string                          `json:"location" bson:"location"  description:"The name of GCP zone or region in which cluster resides [required]"`
 	Locations                      []string                        `json:"locations,omitempty" bson:"locations,omitempty" description:"The name of GCP zones in which cluster nodes located [optional]"`
 	LoggingService                 string                          `json:"logging_service,omitempty" bson:"logging_service,omitempty" description:"The logging service the cluster should use to write logs [optional]"`
 	MaintenancePolicy              *MaintenancePolicy              `json:"maintenance_policy,omitempty" bson:"maintenance_policy,omitempty"`
 	MasterAuth                     *MasterAuth                     `json:"master_auth,omitempty" bson:"master_auth,omitempty"`
 	MasterAuthorizedNetworksConfig *MasterAuthorizedNetworksConfig `json:"master_authorized_networks_config,omitempty" bson:"master_authorized_networks_config,omitempty"`
 	MonitoringService              string                          `json:"monitoring_service,omitempty" bson:"monitoring_service,omitempty" description:"The monitoring service the cluster should use to write metrics [optional]"`
-	Name                           string                          `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"The name of this cluster [required]"`
-	Network                        string                          `json:"network,omitempty" bson:"network,omitempty" description:"The name of GCP network to which the cluster connected [required]"`
+	Name                           string                          `json:"name" bson:"name" validate:"required" description:"The name of this cluster [required]"`
+	Network                        string                          `json:"network" bson:"network" description:"The name of GCP network to which the cluster connected [required]"`
 	NetworkConfig                  *NetworkConfig                  `json:"network_config,omitempty" bson:"network_config,omitempty"`
 	NetworkPolicy                  *NetworkPolicy                  `json:"network_policy,omitempty" bson:"network_policy,omitempty"`
 	NodeIpv4CidrSize               int64                           `json:"node_ipv4_cidr_size,omitempty" bson:"node_ipv4_cidr_size,omitempty" description:"The size of the address space on each node [readonly]"`
-	NodePools                      []*NodePool                     `json:"node_pools,omitempty" bson:"node_pools,omitempty" validate:"required,dive"`
+	NodePools                      []*NodePool                     `json:"node_pools" bson:"node_pools" validate:"required,dive"`
 	PrivateClusterConfig           *PrivateClusterConfig           `json:"private_cluster_config,omitempty" bson:"private_cluster_config,omitempty"`
 	ResourceLabels                 map[string]string               `json:"resource_labels,omitempty" bson:"resource_labels,omitempty"`
 	ResourceUsageExportConfig      *ResourceUsageExportConfig      `json:"resource_usage_export_config,omitempty" bson:"resource_usage_export_config,omitempty"`
 	SelfLink                       string                          `json:"self_link,omitempty" bson:"self_link,omitempty" description:"Server-defined URL for the resource [readonly]"`
 	ServicesIpv4Cidr               string                          `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty" description:"The IP address range of the kubernetes services in the cluster [readonly]"`
-	Status                         string                          `json:"cloud_status,omitempty" bson:"cloud_status,omitempty" description:"The current status of this cluster [readonly]"`
+	Status                         models.Type                     `json:"cloud_status,omitempty" bson:"cloud_status,omitempty" description:"The current status of this cluster [readonly]"`
 	StatusMessage                  string                          `json:"status_message,omitempty" bson:"status_message,omitempty" description:"Additional information about the current status [readonly]"`
 	Subnetwork                     string                          `json:"subnetwork,omitempty" bson:"subnetwork,omitempty" description:"The name of the GCP subnetwork cluster is connected to [required]"`
 	TpuIpv4CidrBlock               string                          `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" description:"The IP address range of the Cloud TPUs in the cluster [readonly]"`
-	Zone                           string                          `json:"zone,omitempty" bson:"zone,omitempty" validate:"required" description:"Name of GCP zone in which cluster resides [required]"`
+	Zone                           string                          `json:"zone" bson:"zone" validate:"required" description:"Name of GCP zone in which cluster resides [required]"`
 }
 
 type AddonsConfig struct {
@@ -97,21 +98,21 @@ type StatusCondition struct {
 }
 
 type MaxPodsConstraint struct {
-	MaxPodsPerNode int64 `json:"max_pods_per_node,omitempty" bson:"max_pods_per_node,omitempty" validate:"required" description:"Constraint enforced on the max num of pods per node [required]"`
+	MaxPodsPerNode int64 `json:"max_pods_per_node" bson:"max_pods_per_node" validate:"required" description:"Constraint enforced on the max num of pods per node [required]"`
 }
 
 type IPAllocationPolicy struct {
-	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr,omitempty" bson:"cluster_ipv4_cidr,omitempty" validate:"cidrv4"`
-	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block,omitempty" bson:"cluster_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	ClusterIpv4Cidr            string `json:"cluster_ipv4_cidr" bson:"cluster_ipv4_cidr" `
+	ClusterIpv4CidrBlock       string `json:"cluster_ipv4_cidr_block" bson:"cluster_ipv4_cidr_block" `
 	ClusterSecondaryRangeName  string `json:"cluster_secondary_range_name,omitempty" bson:"cluster_secondary_range_name,omitempty"`
 	CreateSubnetwork           bool   `json:"create_subnetwork,omitempty" bson:"create_subnetwork,omitempty"`
-	NodeIpv4Cidr               string `json:"node_ipv4_cidr,omitempty" bson:"node_ipv4_cidr,omitempty" validate:"cidrv4"`
-	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block,omitempty" bson:"node_ipv4_cidr_block,omitempty" validate:"cidrv4"`
-	ServicesIpv4Cidr           string `json:"services_ipv4_cidr,omitempty" bson:"services_ipv4_cidr,omitempty" validate:"cidrv4"`
-	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block,omitempty" bson:"services_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	NodeIpv4Cidr               string `json:"node_ipv4_cidr" bson:"node_ipv4_cidr" `
+	NodeIpv4CidrBlock          string `json:"node_ipv4_cidr_block" bson:"node_ipv4_cidr_block" `
+	ServicesIpv4Cidr           string `json:"services_ipv4_cidr" bson:"services_ipv4_cidr" `
+	ServicesIpv4CidrBlock      string `json:"services_ipv4_cidr_block" bson:"services_ipv4_cidr_block" `
 	ServicesSecondaryRangeName string `json:"services_secondary_range_name,omitempty" bson:"services_secondary_range_name,omitempty"`
 	SubnetworkName             string `json:"subnetwork_name,omitempty" bson:"subnetwork_name,omitempty"`
-	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block,omitempty" bson:"tpu_ipv4_cidr_block,omitempty" validate:"cidrv4"`
+	TpuIpv4CidrBlock           string `json:"tpu_ipv4_cidr_block" bson:"tpu_ipv4_cidr_block" `
 	UseIpAliases               bool   `json:"use_ip_aliases,omitempty" bson:"use_ip_aliases,omitempty"`
 }
 
@@ -190,12 +191,12 @@ type ConsumptionMeteringConfig struct {
 type NodePool struct {
 	Autoscaling       *NodePoolAutoscaling `json:"autoscaling,omitempty" bson:"autoscaling,omitempty"`
 	Conditions        []*StatusCondition   `json:"conditions,omitempty" bson:"conditions,omitempty"`
-	Config            *NodeConfig          `json:"config,omitempty" bson:"config,omitempty" validate:"required,dive"`
-	InitialNodeCount  int64                `json:"initial_node_count,omitempty" bson:"initial_node_count,omitempty" validate:"required,gte=1"`
+	Config            *NodeConfig          `json:"config" bson:"config" validate:"required,dive"`
+	InitialNodeCount  int64                `json:"initial_node_count" bson:"initial_node_count" validate:"required,gte=1"`
 	InstanceGroupUrls []string             `json:"instance_group_urls,omitempty" bson:"instance_group_urls,omitempty"`
 	Management        *NodeManagement      `json:"management,omitempty" bson:"management,omitempty"`
 	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty" validate:"required,dive"`
-	Name              string               `json:"name,omitempty" bson:"name,omitempty" validate:"required"`
+	Name              string               `json:"name" bson:"name" validate:"required"`
 	PodIpv4CidrSize   int64                `json:"pod_ipv4_cidr_size,omitempty" bson:"pod_ipv4_cidr_size,omitempty"`
 	SelfLink          string               `json:"self_link,omitempty" bson:"self_link,omitempty"`
 	Status            string               `json:"status,omitempty" bson:"status,omitempty"`
@@ -204,24 +205,24 @@ type NodePool struct {
 }
 
 type NodePoolAutoscaling struct {
-	Enabled      bool  `json:"enabled,omitempty" bson:"enabled,omitempty"`
+	Enabled      bool  `json:"enabled,omitempty" bson:"enabled"`
 	MaxNodeCount int64 `json:"max_node_count,omitempty" bson:"max_node_count,omitempty"`
 	MinNodeCount int64 `json:"min_node_count,omitempty" bson:"min_node_count,omitempty"`
 }
 
 type NodeConfig struct {
 	Accelerators   []*AcceleratorConfig `json:"accelerators,omitempty" bson:"accelerators,omitempty"`
-	DiskSizeGb     int64                `json:"disk_size_gb,omitempty" bson:"disk_size_gb,omitempty" validate:"required,gte=30"`
-	DiskType       string               `json:"disk_type,omitempty" bson:"disk_type,omitempty" validate:"required"`
-	ImageType      string               `json:"image_type,omitempty" bson:"image_type,omitempty" validate:"required"`
+	DiskSizeGb     int64                `json:"disk_size_gb" bson:"disk_size_gb" validate:"required,gte=30"`
+	DiskType       string               `json:"disk_type" bson:"disk_type" validate:"required"`
+	ImageType      string               `json:"image_type" bson:"image_type" validate:"required"`
 	Labels         map[string]string    `json:"labels,omitempty" bson:"labels,omitempty"`
 	LocalSsdCount  int64                `json:"local_ssd_count,omitempty" bson:"local_ssd_count,omitempty"`
-	MachineType    string               `json:"machine_type,omitempty" bson:"machine_type,omitempty" validate:"required"`
+	MachineType    string               `json:"machine_type" bson:"machine_type" validate:"required"`
 	Metadata       map[string]string    `json:"metadata,omitempty" bson:"metadata,omitempty"`
 	MinCpuPlatform string               `json:"min_cpu_platform,omitempty" bson:"min_cpu_platform,omitempty"`
 	OauthScopes    []string             `json:"oauth_scopes,omitempty" bson:"oauth_scopes,omitempty"`
 	Preemptible    bool                 `json:"preemptible,omitempty" bson:"preemptible,omitempty"`
-	ServiceAccount string               `json:"service_account,omitempty" bson:"service_account,omitempty" validate:"required"`
+	ServiceAccount string               `json:"service_account" bson:"service_account" validate:"required"`
 	Tags           []string             `json:"tags,omitempty" bson:"tags,omitempty"`
 	Taints         []*NodeTaint         `json:"taints,omitempty" bson:"taints,omitempty"`
 }
@@ -248,12 +249,57 @@ type AutoUpgradeOptions struct {
 	Description          string `json:"description,omitempty" bson:"description,omitempty"`
 }
 
-type Cluster struct{
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+type Cluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
 }
 
+type KubeClusterStatus struct {
+	Id                string                 `json:"id,omitempty"`
+	Name              string                 `json:"name,omitempty"`
+	Region            string                 `json:"region,omitempty"`
+	Status            models.Type            `json:"status,omitempty"`
+	State             string                 `json:"state,omitempty"`
+	KubernetesVersion string                 `json:"kubernetes_version,omitempty"`
+	Network           string                 `json:"network,omitempty"`
+	PoolCount         int64                  `json:"nodepool_count,omitempty"`
+	ClusterIP         string                 `json:"cluster_ip,omitempty"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools,omitempty"`
+}
+
+type KubeWorkerPoolStatus struct {
+	Id          string            `json:"id,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	Link        string            `json:"-"`
+	NodeCount   int64             `json:"node_count,omitempty"`
+	MachineType string            `json:"machine_type,omitempty"`
+	AutoScale   bool              `json:"auto_scaling,omitempty"`
+	MinCount    int64             `json:"min_count,omitempty"`
+	MaxCount    int64             `json:"max_count,omitempty"`
+	Subnet      string            `json:"subnet_id,omitempty"`
+	Nodes       []KubeNodesStatus `json:"nodes"`
+}
+type KubeNodesStatus struct {
+	Id        string `json:"id,omitempty"`
+	Name      string `json:"name,omitempty"`
+	State     string `json:"state,omitempty"`
+	PrivateIp string `json:"private_ip,omitempty"`
+	PublicIp  string `json:"public_ip,omitempty"`
+}
+
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("gcp", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
 func GetGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -301,7 +347,7 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClust
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoGKEClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(),
@@ -311,9 +357,9 @@ func GetAllGKECluster(data rbacAuthentication.List, ctx utils.Context) (gkeClust
 		return gkeClusters, err
 	}
 
-	for _,cluster := range clusters{
-		temp:=Cluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.CloudplexStatus}
-		gkeClusters =append(gkeClusters,temp)
+	for _, cluster := range clusters {
+		temp := Cluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.CloudplexStatus}
+		gkeClusters = append(gkeClusters, temp)
 	}
 	return gkeClusters, nil
 }
@@ -344,7 +390,7 @@ func AddGKECluster(cluster GKECluster, ctx utils.Context) error {
 			cluster.CloudplexStatus = "new"
 		}
 		cluster.Cloud = models.GKE
-		cluster.CompanyId=ctx.Data.Company
+		cluster.CompanyId = ctx.Data.Company
 	}
 
 	mc := db.GetMongoConf()
@@ -381,8 +427,7 @@ func UpdateGKECluster(cluster GKECluster, ctx utils.Context) error {
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
-	cluster.CompanyId=oldCluster.CompanyId
-	cluster.CloudplexStatus=oldCluster.CloudplexStatus
+	cluster.CompanyId = oldCluster.CompanyId
 
 	err = AddGKECluster(cluster, ctx)
 	if err != nil {
@@ -503,10 +548,10 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = models.AgentDeploymentFailed
-		PrintError( errors.New(confError.Error), cluster.Name,ctx)
-		_=TerminateCluster(credentials,ctx)
-		PrintError( errors.New("Cleaning up resources"), cluster.Name,ctx)
+		cluster.CloudplexStatus = models.ClusterCreationFailed
+		PrintError(errors.New(confError.Error), cluster.Name, ctx)
+		_ = TerminateCluster(credentials, ctx)
+		PrintError(errors.New("Cleaning up resources"), cluster.Name, ctx)
 		_ = UpdateGKECluster(cluster, ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {
@@ -536,57 +581,64 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (GKECluster, types.CustomCPError) {
+func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (*KubeClusterStatus, types.CustomCPError) {
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
 		ctx.SendLogs("GKEClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
+		return &KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching status", Description: err.Error()}
 	}
 	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return GKECluster{}, cpErr
+		return &KubeClusterStatus{}, cpErr
 	}
 	if cluster.CloudplexStatus == models.Deploying || cluster.CloudplexStatus == models.Terminating || cluster.CloudplexStatus == models.ClusterTerminated {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", Description: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
-		return GKECluster{}, cpErr
+		return &KubeClusterStatus{}, cpErr
 	}
-
-	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
-	if err != nil {
-		return GKECluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
-			Description: "Error occurred while getting cluster status in database",
-			StatusCode:  500}
-	}
-	if customErr.Err != (types.CustomCPError{}) {
-		return GKECluster{}, customErr.Err
+	if cluster.CloudplexStatus != models.ClusterCreated {
+		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx)
+		if err != nil {
+			return &KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status in database",
+				Description: "Error occurred while getting cluster status in database",
+				StatusCode:  500}
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return &KubeClusterStatus{}, customErr.Err
+		}
 	}
 	gkeOps, err1 := GetGKE(credentials)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err1
+		return &KubeClusterStatus{}, err1
 	}
 
 	err1 = gkeOps.init()
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err1
+		return &KubeClusterStatus{}, err1
 	}
 
 	latestCluster, err1 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err1
+		return &KubeClusterStatus{}, err1
 	}
-
+	customStatus := fillStatusInfo(latestCluster)
+	err1 = gkeOps.fetchNodePool(latestCluster, &customStatus, ctx)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return &KubeClusterStatus{}, err1
+	}
+	customStatus.Status = cluster.Status
 	latestCluster.ProjectId = ctx.Data.ProjectId
 	latestCluster.CompanyId = ctx.Data.Company
 	latestCluster.CloudplexStatus = cluster.CloudplexStatus
 	latestCluster.IsExpert = cluster.IsExpert
 	latestCluster.IsAdvance = cluster.IsAdvance
 
-	return latestCluster, types.CustomCPError{}
+	return &customStatus, types.CustomCPError{}
 }
 
 func TerminateCluster(credentials gcp.GcpCredentials, ctx utils.Context) types.CustomCPError {
@@ -829,4 +881,39 @@ func validateGKEImageType(imageType string) (bool, error) {
 	}
 
 	return false, errors.New(errData)
+}
+
+func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus) {
+	status.Id = cluster.Name
+	status.Name = cluster.Name
+	status.Region = cluster.Location
+	status.Status = cluster.CloudplexStatus
+	status.Network = cluster.Network
+	status.PoolCount = cluster.CurrentNodeCount
+	status.KubernetesVersion = cluster.CurrentMasterVersion
+	status.ClusterIP = cluster.ClusterIpv4Cidr
+	status.PoolCount = cluster.CurrentNodeCount
+	status.ClusterIP = cluster.ClusterIpv4Cidr
+	status.State = cluster.NodePools[0].Status
+	for _, pool := range cluster.NodePools {
+		workerpool := KubeWorkerPoolStatus{}
+		workerpool.Name = pool.Name
+		workerpool.Id = pool.Name
+		workerpool.NodeCount = pool.InitialNodeCount
+		workerpool.MachineType = pool.Config.MachineType
+		workerpool.Link = pool.InstanceGroupUrls[0]
+		if pool.Autoscaling != nil && pool.Autoscaling.Enabled == true {
+			workerpool.AutoScale = pool.Autoscaling.Enabled
+			workerpool.MinCount = pool.Autoscaling.MinNodeCount
+			workerpool.MaxCount = pool.Autoscaling.MaxNodeCount
+
+			workerpool.Subnet = cluster.Subnetwork
+		} else {
+			workerpool.AutoScale = false
+		}
+		status.WorkerPools = append(status.WorkerPools, workerpool)
+
+	}
+
+	return status
 }

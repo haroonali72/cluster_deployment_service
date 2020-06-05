@@ -29,7 +29,7 @@ func GenerateClusterFromResponse(v gke.Cluster) GKECluster {
 		ResourceLabels:                 v.ResourceLabels,
 		SelfLink:                       v.SelfLink,
 		ServicesIpv4Cidr:               v.ServicesIpv4Cidr,
-		Status:                         v.Status,
+		Status:                         models.Type(v.Status),
 		StatusMessage:                  v.StatusMessage,
 		Subnetwork:                     v.Subnetwork,
 		TpuIpv4CidrBlock:               v.TpuIpv4CidrBlock,
@@ -315,7 +315,7 @@ func GenerateNodePoolFromResponse(pools []*gke.NodePool) []*NodePool {
 			nodePool.Conditions = GenerateConditionsFromResponse(v.Conditions)
 		}
 		if v.Config != nil {
-			nodeConfig := &NodeConfig{
+			nodePool.Config = &NodeConfig{
 				Accelerators:   []*AcceleratorConfig{},
 				DiskSizeGb:     v.Config.DiskSizeGb,
 				DiskType:       v.Config.DiskType,
@@ -332,13 +332,13 @@ func GenerateNodePoolFromResponse(pools []*gke.NodePool) []*NodePool {
 				Taints:         []*NodeTaint{},
 			}
 			for _, i := range v.Config.Accelerators {
-				nodeConfig.Accelerators = append(nodeConfig.Accelerators, &AcceleratorConfig{
+				nodePool.Config.Accelerators = append(nodePool.Config.Accelerators, &AcceleratorConfig{
 					AcceleratorCount: i.AcceleratorCount,
 					AcceleratorType:  i.AcceleratorType,
 				})
 			}
 			for _, i := range v.Config.Taints {
-				nodeConfig.Taints = append(nodeConfig.Taints, &NodeTaint{
+				nodePool.Config.Taints = append(nodePool.Config.Taints, &NodeTaint{
 					Effect: i.Effect,
 					Key:    i.Key,
 					Value:  i.Value,

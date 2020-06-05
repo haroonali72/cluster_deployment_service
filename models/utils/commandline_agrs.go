@@ -8,47 +8,48 @@ import (
 )
 
 var (
-	mongo                           = ""
-	mongo_auth                      = "" // boolean
-	mongo_db                        = ""
-	mongo_user                      = ""
-	mongo_pass                      = ""
-	mongo_ssh_keys_collection       = ""
-	mongo_aws_template_collection   = ""
-	mongo_aws_cluster_collection    = ""
-	mongo_azure_template_collection = ""
-	mongo_azure_cluster_collection  = ""
-	mongo_gcp_template_collection   = ""
-	mongo_gcp_cluster_collection    = ""
-	mongo_gke_template_collection   = ""
-	mongo_gke_cluster_collection    = ""
-	mongo_do_template_collection    = ""
-	mongo_do_cluster_collection     = ""
-	mongo_op_template_collection    = ""
-	mongo_doks_cluster_collection   = ""
-	mongo_doks_template_collection  = ""
-	mongo_op_cluster_collection     = ""
-	mongo_aks_template_collection   = ""
-	mongo_aks_cluster_collection    = ""
-	mongo_iks_template_collection   = ""
-	mongo_iks_cluster_collection    = ""
-	redis_url                       = ""
-	logger_url                      = ""
-	vault_url                       = ""
-	network_url                     = ""
-	raccoon_url                     = ""
-	rbac_url                        = ""
-	woodpecker_url                  = ""
-	ca_cert                         = ""
-	client_cert                     = ""
-	client_pem                      = ""
-	subscription_host               = ""
-	kill_bill_password              = ""
-	kill_bill_secret_key            = ""
-	kill_bill_user                  = ""
-	kill_bill_api_key               = ""
-	jump_host_ssh_key               = ""
-	jump_host_ip                    = ""
+	mongo                             = ""
+	mongo_auth                        = "" // boolean
+	mongo_db                          = ""
+	mongo_user                        = ""
+	mongo_pass                        = ""
+	mongo_ssh_keys_collection         = ""
+	mongo_aws_template_collection     = ""
+	mongo_aws_cluster_collection      = ""
+	mongo_azure_template_collection   = ""
+	mongo_azure_cluster_collection    = ""
+	mongo_gcp_template_collection     = ""
+	mongo_gcp_cluster_collection      = ""
+	mongo_gke_template_collection     = ""
+	mongo_gke_cluster_collection      = ""
+	mongo_do_template_collection      = ""
+	mongo_do_cluster_collection       = ""
+	mongo_op_template_collection      = ""
+	mongo_doks_cluster_collection     = ""
+	mongo_doks_template_collection    = ""
+	mongo_op_cluster_collection       = ""
+	mongo_aks_template_collection     = ""
+	mongo_aks_cluster_collection      = ""
+	mongo_iks_template_collection     = ""
+	mongo_iks_cluster_collection      = ""
+	mongo_default_template_collection = ""
+	redis_url                         = ""
+	logger_url                        = ""
+	vault_url                         = ""
+	network_url                       = ""
+	raccoon_url                       = ""
+	rbac_url                          = ""
+	woodpecker_url                    = ""
+	ca_cert                           = ""
+	client_cert                       = ""
+	client_pem                        = ""
+	subscription_host                 = ""
+	kill_bill_password                = ""
+	kill_bill_secret_key              = ""
+	kill_bill_user                    = ""
+	kill_bill_api_key                 = ""
+	jump_host_ssh_key                 = ""
+	jump_host_ip                      = ""
 )
 
 func InitFlags() error {
@@ -59,6 +60,12 @@ func InitFlags() error {
 			Usage:       "kill_bill_user",
 			Destination: &kill_bill_user,
 			EnvVar:      "kill_bill_user",
+		},
+		cli.StringFlag{
+			Name:        "mongo_default_template_collection",
+			Usage:       "mongo_default_template_collection",
+			Destination: &mongo_default_template_collection,
+			EnvVar:      "mongo_default_template_collection",
 		},
 		cli.StringFlag{
 			Name:        "kill_bill_api_key",
@@ -342,6 +349,7 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_aks_template_collection", mongo_aks_template_collection)
 	beego.AppConfig.Set("mongo_iks_template_collection", mongo_iks_template_collection)
 	beego.AppConfig.Set("mongo_iks_cluster_collection", mongo_iks_cluster_collection)
+	beego.AppConfig.Set("mongo_default_template_collection", mongo_default_template_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)
 	beego.AppConfig.Set("network_url", network_url)

@@ -2,6 +2,7 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/cores"
 	"antelope/models/db"
 	rbacAuthentication "antelope/models/rbac_authentication"
@@ -70,7 +71,7 @@ type KubernetesCluster struct {
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed" description:"Status of cluster [required]"`
+	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of cluster [required]"`
 	Name             string                `json:"name,omitempty" bson:"name" validate:"required" description:"Cluster name [required]"`
 	Region           string                `json:"region,omitempty" bson:"region" validate:"required" description:"Location for cluster provisioning [required]"`
 	KubeVersion      string                `json:"version,omitempty" bson:"version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
@@ -147,12 +148,71 @@ type KubernetesNodeSize struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
-
-type DOKSCluster struct{
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
-	ProjectId              string                               `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status                 models.Type                          `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+type KubeClusterStatus struct {
+	ID                string                 `json:"id"`
+	Name              string                 `json:"name"`
+	Status            models.Type            `json:"status"`
+	State             string                 `json:"state"`
+	RegionSlug        string                 `json:"region"`
+	KubernetesVersion string                 `json:"kubernetes_version"`
+	ClusterIp         string                 `json:"cluster_ip"`
+	NodePoolCount     int                    `json:"nodepool_count"`
+	Endpoint          string                 `json:"endpoint"`
+	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools"`
 }
+
+type KubeWorkerPoolStatus struct {
+	ID        string      `json:"id"`
+	Name      string      `json:"name"`
+	Size      string      `json:"machine_type"`
+	Nodes     []PoolNodes `json:"nodes"`
+	Count     int         `json:"node_count"`
+	AutoScale bool        `json:"auto_scaling"`
+	MinCount  int         `json:"min_count"`
+	MaxCount  int         `json:"max_count"`
+}
+
+type PoolNodes struct {
+	Name      string `json:"name,omitempty"`
+	State     string `json:"state,omitempty"`
+	DropletID string `json:"id,omitempty"`
+	PublicIp  string `json:"public_ip,omitempty"`
+	PrivateIp string `json:"private_ip,omitempty"`
+}
+
+func getNetworkHost(cloudType, projectId string) string {
+
+	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
+
+	if strings.Contains(host, "{cloud}") {
+		host = strings.Replace(host, "{cloud}", cloudType, -1)
+	}
+
+	if strings.Contains(host, "{projectId}") {
+		host = strings.Replace(host, "{projectId}", projectId, -1)
+	}
+
+	return host
+}
+func GetNetwork(token, projectId string, ctx utils.Context) error {
+
+	url := getNetworkHost("do", projectId)
+
+	_, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
+
+type DOKSCluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+}
+
 func GetKubernetesCluster(ctx utils.Context) (cluster KubernetesCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -187,14 +247,14 @@ func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (d
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
-	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData},"company_id": ctx.Data.Company}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("DOKSGetAllClusterModel:  GetAll - Got error while fetching from database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return dokscluster, err
 	}
-	for _,cluster := range clusters{
-		temp:=DOKSCluster{Name:cluster.Name,ProjectId:cluster.ProjectId,Status:cluster.CloudplexStatus}
-		dokscluster =append(dokscluster,temp)
+	for _, cluster := range clusters {
+		temp := DOKSCluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.CloudplexStatus}
+		dokscluster = append(dokscluster, temp)
 	}
 	return dokscluster, nil
 }
@@ -250,8 +310,7 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
-	cluster.CompanyId=oldCluster.CompanyId
-	cluster.CloudplexStatus= oldCluster.CloudplexStatus
+	cluster.CompanyId = oldCluster.CompanyId
 
 	err = AddKubernetesCluster(cluster, ctx)
 	if err != nil {
@@ -317,7 +376,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 
 	err1 := doksOps.init(ctx)
 	if err1 != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(ctx, confError.Error(), cluster.Name)
@@ -346,7 +405,8 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 	cluster, errr := doksOps.createCluster(cluster, ctx, token, credentials)
 	if errr != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = "Cluster creation failed"
+		cluster.CloudplexStatus = models.ClusterCreationFailed
+
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
 			PrintError(ctx, confError.Error(), cluster.Name)
@@ -356,6 +416,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		if err != nil {
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return errr
 	}
 
@@ -363,7 +424,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	if confErr != (types.CustomCPError{}) {
 		PrintError(ctx, confErr.Description, cluster.Name)
 		utils.SendLog(ctx.Data.Company, "Cleaning up resources", "info", cluster.ProjectId)
-		cluster.CloudplexStatus = models.AgentDeploymentFailed
+		cluster.CloudplexStatus = models.ClusterCreationFailed
 		_ = TerminateCluster(credentials, ctx)
 		confError = UpdateKubernetesCluster(cluster, ctx)
 		if confError != nil {
@@ -400,47 +461,51 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (*godo.KubernetesCluster, types.CustomCPError) {
+func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeClusterStatus, types.CustomCPError) {
 
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -  Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err.Error()}
+		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Got error while connecting to the database", Description: err.Error()}
 	}
 	if string(cluster.CloudplexStatus) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return &godo.KubernetesCluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
 	if cluster.CloudplexStatus == models.Deploying || cluster.CloudplexStatus == models.Terminating || cluster.CloudplexStatus == models.ClusterTerminated {
 		cpErr := types.CustomCPError{Error: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", Description: "Cluster is in " +
 			string(cluster.CloudplexStatus) + " state", StatusCode: 409}
-		return &godo.KubernetesCluster{}, cpErr
+		return KubeClusterStatus{}, cpErr
 	}
-	customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
-	if err != nil {
-		return &godo.KubernetesCluster{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
-			Description: "Error occurred while getting cluster status from database",
-			StatusCode:  500}
-	}
-	if customErr.Err != (types.CustomCPError{}) {
-		return &godo.KubernetesCluster{}, customErr.Err
+
+	if cluster.CloudplexStatus != models.ClusterCreated {
+		customErr, err := db.GetError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx)
+		if err != nil {
+			return KubeClusterStatus{}, types.CustomCPError{Error: "Error occurred while getting cluster status from database",
+				Description: "Error occurred while getting cluster status from database",
+				StatusCode:  500}
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return KubeClusterStatus{}, customErr.Err
+		}
 	}
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterModel:  Fetch -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return &godo.KubernetesCluster{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching cluster status ", Description: err.Error()}
+		return KubeClusterStatus{}, types.CustomCPError{StatusCode: 500, Error: "Error in fetching cluster status ", Description: err.Error()}
 	}
 
 	err1 := doksOps.init(ctx)
 	if err1 != (types.CustomCPError{}) {
-		return &godo.KubernetesCluster{}, err1
+		return KubeClusterStatus{}, err1
 	}
 
 	status, errr := doksOps.fetchStatus(ctx, cluster.ID)
 	if errr != (types.CustomCPError{}) {
-		return &godo.KubernetesCluster{}, errr
+		return KubeClusterStatus{}, errr
 	}
+	status.Status = cluster.CloudplexStatus
 
 	return status, errr
 }

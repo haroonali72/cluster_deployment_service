@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -41,7 +42,6 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 	return token, nil
 }
 
-
 func (cloud *DOKS) init(ctx utils.Context) types.CustomCPError {
 	if cloud.Client != nil {
 		return types.CustomCPError{}
@@ -51,7 +51,7 @@ func (cloud *DOKS) init(ctx utils.Context) types.CustomCPError {
 		text := "Invalid cloud credentials"
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		beego.Error(text)
-		return types.CustomCPError{StatusCode:500,Error:"Error in cloud credentials",Description:text,}
+		return types.CustomCPError{StatusCode: 500, Error: "Error in cloud credentials", Description: text}
 	}
 
 	tokenSource := &TokenSource{
@@ -112,8 +112,8 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging, )
-		return cluster, ApiError(err,"Error in Cluster Creation", credentials, ctx)
+		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
 	}
 
 	cluster.ID = clus.ID
@@ -136,15 +136,15 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) t
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
-		if err != (types.CustomCPError{}){
-			return  err
+		if err != (types.CustomCPError{}) {
+			return err
 		}
 	}
 
 	_, err := cloud.Client.Kubernetes.Delete(context.Background(), cluster.ID)
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in cluster termination: "+err.Error(), models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-		return ApiError(err,"Error in terminating kubernetes cluster",vault.DOCredentials{},ctx)
+		return ApiError(err, "Error in terminating kubernetes cluster", vault.DOCredentials{}, ctx)
 	}
 
 	return types.CustomCPError{}
@@ -166,7 +166,7 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return KubernetesConfig{}, ApiError(err,"Error in getting kubernetes config file",vault.DOCredentials{},ctx)
+		return KubernetesConfig{}, ApiError(err, "Error in getting kubernetes config file", vault.DOCredentials{}, ctx)
 	}
 
 	var con KubernetesClusterConfig
@@ -181,37 +181,77 @@ func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (
 	return kubeFile, types.CustomCPError{}
 }
 
-func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool,types.CustomCPError) {
+func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool, types.CustomCPError) {
 	return KubernetesNodePool{}, types.CustomCPError{}
 }
 
-func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context,  clusterId, token string) (KubernetesNodePool, types.CustomCPError) {
-	return KubernetesNodePool{},types.CustomCPError{}
-}
-
-func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool,types.CustomCPError) {
+func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool, types.CustomCPError) {
 	return KubernetesNodePool{}, types.CustomCPError{}
 }
 
-func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (*godo.KubernetesCluster,  types.CustomCPError) {
+func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool, types.CustomCPError) {
+	return KubernetesNodePool{}, types.CustomCPError{}
+}
 
+func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeClusterStatus, types.CustomCPError) {
+	var response KubeClusterStatus
+	count := 0
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
-		if err.Description !="" {
-			return &godo.KubernetesCluster{},err
+		if err.Description != "" {
+			return KubeClusterStatus{}, err
 		}
 	}
 
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clusterId)
 	if err != nil {
-		ctx.SendLogs("DOKS get cluster status  failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging, )
-		return &godo.KubernetesCluster{}, ApiError(err,"Error in fetching kubernetes cluster status",vault.DOCredentials{},ctx)
+		ctx.SendLogs("DOKS get cluster status  failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return KubeClusterStatus{}, ApiError(err, "Error in fetching kubernetes cluster status", vault.DOCredentials{}, ctx)
 	}
+	response.Name = status.Name
+	response.ID = status.ID
+	response.RegionSlug = status.RegionSlug
+	response.KubernetesVersion = status.VersionSlug
+	response.ClusterIp = status.IPv4
+	response.Endpoint = status.Endpoint
+	response.State = status.NodePools[0].Nodes[0].Status.State
+	for _, pool := range status.NodePools {
+		count++
+		var workerPool KubeWorkerPoolStatus
+		workerPool.Name = pool.Name
+		workerPool.ID = pool.ID
+		workerPool.Size = pool.Size
+		workerPool.Count = pool.Count
+		workerPool.AutoScale = pool.AutoScale
+		workerPool.MinCount = pool.MinNodes
+		workerPool.MaxCount = pool.MaxNodes
 
-	return status, types.CustomCPError{}
+		for _, nodes := range pool.Nodes {
+
+			var poolNodes PoolNodes
+			poolNodes.Name = nodes.Name
+			poolNodes.DropletID = nodes.DropletID
+			dropletId, _ := strconv.ParseInt(nodes.DropletID, 10, 64)
+			droplet, _, err := cloud.Client.Droplets.Get(context.Background(), int(dropletId))
+			if err != nil {
+				ctx.SendLogs("Error in getting droplet status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				cpErr := ApiError(err, "Error in getting droplet status", vault.DOCredentials{}, ctx)
+				return KubeClusterStatus{}, cpErr
+			}
+			poolNodes.Name = nodes.Name
+			poolNodes.PrivateIp, _ = droplet.PrivateIPv4()
+			poolNodes.PublicIp, _ = droplet.PublicIPv4()
+			poolNodes.State = nodes.Status.State
+
+			workerPool.Nodes = append(workerPool.Nodes, poolNodes)
+		}
+		response.WorkerPools = append(response.WorkerPools, workerPool)
+	}
+	response.NodePoolCount = count
+	return response, types.CustomCPError{}
 }
 
-func (cloud *DOKS) GetServerConfig(ctx utils.Context) (*godo.KubernetesOptions,types.CustomCPError) {
+func (cloud *DOKS) GetServerConfig(ctx utils.Context) (*godo.KubernetesOptions, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -222,8 +262,8 @@ func (cloud *DOKS) GetServerConfig(ctx utils.Context) (*godo.KubernetesOptions,t
 
 	options, _, err := cloud.Client.Kubernetes.GetOptions(context.Background())
 	if err != nil {
-		return &godo.KubernetesOptions{}, ApiError(err,"Error in fetching valid version and machine sizes",vault.DOCredentials{},ctx)
+		return &godo.KubernetesOptions{}, ApiError(err, "Error in fetching valid version and machine sizes", vault.DOCredentials{}, ctx)
 	}
 
-	return options,types.CustomCPError{}
+	return options, types.CustomCPError{}
 }
