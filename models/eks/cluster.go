@@ -17,28 +17,27 @@ import (
 )
 
 type EKSCluster struct {
-	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
-	CreationDate     time.Time     `json:"-" bson:"creation_date"`
-	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	Status           models.Type   `json:"status" bson:"status"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
-
-	OutputArn          *string            `json:"output_arn,omitempty" bson:"output_arn,omitempty"`
-	EncryptionConfig   *EncryptionConfig  `json:"encryption_config,omitempty" bson:"encryption_config,omitempty"`
-	Logging            Logging            `json:"logging" bson:"logging"`
-	Name               string             `json:"name" bson:"name"`
-	ResourcesVpcConfig VpcConfigRequest   `json:"resources_vpc_config" bson:"resources_vpc_config"`
-	RoleArn            *string            `json:"-" bson:"role_arn"`
-	RoleName           *string            `json:"-" bson:"role_name"`
-	Tags               map[string]*string `json:"tags,omitempty" bson:"tags,omitempty"`
-	Version            *string            `json:"version,omitempty" bson:"version,omitempty"`
-	NodePools          []*NodePool        `json:"node_pools" bson:"node_pools"`
+	ID                 bson.ObjectId     `json:"-" bson:"_id,omitempty"`
+	ProjectId          string            `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	Cloud              models.Cloud      `json:"cloud" bson:"cloud" validate:"eq=EKS|eq=eks"`
+	CreationDate       time.Time         `json:"-" bson:"creation_date"`
+	ModificationDate   time.Time         `json:"-" bson:"modification_date"`
+	NodePools          []*NodePool       `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	Status             models.Type       `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
+	CompanyId          string            `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
+	OutputArn          *string           `json:"-" bson:"output_arn,omitempty"`
+	EncryptionConfig   *EncryptionConfig `json:"encryption_config,omitempty" bson:"encryption_config,omitempty" description:"Encryption Configurations [optional]"`
+	Logging            Logging           `json:"logging" bson:"logging" description:"Logging Configurations [optional]"`
+	Name               string            `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
+	ResourcesVpcConfig VpcConfigRequest  `json:"resources_vpc_config" bson:"resources_vpc_config"`
+	RoleArn            *string           `json:"-" bson:"role_arn"`
+	RoleName           *string           `json:"-" bson:"role_name"`
+	//Tags               map[string]*string `json:"tags,omitempty" bson:"tags,omitempty"`
+	Version *string `json:"version,omitempty" bson:"version,omitempty" description:"Kubernetes Version [required]`
 }
 
 type EncryptionConfig struct {
-	EnableEncryption bool      `json:"enable_encryption" bson:"enable_encryption"`
+	EnableEncryption bool      `json:"enable_encryption" bson:"enable_encryption" description:"Option to enable or disable encryption [optional]`
 	Provider         *Provider `json:"-" bson:"provider"`
 	Resources        []*string `json:"-" bson:"resources"`
 }
@@ -49,11 +48,11 @@ type Provider struct {
 }
 
 type Logging struct {
-	EnableApi               bool `json:"enable_api" bson:"enable_api"`
-	EnableAudit             bool `json:"enable_audit" bson:"enable_audit"`
-	EnableAuthenticator     bool `json:"enable_authenticator" bson:"enable_authenticator"`
-	EnableControllerManager bool `json:"enable_controller_manager" bson:"enable_controller_manager"`
-	EnableScheduler         bool `json:"enable_scheduler" bson:"enable_scheduler"`
+	EnableApi               bool `json:"enable_api" bson:"enable_api" description:"Enable/Disable api logging [optional]"`
+	EnableAudit             bool `json:"enable_audit" bson:"enable_audit" description:"Enable/Disable api audit logging [optional]"`
+	EnableAuthenticator     bool `json:"enable_authenticator" bson:"enable_authenticator" description:"Enable/Disable authenticator logging  [optional]"`
+	EnableControllerManager bool `json:"enable_controller_manager" bson:"enable_controller_manager" description:"Enable/Disable controller logging [optional]"`
+	EnableScheduler         bool `json:"enable_scheduler" bson:"enable_scheduler" description:"Enable/Disable scheduler logging [optional]"`
 }
 
 type LogSetup struct {
@@ -62,26 +61,26 @@ type LogSetup struct {
 }
 
 type VpcConfigRequest struct {
-	EndpointPrivateAccess *bool     `json:"endpoint_private_access" bson:"endpoint_private_access"`
-	EndpointPublicAccess  *bool     `json:"endpoint_public_access" bson:"endpoint_public_access"`
-	PublicAccessCidrs     []*string `json:"public_access_cidrs" bson:"public_access_cidrs"`
+	EndpointPrivateAccess *bool     `json:"endpoint_private_access" bson:"endpoint_private_access" description:"Enable/Disable private access endpoint [optional] `
+	EndpointPublicAccess  *bool     `json:"endpoint_public_access" bson:"endpoint_public_access" description:"Enable/Disable public access endpoint [optional]`
+	PublicAccessCidrs     []*string `json:"public_access_cidrs" bson:"public_access_cidrs" description:"Cidrs for public access [required, if public access is enabled]`
 	SecurityGroupIds      []*string `json:"-" bson:"security_group_ids"`
 	SubnetIds             []*string `json:"-" bson:"subnet_ids"`
 }
 
 type NodePool struct {
-	OutputArn     *string                `json:"output_arn,omitempty" bson:"output_arn,omitempty"`
-	AmiType       *string                `json:"ami_type,omitempty" bson:"ami_type,omitempty"`
-	DiskSize      *int64                 `json:"disk_size,omitempty" bson:"disk_size,omitempty"`
-	InstanceType  *string                `json:"instance_type,omitempty" bson:"instance_type,omitempty"`
-	Labels        map[string]*string     `json:"labels,omitempty" bson:"labels,omitempty"`
+	OutputArn    *string `json:"-" bson:"output_arn,omitempty"`
+	AmiType      *string `json:"ami_type,omitempty" bson:"ami_type,omitempty"`
+	DiskSize     *int64  `json:"disk_size,omitempty" bson:"disk_size,omitempty"`
+	InstanceType *string `json:"instance_type,omitempty" bson:"instance_type,omitempty"`
+	//Labels        map[string]*string     `json:"labels,omitempty" bson:"labels,omitempty"`
 	NodeRole      *string                `json:"-" bson:"node_role"`
 	RoleName      *string                `json:"-" bson:"role_name"`
-	NodePoolName  string                 `json:"node_pool_name" bson:"node_pool_name"`
+	NodePoolName  string                 `json:"node_pool_name" bson:"node_pool_name" description:"Node Pool Name [required]`
 	RemoteAccess  *RemoteAccessConfig    `json:"remote_access,omitempty" bson:"remote_access,omitempty"`
 	ScalingConfig *NodePoolScalingConfig `json:"scaling_config,omitempty" bson:"scaling_config,omitempty"`
 	Subnets       []*string              `json:"-" bson:"subnets"`
-	Tags          map[string]*string     `json:"tags" bson:"tags"`
+	//Tags          map[string]*string     `json:"tags" bson:"tags"`
 }
 
 type RemoteAccessConfig struct {
@@ -358,7 +357,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 
 		cluster.Status = models.ClusterCreationFailed
 		profile := vault.AwsProfile{Profile: credentials.Profile}
-		TerminateCluster(profile, cluster.ProjectId, companyId, ctx)
+		_ = TerminateCluster(cluster, profile, cluster.ProjectId, companyId, ctx)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
 		confError = UpdateEKSCluster(cluster, ctx)
 		if confError != nil {
