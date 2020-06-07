@@ -8,6 +8,7 @@ import (
 	"antelope/models/utils"
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"github.com/go-playground/validator/v10"
 	"strings"
 )
 
@@ -17,14 +18,13 @@ type EKSClusterController struct {
 }
 
 // @Title Get
-// @Description get cluster
+// @Description Get cluster against the projectId
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} eks.EKSCluster
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/ [get]
 func (c *EKSClusterController) Get() {
 	ctx := new(utils.Context)
@@ -38,10 +38,10 @@ func (c *EKSClusterController) Get() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -60,8 +60,13 @@ func (c *EKSClusterController) Get() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "View", token, utils.Context{})
 	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(statusCode)
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -77,9 +82,15 @@ func (c *EKSClusterController) Get() {
 
 	cluster, err := eks.GetEKSCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		ctx.SendLogs("EKSGetClusterController: error getting eks cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -91,19 +102,19 @@ func (c *EKSClusterController) Get() {
 
 // @Title Get All
 // @Description get all the clusters
-// @Param	token	header	string	token ""
+// @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []eks.EKSCluster
-// @Failure 400 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
 func (c *EKSClusterController) GetAll() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("EKSClusterController: GetAll clusters.", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -123,15 +134,26 @@ func (c *EKSClusterController) GetAll() {
 
 	statusCode, err, data := rbacAuthentication.GetAllAuthenticate("cluster", userInfo.CompanyId, token, models.EKS, *ctx)
 	if err != nil {
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		beego.Error(err.Error())
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
 	clusters, err := eks.GetAllEKSCluster(data, *ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
@@ -144,16 +166,16 @@ func (c *EKSClusterController) GetAll() {
 	c.ServeJSON()
 }
 
-// @Title Add
+// @Title Create
 // @Description add a new cluster
-// @Param	token	header	string	token ""
-// @Param	body	body 	eks.EKSCluster		true	"body for cluster content"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 409 {"error": "cluster against same project id already exists"}
-// @Failure 410 {"error": "Core limit exceeded"}
-// @Failure 500 {"error": "error msg"}
+// @Param	body body eks.EKSCluster true "body for cluster content"
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 400 {"msg": "Runtime Error"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Cluster against this project already exists"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *EKSClusterController) Post() {
 
@@ -161,20 +183,19 @@ func (c *EKSClusterController) Post() {
 
 	ctx := new(utils.Context)
 
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
-	err := eks.Validate(cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
+		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -193,7 +214,12 @@ func (c *EKSClusterController) Post() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", cluster.ProjectId, "Create", token, utils.Context{})
 	if err != nil {
-		beego.Error(err.Error())
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -209,8 +235,32 @@ func (c *EKSClusterController) Post() {
 	ctx.SendLogs("EKSClusterController: Post new cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	beego.Info("EKSClusterController: JSON Payload: ", cluster)
 
-	cluster.CompanyId = userInfo.CompanyId
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+	err = eks.ValidateEKSData(cluster, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 
+	cluster.CompanyId = userInfo.CompanyId
+	err = eks.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	err = eks.AddEKSCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -238,37 +288,79 @@ func (c *EKSClusterController) Post() {
 
 // @Title Update
 // @Description update an existing cluster
-// @Param	token	header	string	token ""
-// @Param	body	body 	eks.EKSCluster	true	"body for cluster content"
-// @Success 200 {"msg": "cluster updated successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 402 {"error": "error msg"}
-// @Failure 404 {"error": "no cluster exists with this name"}
-// @Failure 500 {"error": "error msg"}
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	body	body 	aks.AKSCluster	true	"Body for cluster content"
+// @Success 200 {"msg": "Cluster updated successfully"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *EKSClusterController) Patch() {
 	ctx := new(utils.Context)
 
 	var cluster eks.EKSCluster
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
-	err := eks.Validate(cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
+		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.ServeJSON()
+		return
+	}
+	if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("AKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterCreated) {
+		ctx.SendLogs("AKSClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("AKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(cluster)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	err = eks.ValidateEKSData(cluster, *ctx)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -283,7 +375,12 @@ func (c *EKSClusterController) Patch() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {
-		beego.Error(err.Error())
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -298,30 +395,12 @@ func (c *EKSClusterController) Patch() {
 	ctx.SendLogs("EKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("EKSClusterController: JSON Payload: ", cluster)
 
+	cluster.CompanyId = userInfo.CompanyId
 	err = eks.UpdateEKSCluster(cluster, *ctx)
 	if err != nil {
-		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		if strings.Contains(err.Error(), "does not exist") {
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
-			c.ServeJSON()
-			return
-		}
-		if strings.Contains(err.Error(), "Cluster is in running state") {
-			c.Ctx.Output.SetStatus(402)
-			c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
-			c.ServeJSON()
-			return
-		}
-		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
-		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
@@ -330,42 +409,42 @@ func (c *EKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-
 	ctx.SendLogs("EKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 	c.ServeJSON()
 }
 
 // @Title Delete
-// @Description delete a cluster
-// @Param	projectId	path	string	true	"project id of the cluster"
-// @Param	forceDelete path  boolean	true ""
-// @Param	token	header	string	token ""
-// @Success 200 {"msg": "cluster deleted successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
-// @Failure 500 {"error": "error msg"}
-// @router /:projectId/:forceDelete  [delete]
+// @Description Delete a cluster
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	projectId	path 	string	true	"Project id of the cluster"
+// @Param	forceDelete path    boolean	true    "Forcefully delete cluster"
+// @Success 204 {"msg": "Cluster deleted successfully"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 409 {"error": "Cluster is in Cluster Created/Creating/Terminating/Termination Failed state"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
+// @router /:projectId/:forceDelete [delete]
 func (c *EKSClusterController) Delete() {
 	ctx := new(utils.Context)
 
 	id := c.GetString(":projectId")
 	if id == "" {
-		ctx.SendLogs("EKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AKSClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
+
 	forceDelete, err := c.GetBool(":forceDelete")
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -373,9 +452,15 @@ func (c *EKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
-		beego.Error(err.Error())
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -387,7 +472,12 @@ func (c *EKSClusterController) Delete() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", id, "Delete", token, utils.Context{})
 	if err != nil {
-		beego.Error(err.Error())
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -404,31 +494,39 @@ func (c *EKSClusterController) Delete() {
 
 	cluster, err := eks.GetEKSCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	if strings.ToLower(cluster.Status) == string(models.ClusterCreated) && !forceDelete {
-		ctx.SendLogs("EKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": "Cluster is in running state"}
+	if strings.ToLower(string(cluster.Status)) == string(models.ClusterCreated) && !forceDelete {
+		ctx.SendLogs("AKSClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Deploying) && !forceDelete {
-		ctx.SendLogs("EKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	} else if cluster.Status == (models.Deploying) && !forceDelete {
+		ctx.SendLogs("AKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Terminating) && !forceDelete {
-		ctx.SendLogs("EKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
+	} else if cluster.Status == (models.Terminating) && !forceDelete {
+		ctx.SendLogs("AKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) && !forceDelete {
+		ctx.SendLogs("AKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster creation is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
@@ -448,15 +546,16 @@ func (c *EKSClusterController) Delete() {
 }
 
 // @Title Start
-// @Description starts a  cluster
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
-// @Param	token	header	string	token ""
+// @Description Deploy a kubernetes cluster
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	X-Profile-Id	header	string	true "Vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 500 {"error": "error msg"}
+// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 202 {"msg": "Cluster creation initiated"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /start/:projectId [post]
 func (c *EKSClusterController) StartCluster() {
 	ctx := new(utils.Context)
@@ -466,7 +565,7 @@ func (c *EKSClusterController) StartCluster() {
 	if profileId == "" {
 		ctx.SendLogs("EKSClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -480,10 +579,10 @@ func (c *EKSClusterController) StartCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -501,7 +600,12 @@ func (c *EKSClusterController) StartCluster() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
-		beego.Error(err.Error())
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -526,7 +630,7 @@ func (c *EKSClusterController) StartCluster() {
 	if err != nil {
 		ctx.SendLogs("EKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -535,64 +639,70 @@ func (c *EKSClusterController) StartCluster() {
 
 	cluster, err := eks.GetEKSCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("EKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
-	if cluster.Status == "Cluster Created" {
-		ctx.SendLogs("EKSClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+	if cluster.Status == models.ClusterCreated {
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is already in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
-
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("EKSClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
-		c.ServeJSON()
-		return
-	}
-
-	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("EKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
-
-	cluster.Status = string(models.Deploying)
-	err = eks.UpdateEKSCluster(cluster, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	/*	cluster.Status = string(models.Deploying)
+		err = eks.UpdateEKSCluster(cluster, *ctx)
+		if err != nil {
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}*/
 	ctx.SendLogs("EKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	go eks.DeployEKSCluster(cluster, awsProfile, userInfo.CompanyId, token, *ctx)
 
 	ctx.SendLogs(" EKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Ctx.Output.SetStatus(202)
 	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
 	c.ServeJSON()
 }
 
 // @Title Terminate
-// @Description terminates a  cluster
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Description Terminate a running cluster
+// @Param	X-Profile-Id header	X-Profile-Id	string	true "Vault credentials profile Id"
+// @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Param	token	header	string	token ""
-// @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
-// @Failure 400 {"error": "error_msg"}
-// @Failure 404 {"error": "error_msg"}
-// @Failure 500 {"error": "error msg"}
+// @Success 202 {"msg": "Cluster termination initiated"}
+// @Success 204 {"msg": "Cluster terminated successfully"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating state"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /terminate/:projectId/ [post]
 func (c *EKSClusterController) TerminateCluster() {
 	ctx := new(utils.Context)
@@ -616,10 +726,10 @@ func (c *EKSClusterController) TerminateCluster() {
 		return
 	}
 
-	token := c.Ctx.Input.Header("token")
+	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -638,7 +748,12 @@ func (c *EKSClusterController) TerminateCluster() {
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.EKS, "cluster", projectId, "Terminate", token, utils.Context{})
 	if err != nil {
-		beego.Error(err.Error())
+		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
+			c.Ctx.Output.SetStatus(statusCode)
+			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -661,9 +776,8 @@ func (c *EKSClusterController) TerminateCluster() {
 
 	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
 	if err != nil {
-		ctx.SendLogs("EKSClusterController : Unable to get profile", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -672,39 +786,52 @@ func (c *EKSClusterController) TerminateCluster() {
 
 	cluster, err := eks.GetEKSCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("EKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("EKSClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	if string(cluster.Status) == strings.ToLower(string(models.New)) {
+		ctx.SendLogs("IKSClusterController: Cluster is not in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is not in created state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("IKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("IKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminated) {
+		ctx.SendLogs("IKSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterCreationFailed) {
+		ctx.SendLogs("IKSClusterController: Cluster  creation is in failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster  creation is in failed state"}
 		c.ServeJSON()
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("EKSClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
+	go eks.TerminateCluster(cluster, awsProfile, projectId, userInfo.CompanyId, *ctx)
 
-	go eks.TerminateCluster(awsProfile, projectId, userInfo.CompanyId, *ctx)
-
-	err = eks.UpdateEKSCluster(cluster, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs(" EKS cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}
 	c.ServeJSON()
 }
