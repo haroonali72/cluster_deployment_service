@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
-	"github.com/signalsciences/ipv4"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -29,7 +28,7 @@ type EKSCluster struct {
 	EncryptionConfig   *EncryptionConfig `json:"encryption_config,omitempty" bson:"encryption_config,omitempty" description:"Encryption Configurations [optional]"`
 	Logging            Logging           `json:"logging" bson:"logging" description:"Logging Configurations [optional]"`
 	Name               string            `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	ResourcesVpcConfig VpcConfigRequest  `json:"resources_vpc_config" bson:"resources_vpc_config"`
+	ResourcesVpcConfig VpcConfigRequest  `json:"resources_vpc_config" bson:"resources_vpc_config" description:"Access Level Details [optional]`
 	RoleArn            *string           `json:"-" bson:"role_arn"`
 	RoleName           *string           `json:"-" bson:"role_name"`
 	//Tags               map[string]*string `json:"tags,omitempty" bson:"tags,omitempty"`
@@ -468,133 +467,41 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 
 		return errors.New("project ID is empty")
 
-	} else if cluster.ResourceGoup == "" {
+	} else if cluster.Version == nil {
 
-		return errors.New("Resource group name must is empty")
-
-	} else if cluster.Location == "" {
-
-		return errors.New("location is empty")
-
-	} else {
-
-		isRegionExist, err := validateAKSRegion(cluster.Location)
-		if err != nil && !isRegionExist {
-			text := "availabe locations are " + err.Error()
-			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New(text)
-		}
+		return errors.New("kubernetes version is empty")
 
 	}
+	for _, pool := range cluster.NodePools {
 
-	if len(cluster.AgentPoolProfiles) == 0 {
+		if pool.Name != nil && *pool.Name == "" {
 
-		return errors.New("length of node pools must be greater than zero")
+			return errors.New("Node Pool name is empty")
 
-	} else if cluster.IsAdvanced {
+		} else if pool.VMSize != nil && *pool.VMSize == "" {
 
-		if cluster.KubernetesVersion == "" {
+			return errors.New("machine type with pool " + *pool.Name + " is empty")
 
-			return errors.New("kubernetes version is empty")
+		} else if pool.Count != nil && *pool.Count == 0 {
 
-		} else if cluster.DNSPrefix == "" {
+			return errors.New("node count value is zero within pool " + *pool.Name)
 
-			return errors.New("DNS prefix is empty")
+		} else if pool.OsDiskSizeGB != nil && (*pool.OsDiskSizeGB == 0 || *pool.OsDiskSizeGB < 40 || *pool.OsDiskSizeGB > 2048) {
 
-		} else if cluster.IsServicePrincipal {
+			return errors.New("Disk size must be greater than 40 and less than 2048 within pool " + *pool.Name)
 
-			if cluster.ClientID == "" || cluster.Secret == "" {
+		} else if pool.MaxPods != nil && (*pool.MaxPods == 0 || *pool.MaxPods < 40) {
 
-				return errors.New("client id or secret is empty")
+			return errors.New("max pods must be greater than or equal to 40 within pool " + *pool.Name)
 
-			}
-		}
+		} else if pool.EnableAutoScaling != nil && *pool.EnableAutoScaling {
 
-		for _, pool := range cluster.AgentPoolProfiles {
-
-			if pool.Name != nil && *pool.Name == "" {
-
-				return errors.New("Node Pool name is empty")
-
-			} else if pool.VMSize != nil && *pool.VMSize == "" {
-
-				return errors.New("machine type with pool " + *pool.Name + " is empty")
-
-			} else if pool.Count != nil && *pool.Count == 0 {
-
-				return errors.New("node count value is zero within pool " + *pool.Name)
-
-			} else if pool.OsDiskSizeGB != nil && (*pool.OsDiskSizeGB == 0 || *pool.OsDiskSizeGB < 40 || *pool.OsDiskSizeGB > 2048) {
-
-				return errors.New("Disk size must be greater than 40 and less than 2048 within pool " + *pool.Name)
-
-			} else if pool.MaxPods != nil && (*pool.MaxPods == 0 || *pool.MaxPods < 40) {
-
-				return errors.New("max pods must be greater than or equal to 40 within pool " + *pool.Name)
-
-			} else if pool.EnableAutoScaling != nil && *pool.EnableAutoScaling {
-
-				if *pool.MinCount > *pool.MaxCount {
-					return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
-				}
-
-			}
-
-		}
-	}
-
-	if cluster.IsExpert {
-		if cluster.PodCidr == "" {
-
-			return errors.New("pod CIDR must not be empty")
-
-		} else {
-
-			isValidCidr := ipv4.IsIPv4(cluster.PodCidr)
-			if !isValidCidr {
-				return errors.New("pod CIDR is not valid")
+			if *pool.MinCount > *pool.MaxCount {
+				return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
 			}
 
 		}
 
-		if cluster.DNSServiceIP == "" {
-
-			return errors.New("DNS service IP must not be empty")
-
-		} else {
-
-			isValidIp := ipv4.IsIPv4(cluster.DNSServiceIP)
-			if !isValidIp {
-				return errors.New("DNS service IP is not valid")
-			}
-
-		}
-
-		if cluster.DockerBridgeCidr == "" {
-
-			return errors.New("Docker Bridge CIDR must not be empty")
-
-		} else {
-
-			isValidCidr := ipv4.IsIPv4(cluster.DockerBridgeCidr)
-			if !isValidCidr {
-				return errors.New("docker bridge CIDR is not valid")
-			}
-
-		}
-
-		if cluster.ServiceCidr == "" {
-
-			return errors.New("Service CIDR must not be empty")
-
-		} else {
-
-			isValidCidr := ipv4.IsIPv4(cluster.ServiceCidr)
-			if !isValidCidr {
-				return errors.New("service CIDR is not valid")
-			}
-
-		}
 	}
 
 	return nil
