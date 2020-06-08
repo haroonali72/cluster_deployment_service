@@ -835,3 +835,36 @@ func (c *EKSClusterController) TerminateCluster() {
 	c.Data["json"] = map[string]string{"msg": "Cluster termination initiated"}
 	c.ServeJSON()
 }
+
+// @Title Get
+// @Description Get Kubernetes Cluster
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Success 200 {object} []string
+// @Failure 404 {"error": "Not Found"}
+// @router /:projectId/ [get]
+func (c *EKSClusterController) GetkubeVersions() {
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("X-Auth-Token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
+
+	versions := eks.KubeVersions(*ctx)
+	c.Data["json"] = versions
+	c.ServeJSON()
+}

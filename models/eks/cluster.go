@@ -94,6 +94,13 @@ type NodePoolScalingConfig struct {
 	MinSize     *int64 `json:"min_size" bson:"min_size"`
 }
 
+func KubeVersions(ctx utils.Context) []string {
+	var kubeVersions []string
+	kubeVersions = append(kubeVersions, "1.14")
+	kubeVersions = append(kubeVersions, "1.15")
+	kubeVersions = append(kubeVersions, "1.16")
+	return kubeVersions
+}
 func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (cluster EKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
