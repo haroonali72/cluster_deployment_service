@@ -186,7 +186,7 @@ func DeleteCluster(projectId, companyId string, ctx utils.Context, token string)
 	}
 	defer session.Close()
 	for _, pool := range oldCluster.NodePools {
-		err := vault.DeleteSSHkey(string(models.OP), pool.KeyInfo.KeyName, token, ctx, "")
+		err := vault.DeleteSSHkey(string(models.OP), pool.Name, token, ctx, "")
 		if err != nil {
 			ctx.SendLogs("Cluster model: Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
