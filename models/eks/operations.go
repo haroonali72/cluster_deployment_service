@@ -240,6 +240,13 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, sgs []*str
 	)
 	/**/
 
+	if *nodePool.AmiType == "Amazon Linux 2 GPU Enabled" {
+		t := "AL2_x86_64_GPU"
+		nodePool.AmiType = &t
+	} else {
+		t := "AL2_x86_64"
+		nodePool.AmiType = &t
+	}
 	//generate cluster create request
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
@@ -642,4 +649,12 @@ func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 		Region:    credentials.Region,
 		ProjectId: projectId,
 	}
+}
+
+func (cloud *EKS) getInstances(keyName *string) error {
+	_, err := eks.m(&ec2.DeleteKeyPairInput{
+		KeyName: keyName,
+	})
+
+	return err
 }

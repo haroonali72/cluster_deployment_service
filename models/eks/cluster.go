@@ -10,29 +10,28 @@ import (
 	"antelope/models/vault"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
 type EKSCluster struct {
-	ID                 bson.ObjectId     `json:"-" bson:"_id,omitempty"`
-	ProjectId          string            `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud              models.Cloud      `json:"cloud" bson:"cloud" validate:"eq=EKS|eq=eks"`
-	CreationDate       time.Time         `json:"-" bson:"creation_date"`
-	ModificationDate   time.Time         `json:"-" bson:"modification_date"`
-	NodePools          []*NodePool       `json:"node_pools" bson:"node_pools" validate:"required,dive"`
-	Status             models.Type       `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
-	CompanyId          string            `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	OutputArn          *string           `json:"-" bson:"output_arn,omitempty"`
-	EncryptionConfig   *EncryptionConfig `json:"encryption_config,omitempty" bson:"encryption_config,omitempty" description:"Encryption Configurations [optional]"`
-	Logging            Logging           `json:"logging" bson:"logging" description:"Logging Configurations [optional]"`
-	Name               string            `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
-	ResourcesVpcConfig VpcConfigRequest  `json:"resources_vpc_config" bson:"resources_vpc_config" description:"Access Level Details [optional]`
-	RoleArn            *string           `json:"-" bson:"role_arn"`
-	RoleName           *string           `json:"-" bson:"role_name"`
-	//Tags               map[string]*string `json:"tags,omitempty" bson:"tags,omitempty"`
-	Version *string `json:"version,omitempty" bson:"version,omitempty" description:"Kubernetes Version [required]`
+	ID                 bson.ObjectId      `json:"-" bson:"_id,omitempty"`
+	ProjectId          string             `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
+	Cloud              models.Cloud       `json:"cloud" bson:"cloud" validate:"eq=EKS|eq=eks"`
+	CreationDate       time.Time          `json:"-" bson:"creation_date"`
+	ModificationDate   time.Time          `json:"-" bson:"modification_date"`
+	NodePools          []*NodePool        `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	Status             models.Type        `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
+	CompanyId          string             `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
+	OutputArn          *string            `json:"-" bson:"output_arn,omitempty"`
+	EncryptionConfig   *EncryptionConfig  `json:"encryption_config,omitempty" bson:"encryption_config,omitempty" description:"Encryption Configurations [optional]"`
+	Logging            Logging            `json:"logging" bson:"logging" description:"Logging Configurations [optional]"`
+	Name               string             `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
+	ResourcesVpcConfig VpcConfigRequest   `json:"resources_vpc_config" bson:"resources_vpc_config" description:"Access Level Details [optional]`
+	RoleArn            *string            `json:"-" bson:"role_arn"`
+	RoleName           *string            `json:"-" bson:"role_name"`
+	Tags               map[string]*string `json:"-" bson:"tags,omitempty"`
+	Version            *string            `json:"version,omitempty" bson:"version,omitempty" description:"Kubernetes Version [required]`
 }
 
 type EncryptionConfig struct {
@@ -68,22 +67,22 @@ type VpcConfigRequest struct {
 }
 
 type NodePool struct {
-	OutputArn    *string `json:"-" bson:"output_arn,omitempty"`
-	AmiType      *string `json:"ami_type,omitempty" bson:"ami_type,omitempty"`
-	DiskSize     *int64  `json:"disk_size,omitempty" bson:"disk_size,omitempty"`
-	InstanceType *string `json:"instance_type,omitempty" bson:"instance_type,omitempty"`
-	//Labels        map[string]*string     `json:"labels,omitempty" bson:"labels,omitempty"`
+	OutputArn     *string                `json:"-" bson:"output_arn,omitempty"`
+	AmiType       *string                `json:"ami_type,omitempty" bson:"ami_type" validate:"required" description:"AMI for nodepool [required]"`
+	DiskSize      *int64                 `json:"disk_size,omitempty" bson:"disk_size,omitempty" description:"Size of disk for nodes in nodepool [optional]"`
+	InstanceType  *string                `json:"instance_type,omitempty" bson:"instance_type" validate:"required" description:"Instance type for nodes [required]"`
+	Labels        map[string]*string     `json:"-" bson:"labels,omitempty"`
 	NodeRole      *string                `json:"-" bson:"node_role"`
 	RoleName      *string                `json:"-" bson:"role_name"`
-	NodePoolName  string                 `json:"node_pool_name" bson:"node_pool_name" description:"Node Pool Name [required]`
-	RemoteAccess  *RemoteAccessConfig    `json:"remote_access,omitempty" bson:"remote_access,omitempty"`
-	ScalingConfig *NodePoolScalingConfig `json:"scaling_config,omitempty" bson:"scaling_config,omitempty"`
+	NodePoolName  string                 `json:"node_pool_name" bson:"node_pool_name" validate:"required" description:"Node Pool Name [required]"`
+	RemoteAccess  *RemoteAccessConfig    `json:"remote_access,omitempty" bson:"remote_access,omitempty" description:"Access Levels (private of public)[optional]"`
+	ScalingConfig *NodePoolScalingConfig `json:"scaling_config,omitempty" bson:"scaling_config,omitempty" description:"Scaling Configurations for nodepool [optional]"`
 	Subnets       []*string              `json:"-" bson:"subnets"`
-	//Tags          map[string]*string     `json:"tags" bson:"tags"`
+	Tags          map[string]*string     `json:"-" bson:"tags"`
 }
 
 type RemoteAccessConfig struct {
-	EnableRemoteAccess   bool      `json:"enable_remote_access" bson:"enable_remote_access"`
+	EnableRemoteAccess   bool      `json:"enable_remote_access" bson:"enable_remote_access" description:"Enable Remote Access [optional]"`
 	Ec2SshKey            *string   `json:"-" bson:"ec2_ssh_key"`
 	SourceSecurityGroups []*string `json:"-" bson:"source_security_groups"`
 }
@@ -100,6 +99,69 @@ func KubeVersions(ctx utils.Context) []string {
 	kubeVersions = append(kubeVersions, "1.15")
 	kubeVersions = append(kubeVersions, "1.16")
 	return kubeVersions
+}
+func GetAMIS(ctx utils.Context) []string {
+	var amis []string
+	amis = append(amis, "Amazon Linux 2")
+	amis = append(amis, "Amazon Linux 2 GPU Enabled")
+	return amis
+}
+func GetInstances(ctx utils.Context) map[string][]string {
+	var instances map[string][]string
+	var list []string
+	list = append(list, "t3.micro")
+	list = append(list, "t3.small")
+	list = append(list, "t3.medium")
+	list = append(list, "t3.large")
+	list = append(list, "t3.xlarge")
+	list = append(list, "t3.2xlarge")
+	list = append(list, "t3a.micro")
+	list = append(list, "t3a.small")
+	list = append(list, "t3a.medium")
+	list = append(list, "t3a.large")
+	list = append(list, "t3a.xlarge")
+	list = append(list, "t3a.2xlarge")
+	list = append(list, "m5.large")
+	list = append(list, "m5.xlarge")
+	list = append(list, "m5.2xlarge")
+	list = append(list, "m5.4xlarge")
+	list = append(list, "m5.8xlarge")
+	list = append(list, "m5.12xlarge")
+	list = append(list, "m5a.large")
+	list = append(list, "m5a.xlarge")
+	list = append(list, "m5a.2xlarge")
+	list = append(list, "m5a.4xlarge")
+	list = append(list, "c5.large")
+	list = append(list, "c5.xlarge")
+	list = append(list, "c5.2xlarge")
+	list = append(list, "c5.4xlarge")
+	list = append(list, "c5.9xlarge")
+	list = append(list, "r5.large")
+	list = append(list, "r5.xlarge")
+	list = append(list, "r5.2xlarge")
+	list = append(list, "r5.4xlarge")
+	list = append(list, "r5a.large")
+	list = append(list, "r5a.xlarge")
+	list = append(list, "r5a.2xlarge")
+	list = append(list, "r5a.4xlarge")
+	instances["Amazon Linux 2"] = list
+
+	var list2 []string
+	list2 = append(list2, "g4dn.xlarge")
+	list2 = append(list2, "g4dn.2xlarge")
+	list2 = append(list2, "g4dn.4xlarge")
+	list2 = append(list2, "g4dn.8xlarge")
+	list2 = append(list2, "g4dn.12xlarge")
+	list2 = append(list2, "p2.xlarge")
+	list2 = append(list2, "p2.8xlarge")
+	list2 = append(list2, "p2.16xlarge")
+	list2 = append(list2, "p3.2xlarge")
+	list2 = append(list2, "p3.8xlarge")
+	list2 = append(list2, "p3.16xlarge")
+	list2 = append(list2, "p3dn.24xlarge")
+	instances["Amazon Linux 2 GPU Enabled"] = list2
+	return instances
+
 }
 func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (cluster EKSCluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
@@ -462,13 +524,6 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, projectI
 	return types.CustomCPError{}
 }
 
-func PrintError(confError error, name, projectId string, companyId string) {
-	if confError != nil {
-		beego.Error(confError.Error())
-		_, _ = utils.SendLog(companyId, "Cluster creation failed : "+name, "error", projectId)
-		_, _ = utils.SendLog(companyId, confError.Error(), "error", projectId)
-	}
-}
 func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 	if cluster.ProjectId == "" {
 
@@ -481,34 +536,23 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 	}
 	for _, pool := range cluster.NodePools {
 
-		if pool.Name != nil && *pool.Name == "" {
+		if pool.NodePoolName == "" {
 
 			return errors.New("Node Pool name is empty")
 
-		} else if pool.VMSize != nil && *pool.VMSize == "" {
+		} else if pool.AmiType != nil && *pool.AmiType == "" {
 
-			return errors.New("machine type with pool " + *pool.Name + " is empty")
+			return errors.New("Ami Type is empty")
 
-		} else if pool.Count != nil && *pool.Count == 0 {
+		} else if (pool.AmiType != nil) && (*pool.AmiType != "Amazon Linux 2" && *pool.AmiType != "Amazon Linux 2 GPU Enabled") {
 
-			return errors.New("node count value is zero within pool " + *pool.Name)
+			return errors.New("Ami Type is incorrect")
 
-		} else if pool.OsDiskSizeGB != nil && (*pool.OsDiskSizeGB == 0 || *pool.OsDiskSizeGB < 40 || *pool.OsDiskSizeGB > 2048) {
+		} else if pool.InstanceType != nil && *pool.InstanceType == "" {
 
-			return errors.New("Disk size must be greater than 40 and less than 2048 within pool " + *pool.Name)
-
-		} else if pool.MaxPods != nil && (*pool.MaxPods == 0 || *pool.MaxPods < 40) {
-
-			return errors.New("max pods must be greater than or equal to 40 within pool " + *pool.Name)
-
-		} else if pool.EnableAutoScaling != nil && *pool.EnableAutoScaling {
-
-			if *pool.MinCount > *pool.MaxCount {
-				return errors.New("min count should be less than or equal to max count within pool " + *pool.Name)
-			}
+			return errors.New("Ami Type is empty")
 
 		}
-
 	}
 
 	return nil
