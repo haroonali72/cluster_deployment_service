@@ -424,7 +424,119 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 
 	return types.CustomCPError{}
 }
+func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) types.CustomCPError {
+	if eksCluster == nil {
+		return types.CustomCPError{}
+	}
 
+	if cloud.Svc == nil {
+		cloud.init()
+	}
+
+	//try deleting all node groups first
+	for _, nodePool := range eksCluster.NodePools {
+		if eksCluster.OutputArn != nil && *eksCluster.OutputArn != "" {
+			err := cloud.deleteNodePool(eksCluster.Name, nodePool.NodePoolName)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete node group for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
+			//delete extra resources
+			err = cloud.deleteIAMRole(nodePool.RoleName)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
+			if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
+				err = cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
+				if err != nil {
+					ctx.SendLogs(
+						"EKS delete SSH key for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+						models.LOGGING_LEVEL_ERROR,
+						models.Backend_Logging,
+					)
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+					return cpErr
+				}
+				nodePool.RemoteAccess.Ec2SshKey = nil
+			}
+			nodePool.RoleName = nil
+			nodePool.NodeRole = nil
+			nodePool.OutputArn = nil
+		}
+	}
+	/**/
+
+	//try deleting cluster
+	if eksCluster.OutputArn != nil && *eksCluster.OutputArn != "" {
+		_, err := cloud.Svc.DeleteCluster(&eks.DeleteClusterInput{Name: aws.String(eksCluster.Name)})
+		if err != nil {
+			ctx.SendLogs(
+				"EKS delete cluster for '"+eksCluster.Name+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+			return cpErr
+		}
+		/**/
+
+		//delete extra resources
+		err = cloud.deleteIAMRole(eksCluster.RoleName)
+		if err != nil {
+			ctx.SendLogs(
+				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+			return cpErr
+		}
+		if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
+			if eksCluster.EncryptionConfig.Provider != nil {
+				err = cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
+				if err != nil {
+					ctx.SendLogs(
+						"EKS scheduling KMS key deletion for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
+						models.LOGGING_LEVEL_ERROR,
+						models.Backend_Logging,
+					)
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+					cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+					return cpErr
+				}
+			}
+		}
+		/**/
+
+		eksCluster.RoleName = nil
+		eksCluster.RoleArn = nil
+		eksCluster.OutputArn = nil
+	}
+
+	return types.CustomCPError{}
+}
 func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*string, error) {
 	url := getNetworkHost(string(models.AWS), cloud.ProjectId)
 	awsNetwork := types.AWSNetwork{}
@@ -649,12 +761,4 @@ func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 		Region:    credentials.Region,
 		ProjectId: projectId,
 	}
-}
-
-func (cloud *EKS) getInstances(keyName *string) error {
-	_, err := eks.m(&ec2.DeleteKeyPairInput{
-		KeyName: keyName,
-	})
-
-	return err
 }

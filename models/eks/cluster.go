@@ -392,7 +392,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 
 		if cluster.OutputArn != nil {
 
-			eksOps.DeleteCluster(&cluster, ctx)
+			eksOps.CleanUpCluster(&cluster, ctx)
 
 		}
 		cluster.Status = models.ClusterCreationFailed

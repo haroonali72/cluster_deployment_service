@@ -48,7 +48,6 @@ type NodePool struct {
 	MinNodes         int           `json:"min_node_count,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
 	MaxNodes         int           `json:"max_node_count,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 }
-
 type Project struct {
 	ProjectData Data `json:"data"`
 }
