@@ -63,6 +63,15 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
+            Method: "Delete",
+            Router: `/delete/:projectId/:forceDelete`,
+            AllowHTTPMethods: []string{"delete"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
+        beego.ControllerComments{
             Method: "EnableAutoScaling",
             Router: `/enablescaling/:projectId/`,
             AllowHTTPMethods: []string{"post"},
@@ -156,15 +165,6 @@ func init() {
             Method: "ValidateProfile",
             Router: `/validateProfile/`,
             AllowHTTPMethods: []string{"post"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
-        beego.ControllerComments{
-            Method: "Delete",
-            Router: `delete/:projectId/:forceDelete`,
-            AllowHTTPMethods: []string{"delete"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

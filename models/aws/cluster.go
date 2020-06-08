@@ -79,7 +79,7 @@ type Volume struct {
 	VolumeType          string `json:"volume_type" bson:"volume_type" valid:"required" description:"Type of the volume.Valid values are General Purpose SSD,IOPS SSD,Magnetic volumes[required]"`
 	VolumeSize          int64  `json:"volume_size" bson:"volume_size" valid:"required" description:"Size of the volume [required]"`
 	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination" description:"Select if volume should terminate on deletion [optional]"`
-	Iops                int64  `json:"iops" bson:"iops" valid:"required" description:"IOPS of volume [required]"`
+	Iops                int64  `json:"iops" bson:"iops" description:"IOPS of volume [required] when volume is io1"`
 }
 type Project struct {
 	ProjectData Data `json:"data" description:"Project data of the cluster [optional]"`
