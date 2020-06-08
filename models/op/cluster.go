@@ -114,7 +114,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams s
 	**/
 	for index, pool := range cluster.NodePools {
 
-		_, err := vault.PostSSHKey(pool.KeyInfo, pool.KeyInfo.KeyName, models.OP, ctx, token, teams, "")
+		_, err := vault.PostSSHKey(pool.KeyInfo, pool.Name, models.OP, ctx, token, teams, "")
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
