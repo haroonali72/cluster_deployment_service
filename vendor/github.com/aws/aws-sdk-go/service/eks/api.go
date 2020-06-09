@@ -452,8 +452,7 @@ func (c *EKS) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 // in the Amazon EKS User Guide.
 //
 // If you have managed node groups or Fargate profiles attached to the cluster,
-// you must delete them first. For more information, see DeleteNodegroup and
-// DeleteFargateProfile.
+// you must delete them first. For more information, see DeleteNodegroup andDeleteFargateProfile.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1444,9 +1443,8 @@ func (c *EKS) ListNodegroupsRequest(input *ListNodegroupsInput) (req *request.Re
 
 // ListNodegroups API operation for Amazon Elastic Kubernetes Service.
 //
-// Lists the Amazon EKS managed node groups associated with the specified cluster
-// in your AWS account in the specified Region. Self-managed node groups are
-// not listed.
+// Lists the Amazon EKS node groups associated with the specified cluster in
+// your AWS account in the specified Region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2451,8 +2449,8 @@ func (s *AutoScalingGroup) SetName(v string) *AutoScalingGroup {
 // This exception is thrown if the request contains a semantic error. The precise
 // meaning will depend on the API, and will be documented in the error message.
 type BadRequestException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -2469,7 +2467,7 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -2497,12 +2495,12 @@ func (s BadRequestException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s BadRequestException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s BadRequestException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // An object representing the certificate-authority-data for your cluster.
@@ -2535,8 +2533,8 @@ func (s *Certificate) SetData(v string) *Certificate {
 // an action or resource on behalf of a user that doesn't have permissions to
 // use the action or resource or specifying an identifier that is not valid.
 type ClientException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -2559,7 +2557,7 @@ func (s ClientException) GoString() string {
 
 func newErrorClientException(v protocol.ResponseMetadata) error {
 	return &ClientException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -2587,12 +2585,12 @@ func (s ClientException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s ClientException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s ClientException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // An object representing an Amazon EKS cluster.
@@ -3094,13 +3092,12 @@ type CreateNodegroupInput struct {
 	// are created.
 	Labels map[string]*string `locationName:"labels" type:"map"`
 
-	// The Amazon Resource Name (ARN) of the IAM role to associate with your node
-	// group. The Amazon EKS worker node kubelet daemon makes calls to AWS APIs
-	// on your behalf. Worker nodes receive permissions for these API calls through
-	// an IAM instance profile and associated policies. Before you can launch worker
-	// nodes and register them into a cluster, you must create an IAM role for those
-	// worker nodes to use when they are launched. For more information, see Amazon
-	// EKS Worker Node IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
+	// The IAM role associated with your node group. The Amazon EKS worker node
+	// kubelet daemon makes calls to AWS APIs on your behalf. Worker nodes receive
+	// permissions for these API calls through an IAM instance profile and associated
+	// policies. Before you can launch worker nodes and register them into a cluster,
+	// you must create an IAM role for those worker nodes to use when they are launched.
+	// For more information, see Amazon EKS Worker Node IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
 	// in the Amazon EKS User Guide .
 	//
 	// NodeRole is a required field
@@ -4098,8 +4095,8 @@ func (s *Identity) SetOidc(v *OIDC) *Identity {
 // The specified parameter is invalid. Review the available parameters for the
 // API request.
 type InvalidParameterException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -4125,7 +4122,7 @@ func (s InvalidParameterException) GoString() string {
 
 func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -4153,19 +4150,19 @@ func (s InvalidParameterException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s InvalidParameterException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s InvalidParameterException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // The request is invalid given the state of the cluster. Check the state of
 // the cluster and the associated operations.
 type InvalidRequestException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -4188,7 +4185,7 @@ func (s InvalidRequestException) GoString() string {
 
 func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidRequestException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -4216,12 +4213,12 @@ func (s InvalidRequestException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s InvalidRequestException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s InvalidRequestException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // An object representing an issue with an Amazon EKS resource.
@@ -5200,8 +5197,8 @@ func (s *NodegroupScalingConfig) SetMinSize(v int64) *NodegroupScalingConfig {
 // A service resource associated with the request could not be found. Clients
 // should not retry such requests.
 type NotFoundException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5218,7 +5215,7 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -5246,12 +5243,12 @@ func (s NotFoundException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s NotFoundException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s NotFoundException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // An object representing the OpenID Connect (https://openid.net/connect/) identity
@@ -5353,8 +5350,8 @@ func (s *RemoteAccessConfig) SetSourceSecurityGroups(v []*string) *RemoteAccessC
 
 // The specified resource is in use.
 type ResourceInUseException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5377,7 +5374,7 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -5405,18 +5402,18 @@ func (s ResourceInUseException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s ResourceInUseException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s ResourceInUseException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // You have encountered a service limit on the specified resource.
 type ResourceLimitExceededException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5439,7 +5436,7 @@ func (s ResourceLimitExceededException) GoString() string {
 
 func newErrorResourceLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ResourceLimitExceededException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -5467,20 +5464,20 @@ func (s ResourceLimitExceededException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s ResourceLimitExceededException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s ResourceLimitExceededException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // The specified resource could not be found. You can view your available clusters
 // with ListClusters. You can view your available managed node groups with ListNodegroups.
 // Amazon EKS clusters and node groups are Region-specific.
 type ResourceNotFoundException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5506,7 +5503,7 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -5534,18 +5531,18 @@ func (s ResourceNotFoundException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s ResourceNotFoundException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s ResourceNotFoundException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // These errors are usually caused by a server-side issue.
 type ServerException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5568,7 +5565,7 @@ func (s ServerException) GoString() string {
 
 func newErrorServerException(v protocol.ResponseMetadata) error {
 	return &ServerException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -5596,18 +5593,18 @@ func (s ServerException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s ServerException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s ServerException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 // The service is unavailable. Back off and retry the operation.
 type ServiceUnavailableException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5624,7 +5621,7 @@ func (s ServiceUnavailableException) GoString() string {
 
 func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -5652,12 +5649,12 @@ func (s ServiceUnavailableException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s ServiceUnavailableException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s ServiceUnavailableException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 type TagResourceInput struct {
@@ -5738,8 +5735,8 @@ func (s TagResourceOutput) GoString() string {
 // Availability Zones for your account, from which you can choose subnets for
 // your cluster.
 type UnsupportedAvailabilityZoneException struct {
-	_            struct{}                  `type:"structure"`
-	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5766,7 +5763,7 @@ func (s UnsupportedAvailabilityZoneException) GoString() string {
 
 func newErrorUnsupportedAvailabilityZoneException(v protocol.ResponseMetadata) error {
 	return &UnsupportedAvailabilityZoneException{
-		RespMetadata: v,
+		respMetadata: v,
 	}
 }
 
@@ -5794,12 +5791,12 @@ func (s UnsupportedAvailabilityZoneException) Error() string {
 
 // Status code returns the HTTP status code for the request's response error.
 func (s UnsupportedAvailabilityZoneException) StatusCode() int {
-	return s.RespMetadata.StatusCode
+	return s.respMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
 func (s UnsupportedAvailabilityZoneException) RequestID() string {
-	return s.RespMetadata.RequestID
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -6745,20 +6742,11 @@ const (
 	// NodegroupIssueCodeEc2subnetNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeEc2subnetNotFound = "Ec2SubnetNotFound"
 
-	// NodegroupIssueCodeEc2subnetInvalidConfiguration is a NodegroupIssueCode enum value
-	NodegroupIssueCodeEc2subnetInvalidConfiguration = "Ec2SubnetInvalidConfiguration"
-
 	// NodegroupIssueCodeIamInstanceProfileNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeIamInstanceProfileNotFound = "IamInstanceProfileNotFound"
 
-	// NodegroupIssueCodeIamLimitExceeded is a NodegroupIssueCode enum value
-	NodegroupIssueCodeIamLimitExceeded = "IamLimitExceeded"
-
 	// NodegroupIssueCodeIamNodeRoleNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeIamNodeRoleNotFound = "IamNodeRoleNotFound"
-
-	// NodegroupIssueCodeNodeCreationFailure is a NodegroupIssueCode enum value
-	NodegroupIssueCodeNodeCreationFailure = "NodeCreationFailure"
 
 	// NodegroupIssueCodeAsgInstanceLaunchFailures is a NodegroupIssueCode enum value
 	NodegroupIssueCodeAsgInstanceLaunchFailures = "AsgInstanceLaunchFailures"

@@ -36,6 +36,33 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
         beego.ControllerComments{
+            Method: "GetkubeVersions",
+            Router: `/:projectId/`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
+            Method: "GetAMI",
+            Router: `/:projectId/`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
+            Method: "GetInstances",
+            Router: `/:projectId/`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
             Method: "Delete",
             Router: `/:projectId/:forceDelete`,
             AllowHTTPMethods: []string{"delete"},
@@ -57,6 +84,15 @@ func init() {
             Method: "StartCluster",
             Router: `/start/:projectId`,
             AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
+            Method: "GetStatus",
+            Router: `/status/:projectId/`,
+            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
