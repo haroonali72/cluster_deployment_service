@@ -703,7 +703,6 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	client := utils.InitReq()
 
 	res, err := client.SendRequest(req)
-
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
