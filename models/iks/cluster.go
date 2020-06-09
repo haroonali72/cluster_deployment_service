@@ -351,7 +351,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 
 	return types.CustomCPError{}
 }
-func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Context, companyId string, token string) (KubeClusterStatus1, types.CustomCPError) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (KubeClusterStatus1, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {

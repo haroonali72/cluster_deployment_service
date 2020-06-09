@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 	"time"
 )
 
@@ -556,4 +557,74 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 	}
 
 	return nil
+}
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (KubeClusterStatus1, types.CustomCPError) {
+
+	cluster, err := GetCluster(projectId, companyId, ctx)
+	if err != nil {
+		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
+		return KubeClusterStatus1{}, cpErr
+	}
+	if string(cluster.Status) == strings.ToLower(string(models.New)) {
+		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
+		return KubeClusterStatus1{}, cpErr
+	}
+
+	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
+		cpErr := ApiError(errors.New("Cluster is in "+
+			string(cluster.Status)), "Cluster is in "+
+			string(cluster.Status)+" state", 409)
+		return KubeClusterStatus1{}, cpErr
+	}
+	if cluster.Status != models.ClusterCreated {
+		customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
+		if err != nil {
+			cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
+			return KubeClusterStatus1{}, cpErr
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return KubeClusterStatus1{}, customErr.Err
+		}
+	}
+	iks := GetIBM(credentials.Profile)
+
+	cpErr := iks.init(credentials.Profile.Region, ctx)
+	if cpErr != (types.CustomCPError{}) {
+		return KubeClusterStatus1{}, cpErr
+	}
+
+	response, e := iks.fetchStatus(&cluster, ctx, companyId)
+
+	if e != (types.CustomCPError{}) {
+
+		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return KubeClusterStatus1{}, e
+	}
+	var response1 KubeClusterStatus1
+	response1.State = response.State
+	response1.ID = response.ID
+	response1.Name = response.Name
+	response1.Region = response.Region
+	response1.ResourceGroupName = response.ResourceGroupName
+	response1.WorkerCount = response.WorkerCount
+	for _, pool := range response.WorkerPools {
+		var pool1 KubeWorkerPoolStatus1
+		pool1.Name = pool.Name
+		pool1.ID = pool.ID
+		pool1.State = pool.State
+		pool1.Flavour = pool.Flavour
+		for _, node := range pool.Nodes {
+			var node1 KubeWorkerNodesStatus1
+
+			node1.Flavour = node.Flavour
+			node1.State = node.Lifecycle.State
+			node1.ID = node.ID
+			node1.PrivateIp = node.Network.PrivateIp
+			node1.PublicIp = node.Network.PublicIp
+			node1.Location = node.Location
+			pool1.Nodes = append(pool1.Nodes, node1)
+		}
+		response1.WorkerPools = append(response1.WorkerPools, pool1)
+	}
+	return response1, types.CustomCPError{}
 }
