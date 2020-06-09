@@ -784,6 +784,46 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 	return response, types.CustomCPError{}
 
 }
+
+func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
+	var nodes []EKSNodesStatus
+
+	var values []*string
+	values = append(values, &poolName)
+	var tags []*ec2.Filter
+	tag := ec2.Filter{Name: aws.String("eks:nodegroup-name"), Values: values}
+	tags = append(tags, &tag)
+
+	instance_input := ec2.DescribeInstancesInput{Filters: tags}
+	updated_instances, err := cloud.EC2.DescribeInstances(&instance_input)
+
+	if err != nil {
+		ctx.SendLogs(
+			"EKS cluster state request for failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.ProjectId)
+		cpErr := ApiError(err, "unable to fetch cluster status", 512)
+		return []EKSNodesStatus{}, cpErr
+	}
+	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
+
+		return nil, ApiError(errors.New("Error in fetching instance"), "Nodes not found", 512)
+	}
+	for _, instance := range updated_instances.Reservations[0].Instances {
+		var node EKSNodesStatus
+		node.Name = instance.InstanceId
+		node.State = instance.State.Name
+		node.PrivateIP = instance.PrivateIpAddress
+		node.PublicIP = instance.PublicIpAddress
+		nodes = append(nodes, node)
+	}
+	return nodes, types.CustomCPError{}
+
+}
+
 func (cloud *EKS) init() error {
 	if cloud.Svc != nil {
 		return nil
@@ -827,43 +867,4 @@ func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 		Region:    credentials.Region,
 		ProjectId: projectId,
 	}
-}
-
-func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
-	var nodes []EKSNodesStatus
-
-	var values []*string
-	values = append(values, &poolName)
-	var tags []*ec2.Filter
-	tag := ec2.Filter{Name: aws.String("eks:nodegroup-name"), Values: values}
-	tags = append(tags, &tag)
-
-	instance_input := ec2.DescribeInstancesInput{Filters: tags}
-	updated_instances, err := cloud.EC2.DescribeInstances(&instance_input)
-
-	if err != nil {
-		ctx.SendLogs(
-			"EKS cluster state request for failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.ProjectId)
-		cpErr := ApiError(err, "unable to fetch cluster status", 512)
-		return []EKSNodesStatus{}, cpErr
-	}
-	if updated_instances == nil || updated_instances.Reservations == nil || updated_instances.Reservations[0].Instances == nil {
-
-		return nil, ApiError(errors.New("Error in fetching instance"), "Nodes not found", 512)
-	}
-	for _, instance := range updated_instances.Reservations[0].Instances {
-		var node EKSNodesStatus
-		node.Name = instance.InstanceId
-		node.State = instance.State.Name
-		node.PrivateIP = instance.PrivateIpAddress
-		node.PublicIP = instance.PublicIpAddress
-		nodes = append(nodes, node)
-	}
-	return nodes, types.CustomCPError{}
-
 }
