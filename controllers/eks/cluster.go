@@ -942,7 +942,7 @@ func (c *EKSClusterController) GetInstances() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile Id"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {object} eks.EKSCluster
+// @Success 200 {object} eks.EKSClusterStatus
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "Cluster is in deploying/terminating state"}

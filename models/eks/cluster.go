@@ -94,6 +94,32 @@ type NodePoolScalingConfig struct {
 	MinSize     *int64 `json:"min_size" bson:"min_size"`
 }
 
+type EKSClusterStatus struct {
+	ClusterEndpoint *string         `json:"endpoint"`
+	Name            *string         `json:"name"`
+	Status          *string         `json:"status"`
+	KubeVersion     *string         `json:"kubernetes_version"`
+	ClusterArn      *string         `json:"cluster_arn"`
+	NodePools       []EKSPoolStatus `json:"node_pools"`
+}
+type EKSPoolStatus struct {
+	NodePoolArn *string          `json:"pool_arn"`
+	Name        *string          `json:"name"`
+	Status      *string          `json:"status"`
+	AMI         *string          `json:"ami_type"`
+	MachineType *string          `json:"machine_type"`
+	DesiredSize *int64           `json:"desired_size"`
+	MinSize     *int64           `json:"min_size"`
+	MaxSize     *int64           `json:"max_size"`
+	Nodes       []EKSNodesStatus `json:"nodes"`
+}
+type EKSNodesStatus struct {
+	Name      *string `json:"name"`
+	PublicIP  *string `json:"public_ip"`
+	PrivateIP *string `json:"private_ip"`
+	State     *string `json:"state"`
+}
+
 func KubeVersions(ctx utils.Context) []string {
 	var kubeVersions []string
 	kubeVersions = append(kubeVersions, "1.14")
@@ -558,45 +584,45 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 
 	return nil
 }
-func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (EKSCluster, types.CustomCPError) {
+func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Context, companyId string, token string) (EKSClusterStatus, types.CustomCPError) {
 
 	cluster, err := GetEKSCluster(projectId, companyId, ctx)
 	if err != nil {
 		cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
-		return EKSCluster{}, cpErr
+		return EKSClusterStatus{}, cpErr
 	}
 	if string(cluster.Status) == strings.ToLower(string(models.New)) {
 		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
-		return EKSCluster{}, cpErr
+		return EKSClusterStatus{}, cpErr
 	}
 
 	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
 		cpErr := ApiError(errors.New("Cluster is in "+
 			string(cluster.Status)), "Cluster is in "+
 			string(cluster.Status)+" state", 409)
-		return EKSCluster{}, cpErr
+		return EKSClusterStatus{}, cpErr
 	}
 	if cluster.Status != models.ClusterCreated {
 		customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
 		if err != nil {
 			cpErr := ApiError(err, "Error occurred while getting cluster status in database", 500)
-			return EKSCluster{}, cpErr
+			return EKSClusterStatus{}, cpErr
 		}
 		if customErr.Err != (types.CustomCPError{}) {
-			return EKSCluster{}, customErr.Err
+			return EKSClusterStatus{}, customErr.Err
 		}
 	}
 	eks := GetEKS(cluster.ProjectId, credentials.Profile)
 
 	eks.init()
 
-	e := eks.fetchStatus(&cluster, ctx, companyId)
+	response, e := eks.fetchStatus(&cluster, ctx, companyId)
 
 	if e != (types.CustomCPError{}) {
 
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return EKSCluster{}, e
+		return EKSClusterStatus{}, e
 	}
 
-	return cluster, types.CustomCPError{}
+	return response, types.CustomCPError{}
 }
