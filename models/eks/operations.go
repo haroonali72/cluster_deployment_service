@@ -718,6 +718,9 @@ func (cloud *EKS) deleteSSHKey(keyName *string) error {
 	return err
 }
 
+func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId string) types.CustomCPError {
+
+}
 func (cloud *EKS) init() error {
 	if cloud.Svc != nil {
 		return nil

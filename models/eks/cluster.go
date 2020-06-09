@@ -590,7 +590,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 
 	eks.init()
 
-	response, e := eks.fetchStatus(&cluster, ctx, companyId)
+	e := eks.fetchStatus(&cluster, ctx, companyId)
 
 	if e != (types.CustomCPError{}) {
 
@@ -598,5 +598,5 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		return EKSCluster{}, e
 	}
 
-	return response1, types.CustomCPError{}
+	return cluster, types.CustomCPError{}
 }
