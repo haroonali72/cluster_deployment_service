@@ -79,13 +79,19 @@ type Volume struct {
 	VolumeType          string `json:"volume_type" bson:"volume_type" valid:"required" description:"Type of the volume.Valid values are General Purpose SSD,IOPS SSD,Magnetic volumes[required]"`
 	VolumeSize          int64  `json:"volume_size" bson:"volume_size" valid:"required" description:"Size of the volume [required]"`
 	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination" description:"Select if volume should terminate on deletion [optional]"`
-	Iops                int64  `json:"iops" bson:"iops" valid:"required" description:"IOPS of volume [required]"`
+	Iops                int64  `json:"iops" bson:"iops" description:"IOPS of volume [required] when volume is io1"`
 }
 type Project struct {
 	ProjectData Data `json:"data" description:"Project data of the cluster [optional]"`
 }
 type Data struct {
 	Region string `json:"region" description:"Region of the cluster [optional]"`
+}
+
+type AwsCluster struct {
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
 
 func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
@@ -210,24 +216,32 @@ func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster
 	return cluster, nil
 }
 
-func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (clusters []Cluster_Def, err error) {
-
+func GetAllCluster(ctx utils.Context, input rbac_athentication.List) (awsclusters []AwsCluster, err error) {
+	var copyData []string
+	var clusters []Cluster_Def
+	for _, d := range input.Data {
+		copyData = append(copyData, d)
+	}
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 		return nil, err1
 	}
 	defer session.Close()
 	mc := db.GetMongoConf()
 	c := session.DB(mc.MongoDb).C(mc.MongoAwsClusterCollection)
-	err = c.Find(bson.M{}).All(&clusters)
+	err = c.Find(bson.M{"project_id": bson.M{"$in": copyData}, "company_id": ctx.Data.Company}).All(&clusters)
 	if err != nil {
 		ctx.SendLogs("Cluster model: GetAll - Got error while connecting to the database: "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
-	return clusters, nil
+	for _, cluster := range clusters {
+		temp := AwsCluster{Name: cluster.Name, ProjectId: cluster.ProjectId, Status: cluster.Status}
+		awsclusters = append(awsclusters, temp)
+	}
+
+	return awsclusters, nil
 }
 
 func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
@@ -337,10 +351,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	if err != (types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = models.ClusterCreationFailed
-		err1 := ApiError(confError, "Error in cluster creation")
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err1)
-		if err != nil {
-			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
+		if err1 != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		confErr := aws.CleanUp(cluster, ctx)
 		if confErr != (types.CustomCPError{}) {
@@ -354,7 +367,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err1
+		return err
 	}
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
@@ -393,6 +406,26 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, ApiError(err, "Error in fetching cluster")
 	}
+
+	if string(cluster.Status) == strings.ToLower(string(models.New)) {
+		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
+		return Cluster_Def{}, cpErr
+	}
+
+	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
+		cpErr := ApiError(errors.New("Cluster is in "+string(cluster.Status)), "Cluster is in "+string(cluster.Status)+" state")
+		return Cluster_Def{}, cpErr
+	}
+	if cluster.Status != models.ClusterCreated {
+		customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
+		if err != nil {
+			return Cluster_Def{}, types.CustomCPError{Error: err.Error(), Description: "Error occurred while getting cluster status in database", StatusCode: 500}
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return Cluster_Def{}, customErr.Err
+		}
+	}
+
 	//splits := strings.Split(credentials, ":")
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,

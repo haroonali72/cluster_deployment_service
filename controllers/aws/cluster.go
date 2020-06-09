@@ -108,7 +108,7 @@ func (c *AWSClusterController) Get() {
 // @Title Get All
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "token"
-// @Success 200 {object} []aws.Cluster_Def
+// @Success 200 {object} []aws.AwsCluster
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
@@ -164,8 +164,8 @@ func (c *AWSClusterController) GetAll() {
 	c.ServeJSON()
 }
 
-// @Title Create
-// @Description create a new cluster
+// @Title Add
+// @Description add a new cluster
 // @Param	body	body 	aws.Cluster_Def		true	"body for cluster content"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 201 {"msg": "cluster created successfully"}
@@ -400,7 +400,7 @@ func (c *AWSClusterController) Patch() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router delete/:projectId/:forceDelete [delete]
+// @router /delete/:projectId/:forceDelete [delete]
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
@@ -735,17 +735,16 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	cluster, err1 := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
-	if err1 != (types.CustomCPError{}) && !strings.Contains(strings.ToLower(err1.Description), "nodes not found") {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	cluster, cpErr := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
+	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
+		c.Ctx.Output.SetStatus(cpErr.StatusCode)
+		c.Data["json"] = cpErr.Description
 		c.ServeJSON()
 		return
-	} else if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	} else if cpErr != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
+		c.Data["json"] = cpErr
 		c.ServeJSON()
-		return
 	}
 
 	c.Data["json"] = cluster
@@ -1261,7 +1260,7 @@ func (c *AWSClusterController) PostSSHKey() {
 // @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	X-Auth-Token			header	string	true "token"
 // @Param	region		path	string	true	"cloud region"
-// @Success 204 {"msg": "Cluster deleted successfully"}
+// @Success 204 {"msg": "SSH key deleted successfully"}
 // @Failure 401 			{"error": "Unauthorized"}
 // @Failure 404 			{"error": "Not Found"}
 // @Failure 409 {"error": "Conflict"}
