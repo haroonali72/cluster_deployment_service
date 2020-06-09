@@ -195,7 +195,6 @@ func (c *AWSClusterController) Post() {
 		return
 	}
 
-
 	cluster.CreationDate = time.Now()
 
 	token := c.Ctx.Input.Header("X-Auth-Token")
@@ -282,7 +281,7 @@ func (c *AWSClusterController) Post() {
 func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
 
-	err :=json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
@@ -364,7 +363,7 @@ func (c *AWSClusterController) Patch() {
 	}
 	err = aws.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "does not exist")|| strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "No cluster exists with this name"}
 			c.ServeJSON()
@@ -475,19 +474,19 @@ func (c *AWSClusterController) Delete() {
 		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in creaated state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Deploying && !forceDelete {
+	} else if cluster.Status == models.Deploying && !forceDelete {
 		ctx.SendLogs("cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in deploying state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Terminating && !forceDelete {
+	} else if cluster.Status == models.Terminating && !forceDelete {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.ClusterTerminationFailed && !forceDelete {
+	} else if cluster.Status == models.ClusterTerminationFailed && !forceDelete {
 		ctx.SendLogs(" Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": " Cluster is in termination failed state"}
@@ -595,19 +594,19 @@ func (c *AWSClusterController) StartCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Deploying {
+	} else if cluster.Status == models.Deploying {
 		ctx.SendLogs("cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Terminating {
+	} else if cluster.Status == models.Terminating {
 		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.ClusterTerminationFailed {
+	} else if cluster.Status == models.ClusterTerminationFailed {
 		ctx.SendLogs(": Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": ": Cluster is in termination failed state"}
@@ -736,7 +735,7 @@ func (c *AWSClusterController) GetStatus() {
 		return
 	}
 
-	cluster,cpErr := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
+	cluster, cpErr := aws.FetchStatus(awsProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = cpErr.Description
@@ -854,25 +853,25 @@ func (c *AWSClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Terminating {
+	} else if cluster.Status == models.Terminating {
 		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.ClusterTerminated {
+	} else if cluster.Status == models.ClusterTerminated {
 		ctx.SendLogs("AWSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in terminated state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.ClusterCreationFailed {
+	} else if cluster.Status == models.ClusterCreationFailed {
 		ctx.SendLogs("AWSClusterController: Cluster is in cluster creation failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in cluster creation failed state"}
 		c.ServeJSON()
 		return
-	}else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		ctx.SendLogs("AWSClusterController: Cluster is not in created status", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is not in created status"}
@@ -1335,7 +1334,7 @@ func (c *AWSClusterController) DeleteSSHKey() {
 	}
 
 	err1 := aws.DeleteSSHkey(keyName, token, awsProfile.Profile, *ctx)
-	if err1 !=(types.CustomCPError{}) {
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
 		c.ServeJSON()
@@ -1361,7 +1360,7 @@ func (c *AWSClusterController) GetAllRegions() {
 	regions, err1 := aws.GetRegions(*ctx)
 	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
-		c.Data["json"] =err1
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}

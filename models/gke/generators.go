@@ -47,7 +47,6 @@ func GenerateClusterFromResponse(v gke.Cluster) GKECluster {
 		PrivateClusterConfig:           GeneratePrivateClusterConfigFromResponse(v.PrivateClusterConfig),
 		ResourceUsageExportConfig:      GenerateResourceUsageExportConfigFromResponse(v.ResourceUsageExportConfig),
 		NodePools:                      GenerateNodePoolFromResponse(v.NodePools),
-
 	}
 }
 

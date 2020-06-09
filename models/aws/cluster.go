@@ -93,6 +93,7 @@ type AwsCluster struct {
 	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
 	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
+
 func checkScalingChanges(existingCluster, updatedCluster *Cluster_Def) bool {
 	update := false
 	for index, node_pool := range existingCluster.NodePools {
@@ -317,8 +318,8 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		confErr:= ApiError(confError,"Error in deploying cluster")
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		confErr := ApiError(confError, "Error in deploying cluster")
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
 		if err != nil {
 			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -330,7 +331,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		Region:    credentials.Region,
 	}
 	err = aws.init()
-	if err !=(types.CustomCPError{}) {
+	if err != (types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
@@ -350,7 +351,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	if err != (types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = models.ClusterCreationFailed
-		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,err)
+		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
 		if err1 != nil {
 			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -383,8 +384,8 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		confErr:=ApiError(confError,"Error in cluster creation")
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		confErr := ApiError(confError, "Error in cluster creation")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -403,7 +404,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, ApiError(err,"Error in fetching cluster")
+		return Cluster_Def{}, ApiError(err, "Error in fetching cluster")
 	}
 
 	if string(cluster.Status) == strings.ToLower(string(models.New)) {
@@ -412,13 +413,13 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 	}
 
 	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
-		cpErr := ApiError(errors.New("Cluster is in "+ string(cluster.Status)), "Cluster is in "+ string(cluster.Status)+" state")
+		cpErr := ApiError(errors.New("Cluster is in "+string(cluster.Status)), "Cluster is in "+string(cluster.Status)+" state")
 		return Cluster_Def{}, cpErr
 	}
 	if cluster.Status != models.ClusterCreated {
 		customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
 		if err != nil {
-			return Cluster_Def{}, types.CustomCPError{Error:err.Error(), Description:"Error occurred while getting cluster status in database", StatusCode: 500}
+			return Cluster_Def{}, types.CustomCPError{Error: err.Error(), Description: "Error occurred while getting cluster status in database", StatusCode: 500}
 		}
 		if customErr.Err != (types.CustomCPError{}) {
 			return Cluster_Def{}, customErr.Err
@@ -434,7 +435,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 	err1 := aws.init()
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, ApiError(err,"Error in fetching cluster")
+		return Cluster_Def{}, ApiError(err, "Error in fetching cluster")
 	}
 
 	_, e := aws.fetchStatus(&cluster, ctx, companyId, token)
@@ -456,8 +457,8 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		confErr:=ApiError(pub_err,"Error in terminating cluster")
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		confErr := ApiError(pub_err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -467,19 +468,19 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		confErr:=ApiError(err,"Error in terminating cluster")
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		confErr := ApiError(err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		return  confErr
+		return confErr
 	}
 
 	if cluster.Status == "" || cluster.Status == models.New {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AwsClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return  ApiError(errors.New(text),"Error in terminating cluster")
+		return ApiError(errors.New(text), "Error in terminating cluster")
 	}
 
 	aws := AWS{
@@ -493,14 +494,14 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	err1 := aws.init()
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs(err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status =models.ClusterTerminationFailed
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		}
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,err1)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err1)
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -519,10 +520,10 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return ApiError(err,"Error in terminating cluster")
+			return ApiError(err, "Error in terminating cluster")
 		}
-		confErr:=ApiError(err,"Error in terminating cluster")
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		confErr := ApiError(err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -562,8 +563,8 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-		confErr:=ApiError(err,"Error in terminating cluster")
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,confErr)
+		confErr := ApiError(err, "Error in terminating cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -683,7 +684,7 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, to
 		Region:    credentials.Profile.Region,
 	}
 	err := aws.init()
-	if err != (types.CustomCPError{}){
+	if err != (types.CustomCPError{}) {
 		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
@@ -721,7 +722,7 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 	err1 := UpdateCluster(cluster, false, ctx)
 	if err1 != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to enable  scaling"+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return ApiError(err1,"")
+		return ApiError(err1, "")
 	}
 
 	return (types.CustomCPError{})
@@ -791,7 +792,7 @@ func GetRegions(ctx utils.Context) ([]models.Region, types.CustomCPError) {
 	regions, err := api_handler.GetAwsRegions()
 	if err != nil {
 		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []models.Region{}, ApiError(err,"Error in fetching region")
+		return []models.Region{}, ApiError(err, "Error in fetching region")
 	}
 
 	return regions, types.CustomCPError{}
@@ -821,7 +822,7 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, types
 		z := z[len(z)-1:]
 		zone = append(zone,*z)
 	}*/
-	return zones,types.CustomCPError{}
+	return zones, types.CustomCPError{}
 }
 
 func GetAllMachines() ([]string, error) {

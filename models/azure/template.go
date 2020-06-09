@@ -346,7 +346,6 @@ func GetAllCustomerTemplateMetadata(ctx utils.Context) []TemplateMetadata {
 	return templateMetadata
 }
 
-
 func GetAzureDefault(ctx utils.Context) (template Template, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {

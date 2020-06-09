@@ -82,6 +82,7 @@ type Cluster struct {
 	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
 	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
+
 func GetCluster(projectId, companyId string, ctx utils.Context) (cluster Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)

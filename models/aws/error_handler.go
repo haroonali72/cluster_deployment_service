@@ -7,7 +7,6 @@ import (
 
 func ApiError(err error, msg string) (cError types.CustomCPError) {
 
-
 	customError := types.CustomCPError{
 		Error:       msg,
 		Description: err.Error(),
@@ -17,4 +16,3 @@ func ApiError(err error, msg string) (cError types.CustomCPError) {
 	return customError
 
 }
-

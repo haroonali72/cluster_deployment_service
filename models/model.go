@@ -103,6 +103,7 @@ const (
 	Azure Cloud = "azure"
 	GCP   Cloud = "gcp"
 	GKE   Cloud = "gke"
+	EKS   Cloud = "eks"
 	DO    Cloud = "do"
 	DOKS  Cloud = "doks"
 	IKS   Cloud = "iks"

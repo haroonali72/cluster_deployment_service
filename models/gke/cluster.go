@@ -256,37 +256,36 @@ type Cluster struct {
 }
 
 type KubeClusterStatus struct {
-	Id              string                 	 `json:"id,omitempty"`
+	Id                string                 `json:"id,omitempty"`
 	Name              string                 `json:"name,omitempty"`
 	Region            string                 `json:"region,omitempty"`
 	Status            models.Type            `json:"status,omitempty"`
-	State             	string               `json:"state,omitempty"`
-	KubernetesVersion 	string				 `json:"kubernetes_version,omitempty"`
+	State             string                 `json:"state,omitempty"`
+	KubernetesVersion string                 `json:"kubernetes_version,omitempty"`
 	Network           string                 `json:"network,omitempty"`
-	PoolCount       	int64                `json:"nodepool_count,omitempty"`
+	PoolCount         int64                  `json:"nodepool_count,omitempty"`
 	ClusterIP         string                 `json:"cluster_ip,omitempty"`
 	WorkerPools       []KubeWorkerPoolStatus `json:"node_pools,omitempty"`
 }
 
 type KubeWorkerPoolStatus struct {
-	Id    				string                  `json:"id,omitempty"`
-	Name    			string                  `json:"name,omitempty"`
-	Link 			    string					`json:"-"`
-	NodeCount 			int64				 	`json:"node_count,omitempty"`
-	MachineType 		string					`json:"machine_type,omitempty"`
-	AutoScale			bool       			    `json:"auto_scaling,omitempty"`
-	MinCount 			int64					`json:"min_count,omitempty"`
-	MaxCount            int64   				`json:"max_count,omitempty"`
-	Subnet				string   				`json:"subnet_id,omitempty"`
-	Nodes               []KubeNodesStatus       `json:"nodes"`
+	Id          string            `json:"id,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	Link        string            `json:"-"`
+	NodeCount   int64             `json:"node_count,omitempty"`
+	MachineType string            `json:"machine_type,omitempty"`
+	AutoScale   bool              `json:"auto_scaling,omitempty"`
+	MinCount    int64             `json:"min_count,omitempty"`
+	MaxCount    int64             `json:"max_count,omitempty"`
+	Subnet      string            `json:"subnet_id,omitempty"`
+	Nodes       []KubeNodesStatus `json:"nodes"`
 }
 type KubeNodesStatus struct {
-	Id    				string                  `json:"id,omitempty"`
-	Name    			string                  `json:"name,omitempty"`
-	State 				string				 	`json:"state,omitempty"`
-	PrivateIp 			string					`json:"private_ip,omitempty"`
-	PublicIp			string       			`json:"public_ip,omitempty"`
-
+	Id        string `json:"id,omitempty"`
+	Name      string `json:"name,omitempty"`
+	State     string `json:"state,omitempty"`
+	PrivateIp string `json:"private_ip,omitempty"`
+	PublicIp  string `json:"public_ip,omitempty"`
 }
 
 func GetNetwork(token, projectId string, ctx utils.Context) error {
@@ -627,19 +626,17 @@ func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context
 		return &KubeClusterStatus{}, err1
 	}
 	customStatus := fillStatusInfo(latestCluster)
-	err1 = gkeOps.fetchNodePool(latestCluster, &customStatus,ctx)
+	err1 = gkeOps.fetchNodePool(latestCluster, &customStatus, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GKEClusterModel:  Fetch - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return &KubeClusterStatus{}, err1
 	}
-	customStatus.Status=cluster.Status
+	customStatus.Status = cluster.Status
 	latestCluster.ProjectId = ctx.Data.ProjectId
 	latestCluster.CompanyId = ctx.Data.Company
 	latestCluster.CloudplexStatus = cluster.CloudplexStatus
 	latestCluster.IsExpert = cluster.IsExpert
 	latestCluster.IsAdvance = cluster.IsAdvance
-
-
 
 	return &customStatus, types.CustomCPError{}
 }
@@ -886,35 +883,35 @@ func validateGKEImageType(imageType string) (bool, error) {
 	return false, errors.New(errData)
 }
 
-func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus){
-	status.Id=cluster.Name
-	status.Name=cluster.Name
-	status.Region=cluster.Location
-	status.Status=cluster.CloudplexStatus
-	status.Network=cluster.Network
+func fillStatusInfo(cluster GKECluster) (status KubeClusterStatus) {
+	status.Id = cluster.Name
+	status.Name = cluster.Name
+	status.Region = cluster.Location
+	status.Status = cluster.CloudplexStatus
+	status.Network = cluster.Network
 	status.PoolCount = cluster.CurrentNodeCount
-	status.KubernetesVersion =cluster.CurrentMasterVersion
-	status.ClusterIP=cluster.ClusterIpv4Cidr
-	status.PoolCount=cluster.CurrentNodeCount
-	status.ClusterIP=cluster.ClusterIpv4Cidr
-	status.State=cluster.NodePools[0].Status
-	for _, pool :=range cluster.NodePools{
+	status.KubernetesVersion = cluster.CurrentMasterVersion
+	status.ClusterIP = cluster.ClusterIpv4Cidr
+	status.PoolCount = cluster.CurrentNodeCount
+	status.ClusterIP = cluster.ClusterIpv4Cidr
+	status.State = cluster.NodePools[0].Status
+	for _, pool := range cluster.NodePools {
 		workerpool := KubeWorkerPoolStatus{}
-		workerpool.Name=pool.Name
-		workerpool.Id=pool.Name
-		workerpool.NodeCount=pool.InitialNodeCount
-		workerpool.MachineType=pool.Config.MachineType
-		workerpool.Link=pool.InstanceGroupUrls[0]
-		if pool.Autoscaling !=nil && pool.Autoscaling.Enabled==true  {
+		workerpool.Name = pool.Name
+		workerpool.Id = pool.Name
+		workerpool.NodeCount = pool.InitialNodeCount
+		workerpool.MachineType = pool.Config.MachineType
+		workerpool.Link = pool.InstanceGroupUrls[0]
+		if pool.Autoscaling != nil && pool.Autoscaling.Enabled == true {
 			workerpool.AutoScale = pool.Autoscaling.Enabled
 			workerpool.MinCount = pool.Autoscaling.MinNodeCount
 			workerpool.MaxCount = pool.Autoscaling.MaxNodeCount
 
-			workerpool.Subnet= cluster.Subnetwork
+			workerpool.Subnet = cluster.Subnetwork
 		} else {
-			workerpool.AutoScale =false
+			workerpool.AutoScale = false
 		}
-		status.WorkerPools=append(status.WorkerPools ,workerpool)
+		status.WorkerPools = append(status.WorkerPools, workerpool)
 
 	}
 
