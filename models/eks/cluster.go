@@ -445,8 +445,10 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpError
 	}
-
-	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
+	/**
+	  TODO : Add Agent Deployment Process.Due on @Ahmad.
+	*/
+	/*confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
@@ -466,7 +468,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
-	}
+	}*/
 	cluster.Status = models.ClusterCreated
 
 	confError = UpdateEKSCluster(cluster, ctx)
