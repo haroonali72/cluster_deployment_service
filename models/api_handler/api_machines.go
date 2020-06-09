@@ -38,15 +38,15 @@ func GetAwsMachines() ([]string, error) {
 	information := strings.Split(regionsInfo, "\n")
 	var mach []string
 	for _, info := range information {
-		if  info== "" {
+		if info == "" {
 			break
 		}
 		machineInfo := strings.Split(info, "| ")
 
-		if machineInfo[1] == "" ||  machineInfo[1] == "--- " || machineInfo[1] == "|" || machineInfo[1] == "Instance type " || machineInfo[1] == "Default vCPUs" || machineInfo[1] == "Memory(GiB)|" {
+		if machineInfo[1] == "" || machineInfo[1] == "--- " || machineInfo[1] == "|" || machineInfo[1] == "Instance type " || machineInfo[1] == "Default vCPUs" || machineInfo[1] == "Memory(GiB)|" {
 			continue
 		}
-		mach = append(mach, machineInfo[1] )
+		mach = append(mach, machineInfo[1])
 
 		/*for _, machine := range machineInfo {
 			machine := strings.TrimSpace(machine)

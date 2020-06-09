@@ -61,7 +61,7 @@ type NodePool struct {
 }
 type AutoScaling struct {
 	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size" valid:"required" description:"Max count for scaling [required]"`
-	State               models.Type  `json:"status" bson:"status" description:"Status of scaling [required]"`
+	State               models.Type `json:"status" bson:"status" description:"Status of scaling [required]"`
 }
 type Key struct {
 	CredentialType models.CredentialsType `json:"credential_type"  bson:"credential_type" valid:"required,eq=password|eq=key" description:"Credentials type to connect to the VM.Valid values are 'key' and 'password' [required]"`
@@ -115,6 +115,7 @@ type AzureCluster struct {
 	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
 	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
 }
+
 func checkMasterPools(cluster Cluster_Def) error {
 	noOfMasters := 0
 	for _, pools := range cluster.NodePools {
@@ -359,13 +360,13 @@ func PrintError(confError error, name, projectId string, ctx utils.Context, comp
 		utils.SendLog(companyId, confError.Error(), "error", projectId)
 	}
 }
-func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) (types.CustomCPError) {
+func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx utils.Context, companyId string, token string) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		customError :=ApiError(confError,"Error in cluster creation",int(models.CloudStatusCode))
+		customError := ApiError(confError, "Error in cluster creation", int(models.CloudStatusCode))
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
 		if err != nil {
 			ctx.SendLogs("AzureClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -400,13 +401,13 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 	cluster, err = azure.createCluster(cluster, ctx, companyId, token)
-	if err !=(types.CustomCPError {}){
+	if err != (types.CustomCPError{}) {
 		PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 		PrintError(errors.New(err.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = models.ClusterCreationFailed
 		beego.Info("going to cleanup")
 		err = azure.CleanUp(cluster, ctx, companyId)
-		if err != (types.CustomCPError {}) {
+		if err != (types.CustomCPError{}) {
 			PrintError(errors.New(err.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
@@ -430,7 +431,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		customError :=ApiError(confError,"Error in cluster creation",int(models.CloudStatusCode))
+		customError := ApiError(confError, "Error in cluster creation", int(models.CloudStatusCode))
 		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
 		if err1 != nil {
 			ctx.SendLogs("AzureClusterModel:  Deploy - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -448,7 +449,7 @@ func FetchStatus(credentials vault.AzureProfile, token, projectId string, compan
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return Cluster_Def{}, ApiError(err,"Error in fetching status.",int(models.CloudStatusCode))
+		return Cluster_Def{}, ApiError(err, "Error in fetching status.", int(models.CloudStatusCode))
 	}
 
 	azure := AZURE{
@@ -481,7 +482,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs(pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		customError :=ApiError(pub_err,"Error in cluster termination",int(models.CloudStatusCode))
+		customError := ApiError(pub_err, "Error in cluster termination", int(models.CloudStatusCode))
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
 		if err != nil {
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -491,7 +492,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
-		customError :=ApiError(pub_err,"Error in cluster termination",int(models.CloudStatusCode))
+		customError := ApiError(pub_err, "Error in cluster termination", int(models.CloudStatusCode))
 		err1 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
 		if err1 != nil {
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -505,7 +506,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AzureClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return ApiError(errors.New("Error in cluster termination"),text,int(models.CloudStatusCode))
+		return ApiError(errors.New("Error in cluster termination"), text, int(models.CloudStatusCode))
 	}
 
 	azure := AZURE{
@@ -552,7 +553,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return ApiError(err,"Error in cluster termination",int(models.CloudStatusCode))
+			return ApiError(err, "Error in cluster termination", int(models.CloudStatusCode))
 		}
 		err2 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, err1)
 		if err2 != nil {
@@ -576,7 +577,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-		customError :=ApiError(err,"Error in cluster deletion",int(models.CloudStatusCode))
+		customError := ApiError(err, "Error in cluster deletion", int(models.CloudStatusCode))
 		err1 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
 		if err1 != nil {
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -707,7 +708,7 @@ func GetInstances(credentials vault.AzureProfile, ctx utils.Context) ([]azureVM,
 	}
 
 	instances, err := azure.getAllInstances()
-	if err !=(types.CustomCPError{}) {
+	if err != (types.CustomCPError{}) {
 		beego.Error(err.Error)
 		return []azureVM{}, err
 	}
@@ -734,14 +735,14 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Reg
 	}
 	return regions, types.CustomCPError{}
 }
-func GetAllMachines() ([]string,types.CustomCPError) {
+func GetAllMachines() ([]string, types.CustomCPError) {
 
 	regions, err := getAllVMSizes()
 	if err != (types.CustomCPError{}) {
 		beego.Error(err.Error)
 		return []string{}, err
 	}
-	return regions,types.CustomCPError{}
+	return regions, types.CustomCPError{}
 }
 
 func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region string, ctx utils.Context) types.CustomCPError {
@@ -761,7 +762,7 @@ func ValidateProfile(clientId, clientSecret, subscriptionId, tenantId, region st
 	_, err = azure.getRegions(ctx)
 	if err != (types.CustomCPError{}) {
 		beego.Error("Profile is not valid")
-		return ApiError(errors.New("Profile is not valid"),"Profile is not valid",int(models.CloudStatusCode))
+		return ApiError(errors.New("Profile is not valid"), "Profile is not valid", int(models.CloudStatusCode))
 	}
 	return types.CustomCPError{}
 }
@@ -791,4 +792,3 @@ func ApplyAgent(credentials vault.AzureProfile, token string, ctx utils.Context,
 	}
 	return nil
 }
-

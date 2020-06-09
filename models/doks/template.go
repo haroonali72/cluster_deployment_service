@@ -370,7 +370,6 @@ func GetCustomerTemplatesMetadata(ctx utils.Context, data rbac_athentication.Lis
 	return templatemetadata, nil
 }
 
-
 func GetDOKSDefault(ctx utils.Context) (template KubernetesTemplate, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {

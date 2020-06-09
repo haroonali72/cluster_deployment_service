@@ -28,12 +28,12 @@ type Template struct {
 }
 
 type NodePoolT struct {
-	ID          bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
-	Name        string             `json:"name" bson:"name" valid:"required"`
-	NodeCount   int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
-	Nodes       []*NodeT           `json:"nodes" bson:"nodes"`
-	KeyInfo     key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	PoolRole    models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
+	ID        bson.ObjectId      `json:"_id" bson:"_id,omitempty"`
+	Name      string             `json:"name" bson:"name" valid:"required"`
+	NodeCount int64              `json:"node_count" bson:"node_count" valid:"required,matches(^[0-9]+$)"`
+	Nodes     []*NodeT           `json:"nodes" bson:"nodes"`
+	KeyInfo   key_utils.AZUREKey `json:"key_info" bson:"key_info"`
+	PoolRole  models.PoolRole    `json:"pool_role" bson:"pool_role" valid:"required"`
 }
 
 type NodeT struct {

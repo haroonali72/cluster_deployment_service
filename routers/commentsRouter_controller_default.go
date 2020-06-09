@@ -6,14 +6,13 @@ import (
 )
 
 func init() {
-		beego.GlobalControllerRouter["antelope/controllers/default:DefaultTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/default:DefaultTemplateController"],
-			beego.ControllerComments{
-				Method:           "Get",
-				Router:           `/:cloudtype`,
-				AllowHTTPMethods: []string{"get"},
-				MethodParams:     param.Make(),
-				Filters:          nil,
-				Params:           nil})
+	beego.GlobalControllerRouter["antelope/controllers/default:DefaultTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/default:DefaultTemplateController"],
+		beego.ControllerComments{
+			Method:           "Get",
+			Router:           `/:cloudtype`,
+			AllowHTTPMethods: []string{"get"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
 
-	}
-
+}

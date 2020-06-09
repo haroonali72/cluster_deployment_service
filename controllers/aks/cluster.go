@@ -295,8 +295,14 @@ func (c *AKSClusterController) Patch() {
 	ctx := new(utils.Context)
 
 	var cluster aks.AKSCluster
-	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
