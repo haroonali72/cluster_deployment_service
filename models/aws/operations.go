@@ -791,7 +791,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	_, err := cloud.Roles.CreateRole(pool.Name)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, cloud.DecodeErrorMessage(err,"Error in cluster creation"),""
+		return nil, cloud.DecodeErrorMessage(err,"Error in instance creation"),""
 	}
 	cloud.Resources[pool.Name+"_role"] = pool.Name
 	_, err = cloud.Roles.CreatePolicy(pool.Name, docker_master_policy, ctx)

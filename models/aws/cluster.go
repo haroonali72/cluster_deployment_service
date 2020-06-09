@@ -79,7 +79,7 @@ type Volume struct {
 	VolumeType          string `json:"volume_type" bson:"volume_type" valid:"required" description:"Type of the volume.Valid values are General Purpose SSD,IOPS SSD,Magnetic volumes[required]"`
 	VolumeSize          int64  `json:"volume_size" bson:"volume_size" valid:"required" description:"Size of the volume [required]"`
 	DeleteOnTermination bool   `json:"delete_on_termination" bson:"delete_on_termination" description:"Select if volume should terminate on deletion [optional]"`
-	Iops                int64  `json:"iops" bson:"iops" valid:"required" description:"IOPS of volume [required]"`
+	Iops                int64  `json:"iops" bson:"iops" description:"IOPS of volume [required] when volume is io1"`
 }
 type Project struct {
 	ProjectData Data `json:"data" description:"Project data of the cluster [optional]"`
@@ -350,10 +350,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 	if err != (types.CustomCPError{}) {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		cluster.Status = models.ClusterCreationFailed
-		err1:=ApiError(confError,"Error in cluster creation")
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,err1)
-		if err != nil {
-			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx,err)
+		if err1 != nil {
+			ctx.SendLogs("AWSClusterModel:  Deploy :Error in saving error "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		confErr := aws.CleanUp(cluster, ctx)
 		if confErr != (types.CustomCPError{}) {
@@ -367,7 +366,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err1
+		return err
 	}
 
 	cluster = updateNodePool(createdPools, cluster, ctx)
@@ -406,6 +405,26 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, ApiError(err,"Error in fetching cluster")
 	}
+
+	if string(cluster.Status) == strings.ToLower(string(models.New)) {
+		cpErr := types.CustomCPError{Error: "Unable to fetch status - Cluster is not deployed yet", Description: "Unable to fetch state - Cluster is not deployed yet", StatusCode: 409}
+		return Cluster_Def{}, cpErr
+	}
+
+	if cluster.Status == models.Deploying || cluster.Status == models.Terminating || cluster.Status == models.ClusterTerminated {
+		cpErr := ApiError(errors.New("Cluster is in "+ string(cluster.Status)), "Cluster is in "+ string(cluster.Status)+" state")
+		return Cluster_Def{}, cpErr
+	}
+	if cluster.Status != models.ClusterCreated {
+		customErr, err := db.GetError(projectId, companyId, models.IKS, ctx)
+		if err != nil {
+			return Cluster_Def{}, types.CustomCPError{Error:err.Error(), Description:"Error occurred while getting cluster status in database", StatusCode: 500}
+		}
+		if customErr.Err != (types.CustomCPError{}) {
+			return Cluster_Def{}, customErr.Err
+		}
+	}
+
 	//splits := strings.Split(credentials, ":")
 	aws := AWS{
 		AccessKey: credentials.Profile.AccessKey,

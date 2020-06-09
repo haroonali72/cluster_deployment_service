@@ -553,6 +553,37 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/aws/delete/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/aws
+      description: delete a cluster
+      operationId: AWSClusterController.Delete
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: deleting cluster forcefully
+        required: true
+        type: boolean
+      responses:
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/enablescaling/{projectId}/:
     post:
       tags:
@@ -889,37 +920,6 @@ paths:
           description: '{"msg": "Cluster created successfully"}'
         "401":
           description: '{"error": "Profile is invalid"}'
-        "404":
-          description: '{"error": "Not Found"}'
-        "500":
-          description: '{"error": "Runtime Error"}'
-  /cluster/awsdelete/{projectId}/{forceDelete}:
-    delete:
-      tags:
-      - cluster/aws
-      description: delete a cluster
-      operationId: AWSClusterController.Delete
-      parameters:
-      - in: header
-        name: X-Auth-Token
-        description: token
-        required: true
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      - in: path
-        name: forceDelete
-        description: deleting cluster forcefully
-        required: true
-        type: boolean
-      responses:
-        "204":
-          description: '{"msg": "Cluster deleted successfully"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
         "404":
           description: '{"error": "Not Found"}'
         "500":
@@ -6394,25 +6394,25 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0017c7d70.false:
+  482.0xc0017a6390.false:
     title: "false"
     type: object
-  648.0xc000fd99e0.false:
+  648.0xc000f979b0.false:
     title: "false"
     type: object
-  667.0xc0016cd200.false:
+  667.0xc001693800.false:
     title: "false"
     type: object
-  964.0xc00133b800.false:
+  964.0xc0012fde00.false:
     title: "false"
     type: object
   11832.string:
     title: string
     type: object
-  14379.0xc00180bce0.false:
+  14357.0xc0017da300.false:
     title: "false"
     type: object
-  57508.0xc00178aff0.false:
+  57508.0xc00174b5f0.false:
     title: "false"
     type: object
   64195.string:
@@ -6695,7 +6695,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/648.0xc000fd99e0.false'
+        $ref: '#/definitions/648.0xc000f979b0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -6856,7 +6856,7 @@ definitions:
         description: Select if volume should terminate on deletion [optional]
         type: boolean
       iops:
-        description: IOPS of volume [required]
+        description: IOPS of volume [required] when volume is io1
         type: integer
         format: int64
       volume_size:
@@ -7137,7 +7137,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00133b800.false'
+        $ref: '#/definitions/964.0xc0012fde00.false'
       name:
         type: string
       network_name:
@@ -8658,7 +8658,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57508.0xc00178aff0.false'
+        $ref: '#/definitions/57508.0xc00174b5f0.false'
       kube_version:
         type: string
       name:
@@ -8927,7 +8927,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14379.0xc00180bce0.false'
+        $ref: '#/definitions/14357.0xc0017da300.false'
       name:
         type: string
       node_pools:

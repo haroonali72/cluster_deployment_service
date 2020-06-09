@@ -13,6 +13,7 @@ func ApiError(err error, msg string) (cError types.CustomCPError) {
 		Description: err.Error(),
 		StatusCode:  int(models.CloudStatusCode),
 	}
+
 	return customError
 
 }
