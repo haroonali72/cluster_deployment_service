@@ -1031,7 +1031,7 @@ func (c *EKSClusterController) GetStatus() {
 
 	ctx.SendLogs("EKSClusterController: Fetching Status of project"+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, cpErr := iks.FetchStatus(eksProfile, projectId, *ctx, userInfo.CompanyId, token)
+	cluster, cpErr := eks.FetchStatus(eksProfile, projectId, *ctx, userInfo.CompanyId, token)
 	if cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "state") || cpErr != (types.CustomCPError{}) && strings.Contains(strings.ToLower(cpErr.Description), "not deployed") {
 		c.Ctx.Output.SetStatus(cpErr.StatusCode)
 		c.Data["json"] = cpErr.Description
