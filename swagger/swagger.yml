@@ -2151,6 +2151,255 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/eks/:
+    put:
+      tags:
+      - cluster/eks
+      description: update an existing cluster
+      operationId: EKSClusterController.Update
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: body
+        name: body
+        description: Body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/aks.AKSCluster'
+      responses:
+        "200":
+          description: '{"msg": "Cluster updated successfully"}'
+        "400":
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+            state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+    post:
+      tags:
+      - cluster/eks
+      description: add a new cluster
+      operationId: EKSClusterController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for cluster content
+        required: true
+        schema:
+          $ref: '#/definitions/eks.EKSCluster'
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      responses:
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
+        "400":
+          description: '{"msg": "Runtime Error"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster against this project already exists"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/eks/{projectId}/:
+    get:
+      tags:
+      - cluster/eks
+      description: Get Instances for EKS Cluster
+      operationId: EKSClusterController.Get
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/map[string][]string'
+        "404":
+          description: '{"error": "Not Found"}'
+  /cluster/eks/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/eks
+      description: Delete a cluster
+      operationId: EKSClusterController.Delete
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: Forcefully delete cluster
+        required: true
+        type: boolean
+      responses:
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+            Failed state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/eks/all:
+    get:
+      tags:
+      - cluster/eks
+      description: get all the clusters
+      operationId: EKSClusterController.Get All
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/eks.EKSCluster'
+        "404":
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/eks/start/{projectId}:
+    post:
+      tags:
+      - cluster/eks
+      description: Deploy a kubernetes cluster
+      operationId: EKSClusterController.Start
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: Vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
+        "202":
+          description: '{"msg": "Cluster creation initiated"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+            state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/eks/status/{projectId}/:
+    get:
+      tags:
+      - cluster/eks
+      description: Get live status of the running cluster
+      operationId: EKSClusterController.Status
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: Vault credentials profile Id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/eks.EKSClusterStatus'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in deploying/terminating state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+        "512":
+          description: '{object} types.CustomCPError'
+  /cluster/eks/terminate/{projectId}/:
+    post:
+      tags:
+      - cluster/eks
+      description: Terminate a running cluster
+      operationId: EKSClusterController.Terminate
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: Vault credentials profile Id
+        required: true
+        schema:
+          $ref: '#/definitions/X-Profile-Id'
+        default: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "202":
+          description: '{"msg": "Cluster termination initiated"}'
+        "204":
+          description: '{"msg": "Cluster terminated successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/:
     put:
       tags:
@@ -5261,6 +5510,318 @@ paths:
           description: '{"error": "project id is empty"}'
         "500":
           description: '{"error": "error msg"}'
+  /template/eks/:
+    put:
+      tags:
+      - template/eks
+      description: update an existing template
+      operationId: EKSTemplateController.Update
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/eks.EKSClusterTemplate'
+      responses:
+        "200":
+          description: '{"msg": "template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/eks
+      description: create a new template
+      operationId: EKSTemplateController.Create
+      parameters:
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/eks.EKSClusterTemplate'
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: teams
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/eks/{templateId}:
+    get:
+      tags:
+      - template/eks
+      description: get template
+      operationId: EKSTemplateController.Get
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: Id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/eks.EKSClusterTemplate'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+    delete:
+      tags:
+      - template/eks
+      description: delete a templates
+      operationId: EKSTemplateController.Delete
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: Name of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "name is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/eks/all:
+    get:
+      tags:
+      - template/eks
+      description: get all the templates
+      operationId: EKSTemplateController.Get All
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/eks.EKSClusterTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/eks/allCustomerTemplates:
+    get:
+      tags:
+      - template/eks
+      description: get all the customer templates
+      operationId: EKSTemplateController.Get All Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/eks.EKSClusterTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/eks/allCustomerTemplatesInfo:
+    get:
+      tags:
+      - template/eks
+      description: get all the customer templates info
+      operationId: EKSTemplateController.GetAllCustomerTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/eks.EKSClusterTemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/eks/allTemplatesInfo:
+    get:
+      tags:
+      - template/eks
+      description: get all the templates info
+      operationId: EKSTemplateController.GetAllTemplateInfo
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/eks.EKSClusterTemplateMetadata'
+        "400":
+          description: '{"error": "error msg"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/eks/customerTemplate:
+    put:
+      tags:
+      - template/eks
+      description: update an existing customer template
+      operationId: EKSTemplateController.Update customer templates
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: header
+        name: teams
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/eks.EKSClusterTemplate'
+      responses:
+        "200":
+          description: '{"msg": "customer template updated successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "no template exists with this name"}'
+        "500":
+          description: '{"error": "error msg"}'
+    post:
+      tags:
+      - template/eks
+      description: create a new customer template
+      operationId: EKSTemplateController.Create Customer Template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: body
+        name: body
+        description: body for template content
+        required: true
+        schema:
+          $ref: '#/definitions/eks.EKSClusterTemplate'
+      responses:
+        "200":
+          description: '{"msg": "template created successfully"}'
+        "409":
+          description: '{"error": "template with same name already exists"}'
+        "500":
+          description: '{"error": "error msg"}'
+  /template/eks/customerTemplate/{templateId}:
+    get:
+      tags:
+      - template/eks
+      description: get customer template
+      operationId: EKSTemplateController.Get customer template
+      parameters:
+      - in: path
+        name: templateId
+        description: Template Id of the template
+        required: true
+        type: string
+      - in: header
+        name: token
+        description: token
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/eks.EKSClusterTemplate'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "error msg"}'
+    delete:
+      tags:
+      - template/eks
+      description: delete a customer template
+      operationId: EKSTemplateController.Delete customer template
+      parameters:
+      - in: header
+        name: token
+        description: token
+        type: string
+      - in: path
+        name: templateId
+        description: template id of the template
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "customer template deleted successfully"}'
+        "400":
+          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "project id is empty"}'
+        "500":
+          description: '{"error": "error msg"}'
   /template/gcp/:
     put:
       tags:
@@ -6394,28 +6955,40 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc0017a6390.false:
+  482.0xc00197e9c0.false:
     title: "false"
     type: object
-  648.0xc000f979b0.false:
+  648.0xc0010ac420.false:
     title: "false"
     type: object
-  667.0xc001693800.false:
+  667.0xc00186be30.false:
     title: "false"
     type: object
-  964.0xc0012fde00.false:
+  964.0xc001408870.false:
     title: "false"
     type: object
-  11832.string:
+  5476.string:
     title: string
     type: object
-  14357.0xc0017da300.false:
+  8131.string:
+    title: string
+    type: object
+  8869.string:
+    title: string
+    type: object
+  11642.string:
+    title: string
+    type: object
+  14357.0xc0019b2930.false:
     title: "false"
     type: object
-  57508.0xc00174b5f0.false:
+  57610.0xc001917c20.false:
     title: "false"
     type: object
-  64195.string:
+  58305.string:
+    title: string
+    type: object
+  64016.string:
     title: string
     type: object
   X-Profile-Id:
@@ -6524,7 +7097,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/64195.string'
+        $ref: '#/definitions/64016.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -6695,7 +7268,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/648.0xc000f979b0.false'
+        $ref: '#/definitions/648.0xc0010ac420.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7137,7 +7710,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0012fde00.false'
+        $ref: '#/definitions/964.0xc001408870.false'
       name:
         type: string
       network_name:
@@ -7587,6 +8160,216 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/doks.User'
+  eks.EKSCluster:
+    title: EKSCluster
+    type: object
+    properties:
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        description: ID of compnay [optional]
+        type: string
+      encryption_config:
+        $ref: '#/definitions/eks.EncryptionConfig'
+        description: Encryption Configurations [optional]
+      logging:
+        $ref: '#/definitions/eks.Logging'
+        description: Logging Configurations [optional]
+      name:
+        description: Cluster name [required]
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/eks.NodePool'
+      project_id:
+        description: ID of project [required]
+        type: string
+      resources_vpc_config:
+        $ref: '#/definitions/eks.VpcConfigRequest'
+      status:
+        $ref: '#/definitions/models.Type'
+        description: Status of cluster [required]
+      version:
+        type: string
+  eks.EKSClusterStatus:
+    title: EKSClusterStatus
+    type: object
+    properties:
+      cluster_arn:
+        type: string
+      endpoint:
+        type: string
+      kubernetes_version:
+        type: string
+      name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/eks.EKSPoolStatus'
+      status:
+        type: string
+  eks.EKSClusterTemplate:
+    title: EKSClusterTemplate
+    type: object
+    properties:
+      cloud:
+        $ref: '#/definitions/models.Cloud'
+      company_id:
+        type: string
+      encryption_config:
+        $ref: '#/definitions/eks.EncryptionConfig'
+      is_cloudplex:
+        type: boolean
+      logging:
+        $ref: '#/definitions/eks.Logging'
+      name:
+        type: string
+      node_pools:
+        type: array
+        items:
+          $ref: '#/definitions/eks.NodePool'
+      output_arn:
+        type: string
+      resources_vpc_config:
+        $ref: '#/definitions/eks.VpcConfigRequest'
+      status:
+        type: string
+      tags:
+        $ref: '#/definitions/58305.string'
+      template_id:
+        type: string
+      version:
+        type: string
+  eks.EKSClusterTemplateMetadata:
+    title: EKSClusterTemplateMetadata
+    type: object
+  eks.EKSNodesStatus:
+    title: EKSNodesStatus
+    type: object
+    properties:
+      name:
+        type: string
+      private_ip:
+        type: string
+      public_ip:
+        type: string
+      state:
+        type: string
+  eks.EKSPoolStatus:
+    title: EKSPoolStatus
+    type: object
+    properties:
+      ami_type:
+        type: string
+      desired_size:
+        type: integer
+        format: int64
+      machine_type:
+        type: string
+      max_size:
+        type: integer
+        format: int64
+      min_size:
+        type: integer
+        format: int64
+      name:
+        type: string
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/eks.EKSNodesStatus'
+      pool_arn:
+        type: string
+      status:
+        type: string
+  eks.EncryptionConfig:
+    title: EncryptionConfig
+    type: object
+    properties:
+      enable_encryption:
+        type: boolean
+  eks.Logging:
+    title: Logging
+    type: object
+    properties:
+      enable_api:
+        description: Enable/Disable api logging [optional]
+        type: boolean
+      enable_audit:
+        description: Enable/Disable api audit logging [optional]
+        type: boolean
+      enable_authenticator:
+        description: Enable/Disable authenticator logging  [optional]
+        type: boolean
+      enable_controller_manager:
+        description: Enable/Disable controller logging [optional]
+        type: boolean
+      enable_scheduler:
+        description: Enable/Disable scheduler logging [optional]
+        type: boolean
+  eks.NodePool:
+    title: NodePool
+    type: object
+    properties:
+      ami_type:
+        description: AMI for nodepool [required]
+        type: string
+      disk_size:
+        description: Size of disk for nodes in nodepool [optional]
+        type: integer
+        format: int64
+      instance_type:
+        description: Instance type for nodes [required]
+        type: string
+      node_pool_name:
+        description: Node Pool Name [required]
+        type: string
+      remote_access:
+        $ref: '#/definitions/eks.RemoteAccessConfig'
+        description: Access Levels (private of public)[optional]
+      scaling_config:
+        $ref: '#/definitions/eks.NodePoolScalingConfig'
+        description: Scaling Configurations for nodepool [optional]
+  eks.NodePoolScalingConfig:
+    title: NodePoolScalingConfig
+    type: object
+    properties:
+      desired_size:
+        type: integer
+        format: int64
+      max_size:
+        type: integer
+        format: int64
+      min_size:
+        type: integer
+        format: int64
+  eks.Provider:
+    title: Provider
+    type: object
+  eks.RemoteAccessConfig:
+    title: RemoteAccessConfig
+    type: object
+    properties:
+      enable_remote_access:
+        description: Enable Remote Access [optional]
+        type: boolean
+  eks.VpcConfigRequest:
+    title: VpcConfigRequest
+    type: object
+    properties:
+      endpoint_private_access:
+        type: boolean
+      endpoint_public_access:
+        type: boolean
+      public_access_cidrs:
+        type: array
+        items:
+          $ref: '#/definitions/eks.string'
+  eks.string:
+    title: string
+    type: object
   gcp.AccountData:
     title: AccountData
     type: object
@@ -8658,7 +9441,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57508.0xc00174b5f0.false'
+        $ref: '#/definitions/57610.0xc001917c20.false'
       kube_version:
         type: string
       name:
@@ -8753,6 +9536,9 @@ definitions:
       username:
         description: Name of the user ['optional']
         type: string
+  map[string][]string:
+    title: map[string][]string
+    type: object
   models.Cloud:
     title: Cloud
     type: string
@@ -8761,6 +9547,7 @@ definitions:
     - Azure = "azure"
     - GCP = "gcp"
     - GKE = "gke"
+    - EKS = "eks"
     - DO = "do"
     - DOKS = "doks"
     - IKS = "iks"
@@ -8927,7 +9714,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14357.0xc0017da300.false'
+        $ref: '#/definitions/14357.0xc0019b2930.false'
       name:
         type: string
       node_pools:
@@ -9020,6 +9807,12 @@ tags:
 - name: template/gke
   description: |
     Operations about GKE template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
+- name: cluster/eks
+  description: |
+    Operations about EKS cluster [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/cluster/{cloud}/]
+- name: template/eks
+  description: |
+    Operations about EKS template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
 - name: template/do
   description: |
     Operations about DO template [BASE URL WILL BE CHANGED TO STANDARD URLs IN FUTURE e.g. /antelope/template/{cloud}/]
