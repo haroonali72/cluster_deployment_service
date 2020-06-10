@@ -1,16 +1,47 @@
 # Change Log
 
-## unreleased
+## [v1.37.0] - 2020-06-01
 
-## [v1.32.0] -2020-03-04
+- #336 registry: URL encode repository names when building URLs. @adamwg
+- #335 Add 1-click service and request. @scottcrawford03
 
-- #300 Add reset database user auth method - @zbarahal-do
+## [v1.36.0] - 2020-05-12
+
+- #331 Expose expiry_seconds for Registry.DockerCredentials. @andrewsomething
+
+## [v1.35.1] - 2020-04-21
+
+- #328 Update vulnerable x/crypto dependency - @bentranter
+
+## [v1.35.0] - 2020-04-20
+
+- #326 Add TagCount field to registry/Repository - @nicktate
+- #325 Add DOCR EA routes - @nicktate
+- #324 Upgrade godo to Go 1.14 - @bentranter
+
+## [v1.34.0] - 2020-03-30
+
+- #320 Add VPC v3 attributes - @viola
+
+## [v1.33.1] - 2020-03-23
+
+- #318 upgrade github.com/stretchr/objx past 0.1.1 - @hilary
+
+## [v1.33.0] - 2020-03-20
+
+- #310 Add BillingHistory service and List endpoint - @rbutler
+- #316 load balancers: add new enable_backend_keepalive field - @anitgandhi
+
+## [v1.32.0] - 2020-03-04
+
+- #311 Add reset database user auth method - @zbarahal-do
 
 ## [v1.31.0] - 2020-02-28
 
 - #305 invoices: GetPDF and GetCSV methods - @rbutler
 - #304 Add NewFromToken convenience method to init client - @bentranter
 - #301 invoices: Get, Summary, and List methods - @rbutler
+- #299 Fix param expiry_seconds for kubernetes.GetCredentials request - @velp
 
 ## [v1.30.0] - 2020-02-03
 

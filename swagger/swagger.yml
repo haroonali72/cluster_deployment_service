@@ -2217,7 +2217,7 @@ paths:
     get:
       tags:
       - cluster/eks
-      description: Get Instances for EKS Cluster
+      description: Get Kubernetes Cluster
       operationId: EKSClusterController.Get
       parameters:
       - in: header
@@ -2229,7 +2229,9 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/map[string][]string'
+            type: array
+            items:
+              type: string
         "404":
           description: '{"error": "Not Found"}'
   /cluster/eks/{projectId}/{forceDelete}:
@@ -2289,6 +2291,46 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/eks/ami/{projectId}/:
+    get:
+      tags:
+      - cluster/eks
+      description: Get AMIs for EKS Cluster
+      operationId: EKSClusterController.Get
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              type: string
+        "404":
+          description: '{"error": "Not Found"}'
+  /cluster/eks/instances/{projectId}/:
+    get:
+      tags:
+      - cluster/eks
+      description: Get Instances for EKS Cluster
+      operationId: EKSClusterController.Get
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/map[string][]string'
+        "404":
+          description: '{"error": "Not Found"}'
   /cluster/eks/start/{projectId}:
     post:
       tags:
@@ -6955,16 +6997,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00197e9c0.false:
+  482.0xc001a0c510.false:
     title: "false"
     type: object
-  648.0xc0010ac420.false:
+  648.0xc001123f50.false:
     title: "false"
     type: object
-  667.0xc00186be30.false:
+  667.0xc0018fb980.false:
     title: "false"
     type: object
-  964.0xc001408870.false:
+  964.0xc0014a03c0.false:
     title: "false"
     type: object
   5476.string:
@@ -6979,10 +7021,10 @@ definitions:
   11642.string:
     title: string
     type: object
-  14357.0xc0019b2930.false:
+  14388.0xc001a40480.false:
     title: "false"
     type: object
-  57610.0xc001917c20.false:
+  57609.0xc0019af770.false:
     title: "false"
     type: object
   58305.string:
@@ -7268,7 +7310,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/648.0xc0010ac420.false'
+        $ref: '#/definitions/648.0xc001123f50.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7710,7 +7752,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001408870.false'
+        $ref: '#/definitions/964.0xc0014a03c0.false'
       name:
         type: string
       network_name:
@@ -9441,7 +9483,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57610.0xc001917c20.false'
+        $ref: '#/definitions/57609.0xc0019af770.false'
       kube_version:
         type: string
       name:
@@ -9714,7 +9756,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14357.0xc0019b2930.false'
+        $ref: '#/definitions/14388.0xc001a40480.false'
       name:
         type: string
       node_pools:
