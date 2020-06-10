@@ -627,6 +627,7 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 		return KubeClusterStatus{}, cpErr
 
 	}
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
