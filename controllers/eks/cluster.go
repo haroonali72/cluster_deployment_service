@@ -843,7 +843,7 @@ func (c *EKSClusterController) TerminateCluster() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []string
 // @Failure 404 {"error": "Not Found"}
-// @router /:projectId/ [get]
+// @router /kube/versions/:projectId/ [get]
 func (c *EKSClusterController) GetkubeVersions() {
 	ctx := new(utils.Context)
 
@@ -909,7 +909,7 @@ func (c *EKSClusterController) GetAMI() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} map[string][]string
 // @Failure 404 {"error": "Not Found"}
-// @router /instances/:projectId/ [get]
+// @router /instances/amiType/:projectId/ [get]
 func (c *EKSClusterController) GetInstances() {
 	ctx := new(utils.Context)
 
@@ -920,7 +920,13 @@ func (c *EKSClusterController) GetInstances() {
 		c.ServeJSON()
 		return
 	}
-
+	amiType := c.Ctx.Input.Header("amiType")
+	if amiType == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "amiType is empty"}
+		c.ServeJSON()
+		return
+	}
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
 	if err != nil {
 		beego.Error(err.Error())
@@ -932,7 +938,7 @@ func (c *EKSClusterController) GetInstances() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	instances := eks.GetInstances(*ctx)
+	instances := eks.GetInstances(amiType, *ctx)
 	c.Data["json"] = instances
 	c.ServeJSON()
 }
