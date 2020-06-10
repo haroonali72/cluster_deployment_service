@@ -99,7 +99,7 @@ type KubeWorkerPoolStatus struct {
 }
 type AutoScaling struct{
 	MaxCount          *int32  `json:"max_scaling_group_size" bson:"max_count" description:"Max VM count, must be greater than min count"`
-	MinCount          *int32  `json:"max_scaling_group_size" bson:"min_count" description:"Min VM count"`
+	MinCount          *int32  `json:"min_scaling_group_size" bson:"min_count" description:"Min VM count"`
 	EnableAutoScaling *bool   `json:"autoscale" bson:"auto_scaling" description:"Autoscaling configuration"`
 }
 type KubeNodesStatus struct {
