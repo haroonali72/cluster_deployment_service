@@ -45,24 +45,6 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
         beego.ControllerComments{
-            Method: "GetAMI",
-            Router: `/:projectId/`,
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
-        beego.ControllerComments{
-            Method: "GetInstances",
-            Router: `/:projectId/`,
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
-        beego.ControllerComments{
             Method: "Delete",
             Router: `/:projectId/:forceDelete`,
             AllowHTTPMethods: []string{"delete"},
@@ -74,6 +56,33 @@ func init() {
         beego.ControllerComments{
             Method: "GetAll",
             Router: `/all`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
+            Method: "GetAMI",
+            Router: `/ami/:projectId/`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
+            Method: "ApplyAgent",
+            Router: `/applyagent/:projectId`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
+            Method: "GetInstances",
+            Router: `/instances/:projectId/`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
