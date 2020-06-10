@@ -733,7 +733,7 @@ type HardwareProfile struct {
 // ImageReference specifies information about the image to use. You can specify information about platform
 // images, marketplace images, or virtual machine images. This element is required when you want to use a
 // platform image, marketplace image, or virtual machine image, but is not used in other creation
-// operations. NOTE: Image reference publisher and offer can only be set when you create the scale set.
+// operations.
 type ImageReference struct {
 	// Publisher - The image publisher.
 	Publisher *string `json:"publisher,omitempty"`
@@ -1136,9 +1136,7 @@ func (r Resource) MarshalJSON() ([]byte, error) {
 	return json.Marshal(objectMap)
 }
 
-// Sku describes a virtual machine scale set sku. NOTE: If the new VM SKU is not supported on the hardware
-// the scale set is currently on, you need to deallocate the VMs in the scale set before you modify the SKU
-// name.
+// Sku describes a virtual machine scale set sku.
 type Sku struct {
 	// Name - The sku name.
 	Name *string `json:"name,omitempty"`

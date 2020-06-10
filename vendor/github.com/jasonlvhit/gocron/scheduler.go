@@ -87,9 +87,7 @@ func (s *Scheduler) RunPending() {
 
 	if n != 0 {
 		for i := 0; i < n; i++ {
-			go runnableJobs[i].run()
-			runnableJobs[i].lastRun = time.Now()
-			runnableJobs[i].scheduleNextRun()
+			runnableJobs[i].run()
 		}
 	}
 }
@@ -102,7 +100,7 @@ func (s *Scheduler) RunAll() {
 // RunAllwithDelay runs all jobs with delay seconds
 func (s *Scheduler) RunAllwithDelay(d int) {
 	for i := 0; i < s.size; i++ {
-		go s.jobs[i].run()
+		s.jobs[i].run()
 		if 0 != d {
 			time.Sleep(time.Duration(d))
 		}
