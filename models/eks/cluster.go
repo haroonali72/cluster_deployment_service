@@ -131,7 +131,7 @@ func KubeVersions(ctx utils.Context) []string {
 }
 
 type AMI struct {
-	Key   string `json:"key"`
+	Key   string `json:"name"`
 	Value string `json:"value"`
 }
 
@@ -147,13 +147,13 @@ func GetAMIS() []AMI {
 	ami2.Value = "AL2_x86_64_GPU"
 
 	amis = append(amis, ami)
-	amis = append(amis, ami)
+	amis = append(amis, ami2)
 	return amis
 }
 func GetInstances(amiType string, ctx utils.Context) []string {
 	var list []string
 
-	if amiType == "Amazon Linux 2" {
+	if amiType == "AL2_x86_64" {
 
 		list = append(list, "t3.micro")
 		list = append(list, "t3.small")
