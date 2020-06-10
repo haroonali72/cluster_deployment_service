@@ -1,43 +1,43 @@
 # Contributing
 
-We love contributions! You are welcome to open a pull request, but it's a good idea to
-open an issue and discuss your idea with us first.
-
-Once you are ready to open a PR, please keep the following guidelines in mind:
+If you submit a pull request, please keep the following guidelines in mind:
 
 1. Code should be `go fmt` compliant.
-1. Types, structs and funcs should be documented.
-1. Tests pass.
+2. Types, structs and funcs should be documented.
+3. Tests pass.
 
 ## Getting set up
 
-`godo` uses go modules. Just fork this repo, clone your fork and off you go!
+Assuming your `$GOPATH` is set up according to your desires, run:
+
+```sh
+go get github.com/digitalocean/godo
+go get -u github.com/stretchr/testify/assert
+```
+
+If outside `$GOPATH`, just clone the repository:
+
+```sh
+git clone https://github.com/digitalocean/godo
+```
 
 ## Running tests
 
 When working on code in this repository, tests can be run via:
 
 ```sh
-go test -mod=vendor .
+go test .
 ```
 
 ## Versioning
 
-Godo follows [semver](https://www.semver.org) versioning semantics.
-New functionality should be accompanied by increment to the minor
-version number. Any code merged to master is subject to release.
+Godo follows [semver](https://www.semver.org) versioning semantics.  New functionality should be accompanied by increment to the minor version number. The current strategy is to release often. Any code which is complete, tested, reviewed, and merged to master is worthy of release.
 
 ## Releasing
 
-Releasing a new version of godo is currently a manual process. 
+Releasing a new version of godo is currently a manual process.
 
-Submit a separate pull request for the version change from the pull
-request with your changes.
-
-1. Update the `CHANGELOG.md` with your changes. If a version header
-   for the next (unreleased) version does not exist, create one.
-   Include one bullet point for each piece of new functionality in the
-   release, including the pull request ID, description, and author(s).
+1. Update the `CHANGELOG.md` with your changes. If a version header for the next (unreleased) version does not exist, create one.  Include one bullet point for each piece of new functionality in the release, including the pull request ID, description, and author(s).
 
 ```
 ## [v1.8.0] - 2019-03-13

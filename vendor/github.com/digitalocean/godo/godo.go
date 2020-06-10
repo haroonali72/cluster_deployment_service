@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	libraryVersion = "1.37.0"
+	libraryVersion = "1.32.0"
 	defaultBaseURL = "https://api.digitalocean.com/"
 	userAgent      = "godo/" + libraryVersion
 	mediaType      = "application/json"
@@ -47,7 +47,6 @@ type Client struct {
 	Account           AccountService
 	Actions           ActionsService
 	Balance           BalanceService
-	BillingHistory    BillingHistoryService
 	CDNs              CDNService
 	Domains           DomainsService
 	Droplets          DropletsService
@@ -72,7 +71,6 @@ type Client struct {
 	Registry          RegistryService
 	Databases         DatabasesService
 	VPCs              VPCsService
-	OneClick          OneClickService
 
 	// Optional function called after every successful request made to the DO APIs
 	onRequestCompleted RequestCompletionCallback
@@ -170,12 +168,7 @@ func NewFromToken(token string) *Client {
 	return NewClient(oauth2.NewClient(ctx, ts))
 }
 
-// NewClient returns a new DigitalOcean API client, using the given
-// http.Client to perform all requests.
-//
-// Users who wish to pass their own http.Client should use this method. If
-// you're in need of further customization, the godo.New method allows more
-// options, such as setting a custom URL or a custom user agent string.
+// NewClient returns a new DigitalOcean API client.
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
@@ -187,7 +180,6 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Account = &AccountServiceOp{client: c}
 	c.Actions = &ActionsServiceOp{client: c}
 	c.Balance = &BalanceServiceOp{client: c}
-	c.BillingHistory = &BillingHistoryServiceOp{client: c}
 	c.CDNs = &CDNServiceOp{client: c}
 	c.Certificates = &CertificatesServiceOp{client: c}
 	c.Domains = &DomainsServiceOp{client: c}
@@ -212,7 +204,6 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Registry = &RegistryServiceOp{client: c}
 	c.Databases = &DatabasesServiceOp{client: c}
 	c.VPCs = &VPCsServiceOp{client: c}
-	c.OneClick = &OneClickServiceOp{client: c}
 
 	return c
 }
