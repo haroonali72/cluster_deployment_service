@@ -129,10 +129,25 @@ func KubeVersions(ctx utils.Context) []string {
 	kubeVersions = append(kubeVersions, "1.16")
 	return kubeVersions
 }
-func GetAMIS(ctx utils.Context) []string {
-	var amis []string
-	amis = append(amis, "Amazon Linux 2")
-	amis = append(amis, "Amazon Linux 2 GPU Enabled")
+
+type AMI struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+func GetAMIS() []AMI {
+	var amis []AMI
+
+	var ami AMI
+	ami.Key = "Amazon Linux 2"
+	ami.Value = "AL2_x86_64"
+
+	var ami2 AMI
+	ami2.Key = "Amazon Linux 2 GPU Enabled"
+	ami2.Value = "AL2_x86_64_GPU"
+
+	amis = append(amis, ami)
+	amis = append(amis, ami)
 	return amis
 }
 func GetInstances(amiType string, ctx utils.Context) []string {
