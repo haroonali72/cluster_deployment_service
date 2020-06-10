@@ -167,9 +167,9 @@ type KubeWorkerPoolStatus struct {
 	Size      string      `json:"machine_type"`
 	Nodes     []PoolNodes `json:"nodes"`
 	Count     int         `json:"node_count"`
-	AutoScale bool        `json:"auto_scaling"`
-	MinCount  int         `json:"min_count"`
-	MaxCount  int         `json:"max_count"`
+	AutoScale bool        `json:"auto_scaling,omitempty"`
+	MinCount  int         `json:"min_scaling_group_size,omitempty"`
+	MaxCount  int         `json:"max_scaling_group_size,omitempty"`
 }
 
 type PoolNodes struct {

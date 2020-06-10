@@ -3405,7 +3405,7 @@
                 }
             }
         },
-        "/cluster/eks/instances/{projectId}/": {
+        "/cluster/eks/instances/amiType/{projectId}/": {
             "get": {
                 "tags": [
                     "cluster/eks"
@@ -3426,6 +3426,38 @@
                         "description": "",
                         "schema": {
                             "$ref": "#/definitions/map[string][]string"
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/eks/kube/versions/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "Get Kubernetes Cluster",
+                "operationId": "EKSClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
@@ -3601,9 +3633,16 @@
                 "tags": [
                     "cluster/eks"
                 ],
-                "description": "Get Kubernetes Cluster",
+                "description": "Get cluster against the projectId",
                 "operationId": "EKSClusterController.Get",
                 "parameters": [
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
@@ -3616,14 +3655,17 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/eks.EKSCluster"
                         }
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -10508,11 +10550,11 @@
             "title": "string",
             "type": "object"
         },
-        "14388.0xc0019e9200.false": {
+        "14388.0xc001a08ae0.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0019a7290.false": {
+        "482.0xc0019d6b70.false": {
             "title": "false",
             "type": "object"
         },
@@ -10520,15 +10562,15 @@
             "title": "string",
             "type": "object"
         },
-        "57609.0xc001964510.false": {
+        "57716.0xc001977dd0.false": {
             "title": "false",
             "type": "object"
         },
-        "59816.string": {
+        "59747.string": {
             "title": "string",
             "type": "object"
         },
-        "618.0xc0010e49f0.false": {
+        "618.0xc0011122d0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10536,7 +10578,7 @@
             "title": "string",
             "type": "object"
         },
-        "667.0xc0018aa720.false": {
+        "667.0xc0018e2000.false": {
             "title": "false",
             "type": "object"
         },
@@ -10548,7 +10590,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc0014444b0.false": {
+        "964.0xc00144bd70.false": {
             "title": "false",
             "type": "object"
         },
@@ -10928,7 +10970,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc0010e49f0.false"
+                    "$ref": "#/definitions/618.0xc0011122d0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11555,7 +11597,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0014444b0.false"
+                    "$ref": "#/definitions/964.0xc00144bd70.false"
                 },
                 "name": {
                     "type": "string"
@@ -11907,11 +11949,11 @@
                 "machine_type": {
                     "type": "string"
                 },
-                "max_count": {
+                "max_scaling_group_size": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "min_count": {
+                "min_scaling_group_size": {
                     "type": "integer",
                     "format": "int64"
                 },
@@ -12316,7 +12358,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/59816.string"
+                    "$ref": "#/definitions/59747.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -13411,11 +13453,11 @@
                 "machine_type": {
                     "type": "string"
                 },
-                "max_count": {
+                "max_scaling_group_size": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "min_count": {
+                "min_scaling_group_size": {
                     "type": "integer",
                     "format": "int64"
                 },
@@ -13945,6 +13987,14 @@
                 "machine_type": {
                     "type": "string"
                 },
+                "max_scaling_group_size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "min_scaling_group_size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -14059,7 +14109,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/57609.0xc001964510.false"
+                    "$ref": "#/definitions/57716.0xc001977dd0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14431,7 +14481,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14388.0xc0019e9200.false"
+                    "$ref": "#/definitions/14388.0xc001a08ae0.false"
                 },
                 "name": {
                     "type": "string"
