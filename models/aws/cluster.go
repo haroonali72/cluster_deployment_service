@@ -9,7 +9,6 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
-	"antelope/models/woodpecker"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"
@@ -855,31 +854,4 @@ func ValidateProfile(key, secret, region string, ctx utils.Context) types.Custom
 	}
 
 	return types.CustomCPError{}
-}
-
-func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, clusterName string) (confError error) {
-	companyId := ctx.Data.Company
-	projetcID := ctx.Data.ProjectId
-	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
-	if err != nil {
-		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
-	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
-	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
-	if err != nil {
-		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e accessKey=" + credentials.Profile.AccessKey + " -e cluster=" + clusterName + " -e secretKey=" + credentials.Profile.SecretKey + " -e region=" + credentials.Profile.Region + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.EKSAuthContainerName
-
-	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
-	if err != nil {
-		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-	return nil
 }
