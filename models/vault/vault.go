@@ -96,8 +96,8 @@ func PostSSHKey(keyRaw interface{}, keyName string, cloudType models.Cloud, ctx 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 400, err
 	}
-	if response.StatusCode == 500 {
-		return 0, errors.New("error in saving key")
+	if response.StatusCode !=201 {
+		return response.StatusCode, errors.New("Error in saving key")
 	}
 	return response.StatusCode, err
 
