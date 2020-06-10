@@ -8,8 +8,10 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"antelope/models/woodpecker"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -448,7 +450,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	/**
 	  TODO : Add Agent Deployment Process.Due on @Ahmad.
 	*/
-	/*confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
@@ -464,11 +466,11 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		cpErr := ApiError(confError, "Error occurred while deploying agent", 500)
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
-			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("EKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
-	}*/
+	}
 	cluster.Status = models.ClusterCreated
 
 	confError = UpdateEKSCluster(cluster, ctx)
@@ -627,4 +629,30 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 	}
 
 	return response, types.CustomCPError{}
+}
+func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, clusterName string) (confError error) {
+	companyId := ctx.Data.Company
+	projetcID := ctx.Data.ProjectId
+	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	if err != nil {
+		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
+	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e accessKey=" + credentials.Profile.AccessKey + " -e cluster=" + clusterName + " -e secretKey=" + credentials.Profile.SecretKey + " -e region=" + credentials.Profile.Region + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.EKSAuthContainerName
+
+	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	return nil
 }
