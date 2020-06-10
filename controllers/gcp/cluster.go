@@ -22,9 +22,9 @@ type GcpClusterController struct {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} gcp.Cluster_Def
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId/ [get]
 func (c *GcpClusterController) Get() {
@@ -96,7 +96,7 @@ func (c *GcpClusterController) Get() {
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []gcp.Cluster_Def
-// @Failure 400 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 500 {"error": "error msg"}
 // @router /all [get]
 func (c *GcpClusterController) GetAll() {
@@ -153,9 +153,9 @@ func (c *GcpClusterController) GetAll() {
 // @Description create a new cluster
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
+// @Success 200 {"msg": "Cluster created successfully"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 409 {"error": "cluster against same project id already exists"}
 // @Failure 410 {"error": "Core limit exceeded"}
 // @Failure 500 {"error": "error msg"}
@@ -255,10 +255,10 @@ func (c *GcpClusterController) Post() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
 // @Success 200 {"msg": "cluster updated successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 402 {"error": "error msg"}
-// @Failure 404 {"error": "no cluster exists with this name"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "error msg"}
 // @router / [put]
 func (c *GcpClusterController) Patch() {
@@ -360,9 +360,9 @@ func (c *GcpClusterController) Patch() {
 // @Param	forceDelete path  boolean	true "deleting cluster forcefully"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "cluster deleted successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "project id is empty"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "error msg"}
 // @router /:projectId/:forceDelete  [delete]
 func (c *GcpClusterController) Delete() {
@@ -471,9 +471,9 @@ func (c *GcpClusterController) Delete() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "error msg"}
 // @router /start/:projectId [post]
 func (c *GcpClusterController) StartCluster() {
@@ -613,9 +613,9 @@ func (c *GcpClusterController) StartCluster() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
 // @Failure 206 {object} gcp.Cluster_Def
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "authorization params missing or invalid"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 500 {"error": "error msg"}
 // @router /status/:projectId/ [get]
 func (c *GcpClusterController) GetStatus() {
@@ -713,8 +713,8 @@ func (c *GcpClusterController) GetStatus() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {"msg": "cluster terminated successfully"}
 // @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
-// @Failure 400 {"error": "error_msg"}
-// @Failure 404 {"error": "error_msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "error msg"}
 // @router /terminate/:projectId/ [post]
 func (c *GcpClusterController) TerminateCluster() {
@@ -843,7 +843,7 @@ func (c *GcpClusterController) TerminateCluster() {
 // @Description returns ssh key pairs
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 500 {"error": "error msg"}
 // @router /sshkeys [get]
 func (c *GcpClusterController) GetSSHKeys() {
@@ -893,7 +893,7 @@ func (c *GcpClusterController) GetSSHKeys() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "profile id is empty"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
 // @Failure 500 {"error":  "error msg"}
 // @router /serviceaccounts [get]
@@ -963,8 +963,8 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Param	X-Auth-Token		header	string	true "token"
 // @Param	teams		header	string	true "teams"
 // @Success 200 		{object} key_utils.AZUREKey
-// @Failure 400 		{"error": "error msg"}
-// @Failure 404 		{"error": "error msg"}
+// @Failure 400 		{"error": "Bad Request"}
+// @Failure 404 		{"error": "Not Found"}
 // @Failure 500 		{"error": "error msg"}
 // @router /sshkey/:keyname/:username/:projectId [post]
 func (c *GcpClusterController) PostSSHKey() {
@@ -1042,8 +1042,8 @@ func (c *GcpClusterController) PostSSHKey() {
 // @Param	keyname	 	path	string	true	"keyname"
 // @Param	X-Auth-Token		header	string	true "token"
 // @Success 200 		{"msg": key deleted successfully}
-// @Failure 400 		{"error": "error msg"}
-// @Failure 404 		{"error": error msg}
+// @Failure 400 		{"error": "Bad Request"}
+// @Failure 404 		{"error": "Not Found"}
 // @router /sshkey/:keyname [delete]
 func (c *GcpClusterController) DeleteSSHKey() {
 
@@ -1105,9 +1105,9 @@ func (c *GcpClusterController) DeleteSSHKey() {
 // @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
 // @Success 200 []string
-// @Failure 400 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "authorization params missing or invalid"}
+// @Failure 401 {"error": "Not Found"}
 // @router /getallmachines/:region/:zone [get]
 func (c *GcpClusterController) GetAllMachines() {
 
@@ -1182,8 +1182,8 @@ func (c *GcpClusterController) GetAllMachines() {
 // @Title Get All Regions
 // @Description return all regions
 // @Success 200 {object} []string
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
 // @router /getallregions [get]
 func (c *GcpClusterController) GetAllRegions() {
@@ -1206,9 +1206,9 @@ func (c *GcpClusterController) GetAllRegions() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.GcpCredentials	true	"body for cluster content"
 // @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 409 {"error": "profile is invalid"}
 // @Failure 500 {"error": "error msg"}
 // @router /validateProfile [post]
@@ -1278,8 +1278,8 @@ func (c *GcpClusterController) ValidateProfile() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	region	path	string	true	"region of GCP"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "error msg"}
-// @Failure 404 {"error": "error msg"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "authorization params missing or invalid"}
 // @router /getzones/:region [get]
 func (c *GcpClusterController) GetZones() {
