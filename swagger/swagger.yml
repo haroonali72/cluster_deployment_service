@@ -7061,16 +7061,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc001999200.false:
+  482.0xc0019d6b70.false:
     title: "false"
     type: object
-  618.0xc0010e4960.false:
+  618.0xc0011122d0.false:
     title: "false"
     type: object
-  667.0xc0018a0690.false:
+  667.0xc0018e2000.false:
     title: "false"
     type: object
-  964.0xc00144a420.false:
+  964.0xc00144bd70.false:
     title: "false"
     type: object
   5534.string:
@@ -7085,10 +7085,10 @@ definitions:
   11642.string:
     title: string
     type: object
-  14388.0xc0019dd170.false:
+  14388.0xc001a08ae0.false:
     title: "false"
     type: object
-  57609.0xc00195a480.false:
+  57716.0xc001977dd0.false:
     title: "false"
     type: object
   59747.string:
@@ -7374,7 +7374,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0010e4960.false'
+        $ref: '#/definitions/618.0xc0011122d0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7816,7 +7816,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00144a420.false'
+        $ref: '#/definitions/964.0xc00144bd70.false'
       name:
         type: string
       network_name:
@@ -8058,10 +8058,10 @@ definitions:
         type: string
       machine_type:
         type: string
-      max_count:
+      max_scaling_group_size:
         type: integer
         format: int64
-      min_count:
+      min_scaling_group_size:
         type: integer
         format: int64
       name:
@@ -9099,10 +9099,10 @@ definitions:
         type: string
       machine_type:
         type: string
-      max_count:
+      max_scaling_group_size:
         type: integer
         format: int64
-      min_count:
+      min_scaling_group_size:
         type: integer
         format: int64
       name:
@@ -9465,6 +9465,12 @@ definitions:
         type: string
       machine_type:
         type: string
+      max_scaling_group_size:
+        type: integer
+        format: int64
+      min_scaling_group_size:
+        type: integer
+        format: int64
       name:
         type: string
       node_count:
@@ -9547,7 +9553,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57609.0xc00195a480.false'
+        $ref: '#/definitions/57716.0xc001977dd0.false'
       kube_version:
         type: string
       name:
@@ -9820,7 +9826,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14388.0xc0019dd170.false'
+        $ref: '#/definitions/14388.0xc001a08ae0.false'
       name:
         type: string
       node_pools:
