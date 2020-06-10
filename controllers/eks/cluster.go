@@ -876,7 +876,7 @@ func (c *EKSClusterController) GetkubeVersions() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} []string
 // @Failure 404 {"error": "Not Found"}
-// @router /:projectId/ [get]
+// @router /ami/:projectId/ [get]
 func (c *EKSClusterController) GetAMI() {
 	ctx := new(utils.Context)
 
@@ -909,7 +909,7 @@ func (c *EKSClusterController) GetAMI() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} map[string][]string
 // @Failure 404 {"error": "Not Found"}
-// @router /:projectId/ [get]
+// @router /instances/:projectId/ [get]
 func (c *EKSClusterController) GetInstances() {
 	ctx := new(utils.Context)
 
