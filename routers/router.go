@@ -16,6 +16,7 @@ import (
 	_default "antelope/controllers/default"
 	"antelope/controllers/do"
 	"antelope/controllers/doks"
+	"antelope/controllers/eks"
 	"antelope/controllers/gcp"
 	"antelope/controllers/gke"
 	"antelope/controllers/iks"
@@ -79,6 +80,16 @@ func init() {
 		beego.NSNamespace("/template/gke",
 			beego.NSInclude(
 				&gke.GKETemplateController{},
+			),
+		),
+		beego.NSNamespace("/cluster/eks",
+			beego.NSInclude(
+				&eks.EKSClusterController{},
+			),
+		),
+		beego.NSNamespace("/template/eks",
+			beego.NSInclude(
+				&eks.EKSTemplateController{},
 			),
 		),
 		beego.NSNamespace("/template/do",

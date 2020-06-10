@@ -113,7 +113,7 @@ func CreateCluster(cluster Cluster_Def, ctx utils.Context, token string, teams s
 		inserting key in vault
 	**/
 	for index, pool := range cluster.NodePools {
-
+		pool.KeyInfo.KeyName=pool.Name
 		_, err := vault.PostSSHKey(pool.KeyInfo, pool.Name, models.OP, ctx, token, teams, "")
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -163,7 +163,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context, teams, t
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
-	err = CreateCluster(cluster, ctx, teams, token)
+	err = CreateCluster(cluster, ctx, token,teams)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err

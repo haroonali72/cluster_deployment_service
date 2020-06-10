@@ -398,7 +398,6 @@ func GetGKECustomerTemplatesMetadata(ctx utils.Context, data rbacAuthentication.
 	return templateMetadata, nil
 }
 
-
 func GetGKEDefault(ctx utils.Context) (template GKEClusterTemplate, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {

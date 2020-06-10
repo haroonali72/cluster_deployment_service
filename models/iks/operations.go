@@ -85,62 +85,62 @@ type KubeClusterStatus struct {
 	Region            string                 `json:"region"`
 	ResourceGroupName string                 `json:"resourceGroupName"`
 	State             string                 `json:"state"`
-	KubernetesVersion string 				 `json:"masterKubeVersion"`
+	KubernetesVersion string                 `json:"masterKubeVersion"`
 	WorkerCount       int                    `json:"workerCount"`
 	WorkerPools       []KubeWorkerPoolStatus `json:"nodePools"`
 	EtcdPort          string                 `json:"etcdPort"`
 	Crn               string                 `json:"crn"`
-	Status            models.Type 			  `json:"status"`
+	Status            models.Type            `json:"status"`
 }
 type KubeClusterStatus1 struct {
-	ID      		  string                  `json:"id,omitempty"`
+	ID                string                  `json:"id,omitempty"`
 	Name              string                  `json:"name,omitempty"`
 	Region            string                  `json:"region,omitempty"`
 	Status            models.Type             `json:"status,omitempty"`
-	ResourceGroup	  string                  `json:"resource_group,omitempty"`
+	ResourceGroup     string                  `json:"resource_group,omitempty"`
 	State             string                  `json:"state,omitempty"`
-	KubernetesVersion string 				  `json:"kubernetes_version,omitempty"`
-	PoolCount       int                       `json:"nodepool_count,omitempty"`
+	KubernetesVersion string                  `json:"kubernetes_version,omitempty"`
+	PoolCount         int                     `json:"nodepool_count,omitempty"`
 	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
 }
 
 type KubeWorkerPoolStatus struct {
-	ID      string                  `json:"id"`
-	Name    string                  `json:"poolName"`
-	Flavour string                  `json:"flavor"`
-	Autoscaling   bool              `json:"autoscaleEnabled"`
-	Count  int                      `json:"workerCount"`
-	Nodes   []KubeWorkerNodesStatus `json:"nodes"`
+	ID          string                  `json:"id"`
+	Name        string                  `json:"poolName"`
+	Flavour     string                  `json:"flavor"`
+	Autoscaling bool                    `json:"autoscaleEnabled"`
+	Count       int                     `json:"workerCount"`
+	Nodes       []KubeWorkerNodesStatus `json:"nodes"`
 }
 type KubeWorkerPoolStatus1 struct {
-	ID      string                   	`json:"id,omitempty"`
-	Name    string                    	`json:"name,omitempty"`
-	Flavour string                    	`json:"machine_type,omitempty"`
-	Autoscaling bool 				  	`json:"autoscaling,omitempty"`
-	Nodes   []KubeWorkerNodesStatus1  	`json:"nodes"`
-	Count    int                   	 	`json:"node_count,omitempty"`
-	SubnetId 			string   		`json:"subnet_id,omitempty"`
+	ID          string                   `json:"id,omitempty"`
+	Name        string                   `json:"name,omitempty"`
+	Flavour     string                   `json:"machine_type,omitempty"`
+	Autoscaling bool                     `json:"autoscaling,omitempty"`
+	Nodes       []KubeWorkerNodesStatus1 `json:"nodes"`
+	Count       int                      `json:"node_count,omitempty"`
+	SubnetId    string                   `json:"subnet_id,omitempty"`
 }
 type KubeWorkerNodesStatus1 struct {
-	PoolId   			string       				`json:"id,omitempty"`
-	Name                string    					`json:"name,omitempty"`
-	State     			string 						`json:"state,omitempty"`
-	PrivateIp           string 						`json:"private_ip,omitempty"`
-	PublicIp            string 						`json:"public_ip,omitempty"`
+	PoolId    string `json:"id,omitempty"`
+	Name      string `json:"name,omitempty"`
+	State     string `json:"state,omitempty"`
+	PrivateIp string `json:"private_ip,omitempty"`
+	PublicIp  string `json:"public_ip,omitempty"`
 }
 type KubeWorkerNodesStatus struct {
-	ID        string      `json:"id"`
-	Flavour   string      `json:"flavor"`
-	Network   NetworkInfo `json:"networkInformation"`
-	Lifecycle LifeCycle   `json:"lifecycle"`
-	Location  string      `json:"location"`
-	PoolId   string      				   `json:"poolID"`
-	NetworkInterfaces []networkInterfaces  `json:"networkInterfaces"`
+	ID                string              `json:"id"`
+	Flavour           string              `json:"flavor"`
+	Network           NetworkInfo         `json:"networkInformation"`
+	Lifecycle         LifeCycle           `json:"lifecycle"`
+	Location          string              `json:"location"`
+	PoolId            string              `json:"poolID"`
+	NetworkInterfaces []networkInterfaces `json:"networkInterfaces"`
 }
-type networkInterfaces struct{
-	SubnetId string    	  `json:"subnetID,omitempty"`
-	IpAddress string	  `json:"ipAddress,omitempty"`
-	Cidr      string      `json:"cidr,omitempty"`
+type networkInterfaces struct {
+	SubnetId  string `json:"subnetID,omitempty"`
+	IpAddress string `json:"ipAddress,omitempty"`
+	Cidr      string `json:"cidr,omitempty"`
 }
 
 type LifeCycle struct {
@@ -150,7 +150,6 @@ type NetworkInfo struct {
 	PrivateIp string `json:"privateIP"`
 	PublicIp  string `json:"publicIP"`
 }
-
 
 type AllInstancesResponse struct {
 	Profile []InstanceProfile
@@ -182,12 +181,12 @@ func (cloud *IBM) init(region string, ctx utils.Context) types.CustomCPError {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			ctx.SendLogs("Error while getting IBM Auth Token: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(err, "Error while getting IBM Auth Token", 502)
+			cpErr := ApiError(err, "Error while getting IBM Auth Token", 512)
 			return cpErr
 		}
 		beego.Info(string(body))
 		ctx.SendLogs("Error while getting IBM Auth Token: "+string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "Error while getting IBM Auth Token", 502)
+		cpErr := ApiError(errors.New(string(body)), "Error while getting IBM Auth Token", 512)
 		return cpErr
 	}
 	defer res.Body.Close()
@@ -374,7 +373,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 
 	if res.StatusCode != 201 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "error occured during iks cluster creation", 502)
+		cpErr := ApiError(errors.New(string(body)), "error occured during iks cluster creation", 512)
 		return "", cpErr
 	}
 
@@ -437,7 +436,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 502)
+			cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 			return cpErr
 		}
 
@@ -447,17 +446,17 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 			err = json.Unmarshal(body, &ibmResponse)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 502)
+				cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 				return cpErr
 			}
 			if !strings.Contains(ibmResponse.Description, "already exits") {
 				ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 502)
+				cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 512)
 				return cpErr
 			}
 		} else {
 			ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 502)
+			cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 512)
 			return cpErr
 		}
 	}
@@ -504,7 +503,7 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 502)
+			cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 512)
 			return cpErr
 		}
 
@@ -514,17 +513,17 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 			err = json.Unmarshal(body, &ibmResponse)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 502)
+				cpErr := ApiError(err, "error occurred while adding zone to workpool: "+poolName, 512)
 				return cpErr
 			}
 			if !strings.Contains(ibmResponse.Description, "The zone is already part of the worker pool") {
 				ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 502)
+				cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 512)
 				return cpErr
 			}
 		} else {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 502)
+			cpErr := ApiError(errors.New(string(body)), "error occurred while adding zone to workpool: "+poolName, 512)
 			return cpErr
 		}
 	}
@@ -554,7 +553,7 @@ func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, types.CustomCPErr
 	}
 	if res.StatusCode != 200 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "error occurred while getting kubernetes versions", 502)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while getting kubernetes versions", 512)
 		return Versions{}, cpErr
 	}
 	// Reading response
@@ -621,7 +620,7 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 	}
 	if res.StatusCode != 204 {
 		ctx.SendLogs(string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "error occurred while terminating cluster "+cluster.Name, 502)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while terminating cluster "+cluster.Name, 512)
 		return cpErr
 	}
 	for {
@@ -664,7 +663,7 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 
 	if res.StatusCode != 200 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(res.Status), "error in fetching cluster", 502)
+		cpErr := ApiError(errors.New(res.Status), "error in fetching cluster", 512)
 		return KubeClusterStatus{}, cpErr
 	}
 
@@ -704,7 +703,6 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	client := utils.InitReq()
 
 	res, err := client.SendRequest(req)
-
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while fetching cluster", 500)
@@ -727,7 +725,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 
 	if res.StatusCode != 200 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", 502)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", 512)
 		return KubeClusterStatus{}, cpErr
 	}
 
@@ -772,7 +770,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	}
 	if res.StatusCode != 200 {
 		ctx.SendLogs(string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "Error occurred while getting machine types.", 502)
+		cpErr := ApiError(errors.New(string(body)), "Error occurred while getting machine types.", 512)
 		return AllInstancesResponse{}, cpErr
 	}
 
@@ -826,7 +824,7 @@ func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Cont
 
 	if res.StatusCode != 200 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", 502)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while fetching cluster", 512)
 		return []KubeWorkerNodesStatus{}, cpErr
 	}
 

@@ -485,7 +485,6 @@ func (c *GKEClusterController) Patch() {
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster.CompanyId = userInfo.CompanyId
 
-
 	err = gke.UpdateGKECluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

@@ -316,7 +316,7 @@ func (c *OPClusterController) Patch() {
 	}
 
 	ctx.SendLogs("OPClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
+	if strings.ToLower(string(cluster.Status)) != strings.ToLower(string(models.New)) && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
 		ctx.SendLogs("OPClusterController : Cluster is in "+string(cluster.Status)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}

@@ -42,10 +42,9 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 	//q.Add("sub_type", string(cloudType))
 	req.URL.RawQuery = q.Encode()
 
-	ctx.SendLogs("RBAC- Request_URL:" + getRbacHost() + models.RbacEndpoint + models.RbacListURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC- Request Parameters: companyId: "+companyId +" ,resource_type: "+resourceType, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC- Request Header :" +" X-Auth-Token: " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.SendLogs("RBAC- Request_URL:"+getRbacHost()+models.RbacEndpoint+models.RbacListURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Parameters: companyId: "+companyId+" ,resource_type: "+resourceType, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Header :"+" X-Auth-Token: "+token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
@@ -53,7 +52,7 @@ func GetAllAuthenticate(resourceType, companyId string, token string, cloudType 
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return 500, err, List{}
 	}
-	ctx.SendLogs("RBAC- Response :" + string(response.StatusCode) +response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Response :"+string(response.StatusCode)+response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	defer response.Body.Close()
 
@@ -99,10 +98,9 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
-	ctx.SendLogs("RBAC- Request_URL :" + getRbacHost() + models.RbacEndpoint + models.RbacAccessURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC: Request Parameters :"+" resource_id: "+resourceId +" ,resource_type"+resourceType+" ,action "+action, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	ctx.SendLogs("RBAC- Request_URL :"+getRbacHost()+models.RbacEndpoint+models.RbacAccessURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC: Request Parameters :"+" resource_id: "+resourceId+" ,resource_type"+resourceType+" ,action "+action, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Header :"+" X-Auth-Token "+token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
@@ -112,7 +110,7 @@ func Authenticate(cloud interface{}, resourceType, resourceId string, action str
 	}
 	defer response.Body.Close()
 
-	ctx.SendLogs("RBAC- Response :" + string(response.StatusCode) +response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Response :"+string(response.StatusCode)+response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if response.StatusCode == 200 {
 		return 0, true, nil
@@ -133,9 +131,9 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
-	ctx.SendLogs("RBAC- Request_URL:" + getRbacHost() + models.RbacEndpoint +  models.RbacEvaluateURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC- Request Parameters: "+"resource: " + "clusterTemplate"+" ,action "+action, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request_URL:"+getRbacHost()+models.RbacEndpoint+models.RbacEvaluateURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Parameters: "+"resource: "+"clusterTemplate"+" ,action "+action, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Header :"+" X-Auth-Token "+token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
@@ -145,7 +143,7 @@ func Evaluate(action string, token string, ctx utils.Context) (bool, error) {
 	}
 	defer response.Body.Close()
 
-	ctx.SendLogs("RBAC- Response :" + string(response.StatusCode) +response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Response :"+string(response.StatusCode)+response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if response.StatusCode == 200 {
 		return true, nil
@@ -164,8 +162,8 @@ func GetInfo(token string) (int, types.Response, error) {
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
-	beego.Info("RBAC- Request_URL:" + getRbacHost() + models.RbacEndpoint +  models.RbacInfoURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	beego.Info("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("RBAC- Request_URL:"+getRbacHost()+models.RbacEndpoint+models.RbacInfoURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("RBAC- Request Header :"+" X-Auth-Token "+token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
@@ -174,7 +172,7 @@ func GetInfo(token string) (int, types.Response, error) {
 	}
 	defer response.Body.Close()
 
-	beego.Info("RBAC- Response :" + string(response.StatusCode) + response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("RBAC- Response :"+string(response.StatusCode)+response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if response.StatusCode != 200 {
 		return response.StatusCode, types.Response{}, errors.New(response.Status)
@@ -202,8 +200,8 @@ func GetRole(token string) (types.UserRole, error) {
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
-	beego.Info("RBAC- Request_URL:" + getRbacHost() + models.RbacEndpoint +  models.RbacExtractURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	beego.Info("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("RBAC- Request_URL:"+getRbacHost()+models.RbacEndpoint+models.RbacExtractURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("RBAC- Request Header :"+" X-Auth-Token "+token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	client := utils.InitReq()
 	response, err := client.SendRequest(req)
@@ -212,7 +210,7 @@ func GetRole(token string) (types.UserRole, error) {
 	}
 	defer response.Body.Close()
 
-	beego.Info("RBAC- Response :" + string(response.StatusCode)+ response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	beego.Info("RBAC- Response :"+string(response.StatusCode)+response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if response.StatusCode != 200 {
 		return types.UserRole{}, errors.New("RBAC: Unauthorized , " + strconv.Itoa(response.StatusCode))
@@ -256,7 +254,6 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 		req, err = utils.CreatePutRequest(request_data, getRbacHost()+"/security/api/rbac/policy")
 	}
 
-
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -268,8 +265,8 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 	}
 	req.Header.Set("X-Auth-Token", token)
 
-	ctx.SendLogs("RBAC- Request_URL:" + getRbacHost()+"/security/api/rbac/policy", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request_URL:"+getRbacHost()+"/security/api/rbac/policy", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Header :"+" X-Auth-Token "+token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	response, err := client.SendRequest(req)
 	if err != nil {
@@ -279,7 +276,7 @@ func CreatePolicy(resourceId, token, userName, companyId string, requestType mod
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	beego.Info(string(contents))
-	ctx.SendLogs("RBAC- Response :" + string(response.StatusCode) +response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Response :"+string(response.StatusCode)+response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	return 0, err
 
@@ -306,16 +303,16 @@ func DeletePolicy(cloud models.Cloud, resourceId string, token string, ctx utils
 	req.Header.Set("X-Auth-Token", token)
 	req.URL.RawQuery = q.Encode()
 
-	ctx.SendLogs("RBAC- Request_URL :" + getRbacHost() + models.RbacEndpoint + models.RbacPolicyURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC: Request Parameters :"+" resource_id: "+resourceId +" ,resource_type: clusterTemplate", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-	ctx.SendLogs("RBAC- Request Header :" +" X-Auth-Token " +token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request_URL :"+getRbacHost()+models.RbacEndpoint+models.RbacPolicyURI, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC: Request Parameters :"+" resource_id: "+resourceId+" ,resource_type: clusterTemplate", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Request Header :"+" X-Auth-Token "+token, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	response, err := client.SendRequest(req)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return response.StatusCode, err
 	}
-	ctx.SendLogs("RBAC- Response :" + string(response.StatusCode) +response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	ctx.SendLogs("RBAC- Response :"+string(response.StatusCode)+response.Status, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	return response.StatusCode, err
 

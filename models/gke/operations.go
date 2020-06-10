@@ -29,10 +29,10 @@ type GKE struct {
 	Zone        string
 }
 
-func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster,types.CustomCPError) {
+func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster, types.CustomCPError) {
 	if cloud.Client == nil {
 		err := cloud.init()
-		if err.Description !=""{
+		if err.Description != "" {
 			return nil, err
 		}
 	}
@@ -44,7 +44,7 @@ func (cloud *GKE) ListClusters(ctx utils.Context) ([]GKECluster,types.CustomCPEr
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiErrors(err,"Error in listing running clusters")
+		return nil, ApiErrors(err, "Error in listing running clusters")
 	}
 
 	result := []GKECluster{}
@@ -70,7 +70,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 		}
 	}
 
-	_, err := cloud.Client.Projects.Zones.Clusters.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterRequest, ).Context(context.Background()).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterRequest).Context(context.Background()).Do()
 
 	requestJson, _ := json.Marshal(clusterRequest)
 
@@ -87,16 +87,16 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 			models.Backend_Logging,
 		)
 		return types.CustomCPError{
-			StatusCode:500,
-			Error:"Error in cluster creation",
-			Description:err.Error(),
+			StatusCode:  500,
+			Error:       "Error in cluster creation",
+			Description: err.Error(),
 		}
 	}
 
 	return cloud.waitForCluster(gkeCluster.Name, ctx)
 }
 
-func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.Context)types.CustomCPError {
+func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.Context) types.CustomCPError {
 	if newVersion == "" {
 		return types.CustomCPError{}
 	}
@@ -118,9 +118,9 @@ func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.
 			models.Backend_Logging,
 		)
 		return types.CustomCPError{
-			StatusCode:500,
-			Error:"Error in cluster creation",
-			Description:err.Error(),
+			StatusCode:  500,
+			Error:       "Error in cluster creation",
+			Description: err.Error(),
 		}
 	}
 
@@ -147,7 +147,7 @@ func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ct
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in updating node version")
+		return ApiErrors(err, "Error in updating node version")
 	}
 
 	return cloud.waitForNodePool(clusterName, nodeName, ctx)
@@ -156,9 +156,9 @@ func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ct
 func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, ctx utils.Context) types.CustomCPError {
 	if newCount == 0 {
 		return types.CustomCPError{
-			StatusCode: 500,
-			Error: "Error in updating node count",
-			Description:"Node Count Can't be zero.Select a numerical value for node count.",
+			StatusCode:  500,
+			Error:       "Error in updating node count",
+			Description: "Node Count Can't be zero.Select a numerical value for node count.",
 		}
 	}
 
@@ -177,7 +177,7 @@ func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, 
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in updating node count")
+		return ApiErrors(err, "Error in updating node count")
 	}
 
 	return cloud.waitForNodePool(clusterName, nodeName, ctx)
@@ -196,20 +196,20 @@ func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) types.Cus
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in cluster deletion")
+		return ApiErrors(err, "Error in cluster deletion")
 	} else if err != nil && strings.Contains(err.Error(), "notFound") {
 		ctx.SendLogs(
 			"GKE cluster '"+clusterName+"' was not found.",
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in cluster deletion")
+		return ApiErrors(err, "Error in cluster deletion")
 	}
 
 	return types.CustomCPError{}
 }
 
-func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context)types.CustomCPError {
+func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context) types.CustomCPError {
 	message := ""
 	for {
 		cluster, err := cloud.Client.Projects.Zones.Clusters.Get(
@@ -223,7 +223,7 @@ func (cloud *GKE) waitForCluster(clusterName string, ctx utils.Context)types.Cus
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
-			return ApiErrors(err,"Error in GKE cluster creation/Updation")
+			return ApiErrors(err, "Error in GKE cluster creation/Updation")
 		}
 		if cluster.Status == statusRunning {
 			ctx.SendLogs(
@@ -260,7 +260,7 @@ func (cloud *GKE) waitForNodePool(clusterName, nodeName string, ctx utils.Contex
 				models.LOGGING_LEVEL_ERROR,
 				models.Backend_Logging,
 			)
-			return ApiErrors(err,"Error in cluster"+clusterName +"nodepool creation/updation")
+			return ApiErrors(err, "Error in cluster"+clusterName+"nodepool creation/updation")
 		}
 		if nodepool.Status == statusRunning {
 			ctx.SendLogs(
@@ -293,7 +293,7 @@ func (cloud *GKE) getGKEVersions(ctx utils.Context) (*gke.ServerConfig, types.Cu
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return nil, ApiErrors(err,"Error in fetching GKE versions")
+		return nil, ApiErrors(err, "Error in fetching GKE versions")
 	}
 
 	return config, types.CustomCPError{}
@@ -304,7 +304,7 @@ func (cloud *GKE) getGCPNetwork(token string, ctx utils.Context) (gcpNetwork typ
 
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
 	if err != nil {
-		ctx.SendLogs("GKE get network:"+ err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKE get network:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return gcpNetwork
 	}
 
@@ -327,13 +327,13 @@ func (cloud *GKE) init() types.CustomCPError {
 
 	cloud.Client, err = gke.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
 	if err != nil {
-		return ApiErrors(err,"Error in initializing cloud credentials")
+		return ApiErrors(err, "Error in initializing cloud credentials")
 	}
 
 	cloud.Compute, err = compute.NewService(ctx, option.WithCredentialsJSON([]byte(cloud.Credentials)))
 	if err != nil {
 		beego.Error(err.Error())
-		return ApiErrors(err,"Error in initializing cloud credentials")
+		return ApiErrors(err, "Error in initializing cloud credentials")
 	}
 	return types.CustomCPError{}
 }
@@ -354,7 +354,7 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return cluster, ApiErrors(err1,"Cluster is not in running state")
+		return cluster, ApiErrors(err1, "Cluster is not in running state")
 	}
 	if latestCluster == nil {
 		ctx.SendLogs(
@@ -362,19 +362,18 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return cluster, ApiErrors(err1,"Error in fetching cluster status")
+		return cluster, ApiErrors(err1, "Error in fetching cluster status")
 	}
 
-
-		return GenerateClusterFromResponse(*latestCluster), types.CustomCPError{}
+	return GenerateClusterFromResponse(*latestCluster), types.CustomCPError{}
 }
-func (cloud *GKE) fetchNodePool(cluster GKECluster,status *KubeClusterStatus ,ctx utils.Context) (types.CustomCPError) {
+func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, ctx utils.Context) types.CustomCPError {
 
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs("GKE get status for '"+cloud.ProjectId+" failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return   err
+			return err
 		}
 	}
 
@@ -384,7 +383,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster,status *KubeClusterStatus ,ct
 		createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return  ApiErrors(err, "Error in fetching cluster status")
+			return ApiErrors(err, "Error in fetching cluster status")
 		}
 		nodes := []KubeNodesStatus{}
 		for _, node := range createdNodes.ManagedInstances {
@@ -394,7 +393,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster,status *KubeClusterStatus ,ct
 			createdNode, err := cloud.Compute.Instances.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, nodeName).Context(context.Background()).Do()
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				return  ApiErrors(err, "Error in fetching cluster status")
+				return ApiErrors(err, "Error in fetching cluster status")
 			}
 			node := KubeNodesStatus{}
 			node.Id = createdNode.Name
@@ -408,22 +407,22 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster,status *KubeClusterStatus ,ct
 			}
 			nodes = append(nodes, node)
 		}
-		for i,statuspool :=range status.WorkerPools {
+		for i, statuspool := range status.WorkerPools {
 			if statuspool.Link == pool.InstanceGroupUrls[0] {
 
-				status.WorkerPools[i].Nodes=nodes
+				status.WorkerPools[i].Nodes = nodes
 			}
 		}
 	}
 
-	return  types.CustomCPError{}
+	return types.CustomCPError{}
 }
 
 func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs("GKE terminate cluster for "+cloud.ProjectId+"' failed: "+ err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("GKE terminate cluster for "+cloud.ProjectId+"' failed: "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
@@ -435,7 +434,7 @@ func (cloud *GKE) deleteCluster(cluster GKECluster, ctx utils.Context) types.Cus
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err,"Error in deleting cluster")
+		return ApiErrors(err, "Error in deleting cluster")
 	}
 
 	return types.CustomCPError{}

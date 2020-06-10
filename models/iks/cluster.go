@@ -48,7 +48,6 @@ type NodePool struct {
 	MinNodes         int           `json:"min_node_count,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
 	MaxNodes         int           `json:"max_node_count,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 }
-
 type Project struct {
 	ProjectData Data `json:"data"`
 }
@@ -270,7 +269,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 		cpErr := ApiError(confError, "Error occurred while updating cluster status in database", 500)
 
-		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpError)
+		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
