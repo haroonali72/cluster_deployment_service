@@ -324,7 +324,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 		return "", cpErr
 	}
 	req, _ := utils.CreatePostRequest(bytes, models.IBM_Kube_Cluster_Endpoint)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -395,7 +395,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	}
 
 	req, _ := utils.CreatePostRequest(bytes, models.IBM_WorkerPool_Endpoint)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -463,7 +463,7 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 	bytes, err := json.Marshal(zoneInput)
 
 	req, _ := utils.CreatePostRequest(bytes, models.IBM_Zone)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -517,7 +517,7 @@ func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, types.CustomCPErr
 	url := "https://" + cloud.Region + ".containers.cloud.ibm.com/global/v2/getVersions" + models.IBM_Version
 
 	req, _ := utils.CreateGetRequest(url)
-
+	req.Close = true
 	utils.SetHeaders(req, nil)
 
 	client := utils.InitReq()
@@ -574,7 +574,7 @@ func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 }
 func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) types.CustomCPError {
 	req, _ := utils.CreateDeleteRequest(models.IBM_Kube_Delete_Cluster_Endpoint + cluster.ClusterId + "?yes")
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -680,7 +680,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		return KubeClusterStatus{}, cperr
 	}
 	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetWorker_Endpoint + "?cluster=" + cluster.ClusterId)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -742,7 +742,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	url := models.IBM_All_Instances_Endpoint + cloud.Region + "&provider=vpc-classic"
 
 	req, _ := utils.CreateGetRequest(url)
-
+	req.Close = true
 	client := utils.InitReq()
 	res, err := client.SendRequest(req)
 	if err != nil {
@@ -779,7 +779,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Context, companyId string) ([]KubeWorkerNodesStatus, types.CustomCPError) {
 
 	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetNodes_Endpoint + "?cluster=" + cluster.ClusterId + "&pool=" + poolId)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
