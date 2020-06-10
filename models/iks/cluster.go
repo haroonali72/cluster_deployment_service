@@ -398,10 +398,11 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 	response1.Name = response.Name
 	response1.Region = response.Region
 	response1.ResourceGroup = response.ResourceGroupName
-	response1.PoolCount = response.WorkerCount
+	response1.PoolCount = 0
 	response1.KubernetesVersion = response.KubernetesVersion
 	response1.State = response.State
 	for _, pool := range response.WorkerPools {
+		response1.PoolCount=response1.PoolCount+1
 		var pool1 KubeWorkerPoolStatus1
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID

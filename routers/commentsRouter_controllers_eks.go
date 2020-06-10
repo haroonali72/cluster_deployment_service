@@ -73,7 +73,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
         beego.ControllerComments{
             Method: "GetInstances",
-            Router: `/instances/amiType/:projectId/`,
+            Router: `/instances/:amiType/:projectId/`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
