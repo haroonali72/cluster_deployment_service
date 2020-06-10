@@ -275,8 +275,8 @@ type KubeWorkerPoolStatus struct {
 	NodeCount   int64             `json:"node_count,omitempty"`
 	MachineType string            `json:"machine_type,omitempty"`
 	AutoScale   bool              `json:"auto_scaling,omitempty"`
-	MinCount    int64             `json:"min_count,omitempty"`
-	MaxCount    int64             `json:"max_count,omitempty"`
+	MinCount    int64             `json:"min_scaling_group_size,omitempty"`
+	MaxCount    int64             `json:"max_scaling_group_size,omitempty"`
 	Subnet      string            `json:"subnet_id,omitempty"`
 	Nodes       []KubeNodesStatus `json:"nodes"`
 }
