@@ -171,7 +171,7 @@ type KubeWorkerPoolStatus struct {
 
 }
 type AutoScaling struct{
-	AutoScale 	bool        `json:"auto_scaling,omitempty"`
+	AutoScale 	bool        `json:"auto_scale,omitempty"`
 	MinCount  	int         `json:"min_scaling_group_size,omitempty"`
 	MaxCount  	int         `json:"max_scaling_group_size,omitempty"`
 }
