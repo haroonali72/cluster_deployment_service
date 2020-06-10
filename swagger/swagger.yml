@@ -2217,7 +2217,7 @@ paths:
     get:
       tags:
       - cluster/eks
-      description: Get Instances for EKS Cluster
+      description: Get Kubernetes Cluster
       operationId: EKSClusterController.Get
       parameters:
       - in: header
@@ -2229,7 +2229,9 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: '#/definitions/map[string][]string'
+            type: array
+            items:
+              type: string
         "404":
           description: '{"error": "Not Found"}'
   /cluster/eks/{projectId}/{forceDelete}:
@@ -2289,6 +2291,82 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/eks/ami/{projectId}/:
+    get:
+      tags:
+      - cluster/eks
+      description: Get AMIs for EKS Cluster
+      operationId: EKSClusterController.Get
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              type: string
+        "404":
+          description: '{"error": "Not Found"}'
+  /cluster/eks/applyagent/{projectId}:
+    post:
+      tags:
+      - cluster/eks
+      description: Apply cloudplex Agent file to eks cluster
+      operationId: EKSClusterController.Start Agent
+      parameters:
+      - in: header
+        name: clusterName
+        description: clusterName
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: token
+        required: true
+        type: string
+      - in: header
+        name: X-Profile-Id
+        description: vault credentials profile id
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{"msg": "Agent Applied successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/eks/instances/{projectId}/:
+    get:
+      tags:
+      - cluster/eks
+      description: Get Instances for EKS Cluster
+      operationId: EKSClusterController.Get
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/map[string][]string'
+        "404":
+          description: '{"error": "Not Found"}'
   /cluster/eks/start/{projectId}:
     post:
       tags:
@@ -6955,37 +7033,37 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc00197e9c0.false:
+  482.0xc0019a7290.false:
     title: "false"
     type: object
-  648.0xc0010ac420.false:
+  618.0xc0010e49f0.false:
     title: "false"
     type: object
-  667.0xc00186be30.false:
+  667.0xc0018aa720.false:
     title: "false"
     type: object
-  964.0xc001408870.false:
+  964.0xc0014444b0.false:
     title: "false"
     type: object
-  5476.string:
+  5534.string:
     title: string
     type: object
-  8131.string:
+  8189.string:
     title: string
     type: object
-  8869.string:
+  8927.string:
     title: string
     type: object
   11642.string:
     title: string
     type: object
-  14357.0xc0019b2930.false:
+  14388.0xc0019e9200.false:
     title: "false"
     type: object
-  57610.0xc001917c20.false:
+  57609.0xc001964510.false:
     title: "false"
     type: object
-  58305.string:
+  59816.string:
     title: string
     type: object
   64016.string:
@@ -7268,7 +7346,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/648.0xc0010ac420.false'
+        $ref: '#/definitions/618.0xc0010e49f0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7710,7 +7788,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001408870.false'
+        $ref: '#/definitions/964.0xc0014444b0.false'
       name:
         type: string
       network_name:
@@ -8237,7 +8315,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/58305.string'
+        $ref: '#/definitions/59816.string'
       template_id:
         type: string
       version:
@@ -9441,7 +9519,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57610.0xc001917c20.false'
+        $ref: '#/definitions/57609.0xc001964510.false'
       kube_version:
         type: string
       name:
@@ -9714,7 +9792,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14357.0xc0019b2930.false'
+        $ref: '#/definitions/14388.0xc0019e9200.false'
       name:
         type: string
       node_pools:

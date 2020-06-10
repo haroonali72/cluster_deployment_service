@@ -1548,83 +1548,83 @@ func (c *AWSClusterController) ApplyAgent() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("EKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("EKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("X-Auth-Token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	clusterName := c.Ctx.Input.Header("clusterName")
-	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("EKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-	region, err := aws.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
-	if err != nil {
-		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("EKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	go aws.ApplyAgent(awsProfile, token, *ctx, clusterName)
+	//profileId := c.Ctx.Input.Header("X-Profile-Id")
+	//if profileId == "" {
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//projectId := c.GetString(":projectId")
+	//if projectId == "" {
+	//	ctx.SendLogs("EKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "project id is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//token := c.Ctx.Input.Header("X-Auth-Token")
+	//if token == "" {
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//clusterName := c.Ctx.Input.Header("clusterName")
+	//if clusterName == "" {
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "clusterName is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(statusCode)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	//ctx.SendLogs("EKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	//
+	//statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(statusCode)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//if !allowed {
+	//	c.Ctx.Output.SetStatus(401)
+	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//region, err := aws.GetRegion(token, projectId, *ctx)
+	//if err != nil {
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	//if err != nil {
+	//	utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
+	//	c.Ctx.Output.SetStatus(statusCode)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//ctx.SendLogs("EKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	//
+	////go aws.ApplyAgent(awsProfile, token, *ctx, clusterName)
 
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()
