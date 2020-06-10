@@ -108,7 +108,7 @@ type KubeWorkerPoolStatus struct {
 	ID          string                  `json:"id"`
 	Name        string                  `json:"poolName"`
 	Flavour     string                  `json:"flavor"`
-	Autoscaling bool                    `json:"autoscaleEnabled"`
+	AutoScale 	bool        			`json:"auto_scaling"`
 	Count       int                     `json:"workerCount"`
 	Nodes       []KubeWorkerNodesStatus `json:"nodes"`
 }
@@ -117,6 +117,8 @@ type KubeWorkerPoolStatus1 struct {
 	Name        string                   `json:"name,omitempty"`
 	Flavour     string                   `json:"machine_type,omitempty"`
 	Autoscaling bool                     `json:"autoscaling,omitempty"`
+	MinCount  	int         			 `json:"min_scaling_group_size"`
+	MaxCount  	int         			 `json:"max_scaling_group_size"`
 	Nodes       []KubeWorkerNodesStatus1 `json:"nodes"`
 	Count       int                      `json:"node_count,omitempty"`
 	SubnetId    string                   `json:"subnet_id,omitempty"`
