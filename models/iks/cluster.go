@@ -406,7 +406,7 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID
 		pool1.Flavour = pool.Flavour
-		pool1.Autoscaling = pool.AutoScaling
+		//pool1.Autoscaling = pool.AutoScaling
 		pool1.Count = pool.Count
 		pool1.SubnetId = pool.Nodes[0].NetworkInterfaces[0].SubnetId
 		for _, node := range pool.Nodes {
