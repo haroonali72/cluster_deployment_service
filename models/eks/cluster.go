@@ -233,7 +233,6 @@ func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (clust
 
 	return cluster, nil
 }
-
 func GetAllEKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters []EKSCluster, err error) {
 	var copyData []string
 	for _, d := range data.Data {
@@ -590,7 +589,7 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 
 			return errors.New("Ami Type is empty")
 
-		} else if (pool.AmiType != nil) && (*pool.AmiType != "Amazon Linux 2" && *pool.AmiType != "Amazon Linux 2 GPU Enabled") {
+		} else if (pool.AmiType != nil) && (*pool.AmiType != "AL2_x86_64" && *pool.AmiType != "AL2_x86_64_GPU") {
 
 			return errors.New("Ami Type is incorrect")
 
