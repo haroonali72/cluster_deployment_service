@@ -115,7 +115,9 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.Backend_Logging,
 	)
 	/**/
+	beego.Info("waiting")
 	time.Sleep(time.Second * 60)
+	beego.Info("waited....")
 	//generate cluster create request
 	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
 		cidr := "0.0.0.0/0"
@@ -708,6 +710,9 @@ func (cloud *EKS) deleteIAMRole(roleName *string) error {
 	_, err := cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
 		RoleName: roleName,
 	})
+	if err != nil {
+
+	}
 
 	return err
 }

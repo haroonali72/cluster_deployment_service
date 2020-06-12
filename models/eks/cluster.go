@@ -433,11 +433,11 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	if cpError != (types.CustomCPError{}) {
 		utils.SendLog(ctx.Data.Company, "EKS CLuster Creation Failed", "error", cluster.ProjectId)
 
-		if cluster.OutputArn != nil {
+		//if cluster.OutputArn != nil {
 
-			eksOps.CleanUpCluster(&cluster, ctx)
+		eksOps.CleanUpCluster(&cluster, ctx)
 
-		}
+		//}
 		cluster.Status = models.ClusterCreationFailed
 		confError := UpdateEKSCluster(cluster, ctx)
 		if confError != nil {
