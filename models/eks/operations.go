@@ -116,7 +116,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	)
 	/**/
 	beego.Info("waiting")
-	time.Sleep(time.Second * 120)
+	time.Sleep(time.Second * 150)
 	beego.Info("waited....")
 	//generate cluster create request
 	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
