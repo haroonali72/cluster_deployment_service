@@ -96,7 +96,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	/**/
 
 	//create cluster IAM role
-	eksCluster.RoleArn, eksCluster.RoleName, err = cloud.createClusterIAMRole(eksCluster.Name)
+	eksCluster.RoleArn, eksCluster.RoleName, err = cloud.createClusterIAMRole(eksCluster.ProjectId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -497,10 +497,15 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
-		/**/
 
-		//delete extra resources
-		err = cloud.deleteIAMRole(eksCluster.RoleName)
+		eksCluster.OutputArn = nil
+	}
+	/**/
+
+	//delete extra resources
+	if eksCluster.RoleArn != nil {
+
+		err := cloud.deleteIAMRole(eksCluster.RoleName)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -512,28 +517,27 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
-		if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
-			if eksCluster.EncryptionConfig.Provider != nil {
-				err = cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
-				if err != nil {
-					ctx.SendLogs(
-						"EKS scheduling KMS key deletion for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
-						models.LOGGING_LEVEL_ERROR,
-						models.Backend_Logging,
-					)
-					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
-					cpErr := ApiError(err, "Cluster Deletion Failed", 512)
-					return cpErr
-				}
-			}
-		}
-		/**/
 
 		eksCluster.RoleName = nil
 		eksCluster.RoleArn = nil
-		eksCluster.OutputArn = nil
 	}
+	if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
+		if eksCluster.EncryptionConfig.Provider != nil {
+			err := cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS scheduling KMS key deletion for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+				return cpErr
+			}
+		}
+	}
+	/**/
 
 	return types.CustomCPError{}
 }
