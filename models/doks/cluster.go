@@ -420,6 +420,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return errr
 	}
 
+	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
 	confErr := ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confErr != (types.CustomCPError{}) {
 		PrintError(ctx, confErr.Description, cluster.Name)
@@ -454,10 +455,18 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return CpErr
 	}
-
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+
+
+	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
+	if notify{
+		ctx.SendLogs("DOKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	}else{
+		ctx.SendLogs("DOKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
+
 	return types.CustomCPError{}
 }
 
@@ -686,6 +695,10 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 
 	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
 	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
+
+//	key:= beego.AppConfig.String("jump_host_ssh_key")
+//	dat, err := ioutil.ReadFile(key)
+
 	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -694,7 +707,7 @@ func ApplyAgent(credentials vault.DOCredentials, token string, ctx utils.Context
 
 	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e DIGITALOCEAN_ACCESS_TOKEN=" + credentials.AccessKey + " -e cluster=" + clusterName + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.DOAuthContainerName
 
-	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"),  beego.AppConfig.String("jump_host_ssh_key"), cmd)
 	if err != nil {
 		ctx.SendLogs("DOKubernetesClusterController : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: "Agent Deployment failed " + err.Error()}
