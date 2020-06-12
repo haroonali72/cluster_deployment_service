@@ -363,6 +363,8 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_aks_template_collection", mongo_aks_template_collection)
 	beego.AppConfig.Set("mongo_iks_template_collection", mongo_iks_template_collection)
 	beego.AppConfig.Set("mongo_iks_cluster_collection", mongo_iks_cluster_collection)
+	beego.AppConfig.Set("mongo_eks_template_collection", mongo_eks_template_collection)
+	beego.AppConfig.Set("mongo_eks_cluster_collection", mongo_eks_cluster_collection)
 	beego.AppConfig.Set("mongo_default_template_collection", mongo_default_template_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)
