@@ -133,27 +133,36 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	/**/
 
 	//submit cluster creation request to AWS
-	result, err := cloud.Svc.CreateCluster(clusterRequest)
-	if err != nil && !strings.Contains(err.Error(), "exists") {
-		ctx.SendLogs(
-			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
-		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
-		return cpErr
-	} else if err != nil && strings.Contains(err.Error(), "exists") {
-		ctx.SendLogs(
-			"EKS cluster '"+eksCluster.Name+"' already exists.",
-			models.LOGGING_LEVEL_INFO,
-			models.Backend_Logging,
-		)
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
-		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
-		return cpErr
+
+	var result *eks.CreateClusterOutput
+	for {
+		result, err = cloud.Svc.CreateCluster(clusterRequest)
+		if err != nil && !strings.Contains(err.Error(), "exists") {
+			ctx.SendLogs(
+				"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+			cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
+			return cpErr
+		} else if err != nil && strings.Contains(err.Error(), "exists") {
+			ctx.SendLogs(
+				"EKS cluster '"+eksCluster.Name+"' already exists.",
+				models.LOGGING_LEVEL_INFO,
+				models.Backend_Logging,
+			)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+			cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
+			return cpErr
+		} else if err != nil && strings.Contains(err.Error(), "AccessDeniedException: status code: 403") {
+			continue
+		} else {
+			break
+
+		}
 	}
 	ctx.SendLogs(
 		"EKS cluster creation request sent for '"+eksCluster.Name+"'",
