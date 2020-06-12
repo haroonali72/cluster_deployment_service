@@ -129,67 +129,82 @@ func KubeVersions(ctx utils.Context) []string {
 	kubeVersions = append(kubeVersions, "1.16")
 	return kubeVersions
 }
-func GetAMIS(ctx utils.Context) []string {
-	var amis []string
-	amis = append(amis, "Amazon Linux 2")
-	amis = append(amis, "Amazon Linux 2 GPU Enabled")
+
+type AMI struct {
+	Key   string `json:"name"`
+	Value string `json:"value"`
+}
+
+func GetAMIS() []AMI {
+	var amis []AMI
+
+	var ami AMI
+	ami.Key = "Amazon Linux 2"
+	ami.Value = "AL2_x86_64"
+
+	var ami2 AMI
+	ami2.Key = "Amazon Linux 2 GPU Enabled"
+	ami2.Value = "AL2_x86_64_GPU"
+
+	amis = append(amis, ami)
+	amis = append(amis, ami2)
 	return amis
 }
-func GetInstances(ctx utils.Context) map[string][]string {
-	var instances map[string][]string
+func GetInstances(amiType string, ctx utils.Context) []string {
 	var list []string
-	list = append(list, "t3.micro")
-	list = append(list, "t3.small")
-	list = append(list, "t3.medium")
-	list = append(list, "t3.large")
-	list = append(list, "t3.xlarge")
-	list = append(list, "t3.2xlarge")
-	list = append(list, "t3a.micro")
-	list = append(list, "t3a.small")
-	list = append(list, "t3a.medium")
-	list = append(list, "t3a.large")
-	list = append(list, "t3a.xlarge")
-	list = append(list, "t3a.2xlarge")
-	list = append(list, "m5.large")
-	list = append(list, "m5.xlarge")
-	list = append(list, "m5.2xlarge")
-	list = append(list, "m5.4xlarge")
-	list = append(list, "m5.8xlarge")
-	list = append(list, "m5.12xlarge")
-	list = append(list, "m5a.large")
-	list = append(list, "m5a.xlarge")
-	list = append(list, "m5a.2xlarge")
-	list = append(list, "m5a.4xlarge")
-	list = append(list, "c5.large")
-	list = append(list, "c5.xlarge")
-	list = append(list, "c5.2xlarge")
-	list = append(list, "c5.4xlarge")
-	list = append(list, "c5.9xlarge")
-	list = append(list, "r5.large")
-	list = append(list, "r5.xlarge")
-	list = append(list, "r5.2xlarge")
-	list = append(list, "r5.4xlarge")
-	list = append(list, "r5a.large")
-	list = append(list, "r5a.xlarge")
-	list = append(list, "r5a.2xlarge")
-	list = append(list, "r5a.4xlarge")
-	instances["Amazon Linux 2"] = list
 
-	var list2 []string
-	list2 = append(list2, "g4dn.xlarge")
-	list2 = append(list2, "g4dn.2xlarge")
-	list2 = append(list2, "g4dn.4xlarge")
-	list2 = append(list2, "g4dn.8xlarge")
-	list2 = append(list2, "g4dn.12xlarge")
-	list2 = append(list2, "p2.xlarge")
-	list2 = append(list2, "p2.8xlarge")
-	list2 = append(list2, "p2.16xlarge")
-	list2 = append(list2, "p3.2xlarge")
-	list2 = append(list2, "p3.8xlarge")
-	list2 = append(list2, "p3.16xlarge")
-	list2 = append(list2, "p3dn.24xlarge")
-	instances["Amazon Linux 2 GPU Enabled"] = list2
-	return instances
+	if amiType == "AL2_x86_64" {
+
+		list = append(list, "t3.micro")
+		list = append(list, "t3.small")
+		list = append(list, "t3.medium")
+		list = append(list, "t3.large")
+		list = append(list, "t3.xlarge")
+		list = append(list, "t3.2xlarge")
+		list = append(list, "t3a.micro")
+		list = append(list, "t3a.small")
+		list = append(list, "t3a.medium")
+		list = append(list, "t3a.large")
+		list = append(list, "t3a.xlarge")
+		list = append(list, "t3a.2xlarge")
+		list = append(list, "m5.large")
+		list = append(list, "m5.xlarge")
+		list = append(list, "m5.2xlarge")
+		list = append(list, "m5.4xlarge")
+		list = append(list, "m5.8xlarge")
+		list = append(list, "m5.12xlarge")
+		list = append(list, "m5a.large")
+		list = append(list, "m5a.xlarge")
+		list = append(list, "m5a.2xlarge")
+		list = append(list, "m5a.4xlarge")
+		list = append(list, "c5.large")
+		list = append(list, "c5.xlarge")
+		list = append(list, "c5.2xlarge")
+		list = append(list, "c5.4xlarge")
+		list = append(list, "c5.9xlarge")
+		list = append(list, "r5.large")
+		list = append(list, "r5.xlarge")
+		list = append(list, "r5.2xlarge")
+		list = append(list, "r5.4xlarge")
+		list = append(list, "r5a.large")
+		list = append(list, "r5a.xlarge")
+		list = append(list, "r5a.2xlarge")
+		list = append(list, "r5a.4xlarge")
+	} else {
+		list = append(list, "g4dn.xlarge")
+		list = append(list, "g4dn.2xlarge")
+		list = append(list, "g4dn.4xlarge")
+		list = append(list, "g4dn.8xlarge")
+		list = append(list, "g4dn.12xlarge")
+		list = append(list, "p2.xlarge")
+		list = append(list, "p2.8xlarge")
+		list = append(list, "p2.16xlarge")
+		list = append(list, "p3.2xlarge")
+		list = append(list, "p3.8xlarge")
+		list = append(list, "p3.16xlarge")
+		list = append(list, "p3dn.24xlarge")
+	}
+	return list
 
 }
 func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (cluster EKSCluster, err error) {
@@ -218,7 +233,6 @@ func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (clust
 
 	return cluster, nil
 }
-
 func GetAllEKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters []EKSCluster, err error) {
 	var copyData []string
 	for _, d := range data.Data {
@@ -575,7 +589,7 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 
 			return errors.New("Ami Type is empty")
 
-		} else if (pool.AmiType != nil) && (*pool.AmiType != "Amazon Linux 2" && *pool.AmiType != "Amazon Linux 2 GPU Enabled") {
+		} else if (pool.AmiType != nil) && (*pool.AmiType != "AL2_x86_64" && *pool.AmiType != "AL2_x86_64_GPU") {
 
 			return errors.New("Ami Type is incorrect")
 

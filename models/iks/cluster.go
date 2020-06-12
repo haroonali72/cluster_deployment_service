@@ -44,9 +44,14 @@ type NodePool struct {
 	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required" description:"Machine type for pool [required]"`
 	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required" description:"ID of subnet in which pool will be created [required]"`
 	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
-	AutoScale        bool          `json:"autoscaling,omitempty"  bson:"autoscaling" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
+	Autoscale        Autoscaling	`json:"autoscaling,omitempty"  bson:"autoscaling" description:"Autoscaling configuration"`
+}
+
+type Autoscaling struct{
+	AutoScale        bool          `json:"autoscale,omitempty"  bson:"autoscaling" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
 	MinNodes         int           `json:"min_node_count,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
 	MaxNodes         int           `json:"max_node_count,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
+
 }
 type Project struct {
 	ProjectData Data `json:"data"`
@@ -398,15 +403,16 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 	response1.Name = response.Name
 	response1.Region = response.Region
 	response1.ResourceGroup = response.ResourceGroupName
-	response1.PoolCount = response.WorkerCount
+	response1.PoolCount = 0
 	response1.KubernetesVersion = response.KubernetesVersion
 	response1.State = response.State
 	for _, pool := range response.WorkerPools {
+		response1.PoolCount=response1.PoolCount+1
 		var pool1 KubeWorkerPoolStatus1
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID
 		pool1.Flavour = pool.Flavour
-		pool1.Autoscaling = pool.Autoscaling
+		//pool1.Autoscaling = pool.AutoScaling
 		pool1.Count = pool.Count
 		pool1.SubnetId = pool.Nodes[0].NetworkInterfaces[0].SubnetId
 		for _, node := range pool.Nodes {

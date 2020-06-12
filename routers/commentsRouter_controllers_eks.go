@@ -36,15 +36,6 @@ func init() {
 
     beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
         beego.ControllerComments{
-            Method: "GetkubeVersions",
-            Router: `/:projectId/`,
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
-        beego.ControllerComments{
             Method: "Delete",
             Router: `/:projectId/:forceDelete`,
             AllowHTTPMethods: []string{"delete"},
@@ -82,7 +73,16 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
         beego.ControllerComments{
             Method: "GetInstances",
-            Router: `/instances/:projectId/`,
+            Router: `/instances/:amiType/:projectId/`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/eks:EKSClusterController"],
+        beego.ControllerComments{
+            Method: "GetkubeVersions",
+            Router: `/kube/versions/:projectId/`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

@@ -14,8 +14,8 @@ type WriteFile struct {
 }
 
 type Data struct {
-	Agent  string     `json:"agent_binary"`
-	Config ConfigFile `json:"config_file"`
+	Agent  string      `json:"agent_binary"`
+	Config interface{} `json:"config_file"`
 }
 type ConfigFile struct {
 	AgentId             string `json:"agent_id"`
