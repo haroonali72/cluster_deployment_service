@@ -119,9 +119,13 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	*/
 	// cloud.CheckIAMRole()
 	/**/
-	beego.Info("waiting")
+	/*beego.Info("waiting")
 	time.Sleep(time.Second * 150)
-	beego.Info("waited....")
+	beego.Info("waited....")*/
+	role := "arn:aws:iam::193819466102:role/eks-cluster-application-31i2k1"
+	eksCluster.RoleArn = &role
+	role = "eks-cluster-" + eksCluster.Name
+	eksCluster.RoleName = &role
 	//generate cluster create request
 	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
 		cidr := "0.0.0.0/0"
