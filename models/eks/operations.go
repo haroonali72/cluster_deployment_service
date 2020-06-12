@@ -116,7 +116,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	)
 	/**/
 	beego.Info("waiting")
-	time.Sleep(time.Second * 60)
+	time.Sleep(time.Second * 120)
 	beego.Info("waited....")
 	//generate cluster create request
 	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
@@ -667,7 +667,14 @@ func (cloud *EKS) attachIAMPolicy(roleName, managedPolicy string) error {
 
 	return err
 }
+func (cloud *EKS) dettachIAMPolicy(roleName, managedPolicy string) error {
+	_, err := cloud.IAM.DetachRolePolicy(&iam.DetachRolePolicyInput{
+		PolicyArn: aws.String(managedPolicy),
+		RoleName:  aws.String(roleName),
+	})
 
+	return err
+}
 func (cloud *EKS) createKMSKey(clusterName string) (*string, *string, error) {
 	result, err := cloud.KMS.CreateKey(&kms.CreateKeyInput{})
 	if err != nil {
@@ -707,14 +714,20 @@ func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 }
 
 func (cloud *EKS) deleteIAMRole(roleName *string) error {
-	_, err := cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
+
+	err := cloud.dettachIAMPolicy(*roleName, "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy")
+	if err != nil {
+		return err
+	}
+
+	_, err = cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
 		RoleName: roleName,
 	})
 	if err != nil {
-
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func (cloud *EKS) scheduleKMSKeyDeletion(keyId *string) error {
