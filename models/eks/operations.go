@@ -97,7 +97,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	/**/
 
 	//create cluster IAM role
-	eksCluster.RoleArn, eksCluster.RoleName, err = cloud.createClusterIAMRole(eksCluster.ProjectId)
+	/*eksCluster.RoleArn, eksCluster.RoleName, err = cloud.createClusterIAMRole(eksCluster.ProjectId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -113,7 +113,11 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		"EKS cluster creation: Cluster IAM role created for '"+eksCluster.Name+"'",
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
-	)
+	)*/
+	/*
+		// check for IAM Role Activation
+	*/
+	// cloud.CheckIAMRole()
 	/**/
 	beego.Info("waiting")
 	time.Sleep(time.Second * 150)
@@ -324,6 +328,46 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, sgs []*str
 	return types.CustomCPError{}
 }
 
+/*func (cloud *EKS) CheckIAMRole() {
+	func(cloud *AWSIAMRoles) CheckInstanceProfile(iamProfileName
+	string) bool{
+
+		iamProfile := ec2.IamInstanceProfileSpecification{Name: aws.String(iamProfileName)}
+
+		start := time.Now()
+		timeToWait := 60 * 1.5 //seconds
+		retry := true
+
+		region := cloud.Region
+		ami := testInstanceMap[region]
+
+		for retry && int64(time.Since(start).Seconds()) < int64(timeToWait){
+		//this dummy instance run , to check the success of RunInstance call
+		//this is to ensure that iamProfile is properly propagated
+		_, err := cloud.Client.RunInstances(&ec2.RunInstancesInput{
+		// An Amazon Linux AMI ID for t2.micro instances in the us-west-2 region
+		ImageId:            aws.String(ami),
+		InstanceType:       aws.String("t2.micro"),
+		MinCount:           aws.Int64(1),
+		MaxCount:           aws.Int64(1),
+		DryRun:             aws.Bool(true),
+		IamInstanceProfile: &iamProfile,
+	})
+
+		beego.Info(err)
+
+		if err != nil && strings.Contains(err.Error(), "DryRunOperation: Request would have succeeded"){
+		retry = false
+	} else{
+		beego.Info("time passed %6.2f sec\n", time.Since(start).Seconds())
+		beego.Info("waiting 5 seconds before retry")
+		time.Sleep(5 * time.Second)
+	}
+	}
+		beego.Info("retry", retry)
+		return retry
+	}
+} */
 func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types.CustomCPError {
 	if eksCluster == nil {
 		return types.CustomCPError{}
