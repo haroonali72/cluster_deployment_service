@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"strings"
+	"time"
 )
 
 type EKS struct {
@@ -114,7 +115,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.Backend_Logging,
 	)
 	/**/
-
+	time.Sleep(time.Second * 30)
 	//generate cluster create request
 	clusterRequest := GenerateClusterCreateRequest(*eksCluster)
 	/**/
