@@ -22,6 +22,8 @@ var (
 	mongo_gcp_cluster_collection      = ""
 	mongo_gke_template_collection     = ""
 	mongo_gke_cluster_collection      = ""
+	mongo_eks_cluster_collection      = ""
+	mongo_eks_template_collection     = ""
 	mongo_do_template_collection      = ""
 	mongo_do_cluster_collection       = ""
 	mongo_op_template_collection      = ""
@@ -188,6 +190,18 @@ func InitFlags() error {
 			Usage:       "gcp cluster collection name ",
 			Destination: &mongo_gcp_cluster_collection,
 			EnvVar:      "mongo_gcp_cluster_collection",
+		},
+		cli.StringFlag{
+			Name:        "mongo_eks_template_collection",
+			Usage:       "eks template collection name ",
+			Destination: &mongo_eks_template_collection,
+			EnvVar:      "mongo_eks_template_collection",
+		},
+		cli.StringFlag{
+			Name:        "mongo_eks_cluster_collection",
+			Usage:       "eks cluster collection name ",
+			Destination: &mongo_eks_cluster_collection,
+			EnvVar:      "mongo_eks_cluster_collection",
 		},
 		cli.StringFlag{
 			Name:        "mongo_gke_template_collection",
