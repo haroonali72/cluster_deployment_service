@@ -115,8 +115,14 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.Backend_Logging,
 	)
 	/**/
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 60)
 	//generate cluster create request
+	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
+		cidr := "0.0.0.0/0"
+		var cidrs []*string
+		cidrs = append(cidrs, &cidr)
+		eksCluster.ResourcesVpcConfig.PublicAccessCidrs = cidrs
+	}
 	clusterRequest := GenerateClusterCreateRequest(*eksCluster)
 	/**/
 
