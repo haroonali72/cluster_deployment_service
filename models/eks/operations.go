@@ -158,6 +158,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 			return cpErr
 		} else if err != nil && strings.Contains(err.Error(), "AccessDeniedException: status code: 403") {
+			time.Sleep(time.Second * 60)
 			continue
 		} else {
 			break
