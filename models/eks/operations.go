@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"strings"
+	"time"
 )
 
 type EKS struct {
@@ -96,7 +97,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	/**/
 
 	//create cluster IAM role
-	eksCluster.RoleArn, eksCluster.RoleName, err = cloud.createClusterIAMRole(eksCluster.Name)
+	eksCluster.RoleArn, eksCluster.RoleName, err = cloud.createClusterIAMRole(eksCluster.ProjectId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -114,8 +115,16 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.Backend_Logging,
 	)
 	/**/
-
+	beego.Info("waiting")
+	time.Sleep(time.Second * 60)
+	beego.Info("waited....")
 	//generate cluster create request
+	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
+		cidr := "0.0.0.0/0"
+		var cidrs []*string
+		cidrs = append(cidrs, &cidr)
+		eksCluster.ResourcesVpcConfig.PublicAccessCidrs = cidrs
+	}
 	clusterRequest := GenerateClusterCreateRequest(*eksCluster)
 	/**/
 
@@ -240,13 +249,13 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, sgs []*str
 	)
 	/**/
 
-	if *nodePool.AmiType == "Amazon Linux 2 GPU Enabled" {
-		t := "AL2_x86_64_GPU"
-		nodePool.AmiType = &t
-	} else {
-		t := "AL2_x86_64"
-		nodePool.AmiType = &t
-	}
+	/*	if *nodePool.AmiType == "Amazon Linux 2 GPU Enabled" {
+			t := "AL2_x86_64_GPU"
+			nodePool.AmiType = &t
+		} else {
+			t := "AL2_x86_64"
+			nodePool.AmiType = &t
+		}*/
 	//generate cluster create request
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
@@ -497,10 +506,15 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
-		/**/
 
-		//delete extra resources
-		err = cloud.deleteIAMRole(eksCluster.RoleName)
+		eksCluster.OutputArn = nil
+	}
+	/**/
+
+	//delete extra resources
+	if eksCluster.RoleArn != nil {
+
+		err := cloud.deleteIAMRole(eksCluster.RoleName)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -512,28 +526,27 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
-		if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
-			if eksCluster.EncryptionConfig.Provider != nil {
-				err = cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
-				if err != nil {
-					ctx.SendLogs(
-						"EKS scheduling KMS key deletion for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
-						models.LOGGING_LEVEL_ERROR,
-						models.Backend_Logging,
-					)
-					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
-					cpErr := ApiError(err, "Cluster Deletion Failed", 512)
-					return cpErr
-				}
-			}
-		}
-		/**/
 
 		eksCluster.RoleName = nil
 		eksCluster.RoleArn = nil
-		eksCluster.OutputArn = nil
 	}
+	if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
+		if eksCluster.EncryptionConfig.Provider != nil {
+			err := cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS scheduling KMS key deletion for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+				return cpErr
+			}
+		}
+	}
+	/**/
 
 	return types.CustomCPError{}
 }
@@ -697,6 +710,9 @@ func (cloud *EKS) deleteIAMRole(roleName *string) error {
 	_, err := cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
 		RoleName: roleName,
 	})
+	if err != nil {
+
+	}
 
 	return err
 }

@@ -256,13 +256,13 @@ func (c *EKSClusterController) Post() {
 	}
 
 	cluster.CompanyId = userInfo.CompanyId
-	err = eks.GetNetwork(token, cluster.ProjectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	/*	err = eks.GetNetwork(token, cluster.ProjectId, *ctx)
+		if err != nil {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}*/
 	err = eks.AddEKSCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -874,7 +874,7 @@ func (c *EKSClusterController) GetkubeVersions() {
 // @Title Get
 // @Description Get AMIs for EKS Cluster
 // @Param	X-Auth-Token	header	string	true "Token"
-// @Success 200 {object} []string
+// @Success 200 {object} eks.AMI
 // @Failure 404 {"error": "Not Found"}
 // @router /ami/:projectId/ [get]
 func (c *EKSClusterController) GetAMI() {
@@ -899,8 +899,8 @@ func (c *EKSClusterController) GetAMI() {
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
-	versions := eks.GetAMIS(*ctx)
-	c.Data["json"] = versions
+	amis := eks.GetAMIS()
+	c.Data["json"] = amis
 	c.ServeJSON()
 }
 
@@ -909,7 +909,7 @@ func (c *EKSClusterController) GetAMI() {
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Success 200 {object} map[string][]string
 // @Failure 404 {"error": "Not Found"}
-// @router /instances/amiType/:projectId/ [get]
+// @router /instances/:amiType/:projectId/ [get]
 func (c *EKSClusterController) GetInstances() {
 	ctx := new(utils.Context)
 
@@ -920,7 +920,7 @@ func (c *EKSClusterController) GetInstances() {
 		c.ServeJSON()
 		return
 	}
-	amiType := c.Ctx.Input.Header("amiType")
+	amiType := c.GetString(":amiType")
 	if amiType == "" {
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "amiType is empty"}

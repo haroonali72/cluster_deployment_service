@@ -2314,9 +2314,7 @@ paths:
         "200":
           description: ""
           schema:
-            type: array
-            items:
-              type: string
+            $ref: '#/definitions/eks.AMI'
         "404":
           description: '{"error": "Not Found"}'
   /cluster/eks/applyagent/{projectId}:
@@ -2355,7 +2353,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/eks/instances/amiType/{projectId}/:
+  /cluster/eks/instances/{amiType}/{projectId}/:
     get:
       tags:
       - cluster/eks
@@ -7061,16 +7059,16 @@ definitions:
   '*ec2.BlockDeviceMapping':
     title: BlockDeviceMapping
     type: object
-  482.0xc001999200.false:
+  482.0xc0019c3080.false:
     title: "false"
     type: object
-  618.0xc0010e4960.false:
+  618.0xc00110c570.false:
     title: "false"
     type: object
-  667.0xc0018a0690.false:
+  667.0xc0018c2480.false:
     title: "false"
     type: object
-  964.0xc00144a420.false:
+  964.0xc00147a030.false:
     title: "false"
     type: object
   5534.string:
@@ -7085,13 +7083,13 @@ definitions:
   11642.string:
     title: string
     type: object
-  14388.0xc0019dd170.false:
+  14388.0xc0019f8ff0.false:
     title: "false"
     type: object
-  57609.0xc00195a480.false:
+  57894.0xc00197c300.false:
     title: "false"
     type: object
-  59747.string:
+  59920.string:
     title: string
     type: object
   64016.string:
@@ -7374,7 +7372,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0010e4960.false'
+        $ref: '#/definitions/618.0xc00110c570.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7816,7 +7814,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00144a420.false'
+        $ref: '#/definitions/964.0xc00147a030.false'
       name:
         type: string
       network_name:
@@ -7978,6 +7976,18 @@ definitions:
   do.string:
     title: string
     type: object
+  doks.AutoScaling:
+    title: AutoScaling
+    type: object
+    properties:
+      auto_scaling:
+        type: boolean
+      max_scaling_group_size:
+        type: integer
+        format: int64
+      min_scaling_group_size:
+        type: integer
+        format: int64
   doks.Cluster:
     title: Cluster
     type: object
@@ -8053,17 +8063,11 @@ definitions:
     type: object
     properties:
       auto_scaling:
-        type: boolean
+        $ref: '#/definitions/doks.AutoScaling'
       id:
         type: string
       machine_type:
         type: string
-      max_count:
-        type: integer
-        format: int64
-      min_count:
-        type: integer
-        format: int64
       name:
         type: string
       node_count:
@@ -8266,6 +8270,14 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/doks.User'
+  eks.AMI:
+    title: AMI
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
   eks.EKSCluster:
     title: EKSCluster
     type: object
@@ -8343,7 +8355,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/59747.string'
+        $ref: '#/definitions/59920.string'
       template_id:
         type: string
       version:
@@ -8714,6 +8726,18 @@ definitions:
         $ref: '#/definitions/gke.KubernetesDashboard'
       network_policy_config:
         $ref: '#/definitions/gke.NetworkPolicyConfig'
+  gke.AutoScaling:
+    title: AutoScaling
+    type: object
+    properties:
+      auto_scale:
+        type: boolean
+      max_scaling_group_size:
+        type: integer
+        format: int64
+      min_scaling_group_size:
+        type: integer
+        format: int64
   gke.AutoUpgradeOptions:
     title: AutoUpgradeOptions
     type: object
@@ -9094,17 +9118,11 @@ definitions:
     type: object
     properties:
       auto_scaling:
-        type: boolean
+        $ref: '#/definitions/gke.AutoScaling'
       id:
         type: string
       machine_type:
         type: string
-      max_count:
-        type: integer
-        format: int64
-      min_count:
-        type: integer
-        format: int64
       name:
         type: string
       node_count:
@@ -9357,6 +9375,22 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/iks.InstanceProfile'
+  iks.Autoscaling:
+    title: Autoscaling
+    type: object
+    properties:
+      autoscale:
+        description: Autoscaling configuration, possible value 'true' or 'false' [required]
+        type: boolean
+      max_node_count:
+        description: Max VM count, must be greater than min count ['required' if autoscaling
+          is enabled]
+        type: integer
+        format: int64
+      min_node_count:
+        description: Min VM count ['required' if autoscaling is enabled]
+        type: integer
+        format: int64
   iks.Cluster:
     title: Cluster
     type: object
@@ -9465,6 +9499,12 @@ definitions:
         type: string
       machine_type:
         type: string
+      max_scaling_group_size:
+        type: integer
+        format: int64
+      min_scaling_group_size:
+        type: integer
+        format: int64
       name:
         type: string
       node_count:
@@ -9494,22 +9534,13 @@ definitions:
     type: object
     properties:
       autoscaling:
-        description: Autoscaling configuration, possible value 'true' or 'false' [required]
-        type: boolean
+        $ref: '#/definitions/iks.Autoscaling'
+        description: Autoscaling configuration
       availability_zone:
         type: string
       machine_type:
         description: Machine type for pool [required]
         type: string
-      max_node_count:
-        description: Max VM count, must be greater than min count ['required' if autoscaling
-          is enabled]
-        type: integer
-        format: int64
-      min_node_count:
-        description: Min VM count ['required' if autoscaling is enabled]
-        type: integer
-        format: int64
       name:
         description: Cluster pool name [required]
         type: string
@@ -9547,7 +9578,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57609.0xc00195a480.false'
+        $ref: '#/definitions/57894.0xc00197c300.false'
       kube_version:
         type: string
       name:
@@ -9820,7 +9851,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14388.0xc0019dd170.false'
+        $ref: '#/definitions/14388.0xc0019f8ff0.false'
       name:
         type: string
       node_pools:

@@ -22,6 +22,8 @@ var (
 	mongo_gcp_cluster_collection      = ""
 	mongo_gke_template_collection     = ""
 	mongo_gke_cluster_collection      = ""
+	mongo_eks_cluster_collection      = ""
+	mongo_eks_template_collection     = ""
 	mongo_do_template_collection      = ""
 	mongo_do_cluster_collection       = ""
 	mongo_op_template_collection      = ""
@@ -190,6 +192,18 @@ func InitFlags() error {
 			EnvVar:      "mongo_gcp_cluster_collection",
 		},
 		cli.StringFlag{
+			Name:        "mongo_eks_template_collection",
+			Usage:       "eks template collection name ",
+			Destination: &mongo_eks_template_collection,
+			EnvVar:      "mongo_eks_template_collection",
+		},
+		cli.StringFlag{
+			Name:        "mongo_eks_cluster_collection",
+			Usage:       "eks cluster collection name ",
+			Destination: &mongo_eks_cluster_collection,
+			EnvVar:      "mongo_eks_cluster_collection",
+		},
+		cli.StringFlag{
 			Name:        "mongo_gke_template_collection",
 			Usage:       "gke template collection name ",
 			Destination: &mongo_gke_template_collection,
@@ -349,6 +363,8 @@ func InitFlags() error {
 	beego.AppConfig.Set("mongo_aks_template_collection", mongo_aks_template_collection)
 	beego.AppConfig.Set("mongo_iks_template_collection", mongo_iks_template_collection)
 	beego.AppConfig.Set("mongo_iks_cluster_collection", mongo_iks_cluster_collection)
+	beego.AppConfig.Set("mongo_eks_template_collection", mongo_eks_template_collection)
+	beego.AppConfig.Set("mongo_eks_cluster_collection", mongo_eks_cluster_collection)
 	beego.AppConfig.Set("mongo_default_template_collection", mongo_default_template_collection)
 	beego.AppConfig.Set("redis_url", redis_url)
 	beego.AppConfig.Set("logger_url", logger_url)

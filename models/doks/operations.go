@@ -222,9 +222,11 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 		workerPool.ID = pool.ID
 		workerPool.Size = pool.Size
 		workerPool.Count = pool.Count
-		workerPool.AutoScale = pool.AutoScale
-		workerPool.MinCount = pool.MinNodes
-		workerPool.MaxCount = pool.MaxNodes
+		if pool.AutoScale ==true {
+			workerPool.AutoScaling.AutoScale = pool.AutoScale
+			workerPool.AutoScaling.MinCount = pool.MinNodes
+			workerPool.AutoScaling.MaxCount = pool.MaxNodes
+		}
 
 		for _, nodes := range pool.Nodes {
 

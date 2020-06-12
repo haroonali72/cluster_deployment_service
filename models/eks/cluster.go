@@ -129,16 +129,31 @@ func KubeVersions(ctx utils.Context) []string {
 	kubeVersions = append(kubeVersions, "1.16")
 	return kubeVersions
 }
-func GetAMIS(ctx utils.Context) []string {
-	var amis []string
-	amis = append(amis, "Amazon Linux 2")
-	amis = append(amis, "Amazon Linux 2 GPU Enabled")
+
+type AMI struct {
+	Key   string `json:"name"`
+	Value string `json:"value"`
+}
+
+func GetAMIS() []AMI {
+	var amis []AMI
+
+	var ami AMI
+	ami.Key = "Amazon Linux 2"
+	ami.Value = "AL2_x86_64"
+
+	var ami2 AMI
+	ami2.Key = "Amazon Linux 2 GPU Enabled"
+	ami2.Value = "AL2_x86_64_GPU"
+
+	amis = append(amis, ami)
+	amis = append(amis, ami2)
 	return amis
 }
 func GetInstances(amiType string, ctx utils.Context) []string {
 	var list []string
 
-	if amiType == "Amazon Linux 2" {
+	if amiType == "AL2_x86_64" {
 
 		list = append(list, "t3.micro")
 		list = append(list, "t3.small")
@@ -218,7 +233,6 @@ func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (clust
 
 	return cluster, nil
 }
-
 func GetAllEKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters []EKSCluster, err error) {
 	var copyData []string
 	for _, d := range data.Data {
@@ -419,11 +433,11 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	if cpError != (types.CustomCPError{}) {
 		utils.SendLog(ctx.Data.Company, "EKS CLuster Creation Failed", "error", cluster.ProjectId)
 
-		if cluster.OutputArn != nil {
+		//if cluster.OutputArn != nil {
 
-			eksOps.CleanUpCluster(&cluster, ctx)
+		eksOps.CleanUpCluster(&cluster, ctx)
 
-		}
+		//}
 		cluster.Status = models.ClusterCreationFailed
 		confError := UpdateEKSCluster(cluster, ctx)
 		if confError != nil {
@@ -575,7 +589,7 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 
 			return errors.New("Ami Type is empty")
 
-		} else if (pool.AmiType != nil) && (*pool.AmiType != "Amazon Linux 2" && *pool.AmiType != "Amazon Linux 2 GPU Enabled") {
+		} else if (pool.AmiType != nil) && (*pool.AmiType != "AL2_x86_64" && *pool.AmiType != "AL2_x86_64_GPU") {
 
 			return errors.New("Ami Type is incorrect")
 
