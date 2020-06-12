@@ -256,13 +256,13 @@ func (c *EKSClusterController) Post() {
 	}
 
 	cluster.CompanyId = userInfo.CompanyId
-	err = eks.GetNetwork(token, cluster.ProjectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
+	/*	err = eks.GetNetwork(token, cluster.ProjectId, *ctx)
+		if err != nil {
+			c.Ctx.Output.SetStatus(400)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}*/
 	err = eks.AddEKSCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
