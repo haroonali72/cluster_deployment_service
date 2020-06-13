@@ -10543,15 +10543,15 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "11642.string": {
+        "11742.string": {
             "title": "string",
             "type": "object"
         },
-        "14388.0xc0019f8ff0.false": {
+        "14388.0xc0019cce70.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc0019c3080.false": {
+        "482.0xc001998f00.false": {
             "title": "false",
             "type": "object"
         },
@@ -10559,23 +10559,23 @@
             "title": "string",
             "type": "object"
         },
-        "57894.0xc00197c300.false": {
+        "57792.0xc001962180.false": {
             "title": "false",
             "type": "object"
         },
-        "59920.string": {
+        "59929.string": {
             "title": "string",
             "type": "object"
         },
-        "618.0xc00110c570.false": {
+        "618.0xc0010d8510.false": {
             "title": "false",
             "type": "object"
         },
-        "64016.string": {
+        "64164.string": {
             "title": "string",
             "type": "object"
         },
-        "667.0xc0018c2480.false": {
+        "667.0xc0018aa300.false": {
             "title": "false",
             "type": "object"
         },
@@ -10587,7 +10587,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc00147a030.false": {
+        "964.0xc00141bfb0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10728,7 +10728,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/64016.string"
+                    "$ref": "#/definitions/64164.string"
                 },
                 "type": {
                     "type": "string"
@@ -10967,7 +10967,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc00110c570.false"
+                    "$ref": "#/definitions/618.0xc0010d8510.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11594,7 +11594,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00147a030.false"
+                    "$ref": "#/definitions/964.0xc00141bfb0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11833,7 +11833,7 @@
             "title": "AutoScaling",
             "type": "object",
             "properties": {
-                "auto_scaling": {
+                "auto_scale": {
                     "type": "boolean"
                 },
                 "max_scaling_group_size": {
@@ -12258,7 +12258,7 @@
             "title": "AMI",
             "type": "object",
             "properties": {
-                "key": {
+                "name": {
                     "type": "string"
                 },
                 "value": {
@@ -12376,7 +12376,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/59920.string"
+                    "$ref": "#/definitions/59929.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14026,21 +14026,13 @@
             "type": "object",
             "properties": {
                 "autoscaling": {
-                    "type": "boolean"
+                    "$ref": "#/definitions/iks.Autoscaling"
                 },
                 "id": {
                     "type": "string"
                 },
                 "machine_type": {
                     "type": "string"
-                },
-                "max_scaling_group_size": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "min_scaling_group_size": {
-                    "type": "integer",
-                    "format": "int64"
                 },
                 "name": {
                     "type": "string"
@@ -14083,8 +14075,8 @@
             "type": "object",
             "properties": {
                 "autoscaling": {
-                    "$ref": "#/definitions/iks.Autoscaling",
-                    "description": "Autoscaling configuration"
+                    "description": "Autoscaling configuration",
+                    "type": "boolean"
                 },
                 "availability_zone": {
                     "type": "string"
@@ -14146,7 +14138,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/57894.0xc00197c300.false"
+                    "$ref": "#/definitions/57792.0xc001962180.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14518,7 +14510,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14388.0xc0019f8ff0.false"
+                    "$ref": "#/definitions/14388.0xc0019cce70.false"
                 },
                 "name": {
                     "type": "string"
