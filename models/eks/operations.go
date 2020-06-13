@@ -156,9 +156,9 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
 	)
-	if result != nil && result.Cluster != nil {
+	/*if result != nil && result.Cluster != nil {
 		eksCluster.OutputArn = result.Cluster.Arn
-	}
+	}*/
 	/**/
 
 	//wait for cluster creation
@@ -185,6 +185,22 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.Backend_Logging,
 	)
 	/**/
+	result_, err := cloud.Svc.DescribeCluster(&eks.DescribeClusterInput{Name: aws.String(eksCluster.Name)})
+	if err != nil {
+		ctx.SendLogs(
+			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
+		return cpErr
+	}
+	if result_ != nil && result_.Cluster != nil {
+		eksCluster.OutputArn = result.Cluster.Arn
+		beego.Info(eksCluster.OutputArn)
+	}
 
 	//add node groups
 	for _, nodePool := range eksCluster.NodePools {
