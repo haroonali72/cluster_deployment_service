@@ -359,7 +359,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
-		err = cloud.deleteIAMRole(nodePool.RoleName)
+		err = cloud.deleteIAMRole(*nodePool.RoleName)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -408,7 +408,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 	/**/
 
 	//delete extra resources
-	err = cloud.deleteIAMRole(eksCluster.RoleName)
+	err = cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -455,7 +455,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 
 	//try deleting all node groups first
 	for _, nodePool := range eksCluster.NodePools {
-		if eksCluster.OutputArn != nil && *eksCluster.OutputArn != "" {
+		if nodePool.OutputArn != nil && *nodePool.OutputArn != "" {
 			err := cloud.deleteNodePool(eksCluster.Name, nodePool.NodePoolName)
 			if err != nil {
 				ctx.SendLogs(
@@ -468,8 +468,10 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
-			//delete extra resources
-			err = cloud.deleteIAMRole(nodePool.RoleName)
+		}
+		//delete extra resources
+		if nodePool.NodeRole != nil && *nodePool.NodeRole != "" {
+			err := cloud.deleteIAMRole(*nodePool.RoleName)
 			if err != nil {
 				ctx.SendLogs(
 					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -481,25 +483,26 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
-			if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
-				err = cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
-				if err != nil {
-					ctx.SendLogs(
-						"EKS delete SSH key for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
-						models.LOGGING_LEVEL_ERROR,
-						models.Backend_Logging,
-					)
-					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
-					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
-					return cpErr
-				}
-				nodePool.RemoteAccess.Ec2SshKey = nil
-			}
-			nodePool.RoleName = nil
-			nodePool.NodeRole = nil
-			nodePool.OutputArn = nil
 		}
+		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
+			err := cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete SSH key for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
+			nodePool.RemoteAccess.Ec2SshKey = nil
+		}
+		nodePool.RoleName = nil
+		nodePool.NodeRole = nil
+		nodePool.OutputArn = nil
+
 	}
 	/**/
 
@@ -525,7 +528,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 	//delete extra resources
 	if eksCluster.RoleArn != nil {
 
-		err := cloud.deleteIAMRole(eksCluster.RoleName)
+		err := cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -717,15 +720,15 @@ func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 
 	return err
 }
-func (cloud *EKS) deleteIAMRole(roleName *string) error {
+func (cloud *EKS) deleteIAMRole(roleName string) error {
 
-	err := cloud.dettachIAMPolicy(*roleName, "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy")
+	err := cloud.dettachIAMPolicy(roleName, "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy")
 	if err != nil {
 		return err
 	}
 
 	_, err = cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
-		RoleName: roleName,
+		RoleName: aws.String(roleName),
 	})
 	if err != nil {
 		return err
@@ -798,13 +801,13 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 
 			return EKSClusterStatus{}, cpErr
 		}
-		poolResponse.Name = poolOutput.Nodegroup.NodegroupArn
+		poolResponse.NodePoolArn = poolOutput.Nodegroup.NodegroupArn
 		poolResponse.Name = poolOutput.Nodegroup.NodegroupName
-		poolResponse.Name = poolOutput.Nodegroup.Status
-		poolResponse.Name = poolOutput.Nodegroup.AmiType
-		poolResponse.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
+		poolResponse.Status = poolOutput.Nodegroup.Status
+		poolResponse.AMI = poolOutput.Nodegroup.AmiType
+		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
 		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MinSize
-		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
+		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
 		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
 
 		poolResponse.Nodes = nodes
