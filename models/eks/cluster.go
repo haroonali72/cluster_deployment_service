@@ -670,3 +670,12 @@ func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, c
 	}
 	return nil
 }
+func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Context) ([]*string, types.CustomCPError) {
+	eksOps := GetEKS(projectId, credentials.Profile)
+	eksOps.init()
+	clusters, cpError := eksOps.getEKSCluster(ctx)
+	if cpError != (types.CustomCPError{}) {
+		return nil, cpError
+	}
+	return clusters, types.CustomCPError{}
+}
