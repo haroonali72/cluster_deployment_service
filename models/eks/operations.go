@@ -68,6 +68,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	)
 	eksCluster.ResourcesVpcConfig.SubnetIds = subnets
 	eksCluster.ResourcesVpcConfig.SecurityGroupIds = sgs
+
 	/**/
 
 	//create KMS key if encryption is enabled
@@ -205,7 +206,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	//add node groups
 	for _, nodePool := range eksCluster.NodePools {
 		if nodePool != nil {
-			err := cloud.addNodePool(nodePool, eksCluster.Name, sgs, ctx)
+			err := cloud.addNodePool(nodePool, eksCluster.Name, subnets, sgs, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
@@ -216,7 +217,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	return types.CustomCPError{}
 }
 
-func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, sgs []*string, ctx utils.Context) types.CustomCPError {
+func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []*string, sgs []*string, ctx utils.Context) types.CustomCPError {
 	if nodePool == nil {
 		return types.CustomCPError{}
 	}
@@ -265,13 +266,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, sgs []*str
 	)
 	/**/
 
-	/*	if *nodePool.AmiType == "Amazon Linux 2 GPU Enabled" {
-			t := "AL2_x86_64_GPU"
-			nodePool.AmiType = &t
-		} else {
-			t := "AL2_x86_64"
-			nodePool.AmiType = &t
-		}*/
+	nodePool.Subnets = subnets
 	//generate cluster create request
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
@@ -600,7 +595,6 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 
 	return subnets, sgs, nil
 }
-
 func (cloud *EKS) createClusterIAMRole(clusterName string) (*string, *string, error) {
 	roleName := "eks-cluster-" + clusterName
 	managedPolicy := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
@@ -624,7 +618,6 @@ func (cloud *EKS) createClusterIAMRole(clusterName string) (*string, *string, er
 
 	return roleArn, aws.String(roleName), cloud.attachIAMPolicy(roleName, managedPolicy)
 }
-
 func (cloud *EKS) createNodePoolIAMRole(nodePoolName string) (*string, *string, error) {
 	roleName := "eks-worker-" + nodePoolName
 	managedPolicies := []string{
@@ -659,7 +652,6 @@ func (cloud *EKS) createNodePoolIAMRole(nodePoolName string) (*string, *string, 
 
 	return roleArn, aws.String(roleName), nil
 }
-
 func (cloud *EKS) createIAMRole(roleName, trustedEntity string) (*string, error) {
 	result, err := cloud.IAM.CreateRole(&iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(trustedEntity),
@@ -674,7 +666,6 @@ func (cloud *EKS) createIAMRole(roleName, trustedEntity string) (*string, error)
 		return nil, errors.New("IAM Role ARN not found")
 	}
 }
-
 func (cloud *EKS) attachIAMPolicy(roleName, managedPolicy string) error {
 	_, err := cloud.IAM.AttachRolePolicy(&iam.AttachRolePolicyInput{
 		PolicyArn: aws.String(managedPolicy),
@@ -709,7 +700,6 @@ func (cloud *EKS) createKMSKey(clusterName string) (*string, *string, error) {
 
 	return nil, nil, errors.New("KMS key ARN not found")
 }
-
 func (cloud *EKS) createSSHKey(clusterName, nodePoolName string) (*string, error) {
 	keyName := "eks-" + clusterName + "-" + nodePoolName
 	_, err := cloud.EC2.CreateKeyPair(&ec2.CreateKeyPairInput{KeyName: aws.String(keyName)})
@@ -719,7 +709,6 @@ func (cloud *EKS) createSSHKey(clusterName, nodePoolName string) (*string, error
 
 	return aws.String(keyName), nil
 }
-
 func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 	_, err := cloud.Svc.DeleteNodegroup(&eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(clusterName),
@@ -728,7 +717,6 @@ func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 
 	return err
 }
-
 func (cloud *EKS) deleteIAMRole(roleName *string) error {
 
 	err := cloud.dettachIAMPolicy(*roleName, "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy")
@@ -745,7 +733,6 @@ func (cloud *EKS) deleteIAMRole(roleName *string) error {
 
 	return nil
 }
-
 func (cloud *EKS) scheduleKMSKeyDeletion(keyId *string) error {
 	_, err := cloud.KMS.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
 		KeyId:               keyId,
@@ -754,7 +741,6 @@ func (cloud *EKS) scheduleKMSKeyDeletion(keyId *string) error {
 
 	return err
 }
-
 func (cloud *EKS) deleteSSHKey(keyName *string) error {
 	_, err := cloud.EC2.DeleteKeyPair(&ec2.DeleteKeyPairInput{
 		KeyName: keyName,
@@ -762,7 +748,6 @@ func (cloud *EKS) deleteSSHKey(keyName *string) error {
 
 	return err
 }
-
 func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId string) (EKSClusterStatus, types.CustomCPError) {
 
 	var response EKSClusterStatus
@@ -829,7 +814,6 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 	return response, types.CustomCPError{}
 
 }
-
 func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
 	var nodes []EKSNodesStatus
 
@@ -868,7 +852,6 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 	return nodes, types.CustomCPError{}
 
 }
-
 func (cloud *EKS) init() error {
 	if cloud.Svc != nil {
 		return nil
@@ -883,7 +866,6 @@ func (cloud *EKS) init() error {
 
 	return nil
 }
-
 func Validate(eksCluster EKSCluster) error {
 	if eksCluster.ProjectId == "" {
 		return errors.New("project id is required")
@@ -892,7 +874,6 @@ func Validate(eksCluster EKSCluster) error {
 	}
 	return nil
 }
-
 func getNetworkHost(cloudType, projectId string) string {
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
@@ -904,7 +885,6 @@ func getNetworkHost(cloudType, projectId string) string {
 	}
 	return host
 }
-
 func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 	return EKS{
 		AccessKey: credentials.AccessKey,
