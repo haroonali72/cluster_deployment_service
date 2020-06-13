@@ -817,6 +817,17 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 	return response, types.CustomCPError{}
 
 }
+func (cloud *EKS) getEKSCluster(ctx utils.Context) ([]*string, types.CustomCPError) {
+	clusterInput := eks.ListClustersInput{}
+	clusterOutput, err := cloud.Svc.ListClusters(&clusterInput)
+	if err != nil {
+		ctx.SendLogs("Failed to get instances list "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "Failed to get running eks instances", 512)
+
+		return nil, cpErr
+	}
+	return clusterOutput.Clusters, types.CustomCPError{}
+}
 func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
 	var nodes []EKSNodesStatus
 
