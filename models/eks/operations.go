@@ -798,13 +798,13 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 
 			return EKSClusterStatus{}, cpErr
 		}
-		poolResponse.Name = poolOutput.Nodegroup.NodegroupArn
+		poolResponse.NodePoolArn = poolOutput.Nodegroup.NodegroupArn
 		poolResponse.Name = poolOutput.Nodegroup.NodegroupName
-		poolResponse.Name = poolOutput.Nodegroup.Status
-		poolResponse.Name = poolOutput.Nodegroup.AmiType
-		poolResponse.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
+		poolResponse.Status = poolOutput.Nodegroup.Status
+		poolResponse.AMI = poolOutput.Nodegroup.AmiType
+		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
 		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MinSize
-		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
+		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
 		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
 
 		poolResponse.Nodes = nodes
