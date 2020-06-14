@@ -225,7 +225,7 @@ func (c *GcpClusterController) Post() {
 		node.EnablePublicIP = !network.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
-
+	err=gcp.ValidateData(cluster)
 	err = gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
