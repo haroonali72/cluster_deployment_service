@@ -22,10 +22,9 @@ type GcpClusterController struct {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} gcp.Cluster_Def
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/ [get]
 func (c *GcpClusterController) Get() {
 
@@ -81,12 +80,18 @@ func (c *GcpClusterController) Get() {
 
 	cluster, err := gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpGetClusterController: error getting gcp cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "no cluster exists for this name"}
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error":"No cluster exists for this name"}
+			c.ServeJSON()
+			return
+		}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error":err.Error()}
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" fetched ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = cluster
 	c.ServeJSON()
@@ -96,8 +101,8 @@ func (c *GcpClusterController) Get() {
 // @Description get all the clusters
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []gcp.Cluster_Def
-// @Failure 400 {"error": "Bad Request"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /all [get]
 func (c *GcpClusterController) GetAll() {
 
@@ -138,12 +143,18 @@ func (c *GcpClusterController) GetAll() {
 
 	clusters, err := gcp.GetAllCluster(data, *ctx)
 	if err != nil {
-		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		if strings.Contains(err.Error(), "not found") {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("All GCP cluster fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = clusters
 	c.ServeJSON()
@@ -153,12 +164,12 @@ func (c *GcpClusterController) GetAll() {
 // @Description create a new cluster
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.Cluster_Def		true	"body for cluster content"
-// @Success 200 {"msg": "Cluster created successfully"}
+// @Success 201 {"msg": "Cluster created successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "cluster against same project id already exists"}
-// @Failure 410 {"error": "Core limit exceeded"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router / [post]
 func (c *GcpClusterController) Post() {
 
@@ -169,7 +180,7 @@ func (c *GcpClusterController) Post() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "error while unmarshalling " + err.Error()}
+		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -216,7 +227,7 @@ func (c *GcpClusterController) Post() {
 
 	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -231,12 +242,7 @@ func (c *GcpClusterController) Post() {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		if strings.Contains(err.Error(), "already exists") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "cluster against same project id already exists"}
-			c.ServeJSON()
-			return
-		} else if strings.Contains(err.Error(), "Exceeds the cores limit") {
-			c.Ctx.Output.SetStatus(410)
-			c.Data["json"] = map[string]string{"error": "core limit exceeded"}
+			c.Data["json"] = map[string]string{"error": "Cluster against same project id already exists"}
 			c.ServeJSON()
 			return
 		}
@@ -246,7 +252,9 @@ func (c *GcpClusterController) Post() {
 		return
 	}
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" created ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster added successfully"}
+
+	c.Ctx.Output.SetStatus(201)
+	c.Data["json"] = map[string]string{"msg": "Cluster added successfully"}
 	c.ServeJSON()
 }
 
@@ -254,23 +262,30 @@ func (c *GcpClusterController) Post() {
 // @Description update an existing cluster
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.Cluster_Def	true	"body for cluster content"
-// @Success 200 {"msg": "cluster updated successfully"}
+// @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 402 {"error": "error msg"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *GcpClusterController) Patch() {
 
 	ctx := new(utils.Context)
 
 	var cluster gcp.Cluster_Def
-	json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
-
+	err:= json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
+		c.ServeJSON()
+		return
+	}
 	token := c.Ctx.Input.Header("X-Auth-Token")
-
 	if token == "" {
+
+
+
+
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
@@ -305,11 +320,27 @@ func (c *GcpClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+
+
+	if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("GCPClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("GCPClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
 	network, err := gcp.GetNetwork(token, cluster.ProjectId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -320,27 +351,27 @@ func (c *GcpClusterController) Patch() {
 	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		if strings.Contains(err.Error(), "does not exist") {
+		if strings.Contains(err.Error(), "does not exist") ||strings.Contains(err.Error(), "not found"){
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
+			c.Data["json"] = map[string]string{"error": "No cluster exists with this name"}
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "Cluster is in runnning state") {
-			c.Ctx.Output.SetStatus(402)
-			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
+		if strings.Contains(err.Error(), "Cluster is in deploying state") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "Cluster is in deploying state"}
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "cluster is in deploying state") {
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
+		if strings.Contains(err.Error(), "Cluster is in created state") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "cluster is in terminating state") {
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
+		if strings.Contains(err.Error(), "Cluster is in terminating state") {
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error":"Cluster is in terminating state"}
 			c.ServeJSON()
 			return
 		}
@@ -350,7 +381,7 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
+	c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 	c.ServeJSON()
 }
 
@@ -359,18 +390,16 @@ func (c *GcpClusterController) Patch() {
 // @Param	projectId	path	string	true	"project id of the cluster"
 // @Param	forceDelete path  boolean	true "deleting cluster forcefully"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Success 200 {"msg": "cluster deleted successfully"}
-// @Failure 400 {"error": "Bad Request"}
+// @Success 204 {"msg": "Cluster deleted successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /:projectId/:forceDelete  [delete]
 func (c *GcpClusterController) Delete() {
 	ctx := new(utils.Context)
 
 	id := c.GetString(":projectId")
 	if id == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -423,31 +452,33 @@ func (c *GcpClusterController) Delete() {
 
 	cluster, err := gcp.GetCluster(id, userInfo.CompanyId, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == "Cluster Created" && !forceDelete {
+	if cluster.Status == models.ClusterCreated && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in running state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error() + "Cluster is in running state"}
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": err.Error() + "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Deploying) && !forceDelete {
-		ctx.SendLogs("GcpClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	}else if cluster.Status == models.Deploying && !forceDelete {
+		ctx.SendLogs("GcpClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Terminating) && !forceDelete {
+	}else if cluster.Status == models.Terminating && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminationFailed && !forceDelete {
+		ctx.SendLogs("GcpClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
@@ -460,7 +491,9 @@ func (c *GcpClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Ctx.Output.SetStatus(204)
 	c.Data["json"] = map[string]string{"msg": "cluster deleted successfully"}
 	c.ServeJSON()
 }
@@ -470,11 +503,12 @@ func (c *GcpClusterController) Delete() {
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "Bad Request"}
-// @Failure 404 {"error": "Not Found"}
+// @Success 201 {"msg": "Cluster created successfully"}
+// @Success 202 {"msg": "Cluster creation started successfully"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /start/:projectId [post]
 func (c *GcpClusterController) StartCluster() {
 
@@ -483,16 +517,14 @@ func (c *GcpClusterController) StartCluster() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId field is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -565,31 +597,33 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	if cluster.Status == "Cluster Created" {
-		ctx.SendLogs("GcpClusterController : Cluster is already running", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is already in running state"}
+	if cluster.Status == models.ClusterCreated {
+		ctx.SendLogs("GcpClusterController : Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("GcpClusterController: Cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	}else if cluster.Status == models.Deploying {
+		ctx.SendLogs("GcpClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}
-
-	if cluster.Status == string(models.Terminating) {
+	}else if cluster.Status == models.Terminating {
 		ctx.SendLogs("GcpClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminationFailed {
+		ctx.SendLogs("GcpClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
 		c.ServeJSON()
 		return
 	}
 
-	cluster.Status = string(models.Deploying)
+	cluster.Status = models.Deploying
 	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -602,7 +636,8 @@ func (c *GcpClusterController) StartCluster() {
 	go gcp.DeployCluster(cluster, credentials, userInfo.CompanyId, token, *ctx)
 
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" deployed ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster creation in progress"}
+	c.Ctx.Output.SetStatus(202)
+	c.Data["json"] = map[string]string{"msg": "Cluster creation initiated"}
 	c.ServeJSON()
 }
 
@@ -612,11 +647,9 @@ func (c *GcpClusterController) StartCluster() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Success 200 {object} gcp.Cluster_Def
-// @Failure 206 {object} gcp.Cluster_Def
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /status/:projectId/ [get]
 func (c *GcpClusterController) GetStatus() {
 
@@ -625,16 +658,14 @@ func (c *GcpClusterController) GetStatus() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -699,7 +730,7 @@ func (c *GcpClusterController) GetStatus() {
 	cluster, err := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(206)
+		c.Ctx.Output.SetStatus(200)
 	}
 
 	c.Data["json"] = cluster
@@ -711,11 +742,12 @@ func (c *GcpClusterController) GetStatus() {
 // @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Success 200 {"msg": "cluster terminated successfully"}
-// @Failure 401 {"error": "Authorization format should be 'base64 encoded service_account_json'"}
-// @Failure 400 {"error": "Bad Request"}
+// @Success 202 {"msg": "Cluster termination initiated"}
+// @Success 204 {"msg": "Cluster terminated successfully"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 409 {"error": "Conflict"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /terminate/:projectId/ [post]
 func (c *GcpClusterController) TerminateCluster() {
 
@@ -724,16 +756,14 @@ func (c *GcpClusterController) TerminateCluster() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -789,7 +819,6 @@ func (c *GcpClusterController) TerminateCluster() {
 	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
 	if !isValid {
 		ctx.SendLogs("GcpClusterController: athorization params missing or invalid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 		c.Ctx.Output.SetStatus(401)
 		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
 		c.ServeJSON()
@@ -809,22 +838,39 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	if cluster.Status == string(models.Deploying) {
-		ctx.SendLogs("GcpClusterController: cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in deploying state"}
+	if cluster.Status == models.Deploying {
+		ctx.SendLogs("GcpClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.Terminating {
+		ctx.SendLogs("GcpClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status == models.ClusterTerminated{
+		ctx.SendLogs("GcpClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
+		c.ServeJSON()
+		return
+	}else if cluster.Status ==models.ClusterCreationFailed {
+		ctx.SendLogs("GcpClusterController: Cluster is in cluster creation failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in cluster creation failed state"}
+		c.ServeJSON()
+		return
+	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
+		ctx.SendLogs("GcpClusterController: Cluster is not in created status", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is not in created status"}
 		c.ServeJSON()
 		return
 	}
 
-	if cluster.Status == string(models.Terminating) {
-		ctx.SendLogs("GcpClusterController: cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
-	cluster.Status = string(models.Terminating)
+	cluster.Status = models.Terminating
 	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -832,10 +878,13 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
+
+
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
 
+	c.Ctx.Output.SetStatus(202)
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "cluster termination is in progress"}
+	c.Data["json"] = map[string]string{"msg": "Cluster termination is in progress"}
 	c.ServeJSON()
 }
 
@@ -843,8 +892,9 @@ func (c *GcpClusterController) TerminateCluster() {
 // @Description returns ssh key pairs
 // @Param	X-Auth-Token	header	string	true "token"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "Bad Request"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /sshkeys [get]
 func (c *GcpClusterController) GetSSHKeys() {
 
@@ -877,7 +927,6 @@ func (c *GcpClusterController) GetSSHKeys() {
 	keys, err := gcp.GetAllSSHKeyPair(token, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
@@ -891,11 +940,11 @@ func (c *GcpClusterController) GetSSHKeys() {
 // @Title ListServiceAccounts
 // @Description returns list of service account emails
 // @Param	X-Auth-Token	header	string	true "token"
-// @Param	X-Profile-Id	header	string	true	"vault credentials profile id"
+// @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "Bad Request"}
-// @Failure 401 {"error": "authorization params missing or invalid"}
-// @Failure 500 {"error":  "error msg"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error":  "Runtime Error"}
 // @router /serviceaccounts [get]
 func (c *GcpClusterController) GetServiceAccounts() {
 
@@ -926,9 +975,8 @@ func (c *GcpClusterController) GetServiceAccounts() {
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
-		ctx.SendLogs("GcpClusterController: ProfileId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "profile id is empty"}
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -960,12 +1008,13 @@ func (c *GcpClusterController) GetServiceAccounts() {
 // @Param	projectId	path	string	true	"Id of the project"
 // @Param	keyname	 	path	string	true	"SSHKey"
 // @Param	username	path	string	true	"UserName"
-// @Param	X-Auth-Token		header	string	true "token"
-// @Param	teams		header	string	true "teams"
+// @Param	X-Auth-Token		header	string	true "Token"
+// @Param	teams		header	string	true "Teams"
 // @Success 200 		{object} key_utils.AZUREKey
-// @Failure 400 		{"error": "Bad Request"}
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 		{"error": "Unauthorized"}
 // @Failure 404 		{"error": "Not Found"}
-// @Failure 500 		{"error": "error msg"}
+// @Failure 500 		{"error": "Runtime Error"}
 // @router /sshkey/:keyname/:username/:projectId [post]
 func (c *GcpClusterController) PostSSHKey() {
 
@@ -974,7 +1023,6 @@ func (c *GcpClusterController) PostSSHKey() {
 
 	projectId := c.GetString(":projectId")
 	if projectId == "" {
-		ctx.SendLogs("GcpClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "project id is empty"}
 		c.ServeJSON()
@@ -984,7 +1032,7 @@ func (c *GcpClusterController) PostSSHKey() {
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "token is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1041,9 +1089,11 @@ func (c *GcpClusterController) PostSSHKey() {
 // @Description Delete SSH key
 // @Param	keyname	 	path	string	true	"keyname"
 // @Param	X-Auth-Token		header	string	true "token"
-// @Success 200 		{"msg": key deleted successfully}
-// @Failure 400 		{"error": "Bad Request"}
+// @Success 204 		{"msg": "Key deleted successfully"}
+// @Failure 401 		{"error": "Unauthorized"}
 // @Failure 404 		{"error": "Not Found"}
+// @Failure 409 		{"error": "Conflict"}
+// @Failure 500 		{"error": "Runtime Error"}
 // @router /sshkey/:keyname [delete]
 func (c *GcpClusterController) DeleteSSHKey() {
 
@@ -1081,20 +1131,21 @@ func (c *GcpClusterController) DeleteSSHKey() {
 	}
 	alreadyUsed := gcp.CheckKeyUsage(keyName, userInfo.CompanyId, *ctx)
 	if alreadyUsed {
-		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "key is used in other projects and can't be deleted"}
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Key is used in other projects and can't be deleted"}
 		c.ServeJSON()
 		return
 	}
 	err = gcp.DeleteSSHkey(keyName, token, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(400)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
 	ctx.SendLogs(" GCP cluster key "+keyName+" deleted ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-	c.Data["json"] = map[string]string{"msg": "key deleted successfully"}
+	c.Ctx.Output.SetStatus(204)
+	c.Data["json"] = map[string]string{"msg": "Key deleted successfully"}
 	c.ServeJSON()
 }
 
@@ -1105,9 +1156,9 @@ func (c *GcpClusterController) DeleteSSHKey() {
 // @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
 // @Success 200 []string
-// @Failure 400 {"error": "Bad Request"}
-// @Failure 404 {"error": "error msg"}
-// @Failure 401 {"error": "Not Found"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /getallmachines/:region/:zone [get]
 func (c *GcpClusterController) GetAllMachines() {
 
@@ -1117,7 +1168,7 @@ func (c *GcpClusterController) GetAllMachines() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profileid is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1160,7 +1211,7 @@ func (c *GcpClusterController) GetAllMachines() {
 	if !isValid {
 		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "authorization params missing or invalid"}
+		c.Data["json"] = map[string]string{"error": "Authorization params missing or invalid"}
 		c.ServeJSON()
 		return
 	}
@@ -1169,8 +1220,8 @@ func (c *GcpClusterController) GetAllMachines() {
 
 	machines, err := gcp.GetAllMachines(credentials, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = err
 		c.ServeJSON()
 		return
 	}
@@ -1182,16 +1233,15 @@ func (c *GcpClusterController) GetAllMachines() {
 // @Title Get All Regions
 // @Description return all regions
 // @Success 200 {object} []string
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 401 {"error": "authorization params missing or invalid"}
+// @Failure 401 {"error": "Unauthorized"}
 // @router /getallregions [get]
 func (c *GcpClusterController) GetAllRegions() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	regions, err := gcp.GetRegions()
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
@@ -1205,12 +1255,10 @@ func (c *GcpClusterController) GetAllRegions() {
 // @Description check if profile is valid
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	body	body 	gcp.GcpCredentials	true	"body for cluster content"
-// @Success 200 {"msg": "cluster created successfully"}
-// @Failure 400 {"error": "Bad Request"}
-// @Failure 401 {"error": "error msg"}
+// @Success 200 {"msg": "Profile is valid"}
+// @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 409 {"error": "profile is invalid"}
-// @Failure 500 {"error": "error msg"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /validateProfile [post]
 func (c *GcpClusterController) ValidateProfile() {
 
@@ -1256,8 +1304,8 @@ func (c *GcpClusterController) ValidateProfile() {
 		err = gcp.ValidateProfile(prof, region.Location, "b", *ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] =err
 			c.ServeJSON()
 			return
 		}
@@ -1267,7 +1315,6 @@ func (c *GcpClusterController) ValidateProfile() {
 	}
 
 	ctx.SendLogs("Profile Validated", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
 	c.Data["json"] = map[string]string{"msg": "profile is valid"}
 	c.ServeJSON()
 }
@@ -1278,9 +1325,9 @@ func (c *GcpClusterController) ValidateProfile() {
 // @Param	X-Auth-Token	header	string	true "token"
 // @Param	region	path	string	true	"region of GCP"
 // @Success 200 {object} []string
-// @Failure 400 {"error": "Bad Request"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 401 {"error": "authorization params missing or invalid"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 500 {"error": "Runtime Error"}
 // @router /getzones/:region [get]
 func (c *GcpClusterController) GetZones() {
 
@@ -1290,7 +1337,7 @@ func (c *GcpClusterController) GetZones() {
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
 	if profileId == "" {
 		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "profileid is empty"}
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
 		c.ServeJSON()
 		return
 	}
@@ -1335,7 +1382,7 @@ func (c *GcpClusterController) GetZones() {
 
 	zones, err := gcp.GetZones(credentials, *ctx)
 	if err != nil {
-		c.Ctx.Output.SetStatus(404)
+		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return

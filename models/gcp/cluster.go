@@ -24,7 +24,7 @@ type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id"`
 	Name             string        `json:"name" bson:"name"`
-	Status           string        `json:"status" bson:"status"`
+	Status           models.Type   `json:"status" bson:"status"`
 	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
@@ -320,13 +320,13 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in deploying state")
+	if oldCluster.Status == models.Deploying && update {
+		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in creating state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in terminating state")
+	if oldCluster.Status ==models.Terminating && update {
+		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in terminating state")
 	}
 
 	/*err = checkMasterPools(cluster)
@@ -334,10 +334,10 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}*/
-	if oldCluster.Status == "Cluster Created" && update {
+	if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
-			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Cluster is in runnning state")
+			ctx.SendLogs("Cluster is in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("Cluster is in created state")
 		} else {
 			cluster = oldCluster
 		}
@@ -553,7 +553,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		return err
 	}
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = models.Terminating
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
 	err = gcp.init()
