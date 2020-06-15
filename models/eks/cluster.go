@@ -433,11 +433,11 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	if cpError != (types.CustomCPError{}) {
 		utils.SendLog(ctx.Data.Company, "EKS CLuster Creation Failed", "error", cluster.ProjectId)
 
-		if cluster.OutputArn != nil {
+		//if cluster.OutputArn != nil {
 
-			eksOps.CleanUpCluster(&cluster, ctx)
+		eksOps.CleanUpCluster(&cluster, ctx)
 
-		}
+		//}
 		cluster.Status = models.ClusterCreationFailed
 		confError := UpdateEKSCluster(cluster, ctx)
 		if confError != nil {
@@ -669,4 +669,13 @@ func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, c
 		return err
 	}
 	return nil
+}
+func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Context) ([]*string, types.CustomCPError) {
+	eksOps := GetEKS(projectId, credentials.Profile)
+	eksOps.init()
+	clusters, cpError := eksOps.getEKSCluster(ctx)
+	if cpError != (types.CustomCPError{}) {
+		return nil, cpError
+	}
+	return clusters, types.CustomCPError{}
 }

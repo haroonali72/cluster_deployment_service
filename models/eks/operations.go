@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"strings"
+	"time"
 )
 
 type EKS struct {
@@ -67,6 +68,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	)
 	eksCluster.ResourcesVpcConfig.SubnetIds = subnets
 	eksCluster.ResourcesVpcConfig.SecurityGroupIds = sgs
+
 	/**/
 
 	//create KMS key if encryption is enabled
@@ -92,11 +94,15 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			KeyArn: keyArn,
 			KeyId:  keyId,
 		}
+		secret := "secrets"
+		var resources []*string
+		resources = append(resources, &secret)
+		eksCluster.EncryptionConfig.Resources = resources
 	}
 	/**/
 
 	//create cluster IAM role
-	eksCluster.RoleArn, eksCluster.RoleName, err = cloud.createClusterIAMRole(eksCluster.Name)
+	eksCluster.RoleArn, _, err = cloud.createClusterIAMRole(eksCluster.ProjectId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -113,43 +119,47 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
 	)
-	/**/
-
 	//generate cluster create request
+	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
+		cidr := "0.0.0.0/0"
+		var cidrs []*string
+		cidrs = append(cidrs, &cidr)
+		eksCluster.ResourcesVpcConfig.PublicAccessCidrs = cidrs
+	}
 	clusterRequest := GenerateClusterCreateRequest(*eksCluster)
 	/**/
 
 	//submit cluster creation request to AWS
-	result, err := cloud.Svc.CreateCluster(clusterRequest)
-	if err != nil && !strings.Contains(err.Error(), "exists") {
-		ctx.SendLogs(
-			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
-		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
-		return cpErr
-	} else if err != nil && strings.Contains(err.Error(), "exists") {
-		ctx.SendLogs(
-			"EKS cluster '"+eksCluster.Name+"' already exists.",
-			models.LOGGING_LEVEL_INFO,
-			models.Backend_Logging,
-		)
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
-		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
-		return cpErr
+	time.Sleep(time.Second * 120)
+	beego.Info("waited for role activation")
+	var result *eks.CreateClusterOutput
+	for {
+		result, err = cloud.Svc.CreateCluster(clusterRequest)
+		if err != nil && strings.Contains(err.Error(), "AccessDeniedException: status code: 403") {
+			time.Sleep(time.Second * 60)
+			continue
+		} else if err != nil && !strings.Contains(err.Error(), "exists") {
+			ctx.SendLogs(
+				"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+			cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
+			return cpErr
+		} else {
+			break
+		}
 	}
 	ctx.SendLogs(
 		"EKS cluster creation request sent for '"+eksCluster.Name+"'",
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
 	)
-	if result != nil && result.Cluster != nil {
+	/*if result != nil && result.Cluster != nil {
 		eksCluster.OutputArn = result.Cluster.Arn
-	}
+	}*/
 	/**/
 
 	//wait for cluster creation
@@ -176,11 +186,27 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.Backend_Logging,
 	)
 	/**/
+	result_, err := cloud.Svc.DescribeCluster(&eks.DescribeClusterInput{Name: aws.String(eksCluster.Name)})
+	if err != nil {
+		ctx.SendLogs(
+			"EKS cluster creation request for '"+eksCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, err.Error(), "error", eksCluster.ProjectId)
+		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
+		return cpErr
+	}
+	if result_ != nil && result_.Cluster != nil {
+		eksCluster.OutputArn = result.Cluster.Arn
+		beego.Info(eksCluster.OutputArn)
+	}
 
 	//add node groups
 	for _, nodePool := range eksCluster.NodePools {
 		if nodePool != nil {
-			err := cloud.addNodePool(nodePool, eksCluster.Name, sgs, ctx)
+			err := cloud.addNodePool(nodePool, eksCluster.Name, subnets, sgs, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
@@ -191,7 +217,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	return types.CustomCPError{}
 }
 
-func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, sgs []*string, ctx utils.Context) types.CustomCPError {
+func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []*string, sgs []*string, ctx utils.Context) types.CustomCPError {
 	if nodePool == nil {
 		return types.CustomCPError{}
 	}
@@ -240,13 +266,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, sgs []*str
 	)
 	/**/
 
-	/*	if *nodePool.AmiType == "Amazon Linux 2 GPU Enabled" {
-			t := "AL2_x86_64_GPU"
-			nodePool.AmiType = &t
-		} else {
-			t := "AL2_x86_64"
-			nodePool.AmiType = &t
-		}*/
+	nodePool.Subnets = subnets
 	//generate cluster create request
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
@@ -339,7 +359,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
-		err = cloud.deleteIAMRole(nodePool.RoleName)
+		err = cloud.deleteIAMRole(*nodePool.RoleName)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -388,7 +408,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 	/**/
 
 	//delete extra resources
-	err = cloud.deleteIAMRole(eksCluster.RoleName)
+	err = cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -435,7 +455,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 
 	//try deleting all node groups first
 	for _, nodePool := range eksCluster.NodePools {
-		if eksCluster.OutputArn != nil && *eksCluster.OutputArn != "" {
+		if nodePool.OutputArn != nil && *nodePool.OutputArn != "" {
 			err := cloud.deleteNodePool(eksCluster.Name, nodePool.NodePoolName)
 			if err != nil {
 				ctx.SendLogs(
@@ -448,8 +468,10 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
-			//delete extra resources
-			err = cloud.deleteIAMRole(nodePool.RoleName)
+		}
+		//delete extra resources
+		if nodePool.NodeRole != nil && *nodePool.NodeRole != "" {
+			err := cloud.deleteIAMRole(*nodePool.RoleName)
 			if err != nil {
 				ctx.SendLogs(
 					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -461,25 +483,26 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
 				return cpErr
 			}
-			if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
-				err = cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
-				if err != nil {
-					ctx.SendLogs(
-						"EKS delete SSH key for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
-						models.LOGGING_LEVEL_ERROR,
-						models.Backend_Logging,
-					)
-					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
-					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
-					return cpErr
-				}
-				nodePool.RemoteAccess.Ec2SshKey = nil
-			}
-			nodePool.RoleName = nil
-			nodePool.NodeRole = nil
-			nodePool.OutputArn = nil
 		}
+		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
+			err := cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete SSH key for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
+			nodePool.RemoteAccess.Ec2SshKey = nil
+		}
+		nodePool.RoleName = nil
+		nodePool.NodeRole = nil
+		nodePool.OutputArn = nil
+
 	}
 	/**/
 
@@ -497,10 +520,15 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
-		/**/
 
-		//delete extra resources
-		err = cloud.deleteIAMRole(eksCluster.RoleName)
+		eksCluster.OutputArn = nil
+	}
+	/**/
+
+	//delete extra resources
+	if eksCluster.RoleArn != nil {
+
+		err := cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -512,28 +540,27 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 			cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 			return cpErr
 		}
-		if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
-			if eksCluster.EncryptionConfig.Provider != nil {
-				err = cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
-				if err != nil {
-					ctx.SendLogs(
-						"EKS scheduling KMS key deletion for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
-						models.LOGGING_LEVEL_ERROR,
-						models.Backend_Logging,
-					)
-					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-					utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
-					cpErr := ApiError(err, "Cluster Deletion Failed", 512)
-					return cpErr
-				}
-			}
-		}
-		/**/
 
 		eksCluster.RoleName = nil
 		eksCluster.RoleArn = nil
-		eksCluster.OutputArn = nil
 	}
+	if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
+		if eksCluster.EncryptionConfig.Provider != nil {
+			err := cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS scheduling KMS key deletion for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+				return cpErr
+			}
+		}
+	}
+	/**/
 
 	return types.CustomCPError{}
 }
@@ -571,7 +598,6 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 
 	return subnets, sgs, nil
 }
-
 func (cloud *EKS) createClusterIAMRole(clusterName string) (*string, *string, error) {
 	roleName := "eks-cluster-" + clusterName
 	managedPolicy := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
@@ -595,7 +621,6 @@ func (cloud *EKS) createClusterIAMRole(clusterName string) (*string, *string, er
 
 	return roleArn, aws.String(roleName), cloud.attachIAMPolicy(roleName, managedPolicy)
 }
-
 func (cloud *EKS) createNodePoolIAMRole(nodePoolName string) (*string, *string, error) {
 	roleName := "eks-worker-" + nodePoolName
 	managedPolicies := []string{
@@ -630,7 +655,6 @@ func (cloud *EKS) createNodePoolIAMRole(nodePoolName string) (*string, *string, 
 
 	return roleArn, aws.String(roleName), nil
 }
-
 func (cloud *EKS) createIAMRole(roleName, trustedEntity string) (*string, error) {
 	result, err := cloud.IAM.CreateRole(&iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(trustedEntity),
@@ -645,7 +669,6 @@ func (cloud *EKS) createIAMRole(roleName, trustedEntity string) (*string, error)
 		return nil, errors.New("IAM Role ARN not found")
 	}
 }
-
 func (cloud *EKS) attachIAMPolicy(roleName, managedPolicy string) error {
 	_, err := cloud.IAM.AttachRolePolicy(&iam.AttachRolePolicyInput{
 		PolicyArn: aws.String(managedPolicy),
@@ -654,7 +677,14 @@ func (cloud *EKS) attachIAMPolicy(roleName, managedPolicy string) error {
 
 	return err
 }
+func (cloud *EKS) dettachIAMPolicy(roleName, managedPolicy string) error {
+	_, err := cloud.IAM.DetachRolePolicy(&iam.DetachRolePolicyInput{
+		PolicyArn: aws.String(managedPolicy),
+		RoleName:  aws.String(roleName),
+	})
 
+	return err
+}
 func (cloud *EKS) createKMSKey(clusterName string) (*string, *string, error) {
 	result, err := cloud.KMS.CreateKey(&kms.CreateKeyInput{})
 	if err != nil {
@@ -673,7 +703,6 @@ func (cloud *EKS) createKMSKey(clusterName string) (*string, *string, error) {
 
 	return nil, nil, errors.New("KMS key ARN not found")
 }
-
 func (cloud *EKS) createSSHKey(clusterName, nodePoolName string) (*string, error) {
 	keyName := "eks-" + clusterName + "-" + nodePoolName
 	_, err := cloud.EC2.CreateKeyPair(&ec2.CreateKeyPairInput{KeyName: aws.String(keyName)})
@@ -683,7 +712,6 @@ func (cloud *EKS) createSSHKey(clusterName, nodePoolName string) (*string, error
 
 	return aws.String(keyName), nil
 }
-
 func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 	_, err := cloud.Svc.DeleteNodegroup(&eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(clusterName),
@@ -692,15 +720,22 @@ func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 
 	return err
 }
+func (cloud *EKS) deleteIAMRole(roleName string) error {
 
-func (cloud *EKS) deleteIAMRole(roleName *string) error {
-	_, err := cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
-		RoleName: roleName,
+	err := cloud.dettachIAMPolicy(roleName, "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy")
+	if err != nil {
+		return err
+	}
+
+	_, err = cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
+		RoleName: aws.String(roleName),
 	})
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
-
 func (cloud *EKS) scheduleKMSKeyDeletion(keyId *string) error {
 	_, err := cloud.KMS.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
 		KeyId:               keyId,
@@ -709,7 +744,6 @@ func (cloud *EKS) scheduleKMSKeyDeletion(keyId *string) error {
 
 	return err
 }
-
 func (cloud *EKS) deleteSSHKey(keyName *string) error {
 	_, err := cloud.EC2.DeleteKeyPair(&ec2.DeleteKeyPairInput{
 		KeyName: keyName,
@@ -717,7 +751,6 @@ func (cloud *EKS) deleteSSHKey(keyName *string) error {
 
 	return err
 }
-
 func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId string) (EKSClusterStatus, types.CustomCPError) {
 
 	var response EKSClusterStatus
@@ -768,13 +801,13 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 
 			return EKSClusterStatus{}, cpErr
 		}
-		poolResponse.Name = poolOutput.Nodegroup.NodegroupArn
+		poolResponse.NodePoolArn = poolOutput.Nodegroup.NodegroupArn
 		poolResponse.Name = poolOutput.Nodegroup.NodegroupName
-		poolResponse.Name = poolOutput.Nodegroup.Status
-		poolResponse.Name = poolOutput.Nodegroup.AmiType
-		poolResponse.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
+		poolResponse.Status = poolOutput.Nodegroup.Status
+		poolResponse.AMI = poolOutput.Nodegroup.AmiType
+		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
 		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MinSize
-		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
+		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
 		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
 
 		poolResponse.Nodes = nodes
@@ -784,7 +817,17 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 	return response, types.CustomCPError{}
 
 }
+func (cloud *EKS) getEKSCluster(ctx utils.Context) ([]*string, types.CustomCPError) {
+	clusterInput := eks.ListClustersInput{}
+	clusterOutput, err := cloud.Svc.ListClusters(&clusterInput)
+	if err != nil {
+		ctx.SendLogs("Failed to get instances list "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "Failed to get running eks instances", 512)
 
+		return nil, cpErr
+	}
+	return clusterOutput.Clusters, types.CustomCPError{}
+}
 func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
 	var nodes []EKSNodesStatus
 
@@ -823,7 +866,6 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 	return nodes, types.CustomCPError{}
 
 }
-
 func (cloud *EKS) init() error {
 	if cloud.Svc != nil {
 		return nil
@@ -838,7 +880,6 @@ func (cloud *EKS) init() error {
 
 	return nil
 }
-
 func Validate(eksCluster EKSCluster) error {
 	if eksCluster.ProjectId == "" {
 		return errors.New("project id is required")
@@ -847,7 +888,6 @@ func Validate(eksCluster EKSCluster) error {
 	}
 	return nil
 }
-
 func getNetworkHost(cloudType, projectId string) string {
 	host := beego.AppConfig.String("network_url") + models.WeaselGetEndpoint
 
@@ -859,7 +899,6 @@ func getNetworkHost(cloudType, projectId string) string {
 	}
 	return host
 }
-
 func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 	return EKS{
 		AccessKey: credentials.AccessKey,
