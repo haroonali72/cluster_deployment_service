@@ -324,7 +324,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in creating state")
 	}
-	if oldCluster.Status ==models.Terminating && update {
+	if oldCluster.Status == models.Terminating && update {
 		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("Cluster is in terminating state")
 	}
@@ -414,7 +414,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 
-	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 
 	cluster, confError = gcp.createCluster(cluster, token, ctx)
 
@@ -454,11 +454,11 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 
-	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
-	if notify{
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
 		ctx.SendLogs("GCPClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-	}else{
+	} else {
 		ctx.SendLogs("GCPClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 

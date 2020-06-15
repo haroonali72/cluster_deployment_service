@@ -464,7 +464,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	/**
 	  TODO : Add Agent Deployment Process.Due on @Ahmad.
 	*/
-	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
@@ -502,14 +502,13 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
-	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
-	if notify{
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
 		ctx.SendLogs("EKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-	}else{
+	} else {
 		ctx.SendLogs("EKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
-
 
 	return types.CustomCPError{}
 }

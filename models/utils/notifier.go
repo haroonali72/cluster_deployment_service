@@ -68,7 +68,6 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 		ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 
-
 }
 
 func (notifier *Notifier) Init_notifier() error {
@@ -82,11 +81,11 @@ func (notifier *Notifier) Init_notifier() error {
 
 	return nil
 }
-func (notifier *Notifier) Subscribe (channel string,ctx Context) *redis.PubSub{
-	pubsub:= notifier.Client.Subscribe(ctx.Data.Company+"_"+channel)
+func (notifier *Notifier) Subscribe(channel string, ctx Context) *redis.PubSub {
+	pubsub := notifier.Client.Subscribe(ctx.Data.Company + "_" + channel)
 	return pubsub
 }
-func (notifier *Notifier) RecieveNotification( channel string,ctx Context,pubsub *redis.PubSub) bool{
+func (notifier *Notifier) RecieveNotification(channel string, ctx Context, pubsub *redis.PubSub) bool {
 	start := time.Now()
 	defer pubsub.Close()
 	err1 := notifier.Client.Ping()
@@ -105,4 +104,3 @@ func (notifier *Notifier) RecieveNotification( channel string,ctx Context,pubsub
 
 	return false
 }
-

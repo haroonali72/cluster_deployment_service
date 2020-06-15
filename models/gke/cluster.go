@@ -274,14 +274,14 @@ type KubeWorkerPoolStatus struct {
 	Link        string            `json:"-"`
 	NodeCount   int64             `json:"node_count,omitempty"`
 	MachineType string            `json:"machine_type,omitempty"`
-	Autoscaling AutoScaling 	  `json:"auto_scaling,omitempty"`
+	Autoscaling AutoScaling       `json:"auto_scaling,omitempty"`
 	Subnet      string            `json:"subnet_id,omitempty"`
 	Nodes       []KubeNodesStatus `json:"nodes"`
 }
-type AutoScaling struct{
-	AutoScale   bool              `json:"auto_scale,omitempty"`
-	MinCount    int64             `json:"min_scaling_group_size,omitempty"`
-	MaxCount    int64             `json:"max_scaling_group_size,omitempty"`
+type AutoScaling struct {
+	AutoScale bool  `json:"auto_scale,omitempty"`
+	MinCount  int64 `json:"min_scaling_group_size,omitempty"`
+	MaxCount  int64 `json:"max_scaling_group_size,omitempty"`
 }
 type KubeNodesStatus struct {
 	Id        string `json:"id,omitempty"`
@@ -550,7 +550,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		return err
 	}
 
-	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
@@ -583,11 +583,11 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
-	if notify{
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
 		ctx.SendLogs("GKEClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-	}else{
+	} else {
 		ctx.SendLogs("GKEClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 

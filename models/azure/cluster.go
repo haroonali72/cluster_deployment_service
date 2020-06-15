@@ -399,10 +399,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		return err
 	}
 
-
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 
-	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 
 	cluster, err = azure.createCluster(cluster, ctx, companyId, token)
 	if err != (types.CustomCPError{}) {
@@ -445,11 +444,11 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 
-	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
-	if notify{
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
 		ctx.SendLogs("AzureClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-	}else{
+	} else {
 		ctx.SendLogs("AzureClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 

@@ -82,12 +82,12 @@ func (c *GcpClusterController) Get() {
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
-			c.Data["json"] = map[string]string{"error":"No cluster exists for this name"}
+			c.Data["json"] = map[string]string{"error": "No cluster exists for this name"}
 			c.ServeJSON()
 			return
 		}
 		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error":err.Error()}
+		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -273,7 +273,7 @@ func (c *GcpClusterController) Patch() {
 	ctx := new(utils.Context)
 
 	var cluster gcp.Cluster_Def
-	err:= json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
@@ -282,9 +282,6 @@ func (c *GcpClusterController) Patch() {
 	}
 	token := c.Ctx.Input.Header("X-Auth-Token")
 	if token == "" {
-
-
-
 
 		c.Ctx.Output.SetStatus(404)
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
@@ -321,7 +318,6 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
-
 	if cluster.Status == (models.Deploying) {
 		ctx.SendLogs("GCPClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
@@ -351,7 +347,7 @@ func (c *GcpClusterController) Patch() {
 	err = gcp.UpdateCluster(cluster, true, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		if strings.Contains(err.Error(), "does not exist") ||strings.Contains(err.Error(), "not found"){
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "not found") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "No cluster exists with this name"}
 			c.ServeJSON()
@@ -371,7 +367,7 @@ func (c *GcpClusterController) Patch() {
 		}
 		if strings.Contains(err.Error(), "Cluster is in terminating state") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error":"Cluster is in terminating state"}
+			c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 			c.ServeJSON()
 			return
 		}
@@ -463,19 +459,19 @@ func (c *GcpClusterController) Delete() {
 		c.Data["json"] = map[string]string{"error": err.Error() + "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Deploying && !forceDelete {
+	} else if cluster.Status == models.Deploying && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Terminating && !forceDelete {
+	} else if cluster.Status == models.Terminating && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.ClusterTerminationFailed && !forceDelete {
+	} else if cluster.Status == models.ClusterTerminationFailed && !forceDelete {
 		ctx.SendLogs("GcpClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
@@ -603,19 +599,19 @@ func (c *GcpClusterController) StartCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Deploying {
+	} else if cluster.Status == models.Deploying {
 		ctx.SendLogs("GcpClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Terminating {
+	} else if cluster.Status == models.Terminating {
 		ctx.SendLogs("GcpClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.ClusterTerminationFailed {
+	} else if cluster.Status == models.ClusterTerminationFailed {
 		ctx.SendLogs("GcpClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in termination failed state"}
@@ -844,19 +840,19 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.Terminating {
+	} else if cluster.Status == models.Terminating {
 		ctx.SendLogs("GcpClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status == models.ClusterTerminated{
+	} else if cluster.Status == models.ClusterTerminated {
 		ctx.SendLogs("GcpClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
 		c.ServeJSON()
 		return
-	}else if cluster.Status ==models.ClusterCreationFailed {
+	} else if cluster.Status == models.ClusterCreationFailed {
 		ctx.SendLogs("GcpClusterController: Cluster is in cluster creation failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Cluster is in cluster creation failed state"}
@@ -878,7 +874,6 @@ func (c *GcpClusterController) TerminateCluster() {
 		c.ServeJSON()
 		return
 	}
-
 
 	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
 
@@ -1305,7 +1300,7 @@ func (c *GcpClusterController) ValidateProfile() {
 		if err != nil {
 			ctx.SendLogs("GcpClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(500)
-			c.Data["json"] =err
+			c.Data["json"] = err
 			c.ServeJSON()
 			return
 		}
