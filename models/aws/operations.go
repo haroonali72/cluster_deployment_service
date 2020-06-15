@@ -218,7 +218,10 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 	var awsNetwork types.AWSNetwork
 	url := getNetworkHost("aws", cluster.ProjectId)
 	network, err := api_handler.GetAPIStatus(token, url, ctx)
-
+	if err != nil {
+		beego.Error(err.Error())
+		return nil, types.CustomCPError{}
+	}
 	err = json.Unmarshal(network.([]byte), &awsNetwork)
 	if err != nil {
 		beego.Error(err.Error())

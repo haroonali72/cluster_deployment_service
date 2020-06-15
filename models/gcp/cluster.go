@@ -413,6 +413,9 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+
+	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
+
 	cluster, confError = gcp.createCluster(cluster, token, ctx)
 
 	if confError != nil {
@@ -450,7 +453,15 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	}
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+
+	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
+	if notify{
+		ctx.SendLogs("GCPClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	}else{
+		ctx.SendLogs("GCPClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
+
 	return nil
 }
 
