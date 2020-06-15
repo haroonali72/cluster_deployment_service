@@ -163,6 +163,7 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context, teams, t
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 
+
 	err = CreateCluster(cluster, ctx, token,teams)
 	if err != nil {
 		ctx.SendLogs("Cluster model: Update - Got error deleting cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

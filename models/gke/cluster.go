@@ -549,6 +549,9 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}
+
+	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
+
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.ClusterCreationFailed
@@ -580,7 +583,14 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
+	if notify{
+		ctx.SendLogs("GKEClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	}else{
+		ctx.SendLogs("GKEClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
+
 	return types.CustomCPError{}
 }
 

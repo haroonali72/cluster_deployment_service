@@ -88,13 +88,10 @@ func (notifier *Notifier) Subscribe (channel string,ctx Context) *redis.PubSub{
 }
 func (notifier *Notifier) RecieveNotification( channel string,ctx Context,pubsub *redis.PubSub) bool{
 	start := time.Now()
-	cmd := notifier.Client.Publish(ctx.Data.Company+"_"+channel, "New message")
-	fmt.Println(cmd)
 	defer pubsub.Close()
 	err1 := notifier.Client.Ping()
 	fmt.Println(err1)
 	for int(time.Since(start).Minutes()) < 1 {
-
 		message, err := pubsub.ReceiveMessage()
 		if err != nil {
 			return false

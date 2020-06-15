@@ -315,6 +315,8 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return cpError
 	}
 
+	pubSub:= publisher.Subscribe(ctx.Data.ProjectId ,ctx)
+
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
@@ -352,7 +354,14 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+
+	notify:= publisher.RecieveNotification(ctx.Data.ProjectId,ctx,pubSub)
+	if notify{
+		ctx.SendLogs("IKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	}else{
+		ctx.SendLogs("IKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
 
 	return types.CustomCPError{}
 }
