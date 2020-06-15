@@ -408,7 +408,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 	/**/
 
 	//delete extra resources
-	err = cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
+	err = cloud.deleteIAMRole("eks-cluster-" + eksCluster.ProjectId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -598,8 +598,8 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 
 	return subnets, sgs, nil
 }
-func (cloud *EKS) createClusterIAMRole(clusterName string) (*string, *string, error) {
-	roleName := "eks-cluster-" + clusterName
+func (cloud *EKS) createClusterIAMRole(projectId string) (*string, *string, error) {
+	roleName := "eks-cluster-" + projectId
 	managedPolicy := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 	trustedEntity := []byte(`{
 	  "Version": "2012-10-17",
