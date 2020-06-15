@@ -528,7 +528,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 	//delete extra resources
 	if eksCluster.RoleArn != nil {
 
-		err := cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
+		err := cloud.deleteIAMRole("eks-cluster-" + eksCluster.ProjectId)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
