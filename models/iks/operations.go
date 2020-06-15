@@ -116,12 +116,17 @@ type KubeWorkerPoolStatus1 struct {
 	ID          string                  	`json:"id,omitempty"`
 	Name        string                  	`json:"name,omitempty"`
 	Flavour     string                  	`json:"machine_type,omitempty"`
-	Autoscaling bool                    	`json:"autoscaling,omitempty"`
-	MinCount  	int64					`json:"min_scaling_group_size"`
-	MaxCount  	int64					`json:"max_scaling_group_size"`
+	Autoscaling Autoscaling                 `json:"autoscaling,omitempty"`
 	Nodes       []KubeWorkerNodesStatus1	`json:"nodes"`
 	Count       int                      	`json:"node_count,omitempty"`
 	SubnetId    string                   	`json:"subnet_id,omitempty"`
+}
+
+type Autoscaling struct{
+	AutoScale        bool          `json:"autoscale,omitempty"  bson:"autoscaling" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
+	MinNodes         int64           `json:"min_node_count,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
+	MaxNodes         int64           `json:"max_node_count,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
+
 }
 type KubeWorkerNodesStatus1 struct {
 	PoolId    string `json:"id,omitempty"`

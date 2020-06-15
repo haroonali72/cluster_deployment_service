@@ -256,13 +256,13 @@ func (c *EKSClusterController) Post() {
 	}
 
 	cluster.CompanyId = userInfo.CompanyId
-	/*	err = eks.GetNetwork(token, cluster.ProjectId, *ctx)
-		if err != nil {
-			c.Ctx.Output.SetStatus(400)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}*/
+	err = eks.GetNetwork(token, cluster.ProjectId, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
 	err = eks.AddEKSCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("EKSClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -939,6 +939,66 @@ func (c *EKSClusterController) GetInstances() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 
 	instances := eks.GetInstances(amiType, *ctx)
+	c.Data["json"] = instances
+	c.ServeJSON()
+}
+
+// @Title Get
+// @Description Get list of running EKS Cluster
+// @Param	X-Auth-Token	header	string	true "Token"
+// @Param	X-Profile-Id	header	string	true "Token"
+// @Success 200 {object} []*string
+// @Failure 404 {"error": "Not Found"}
+// @router /clusters/:region/:projectId/ [get]
+func (c *EKSClusterController) GetClusters() {
+	ctx := new(utils.Context)
+
+	token := c.Ctx.Input.Header("X-Auth-Token")
+	if token == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+		c.ServeJSON()
+		return
+	}
+	profileId := c.Ctx.Input.Header("X-Profile-Id")
+	if profileId == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+		c.ServeJSON()
+		return
+	}
+	region := c.GetString(":region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+	projectId := c.GetString(":projectId")
+	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
+	if err != nil {
+		beego.Error(err.Error())
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	instances, cpErr := eks.GetEKSClusters(projectId, awsProfile, *ctx)
+	if cpErr != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
+		c.Data["json"] = cpErr
+		c.ServeJSON()
+	}
 	c.Data["json"] = instances
 	c.ServeJSON()
 }
