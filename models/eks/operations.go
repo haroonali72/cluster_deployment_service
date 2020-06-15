@@ -267,6 +267,10 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 	/**/
 
 	nodePool.Subnets = subnets
+
+	tags := make(map[string]*string)
+	tags["name"] = &nodePool.NodePoolName
+	nodePool.Tags = tags
 	//generate cluster create request
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
@@ -359,7 +363,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
-		err = cloud.deleteIAMRole(*nodePool.RoleName)
+		err = cloud.deleteIAMRole("eks-worker-" + *nodePool.RoleName)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -471,7 +475,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 		}
 		//delete extra resources
 		if nodePool.NodeRole != nil && *nodePool.NodeRole != "" {
-			err := cloud.deleteIAMRole(*nodePool.RoleName)
+			err := cloud.deleteIAMRole("eks-worker-" + *nodePool.RoleName)
 			if err != nil {
 				ctx.SendLogs(
 					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
