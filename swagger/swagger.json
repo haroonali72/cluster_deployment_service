@@ -3402,6 +3402,45 @@
                 }
             }
         },
+        "/cluster/eks/clusters/{region}/{projectId}/": {
+            "get": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "Get list of running EKS Cluster",
+                "operationId": "EKSClusterController.Get",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/*string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
+                    }
+                }
+            }
+        },
         "/cluster/eks/instances/{amiType}/{projectId}/": {
             "get": {
                 "tags": [
@@ -10543,15 +10582,19 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
+        "*string": {
+            "title": "*string",
+            "type": "object"
+        },
         "11742.string": {
             "title": "string",
             "type": "object"
         },
-        "14388.0xc0019cce70.false": {
+        "14388.0xc0019afbc0.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001998f00.false": {
+        "482.0xc00196bc50.false": {
             "title": "false",
             "type": "object"
         },
@@ -10559,23 +10602,23 @@
             "title": "string",
             "type": "object"
         },
-        "57792.0xc001962180.false": {
+        "57792.0xc00192eed0.false": {
             "title": "false",
             "type": "object"
         },
-        "59929.string": {
+        "618.0xc0010b0450.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "61937.string": {
             "title": "string",
-            "type": "object"
-        },
-        "618.0xc0010d8510.false": {
-            "title": "false",
             "type": "object"
         },
         "64164.string": {
             "title": "string",
             "type": "object"
         },
-        "667.0xc0018aa300.false": {
+        "667.0xc001873050.false": {
             "title": "false",
             "type": "object"
         },
@@ -10587,7 +10630,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc00141bfb0.false": {
+        "964.0xc0013f9ef0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10967,7 +11010,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc0010d8510.false"
+                    "$ref": "#/definitions/618.0xc0010b0450.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11594,7 +11637,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00141bfb0.false"
+                    "$ref": "#/definitions/964.0xc0013f9ef0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12376,7 +12419,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/59929.string"
+                    "$ref": "#/definitions/61937.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14138,7 +14181,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/57792.0xc001962180.false"
+                    "$ref": "#/definitions/57792.0xc00192eed0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14510,7 +14553,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14388.0xc0019cce70.false"
+                    "$ref": "#/definitions/14388.0xc0019afbc0.false"
                 },
                 "name": {
                     "type": "string"

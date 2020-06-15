@@ -471,7 +471,7 @@ func (c *AWSClusterController) Delete() {
 	}
 	if cluster.Status == models.ClusterCreated && !forceDelete {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in creaated state"}
+		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in created state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.Deploying && !forceDelete {
@@ -760,6 +760,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /terminate/:projectId/ [post]
 func (c *AWSClusterController) TerminateCluster() {
@@ -850,25 +851,25 @@ func (c *AWSClusterController) TerminateCluster() {
 	if cluster.Status == models.Deploying {
 		ctx.SendLogs("AWSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.Terminating {
 		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		ctx.SendLogs("AWSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminated state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.ClusterCreationFailed {
 		ctx.SendLogs("AWSClusterController: Cluster is in cluster creation failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in cluster creation failed state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in cluster creation failed state"}
 		c.ServeJSON()
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {

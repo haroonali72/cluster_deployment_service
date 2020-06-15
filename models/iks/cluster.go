@@ -44,9 +44,8 @@ type NodePool struct {
 	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required" description:"Machine type for pool [required]"`
 	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required" description:"ID of subnet in which pool will be created [required]"`
 	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
-	Autoscale        bool		   `json:"autoscaling,omitempty"  bson:"autoscaling" description:"Autoscaling configuration"`
+	Autoscale        bool          `json:"autoscaling,omitempty"  bson:"autoscaling" description:"Autoscaling configuration"`
 }
-
 
 type Project struct {
 	ProjectData Data `json:"data"`
@@ -310,6 +309,8 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return cpError
 	}
 
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
@@ -347,7 +348,14 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
+		ctx.SendLogs("IKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	} else {
+		ctx.SendLogs("IKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
 
 	return types.CustomCPError{}
 }
@@ -402,7 +410,7 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 	response1.KubernetesVersion = response.KubernetesVersion
 	response1.State = response.State
 	for _, pool := range response.WorkerPools {
-		response1.PoolCount=response1.PoolCount+1
+		response1.PoolCount = response1.PoolCount + 1
 		var pool1 KubeWorkerPoolStatus1
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID

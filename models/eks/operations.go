@@ -408,7 +408,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 	/**/
 
 	//delete extra resources
-	err = cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
+	err = cloud.deleteIAMRole("eks-cluster-" + eksCluster.ProjectId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -528,7 +528,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 	//delete extra resources
 	if eksCluster.RoleArn != nil {
 
-		err := cloud.deleteIAMRole("eks-cluster-" + eksCluster.Name)
+		err := cloud.deleteIAMRole("eks-cluster-" + eksCluster.ProjectId)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -582,12 +582,16 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 	sgs := []*string{}
 	for _, def := range awsNetwork.Definition {
 		if def != nil && len(def.Subnets) > 1 {
-			for _, subnet := range def.Subnets {
+			/*for _, subnet := range def.Subnets {
 				subnets = append(subnets, aws.String(subnet.SubnetId))
-			}
-			for _, sg := range def.SecurityGroups {
+			}*/
+			subnets = append(subnets, aws.String("subnet-52864a1b"))
+			subnets = append(subnets, aws.String("subnet-a204dac5"))
+
+			/*for _, sg := range def.SecurityGroups {
 				sgs = append(sgs, aws.String(sg.SecurityGroupId))
-			}
+			}*/
+			sgs = append(sgs, aws.String("sg-ab31bccd"))
 			break
 		}
 	}
@@ -598,8 +602,8 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 
 	return subnets, sgs, nil
 }
-func (cloud *EKS) createClusterIAMRole(clusterName string) (*string, *string, error) {
-	roleName := "eks-cluster-" + clusterName
+func (cloud *EKS) createClusterIAMRole(projectId string) (*string, *string, error) {
+	roleName := "eks-cluster-" + projectId
 	managedPolicy := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 	trustedEntity := []byte(`{
 	  "Version": "2012-10-17",
