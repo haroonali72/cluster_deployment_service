@@ -102,8 +102,8 @@ type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
 	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"Project ID of the cluster [required]"`
 	Name             string        `json:"name" bson:"name" validate:"required" description:"Name of the cluster [required]"`
-	Status          models.Type        `json:"status" bson:"status" validate:"required" description:"Status of the project [required]"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud" description:"Cloud of the cluster.Valid value is gcp|GCP|Gcp [readonly]"`
+	Status          models.Type        `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of the project [required]"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud"  validate:"eq=gcp|eq=Gcp|eq=GCP" description:"Cloud of the cluster.Valid value is gcp|GCP|Gcp [readonly]"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
 	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive" description:"Details of the nodepool [required]"`
@@ -123,10 +123,10 @@ type NodePool struct {
 	Volume              Volume             `json:"volume" bson:"volume" description:"Volume of the nodepool [optional]"`
 	RootVolume          Volume             `json:"root_volume" bson:"root_volume" validate:"required,dive" description:"Root volume of the nodepool [required]"`
 	EnableVolume        bool               `json:"is_external" bson:"is_external"`
-	PoolSubnet          string             `json:"subnet_id" bson:"subnet_id" validate:"required" description:"Subnet of the nodepool [required]"`
+	PoolSubnet          string             `json:"subnet_id" bson:"subnet_id"  description:"Subnet of the nodepool [required]"`
 	PoolRole            models.PoolRole    `json:"pool_role" bson:"pool_role" validate:"required,dive" description:"Role of the nodepool.Valid values are master and slave. [required]"`
 	ServiceAccountEmail string             `json:"service_account_email" bson:"service_account_email" validate:"required" description:"Service account of the nodepool [required]"`
-	Nodes               []*Node            `json:"nodes" bson:"nodes" validate:"required.dive" description:"Details of the node [required]"`
+	Nodes               []*Node            `json:"nodes" bson:"nodes" validate:"required,dive" description:"Details of the node [required]"`
 	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info" validate:"required,dive" description:"Details of the key [required]"`
 	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling" validate:"required" description:"To enable scaling [required]"`
 	EnablePublicIP      bool               `json:"enable_public_ip" bson:"enable_public_ip" validate:"required" description:"To enable public ip of the instance [required]"`
@@ -144,7 +144,7 @@ type Node struct {
 	CloudId   string        `json:"cloud_id" bson:"cloud_id,omitempty" description:"Cloud id of the node [readonly]"`
 	Url       string        `json:"url" bson:"url,omitempty" description:"URL of the node [readonly]"`
 	NodeState string        `json:"node_state" bson:"node_state,omitempty" description:"State of the node [readonly]"`
-	Name      string        `json:"name" bson:"name,omitempty" description:"Name of the node [readonly]"`
+	Name      string        `json:"name" bson:"name,omitempty"  description:"Name of the node [readonly]"`
 	PrivateIp string        `json:"private_ip" bson:"private_ip" description:"Private IP of the node [readonly]"`
 	PublicIp  string        `json:"public_ip" bson:"public_ip" description:"Public IP of the node [readonly]"`
 	Username  string        `json:"user_name" bson:"user_name" description:"Username of the node [optional]"`
@@ -152,8 +152,8 @@ type Node struct {
 
 type Image struct {
 	ID      bson.ObjectId `json:"-" bson:"_id,omitempty" description:"Id of the image [readonly]"`
-	Project string        `json:"project" bson:"project" description:"Project of the image [readonly]"`
-	Family  string        `json:"family" bson:"family" description:"family of the image [readonly]"`
+	Project string        `json:"project" bson:"project" validate:"required" description:"Project of the image [required]"`
+	Family  string        `json:"family" bson:"family" validate:"required" description:"family of the image [required]"`
 }
 
 type Volume struct {

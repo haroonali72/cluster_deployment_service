@@ -519,7 +519,6 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	cluster.CloudplexStatus = (models.Deploying)
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
-
 		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
 		cpErr := types.CustomCPError{Description: confError.Error, Error: "Error occurred while updating cluster status in database", StatusCode: 500}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
