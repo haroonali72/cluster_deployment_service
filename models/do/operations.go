@@ -117,7 +117,7 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 		utils.SendLog(companyId, "Creating Node Pools : "+cluster.Name, "info", cluster.ProjectId)
 		droplets, cpErr := cloud.createInstances(*pool, doNetwork, key, ctx, token, cluster.ProjectId)
 		if cpErr != (types.CustomCPError{}) {
-			utils.SendLog(companyId, "Error in instances creation: "+err.Error(), "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in instances creation: "+cpErr.Description, "info", cluster.ProjectId)
 			return cluster, cpErr
 		}
 		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
