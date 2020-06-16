@@ -895,13 +895,22 @@
                 }
             }
         },
-        "/cluster/aws/getallregions": {
+        "/cluster/aws/getallregions/{cloud}": {
             "get": {
                 "tags": [
                     "cluster/aws"
                 ],
                 "description": "Get AWS Regions",
                 "operationId": "AWSClusterController.GetRegions",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "cloud",
+                        "description": "keyname",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "[]models.Region"
@@ -10590,11 +10599,11 @@
             "title": "string",
             "type": "object"
         },
-        "14391.0xc001a952c0.false": {
+        "14391.0xc001a5f500.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001a55350.false": {
+        "482.0xc001a1f590.false": {
             "title": "false",
             "type": "object"
         },
@@ -10602,15 +10611,15 @@
             "title": "string",
             "type": "object"
         },
-        "58204.0xc001a145d0.false": {
+        "58562.0xc0019e0810.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc001165080.false": {
+        "618.0xc0011315f0.false": {
             "title": "false",
             "type": "object"
         },
-        "62650.string": {
+        "62516.string": {
             "title": "string",
             "type": "object"
         },
@@ -10618,7 +10627,7 @@
             "title": "string",
             "type": "object"
         },
-        "667.0xc00196a660.false": {
+        "667.0xc00192a6f0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10630,7 +10639,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc0014c6de0.false": {
+        "964.0xc001483350.false": {
             "title": "false",
             "type": "object"
         },
@@ -11010,7 +11019,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc001165080.false"
+                    "$ref": "#/definitions/618.0xc0011315f0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11637,7 +11646,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0014c6de0.false"
+                    "$ref": "#/definitions/964.0xc001483350.false"
                 },
                 "name": {
                     "type": "string"
@@ -12419,7 +12428,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/62650.string"
+                    "$ref": "#/definitions/62516.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -12615,43 +12624,33 @@
             "type": "object",
             "properties": {
                 "auth_provider_x509_cert_url": {
-                    "description": "Auth Provider of the account [readonly]",
                     "type": "string"
                 },
                 "auth_uri": {
-                    "description": "Auth Uri of the account [readonly]",
                     "type": "string"
                 },
                 "client_email": {
-                    "description": "Client email of the account [readonly]",
                     "type": "string"
                 },
                 "client_id": {
-                    "description": "Client Id of the account [readonly]",
                     "type": "string"
                 },
                 "client_x509_cert_url": {
-                    "description": "Client Cert Url of the account [readonly]",
                     "type": "string"
                 },
                 "private_key": {
-                    "description": "Private key of the account [readonly]",
                     "type": "string"
                 },
                 "private_key_id": {
-                    "description": "Private key Id of the account [readonly]",
                     "type": "string"
                 },
                 "project_id": {
-                    "description": "Project Id of the account [readonly]",
                     "type": "string"
                 },
                 "token_uri": {
-                    "description": "Token Uri of the account [readonly]",
                     "type": "string"
                 },
                 "type": {
-                    "description": "Type of the account[readonly]",
                     "type": "string"
                 }
             }
@@ -12661,13 +12660,11 @@
             "type": "object",
             "properties": {
                 "max_scaling_group_size": {
-                    "description": "Max count for the scaling [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.Type",
-                    "description": "State of the scaling [readonly]"
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -12676,41 +12673,33 @@
             "type": "object",
             "properties": {
                 "cloud": {
-                    "$ref": "#/definitions/models.Cloud",
-                    "description": "Cloud of the cluster.Valid value is gcp|GCP|Gcp [readonly]"
+                    "$ref": "#/definitions/models.Cloud"
                 },
                 "company_id": {
-                    "description": "CompanyId of the cluster [optional]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the cluster [required]",
                     "type": "string"
                 },
                 "network_name": {
-                    "description": "Natwork of the cluster [required]",
                     "type": "string"
                 },
                 "node_pools": {
-                    "description": "Details of the nodepool [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/gcp.NodePool"
                     }
                 },
                 "project_id": {
-                    "description": "Project ID of the cluster [required]",
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.Type",
-                    "description": "Status of the project [required]"
+                    "$ref": "#/definitions/models.Type"
                 },
                 "token_name": {
                     "type": "string"
                 },
                 "vpc_name": {
-                    "description": "VPC of the cluster [required]",
                     "type": "string"
                 }
             }
@@ -12720,19 +12709,15 @@
             "type": "object",
             "properties": {
                 "account_data": {
-                    "$ref": "#/definitions/gcp.AccountData",
-                    "description": "Account details [readonly]"
+                    "$ref": "#/definitions/gcp.AccountData"
                 },
                 "raw_account_data": {
-                    "description": "Account details [readonly]",
                     "type": "string"
                 },
                 "region": {
-                    "description": "Region of the cloud [readonly]",
                     "type": "string"
                 },
                 "zone": {
-                    "description": "Zone of the cloud [readonly]",
                     "type": "string"
                 }
             }
@@ -12742,11 +12727,9 @@
             "type": "object",
             "properties": {
                 "family": {
-                    "description": "family of the image [required]",
                     "type": "string"
                 },
                 "project": {
-                    "description": "Project of the image [required]",
                     "type": "string"
                 }
             }
@@ -12756,31 +12739,24 @@
             "type": "object",
             "properties": {
                 "cloud_id": {
-                    "description": "Cloud id of the node [readonly]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the node [readonly]",
                     "type": "string"
                 },
                 "node_state": {
-                    "description": "State of the node [readonly]",
                     "type": "string"
                 },
                 "private_ip": {
-                    "description": "Private IP of the node [readonly]",
                     "type": "string"
                 },
                 "public_ip": {
-                    "description": "Public IP of the node [readonly]",
                     "type": "string"
                 },
                 "url": {
-                    "description": "URL of the node [readonly]",
                     "type": "string"
                 },
                 "user_name": {
-                    "description": "Username of the node [optional]",
                     "type": "string"
                 }
             }
@@ -12790,66 +12766,52 @@
             "type": "object",
             "properties": {
                 "auto_scaling": {
-                    "$ref": "#/definitions/gcp.AutoScaling",
-                    "description": "Details of the scaling [optional]"
+                    "$ref": "#/definitions/gcp.AutoScaling"
                 },
                 "enable_public_ip": {
-                    "description": "To enable public ip of the instance [required]",
                     "type": "boolean"
                 },
                 "enable_scaling": {
-                    "description": "To enable scaling [required]",
                     "type": "boolean"
                 },
                 "image": {
-                    "$ref": "#/definitions/gcp.Image",
-                    "description": "Image of the nodepool[required]"
+                    "$ref": "#/definitions/gcp.Image"
                 },
                 "is_external": {
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey",
-                    "description": "Details of the key [required]"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
-                    "description": "Machine type of the nodepool [required]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the nodepool [required]",
                     "type": "string"
                 },
                 "node_count": {
-                    "description": "Node count of pool [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "nodes": {
-                    "description": "Details of the node [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/gcp.Node"
                     }
                 },
                 "pool_id": {
-                    "description": "Id of the nodepool [optional]",
                     "type": "string"
                 },
                 "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole",
-                    "description": "Role of the nodepool.Valid values are master and slave. [required]"
+                    "$ref": "#/definitions/models.PoolRole"
                 },
                 "root_volume": {
-                    "$ref": "#/definitions/gcp.Volume",
-                    "description": "Root volume of the nodepool [required]"
+                    "$ref": "#/definitions/gcp.Volume"
                 },
                 "service_account_email": {
-                    "description": "Service account of the nodepool [required]",
                     "type": "string"
                 },
                 "subnet_id": {
-                    "description": "Subnet of the nodepool [required]",
                     "type": "string"
                 },
                 "tags": {
@@ -12859,8 +12821,7 @@
                     }
                 },
                 "volume": {
-                    "$ref": "#/definitions/gcp.Volume",
-                    "description": "Volume of the nodepool [optional]"
+                    "$ref": "#/definitions/gcp.Volume"
                 }
             }
         },
@@ -12970,13 +12931,11 @@
             "type": "object",
             "properties": {
                 "disk_size": {
-                    "description": "Size of the disk [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "disk_type": {
-                    "$ref": "#/definitions/models.GCPDiskType",
-                    "description": "Type of the disk [required]"
+                    "$ref": "#/definitions/models.GCPDiskType"
                 },
                 "is_blank": {
                     "type": "boolean"
@@ -13962,12 +13921,12 @@
                     "description": "Autoscaling configuration, possible value 'true' or 'false' [required]",
                     "type": "boolean"
                 },
-                "max_node_count": {
+                "max_scaling_group_size": {
                     "description": "Max VM count, must be greater than min count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
                 },
-                "min_node_count": {
+                "min_scaling_group_size": {
                     "description": "Min VM count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
@@ -14118,7 +14077,7 @@
             "title": "KubeWorkerPoolStatus1",
             "type": "object",
             "properties": {
-                "autoscaling": {
+                "auto_scaling": {
                     "$ref": "#/definitions/iks.Autoscaling"
                 },
                 "id": {
@@ -14167,9 +14126,9 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "autoscaling": {
-                    "description": "Autoscaling configuration",
-                    "type": "boolean"
+                "auto_scaling": {
+                    "$ref": "#/definitions/iks.Autoscaling",
+                    "description": "Autoscaling configuration [optional]"
                 },
                 "availability_zone": {
                     "type": "string"
@@ -14231,7 +14190,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/58204.0xc001a145d0.false"
+                    "$ref": "#/definitions/58562.0xc0019e0810.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14603,7 +14562,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001a952c0.false"
+                    "$ref": "#/definitions/14391.0xc001a5f500.false"
                 },
                 "name": {
                     "type": "string"

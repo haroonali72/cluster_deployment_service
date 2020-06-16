@@ -363,7 +363,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
-		err = cloud.deleteIAMRole("eks-worker-" + *nodePool.RoleName)
+		err = cloud.deleteIAMRole(*nodePool.RoleName)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -475,7 +475,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 		}
 		//delete extra resources
 		if nodePool.NodeRole != nil && *nodePool.NodeRole != "" {
-			err := cloud.deleteIAMRole("eks-worker-" + *nodePool.RoleName)
+			err := cloud.deleteIAMRole(*nodePool.RoleName)
 			if err != nil {
 				ctx.SendLogs(
 					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -855,7 +855,6 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.ProjectId)
 		cpErr := ApiError(err, "unable to fetch cluster status", 512)
 		return []EKSNodesStatus{}, cpErr
 	}
