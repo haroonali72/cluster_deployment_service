@@ -116,7 +116,7 @@ type KubeWorkerPoolStatus1 struct {
 	ID          string                  	`json:"id,omitempty"`
 	Name        string                  	`json:"name,omitempty"`
 	Flavour     string                  	`json:"machine_type,omitempty"`
-	Autoscaling Autoscaling                 `json:"autoscaling,omitempty"`
+	Autoscaling Autoscaling                 `json:"auto_scaling,omitempty"`
 	Nodes       []KubeWorkerNodesStatus1	`json:"nodes"`
 	Count       int                      	`json:"node_count,omitempty"`
 	SubnetId    string                   	`json:"subnet_id,omitempty"`
@@ -124,8 +124,8 @@ type KubeWorkerPoolStatus1 struct {
 
 type Autoscaling struct{
 	AutoScale        bool          `json:"autoscale,omitempty"  bson:"autoscaling" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
-	MinNodes         int64           `json:"min_node_count,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
-	MaxNodes         int64           `json:"max_node_count,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
+	MinNodes         int64           `json:"min_scaling_group_size,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
+	MaxNodes         int64           `json:"max_scaling_group_size,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 
 }
 type KubeWorkerNodesStatus1 struct {
@@ -690,6 +690,7 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 	}
 	return response, types.CustomCPError{}
 }
+
 func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, types.CustomCPError) {
 
 	kubeCluster, cperr := cloud.fetchClusterStatus(cluster, ctx, companyId)
@@ -754,6 +755,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	}
 	return kubeCluster, types.CustomCPError{}
 }
+
 func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, types.CustomCPError) {
 	url := models.IBM_All_Instances_Endpoint + cloud.Region + "&provider=vpc-classic"
 
