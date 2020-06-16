@@ -632,12 +632,18 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/aws/getallregions:
+  /cluster/aws/getallregions/{cloud}:
     get:
       tags:
       - cluster/aws
       description: Get AWS Regions
       operationId: AWSClusterController.GetRegions
+      parameters:
+      - in: path
+        name: cloud
+        description: keyname
+        required: true
+        type: string
       responses:
         "200":
           description: '[]models.Region'
@@ -895,6 +901,8 @@ paths:
           description: '{"error": "Unauthorized"}'
         "404":
           description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
         "500":
           description: '{"error": "Runtime Error"}'
   /cluster/aws/validateProfile/:
@@ -2550,17 +2558,15 @@ paths:
           $ref: '#/definitions/gcp.Cluster_Def'
       responses:
         "200":
-          description: '{"msg": "cluster updated successfully"}'
+          description: '{"msg": "Cluster updated successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
-        "402":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "no cluster exists with this name"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
     post:
       tags:
       - cluster/gcp
@@ -2579,18 +2585,18 @@ paths:
         schema:
           $ref: '#/definitions/gcp.Cluster_Def'
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "cluster against same project id already exists"}'
-        "410":
-          description: '{"error": "Core limit exceeded"}'
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/{projectId}/:
     get:
       tags:
@@ -2613,14 +2619,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gcp.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/{projectId}/{forceDelete}: {}
   /cluster/gcp/all:
     get:
@@ -2641,10 +2645,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/gcp.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/getallmachines/{region}/{zone}:
     get:
       tags:
@@ -2675,12 +2679,12 @@ paths:
       responses:
         "200":
           description: '[]string'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/getallregions:
     get:
       tags:
@@ -2694,12 +2698,10 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
   /cluster/gcp/getzones/{region}:
     get:
       tags:
@@ -2729,12 +2731,12 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/serviceaccounts:
     get:
       tags:
@@ -2749,7 +2751,7 @@ paths:
         type: string
       - in: header
         name: X-Profile-Id
-        description: vault credentials profile id
+        description: Vault credentials profile id
         required: true
         type: string
       responses:
@@ -2759,12 +2761,12 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "profile id is empty"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error":  "error msg"}'
+          description: '{"error":  "Runtime Error"}'
   /cluster/gcp/sshkey/{keyname}:
     delete:
       tags:
@@ -2783,12 +2785,16 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": key deleted successfully}'
-        "400":
-          description: '{"error": "error msg"}'
+        "204":
+          description: '{"msg": "Key deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": error msg}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/sshkey/{keyname}/{username}/{projectId}:
     post:
       tags:
@@ -2813,12 +2819,12 @@ paths:
         type: string
       - in: header
         name: X-Auth-Token
-        description: token
+        description: Token
         required: true
         type: string
       - in: header
         name: teams
-        description: teams
+        description: Teams
         required: true
         type: string
       responses:
@@ -2827,11 +2833,13 @@ paths:
           schema:
             $ref: '#/definitions/key_utils.AZUREKey'
         "400":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/sshkeys:
     get:
       tags:
@@ -2851,10 +2859,12 @@ paths:
             type: array
             items:
               type: string
-        "400":
-          description: '{"error": "error msg"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/start/{projectId}:
     post:
       tags:
@@ -2878,16 +2888,18 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+        "201":
+          description: '{"msg": "Cluster created successfully"}'
+        "202":
+          description: '{"msg": "Cluster creation started successfully"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/status/{projectId}/:
     get:
       tags:
@@ -2915,16 +2927,12 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/gcp.Cluster_Def'
-        "206":
-          description: '{object} gcp.Cluster_Def'
-        "400":
-          description: '{"error": "error msg"}'
         "401":
-          description: '{"error": "authorization params missing or invalid"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/terminate/{projectId}/:
     post:
       tags:
@@ -2948,17 +2956,18 @@ paths:
         required: true
         type: string
       responses:
-        "200":
-          description: '{"msg": "cluster terminated successfully"}'
-        "400":
-          description: '{"error": "error_msg"}'
+        "202":
+          description: '{"msg": "Cluster termination initiated"}'
+        "204":
+          description: '{"msg": "Cluster terminated successfully"}'
         "401":
-          description: '{"error": "Authorization format should be ''base64 encoded
-            service_account_json''"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error_msg"}'
+          description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Conflict"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/validateProfile:
     post:
       tags:
@@ -2979,17 +2988,13 @@ paths:
           $ref: '#/definitions/gcp.GcpCredentials'
       responses:
         "200":
-          description: '{"msg": "cluster created successfully"}'
-        "400":
-          description: '{"error": "error msg"}'
+          description: '{"msg": "Profile is valid"}'
         "401":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Unauthorized"}'
         "404":
-          description: '{"error": "error msg"}'
-        "409":
-          description: '{"error": "profile is invalid"}'
+          description: '{"error": "Not Found"}'
         "500":
-          description: '{"error": "error msg"}'
+          description: '{"error": "Runtime Error"}'
   /cluster/gke/:
     put:
       tags:
@@ -7088,16 +7093,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc00196bc50.false:
+  482.0xc001a1f590.false:
     title: "false"
     type: object
-  618.0xc0010b0450.false:
+  618.0xc0011315f0.false:
     title: "false"
     type: object
-  667.0xc001873050.false:
+  667.0xc00192a6f0.false:
     title: "false"
     type: object
-  964.0xc0013f9ef0.false:
+  964.0xc001483350.false:
     title: "false"
     type: object
   5534.string:
@@ -7112,13 +7117,13 @@ definitions:
   11742.string:
     title: string
     type: object
-  14388.0xc0019afbc0.false:
+  14391.0xc001a5f500.false:
     title: "false"
     type: object
-  57792.0xc00192eed0.false:
+  58562.0xc0019e0810.false:
     title: "false"
     type: object
-  61937.string:
+  62516.string:
     title: string
     type: object
   64164.string:
@@ -7401,7 +7406,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0010b0450.false'
+        $ref: '#/definitions/618.0xc0011315f0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7843,7 +7848,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0013f9ef0.false'
+        $ref: '#/definitions/964.0xc001483350.false'
       name:
         type: string
       network_name:
@@ -8384,7 +8389,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/61937.string'
+        $ref: '#/definitions/62516.string'
       template_id:
         type: string
       version:
@@ -8569,7 +8574,7 @@ definitions:
       project_id:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/models.Type'
       token_name:
         type: string
       vpc_name:
@@ -9411,12 +9416,12 @@ definitions:
       autoscale:
         description: Autoscaling configuration, possible value 'true' or 'false' [required]
         type: boolean
-      max_node_count:
+      max_scaling_group_size:
         description: Max VM count, must be greater than min count ['required' if autoscaling
           is enabled]
         type: integer
         format: int64
-      min_node_count:
+      min_scaling_group_size:
         description: Min VM count ['required' if autoscaling is enabled]
         type: integer
         format: int64
@@ -9522,7 +9527,7 @@ definitions:
     title: KubeWorkerPoolStatus1
     type: object
     properties:
-      autoscaling:
+      auto_scaling:
         $ref: '#/definitions/iks.Autoscaling'
       id:
         type: string
@@ -9556,9 +9561,9 @@ definitions:
     title: NodePool
     type: object
     properties:
-      autoscaling:
-        description: Autoscaling configuration
-        type: boolean
+      auto_scaling:
+        $ref: '#/definitions/iks.Autoscaling'
+        description: Autoscaling configuration [optional]
       availability_zone:
         type: string
       machine_type:
@@ -9601,7 +9606,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/57792.0xc00192eed0.false'
+        $ref: '#/definitions/58562.0xc0019e0810.false'
       kube_version:
         type: string
       name:
@@ -9874,7 +9879,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14388.0xc0019afbc0.false'
+        $ref: '#/definitions/14391.0xc001a5f500.false'
       name:
         type: string
       node_pools:

@@ -1349,15 +1349,24 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 // @Title GetRegions
 // @Description Get AWS Regions
+// @Param	cloud	path	string	true		"keyname"
 // @Success 200  []models.Region
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 500  {"error": "Runtime Error"}
-// @router /getallregions [get]
+// @router /getallregions/:cloud [get]
 func (c *AWSClusterController) GetAllRegions() {
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("AWSClusterController: Fetch regions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
+	cloud := c.GetString(":cloud")
+	if cloud == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "cloud is empty"}
+		c.ServeJSON()
+		return
+	}
+	var EKSregion []models.Region
 	regions, err1 := aws.GetRegions(*ctx)
 	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
@@ -1366,6 +1375,15 @@ func (c *AWSClusterController) GetAllRegions() {
 		return
 	}
 
+	if strings.ToLower(cloud) == strings.ToLower(string(models.EKS)){
+		for _,reg := range regions{
+			if reg.Location != "us-west-1" && reg.Location != "af-south-1" && reg.Location !="ap-northeast-3"{
+				EKSregion =append(EKSregion,reg)
+			}
+		}
+		c.Data["json"] = EKSregion
+		c.ServeJSON()
+	}
 	ctx.SendLogs("Region fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = regions
 	c.ServeJSON()
