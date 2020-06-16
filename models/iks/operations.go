@@ -123,9 +123,9 @@ type KubeWorkerPoolStatus1 struct {
 }
 
 type Autoscaling struct{
-	AutoScale        bool          `json:"autoscale,omitempty"  bson:"autoscaling" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
-	MinNodes         int64           `json:"min_scaling_group_size,omitempty"  bson:"min_node_count" description:"Min VM count ['required' if autoscaling is enabled]"`
-	MaxNodes         int64           `json:"max_scaling_group_size,omitempty"  bson:"max_node_count" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
+	AutoScale        bool          `json:"autoscale,omitempty"  bson:"autoscaling,omitempty" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
+	MinNodes         int64           `json:"min_scaling_group_size,omitempty"  bson:"min_scaling_group_size,omitempty" description:"Min VM count ['required' if autoscaling is enabled]"`
+	MaxNodes         int64           `json:"max_scaling_group_size,omitempty"  bson:"max_scaling_group_size,omitempty" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 
 }
 type KubeWorkerNodesStatus1 struct {
