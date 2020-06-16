@@ -391,7 +391,10 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		//PrintError(confError, cluster.Name, cluster.ProjectId)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, ApiErrors(confError,"Error in deploying cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		return ApiErrors(confError,"Error in deploying cluster")
 	}
 	gcp, err := GetGCP(credentials)
@@ -407,6 +410,10 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
@@ -429,7 +436,10 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		}
-
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,confErr)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
 
@@ -449,7 +459,11 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return ApiErrors(confError,"Erro in deploying cluster")
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,ApiErrors(confError,"Error in deploying cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return ApiErrors(confError,"Error in deploying cluster")
 	}
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
@@ -543,12 +557,20 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs("GcpClusterModel :"+pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,ApiErrors(pub_err,"Error in terminating cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		return ApiErrors(pub_err,"Error in initializing notifier")
 	}
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,ApiErrors(err,"Error in terminating cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		return ApiErrors(err,"Error in fetching cluster")
 	}
 
@@ -562,6 +584,10 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	gcp, err1 := GetGCP(credentials)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,ApiErrors(err1,"Error in terminating cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		return err1
 	}
 
@@ -580,6 +606,10 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 
 			return ApiErrors(err,"Error in cluster termination")
 		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,err1)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return ApiErrors(err,"Error in cluster termination")
 	}
@@ -597,6 +627,10 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return ApiErrors(err,"Error in cluster termination")
 		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,err1)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
 	}
@@ -612,6 +646,10 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		ctx.SendLogs("GcpClusterModel :Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,ApiErrors(err,"Error in terminating cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return ApiErrors(err,"Error in cluster termination")
 	}
