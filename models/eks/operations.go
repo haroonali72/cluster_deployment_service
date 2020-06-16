@@ -363,7 +363,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
-		err = cloud.deleteIAMRole("eks-worker-" + *nodePool.RoleName)
+		err = cloud.deleteIAMRole(*nodePool.RoleName)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
@@ -475,7 +475,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 		}
 		//delete extra resources
 		if nodePool.NodeRole != nil && *nodePool.NodeRole != "" {
-			err := cloud.deleteIAMRole("eks-worker-" + *nodePool.RoleName)
+			err := cloud.deleteIAMRole(*nodePool.RoleName)
 			if err != nil {
 				ctx.SendLogs(
 					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
