@@ -464,23 +464,23 @@ func PrintError(confError error, name, projectId string, companyId string) {
 	}
 }
 
-func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, token string, ctx utils.Context) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, token string, ctx utils.Context) (confErr types.CustomCPError) {
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
+	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		//PrintError(confError, cluster.Name, cluster.ProjectId)
-		return confError
+		return ApiErrors(confError,"Error in deploying cluster")
 	}
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("gcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("gcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err !=  (types.CustomCPError{}) {
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster creation failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
@@ -495,13 +495,13 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 
-	cluster, confError = gcp.createCluster(cluster, token, ctx)
+	cluster, confErr= gcp.createCluster(cluster, token, ctx)
 
-	if confError != nil {
-		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if confErr != (types.CustomCPError{}) {
+		ctx.SendLogs("gcpClusterModel :"+confErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
@@ -510,7 +510,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		}
 
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return types.CustomCPError{}
 
 	}
 
@@ -521,14 +521,14 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 			node.PrivateIp = ""
 		}
 	}
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		return ApiErrors(confError,"Erro in deploying cluster")
 	}
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
@@ -536,36 +536,36 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("GCPClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("GCPClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 
-	return nil
+	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, types.CustomCPError) {
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Deploy - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return cluster, ApiErrors(err,"Error in fetching status")
 	}
 
-	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+	gcp, err1 := GetGCP(credentials)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, err1
 	}
-	err = gcp.init()
-	if err != nil {
+	err1 = gcp.init()
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return cluster, err1
 	}
 
-	err = gcp.fetchClusterStatus(&cluster, ctx)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel : Status - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+	err1 = gcp.fetchClusterStatus(&cluster, ctx)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel : Status - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, err1
 	}
 
 	for _, pool := range cluster.NodePools {
@@ -573,17 +573,17 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
 			ctx.SendLogs("vm fetched failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return Cluster_Def{},ApiErrors(err,"Error in fetching status")
 		}
 		keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return Cluster_Def{},ApiErrors(err,"Error in fetching status")
 
 		}
 		pool.KeyInfo = keyInfo
 	}
-	return cluster, nil
+	return cluster, types.CustomCPError{}
 }
 
 func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err error) {
@@ -595,92 +595,92 @@ func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err er
 	return keys, nil
 }
 
-func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (serviceAccounts []string, err error) {
+func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (serviceAccounts []string, err types.CustomCPError) {
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	serviceAccounts, err = gcp.listServiceAccounts(ctx)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel ServiceAccounts - Failed to list service accounts "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel ServiceAccounts - Failed to list service accounts "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	return serviceAccounts, err
 }
 
-func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) error {
+func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs("GcpClusterModel :"+pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return pub_err
+		return ApiErrors(pub_err,"Error in initializing notifier")
 	}
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return ApiErrors(err,"Error in fetching cluster")
 	}
-	if cluster.Status == "" || cluster.Status == "new" {
+
+	if cluster.Status == "" || strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		text := "GcpClusterModel :Cannot terminate a new cluster"
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return errors.New(text)
+		return ApiErrors(errors.New(text),text)
 	}
 
-	gcp, err := GetGCP(credentials)
-	if err != nil {
+	gcp, err1 := GetGCP(credentials)
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return err1
 	}
 
 	cluster.Status = models.Terminating
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status = "Cluster Termination Failed"
+	err1 = gcp.init()
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
-			return err
+			return ApiErrors(err,"Error in cluster termination")
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return ApiErrors(err,"Error in cluster termination")
 	}
 
-	err = gcp.deleteCluster(cluster, ctx)
-	if err != nil {
-
+	err1 = gcp.deleteCluster(cluster, ctx)
+	if err1 !=(types.CustomCPError{}) {
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel :Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return err
+			return ApiErrors(err,"Error in cluster termination")
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return types.CustomCPError{}
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 
 	for _, pools := range cluster.NodePools {
 		var nodes []*Node
@@ -692,23 +692,23 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return ApiErrors(err,"Error in cluster termination")
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+	return types.CustomCPError{}
 }
 
 func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
 
 	keyInfo, err := key_utils.GenerateKey(models.GCP, keyName, userName, token, teams, ctx)
 	if err != nil {
-		return "", err
+		return "",err
 	}
 	_, err = vault.PostSSHKey(keyInfo, keyInfo.KeyName, keyInfo.Cloud, ctx, token, teams, "")
 	if err != nil {
 		beego.Error(err.Error())
-		return "", err
+		return "",err
 	}
 
 	return keyInfo.PrivateKey, err
@@ -721,23 +721,23 @@ func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 		return err
 	}
 
-	return err
+	return nil
 }
 
-func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, error) {
+func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, types.CustomCPError) {
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Machines{}, err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Machines{}, err
 	}
 
 	machines, err := gcp.GetAllMachines(ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return Machines{}, err
 	}
 
@@ -746,30 +746,33 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 		mach.MachineName = append(mach.MachineName, machine.Name)
 	}
 
-	return mach, nil
+	return mach, types.CustomCPError{}
 }
-func GetRegions() ([]models.Region, error) {
+
+func GetRegions() ([]models.Region, types.CustomCPError) {
+
 	regionInfo, err := api_handler.GetGcpRegion()
 	if err != nil {
-		return []models.Region{}, err
+		return []models.Region{}, ApiErrors(err,"Error in fetching regions")
 	}
 
-	return regionInfo, nil
+	return regionInfo, types.CustomCPError{}
 }
-func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
+
+func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string,types.CustomCPError) {
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []string{}, err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err !=(types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []string{}, err
 	}
 
 	regionInfo, err := gcp.GetZones(ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return []string{}, err
 	}
 	var zones []string
@@ -778,8 +781,9 @@ func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
 		zones = append(zones, zone)
 	}
 
-	return zones, nil
+	return zones, types.CustomCPError{}
 }
+
 func getCompanyAllCluster(companyId string, ctx utils.Context) (clusters []Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -813,18 +817,18 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	}
 	return false
 }
-func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) error {
+func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) types.CustomCPError {
 	credentials := GcpResponse{}
 
 	err := json.Unmarshal(profile, &credentials.Credentials.AccountData)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return ApiErrors(err,"Error in profile validation")
 	}
 	jsonData, err := json.Marshal(credentials.Credentials.AccountData)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return ApiErrors(err,"Error in profile validation")
 	}
 	credentials.Credentials.RawData = string(jsonData)
 	credentials.Credentials.Region = region
@@ -832,7 +836,7 @@ func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) err
 	_, err = govalidator.ValidateStruct(credentials.Credentials)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return ApiErrors(err,"Error in profile validation")
 	}
 
 	cre := GcpCredentials{
@@ -841,23 +845,23 @@ func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) err
 		Region:      region,
 		Zone:        zone,
 	}
-	gcp, err := GetGCP(cre)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	gcp, err1 := GetGCP(cre)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err1
 	}
-	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	_, err = gcp.GetAllMachines(ctx)
-	if err != nil {
-		return err
+	err1 = gcp.init()
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err1
 	}
 
-	return nil
+	_, err1 = gcp.GetAllMachines(ctx)
+	if err1 != (types.CustomCPError{}) {
+		return err1
+	}
+
+	return types.CustomCPError{}
 }
 func ValidateData(cluster Cluster_Def)error{
 	var machineList []string

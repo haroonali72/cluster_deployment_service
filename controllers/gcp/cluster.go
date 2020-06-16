@@ -5,6 +5,7 @@ import (
 	"antelope/models/cores"
 	"antelope/models/gcp"
 	rbac_athentication "antelope/models/rbac_authentication"
+	"antelope/models/types"
 	"antelope/models/utils"
 	"encoding/json"
 
@@ -619,7 +620,7 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	cluster.Status = models.Deploying
+	cluster.Status =models.Deploying
 	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -723,10 +724,11 @@ func (c *GcpClusterController) GetStatus() {
 
 	ctx.SendLogs("GcpClusterController: Fetch Cluster Status of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	cluster, err := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
-	if err != nil {
-		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(200)
+	cluster, err1 := gcp.FetchStatus(credentials, token, projectId, userInfo.CompanyId, *ctx)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterController :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] =err1
 	}
 
 	c.Data["json"] = cluster
@@ -985,11 +987,11 @@ func (c *GcpClusterController) GetServiceAccounts() {
 		return
 	}
 
-	serviceAccounts, err := gcp.GetAllServiceAccounts(credentials, *ctx)
-	if err != nil {
-		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	serviceAccounts, err1 := gcp.GetAllServiceAccounts(credentials, *ctx)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterController :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err
 		c.ServeJSON()
 		return
 	}
@@ -1213,10 +1215,10 @@ func (c *GcpClusterController) GetAllMachines() {
 
 	ctx.SendLogs("GcpClusterController: Get All Machines. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	machines, err := gcp.GetAllMachines(credentials, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = err
+	machines, err1 := gcp.GetAllMachines(credentials, *ctx)
+	if err1 !=(types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
@@ -1235,9 +1237,9 @@ func (c *GcpClusterController) GetAllRegions() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("GcpClusterController: GetAllRegions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	regions, err := gcp.GetRegions()
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	if err != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err.StatusCode)
+		c.Data["json"] = err
 		c.ServeJSON()
 		return
 	}
@@ -1296,11 +1298,11 @@ func (c *GcpClusterController) ValidateProfile() {
 	}
 
 	for _, region := range regions {
-		err = gcp.ValidateProfile(prof, region.Location, "b", *ctx)
-		if err != nil {
+		err1 := gcp.ValidateProfile(prof, region.Location, "b", *ctx)
+		if err1 != (types.CustomCPError{}) {
 			ctx.SendLogs("GcpClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			c.Ctx.Output.SetStatus(500)
-			c.Data["json"] = err
+			c.Ctx.Output.SetStatus(err1.StatusCode)
+			c.Data["json"] =err
 			c.ServeJSON()
 			return
 		}
@@ -1375,10 +1377,10 @@ func (c *GcpClusterController) GetZones() {
 	}
 	ctx.SendLogs("GcpClusterController: Get Zones. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	zones, err := gcp.GetZones(credentials, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
+	zones, err1 := gcp.GetZones(credentials, *ctx)
+	if err1 != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] =err1
 		c.ServeJSON()
 		return
 	}
