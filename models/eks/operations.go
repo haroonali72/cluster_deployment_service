@@ -855,7 +855,6 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 			models.Backend_Logging,
 		)
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.ProjectId)
 		cpErr := ApiError(err, "unable to fetch cluster status", 512)
 		return []EKSNodesStatus{}, cpErr
 	}
