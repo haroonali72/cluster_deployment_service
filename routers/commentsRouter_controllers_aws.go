@@ -91,7 +91,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aws:AWSClusterController"],
         beego.ControllerComments{
             Method: "GetAllRegions",
-            Router: `/getallregions`,
+            Router: `/getallregions/:cloud`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

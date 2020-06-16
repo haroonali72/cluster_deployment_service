@@ -895,13 +895,22 @@
                 }
             }
         },
-        "/cluster/aws/getallregions": {
+        "/cluster/aws/getallregions/{cloud}": {
             "get": {
                 "tags": [
                     "cluster/aws"
                 ],
                 "description": "Get AWS Regions",
                 "operationId": "AWSClusterController.GetRegions",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "cloud",
+                        "description": "keyname",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "[]models.Region"
@@ -10590,11 +10599,11 @@
             "title": "string",
             "type": "object"
         },
-        "14391.0xc001a51890.false": {
+        "14391.0xc001a5f500.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001a11920.false": {
+        "482.0xc001a1f590.false": {
             "title": "false",
             "type": "object"
         },
@@ -10602,15 +10611,15 @@
             "title": "string",
             "type": "object"
         },
-        "58562.0xc0019d2ba0.false": {
+        "58562.0xc0019e0810.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc00112d8f0.false": {
+        "618.0xc0011315f0.false": {
             "title": "false",
             "type": "object"
         },
-        "62650.string": {
+        "62516.string": {
             "title": "string",
             "type": "object"
         },
@@ -10618,7 +10627,7 @@
             "title": "string",
             "type": "object"
         },
-        "667.0xc001920a80.false": {
+        "667.0xc00192a6f0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10630,7 +10639,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc001487650.false": {
+        "964.0xc001483350.false": {
             "title": "false",
             "type": "object"
         },
@@ -11010,7 +11019,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc00112d8f0.false"
+                    "$ref": "#/definitions/618.0xc0011315f0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11637,7 +11646,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001487650.false"
+                    "$ref": "#/definitions/964.0xc001483350.false"
                 },
                 "name": {
                     "type": "string"
@@ -12419,7 +12428,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/62650.string"
+                    "$ref": "#/definitions/62516.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14181,7 +14190,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/58562.0xc0019d2ba0.false"
+                    "$ref": "#/definitions/58562.0xc0019e0810.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14553,7 +14562,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001a51890.false"
+                    "$ref": "#/definitions/14391.0xc001a5f500.false"
                 },
                 "name": {
                     "type": "string"
