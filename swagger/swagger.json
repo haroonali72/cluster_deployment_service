@@ -1282,6 +1282,9 @@
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
                     },
+                    "409": {
+                        "description": "{\"error\": \"Conflict\"}"
+                    },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
                     }
@@ -3782,22 +3785,19 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster updated successfully\"}"
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "402": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"no cluster exists with this name\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             },
@@ -3826,23 +3826,23 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"cluster against same project id already exists\"}"
-                    },
-                    "410": {
-                        "description": "{\"error\": \"Core limit exceeded\"}"
+                        "description": "{\"error\": \"Conflict\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3873,11 +3873,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3923,14 +3923,14 @@
                     "200": {
                         "description": "[]string"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3952,14 +3952,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     }
                 }
             }
@@ -4004,14 +4001,14 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4034,7 +4031,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
+                        "description": "Vault credentials profile id",
                         "required": true,
                         "type": "string"
                     }
@@ -4049,14 +4046,14 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"profile id is empty\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\":  \"error msg\"}"
+                        "description": "{\"error\":  \"Runtime Error\"}"
                     }
                 }
             }
@@ -4085,14 +4082,20 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": key deleted successfully}"
+                    "204": {
+                        "description": "{\"msg\": \"Key deleted successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": error msg}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Conflict\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4129,14 +4132,14 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "token",
+                        "description": "Token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "teams",
-                        "description": "teams",
+                        "description": "Teams",
                         "required": true,
                         "type": "string"
                     }
@@ -4149,13 +4152,16 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Bad Request\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4186,11 +4192,14 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4226,20 +4235,23 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    "201": {
+                        "description": "{\"msg\": \"Cluster created successfully\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                    "202": {
+                        "description": "{\"msg\": \"Cluster creation started successfully\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Conflict\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4281,20 +4293,14 @@
                             "$ref": "#/definitions/gcp.Cluster_Def"
                         }
                     },
-                    "206": {
-                        "description": "{object} gcp.Cluster_Def"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"authorization params missing or invalid\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4330,20 +4336,23 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"cluster terminated successfully\"}"
+                    "202": {
+                        "description": "{\"msg\": \"Cluster termination initiated\"}"
                     },
-                    "400": {
-                        "description": "{\"error\": \"error_msg\"}"
+                    "204": {
+                        "description": "{\"msg\": \"Cluster terminated successfully\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error_msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Conflict\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4375,22 +4384,16 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"cluster created successfully\"}"
-                    },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"msg\": \"Profile is valid\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"profile is invalid\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -4425,17 +4428,14 @@
                             "$ref": "#/definitions/gcp.Cluster_Def"
                         }
                     },
-                    "400": {
-                        "description": "{\"error\": \"error msg\"}"
-                    },
                     "401": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Not Found\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"error msg\"}"
+                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -10590,11 +10590,11 @@
             "title": "string",
             "type": "object"
         },
-        "14388.0xc0019afbc0.false": {
+        "14391.0xc001a51890.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc00196bc50.false": {
+        "482.0xc001a11920.false": {
             "title": "false",
             "type": "object"
         },
@@ -10602,15 +10602,15 @@
             "title": "string",
             "type": "object"
         },
-        "57792.0xc00192eed0.false": {
+        "58562.0xc0019d2ba0.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc0010b0450.false": {
+        "618.0xc00112d8f0.false": {
             "title": "false",
             "type": "object"
         },
-        "61937.string": {
+        "62650.string": {
             "title": "string",
             "type": "object"
         },
@@ -10618,7 +10618,7 @@
             "title": "string",
             "type": "object"
         },
-        "667.0xc001873050.false": {
+        "667.0xc001920a80.false": {
             "title": "false",
             "type": "object"
         },
@@ -10630,7 +10630,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc0013f9ef0.false": {
+        "964.0xc001487650.false": {
             "title": "false",
             "type": "object"
         },
@@ -11010,7 +11010,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc0010b0450.false"
+                    "$ref": "#/definitions/618.0xc00112d8f0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11637,7 +11637,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0013f9ef0.false"
+                    "$ref": "#/definitions/964.0xc001487650.false"
                 },
                 "name": {
                     "type": "string"
@@ -12419,7 +12419,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/61937.string"
+                    "$ref": "#/definitions/62650.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -12685,7 +12685,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.Type"
                 },
                 "token_name": {
                     "type": "string"
@@ -13912,12 +13912,12 @@
                     "description": "Autoscaling configuration, possible value 'true' or 'false' [required]",
                     "type": "boolean"
                 },
-                "max_node_count": {
+                "max_scaling_group_size": {
                     "description": "Max VM count, must be greater than min count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
                 },
-                "min_node_count": {
+                "min_scaling_group_size": {
                     "description": "Min VM count ['required' if autoscaling is enabled]",
                     "type": "integer",
                     "format": "int64"
@@ -14068,7 +14068,7 @@
             "title": "KubeWorkerPoolStatus1",
             "type": "object",
             "properties": {
-                "autoscaling": {
+                "auto_scaling": {
                     "$ref": "#/definitions/iks.Autoscaling"
                 },
                 "id": {
@@ -14117,9 +14117,9 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "autoscaling": {
-                    "description": "Autoscaling configuration",
-                    "type": "boolean"
+                "auto_scaling": {
+                    "$ref": "#/definitions/iks.Autoscaling",
+                    "description": "Autoscaling configuration [optional]"
                 },
                 "availability_zone": {
                     "type": "string"
@@ -14181,7 +14181,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/57792.0xc00192eed0.false"
+                    "$ref": "#/definitions/58562.0xc0019d2ba0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14553,7 +14553,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14388.0xc0019afbc0.false"
+                    "$ref": "#/definitions/14391.0xc001a51890.false"
                 },
                 "name": {
                     "type": "string"

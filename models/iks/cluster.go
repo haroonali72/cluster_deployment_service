@@ -44,7 +44,7 @@ type NodePool struct {
 	MachineType      string        `json:"machine_type" bson:"machine_type" validate:"required" description:"Machine type for pool [required]"`
 	SubnetID         string        `json:"subnet_id" bson:"subnet_id" validate:"required" description:"ID of subnet in which pool will be created [required]"`
 	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
-	Autoscale        bool          `json:"autoscaling,omitempty"  bson:"autoscaling" description:"Autoscaling configuration"`
+	Autoscaling      Autoscaling   `json:"auto_scaling,omitempty"  bson:"autoscaling,omitempty" description:"Autoscaling configuration [optional]"`
 }
 
 type Project struct {
@@ -415,7 +415,15 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID
 		pool1.Flavour = pool.Flavour
-		//pool1.Autoscaling = pool.AutoScaling
+		for _,pool :=range cluster.NodePools{
+			if pool.Autoscaling.AutoScale != false || pool.Autoscaling != (Autoscaling{}) {
+				pool1.Autoscaling.AutoScale = pool.Autoscaling.AutoScale
+				pool1.Autoscaling.MaxNodes = pool.Autoscaling.MaxNodes
+				pool1.Autoscaling.MinNodes =pool.Autoscaling.MinNodes
+			}
+		}
+
+
 		pool1.Count = pool.Count
 		pool1.SubnetId = pool.Nodes[0].NetworkInterfaces[0].SubnetId
 		for _, node := range pool.Nodes {
