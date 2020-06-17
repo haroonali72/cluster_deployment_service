@@ -24,6 +24,7 @@ type EKSCluster struct {
 	CreationDate       time.Time          `json:"-" bson:"creation_date"`
 	ModificationDate   time.Time          `json:"-" bson:"modification_date"`
 	NodePools          []*NodePool        `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	IsAdvanced         bool               `json:"is_advance" bson:"is_advance" description:"Cluster advance level settings possible value 'true' or 'false'"`
 	Status             models.Type        `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
 	CompanyId          string             `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	OutputArn          *string            `json:"-" bson:"output_arn,omitempty"`
