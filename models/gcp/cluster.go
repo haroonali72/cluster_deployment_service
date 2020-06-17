@@ -663,7 +663,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 	gcp, err1 := GetGCP(credentials)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,ApiErrors(err1,"Error in terminating cluster"))
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx,err1)
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
