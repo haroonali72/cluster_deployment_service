@@ -119,6 +119,15 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
 	)
+	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
+		flag := false
+		eksCluster.ResourcesVpcConfig.EndpointPrivateAccess = &flag
+	}
+	if eksCluster.ResourcesVpcConfig.EndpointPublicAccess == nil {
+		flag := false
+		eksCluster.ResourcesVpcConfig.EndpointPublicAccess = &flag
+	}
+
 	//generate cluster create request
 	if eksCluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
 		cidr := "0.0.0.0/0"
@@ -126,6 +135,7 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		cidrs = append(cidrs, &cidr)
 		eksCluster.ResourcesVpcConfig.PublicAccessCidrs = cidrs
 	}
+
 	clusterRequest := GenerateClusterCreateRequest(*eksCluster)
 	/**/
 
@@ -586,16 +596,16 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 	sgs := []*string{}
 	for _, def := range awsNetwork.Definition {
 		if def != nil && len(def.Subnets) > 1 {
-			/*for _, subnet := range def.Subnets {
+			for _, subnet := range def.Subnets {
 				subnets = append(subnets, aws.String(subnet.SubnetId))
-			}*/
-			subnets = append(subnets, aws.String("subnet-52864a1b"))
-			subnets = append(subnets, aws.String("subnet-a204dac5"))
+			}
+			//subnets = append(subnets, aws.String("subnet-52864a1b"))
+			//subnets = append(subnets, aws.String("subnet-a204dac5"))
 
-			/*for _, sg := range def.SecurityGroups {
+			for _, sg := range def.SecurityGroups {
 				sgs = append(sgs, aws.String(sg.SecurityGroupId))
-			}*/
-			sgs = append(sgs, aws.String("sg-ab31bccd"))
+			}
+			//sgs = append(sgs, aws.String("sg-ab31bccd"))
 			break
 		}
 	}
