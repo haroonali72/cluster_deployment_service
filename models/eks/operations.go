@@ -852,7 +852,7 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 	var values []*string
 	values = append(values, &poolName)
 	var tags []*ec2.Filter
-	tag := ec2.Filter{Name: aws.String("eks:nodegroup-name"), Values: values}
+	tag := ec2.Filter{Name: aws.String("tag:eks:nodegroup-name"), Values: values}
 	tags = append(tags, &tag)
 
 	instance_input := ec2.DescribeInstancesInput{Filters: tags}
