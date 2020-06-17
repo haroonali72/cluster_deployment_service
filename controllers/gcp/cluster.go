@@ -237,7 +237,13 @@ func (c *GcpClusterController) Post() {
 		node.EnablePublicIP = !network.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
-
+	err=gcp.ValidateData(cluster)
+	if err !=nil{
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = map[string]string{"error": "Invalid data: "+err.Error()}
+		c.ServeJSON()
+		return
+	}
 	err = gcp.CreateCluster(cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
