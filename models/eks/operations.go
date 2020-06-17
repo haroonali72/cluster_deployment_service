@@ -739,13 +739,19 @@ func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 	return err
 }
 func (cloud *EKS) deleteIAMRole(roleName string) error {
-
-	err := cloud.dettachIAMPolicy(roleName, "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy")
-	if err != nil {
-		return err
+	managedPolicies := []string{
+		"arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+		"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+		"arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
 	}
 
-	_, err = cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
+	for _, managedPolicy := range managedPolicies {
+		err := cloud.dettachIAMPolicy(roleName, managedPolicy)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	})
 	if err != nil {
