@@ -498,7 +498,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 				return cpErr
 			}
 		}
-		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
+		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess && nodePool.RemoteAccess.Ec2SshKey != nil && *nodePool.RemoteAccess.Ec2SshKey != "" {
 			err := cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
 			if err != nil {
 				ctx.SendLogs(
