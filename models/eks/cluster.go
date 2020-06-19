@@ -95,6 +95,7 @@ type NodePoolScalingConfig struct {
 	DesiredSize *int64 `json:"desired_size" bson:"desired_size"`
 	MaxSize     *int64 `json:"max_size" bson:"max_size"`
 	MinSize     *int64 `json:"min_size" bson:"min_size"`
+	IsEnabled   bool   `json:"is_enabled" bson:"is_enabled"`
 }
 
 type EKSClusterStatus struct {
