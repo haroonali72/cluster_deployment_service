@@ -7093,37 +7093,37 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001a5b230.false:
+  482.0xc001a2b560.false:
     title: "false"
     type: object
-  618.0xc00116a4e0.false:
+  618.0xc00113c3f0.false:
     title: "false"
     type: object
-  667.0xc00196a390.false:
+  667.0xc00193a6c0.false:
     title: "false"
     type: object
-  964.0xc0014d4240.false:
+  964.0xc0014b0150.false:
     title: "false"
     type: object
-  5534.string:
+  5689.string:
     title: string
     type: object
-  8189.string:
+  8344.string:
     title: string
     type: object
-  8927.string:
+  9082.string:
     title: string
     type: object
   11742.string:
     title: string
     type: object
-  14391.0xc001aa31a0.false:
+  14391.0xc001a6d4d0.false:
     title: "false"
     type: object
-  58562.0xc001a244b0.false:
+  58562.0xc0019ee7e0.false:
     title: "false"
     type: object
-  62516.string:
+  63272.string:
     title: string
     type: object
   64164.string:
@@ -7406,7 +7406,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc00116a4e0.false'
+        $ref: '#/definitions/618.0xc00113c3f0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7848,7 +7848,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0014d4240.false'
+        $ref: '#/definitions/964.0xc0014b0150.false'
       name:
         type: string
       network_name:
@@ -8324,6 +8324,9 @@ definitions:
       encryption_config:
         $ref: '#/definitions/eks.EncryptionConfig'
         description: Encryption Configurations [optional]
+      is_advance:
+        description: Cluster advance level settings possible value 'true' or 'false'
+        type: boolean
       logging:
         $ref: '#/definitions/eks.Logging'
         description: Logging Configurations [optional]
@@ -8389,7 +8392,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/62516.string'
+        $ref: '#/definitions/63272.string'
       template_id:
         type: string
       version:
@@ -9656,7 +9659,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/58562.0xc001a244b0.false'
+        $ref: '#/definitions/58562.0xc0019ee7e0.false'
       kube_version:
         type: string
       name:
@@ -9929,7 +9932,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001aa31a0.false'
+        $ref: '#/definitions/14391.0xc001a6d4d0.false'
       name:
         type: string
       node_pools:
