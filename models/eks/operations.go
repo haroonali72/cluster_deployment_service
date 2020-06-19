@@ -898,6 +898,7 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 	for _, instance := range updated_instances.Reservations[0].Instances {
 		var node EKSNodesStatus
 		node.Name = instance.InstanceId
+		node.ID = instance.InstanceId
 		node.State = instance.State.Name
 		node.PrivateIP = instance.PrivateIpAddress
 		node.PublicIP = instance.PublicIpAddress

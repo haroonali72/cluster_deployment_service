@@ -122,6 +122,7 @@ type EKSNodesStatus struct {
 	PublicIP  *string `json:"public_ip"`
 	PrivateIP *string `json:"private_ip"`
 	State     *string `json:"state"`
+	ID        *string `json:"id"`
 }
 
 func KubeVersions(ctx utils.Context) []string {
