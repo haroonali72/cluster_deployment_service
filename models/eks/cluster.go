@@ -588,6 +588,12 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 		return errors.New("kubernetes version is empty")
 
 	}
+	if cluster.ResourcesVpcConfig.EndpointPublicAccess == nil && cluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
+		return errors.New("both private and public access cannot be false")
+	}
+	if cluster.ResourcesVpcConfig.EndpointPublicAccess != nil && *cluster.ResourcesVpcConfig.EndpointPublicAccess == false && cluster.ResourcesVpcConfig.EndpointPrivateAccess == nil && *cluster.ResourcesVpcConfig.EndpointPrivateAccess == false {
+		return errors.New("both private and public access cannot be false")
+	}
 	for _, pool := range cluster.NodePools {
 
 		if pool.NodePoolName == "" {
