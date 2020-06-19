@@ -422,7 +422,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 	/**/
 
 	//delete extra resources
-	err = cloud.deleteIAMRole("eks-cluster-" + eksCluster.ProjectId)
+	err = cloud.deleteClusterIAMRole("eks-cluster-" + eksCluster.ProjectId)
 	if err != nil {
 		ctx.SendLogs(
 			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -542,7 +542,7 @@ func (cloud *EKS) CleanUpCluster(eksCluster *EKSCluster, ctx utils.Context) type
 	//delete extra resources
 	if eksCluster.RoleArn != nil {
 
-		err := cloud.deleteIAMRole("eks-cluster-" + eksCluster.ProjectId)
+		err := cloud.deleteClusterIAMRole("eks-cluster-" + eksCluster.ProjectId)
 		if err != nil {
 			ctx.SendLogs(
 				"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
@@ -752,6 +752,23 @@ func (cloud *EKS) deleteIAMRole(roleName string) error {
 		}
 	}
 	_, err := cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
+		RoleName: aws.String(roleName),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (cloud *EKS) deleteClusterIAMRole(roleName string) error {
+
+	managedPolicy := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+
+	err := cloud.dettachIAMPolicy(roleName, managedPolicy)
+	if err != nil {
+		return err
+	}
+	_, err = cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	})
 	if err != nil {
