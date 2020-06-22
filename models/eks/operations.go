@@ -432,6 +432,18 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 		return cpErr
 	}
 	/**/
+	err = cloud.deleteIAMRoleFromInstanceProfile("eks-cluster-" + eksCluster.ProjectId)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS delete IAM role for cluster '"+eksCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+		cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+		return cpErr
+	}
 
 	//delete extra resources
 	err = cloud.deleteClusterIAMRole("eks-cluster-" + eksCluster.ProjectId)
