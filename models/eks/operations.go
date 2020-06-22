@@ -373,6 +373,18 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
+		err = cloud.deleteIAMRoleFromInstanceProfile(*nodePool.RoleName)
+		if err != nil {
+			ctx.SendLogs(
+				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+			cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+			return cpErr
+		}
 		err = cloud.deleteIAMRole(*nodePool.RoleName)
 		if err != nil {
 			ctx.SendLogs(
@@ -737,6 +749,39 @@ func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 	})
 
 	return err
+}
+func (cloud *EKS) deleteIAMRoleFromInstanceProfile(roleName string) error {
+	output, err := cloud.IAM.ListInstanceProfilesForRole(&iam.ListInstanceProfilesForRoleInput{
+		RoleName: aws.String(roleName),
+	})
+	if err != nil {
+		return err
+	}
+
+	if output.InstanceProfiles == nil || output.InstanceProfiles[0].InstanceProfileName == nil {
+		return nil
+	}
+
+	for _, names := range output.InstanceProfiles {
+		if names.InstanceProfileName != nil {
+			beego.Info("profile name := " + *names.InstanceProfileName)
+		}
+		for _, roles := range names.Roles {
+			if roles.RoleName != nil {
+				beego.Info("role name := " + *roles.RoleName)
+			}
+		}
+	}
+
+	_, err = cloud.IAM.RemoveRoleFromInstanceProfile(&iam.RemoveRoleFromInstanceProfileInput{
+		RoleName:            aws.String(roleName),
+		InstanceProfileName: output.InstanceProfiles[0].InstanceProfileName,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 func (cloud *EKS) deleteIAMRole(roleName string) error {
 	managedPolicies := []string{
