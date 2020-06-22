@@ -476,9 +476,9 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		profile := vault.AwsProfile{Profile: credentials.Profile}
 		_ = TerminateCluster(cluster, profile, cluster.ProjectId, companyId, ctx)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
-		confError = UpdateEKSCluster(cluster, ctx)
-		if confError != nil {
-			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		confError_ := UpdateEKSCluster(cluster, ctx)
+		if confError_ != nil {
+			utils.SendLog(companyId, confError_.Error(), "error", cluster.ProjectId)
 		}
 
 		cpErr := ApiError(confError, "Error occurred while deploying agent", 500)
