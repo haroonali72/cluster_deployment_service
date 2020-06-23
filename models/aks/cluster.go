@@ -97,6 +97,11 @@ type KubeWorkerPoolStatus struct {
 	MinCount          *int32  `json:"min_count" bson:"min_count" description:"Min VM count"`
 	EnableAutoScaling *bool   `json:"auto_scaling" bson:"auto_scaling" description:"Autoscaling configuration"`
 }
+type AutoScaling struct{
+	MaxCount          *int32  `json:"max_scaling_group_size" bson:"max_count" description:"Max VM count, must be greater than min count"`
+	MinCount          *int32  `json:"min_scaling_group_size" bson:"min_count" description:"Min VM count"`
+	EnableAutoScaling *bool   `json:"autoscale" bson:"auto_scaling" description:"Autoscaling configuration"`
+}
 type KubeNodesStatus struct {
 	Id        *string `json:"id" bson:"id,omitempty"`
 	NodeState *string `json:"state" bson:"state,omitempty"`
@@ -111,9 +116,7 @@ type ManagedClusterAgentPoolStatus struct {
 	VnetSubnetID      *string           `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool is created"`
 	Count             *int64            `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
 	VMSize            *string           `json:"machine_type,omitempty" bson:"vm_size,omitempty" description:"Machine type for pool"`
-	MaxCount          *int32            `json:"max_count,omitempty" bson:"max_count,omitempty" description:"Max VM count"`
-	MinCount          *int32            `json:"min_count,omitempty" bson:"min_count,omitempty" description:"Min VM count"`
-	EnableAutoScaling *bool             `json:"auto_scaling,omitempty" bson:"enable_auto_scaling,omitempty" description:"Autoscaling configuration"`
+	AutoScaling 	  AutoScaling       `json:"autoscaling" bson:"auto_scaling" description:"Autoscaling configuration"`
 	KubeNodes         []KubeNodesStatus `json:"nodes" bson:"nodes" description:"Nodes "`
 }
 

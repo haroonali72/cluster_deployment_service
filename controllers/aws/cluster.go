@@ -471,7 +471,7 @@ func (c *AWSClusterController) Delete() {
 	}
 	if cluster.Status == models.ClusterCreated && !forceDelete {
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in creaated state"}
+		c.Data["json"] = map[string]string{"error": err.Error() + " + Cluster is in created state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.Deploying && !forceDelete {
@@ -760,6 +760,7 @@ func (c *AWSClusterController) GetStatus() {
 // @Success 204 {"msg": "Cluster terminated successfully"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Conflict"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /terminate/:projectId/ [post]
 func (c *AWSClusterController) TerminateCluster() {
@@ -850,25 +851,25 @@ func (c *AWSClusterController) TerminateCluster() {
 	if cluster.Status == models.Deploying {
 		ctx.SendLogs("AWSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in creating state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.Terminating {
 		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminating state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.ClusterTerminated {
 		ctx.SendLogs("AWSClusterController: Cluster is in terminated state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in terminated state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminated state"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == models.ClusterCreationFailed {
 		ctx.SendLogs("AWSClusterController: Cluster is in cluster creation failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in cluster creation failed state"}
+		c.Data["json"] = map[string]string{"error": "Cluster is in cluster creation failed state"}
 		c.ServeJSON()
 		return
 	} else if strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
@@ -1348,15 +1349,24 @@ func (c *AWSClusterController) DeleteSSHKey() {
 
 // @Title GetRegions
 // @Description Get AWS Regions
+// @Param	cloud	path	string	true		"keyname"
 // @Success 200  []models.Region
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 500  {"error": "Runtime Error"}
-// @router /getallregions [get]
+// @router /getallregions/:cloud [get]
 func (c *AWSClusterController) GetAllRegions() {
 
 	ctx := new(utils.Context)
 	ctx.SendLogs("AWSClusterController: Fetch regions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
+	cloud := c.GetString(":cloud")
+	if cloud == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "cloud is empty"}
+		c.ServeJSON()
+		return
+	}
+	var EKSregion []models.Region
 	regions, err1 := aws.GetRegions(*ctx)
 	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
@@ -1365,6 +1375,15 @@ func (c *AWSClusterController) GetAllRegions() {
 		return
 	}
 
+	if strings.ToLower(cloud) == strings.ToLower(string(models.EKS)){
+		for _,reg := range regions{
+			if reg.Location != "us-west-1" && reg.Location != "af-south-1" && reg.Location !="ap-northeast-3"{
+				EKSregion =append(EKSregion,reg)
+			}
+		}
+		c.Data["json"] = EKSregion
+		c.ServeJSON()
+	}
 	ctx.SendLogs("Region fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = regions
 	c.ServeJSON()
@@ -1548,83 +1567,83 @@ func (c *AWSClusterController) ApplyAgent() {
 	ctx := new(utils.Context)
 	ctx.SendLogs("EKSClusterController: TerminateCluster.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	profileId := c.Ctx.Input.Header("X-Profile-Id")
-	if profileId == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	projectId := c.GetString(":projectId")
-	if projectId == "" {
-		ctx.SendLogs("EKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "project id is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	token := c.Ctx.Input.Header("X-Auth-Token")
-	if token == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	clusterName := c.Ctx.Input.Header("clusterName")
-	if clusterName == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "clusterName is empty"}
-		c.ServeJSON()
-		return
-	}
-
-	statusCode, userInfo, err := rbac_athentication.GetInfo(token)
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-
-	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
-	ctx.SendLogs("EKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
-	if err != nil {
-		beego.Error(err.Error())
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	if !allowed {
-		c.Ctx.Output.SetStatus(401)
-		c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
-		c.ServeJSON()
-		return
-	}
-	region, err := aws.GetRegion(token, projectId, *ctx)
-	if err != nil {
-		c.Ctx.Output.SetStatus(500)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
-	if err != nil {
-		utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
-		c.Ctx.Output.SetStatus(statusCode)
-		c.Data["json"] = map[string]string{"error": err.Error()}
-		c.ServeJSON()
-		return
-	}
-	ctx.SendLogs("EKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
-	go aws.ApplyAgent(awsProfile, token, *ctx, clusterName)
+	//profileId := c.Ctx.Input.Header("X-Profile-Id")
+	//if profileId == "" {
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//projectId := c.GetString(":projectId")
+	//if projectId == "" {
+	//	ctx.SendLogs("EKSClusterController: ProjectId is empty ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "project id is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//token := c.Ctx.Input.Header("X-Auth-Token")
+	//if token == "" {
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//clusterName := c.Ctx.Input.Header("clusterName")
+	//if clusterName == "" {
+	//	c.Ctx.Output.SetStatus(404)
+	//	c.Data["json"] = map[string]string{"error": "clusterName is empty"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//statusCode, userInfo, err := rbac_athentication.GetInfo(token)
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(statusCode)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//
+	//ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, userInfo.CompanyId, userInfo.UserId)
+	//ctx.SendLogs("EKSClusterController: Apply Agent.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	//
+	//statusCode, allowed, err := rbac_athentication.Authenticate(models.GKE, "cluster", projectId, "Start", token, utils.Context{})
+	//if err != nil {
+	//	beego.Error(err.Error())
+	//	c.Ctx.Output.SetStatus(statusCode)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//if !allowed {
+	//	c.Ctx.Output.SetStatus(401)
+	//	c.Data["json"] = map[string]string{"error": "User is unauthorized to perform this action"}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//region, err := aws.GetRegion(token, projectId, *ctx)
+	//if err != nil {
+	//	c.Ctx.Output.SetStatus(500)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//statusCode, awsProfile, err := aws.GetProfile(profileId, region, token, *ctx)
+	//if err != nil {
+	//	utils.SendLog(userInfo.CompanyId, err.Error(), "error", projectId)
+	//	c.Ctx.Output.SetStatus(statusCode)
+	//	c.Data["json"] = map[string]string{"error": err.Error()}
+	//	c.ServeJSON()
+	//	return
+	//}
+	//ctx.SendLogs("EKSClusterController: applying agent on cluster . "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	//
+	////go aws.ApplyAgent(awsProfile, token, *ctx, clusterName)
 
 	c.Data["json"] = map[string]string{"msg": "agent deployment in progress"}
 	c.ServeJSON()

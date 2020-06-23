@@ -3,8 +3,10 @@ package utils
 import (
 	"antelope/models"
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/go-redis/redis"
+	"strings"
 	"time"
 )
 
@@ -41,10 +43,8 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 	beego.Info(*cmd)
 	published := false
 	if cmd != nil && (cmd.Err() != nil || cmd.Val() == 0) {
-
 		start := time.Now()
 		for int(time.Since(start).Minutes()) < 1 {
-
 			time.Sleep(5 * time.Second)
 			cmd = notifier.Client.Publish(ctx.Data.Company+"_"+channel, string(b))
 
@@ -67,6 +67,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 		}
 		ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
+
 }
 
 func (notifier *Notifier) Init_notifier() error {
@@ -79,4 +80,27 @@ func (notifier *Notifier) Init_notifier() error {
 	notifier.Client = redis.NewClient(&options)
 
 	return nil
+}
+func (notifier *Notifier) Subscribe(channel string, ctx Context) *redis.PubSub {
+	pubsub := notifier.Client.Subscribe(ctx.Data.Company + "_" + channel)
+	return pubsub
+}
+func (notifier *Notifier) RecieveNotification(channel string, ctx Context, pubsub *redis.PubSub) bool {
+	start := time.Now()
+	defer pubsub.Close()
+	err1 := notifier.Client.Ping()
+	fmt.Println(err1)
+	for int(time.Since(start).Minutes()) < 1 {
+		message, err := pubsub.ReceiveMessage()
+		if err != nil {
+			return false
+		}
+		if strings.Contains(message.Payload, "AgentServer") {
+			return true
+		} else {
+			time.Sleep(30 * time.Second)
+		}
+	}
+
+	return false
 }

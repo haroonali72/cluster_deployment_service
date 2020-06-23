@@ -201,15 +201,18 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 	if oldCluster.Status == (models.Terminating) && update {
 		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New("cluster is in terminating state")
-	}
-
-	if oldCluster.Status == "Cluster Created" && update {
+	} else if oldCluster.Status == models.ClusterTerminationFailed && update {
+		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in termination failed state")
+	} else if oldCluster.Status == models.ClusterCreated && update {
 		//if !checkScalingChanges(&oldCluster, &cluster) {
-		ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("Cluster is in runnning state")
+		//ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		//return errors.New("Cluster is in runnning state")
 		//} else {
 		//		cluster = oldCluster
 		//	}
+		ctx.SendLogs("No changes are applicable", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("No changes are applicable")
 	}
 	err = DeleteCluster(cluster.ProjectId, cluster.CompanyId, ctx)
 	if err != nil {
@@ -313,6 +316,9 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
+
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+
 	cluster, confError = do.createCluster(cluster, ctx, companyId, token)
 	if confError != (types.CustomCPError{}) {
 		PrintError(errors.New(confError.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -348,7 +354,14 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
+		ctx.SendLogs("DOClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	} else {
+		ctx.SendLogs("DOClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
 
 	return types.CustomCPError{}
 }

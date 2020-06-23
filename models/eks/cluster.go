@@ -8,8 +8,10 @@ import (
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
+	"antelope/models/woodpecker"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -22,6 +24,7 @@ type EKSCluster struct {
 	CreationDate       time.Time          `json:"-" bson:"creation_date"`
 	ModificationDate   time.Time          `json:"-" bson:"modification_date"`
 	NodePools          []*NodePool        `json:"node_pools" bson:"node_pools" validate:"required,dive"`
+	IsAdvanced         bool               `json:"is_advance" bson:"is_advance" description:"Cluster advance level settings possible value 'true' or 'false'"`
 	Status             models.Type        `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
 	CompanyId          string             `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	OutputArn          *string            `json:"-" bson:"output_arn,omitempty"`
@@ -92,6 +95,7 @@ type NodePoolScalingConfig struct {
 	DesiredSize *int64 `json:"desired_size" bson:"desired_size"`
 	MaxSize     *int64 `json:"max_size" bson:"max_size"`
 	MinSize     *int64 `json:"min_size" bson:"min_size"`
+	IsEnabled   bool   `json:"is_enabled" bson:"is_enabled"`
 }
 
 type EKSClusterStatus struct {
@@ -118,6 +122,7 @@ type EKSNodesStatus struct {
 	PublicIP  *string `json:"public_ip"`
 	PrivateIP *string `json:"private_ip"`
 	State     *string `json:"state"`
+	ID        *string `json:"id"`
 }
 
 func KubeVersions(ctx utils.Context) []string {
@@ -127,67 +132,82 @@ func KubeVersions(ctx utils.Context) []string {
 	kubeVersions = append(kubeVersions, "1.16")
 	return kubeVersions
 }
-func GetAMIS(ctx utils.Context) []string {
-	var amis []string
-	amis = append(amis, "Amazon Linux 2")
-	amis = append(amis, "Amazon Linux 2 GPU Enabled")
+
+type AMI struct {
+	Key   string `json:"name"`
+	Value string `json:"value"`
+}
+
+func GetAMIS() []AMI {
+	var amis []AMI
+
+	var ami AMI
+	ami.Key = "Amazon Linux 2"
+	ami.Value = "AL2_x86_64"
+
+	var ami2 AMI
+	ami2.Key = "Amazon Linux 2 GPU Enabled"
+	ami2.Value = "AL2_x86_64_GPU"
+
+	amis = append(amis, ami)
+	amis = append(amis, ami2)
 	return amis
 }
-func GetInstances(ctx utils.Context) map[string][]string {
-	var instances map[string][]string
+func GetInstances(amiType string, ctx utils.Context) []string {
 	var list []string
-	list = append(list, "t3.micro")
-	list = append(list, "t3.small")
-	list = append(list, "t3.medium")
-	list = append(list, "t3.large")
-	list = append(list, "t3.xlarge")
-	list = append(list, "t3.2xlarge")
-	list = append(list, "t3a.micro")
-	list = append(list, "t3a.small")
-	list = append(list, "t3a.medium")
-	list = append(list, "t3a.large")
-	list = append(list, "t3a.xlarge")
-	list = append(list, "t3a.2xlarge")
-	list = append(list, "m5.large")
-	list = append(list, "m5.xlarge")
-	list = append(list, "m5.2xlarge")
-	list = append(list, "m5.4xlarge")
-	list = append(list, "m5.8xlarge")
-	list = append(list, "m5.12xlarge")
-	list = append(list, "m5a.large")
-	list = append(list, "m5a.xlarge")
-	list = append(list, "m5a.2xlarge")
-	list = append(list, "m5a.4xlarge")
-	list = append(list, "c5.large")
-	list = append(list, "c5.xlarge")
-	list = append(list, "c5.2xlarge")
-	list = append(list, "c5.4xlarge")
-	list = append(list, "c5.9xlarge")
-	list = append(list, "r5.large")
-	list = append(list, "r5.xlarge")
-	list = append(list, "r5.2xlarge")
-	list = append(list, "r5.4xlarge")
-	list = append(list, "r5a.large")
-	list = append(list, "r5a.xlarge")
-	list = append(list, "r5a.2xlarge")
-	list = append(list, "r5a.4xlarge")
-	instances["Amazon Linux 2"] = list
 
-	var list2 []string
-	list2 = append(list2, "g4dn.xlarge")
-	list2 = append(list2, "g4dn.2xlarge")
-	list2 = append(list2, "g4dn.4xlarge")
-	list2 = append(list2, "g4dn.8xlarge")
-	list2 = append(list2, "g4dn.12xlarge")
-	list2 = append(list2, "p2.xlarge")
-	list2 = append(list2, "p2.8xlarge")
-	list2 = append(list2, "p2.16xlarge")
-	list2 = append(list2, "p3.2xlarge")
-	list2 = append(list2, "p3.8xlarge")
-	list2 = append(list2, "p3.16xlarge")
-	list2 = append(list2, "p3dn.24xlarge")
-	instances["Amazon Linux 2 GPU Enabled"] = list2
-	return instances
+	if amiType == "AL2_x86_64" {
+
+		list = append(list, "t3.micro")
+		list = append(list, "t3.small")
+		list = append(list, "t3.medium")
+		list = append(list, "t3.large")
+		list = append(list, "t3.xlarge")
+		list = append(list, "t3.2xlarge")
+		list = append(list, "t3a.micro")
+		list = append(list, "t3a.small")
+		list = append(list, "t3a.medium")
+		list = append(list, "t3a.large")
+		list = append(list, "t3a.xlarge")
+		list = append(list, "t3a.2xlarge")
+		list = append(list, "m5.large")
+		list = append(list, "m5.xlarge")
+		list = append(list, "m5.2xlarge")
+		list = append(list, "m5.4xlarge")
+		list = append(list, "m5.8xlarge")
+		list = append(list, "m5.12xlarge")
+		list = append(list, "m5a.large")
+		list = append(list, "m5a.xlarge")
+		list = append(list, "m5a.2xlarge")
+		list = append(list, "m5a.4xlarge")
+		list = append(list, "c5.large")
+		list = append(list, "c5.xlarge")
+		list = append(list, "c5.2xlarge")
+		list = append(list, "c5.4xlarge")
+		list = append(list, "c5.9xlarge")
+		list = append(list, "r5.large")
+		list = append(list, "r5.xlarge")
+		list = append(list, "r5.2xlarge")
+		list = append(list, "r5.4xlarge")
+		list = append(list, "r5a.large")
+		list = append(list, "r5a.xlarge")
+		list = append(list, "r5a.2xlarge")
+		list = append(list, "r5a.4xlarge")
+	} else {
+		list = append(list, "g4dn.xlarge")
+		list = append(list, "g4dn.2xlarge")
+		list = append(list, "g4dn.4xlarge")
+		list = append(list, "g4dn.8xlarge")
+		list = append(list, "g4dn.12xlarge")
+		list = append(list, "p2.xlarge")
+		list = append(list, "p2.8xlarge")
+		list = append(list, "p2.16xlarge")
+		list = append(list, "p3.2xlarge")
+		list = append(list, "p3.8xlarge")
+		list = append(list, "p3.16xlarge")
+		list = append(list, "p3dn.24xlarge")
+	}
+	return list
 
 }
 func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (cluster EKSCluster, err error) {
@@ -216,7 +236,6 @@ func GetEKSCluster(projectId string, companyId string, ctx utils.Context) (clust
 
 	return cluster, nil
 }
-
 func GetAllEKSCluster(data rbacAuthentication.List, ctx utils.Context) (clusters []EKSCluster, err error) {
 	var copyData []string
 	for _, d := range data.Data {
@@ -417,11 +436,11 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	if cpError != (types.CustomCPError{}) {
 		utils.SendLog(ctx.Data.Company, "EKS CLuster Creation Failed", "error", cluster.ProjectId)
 
-		if cluster.OutputArn != nil {
+		//if cluster.OutputArn != nil {
 
-			eksOps.CleanUpCluster(&cluster, ctx)
+		eksOps.CleanUpCluster(&cluster, ctx)
 
-		}
+		//}
 		cluster.Status = models.ClusterCreationFailed
 		confError := UpdateEKSCluster(cluster, ctx)
 		if confError != nil {
@@ -448,7 +467,8 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 	/**
 	  TODO : Add Agent Deployment Process.Due on @Ahmad.
 	*/
-	/*confError = ApplyAgent(credentials, token, ctx, cluster.Name, cluster.ResourceGroup)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
 
@@ -456,19 +476,19 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		profile := vault.AwsProfile{Profile: credentials.Profile}
 		_ = TerminateCluster(cluster, profile, cluster.ProjectId, companyId, ctx)
 		utils.SendLog(companyId, "Cleaning up resources", "info", cluster.ProjectId)
-		confError = UpdateEKSCluster(cluster, ctx)
-		if confError != nil {
-			utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
+		confError_ := UpdateEKSCluster(cluster, ctx)
+		if confError_ != nil {
+			utils.SendLog(companyId, confError_.Error(), "error", cluster.ProjectId)
 		}
 
 		cpErr := ApiError(confError, "Error occurred while deploying agent", 500)
 		err := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.IKS, ctx, cpErr)
 		if err != nil {
-			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("EKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
-	}*/
+	}
 	cluster.Status = models.ClusterCreated
 
 	confError = UpdateEKSCluster(cluster, ctx)
@@ -485,7 +505,13 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
+		ctx.SendLogs("EKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	} else {
+		ctx.SendLogs("EKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
 
 	return types.CustomCPError{}
 }
@@ -563,6 +589,12 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 		return errors.New("kubernetes version is empty")
 
 	}
+	if cluster.ResourcesVpcConfig.EndpointPublicAccess == nil && cluster.ResourcesVpcConfig.EndpointPrivateAccess == nil {
+		return errors.New("both private and public access cannot be false")
+	}
+	if cluster.ResourcesVpcConfig.EndpointPublicAccess != nil && *cluster.ResourcesVpcConfig.EndpointPublicAccess == false && cluster.ResourcesVpcConfig.EndpointPrivateAccess == nil && *cluster.ResourcesVpcConfig.EndpointPrivateAccess == false {
+		return errors.New("both private and public access cannot be false")
+	}
 	for _, pool := range cluster.NodePools {
 
 		if pool.NodePoolName == "" {
@@ -573,7 +605,7 @@ func ValidateEKSData(cluster EKSCluster, ctx utils.Context) error {
 
 			return errors.New("Ami Type is empty")
 
-		} else if (pool.AmiType != nil) && (*pool.AmiType != "Amazon Linux 2" && *pool.AmiType != "Amazon Linux 2 GPU Enabled") {
+		} else if (pool.AmiType != nil) && (*pool.AmiType != "AL2_x86_64" && *pool.AmiType != "AL2_x86_64_GPU") {
 
 			return errors.New("Ami Type is incorrect")
 
@@ -627,4 +659,39 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 	}
 
 	return response, types.CustomCPError{}
+}
+func ApplyAgent(credentials vault.AwsProfile, token string, ctx utils.Context, clusterName string) (confError error) {
+	companyId := ctx.Data.Company
+	projetcID := ctx.Data.ProjectId
+	data2, err := woodpecker.GetCertificate(projetcID, token, ctx)
+	if err != nil {
+		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	filePath := "/tmp/" + companyId + "/" + projetcID + "/"
+	cmd := "mkdir -p " + filePath + " && echo '" + data2 + "'>" + filePath + "agent.yaml"
+	output, err := models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("EKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	cmd = "sudo docker run --rm --name " + companyId + projetcID + " -e accessKey=" + credentials.Profile.AccessKey + " -e cluster=" + clusterName + " -e secretKey=" + credentials.Profile.SecretKey + " -e region=" + credentials.Profile.Region + " -e yamlFile=" + filePath + "agent.yaml -v " + filePath + ":" + filePath + " " + models.EKSAuthContainerName
+
+	output, err = models.RemoteRun("ubuntu", beego.AppConfig.String("jump_host_ip"), beego.AppConfig.String("jump_host_ssh_key"), cmd)
+	if err != nil {
+		ctx.SendLogs("AKSClusterModel : Apply Agent -"+err.Error()+output, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+	return nil
+}
+func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Context) ([]*string, types.CustomCPError) {
+	eksOps := GetEKS(projectId, credentials.Profile)
+	eksOps.init()
+	clusters, cpError := eksOps.getEKSCluster(ctx)
+	if cpError != (types.CustomCPError{}) {
+		return nil, cpError
+	}
+	return clusters, types.CustomCPError{}
 }

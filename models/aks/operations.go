@@ -639,12 +639,12 @@ func (cloud *AKS) fetchClusterStatus(credentials vault.AzureCredentials, cluster
 			a := *agentPool.Name
 			b := *scaling.Name
 			if strings.Contains(a, b) && scaling.EnableAutoScaling != nil && *scaling.EnableAutoScaling == true {
-				agentPoolProfiles.EnableAutoScaling = scaling.EnableAutoScaling
-				agentPoolProfiles.MaxCount = scaling.MaxCount
-				agentPoolProfiles.MinCount = scaling.MinCount
+				agentPoolProfiles.AutoScaling.EnableAutoScaling = scaling.EnableAutoScaling
+				agentPoolProfiles.AutoScaling.MaxCount = scaling.MaxCount
+				agentPoolProfiles.AutoScaling.MinCount = scaling.MinCount
 			} else if strings.Contains(*agentPool.Name, *scaling.Name) {
 				scaling := false
-				agentPoolProfiles.EnableAutoScaling = &scaling
+				agentPoolProfiles.AutoScaling.EnableAutoScaling = &scaling
 			}
 		}
 		CpErr := aksOps.fetchNodeStatus(cluster1, ctx, &agentPoolProfiles, *AKScluster.NodeResourceGroup, *agentPool.Name)

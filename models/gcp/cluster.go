@@ -20,90 +20,170 @@ import (
 	"time"
 )
 
+var machines = []byte(`[
+	"c2-standard-16",
+	"c2-standard-30",
+	"c2-standard-4",
+	"c2-standard-60",
+	"c2-standard-8",
+	"e2-highcpu-16",
+	"e2-highcpu-2",
+	"e2-highcpu-4",
+	"e2-highcpu-8",
+	"e2-highmem-16",
+	"e2-highmem-2",
+	"e2-highmem-4",
+	"e2-highmem-8",
+	"e2-medium",
+	"e2-micro",
+	"e2-small",
+	"e2-standard-16",
+	"e2-standard-2",
+	"e2-standard-4",
+	"e2-standard-8",
+	"f1-micro",
+	"g1-small",
+	"m1-megamem-96",
+	"m1-ultramem-160",
+	"m1-ultramem-40",
+	"m1-ultramem-80",
+	"n1-highcpu-16",
+	"n1-highcpu-2",
+	"n1-highcpu-32",
+	"n1-highcpu-4",
+	"n1-highcpu-64",
+	"n1-highcpu-8",
+	"n1-highcpu-96",
+	"n1-highmem-16",
+	"n1-highmem-2",
+	"n1-highmem-32",
+	"n1-highmem-4",
+	"n1-highmem-64",
+	"n1-highmem-8",
+	"n1-highmem-96",
+	"n1-megamem-96",
+	"n1-standard-1",
+	"n1-standard-16",
+	"n1-standard-2",
+	"n1-standard-32",
+	"n1-standard-4",
+	"n1-standard-64",
+	"n1-standard-8",
+	"n1-standard-96",
+	"n1-ultramem-160",
+	"n1-ultramem-40",
+	"n1-ultramem-80",
+	"n2-highcpu-16",
+	"n2-highcpu-2",
+	"n2-highcpu-32",
+	"n2-highcpu-4",
+	"n2-highcpu-48",
+	"n2-highcpu-64",
+	"n2-highcpu-8",
+	"n2-highcpu-80",
+	"n2-highmem-16",
+	"n2-highmem-2",
+	"n2-highmem-32",
+	"n2-highmem-4",
+	"n2-highmem-48",
+	"n2-highmem-64",
+	"n2-highmem-8",
+	"n2-highmem-80",
+	"n2-standard-16",
+	"n2-standard-2",
+	"n2-standard-32",
+	"n2-standard-4",
+	"n2-standard-48",
+	"n2-standard-64",
+	"n2-standard-8",
+	"n2-standard-80"
+]`)
+
 type Cluster_Def struct {
 	ID               bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	ProjectId        string        `json:"project_id" bson:"project_id"`
-	Name             string        `json:"name" bson:"name"`
-	Status           string        `json:"status" bson:"status"`
-	Cloud            models.Cloud  `json:"cloud" bson:"cloud"`
+	ProjectId        string        `json:"project_id" bson:"project_id" validate:"required" description:"Project ID of the cluster [required]"`
+	Name             string        `json:"name" bson:"name" validate:"required" description:"Name of the cluster [required]"`
+	Status           models.Type   `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of the project [required]"`
+	Cloud            models.Cloud  `json:"cloud" bson:"cloud"  validate:"eq=gcp|eq=Gcp|eq=GCP" description:"Cloud of the cluster.Valid value is gcp|GCP|Gcp [readonly]"`
 	CreationDate     time.Time     `json:"-" bson:"creation_date"`
 	ModificationDate time.Time     `json:"-" bson:"modification_date"`
-	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools"`
-	NetworkName      string        `json:"network_name" bson:"network_name"`
-	VPCName          string        `json:"vpc_name" bson:"vpc_name"`
-	CompanyId        string        `json:"company_id" bson:"company_id"`
+	NodePools        []*NodePool   `json:"node_pools" bson:"node_pools" validate:"required,dive" description:"Details of the nodepool [required]"`
+	NetworkName      string        `json:"network_name" bson:"network_name" description:"Natwork of the cluster [required]"`
+	VPCName          string        `json:"vpc_name" bson:"vpc_name" description:"VPC of the cluster [required]"`
+	CompanyId        string        `json:"company_id" bson:"company_id" description:"CompanyId of the cluster [optional]"`
 	TokenName        string        `json:"token_name" bson:"token_name"`
 }
 
 type NodePool struct {
 	ID                  bson.ObjectId      `json:"-" bson:"_id,omitempty"`
-	Name                string             `json:"name" bson:"name"`
-	PoolId              string             `json:"pool_id" bson:"pool_id"`
-	NodeCount           int64              `json:"node_count" bson:"node_count"`
-	MachineType         string             `json:"machine_type" bson:"machine_type"`
-	Image               Image              `json:"image" bson:"image"`
-	Volume              Volume             `json:"volume" bson:"volume"`
-	RootVolume          Volume             `json:"root_volume" bson:"root_volume"`
+	Name                string             `json:"name" bson:"name" validate:"required" description:"Name of the nodepool [required]"`
+	PoolId              string             `json:"pool_id" bson:"pool_id" description:"Id of the nodepool [optional]"`
+	NodeCount           int64              `json:"node_count" bson:"node_count" validate:"required" description:"Node count of pool [required]"`
+	MachineType         string             `json:"machine_type" bson:"machine_type" validate:"required" description:"Machine type of the nodepool [required]"`
+	Image               Image              `json:"image" bson:"image" validate:"required,dive" description:"Image of the nodepool[required]"`
+	Volume              Volume             `json:"volume" bson:"volume" description:"Volume of the nodepool [optional]"`
+	RootVolume          Volume             `json:"root_volume" bson:"root_volume" validate:"required,dive" description:"Root volume of the nodepool [required]"`
 	EnableVolume        bool               `json:"is_external" bson:"is_external"`
-	PoolSubnet          string             `json:"subnet_id" bson:"subnet_id"`
-	PoolRole            models.PoolRole    `json:"pool_role" bson:"pool_role"`
-	ServiceAccountEmail string             `json:"service_account_email" bson:"service_account_email"`
-	Nodes               []*Node            `json:"nodes" bson:"nodes"`
-	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info"`
-	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling"`
-	EnablePublicIP      bool               `json:"enable_public_ip" bson:"enable_public_ip"`
-	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"`
+	PoolSubnet          string             `json:"subnet_id" bson:"subnet_id"  description:"Subnet of the nodepool [required]"`
+	PoolRole            models.PoolRole    `json:"pool_role" bson:"pool_role" validate:"required,dive" description:"Role of the nodepool.Valid values are master and slave. [required]"`
+	ServiceAccountEmail string             `json:"service_account_email" bson:"service_account_email" validate:"required" description:"Service account of the nodepool [required]"`
+	Nodes               []*Node            `json:"nodes" bson:"nodes" validate:"required,dive" description:"Details of the node [required]"`
+	KeyInfo             key_utils.AZUREKey `json:"key_info" bson:"key_info" validate:"required,dive" description:"Details of the key [required]"`
+	EnableScaling       bool               `json:"enable_scaling" bson:"enable_scaling" validate:"required" description:"To enable scaling [required]"`
+	EnablePublicIP      bool               `json:"enable_public_ip" bson:"enable_public_ip" validate:"required" description:"To enable public ip of the instance [required]"`
+	Scaling             AutoScaling        `json:"auto_scaling" bson:"auto_scaling"  description:"Details of the scaling [optional]"`
 	Tags                []string           `json:"tags" bson:"tags"`
 }
 
 type AutoScaling struct {
-	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
-	State               models.Type `json:"status" bson:"status"`
+	MaxScalingGroupSize int64       `json:"max_scaling_group_size" bson:"max_scaling_group_size" validate:"required" description:"Max count for the scaling [required]"`
+	State               models.Type `json:"status" bson:"status" description:"State of the scaling [readonly]"`
 }
 
 type Node struct {
 	ID        bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	CloudId   string        `json:"cloud_id" bson:"cloud_id,omitempty"`
-	Url       string        `json:"url" bson:"url,omitempty"`
-	NodeState string        `json:"node_state" bson:"node_state,omitempty"`
-	Name      string        `json:"name" bson:"name,omitempty"`
-	PrivateIp string        `json:"private_ip" bson:"private_ip"`
-	PublicIp  string        `json:"public_ip" bson:"public_ip"`
-	Username  string        `json:"user_name" bson:"user_name"`
+	CloudId   string        `json:"cloud_id" bson:"cloud_id,omitempty" description:"Cloud id of the node [readonly]"`
+	Url       string        `json:"url" bson:"url,omitempty" description:"URL of the node [readonly]"`
+	NodeState string        `json:"node_state" bson:"node_state,omitempty" description:"State of the node [readonly]"`
+	Name      string        `json:"name" bson:"name,omitempty"  description:"Name of the node [readonly]"`
+	PrivateIp string        `json:"private_ip" bson:"private_ip" description:"Private IP of the node [readonly]"`
+	PublicIp  string        `json:"public_ip" bson:"public_ip" description:"Public IP of the node [readonly]"`
+	Username  string        `json:"user_name" bson:"user_name" description:"Username of the node [optional]"`
 }
 
 type Image struct {
-	ID      bson.ObjectId `json:"-" bson:"_id,omitempty"`
-	Project string        `json:"project" bson:"project"`
-	Family  string        `json:"family" bson:"family"`
+	ID      bson.ObjectId `json:"-" bson:"_id,omitempty" description:"Id of the image [readonly]"`
+	Project string        `json:"project" bson:"project" validate:"required" description:"Project of the image [required]"`
+	Family  string        `json:"family" bson:"family" validate:"required" description:"family of the image [required]"`
 }
 
 type Volume struct {
-	DiskType models.GCPDiskType `json:"disk_type" bson:"disk_type"`
+	DiskType models.GCPDiskType `json:"disk_type" bson:"disk_type" validate:"required" description:"Type of the disk [required]"`
 	IsBlank  bool               `json:"is_blank" bson:"is_blank"`
-	Size     int64              `json:"disk_size" bson:"disk_size"`
+	Size     int64              `json:"disk_size" bson:"disk_size" validate:"required" description:"Size of the disk [required]"`
 }
+
 type GcpResponse struct {
-	Credentials GcpCredentials `json:"credentials"`
+	Credentials GcpCredentials `json:"credentials" description:"Gcp credentials [readonly]"`
 }
 type GcpCredentials struct {
-	AccountData AccountData `json:"account_data"`
-	RawData     string      `json:"raw_account_data" valid:"required"`
-	Region      string      `json:"region"`
-	Zone        string      `json:"zone"`
+	AccountData AccountData `json:"account_data" description:"Account details [readonly]"`
+	RawData     string      `json:"raw_account_data" valid:"required" description:"Account details [readonly]"`
+	Region      string      `json:"region" description:"Region of the cloud [readonly]"`
+	Zone        string      `json:"zone" description:"Zone of the cloud [readonly]"`
 }
 
 type AccountData struct {
-	Type          string `json:"type" valid:"required"`
-	ProjectId     string `json:"project_id" valid:"required"`
-	PrivateKeyId  string `json:"private_key_id" valid:"required"`
-	PrivateKey    string `json:"private_key" valid:"required"`
-	ClientEmail   string `json:"client_email" valid:"required"`
-	ClientId      string `json:"client_id" valid:"required"`
-	AuthUri       string `json:"auth_uri" valid:"required"`
-	TokenUri      string `json:"token_uri" valid:"required"`
-	AuthProvider  string `json:"auth_provider_x509_cert_url" valid:"required"`
-	ClientCertUrl string `json:"client_x509_cert_url" valid:"required"`
+	Type          string `json:"type" valid:"required" description:"Type of the account[readonly]"`
+	ProjectId     string `json:"project_id" valid:"required" description:"Project Id of the account [readonly]"`
+	PrivateKeyId  string `json:"private_key_id" valid:"required" description:"Private key Id of the account [readonly]"`
+	PrivateKey    string `json:"private_key" valid:"required" description:"Private key of the account [readonly]"`
+	ClientEmail   string `json:"client_email" valid:"required" description:"Client email of the account [readonly]"`
+	ClientId      string `json:"client_id" valid:"required" description:"Client Id of the account [readonly]"`
+	AuthUri       string `json:"auth_uri" valid:"required" description:"Auth Uri of the account [readonly]"`
+	TokenUri      string `json:"token_uri" valid:"required" description:"Token Uri of the account [readonly]"`
+	AuthProvider  string `json:"auth_provider_x509_cert_url" valid:"required" description:"Auth Provider of the account [readonly]"`
+	ClientCertUrl string `json:"client_x509_cert_url" valid:"required" description:"Client Cert Url of the account [readonly]"`
 }
 type Project struct {
 	ProjectData Data `json:"data"`
@@ -320,24 +400,22 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New(text)
 	}
 
-	if oldCluster.Status == string(models.Deploying) && update {
-		ctx.SendLogs("cluster is in deploying state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in deploying state")
+	if oldCluster.Status == models.Deploying && update {
+		ctx.SendLogs("Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in creating state")
 	}
-	if oldCluster.Status == string(models.Terminating) && update {
-		ctx.SendLogs("cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return errors.New("cluster is in terminating state")
+	if oldCluster.Status == models.Terminating && update {
+		ctx.SendLogs("Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in terminating state")
 	}
-
-	/*err = checkMasterPools(cluster)
-	if err != nil { //cluster found
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}*/
-	if oldCluster.Status == "Cluster Created" && update {
+	if oldCluster.Status == models.ClusterTerminationFailed && update {
+		ctx.SendLogs("Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New("Cluster is in termination failed state")
+	}
+	if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
-			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Cluster is in runnning state")
+			ctx.SendLogs("No changes are applicable", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("No changes are applicable")
 		} else {
 			cluster = oldCluster
 		}
@@ -385,50 +463,63 @@ func PrintError(confError error, name, projectId string, companyId string) {
 	}
 }
 
-func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, token string, ctx utils.Context) (confError error) {
+func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, token string, ctx utils.Context) (confErr types.CustomCPError) {
 	publisher := utils.Notifier{}
-	confError = publisher.Init_notifier()
+	confError := publisher.Init_notifier()
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		//PrintError(confError, cluster.Name, cluster.ProjectId)
-		return confError
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, ApiErrors(confError, "Error in deploying cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return ApiErrors(confError, "Error in deploying cluster")
 	}
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("gcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("gcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = "Cluster creation failed"
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
-	cluster, confError = gcp.createCluster(cluster, token, ctx)
 
-	if confError != nil {
-		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+
+	cluster, confErr = gcp.createCluster(cluster, token, ctx)
+
+	if confErr != (types.CustomCPError{}) {
+		ctx.SendLogs("gcpClusterModel :"+confErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 
-		cluster.Status = "Cluster creation failed"
+		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 			ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		}
-
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, confErr)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return types.CustomCPError{}
 
 	}
 
@@ -439,43 +530,55 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 			node.PrivateIp = ""
 		}
 	}
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
 		ctx.SendLogs("gcpClusterModel :"+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return confError
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, ApiErrors(confError, "Error in deploying cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return ApiErrors(confError, "Error in deploying cluster")
 	}
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
+		ctx.SendLogs("GCPClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	} else {
+		ctx.SendLogs("GCPClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
+
+	return types.CustomCPError{}
 }
 
-func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, error) {
+func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, types.CustomCPError) {
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Deploy - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return cluster, ApiErrors(err, "Error in fetching status")
 	}
 
-	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+	gcp, err1 := GetGCP(credentials)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, err1
 	}
-	err = gcp.init()
-	if err != nil {
+	err1 = gcp.init()
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+		return cluster, err1
 	}
 
-	err = gcp.fetchClusterStatus(&cluster, ctx)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel : Status - Failed to get latest status "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, err
+	err1 = gcp.fetchClusterStatus(&cluster, ctx)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel : Status - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, err1
 	}
 
 	for _, pool := range cluster.NodePools {
@@ -483,17 +586,17 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		bytes, err := vault.GetSSHKey(string(models.GCP), pool.KeyInfo.KeyName, token, ctx, "")
 		if err != nil {
 			ctx.SendLogs("vm fetched failed with error: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return Cluster_Def{}, ApiErrors(err, "Error in fetching status")
 		}
 		keyInfo, err = key_utils.AzureKeyConversion(bytes, ctx)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return Cluster_Def{}, err
+			return Cluster_Def{}, ApiErrors(err, "Error in fetching status")
 
 		}
 		pool.KeyInfo = keyInfo
 	}
-	return cluster, nil
+	return cluster, types.CustomCPError{}
 }
 
 func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err error) {
@@ -505,92 +608,112 @@ func GetAllSSHKeyPair(token string, ctx utils.Context) (keys interface{}, err er
 	return keys, nil
 }
 
-func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (serviceAccounts []string, err error) {
+func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (serviceAccounts []string, err types.CustomCPError) {
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	serviceAccounts, err = gcp.listServiceAccounts(ctx)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel ServiceAccounts - Failed to list service accounts "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel ServiceAccounts - Failed to list service accounts "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
 	return serviceAccounts, err
 }
 
-func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) error {
+func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
 	if pub_err != nil {
 		ctx.SendLogs("GcpClusterModel :"+pub_err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return pub_err
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, ApiErrors(pub_err, "Error in terminating cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return ApiErrors(pub_err, "Error in initializing notifier")
 	}
 
 	cluster, err := GetCluster(cluster.ProjectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel : Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, ApiErrors(err, "Error in terminating cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return ApiErrors(err, "Error in fetching cluster")
 	}
-	if cluster.Status == "" || cluster.Status == "new" {
+
+	if cluster.Status == "" || strings.ToLower(string(cluster.Status)) == strings.ToLower(string(models.New)) {
 		text := "GcpClusterModel :Cannot terminate a new cluster"
 		ctx.SendLogs(text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return errors.New(text)
+		return ApiErrors(errors.New(text), text)
 	}
 
-	gcp, err := GetGCP(credentials)
-	if err != nil {
+	gcp, err1 := GetGCP(credentials)
+	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, err1)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return err1
 	}
 
-	cluster.Status = string(models.Terminating)
+	cluster.Status = models.Terminating
 	utils.SendLog(companyId, "Terminating cluster: "+cluster.Name, "info", cluster.ProjectId)
 
-	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cluster.Status = "Cluster Termination Failed"
+	err1 = gcp.init()
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 
-			return err
+			return ApiErrors(err, "Error in cluster termination")
+		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, err1)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return ApiErrors(err, "Error in cluster termination")
 	}
 
-	err = gcp.deleteCluster(cluster, ctx)
-	if err != nil {
-
+	err1 = gcp.deleteCluster(cluster, ctx)
+	if err1 != (types.CustomCPError{}) {
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
-		cluster.Status = "Cluster Termination Failed"
+		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			ctx.SendLogs("GcpClusterModel :Terminate - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-			return err
+			return ApiErrors(err, "Error in cluster termination")
+		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, err1)
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return nil
+		return types.CustomCPError{}
 	}
 
-	cluster.Status = "Cluster Terminated"
+	cluster.Status = models.ClusterTerminated
 
 	for _, pools := range cluster.NodePools {
 		var nodes []*Node
@@ -601,12 +724,16 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		ctx.SendLogs("GcpClusterModel :Terminate - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, ApiErrors(err, "Error in terminating cluster"))
+		if err_ != nil {
+			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-		return err
+		return ApiErrors(err, "Error in cluster termination")
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
 	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
-	return nil
+	return types.CustomCPError{}
 }
 
 func GetSSHkey(keyName, userName, token, teams string, ctx utils.Context) (privateKey string, err error) {
@@ -631,23 +758,23 @@ func DeleteSSHkey(keyName, token string, ctx utils.Context) error {
 		return err
 	}
 
-	return err
+	return nil
 }
 
-func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, error) {
+func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, types.CustomCPError) {
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Machines{}, err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Machines{}, err
 	}
 
 	machines, err := gcp.GetAllMachines(ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return Machines{}, err
 	}
 
@@ -656,31 +783,33 @@ func GetAllMachines(credentials GcpCredentials, ctx utils.Context) (Machines, er
 		mach.MachineName = append(mach.MachineName, machine.Name)
 	}
 
-	return mach, nil
+	return mach, types.CustomCPError{}
 }
-func GetRegions() ([]models.Region, error) {
+
+func GetRegions() ([]models.Region, types.CustomCPError) {
 
 	regionInfo, err := api_handler.GetGcpRegion()
 	if err != nil {
-		return []models.Region{}, err
+		return []models.Region{}, ApiErrors(err, "Error in fetching regions")
 	}
 
-	return regionInfo, nil
+	return regionInfo, types.CustomCPError{}
 }
-func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
+
+func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, types.CustomCPError) {
 	gcp, err := GetGCP(credentials)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []string{}, err
 	}
 	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return []string{}, err
 	}
 
 	regionInfo, err := gcp.GetZones(ctx)
-	if err != nil {
+	if err != (types.CustomCPError{}) {
 		return []string{}, err
 	}
 	var zones []string
@@ -689,8 +818,9 @@ func GetZones(credentials GcpCredentials, ctx utils.Context) ([]string, error) {
 		zones = append(zones, zone)
 	}
 
-	return zones, nil
+	return zones, types.CustomCPError{}
 }
+
 func getCompanyAllCluster(companyId string, ctx utils.Context) (clusters []Cluster_Def, err error) {
 
 	session, err1 := db.GetMongoSession(ctx)
@@ -724,18 +854,18 @@ func CheckKeyUsage(keyName, companyId string, ctx utils.Context) bool {
 	}
 	return false
 }
-func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) error {
+func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) types.CustomCPError {
 	credentials := GcpResponse{}
 
 	err := json.Unmarshal(profile, &credentials.Credentials.AccountData)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return ApiErrors(err, "Error in profile validation")
 	}
 	jsonData, err := json.Marshal(credentials.Credentials.AccountData)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return ApiErrors(err, "Error in profile validation")
 	}
 	credentials.Credentials.RawData = string(jsonData)
 	credentials.Credentials.Region = region
@@ -743,7 +873,7 @@ func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) err
 	_, err = govalidator.ValidateStruct(credentials.Credentials)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		return ApiErrors(err, "Error in profile validation")
 	}
 
 	cre := GcpCredentials{
@@ -752,21 +882,37 @@ func ValidateProfile(profile []byte, region, zone string, ctx utils.Context) err
 		Region:      region,
 		Zone:        zone,
 	}
-	gcp, err := GetGCP(cre)
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+	gcp, err1 := GetGCP(cre)
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err1
 	}
-	err = gcp.init()
-	if err != nil {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
-	}
-
-	_, err = gcp.GetAllMachines(ctx)
-	if err != nil {
-		return err
+	err1 = gcp.init()
+	if err1 != (types.CustomCPError{}) {
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err1
 	}
 
-	return nil
+	_, err1 = gcp.GetAllMachines(ctx)
+	if err1 != (types.CustomCPError{}) {
+		return err1
+	}
+
+	return types.CustomCPError{}
+}
+func ValidateData(cluster Cluster_Def) error {
+	var machineList []string
+	err := json.Unmarshal(machines, &machineList)
+	if err != nil {
+		return err
+	}
+	for _, nodepool := range cluster.NodePools {
+		for _, mach := range machineList {
+			if nodepool.MachineType == mach {
+				return nil
+			}
+		}
+	}
+	return errors.New("Invalid machine types.Valid machines are:" + strings.Join(machineList, ","))
+
 }
