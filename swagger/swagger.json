@@ -895,22 +895,13 @@
                 }
             }
         },
-        "/cluster/aws/getallregions/{cloud}": {
+        "/cluster/aws/getallregions": {
             "get": {
                 "tags": [
                     "cluster/aws"
                 ],
                 "description": "Get AWS Regions",
                 "operationId": "AWSClusterController.GetRegions",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "cloud",
-                        "description": "keyname",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "[]models.Region"
@@ -1290,9 +1281,6 @@
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"Conflict\"}"
                     },
                     "500": {
                         "description": "{\"error\": \"Runtime Error\"}"
@@ -3332,188 +3320,6 @@
                 }
             }
         },
-        "/cluster/eks/ami/{projectId}/": {
-            "get": {
-                "tags": [
-                    "cluster/eks"
-                ],
-                "description": "Get AMIs for EKS Cluster",
-                "operationId": "EKSClusterController.Get",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/eks.AMI"
-                        }
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/eks/applyagent/{projectId}": {
-            "post": {
-                "tags": [
-                    "cluster/eks"
-                ],
-                "description": "Apply cloudplex Agent file to eks cluster",
-                "operationId": "EKSClusterController.Start Agent",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "clusterName",
-                        "description": "clusterName",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "X-Auth-Token",
-                        "description": "token",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "X-Profile-Id",
-                        "description": "vault credentials profile id",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"msg\": \"Agent Applied successfully\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/eks/clusters/{region}/{projectId}/": {
-            "get": {
-                "tags": [
-                    "cluster/eks"
-                ],
-                "description": "Get list of running EKS Cluster",
-                "operationId": "EKSClusterController.Get",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "header",
-                        "name": "X-Profile-Id",
-                        "description": "Token",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/*string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/eks/instances/{amiType}/{projectId}/": {
-            "get": {
-                "tags": [
-                    "cluster/eks"
-                ],
-                "description": "Get Instances for EKS Cluster",
-                "operationId": "EKSClusterController.Get",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/map[string][]string"
-                        }
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/eks/kube/versions/{projectId}/": {
-            "get": {
-                "tags": [
-                    "cluster/eks"
-                ],
-                "description": "Get Kubernetes Cluster",
-                "operationId": "EKSClusterController.Get",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Auth-Token",
-                        "description": "Token",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    }
-                }
-            }
-        },
         "/cluster/eks/start/{projectId}": {
             "post": {
                 "tags": [
@@ -3681,16 +3487,9 @@
                 "tags": [
                     "cluster/eks"
                 ],
-                "description": "Get cluster against the projectId",
+                "description": "Get Instances for EKS Cluster",
                 "operationId": "EKSClusterController.Get",
                 "parameters": [
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "Id of the project",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
@@ -3703,17 +3502,11 @@
                     "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/eks.EKSCluster"
+                            "$ref": "#/definitions/map[string][]string"
                         }
-                    },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
                     },
                     "404": {
                         "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
                     }
                 }
             }
@@ -3794,19 +3587,22 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"Cluster updated successfully\"}"
+                        "description": "{\"msg\": \"cluster updated successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "402": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                        "description": "{\"error\": \"no cluster exists with this name\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             },
@@ -3835,23 +3631,23 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "{\"msg\": \"Cluster created successfully\"}"
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
                     },
                     "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "409": {
-                        "description": "{\"error\": \"Conflict\"}"
+                        "description": "{\"error\": \"cluster against same project id already exists\"}"
+                    },
+                    "410": {
+                        "description": "{\"error\": \"Core limit exceeded\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -3882,11 +3678,11 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -3932,14 +3728,14 @@
                     "200": {
                         "description": "[]string"
                     },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -3961,11 +3757,14 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4010,14 +3809,14 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4040,7 +3839,7 @@
                     {
                         "in": "header",
                         "name": "X-Profile-Id",
-                        "description": "Vault credentials profile id",
+                        "description": "vault credentials profile id",
                         "required": true,
                         "type": "string"
                     }
@@ -4055,14 +3854,14 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                    "400": {
+                        "description": "{\"error\": \"profile id is empty\"}"
                     },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                    "401": {
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "500": {
-                        "description": "{\"error\":  \"Runtime Error\"}"
+                        "description": "{\"error\":  \"error msg\"}"
                     }
                 }
             }
@@ -4091,20 +3890,14 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "{\"msg\": \"Key deleted successfully\"}"
+                    "200": {
+                        "description": "{\"msg\": key deleted successfully}"
                     },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"Conflict\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": error msg}"
                     }
                 }
             }
@@ -4141,14 +3934,14 @@
                     {
                         "in": "header",
                         "name": "X-Auth-Token",
-                        "description": "Token",
+                        "description": "token",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "header",
                         "name": "teams",
-                        "description": "Teams",
+                        "description": "teams",
                         "required": true,
                         "type": "string"
                     }
@@ -4161,16 +3954,13 @@
                         }
                     },
                     "400": {
-                        "description": "{\"error\": \"Bad Request\"}"
-                    },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4201,14 +3991,11 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4244,23 +4031,20 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "{\"msg\": \"Cluster created successfully\"}"
+                    "200": {
+                        "description": "{\"msg\": \"cluster created successfully\"}"
                     },
-                    "202": {
-                        "description": "{\"msg\": \"Cluster creation started successfully\"}"
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"Conflict\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4302,14 +4086,20 @@
                             "$ref": "#/definitions/gcp.Cluster_Def"
                         }
                     },
+                    "206": {
+                        "description": "{object} gcp.Cluster_Def"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"authorization params missing or invalid\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4345,23 +4135,20 @@
                     }
                 ],
                 "responses": {
-                    "202": {
-                        "description": "{\"msg\": \"Cluster termination initiated\"}"
+                    "200": {
+                        "description": "{\"msg\": \"cluster terminated successfully\"}"
                     },
-                    "204": {
-                        "description": "{\"msg\": \"Cluster terminated successfully\"}"
+                    "400": {
+                        "description": "{\"error\": \"error_msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"Authorization format should be 'base64 encoded service_account_json'\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "409": {
-                        "description": "{\"error\": \"Conflict\"}"
+                        "description": "{\"error\": \"error_msg\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4393,16 +4180,22 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"msg\": \"Profile is valid\"}"
+                        "description": "{\"msg\": \"cluster created successfully\"}"
+                    },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                        "description": "{\"error\": \"error msg\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"profile is invalid\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -4437,14 +4230,17 @@
                             "$ref": "#/definitions/gcp.Cluster_Def"
                         }
                     },
+                    "400": {
+                        "description": "{\"error\": \"error msg\"}"
+                    },
                     "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "404": {
-                        "description": "{\"error\": \"Not Found\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     },
                     "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
+                        "description": "{\"error\": \"error msg\"}"
                     }
                 }
             }
@@ -10591,55 +10387,51 @@
             "title": "BlockDeviceMapping",
             "type": "object"
         },
-        "*string": {
-            "title": "*string",
-            "type": "object"
-        },
-        "11742.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "14391.0xc001a53110.false": {
+        "14087.0xc0017c5b90.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001a171a0.false": {
+        "14179.0xc00100c0c0.false": {
             "title": "false",
             "type": "object"
         },
-        "5689.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "58562.0xc0019d4420.false": {
+        "14239.0xc00136a2d0.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc001136030.false": {
+        "1559.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "17821.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "20476.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "21214.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "26730.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "434.0xc00189aae0.false": {
             "title": "false",
             "type": "object"
         },
-        "63330.string": {
+        "4897.string": {
             "title": "string",
             "type": "object"
         },
-        "64164.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "667.0xc00192e300.false": {
+        "518.0xc00178de60.false": {
             "title": "false",
             "type": "object"
         },
-        "8344.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "9082.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "964.0xc001475d70.false": {
+        "6737.0xc0018bc300.false": {
             "title": "false",
             "type": "object"
         },
@@ -10780,7 +10572,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/64164.string"
+                    "$ref": "#/definitions/1559.string"
                 },
                 "type": {
                     "type": "string"
@@ -11019,7 +10811,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc001136030.false"
+                    "$ref": "#/definitions/14179.0xc00100c0c0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11646,7 +11438,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001475d70.false"
+                    "$ref": "#/definitions/14239.0xc00136a2d0.false"
                 },
                 "name": {
                     "type": "string"
@@ -11881,23 +11673,6 @@
             "title": "string",
             "type": "object"
         },
-        "doks.AutoScaling": {
-            "title": "AutoScaling",
-            "type": "object",
-            "properties": {
-                "auto_scale": {
-                    "type": "boolean"
-                },
-                "max_scaling_group_size": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "min_scaling_group_size": {
-                    "type": "integer",
-                    "format": "int64"
-                }
-            }
-        },
         "doks.Cluster": {
             "title": "Cluster",
             "type": "object",
@@ -12007,13 +11782,21 @@
             "type": "object",
             "properties": {
                 "auto_scaling": {
-                    "$ref": "#/definitions/doks.AutoScaling"
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
                 },
                 "machine_type": {
                     "type": "string"
+                },
+                "max_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "min_count": {
+                    "type": "integer",
+                    "format": "int64"
                 },
                 "name": {
                     "type": "string"
@@ -12306,18 +12089,6 @@
                 }
             }
         },
-        "eks.AMI": {
-            "title": "AMI",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
         "eks.EKSCluster": {
             "title": "EKSCluster",
             "type": "object",
@@ -12332,10 +12103,6 @@
                 "encryption_config": {
                     "$ref": "#/definitions/eks.EncryptionConfig",
                     "description": "Encryption Configurations [optional]"
-                },
-                "is_advance": {
-                    "description": "Cluster advance level settings possible value 'true' or 'false'",
-                    "type": "boolean"
                 },
                 "logging": {
                     "$ref": "#/definitions/eks.Logging",
@@ -12432,7 +12199,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/63330.string"
+                    "$ref": "#/definitions/4897.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -12577,9 +12344,6 @@
                     "type": "integer",
                     "format": "int64"
                 },
-                "is_enabled": {
-                    "type": "boolean"
-                },
                 "max_size": {
                     "type": "integer",
                     "format": "int64"
@@ -12631,43 +12395,33 @@
             "type": "object",
             "properties": {
                 "auth_provider_x509_cert_url": {
-                    "description": "Auth Provider of the account [readonly]",
                     "type": "string"
                 },
                 "auth_uri": {
-                    "description": "Auth Uri of the account [readonly]",
                     "type": "string"
                 },
                 "client_email": {
-                    "description": "Client email of the account [readonly]",
                     "type": "string"
                 },
                 "client_id": {
-                    "description": "Client Id of the account [readonly]",
                     "type": "string"
                 },
                 "client_x509_cert_url": {
-                    "description": "Client Cert Url of the account [readonly]",
                     "type": "string"
                 },
                 "private_key": {
-                    "description": "Private key of the account [readonly]",
                     "type": "string"
                 },
                 "private_key_id": {
-                    "description": "Private key Id of the account [readonly]",
                     "type": "string"
                 },
                 "project_id": {
-                    "description": "Project Id of the account [readonly]",
                     "type": "string"
                 },
                 "token_uri": {
-                    "description": "Token Uri of the account [readonly]",
                     "type": "string"
                 },
                 "type": {
-                    "description": "Type of the account[readonly]",
                     "type": "string"
                 }
             }
@@ -12677,13 +12431,11 @@
             "type": "object",
             "properties": {
                 "max_scaling_group_size": {
-                    "description": "Max count for the scaling [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.Type",
-                    "description": "State of the scaling [readonly]"
+                    "$ref": "#/definitions/models.Type"
                 }
             }
         },
@@ -12692,41 +12444,33 @@
             "type": "object",
             "properties": {
                 "cloud": {
-                    "$ref": "#/definitions/models.Cloud",
-                    "description": "Cloud of the cluster.Valid value is gcp|GCP|Gcp [readonly]"
+                    "$ref": "#/definitions/models.Cloud"
                 },
                 "company_id": {
-                    "description": "CompanyId of the cluster [optional]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the cluster [required]",
                     "type": "string"
                 },
                 "network_name": {
-                    "description": "Natwork of the cluster [required]",
                     "type": "string"
                 },
                 "node_pools": {
-                    "description": "Details of the nodepool [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/gcp.NodePool"
                     }
                 },
                 "project_id": {
-                    "description": "Project ID of the cluster [required]",
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/models.Type",
-                    "description": "Status of the project [required]"
+                    "type": "string"
                 },
                 "token_name": {
                     "type": "string"
                 },
                 "vpc_name": {
-                    "description": "VPC of the cluster [required]",
                     "type": "string"
                 }
             }
@@ -12736,19 +12480,15 @@
             "type": "object",
             "properties": {
                 "account_data": {
-                    "$ref": "#/definitions/gcp.AccountData",
-                    "description": "Account details [readonly]"
+                    "$ref": "#/definitions/gcp.AccountData"
                 },
                 "raw_account_data": {
-                    "description": "Account details [readonly]",
                     "type": "string"
                 },
                 "region": {
-                    "description": "Region of the cloud [readonly]",
                     "type": "string"
                 },
                 "zone": {
-                    "description": "Zone of the cloud [readonly]",
                     "type": "string"
                 }
             }
@@ -12758,11 +12498,9 @@
             "type": "object",
             "properties": {
                 "family": {
-                    "description": "family of the image [required]",
                     "type": "string"
                 },
                 "project": {
-                    "description": "Project of the image [required]",
                     "type": "string"
                 }
             }
@@ -12772,31 +12510,24 @@
             "type": "object",
             "properties": {
                 "cloud_id": {
-                    "description": "Cloud id of the node [readonly]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the node [readonly]",
                     "type": "string"
                 },
                 "node_state": {
-                    "description": "State of the node [readonly]",
                     "type": "string"
                 },
                 "private_ip": {
-                    "description": "Private IP of the node [readonly]",
                     "type": "string"
                 },
                 "public_ip": {
-                    "description": "Public IP of the node [readonly]",
                     "type": "string"
                 },
                 "url": {
-                    "description": "URL of the node [readonly]",
                     "type": "string"
                 },
                 "user_name": {
-                    "description": "Username of the node [optional]",
                     "type": "string"
                 }
             }
@@ -12806,66 +12537,52 @@
             "type": "object",
             "properties": {
                 "auto_scaling": {
-                    "$ref": "#/definitions/gcp.AutoScaling",
-                    "description": "Details of the scaling [optional]"
+                    "$ref": "#/definitions/gcp.AutoScaling"
                 },
                 "enable_public_ip": {
-                    "description": "To enable public ip of the instance [required]",
                     "type": "boolean"
                 },
                 "enable_scaling": {
-                    "description": "To enable scaling [required]",
                     "type": "boolean"
                 },
                 "image": {
-                    "$ref": "#/definitions/gcp.Image",
-                    "description": "Image of the nodepool[required]"
+                    "$ref": "#/definitions/gcp.Image"
                 },
                 "is_external": {
                     "type": "boolean"
                 },
                 "key_info": {
-                    "$ref": "#/definitions/key_utils.AZUREKey",
-                    "description": "Details of the key [required]"
+                    "$ref": "#/definitions/key_utils.AZUREKey"
                 },
                 "machine_type": {
-                    "description": "Machine type of the nodepool [required]",
                     "type": "string"
                 },
                 "name": {
-                    "description": "Name of the nodepool [required]",
                     "type": "string"
                 },
                 "node_count": {
-                    "description": "Node count of pool [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "nodes": {
-                    "description": "Details of the node [required]",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/gcp.Node"
                     }
                 },
                 "pool_id": {
-                    "description": "Id of the nodepool [optional]",
                     "type": "string"
                 },
                 "pool_role": {
-                    "$ref": "#/definitions/models.PoolRole",
-                    "description": "Role of the nodepool.Valid values are master and slave. [required]"
+                    "$ref": "#/definitions/models.PoolRole"
                 },
                 "root_volume": {
-                    "$ref": "#/definitions/gcp.Volume",
-                    "description": "Root volume of the nodepool [required]"
+                    "$ref": "#/definitions/gcp.Volume"
                 },
                 "service_account_email": {
-                    "description": "Service account of the nodepool [required]",
                     "type": "string"
                 },
                 "subnet_id": {
-                    "description": "Subnet of the nodepool [required]",
                     "type": "string"
                 },
                 "tags": {
@@ -12875,8 +12592,7 @@
                     }
                 },
                 "volume": {
-                    "$ref": "#/definitions/gcp.Volume",
-                    "description": "Volume of the nodepool [optional]"
+                    "$ref": "#/definitions/gcp.Volume"
                 }
             }
         },
@@ -12986,13 +12702,11 @@
             "type": "object",
             "properties": {
                 "disk_size": {
-                    "description": "Size of the disk [required]",
                     "type": "integer",
                     "format": "int64"
                 },
                 "disk_type": {
-                    "$ref": "#/definitions/models.GCPDiskType",
-                    "description": "Type of the disk [required]"
+                    "$ref": "#/definitions/models.GCPDiskType"
                 },
                 "is_blank": {
                     "type": "boolean"
@@ -13027,23 +12741,6 @@
                 },
                 "network_policy_config": {
                     "$ref": "#/definitions/gke.NetworkPolicyConfig"
-                }
-            }
-        },
-        "gke.AutoScaling": {
-            "title": "AutoScaling",
-            "type": "object",
-            "properties": {
-                "auto_scale": {
-                    "type": "boolean"
-                },
-                "max_scaling_group_size": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "min_scaling_group_size": {
-                    "type": "integer",
-                    "format": "int64"
                 }
             }
         },
@@ -13589,13 +13286,21 @@
             "type": "object",
             "properties": {
                 "auto_scaling": {
-                    "$ref": "#/definitions/gke.AutoScaling"
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
                 },
                 "machine_type": {
                     "type": "string"
+                },
+                "max_count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "min_count": {
+                    "type": "integer",
+                    "format": "int64"
                 },
                 "name": {
                     "type": "string"
@@ -13970,26 +13675,6 @@
                 }
             }
         },
-        "iks.Autoscaling": {
-            "title": "Autoscaling",
-            "type": "object",
-            "properties": {
-                "autoscale": {
-                    "description": "Autoscaling configuration, possible value 'true' or 'false' [required]",
-                    "type": "boolean"
-                },
-                "max_scaling_group_size": {
-                    "description": "Max VM count, must be greater than min count ['required' if autoscaling is enabled]",
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "min_scaling_group_size": {
-                    "description": "Min VM count ['required' if autoscaling is enabled]",
-                    "type": "integer",
-                    "format": "int64"
-                }
-            }
-        },
         "iks.Cluster": {
             "title": "Cluster",
             "type": "object",
@@ -14134,8 +13819,8 @@
             "title": "KubeWorkerPoolStatus1",
             "type": "object",
             "properties": {
-                "auto_scaling": {
-                    "$ref": "#/definitions/iks.Autoscaling"
+                "autoscaling": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
@@ -14183,9 +13868,9 @@
             "title": "NodePool",
             "type": "object",
             "properties": {
-                "auto_scaling": {
-                    "$ref": "#/definitions/iks.Autoscaling",
-                    "description": "Autoscaling configuration [optional]"
+                "autoscaling": {
+                    "description": "Autoscaling configuration, possible value 'true' or 'false' [required]",
+                    "type": "boolean"
                 },
                 "availability_zone": {
                     "type": "string"
@@ -14193,6 +13878,16 @@
                 "machine_type": {
                     "description": "Machine type for pool [required]",
                     "type": "string"
+                },
+                "max_node_count": {
+                    "description": "Max VM count, must be greater than min count ['required' if autoscaling is enabled]",
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "min_node_count": {
+                    "description": "Min VM count ['required' if autoscaling is enabled]",
+                    "type": "integer",
+                    "format": "int64"
                 },
                 "name": {
                     "description": "Cluster pool name [required]",
@@ -14247,7 +13942,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/58562.0xc0019d4420.false"
+                    "$ref": "#/definitions/518.0xc00178de60.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14619,7 +14314,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001a53110.false"
+                    "$ref": "#/definitions/434.0xc00189aae0.false"
                 },
                 "name": {
                     "type": "string"
