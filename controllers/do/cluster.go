@@ -270,7 +270,7 @@ func (c *DOClusterController) Post() {
 // @Success 200 {"msg": "Cluster updated successfully"}
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in Creating/Created/Terminating/TerminationFailed state"}
+// @Failure 409 {"error": "Cluster is in Creating/Terminating/TerminationFailed state"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
@@ -335,13 +335,13 @@ func (c *DOClusterController) Patch() {
 	}
 
 	//=============================================================================//
-	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
+	/*	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
 		ctx.SendLogs("DOClusterController : Cluster is in "+string(cluster.Status)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}
 		c.ServeJSON()
 		return
-	}
+	}*/
 	ctx.SendLogs("DOClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	cluster.CompanyId = userInfo.CompanyId
 	err = do.UpdateCluster(cluster, true, *ctx)
@@ -349,12 +349,6 @@ func (c *DOClusterController) Patch() {
 		if strings.Contains(err.Error(), "does not exist") {
 			c.Ctx.Output.SetStatus(404)
 			c.Data["json"] = map[string]string{"error": "no cluster exists with this name"}
-			c.ServeJSON()
-			return
-		}
-		if strings.Contains(err.Error(), "Cluster is in runnning state") {
-			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "Cluster is in runnning state"}
 			c.ServeJSON()
 			return
 		}
@@ -367,6 +361,15 @@ func (c *DOClusterController) Patch() {
 		if strings.Contains(err.Error(), "cluster is in terminating state") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		} else if strings.Contains(err.Error(), "Cluster is in termination failed state") {
+			c.Ctx.Output.SetStatus(int(models.StateConflict))
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		} else if strings.Contains(err.Error(), "No changes are applicable") {
+			c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyUpdated)}
 			c.ServeJSON()
 			return
 		}

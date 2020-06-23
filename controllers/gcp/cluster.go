@@ -237,10 +237,10 @@ func (c *GcpClusterController) Post() {
 		node.EnablePublicIP = !network.IsPrivate
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	err=gcp.ValidateData(cluster)
-	if err !=nil{
+	err = gcp.ValidateData(cluster)
+	if err != nil {
 		c.Ctx.Output.SetStatus(400)
-		c.Data["json"] = map[string]string{"error": "Invalid data: "+err.Error()}
+		c.Data["json"] = map[string]string{"error": "Invalid data: " + err.Error()}
 		c.ServeJSON()
 		return
 	}
@@ -273,6 +273,7 @@ func (c *GcpClusterController) Post() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
+// @Failure 409 {"error": "Cluster is in Creating/Terminating/TerminationFailed state"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *GcpClusterController) Patch() {
@@ -325,19 +326,19 @@ func (c *GcpClusterController) Patch() {
 		return
 	}
 
-	if cluster.Status == (models.Deploying) {
-		ctx.SendLogs("GCPClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.Terminating) {
-		ctx.SendLogs("GCPClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
+	/*	if cluster.Status == (models.Deploying) {
+			ctx.SendLogs("GCPClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+			c.ServeJSON()
+			return
+		} else if cluster.Status == (models.Terminating) {
+			ctx.SendLogs("GCPClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			c.Ctx.Output.SetStatus(409)
+			c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+			c.ServeJSON()
+			return
+		}*/
 
 	ctx.SendLogs("GcpClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("GcpClusterController: JSON Payload: ", cluster)
@@ -366,15 +367,20 @@ func (c *GcpClusterController) Patch() {
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "Cluster is in created state") {
-			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		if strings.Contains(err.Error(), "No changes are applicable") {
+			c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyUpdated)}
 			c.ServeJSON()
 			return
 		}
 		if strings.Contains(err.Error(), "Cluster is in terminating state") {
 			c.Ctx.Output.SetStatus(409)
 			c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+			c.ServeJSON()
+			return
+		}
+		if strings.Contains(err.Error(), "Cluster is in termination failed state") {
+			c.Ctx.Output.SetStatus(int(models.StateConflict))
+			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
 		}
@@ -626,7 +632,7 @@ func (c *GcpClusterController) StartCluster() {
 		return
 	}
 
-	cluster.Status =models.Deploying
+	cluster.Status = models.Deploying
 	err = gcp.UpdateCluster(cluster, false, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(500)
@@ -734,7 +740,7 @@ func (c *GcpClusterController) GetStatus() {
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterController :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(err1.StatusCode)
-		c.Data["json"] =err1
+		c.Data["json"] = err1
 	}
 
 	c.Data["json"] = cluster
@@ -1222,7 +1228,7 @@ func (c *GcpClusterController) GetAllMachines() {
 	ctx.SendLogs("GcpClusterController: Get All Machines. ", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	machines, err1 := gcp.GetAllMachines(credentials, *ctx)
-	if err1 !=(types.CustomCPError{}) {
+	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
 		c.ServeJSON()
@@ -1308,7 +1314,7 @@ func (c *GcpClusterController) ValidateProfile() {
 		if err1 != (types.CustomCPError{}) {
 			ctx.SendLogs("GcpClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(err1.StatusCode)
-			c.Data["json"] =err
+			c.Data["json"] = err
 			c.ServeJSON()
 			return
 		}
@@ -1386,7 +1392,7 @@ func (c *GcpClusterController) GetZones() {
 	zones, err1 := gcp.GetZones(credentials, *ctx)
 	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
-		c.Data["json"] =err1
+		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}

@@ -312,8 +312,8 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 		return errors.New("Cluster is in termination failed state")
 	} else if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
-			ctx.SendLogs("Cluster is in created state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Cluster is in created state")
+			ctx.SendLogs("No changes are applicable", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("No changes are applicable")
 		} else {
 			cluster = oldCluster
 		}

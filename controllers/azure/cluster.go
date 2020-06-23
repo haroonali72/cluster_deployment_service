@@ -266,7 +266,7 @@ func (c *AzureClusterController) Post() {
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
-// @Failure 409 {"error": "Cluster is in Created/Creating/Terminating/TerminationFailed state"}
+// @Failure 409 {"error": "Cluster is in Creating/Terminating/TerminationFailed state"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router / [put]
 func (c *AzureClusterController) Patch() {
@@ -341,9 +341,8 @@ func (c *AzureClusterController) Patch() {
 			c.Data["json"] = map[string]string{"error": "No cluster exists with this name"}
 			c.ServeJSON()
 			return
-		} else if strings.Contains(err.Error(), "Cluster is in created state") {
-			c.Ctx.Output.SetStatus(int(models.StateConflict))
-			c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		} else if strings.Contains(err.Error(), "No changes are applicable") {
+			c.Data["json"] = map[string]string{"msg": string(models.SuccessfullyUpdated)}
 			c.ServeJSON()
 			return
 		} else if strings.Contains(err.Error(), "Cluster is in creating state") {
