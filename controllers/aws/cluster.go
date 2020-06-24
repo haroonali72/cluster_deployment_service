@@ -369,9 +369,9 @@ func (c *AWSClusterController) Patch() {
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "Cluster is in created state") {
+		if strings.Contains(err.Error(), "No changes are applicable") {
 			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+			c.Data["json"] = map[string]string{"error": string(models.SuccessfullyUpdated)}
 			c.ServeJSON()
 			return
 		}
