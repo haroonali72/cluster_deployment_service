@@ -7093,16 +7093,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001a171a0.false:
+  482.0xc001a53620.false:
     title: "false"
     type: object
-  618.0xc001136030.false:
+  618.0xc0011592c0.false:
     title: "false"
     type: object
-  667.0xc00192e300.false:
+  667.0xc001962780.false:
     title: "false"
     type: object
-  964.0xc001475d70.false:
+  964.0xc0014b3020.false:
     title: "false"
     type: object
   5689.string:
@@ -7117,16 +7117,16 @@ definitions:
   11742.string:
     title: string
     type: object
-  14391.0xc001a53110.false:
+  14391.0xc001a91590.false:
     title: "false"
     type: object
-  58562.0xc0019d4420.false:
+  58562.0xc001a148a0.false:
     title: "false"
-    type: object
-  63330.string:
-    title: string
     type: object
   64164.string:
+    title: string
+    type: object
+  66304.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7406,7 +7406,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc001136030.false'
+        $ref: '#/definitions/618.0xc0011592c0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7848,7 +7848,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001475d70.false'
+        $ref: '#/definitions/964.0xc0014b3020.false'
       name:
         type: string
       network_name:
@@ -8392,7 +8392,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/63330.string'
+        $ref: '#/definitions/66304.string'
       template_id:
         type: string
       version:
@@ -8404,6 +8404,8 @@ definitions:
     title: EKSNodesStatus
     type: object
     properties:
+      id:
+        type: string
       name:
         type: string
       private_ip:
@@ -9661,7 +9663,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/58562.0xc0019d4420.false'
+        $ref: '#/definitions/58562.0xc001a148a0.false'
       kube_version:
         type: string
       name:
@@ -9934,7 +9936,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001a53110.false'
+        $ref: '#/definitions/14391.0xc001a91590.false'
       name:
         type: string
       node_pools:
