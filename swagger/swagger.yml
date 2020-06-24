@@ -39,7 +39,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+          description: '{"error": "Cluster is in Creating/Terminating/TerminationFailed
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -960,7 +960,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Created/Creating/Terminating/TerminationFailed
+          description: '{"error": "Cluster is in Creating/Terminating/TerminationFailed
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -1424,7 +1424,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+          description: '{"error": "Cluster is in Creating/Terminating/TerminationFailed
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -1841,7 +1841,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+          description: '{"error": "Cluster is in Creating/Terminating/Termination
             Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -2565,6 +2565,9 @@ paths:
           description: '{"error": "Unauthorized"}'
         "404":
           description: '{"error": "Not Found"}'
+        "409":
+          description: '{"error": "Cluster is in Creating/Terminating/TerminationFailed
+            state"}'
         "500":
           description: '{"error": "Runtime Error"}'
     post:
@@ -3023,7 +3026,7 @@ paths:
         "404":
           description: '{"error": "Not found"}'
         "409":
-          description: '{"error": "Cluster is in Cluster Created/Creating/Terminating/Termination
+          description: '{"error": "Cluster is in Creating/Terminating/Termination
             Failed state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -3314,7 +3317,7 @@ paths:
         "404":
           description: '{"error": "Not Found"}'
         "409":
-          description: '{"error": "Cluster is in Creating/Created/Terminating/TerminationFailed
+          description: '{"error": "Cluster is in Creating/Terminating/TerminationFailed
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -7093,16 +7096,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001a53620.false:
+  482.0xc001a32360.false:
     title: "false"
     type: object
-  618.0xc0011592c0.false:
+  618.0xc001133980.false:
     title: "false"
     type: object
-  667.0xc001962780.false:
+  667.0xc0019273e0.false:
     title: "false"
     type: object
-  964.0xc0014b3020.false:
+  964.0xc0014836e0.false:
     title: "false"
     type: object
   5689.string:
@@ -7117,16 +7120,16 @@ definitions:
   11742.string:
     title: string
     type: object
-  14391.0xc001a91590.false:
+  14391.0xc001a642d0.false:
     title: "false"
     type: object
-  58562.0xc001a148a0.false:
+  58880.0xc0019db5c0.false:
     title: "false"
     type: object
   64164.string:
     title: string
     type: object
-  66304.string:
+  67068.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7406,7 +7409,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0011592c0.false'
+        $ref: '#/definitions/618.0xc001133980.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7848,7 +7851,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0014b3020.false'
+        $ref: '#/definitions/964.0xc0014836e0.false'
       name:
         type: string
       network_name:
@@ -8392,7 +8395,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/66304.string'
+        $ref: '#/definitions/67068.string'
       template_id:
         type: string
       version:
@@ -9663,7 +9666,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/58562.0xc001a148a0.false'
+        $ref: '#/definitions/58880.0xc0019db5c0.false'
       kube_version:
         type: string
       name:
@@ -9936,7 +9939,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001a91590.false'
+        $ref: '#/definitions/14391.0xc001a642d0.false'
       name:
         type: string
       node_pools:
