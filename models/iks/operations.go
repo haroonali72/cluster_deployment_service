@@ -113,20 +113,19 @@ type KubeWorkerPoolStatus struct {
 	Nodes       []KubeWorkerNodesStatus `json:"nodes"`
 }
 type KubeWorkerPoolStatus1 struct {
-	ID          string                  	`json:"id,omitempty"`
-	Name        string                  	`json:"name,omitempty"`
-	Flavour     string                  	`json:"machine_type,omitempty"`
-	Autoscaling Autoscaling                 `json:"auto_scaling,omitempty"`
-	Nodes       []KubeWorkerNodesStatus1	`json:"nodes"`
-	Count       int                      	`json:"node_count,omitempty"`
-	SubnetId    string                   	`json:"subnet_id,omitempty"`
+	ID          string                   `json:"id,omitempty"`
+	Name        string                   `json:"name,omitempty"`
+	Flavour     string                   `json:"machine_type,omitempty"`
+	Autoscaling Autoscaling              `json:"auto_scaling,omitempty"`
+	Nodes       []KubeWorkerNodesStatus1 `json:"nodes"`
+	Count       int                      `json:"node_count,omitempty"`
+	SubnetId    string                   `json:"subnet_id,omitempty"`
 }
 
-type Autoscaling struct{
-	AutoScale        bool          `json:"autoscale,omitempty"  bson:"autoscaling,omitempty" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
-	MinNodes         int64           `json:"min_scaling_group_size,omitempty"  bson:"min_scaling_group_size,omitempty" description:"Min VM count ['required' if autoscaling is enabled]"`
-	MaxNodes         int64           `json:"max_scaling_group_size,omitempty"  bson:"max_scaling_group_size,omitempty" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
-
+type Autoscaling struct {
+	AutoScale bool  `json:"autoscale,omitempty"  bson:"autoscaling,omitempty" description:"Autoscaling configuration, possible value 'true' or 'false' [required]"`
+	MinNodes  int64 `json:"min_scaling_group_size,omitempty"  bson:"min_scaling_group_size,omitempty" description:"Min VM count ['required' if autoscaling is enabled]"`
+	MaxNodes  int64 `json:"max_scaling_group_size,omitempty"  bson:"max_scaling_group_size,omitempty" description:"Max VM count, must be greater than min count ['required' if autoscaling is enabled]"`
 }
 type KubeWorkerNodesStatus1 struct {
 	PoolId    string `json:"id,omitempty"`
@@ -347,7 +346,7 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 		return "", cpErr
 	}
 	req, _ := utils.CreatePostRequest(bytes, models.IBM_Kube_Cluster_Endpoint)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -418,7 +417,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	}
 
 	req, _ := utils.CreatePostRequest(bytes, models.IBM_WorkerPool_Endpoint)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -486,7 +485,7 @@ func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string
 	bytes, err := json.Marshal(zoneInput)
 
 	req, _ := utils.CreatePostRequest(bytes, models.IBM_Zone)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -540,7 +539,7 @@ func (cloud *IBM) GetAllVersions(ctx utils.Context) (Versions, types.CustomCPErr
 	url := "https://" + cloud.Region + ".containers.cloud.ibm.com/global/v2/getVersions" + models.IBM_Version
 
 	req, _ := utils.CreateGetRequest(url)
-
+	req.Close = true
 	utils.SetHeaders(req, nil)
 
 	client := utils.InitReq()
@@ -597,7 +596,7 @@ func (cloud *IBM) GetVPC(vpcID string, network types.IBMNetwork) string {
 }
 func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) types.CustomCPError {
 	req, _ := utils.CreateDeleteRequest(models.IBM_Kube_Delete_Cluster_Endpoint + cluster.ClusterId + "?yes")
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -643,8 +642,14 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 }
 func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, types.CustomCPError) {
 
-	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?cluster=" + cluster.ClusterId)
+	req, err := utils.CreateGetRequest(models.IBM_Kube_GetCluster_Endpoint + "?cluster=" + cluster.ClusterId)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while getting status of cluster", 500)
+		return KubeClusterStatus{}, cpErr
 
+	}
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -698,7 +703,7 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 		return KubeClusterStatus{}, cperr
 	}
 	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetWorker_Endpoint + "?cluster=" + cluster.ClusterId)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
@@ -760,7 +765,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 	url := models.IBM_All_Instances_Endpoint + cloud.Region + "&provider=vpc-classic"
 
 	req, _ := utils.CreateGetRequest(url)
-
+	req.Close = true
 	client := utils.InitReq()
 	res, err := client.SendRequest(req)
 	if err != nil {
@@ -797,7 +802,7 @@ func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, type
 func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Context, companyId string) ([]KubeWorkerNodesStatus, types.CustomCPError) {
 
 	req, _ := utils.CreateGetRequest(models.IBM_Kube_GetNodes_Endpoint + "?cluster=" + cluster.ClusterId + "&pool=" + poolId)
-
+	req.Close = true
 	m := make(map[string]string)
 
 	m["Content-Type"] = "application/json"
