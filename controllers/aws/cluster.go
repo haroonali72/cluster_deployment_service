@@ -370,7 +370,7 @@ func (c *AWSClusterController) Patch() {
 			return
 		}
 		if strings.Contains(err.Error(), "No changes are applicable") {
-			c.Ctx.Output.SetStatus(409)
+			c.Ctx.Output.SetStatus(200)
 			c.Data["json"] = map[string]string{"error": string(models.SuccessfullyUpdated)}
 			c.ServeJSON()
 			return
