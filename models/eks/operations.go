@@ -458,6 +458,18 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 		cpErr := ApiError(err, "Cluster Deletion Failed", 512)
 		return cpErr
 	}
+	err = cloud.Svc.WaitUntilClusterDeleted(&eks.DescribeClusterInput{Name: aws.String(eksCluster.Name)})
+	if err != nil {
+		ctx.SendLogs(
+			"EKS cluster '"+eksCluster.Name+"'deletion failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, err.Error()+"\n Cluster Deletion Failed - "+eksCluster.Name, "error", eksCluster.ProjectId)
+		cpErr := ApiError(err, "Cluster Deletion Failed", 512)
+		return cpErr
+	}
 	if eksCluster.EncryptionConfig != nil && eksCluster.EncryptionConfig.EnableEncryption {
 		if eksCluster.EncryptionConfig.Provider != nil {
 			err = cloud.scheduleKMSKeyDeletion(eksCluster.EncryptionConfig.Provider.KeyId)
@@ -759,8 +771,14 @@ func (cloud *EKS) deleteNodePool(clusterName, nodePoolName string) error {
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodePoolName),
 	})
-
-	return err
+	if err != nil {
+		return err
+	}
+	err = cloud.Svc.WaitUntilNodegroupDeleted(&eks.DescribeNodegroupInput{ClusterName: aws.String(clusterName), NodegroupName: aws.String(nodePoolName)})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func (cloud *EKS) deleteIAMRoleFromInstanceProfile(roleName string) error {
 	output, err := cloud.IAM.ListInstanceProfilesForRole(&iam.ListInstanceProfilesForRoleInput{
