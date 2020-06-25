@@ -680,35 +680,6 @@ func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]strin
 
 }
 
-func UpdateKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]string, types.CustomCPError) {
-	aksOps, _ := GetAKS(credentials.Profile)
-
-	CpErr := aksOps.init()
-	if CpErr != (types.CustomCPError{}) {
-		ctx.SendLogs(CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []string{}, CpErr
-	}
-
-	result, err := aksOps.GetKubernetesVersions(ctx)
-	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return []string{}, err
-	}
-
-	var versions []string
-	for _, versionProfile := range *result.Orchestrators {
-		if *versionProfile.OrchestratorVersion == "1.6.9" {
-			continue
-		}
-		if *versionProfile.OrchestratorType == "Kubernetes" {
-			versions = append(versions, *versionProfile.OrchestratorVersion)
-		}
-	}
-
-	return versions, types.CustomCPError{}
-
-}
-
 func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
 	if cluster.ProjectId == "" {
 
