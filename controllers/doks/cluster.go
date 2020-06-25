@@ -529,8 +529,7 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 	if cluster.CloudplexStatus == (models.ClusterCreated) {
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster is already in a created state"}
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
 	}
 	validate := validator.New()

@@ -333,8 +333,7 @@ func (c *EKSClusterController) Patch() {
 		return
 	} else if cluster.Status == (models.ClusterCreated) {
 		ctx.SendLogs("EKSClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster is already in a created state"}
+		c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
 		c.ServeJSON()
 		return
 	} else if cluster.Status == (models.ClusterTerminationFailed) {
