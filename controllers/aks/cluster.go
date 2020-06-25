@@ -1119,142 +1119,77 @@ func (c *AKSClusterController) GetKubeConfig() {
 	c.ServeJSON()
 }
 
-
 // @Title Get Kube Versions
-
 // @Description fetch version of kubernetes cluster
-
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
-
 // @Param	region	path	string	true	"Cloud region"
-
 // @Param	X-Auth-Token	header	string	true "Token"
-
 // @Success 200 {object} []string
-
 // @Failure 404 {"error": "Not Found"}
-
 // @Failure 500 {"error": "Internal Server Error"}
-
 // @Failure 512 {object} types.CustomCPError
-
 // @router /getallkubeversions/:region [get]
-
 func (c *AKSClusterController) FetchKubeVersions() {
 
-
 	token := c.Ctx.Input.Header("X-Auth-Token")
-
 	if token == "" {
-
 		c.Ctx.Output.SetStatus(404)
-
 		c.Data["json"] = map[string]string{"error": "X-Auth-Token is empty"}
-
 		c.ServeJSON()
-
 		return
-
 	}
-
 
 	profileId := c.Ctx.Input.Header("X-Profile-Id")
-
 	if profileId == "" {
-
 		c.Ctx.Output.SetStatus(404)
-
 		c.Data["json"] = map[string]string{"error": "X-Profile-Id is empty"}
-
 		c.ServeJSON()
-
 		return
-
 	}
-
 
 	region := c.GetString(":region")
-
 	if region == "" {
-
 		c.Ctx.Output.SetStatus(404)
-
 		c.Data["json"] = map[string]string{"error": "region is empty"}
-
 		c.ServeJSON()
-
 		return
-
 	}
-
 
 	statusCode, userInfo, err := rbacAuthentication.GetInfo(token)
-
 	if err != nil {
-
 		if statusCode == 404 && strings.Contains(strings.ToLower(err.Error()), "policy") {
-
 			c.Ctx.Output.SetStatus(statusCode)
-
 			c.Data["json"] = map[string]string{"error": "No policy exist against this project id"}
-
 			c.ServeJSON()
-
 			return
-
 		}
-
 		beego.Error(err.Error())
-
 		c.Ctx.Output.SetStatus(statusCode)
-
 		c.Data["json"] = map[string]string{"error": err.Error()}
-
 		c.ServeJSON()
-
 		return
-
 	}
-
 
 	ctx := new(utils.Context)
-
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
-
 	ctx.SendLogs("AKSClusterController: GetAllKubernetesVersions.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-
 	statusCode, azureProfile, err := azure.GetProfile(profileId, region, token, *ctx)
-
 	if err != nil {
-
 		c.Ctx.Output.SetStatus(statusCode)
-
 		c.Data["json"] = map[string]string{"error": err.Error()}
-
 		c.ServeJSON()
-
 		return
-
 	}
-
 
 	kubeVersions, CpErr := aks.GetKubeVersions(azureProfile, *ctx)
-
 	if CpErr != (types.CustomCPError{}) {
-
 		c.Ctx.Output.SetStatus(int(models.CloudStatusCode))
-
 		c.Data["json"] = CpErr
-
 		c.ServeJSON()
-
 		return
-
 	}
-
 	c.Data["json"] = kubeVersions
-
 	c.ServeJSON()
-
 }
+
