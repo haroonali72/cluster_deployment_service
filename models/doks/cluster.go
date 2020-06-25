@@ -460,7 +460,18 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	cluster.CloudplexStatus = models.ClusterCreated
-
+	confError = UpdateKubernetesCluster(cluster, ctx)
+	if confError != nil {
+		PrintError(ctx, confError.Error(), cluster.Name)
+		ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		CpErr := types.CustomCPError{StatusCode: 500, Error: "Error in updating cluster", Description: err.Error()}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx, CpErr)
+		if err != nil {
+			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return CpErr
+	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
