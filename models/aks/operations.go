@@ -707,7 +707,7 @@ func (cloud *AKS) fetchNodeStatus(cluster1 *AKSCluster, ctx utils.Context, pool 
 			arr = strings.Split(pipId, "/")
 			pipConf := arr[14]
 			pipAddress := arr[16]
-			publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.Context, "MC_application-efg3gj_cluster-azure-va2lrq_eastasia", "aks-pool0-24224467-vmss", arr[10], nicName, pipConf, pipAddress, "")
+			publicIPaddress, err := cloud.AddressClient.GetVirtualMachineScaleSetPublicIPAddress(cloud.Context, rg, vmName, arr[10], nicName, pipConf, pipAddress, "")
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return ApiError(err, "Error in status fetching", int(models.CloudStatusCode))
