@@ -610,7 +610,8 @@ func (c *IKSClusterController) Patch() {
 		return
 	}
 	if cluster.Status == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "No changes are applicable"}
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster is already in a created state"}
 		c.ServeJSON()
 	}
 	validate := validator.New()
