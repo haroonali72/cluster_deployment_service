@@ -339,7 +339,7 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 	if cluster.Status == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
 	}
 	validate := validator.New()
@@ -1192,3 +1192,4 @@ func (c *AKSClusterController) FetchKubeVersions() {
 	c.Data["json"] = kubeVersions
 	c.ServeJSON()
 }
+
