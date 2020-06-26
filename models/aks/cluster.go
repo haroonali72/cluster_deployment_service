@@ -52,7 +52,7 @@ type AKSCluster struct {
 	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" description:"Docker bridge CIDR for cluster ['required' if expert settings enabled]"`
 	ResourceGoup           string                               `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
 	ResourceID             string                               `json:"-" bson:"cluster_id,omitempty"`
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" validate:"required," description:"Cluster name [required]"`
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster name [required]"`
 	Type                   string                               `json:"-" bson:"type,omitempty"`
 	Location               string                               `json:"location,omitempty" bson:"location,omitempty" validate:"required" description:"Location for cluster provisioning [required]"`
 }
