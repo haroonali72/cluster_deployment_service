@@ -437,6 +437,30 @@ func (c *GKEClusterController) Patch() {
 		return
 	}
 
+	if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("GKElusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("GKEClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("GKEClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
+	if cluster.Status == (models.ClusterCreated) {
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
+		c.ServeJSON()
+	}
+
 	err = gke.Validate(cluster)
 	if err != nil {
 		c.Ctx.Output.SetStatus(400)

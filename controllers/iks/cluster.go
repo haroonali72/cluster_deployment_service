@@ -586,7 +586,7 @@ func (c *IKSClusterController) Patch() {
 	if cluster.Status != models.New && cluster.Status != models.ClusterCreationFailed && cluster.Status != models.ClusterTerminated {
 		ctx.SendLogs("IKSClusterController : Cluster is in "+string(cluster.Status)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.Status) + " state"}
+		c.Data["json"] = map[string]string{"error": "Can't update.Cluster is in " + string(cluster.Status) + " state"}
 		c.ServeJSON()
 		return
 	}
@@ -610,7 +610,7 @@ func (c *IKSClusterController) Patch() {
 		return
 	}
 	if cluster.Status == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
 	}
 	validate := validator.New()

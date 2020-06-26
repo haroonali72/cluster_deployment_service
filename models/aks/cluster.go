@@ -367,7 +367,6 @@ func DeployAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, compan
 		return CpErr
 	}
 	err := aksOps.CreateCluster(cluster, token, ctx)
-
 	if err != nil {
 		cpErr := ApiError(err, "", 502)
 
