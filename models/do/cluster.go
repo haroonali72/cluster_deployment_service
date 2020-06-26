@@ -302,7 +302,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 	}
 	confError := do.init(ctx)
 	if confError != (types.CustomCPError{}) {
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			PrintError(err, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -327,7 +327,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 			PrintError(errors.New(confError_.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
-		cluster.Status = "Cluster Creation Failed"
+		cluster.Status = models.ClusterCreationFailed
 		err := UpdateCluster(cluster, false, ctx)
 		if err != nil {
 			PrintError(err, cluster.Name, cluster.ProjectId, ctx, companyId)
@@ -340,7 +340,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 		return confError
 	}
 
-	cluster.Status = "Cluster Created"
+	cluster.Status = models.ClusterCreated
 	err := UpdateCluster(cluster, false, ctx)
 	if err != nil {
 		confError = types.CustomCPError{StatusCode: 500, Error: "Error occured in updating cluster status in database", Description: "Error occured in updating cluster status in database"}
@@ -353,18 +353,19 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 		return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 
 	}
-	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
+	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
 	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
 	if notify {
-		ctx.SendLogs("DOClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("DOClusterModel:  Notification received from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
-		ctx.SendLogs("DOClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		ctx.SendLogs("DOClusterModel:  Notification not received from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
 
 	return types.CustomCPError{}
 }
+
 func FetchStatus(credentials vault.DOProfile, projectId string, ctx utils.Context, companyId string, token string) (Cluster_Def, types.CustomCPError) {
 
 	cluster, err := GetCluster(projectId, companyId, ctx)

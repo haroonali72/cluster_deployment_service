@@ -87,7 +87,7 @@ type KubeClusterStatus struct {
 	AgentPoolProfiles []ManagedClusterAgentPoolStatus `json:"node_pools" bson:"node_pools" `
 }
 type KubeWorkerPoolStatus struct {
-	Name              *string `json:"name" bson:"name" description:"Cluster pool name"`
+	Name              *string `json:"name" bson:"name" validate:"required,alphanum" description:"Cluster pool name"`
 	Count             *int32  `json:"node_count" bson:"node_count" description:"Pool node count"`
 	VMSize            *string `json:"vm_size" bson:"vm_size"  description:"Machine type for pool"`
 	OsDiskSizeGB      *int32  `json:"os_disk_size_gb" bson:"os_disk_size_gb" description:"Disk size for VMs"`
