@@ -52,7 +52,7 @@ type AKSCluster struct {
 	DockerBridgeCidr       string                               `json:"docker_bridge_cidr,omitempty" bson:"docker_bridge_cidr,omitempty" description:"Docker bridge CIDR for cluster ['required' if expert settings enabled]"`
 	ResourceGoup           string                               `json:"resource_group" bson:"resource_group" validate:"required" description:"Resources would be created within resource_group [required]"`
 	ResourceID             string                               `json:"-" bson:"cluster_id,omitempty"`
-	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" validate:"required" description:"Cluster name [required]"`
+	Name                   string                               `json:"name,omitempty" bson:"name,omitempty" validate:"required," description:"Cluster name [required]"`
 	Type                   string                               `json:"-" bson:"type,omitempty"`
 	Location               string                               `json:"location,omitempty" bson:"location,omitempty" validate:"required" description:"Location for cluster provisioning [required]"`
 }
@@ -87,7 +87,7 @@ type KubeClusterStatus struct {
 	AgentPoolProfiles []ManagedClusterAgentPoolStatus `json:"node_pools" bson:"node_pools" `
 }
 type KubeWorkerPoolStatus struct {
-	Name              *string `json:"name" bson:"name" description:"Cluster pool name"`
+	Name              *string `json:"name" bson:"name" validate:"required,alphanum" description:"Cluster pool name"`
 	Count             *int32  `json:"node_count" bson:"node_count" description:"Pool node count"`
 	VMSize            *string `json:"vm_size" bson:"vm_size"  description:"Machine type for pool"`
 	OsDiskSizeGB      *int32  `json:"os_disk_size_gb" bson:"os_disk_size_gb" description:"Disk size for VMs"`
