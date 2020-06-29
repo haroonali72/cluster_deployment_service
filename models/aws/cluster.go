@@ -359,7 +359,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		}
 		confErr := aws.CleanUp(cluster, ctx)
 		if confErr != (types.CustomCPError{}) {
-			PrintError(errors.New(confErr.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
+			PrintError(errors.New(confErr.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
 		cluster.Status = models.ClusterCreationFailed
@@ -443,7 +443,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 	}
 	err1 := aws.init()
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, ApiError(err, "Error in fetching cluster")
 	}
 
@@ -502,7 +502,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 
 	err1 := aws.init()
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs(err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
@@ -694,7 +694,7 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, to
 	}
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
@@ -716,7 +716,7 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 	}
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return err
 	}
@@ -816,7 +816,7 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, types
 	}
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
@@ -853,13 +853,13 @@ func ValidateProfile(key, secret, region string, ctx utils.Context) types.Custom
 
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
 	err = aws.validateProfile(ctx)
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 

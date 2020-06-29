@@ -241,7 +241,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 
 		result, err, subnetId := cloud.CreateInstance(pool, awsNetwork, ctx, token, cluster.ProjectId)
 		if err != (types.CustomCPError{}) {
-			utils.SendLog(companyId, "Error in instances creation: "+err.Error, "info", cluster.ProjectId)
+			utils.SendLog(companyId, "Error in instances creation: "+err.Description, "info", cluster.ProjectId)
 			return nil, err
 		}
 
@@ -249,7 +249,7 @@ func (cloud *AWS) createCluster(cluster Cluster_Def, ctx utils.Context, companyI
 			for index, instance := range result.Instances {
 				err := cloud.updateInstanceTags(instance.InstanceId, pool.Name+"-"+strconv.Itoa(index), cluster.ProjectId, ctx)
 				if err != (types.CustomCPError{}) {
-					utils.SendLog(companyId, "Error in instances creation: "+err.Error, "info", cluster.ProjectId)
+					utils.SendLog(companyId, "Error in instances creation: "+err.Description, "info", cluster.ProjectId)
 					return nil, err
 				}
 			}
@@ -386,7 +386,7 @@ func (cloud *AWS) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs("Failed to get latest status"+err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("Failed to get latest status"+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return &Cluster_Def{}, err
 		}
 	}
@@ -490,7 +490,7 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return !flag
 		}
 	}
@@ -537,10 +537,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		err := cloud.TerminatePool(pool, cluster.ProjectId, ctx, companyId)
 		if err != (types.CustomCPError{}) {
 			if !strings.Contains(strings.ToLower(err.Error), "not found") && !strings.Contains(strings.ToLower(err.Error), "cannot be found") && !strings.Contains(strings.ToLower(err.Error), "does not exist") {
-				ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				flag = true
 			} else {
-				ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 		} else {
 			ctx.SendLogs(pool.Name+" pool terminated successfully", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -696,7 +696,7 @@ func (cloud *AWS) CleanUp(cluster Cluster_Def, ctx utils.Context) types.CustomCP
 			}
 			err := cloud.TerminateIns(ids)
 			if err != (types.CustomCPError{}) {
-				ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return err
 			}
 		}
@@ -851,7 +851,7 @@ func (cloud *AWS) CreateInstance(pool *NodePool, network types.AWSNetwork, ctx u
 	beego.Info("updating root volume ")
 	ebs, err1 := cloud.describeAmi(&pool.Ami.AmiId, ctx)
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs(err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err1, ""
 	}
 	if ebs != nil && ebs[0].Ebs != nil && ebs[0].Ebs.VolumeSize != nil {
@@ -1218,12 +1218,12 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key key_utils.AWSKey
 	for _, id := range ids {
 		err := fileWrite(key.KeyMaterial, key.KeyName)
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		err1 := setPermission(key.KeyName)
 		if err1 != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		publicIp := ""
@@ -1233,7 +1233,7 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key key_utils.AWSKey
 			beego.Error("waited for public ip")
 			err, publicIp = cloud.checkInstanceState(*id.InstanceId, projectId, ctx, companyId)
 			if err != (types.CustomCPError{}) {
-				ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return err
 			}
 		}
@@ -1261,23 +1261,23 @@ func (cloud *AWS) mountVolume(ids []*ec2.Instance, ami Ami, key key_utils.AWSKey
 		}
 		err = setScriptPermision(key.KeyName, ami.Username, publicIp)
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(errCopy.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 			return err
 		}
 		err = runScript(key.KeyName, ami.Username, publicIp)
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		err = deleteScript(key.KeyName, ami.Username, publicIp)
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 		err = deleteFile(key.KeyName)
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
 		}
 	}
