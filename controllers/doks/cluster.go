@@ -529,7 +529,7 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 	if cluster.CloudplexStatus == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
 		c.ServeJSON()
 	}
 	validate := validator.New()

@@ -280,6 +280,7 @@ func (c *AWSClusterController) Post() {
 // @router / [put]
 func (c *AWSClusterController) Patch() {
 	var cluster aws.Cluster_Def
+	ctx := new(utils.Context)
 
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cluster)
 	if err != nil {
@@ -287,6 +288,30 @@ func (c *AWSClusterController) Patch() {
 		c.Data["json"] = map[string]string{"error": "Error while unmarshalling " + err.Error()}
 		c.ServeJSON()
 		return
+	}
+
+	if cluster.Status == (models.Deploying) {
+		ctx.SendLogs("AWSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.Terminating) {
+		ctx.SendLogs("AWSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
+		c.ServeJSON()
+		return
+	} else if cluster.Status == (models.ClusterTerminationFailed) {
+		ctx.SendLogs("AwsClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		c.Ctx.Output.SetStatus(409)
+		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
+		c.ServeJSON()
+		return
+	}
+	if cluster.Status == (models.ClusterCreated) {
+		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
+		c.ServeJSON()
 	}
 
 	validate := validator.New()
@@ -315,22 +340,10 @@ func (c *AWSClusterController) Patch() {
 		return
 	}
 
-	ctx := new(utils.Context)
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, cluster.ProjectId, userInfo.CompanyId, userInfo.UserId)
 
-	if cluster.Status == (models.Deploying) {
-		ctx.SendLogs("DOKSClusterController: Cluster is in creating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in creating state"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.Terminating) {
-		ctx.SendLogs("DOKSClusterController: Cluster is in terminating state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
-		c.ServeJSON()
-		return
-	}
+
 	//==========================RBAC Authentication==============================//
 	statusCode, allowed, err := rbac_athentication.Authenticate(models.AWS, "cluster", cluster.ProjectId, "Update", token, *ctx)
 	if err != nil {
@@ -369,9 +382,9 @@ func (c *AWSClusterController) Patch() {
 			c.ServeJSON()
 			return
 		}
-		if strings.Contains(err.Error(), "Cluster is in created state") {
-			c.Ctx.Output.SetStatus(409)
-			c.Data["json"] = map[string]string{"error": "Cluster is in created state"}
+		if strings.Contains(err.Error(), "No changes are applicable") {
+			c.Ctx.Output.SetStatus(200)
+			c.Data["json"] = map[string]string{"error": string(models.SuccessfullyUpdated)}
 			c.ServeJSON()
 			return
 		}

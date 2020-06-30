@@ -261,8 +261,8 @@ func UpdateCluster(cluster Cluster_Def, update bool, ctx utils.Context) error {
 
 	if oldCluster.Status == models.ClusterCreated && update {
 		if !checkScalingChanges(&oldCluster, &cluster) {
-			ctx.SendLogs("Cluster is in runnning state ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return errors.New("Cluster is in runnning state")
+			ctx.SendLogs("No changes are applicable", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New("No changes are applicable")
 		} else {
 			cluster = oldCluster
 		}
@@ -359,7 +359,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		}
 		confErr := aws.CleanUp(cluster, ctx)
 		if confErr != (types.CustomCPError{}) {
-			PrintError(errors.New(confErr.Error), cluster.Name, cluster.ProjectId, ctx, companyId)
+			PrintError(errors.New(confErr.Description), cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
 		cluster.Status = models.ClusterCreationFailed
@@ -404,6 +404,19 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("AWSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		cluster.Status = models.ClusterCreationFailed
+		PrintError(errors.New("Notification not recieved from agent"), cluster.Name, cluster.ProjectId, ctx, companyId)
+		err := UpdateCluster(cluster, false, ctx)
+		if err != nil {
+			confErr := types.CustomCPError{StatusCode: 500, Error: "Error occured in updating cluster status in database", Description: "Error occured in updating cluster status in database"}
+			PrintError(err, cluster.Name, cluster.ProjectId, ctx, companyId)
+			err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, confErr)
+			if err != nil {
+				ctx.SendLogs("AWSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
+		}
 	}
 
 	return types.CustomCPError{}
@@ -443,7 +456,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 	}
 	err1 := aws.init()
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Cluster_Def{}, ApiError(err, "Error in fetching cluster")
 	}
 
@@ -502,7 +515,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 
 	err1 := aws.init()
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs(err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.Status = models.ClusterTerminationFailed
 		err = UpdateCluster(cluster, false, ctx)
 		if err != nil {
@@ -694,7 +707,7 @@ func GetAWSAmi(credentials vault.AwsProfile, amiId string, ctx utils.Context, to
 	}
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
@@ -716,7 +729,7 @@ func EnableScaling(credentials vault.AwsProfile, cluster Cluster_Def, ctx utils.
 	}
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		return err
 	}
@@ -816,7 +829,7 @@ func GetZones(credentials vault.AwsProfile, ctx utils.Context) ([]*string, types
 	}
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, err
 	}
 
@@ -853,13 +866,13 @@ func ValidateProfile(key, secret, region string, ctx utils.Context) types.Custom
 
 	err := aws.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
 	err = aws.validateProfile(ctx)
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("Cluster model: Status - Failed to get aws regions "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err
 	}
 
