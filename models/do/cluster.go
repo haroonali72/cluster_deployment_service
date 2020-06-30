@@ -36,18 +36,20 @@ type Cluster_Def struct {
 }
 
 type NodePool struct {
-	ID                 bson.ObjectId      `json:"_" bson:"_id,omitempty"`
-	Name               string             `json:"name" bson:"name" validate:"required" description:"Name of pool [required]`
-	NodeCount          int64              `json:"node_count"  bson:"node_count" validate:"required,gte=1" description:"Pool node count [required]"`
-	MachineType        string             `json:"machine_type"  bson:"machine_type" validate:"required" description:"Machine type for pool [required]"` //machine size
-	Image              ImageReference     `json:"image" bson:"image" description:"Image Information for cluster [required]"`
-	PoolSecurityGroups []*string          `json:"security_group_id" bson:"security_group_id" validate:"required" description:"Security Group for cluster [required]"`
-	Nodes              []*Node            `json:"nodes,omitempty" bson:"nodes"`
-	KeyInfo            key_utils.AZUREKey `json:"key_info" bson:"key_info" description:"SSH Key information [required]"`
-	PoolRole           models.PoolRole    `json:"pool_role" bson:"pool_role" validate:"required" description:"Pool role, possible values 'master' or 'slave'. [required]"`
-	IsExternal         bool               `json:"is_external" bson:"is_external" description:"Enable Volume Option, possible values 'true' or 'false'  [optional]"`
-	ExternalVolume     Volume             `json:"external_volume" bson:"external_volume" description:"Block Store Volume Information ['required' if external volume is enabled']"`
-	PrivateNetworking  bool               `json:"private_networking" bson:"private_networking" description:"Option to enable private networking [optional]"`
+	ID                 bson.ObjectId  `json:"_" bson:"_id,omitempty"`
+	Name               string         `json:"name" bson:"name" validate:"required" description:"Name of pool [required]`
+	NodeCount          int64          `json:"node_count"  bson:"node_count" validate:"required,gte=1" description:"Pool node count [required]"`
+	MachineType        string         `json:"machine_type"  bson:"machine_type" validate:"required" description:"Machine type for pool [required]"` //machine size
+	Image              ImageReference `json:"image" bson:"image" description:"Image Information for cluster [required]"`
+	PoolSecurityGroups []*string      `json:"security_group_id" bson:"security_group_id" validate:"required" description:"Security Group for cluster [required]"`
+	VPC                string         `json:"vpc_id" bson:"vpc_id" validate:"required" description:"VPC for nodepool [required]"`
+
+	Nodes             []*Node            `json:"nodes,omitempty" bson:"nodes"`
+	KeyInfo           key_utils.AZUREKey `json:"key_info" bson:"key_info" description:"SSH Key information [required]"`
+	PoolRole          models.PoolRole    `json:"pool_role" bson:"pool_role" validate:"required" description:"Pool role, possible values 'master' or 'slave'. [required]"`
+	IsExternal        bool               `json:"is_external" bson:"is_external" description:"Enable Volume Option, possible values 'true' or 'false'  [optional]"`
+	ExternalVolume    Volume             `json:"external_volume" bson:"external_volume" description:"Block Store Volume Information ['required' if external volume is enabled']"`
+	PrivateNetworking bool               `json:"private_networking" bson:"private_networking" description:"Option to enable private networking [optional]"`
 }
 
 type Node struct {
