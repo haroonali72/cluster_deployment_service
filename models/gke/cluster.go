@@ -593,6 +593,129 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	return types.CustomCPError{}
 }
 
+func UpdateRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
+
+	publisher := utils.Notifier{}
+
+	errr := publisher.Init_notifier()
+	if errr != nil {
+		PrintError(errr, cluster.Name, ctx)
+		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in deploying GKE Cluster", Description: errr.Error()}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return cpErr
+	}
+
+	gkeOps, err := GetGKE(credentials)
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return err
+	}
+
+	err = gkeOps.init()
+	if err != (types.CustomCPError{}) {
+		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cluster.CloudplexStatus = models.ClusterCreationFailed
+		confError := UpdateGKECluster(cluster, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, ctx)
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		return err
+	}
+
+	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+	//cluster.CloudplexStatus = (models.Deploying)
+
+	err_ := UpdateGKECluster(cluster, ctx)
+	if err_ != nil {
+		utils.SendLog(ctx.Data.Company, err_.Error(), "error", cluster.ProjectId)
+		cpErr := types.CustomCPError{Description: confError.Error, Error: "Error occurred while updating cluster status in database", StatusCode: 500}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		return cpErr
+	}
+
+	err = gkeOps.CreateCluster(cluster, token, ctx)
+	if err != (types.CustomCPError{}) {
+		cluster.CloudplexStatus = models.ClusterCreationFailed
+		confError := UpdateGKECluster(cluster, ctx)
+		if confError != nil {
+			PrintError(confError, cluster.Name, ctx)
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+		if err_ != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		return err
+	}
+
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+
+	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
+	if confError != (types.CustomCPError{}) {
+		cluster.CloudplexStatus = models.ClusterCreationFailed
+		PrintError(errors.New(confError.Error), cluster.Name, ctx)
+		_ = TerminateCluster(credentials, ctx)
+		PrintError(errors.New("Cleaning up resources"), cluster.Name, ctx)
+		_ = UpdateGKECluster(cluster, ctx)
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		return confError
+	}
+
+	cluster.CloudplexStatus = models.ClusterCreated
+
+	err1 := UpdateGKECluster(cluster, ctx)
+	if err1 != nil {
+		PrintError(err1, cluster.Name, ctx)
+		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err1.Error()}
+
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return cpErr
+	}
+
+	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	if notify {
+		ctx.SendLogs("GKEClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+	} else {
+		ctx.SendLogs("GKEClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}
+
+	return types.CustomCPError{}
+}
+
 func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (*KubeClusterStatus, types.CustomCPError) {
 	cluster, err := GetGKECluster(ctx)
 	if err != nil {
