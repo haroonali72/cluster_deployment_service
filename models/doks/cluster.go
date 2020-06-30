@@ -483,6 +483,18 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	}else{
 		ctx.SendLogs("DOKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		cluster.CloudplexStatus = models.ClusterCreationFailed
+		PrintError(ctx,"Notification not recieved from agent", cluster.Name )
+		confError = UpdateKubernetesCluster(cluster, ctx)
+		if confError != nil {
+			PrintError(ctx, confError.Error(), cluster.Name)
+			ctx.SendLogs("DOKSDeployClusterModel:  Apply agent - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx, confErr)
+		if err != nil {
+			ctx.SendLogs("DOKSDeployClusterModel:  Apply agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	}
 
 	return types.CustomCPError{}

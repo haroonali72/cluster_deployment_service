@@ -552,6 +552,19 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("GCPClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		cluster.Status = models.ClusterCreationFailed
+		PrintError(errors.New("Notification not recieved from the agent"), cluster.Name, cluster.ProjectId,  companyId)
+		err := UpdateCluster(cluster, false, ctx)
+		if err != nil {
+			confErr := types.CustomCPError{StatusCode: 500, Error: "Error occured in updating cluster status in database", Description: "Error occured in updating cluster status in database"}
+			PrintError(err, cluster.Name, cluster.ProjectId,  companyId)
+			err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, confErr)
+			if err != nil {
+				ctx.SendLogs("GcpDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
+		}
 	}
 
 	return types.CustomCPError{}
