@@ -511,6 +511,18 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("EKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		cluster.Status = models.ClusterCreationFailed
+		utils.SendLog(companyId, confError.Error(), "Notification not recieved from agent", cluster.ProjectId)
+		confError_ := UpdateEKSCluster(cluster, ctx)
+		if confError_ != nil {
+			ctx.SendLogs("EKSDeployClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, types.CustomCPError{Description:confError_.Error(),Error: confError_.Error(),StatusCode:512} )
+		if err != nil {
+			ctx.SendLogs("EKSDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	}
 
 	return types.CustomCPError{}
