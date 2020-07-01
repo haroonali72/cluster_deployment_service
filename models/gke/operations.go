@@ -263,7 +263,7 @@ func (cloud *GKE) UpdateClusterAddson(cluster GKECluster, ctx utils.Context) typ
 				DesiredLoggingService: response.Cluster.LoggingService,
 				DesiredVerticalPodAutoscaling: response.Cluster.VerticalPodAutoscaling,
 				DesiredMasterAuthorizedNetworksConfig: response.Cluster.MasterAuthorizedNetworksConfig,
-				DesiredLocations:response.Cluster.Zone,
+			//	DesiredLocations:response.Cluster.Zone,
 				DesiredResourceUsageExportConfig: response.Cluster.ResourceUsageExportConfig,
 			},
 		},
