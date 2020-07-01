@@ -650,7 +650,7 @@ func UpdateRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials,
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Creating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	//cluster.CloudplexStatus = (models.Deploying)
+	/*cluster.CloudplexStatus = (models.Deploying)
 
 	err_ := UpdateGKECluster(cluster, ctx)
 	if err_ != nil {
@@ -663,10 +663,19 @@ func UpdateRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials,
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
+*/
+//	err = gkeOps.UpdateMasterVersion(cluster.Name,"1.15.12-gke.3", ctx)
+//	err = gkeOps.UpdateNodePoolVersion(cluster.Name,cluster.NodePools[0].Name,"1.15.12-gke.3",ctx)
+//	err =gkeOps.UpdateNodePoolImageType(cluster.Name,cluster.NodePools[0].Name,"UBUNTU",ctx)
+//	err =gkeOps.UpdateNodePoolCount(cluster.Name,cluster.NodePools[0].Name,4,ctx)
+//	err =gkeOps.UpdateResourceUsageExportConfig(cluster.Name , ctx ,ResourceUsageExportConfig{})
+//	err= gkeOps.AutoscaleNodepool(cluster.ProjectId, cluster.Zone, cluster.Name , cluster.NodePools[0].Name , NodePoolAutoscaling{MinNodeCount:1,MaxNodeCount:2,Enabled:true},ctx )
+//	err = gkeOps.AddNodePool(cluster.Name,cluster.NodePools,ctx)
+	err = gkeOps.UpdateNodepoolManagement(cluster.Name,*cluster.NodePools[0],ctx)
+	err = gkeOps.UpdateClusterAddson(cluster , ctx )
 
-	err = gkeOps.CreateCluster(cluster, token, ctx)
 	if err != (types.CustomCPError{}) {
-		cluster.CloudplexStatus = models.ClusterCreationFailed
+		cluster.CloudplexStatus = models.ClusterUpdateFailed
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, ctx)
@@ -684,7 +693,7 @@ func UpdateRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials,
 		return err
 	}
 
-	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+/*	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
@@ -724,7 +733,7 @@ func UpdateRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials,
 	} else {
 		ctx.SendLogs("GKEClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
-
+*/
 	return types.CustomCPError{}
 }
 

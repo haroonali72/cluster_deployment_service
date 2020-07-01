@@ -4840,6 +4840,58 @@
                 }
             }
         },
+        "/cluster/gke/update/{projectId}": {
+            "put": {
+                "tags": [
+                    "cluster/gke"
+                ],
+                "description": "Update a running kubernetes cluster",
+                "operationId": "GKEClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "{\"msg\": \"Cluster updated successfully\"}"
+                    },
+                    "202": {
+                        "description": "{\"msg\": \"Cluster updation initiated\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed/Terminating/Terminated/ state\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/gke/{projectId}/": {
             "get": {
                 "tags": [
@@ -10598,15 +10650,15 @@
             "title": "*string",
             "type": "object"
         },
-        "11742.string": {
+        "11771.string": {
             "title": "string",
             "type": "object"
         },
-        "14391.0xc001a642d0.false": {
+        "14391.0xc001b4e810.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001a32360.false": {
+        "482.0xc001b1a8a0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10614,23 +10666,23 @@
             "title": "string",
             "type": "object"
         },
-        "58880.0xc0019db5c0.false": {
+        "59615.0xc001abdb00.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc001133980.false": {
+        "618.0xc0011d2420.false": {
             "title": "false",
             "type": "object"
         },
-        "64164.string": {
+        "64122.string": {
             "title": "string",
             "type": "object"
         },
-        "667.0xc0019273e0.false": {
+        "667.0xc001a096b0.false": {
             "title": "false",
             "type": "object"
         },
-        "67068.string": {
+        "67786.string": {
             "title": "string",
             "type": "object"
         },
@@ -10642,7 +10694,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc0014836e0.false": {
+        "964.0xc001534720.false": {
             "title": "false",
             "type": "object"
         },
@@ -10783,7 +10835,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/64164.string"
+                    "$ref": "#/definitions/64122.string"
                 },
                 "type": {
                     "type": "string"
@@ -11022,7 +11074,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc001133980.false"
+                    "$ref": "#/definitions/618.0xc0011d2420.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11649,7 +11701,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0014836e0.false"
+                    "$ref": "#/definitions/964.0xc001534720.false"
                 },
                 "name": {
                     "type": "string"
@@ -12435,7 +12487,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/67068.string"
+                    "$ref": "#/definitions/67786.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14253,7 +14305,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/58880.0xc0019db5c0.false"
+                    "$ref": "#/definitions/59615.0xc001abdb00.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14483,7 +14535,8 @@
                 "ClusterTerminationFailed = \"Cluster Termination Failed\"",
                 "ClusterTerminated = \"Cluster Terminated\"",
                 "Deploying = \"Creating\"",
-                "Terminating = \"Terminating\""
+                "Terminating = \"Terminating\"",
+                "ClusterUpdateFailed = \"Cluster Update Failed\""
             ],
             "example": "New"
         },
@@ -14625,7 +14678,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001a642d0.false"
+                    "$ref": "#/definitions/14391.0xc001b4e810.false"
                 },
                 "name": {
                     "type": "string"

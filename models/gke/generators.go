@@ -639,3 +639,44 @@ func GenerateNodePoolFromRequest(pools []*NodePool) []*gke.NodePool {
 
 	return nodePools
 }
+func GenerateNodePoolManagementFromRequest(project, region, zone string,nodepool NodePool) *gke.SetNodePoolManagementRequest{
+
+	if *nodepool.Management == (NodeManagement{}){
+		return &gke.SetNodePoolManagementRequest{}
+	}else if *nodepool.Management.UpgradeOptions == (AutoUpgradeOptions{}){
+	}
+	request := gke.SetNodePoolManagementRequest{
+		Management:      &gke.NodeManagement{
+			AutoRepair:    true,// nodepool.Management.AutoRepair,
+			AutoUpgrade:    false,//nodepool.Management.AutoUpgrade,
+			UpgradeOptions: &gke.AutoUpgradeOptions{
+				AutoUpgradeStartTime: "2020-10-02T10:00:00-05:00",//nodepool.Management.UpgradeOptions.AutoUpgradeStartTime,
+				Description:          nodepool.Management.UpgradeOptions.Description,
+			},
+		},
+		Name:            "projects/" + project + "/locations/" + region + "-" + zone+ "/nodePools/"+nodepool.Name,
+
+	}
+	/*r := gke.ProjectsZonesClustersNodePoolsSetManagementCall{
+		projectId                 :  project,
+		zone                      :  zone,
+		clusterId                 :   clusterName,
+		nodePoolId                :  nodepool.Name,
+		setnodepoolmanagementrequest : &request ,
+	}*/
+	return &request
+}
+
+func  GenerateNodepoolCreateRequest(project, region, zone,clusterName string,pool []*NodePool) *gke.CreateNodePoolRequest {
+//	if pool.InitialNodeCount == 0 {
+//		return &gke.CreateNodePoolRequest{}
+//	}
+	nPool := GenerateNodePoolFromRequest(pool)
+	for _,pool := range nPool {
+		return &gke.CreateNodePoolRequest{
+			NodePool: pool,
+			Parent:   "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+		}
+	}
+return &gke.CreateNodePoolRequest{}
+}

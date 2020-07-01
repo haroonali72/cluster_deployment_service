@@ -1221,7 +1221,7 @@ func (c *GKEClusterController) ApplyAgent() {
 // @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated/ state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /start/:projectId [post]
+// @router /update/:projectId [put]
 func (c *GKEClusterController) UpdateRunningCluster() {
 	ctx := new(utils.Context)
 
