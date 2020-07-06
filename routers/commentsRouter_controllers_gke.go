@@ -97,14 +97,6 @@ func init() {
             Filters: nil,
             Params: nil})
 
-    beego.GlobalControllerRouter["antelope/controllers/gke:GKEClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gke:GKEClusterController"],
-        beego.ControllerComments{
-            Method: "UpdateRunningCluster",
-            Router: `/update/:projectId`,
-            AllowHTTPMethods: []string{"put"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
 
     beego.GlobalControllerRouter["antelope/controllers/gke:GKETemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/gke:GKETemplateController"],
         beego.ControllerComments{

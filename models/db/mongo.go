@@ -142,8 +142,8 @@ func GetMongoConf() mongConf {
 	conf.MongoIKSCustomerTemplateCollection = "mongo_iks_customer_template_collection"
 	conf.MongoDOKSCustomerTemplateCollection = "mongo_doks_customer_template_collection"
 	conf.MongoClusterErrorCollection = "mongo_cluster_error_collection"
+	conf.MongoGKEPreviousClusterCollection ="gke_previous_cluster"
 	return conf
-
 }
 
 type mongConf struct {
@@ -164,6 +164,7 @@ type mongConf struct {
 	MongoGKETemplateCollection           string
 	MongoGKECustomerTemplateCollection   string
 	MongoGKEClusterCollection            string
+	MongoGKEPreviousClusterCollection     string
 	MongoEKSTemplateCollection           string
 	MongoEKSCustomerTemplateCollection   string
 	MongoEKSClusterCollection            string

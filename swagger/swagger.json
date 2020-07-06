@@ -10654,11 +10654,11 @@
             "title": "string",
             "type": "object"
         },
-        "14391.0xc001b4e810.false": {
+        "14391.0xc001b11260.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001b1a8a0.false": {
+        "482.0xc001ad72f0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10666,11 +10666,11 @@
             "title": "string",
             "type": "object"
         },
-        "59615.0xc001abdb00.false": {
+        "59615.0xc001a9c570.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc0011d2420.false": {
+        "618.0xc00118d440.false": {
             "title": "false",
             "type": "object"
         },
@@ -10678,7 +10678,7 @@
             "title": "string",
             "type": "object"
         },
-        "667.0xc001a096b0.false": {
+        "667.0xc0019ea120.false": {
             "title": "false",
             "type": "object"
         },
@@ -10694,7 +10694,7 @@
             "title": "string",
             "type": "object"
         },
-        "964.0xc001534720.false": {
+        "964.0xc0014e5740.false": {
             "title": "false",
             "type": "object"
         },
@@ -11074,7 +11074,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc0011d2420.false"
+                    "$ref": "#/definitions/618.0xc00118d440.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11701,7 +11701,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc001534720.false"
+                    "$ref": "#/definitions/964.0xc0014e5740.false"
                 },
                 "name": {
                     "type": "string"
@@ -11833,6 +11833,10 @@
                     "items": {
                         "$ref": "#/definitions/do.string"
                     }
+                },
+                "vpc_id": {
+                    "description": "VPC for nodepool [required]",
+                    "type": "string"
                 }
             }
         },
@@ -14305,7 +14309,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/59615.0xc001abdb00.false"
+                    "$ref": "#/definitions/59615.0xc001a9c570.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14678,7 +14682,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001b4e810.false"
+                    "$ref": "#/definitions/14391.0xc001b11260.false"
                 },
                 "name": {
                     "type": "string"
