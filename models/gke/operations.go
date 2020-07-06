@@ -129,7 +129,6 @@ func (cloud *GKE) UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context)
 	if cluster.MaintenancePolicy == nil {
 		cluster.MaintenancePolicy=&MaintenancePolicy{}
 
-		return types.CustomCPError{}
 	}
 	request := SetMaintenancePolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster.Name,cluster.MaintenancePolicy)
 
@@ -285,6 +284,7 @@ func (cloud *GKE) UpdateMonitoringAndLoggingService(cluster GKECluster, ctx util
 func (cloud *GKE) UpdateClusterZone(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 
 	if cluster.Zone == "" {
+		return types.CustomCPError {512,"Zone cant be empty","Zone cant be empty"}
 	}
 
 	response :=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
@@ -302,7 +302,7 @@ func (cloud *GKE) UpdateClusterZone(cluster GKECluster, ctx utils.Context) types
 	).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE running cluster ClusterAddsons (HttpLoadBalancing) request of "+cluster.Name+" failed: "+err.Error(),
+			"GKE running cluster zone update request of "+cluster.Name+" failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)

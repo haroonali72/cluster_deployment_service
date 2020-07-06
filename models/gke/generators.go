@@ -643,9 +643,11 @@ func GenerateNodePoolFromRequest(pools []*NodePool) []*gke.NodePool {
 func GenerateNodePoolManagementFromRequest(project, region, zone string,nodepool NodePool) *gke.SetNodePoolManagementRequest{
 
 	if *nodepool.Management == (NodeManagement{}){
-		return &gke.SetNodePoolManagementRequest{}
-	}else if *nodepool.Management.UpgradeOptions == (AutoUpgradeOptions{}){
+		nodepool.Management = &NodeManagement{}
+		nodepool.Management.AutoUpgrade=false
+		nodepool.Management.AutoRepair=false
 	}
+
 	request := gke.SetNodePoolManagementRequest{
 		Management:      &gke.NodeManagement{
 			AutoRepair:     nodepool.Management.AutoRepair,
