@@ -71,15 +71,6 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterRequest).Context(context.Background()).Do()
-
-	requestJson, _ := json.Marshal(clusterRequest)
-
-	ctx.SendLogs(
-		"GKE cluster creation of "+gkeCluster.Name+" submitted: "+string(requestJson),
-		models.LOGGING_LEVEL_INFO,
-		models.Backend_Logging,
-	)
-
 	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
 		ctx.SendLogs(
 			"GKE cluster creation of '"+gkeCluster.Name+"' failed: "+err.Error(),
@@ -87,11 +78,31 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 			models.Backend_Logging,
 		)
 		return types.CustomCPError{
-			StatusCode:  500,
+			StatusCode:  512,
+			Error:       "Error in cluster creation",
+			Description: err.Error(),
+		}
+	}else if err !=nil{
+		ctx.SendLogs(
+			"GKE cluster creation of '"+gkeCluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
 			Error:       "Error in cluster creation",
 			Description: err.Error(),
 		}
 	}
+
+	requestJson, _ := json.Marshal(clusterRequest)
+	ctx.SendLogs(
+		"GKE cluster creation of "+gkeCluster.Name+" submitted: "+string(requestJson),
+		models.LOGGING_LEVEL_INFO,
+		models.Backend_Logging,
+	)
+
+
 
 	return cloud.waitForCluster(gkeCluster.Name, ctx)
 }
