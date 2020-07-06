@@ -1205,10 +1205,10 @@ func (c *GKEClusterController) ApplyAgent() {
 // @Param	X-Profile-Id	header	string	true	"Vault credentials profile id"
 // @Param	X-Auth-Token	header	string	true "Token"
 // @Param	projectId	path	string	true	"Id of the project"
-// @Success 201 {"msg": "Cluster updated successfully"}
-// @Success 202 {"msg": "Cluster updation initiated"}
+// @Success 201 {"msg": "Running cluster updated successfully"}
+// @Success 202 {"msg": "Running cluster updation initiated"}
 // @Failure 401 {"error": "Unauthorized"}
-// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated/ state"}
+// @Failure 409 {"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated state"}
 // @Failure 404 {"error": "Not found"}
 // @Failure 500 {"error": "Runtime Error"}
 // @router /update/:projectId [put]
