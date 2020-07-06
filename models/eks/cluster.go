@@ -107,15 +107,15 @@ type EKSClusterStatus struct {
 	NodePools       []EKSPoolStatus `json:"node_pools"`
 }
 type EKSPoolStatus struct {
-	NodePoolArn *string          `json:"pool_arn"`
-	Name        *string          `json:"name"`
-	Status      *string          `json:"status"`
-	AMI         *string          `json:"ami_type"`
-	MachineType *string          `json:"machine_type"`
-	DesiredSize *int64           `json:"desired_size"`
-	MinSize     *int64           `json:"min_size"`
-	MaxSize     *int64           `json:"max_size"`
-	Nodes       []EKSNodesStatus `json:"nodes"`
+	NodePoolArn *string `json:"pool_arn"`
+	Name        *string `json:"name"`
+	Status      *string `json:"status"`
+	AMI         *string `json:"ami_type"`
+	MachineType *string `json:"machine_type"`
+
+	Scaling AutoScaling      `json:"auto_scaling"`
+	MaxSize *int64           `json:"max_size"`
+	Nodes   []EKSNodesStatus `json:"nodes"`
 }
 type EKSNodesStatus struct {
 	Name      *string `json:"name"`
@@ -123,6 +123,12 @@ type EKSNodesStatus struct {
 	PrivateIP *string `json:"private_ip"`
 	State     *string `json:"state"`
 	ID        *string `json:"id"`
+}
+type AutoScaling struct {
+	AutoScale   bool   `json:"auto_scale,omitempty"`
+	MinCount    *int64 `json:"min_scaling_group_size,omitempty"`
+	MaxCount    *int64 `json:"max_scaling_group_size,omitempty"`
+	DesiredSize *int64 `json:"desired_size"`
 }
 
 func KubeVersions(ctx utils.Context) []string {
@@ -518,7 +524,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 			ctx.SendLogs("EKSDeployClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		}
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, types.CustomCPError{Description:confError_.Error(),Error: confError_.Error(),StatusCode:512} )
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, types.CustomCPError{Description: confError_.Error(), Error: confError_.Error(), StatusCode: 512})
 		if err != nil {
 			ctx.SendLogs("EKSDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}

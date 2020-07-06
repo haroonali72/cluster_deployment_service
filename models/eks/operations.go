@@ -921,9 +921,15 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 		poolResponse.Name = poolOutput.Nodegroup.NodegroupName
 		poolResponse.Status = poolOutput.Nodegroup.Status
 		poolResponse.AMI = poolOutput.Nodegroup.AmiType
-		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
-		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MinSize
-		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
+
+		var scaling AutoScaling
+
+		scaling.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
+		scaling.MinCount = poolOutput.Nodegroup.ScalingConfig.MinSize
+		scaling.MaxCount = poolOutput.Nodegroup.ScalingConfig.MaxSize
+		scaling.AutoScale = true
+
+		poolResponse.Scaling = scaling
 		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
 
 		poolResponse.Nodes = nodes
