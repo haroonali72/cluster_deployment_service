@@ -93,8 +93,8 @@ type RemoteAccessConfig struct {
 
 type NodePoolScalingConfig struct {
 	DesiredSize *int64 `json:"desired_size" bson:"desired_size"`
-	MaxSize     *int64 `json:"max_scaling_group_size" bson:"max_size"`
-	MinSize     *int64 `json:"min_scaling_group_size" bson:"min_size"`
+	MaxSize     *int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MinSize     *int64 `json:"min_scaling_group_size" bson:"min_scaling_group_size"`
 	IsEnabled   bool   `json:"is_enabled" bson:"is_enabled"`
 }
 
