@@ -194,6 +194,7 @@ func (cloud *DO) getKey(pool NodePool, projectId string, ctx utils.Context, comp
 }
 func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key_utils.AZUREKey, ctx utils.Context, token, projectId string) ([]godo.Droplet, types.CustomCPError) {
 
+	vpcId := cloud.getVPCId(network, pool.VPC)
 	var nodeNames []string
 	var i int64
 	i = 0
@@ -227,6 +228,7 @@ func (cloud *DO) createInstances(pool NodePool, network types.DONetwork, key key
 		SSHKeys:           keys,
 		PrivateNetworking: pool.PrivateNetworking,
 		Tags:              tags,
+		VPCUUID:           vpcId,
 	}
 
 	var fileName []string
@@ -555,6 +557,16 @@ func (cloud *DO) getSgId(doNetwork types.DONetwork, sgName string) string {
 		for _, sg := range network.SecurityGroups {
 			if sg.Name == sgName {
 				return sg.SecurityGroupId
+			}
+		}
+	}
+	return ""
+}
+func (cloud *DO) getVPCId(doNetwork types.DONetwork, vpcName string) string {
+	for _, network := range doNetwork.Definition {
+		for _, vpc := range network.VPCs {
+			if vpc.Name == vpcName {
+				return vpc.VPCId
 			}
 		}
 	}

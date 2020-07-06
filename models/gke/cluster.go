@@ -98,7 +98,7 @@ type StatusCondition struct {
 }
 
 type MaxPodsConstraint struct {
-	MaxPodsPerNode int64 `json:"max_pods_per_node" bson:"max_pods_per_node" validate:"required" description:"Constraint enforced on the max num of pods per node [required]"`
+	MaxPodsPerNode int64 `json:"max_pods_per_node" bson:"max_pods_per_node"  description:"Constraint enforced on the max num of pods per node [required]"`
 }
 
 type IPAllocationPolicy struct {
@@ -594,6 +594,18 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("GKEClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+		cluster.Status = models.ClusterCreationFailed
+		utils.SendLog(ctx.Data.Company, "Notification not recieved from agent", models.LOGGING_LEVEL_INFO, cluster.ProjectId)
+		confError_ := UpdateGKECluster(cluster, ctx)
+		if confError_ != nil {
+			ctx.SendLogs("GKEDeployClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, types.CustomCPError{Description:confError_.Error(),Error: confError_.Error(),StatusCode:512} )
+		if err != nil {
+			ctx.SendLogs("GKEDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	}
 
 	return types.CustomCPError{}

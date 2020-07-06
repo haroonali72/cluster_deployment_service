@@ -96,6 +96,7 @@ func (notifier *Notifier) RecieveNotification(channel string, ctx Context, pubsu
 			return false
 		}
 		if strings.Contains(message.Payload, "AgentServer") {
+			ctx.SendLogs("Agent Notification: "+message.Payload, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 			return true
 		} else {
 			time.Sleep(30 * time.Second)

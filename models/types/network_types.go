@@ -92,6 +92,7 @@ type DONetwork struct {
 type DODefinition struct {
 	ID             bson.ObjectId    `json:"-" bson:"_id,omitempty"`
 	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups" valid:"optional"`
+	VPCs           []*DOVPC         `json:"vpc" bson:"vpc" valid:"optional"`
 }
 type DOSecurityGroup struct {
 	ID              bson.ObjectId `json:"-" bson:"_id,omitempty"`
@@ -99,6 +100,11 @@ type DOSecurityGroup struct {
 	Name            string        `json:"name" bson:"name" valid:"required"`
 	Outbound        []DOBound     `json:"outbound" bson:"outbound" valid:"optional"`
 	Inbound         []DOBound     `json:"inbound" bson:"inbound" valid:"optional"`
+}
+type DOVPC struct {
+	ID    bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	VPCId string        `json:"vpc_id" bson:"vpc_id"`
+	Name  string        `json:"name" bson:"name" valid:"required"`
 }
 
 type DOBound struct {
