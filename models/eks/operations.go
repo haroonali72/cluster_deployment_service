@@ -654,7 +654,7 @@ func (cloud *EKS) getAWSNetwork(token string, ctx utils.Context) ([]*string, []*
 }
 func (cloud *EKS) createClusterIAMRole(projectId string) (*string, *string, error) {
 	roleName := "eks-cluster-" + projectId
-	managedPolicy := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+
 	trustedEntity := []byte(`{
 	  "Version": "2012-10-17",
 	  "Statement": [
@@ -667,13 +667,24 @@ func (cloud *EKS) createClusterIAMRole(projectId string) (*string, *string, erro
 		}
 	  ]
 	}`)
+	managedPolicies := []string{
+		"arn:aws:iam::aws:policy/AutoScalingFullAccess",
+		"arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+	}
 
 	roleArn, err := cloud.createIAMRole(roleName, string(trustedEntity))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return roleArn, aws.String(roleName), cloud.attachIAMPolicy(roleName, managedPolicy)
+	for _, managedPolicy := range managedPolicies {
+		err = cloud.attachIAMPolicy(roleName, managedPolicy)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return roleArn, aws.String(roleName), nil
 }
 func (cloud *EKS) createNodePoolIAMRole(nodePoolName string) (*string, *string, error) {
 	roleName := "eks-worker-" + nodePoolName
@@ -681,6 +692,7 @@ func (cloud *EKS) createNodePoolIAMRole(nodePoolName string) (*string, *string, 
 		"arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
 		"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
 		"arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+		"arn:aws:iam::aws:policy/AutoScalingFullAccess",
 	}
 	trustedEntity := []byte(`{
 	  "Version": "2012-10-17",
@@ -818,6 +830,7 @@ func (cloud *EKS) deleteIAMRole(roleName string) error {
 		"arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
 		"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
 		"arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+		"arn:aws:iam::aws:policy/AutoScalingFullAccess",
 	}
 
 	for _, managedPolicy := range managedPolicies {
@@ -837,13 +850,18 @@ func (cloud *EKS) deleteIAMRole(roleName string) error {
 }
 func (cloud *EKS) deleteClusterIAMRole(roleName string) error {
 
-	managedPolicy := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-
-	err := cloud.dettachIAMPolicy(roleName, managedPolicy)
-	if err != nil {
-		return err
+	managedPolicies := []string{
+		"arn:aws:iam::aws:policy/AutoScalingFullAccess",
+		"arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
 	}
-	_, err = cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
+
+	for _, managedPolicy := range managedPolicies {
+		err := cloud.dettachIAMPolicy(roleName, managedPolicy)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := cloud.IAM.DeleteRole(&iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	})
 	if err != nil {
@@ -921,9 +939,15 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 		poolResponse.Name = poolOutput.Nodegroup.NodegroupName
 		poolResponse.Status = poolOutput.Nodegroup.Status
 		poolResponse.AMI = poolOutput.Nodegroup.AmiType
-		poolResponse.MinSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
-		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MinSize
-		poolResponse.MaxSize = poolOutput.Nodegroup.ScalingConfig.MaxSize
+
+		var scaling AutoScaling
+
+		scaling.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
+		scaling.MinCount = poolOutput.Nodegroup.ScalingConfig.MinSize
+		scaling.MaxCount = poolOutput.Nodegroup.ScalingConfig.MaxSize
+		scaling.AutoScale = true
+
+		poolResponse.Scaling = scaling
 		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
 
 		poolResponse.Nodes = nodes

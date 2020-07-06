@@ -100,7 +100,7 @@ type StatusCondition struct {
 }
 
 type MaxPodsConstraint struct {
-	MaxPodsPerNode int64 `json:"max_pods_per_node" bson:"max_pods_per_node" validate:"required" description:"Constraint enforced on the max num of pods per node [required]"`
+	MaxPodsPerNode int64 `json:"max_pods_per_node" bson:"max_pods_per_node"  description:"Constraint enforced on the max num of pods per node [required]"`
 }
 
 type IPAllocationPolicy struct {
