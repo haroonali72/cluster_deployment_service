@@ -476,12 +476,24 @@ func AddPreviousGKECluster(cluster GKECluster, ctx utils.Context,patch bool) err
 	_,err := GetPreviousGKECluster(ctx)
 	if err ==nil{
 		err := DeletePreviousGKECluster(ctx)
-		if err != nil{}
+		if err != nil{
+			ctx.SendLogs(
+				"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
 	}
 
 	if patch ==false{
 	oldCluster, err = GetGKECluster(ctx)
 	if err != nil {
+		ctx.SendLogs(
+			"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
 		return err
 	}
 	}else {
@@ -490,7 +502,7 @@ func AddPreviousGKECluster(cluster GKECluster, ctx utils.Context,patch bool) err
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEAddClusterModel:  Add - Got error while connecting to the database: "+err.Error(),
+			"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -510,7 +522,7 @@ func AddPreviousGKECluster(cluster GKECluster, ctx utils.Context,patch bool) err
 	err = db.InsertInMongo(mc.MongoGKEPreviousClusterCollection, oldCluster)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEAddClusterModel:  Add - Got error while inserting cluster to the database:  "+err.Error(),
+			"GKEAddClusterModel:  Add previous cluster -  "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -519,11 +531,12 @@ func AddPreviousGKECluster(cluster GKECluster, ctx utils.Context,patch bool) err
 
 	return nil
 }
+
 func GetPreviousGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
 		ctx.SendLogs(
-			"GKEGetClusterModel:  Get - Got error while connecting to the database: "+err1.Error(),
+			"GKEGetClusterModel:  Get previous cluster - Got error while connecting to the database: "+err1.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -536,7 +549,7 @@ func GetPreviousGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	err = c.Find(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEGetClusterModel:  Get - Got error while fetching from database: "+err.Error(),
+			"GKEGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -545,23 +558,24 @@ func GetPreviousGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 
 	return cluster, nil
 }
+
 func UpdatePreviousGKECluster(cluster GKECluster, ctx utils.Context) error {
 
 	err := AddPreviousGKECluster(cluster,ctx,false)
 	if err !=nil{
-		text := "GKEClusterModel:  Update - Deployed Cluster '" + cluster.Name + err.Error()
+		text := "GKEClusterModel:  Update  previous cluster -'" + cluster.Name + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
 
 	err =UpdateGKECluster(cluster,ctx)
 	if err != nil {
-		text := "GKEClusterModel:  Update - Deployed Cluster '" + cluster.Name + err.Error()
+		text := "GKEClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		err= DeletePreviousGKECluster(ctx)
 		if err !=nil{
-			text := "GKEDeleteClusterModel:  Delete - Deployed Cluster '" + cluster.Name + err.Error()
+			text := "GKEDeleteClusterModel:  Delete  previous cluster - '" + cluster.Name + err.Error()
 			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return errors.New(text)
 		}
@@ -575,7 +589,7 @@ func DeletePreviousGKECluster(ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
 		ctx.SendLogs(
-			"GKEDeleteClusterModel:  Delete - Got error while connecting to the database: "+err.Error(),
+			"GKEDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -588,7 +602,7 @@ func DeletePreviousGKECluster(ctx utils.Context) error {
 	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
-			"GKEDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(),
+			"GKEDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
@@ -743,14 +757,14 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in deploying GKE Cluster", Description: errr.Error()}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
-			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("GKEUpdateRunningClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return cpErr
 	}
 
 	gkeOps, err := GetGKE(credentials)
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEUpdateRunningClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -760,22 +774,22 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	err = gkeOps.init()
 	if err != (types.CustomCPError{}) {
-		ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GKEUpdateRunningClusterModel:  Deploy - "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, ctx)
-			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("GKEUpdateRunningClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
 		if err_ != nil {
-			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("GKEUpdateRunningClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}
 
-	_, _ = utils.SendLog(ctx.Data.Company, "Updating Cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 	difCluster ,previousPoolCount,newPoolCount, err1 := CompareClusters(ctx)
 	if err1 != nil {

@@ -1278,7 +1278,6 @@ func (c *GKEClusterController) PatchRunningCluster() {
 		return
 	}
 
-	ctx.Data.ProjectId = projectId
 
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {
@@ -1347,6 +1346,6 @@ func (c *GKEClusterController) PatchRunningCluster() {
 	ctx.SendLogs(" GKE running cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 
 	c.Ctx.Output.SetStatus(202)
-	c.Data["json"] = map[string]string{"msg": "Cluster updation initiated"}
+	c.Data["json"] = map[string]string{"msg": "Running cluster update initiated"}
 	c.ServeJSON()
 }
