@@ -896,7 +896,10 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 
+	DeletePreviousGKECluster(ctx)
+
 	return types.CustomCPError{}
+
 }
 
 func FetchStatus(credentials gcp.GcpCredentials, token string, ctx utils.Context) (*KubeClusterStatus, types.CustomCPError) {
@@ -1503,7 +1506,6 @@ func UpdateHttpLoadBalancing(cluster GKECluster,ctx utils.Context,gkeOps GKE) ty
 	}
 	return types.CustomCPError{}
 }
-
 
 func UpdateNodeCount(cluster GKECluster,ctx utils.Context,gkeOps GKE,pool *NodePool,poolIndex int) types.CustomCPError{
 
