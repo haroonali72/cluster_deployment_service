@@ -5,6 +5,7 @@ import (
 	"antelope/models/api_handler"
 	"antelope/models/aws/IAMRoles"
 	autoscaling2 "antelope/models/aws/autoscaling"
+	"antelope/models/db"
 	"antelope/models/key_utils"
 	"antelope/models/types"
 	userData2 "antelope/models/userData"
@@ -491,6 +492,11 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
+			if err_ != nil {
+				ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+
 			return !flag
 		}
 	}
@@ -503,6 +509,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 	confError := roles.Init()
 	if confError != nil {
 		ctx.SendLogs(confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(confError,"Error in cluster termination"))
+		if err_ != nil {
+			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
 		return !flag
 	}
 
@@ -512,6 +522,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 			if err != nil {
 				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(err,"Error in cluster termination"))
+					if err_ != nil {
+						ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					}
 					flag = true
 				} else {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -524,6 +538,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 			if err != nil {
 				if !strings.Contains(strings.ToLower(err.Error()), "not found") && !strings.Contains(strings.ToLower(err.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(err,"Error in cluster termination"))
+					if err_ != nil {
+						ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					}
 					flag = true
 				} else {
 					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -538,6 +556,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		if err != (types.CustomCPError{}) {
 			if !strings.Contains(strings.ToLower(err.Error), "not found") && !strings.Contains(strings.ToLower(err.Error), "cannot be found") && !strings.Contains(strings.ToLower(err.Error), "does not exist") {
 				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, err)
+				if err_ != nil {
+					ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
 				flag = true
 			} else {
 				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -549,6 +571,10 @@ func (cloud *AWS) terminateCluster(cluster Cluster_Def, ctx utils.Context, compa
 		err1 := cloud.Roles.DeleteIAMRole(pool.Name, ctx)
 		if err1 != nil {
 			if !strings.Contains(strings.ToLower(err1.Error()), "not found") && !strings.Contains(strings.ToLower(err1.Error()), "cannot be found") && !strings.Contains(strings.ToLower(err1.Error()), "does not exist") {
+				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, ApiError(err1,"Error in cluster termination"))
+				if err_ != nil {
+					ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				}
 				flag = true
 			}
 		}
