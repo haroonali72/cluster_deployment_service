@@ -796,7 +796,6 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			return types.CustomCPError{}
 		}
-
 	}
 
 	for _, dif := range difCluster {
@@ -894,9 +893,19 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 
 	DeletePreviousGKECluster(ctx)
+
+	latestCluster, err2 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
+	if err2 != (types.CustomCPError{}){
+		return err
+	}
+
+	for strings.ToLower(string(latestCluster.Status)) != strings.ToLower("running"){
+		time.Sleep(time.Second * 60)
+	}
+
+	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 
 	return types.CustomCPError{}
 
