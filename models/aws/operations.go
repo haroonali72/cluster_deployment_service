@@ -93,6 +93,7 @@ var docker_master_policy = []byte(`{
                 "elasticloadbalancing:ModifyLoadBalancerAttributes",
                 "elasticloadbalancing:ModifyTargetGroup",
                 "elasticloadbalancing:DeleteListener",
+                "iam:CreateServiceLinkedRole"
                 "ecr:*"
             ],
          "Resource": ["*" ]
