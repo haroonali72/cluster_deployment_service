@@ -514,15 +514,18 @@ func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils
 	nodepoolRequest := GenerateNodepoolCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,clusterName, nodepool)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName,nodepoolRequest).Context(context.Background()).Do()
-	if err !=nil{}
-	requestJson, _ := json.Marshal(nodepoolRequest)
-	ctx.SendLogs(
-		"GKE cluster creation of "+clusterName+" submitted: "+string(requestJson),
-		models.LOGGING_LEVEL_INFO,
-		models.Backend_Logging,
-	)
-
 	if err != nil && !strings.Contains(err.Error(), "Already exists") {
+		ctx.SendLogs(
+			"GKE nodepool creation of '"+nodepool[1].Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in adding nodepool in running cluster.Nodepoll alreaady exist",
+			Description: err.Error(),
+		}
+	}else if err !=nil{
 		ctx.SendLogs(
 			"GKE nodepool creation of '"+nodepool[1].Name+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
@@ -535,8 +538,36 @@ func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils
 		}
 	}
 
+
+	requestJson, _ := json.Marshal(nodepoolRequest)
+	ctx.SendLogs(
+		"GKE cluster creation of "+clusterName+" submitted: "+string(requestJson),
+		models.LOGGING_LEVEL_INFO,
+		models.Backend_Logging,
+	)
+
+
 	return cloud.waitForCluster(clusterName, ctx)
 }
+func (cloud *GKE) DeleteNodePool(clusterName , nodepoolName string,ctx utils.Context) types.CustomCPError{
+
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone,clusterName, nodepoolName).Context(context.Background()).Do()
+	if err != nil   {
+		ctx.SendLogs(
+			"GKE nodepool deletion of '"+nodepoolName+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in deleting nodepool in running cluster.",
+			Description: err.Error(),
+		}
+	}
+
+	return cloud.waitForCluster(clusterName, ctx)
+}
+
 func (cloud *GKE) UpdateNodePoolImageType(clusterName string,pool NodePool, ctx utils.Context) types.CustomCPError {
 	if pool.Config.ImageType == "" {
 		return types.CustomCPError{}
