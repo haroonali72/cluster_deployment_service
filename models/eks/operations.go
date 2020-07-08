@@ -1047,3 +1047,27 @@ func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 		ProjectId: projectId,
 	}
 }
+func (cloud *EKS) GetClusterStatus(name string, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+	var response EKSClusterStatus
+	clusterInput := eks.DescribeClusterInput{Name: aws.String(name)}
+	clusterOutput, err := cloud.Svc.DescribeCluster(&clusterInput)
+	if err != nil {
+
+		ctx.SendLogs(
+			"EKS cluster state request for '"+name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.ProjectId)
+		cpErr := ApiError(err, "unable to fetch cluster status", 512)
+
+		return EKSClusterStatus{}, cpErr
+	}
+	response.Name = clusterOutput.Cluster.Name
+	response.Status = clusterOutput.Cluster.Status
+	response.ClusterEndpoint = clusterOutput.Cluster.Endpoint
+	response.KubeVersion = clusterOutput.Cluster.Version
+	response.ClusterArn = clusterOutput.Cluster.Arn
+	return response, types.CustomCPError{}
+}
