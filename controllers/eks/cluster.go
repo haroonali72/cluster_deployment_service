@@ -331,19 +331,33 @@ func (c *EKSClusterController) Patch() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.Status == (models.ClusterCreated) {
-		ctx.SendLogs("EKSClusterController: Cluster is in created state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Data["json"] = map[string]string{"msg": "cluster updated successfully"}
-		c.ServeJSON()
-		return
-	} else if cluster.Status == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("EKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
-		c.ServeJSON()
-		return
 	}
+	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) || cluster.Status == (models.ClusterUpdateFailed) {
+		err := eks.UpdatePreviousEKSCluster(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			if strings.Contains(err.Error(), "does not exist") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
 
+		ctx.SendLogs("EKS running cluster "+cluster.Name+" in project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
+		c.ServeJSON()
+	}
 	validate := validator.New()
 	err = validate.Struct(cluster)
 	if err != nil {

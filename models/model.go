@@ -22,6 +22,7 @@ const (
 	ClusterTerminationFailed Type = "Cluster Termination Failed"
 	ClusterTerminated        Type = "Cluster Terminated"
 	Deploying                Type = "Creating"
+	ClusterUpdateFailed      Type = "Cluster Updating Failed"
 	Terminating              Type = "Terminating"
 
 //	AgentDeploymentFailed    Type = "Agent Deployment Failed"
