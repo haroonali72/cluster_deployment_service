@@ -891,7 +891,7 @@ func AddPreviousEKSCluster(cluster EKSCluster, ctx utils.Context, patch bool) er
 	}
 
 	mc := db.GetMongoConf()
-	err = db.InsertInMongo(mc.MongoGKEPreviousClusterCollection, oldCluster)
+	err = db.InsertInMongo(mc.MongoEKSPreviousClusterCollection, oldCluster)
 	if err != nil {
 		ctx.SendLogs(
 			"GKEAddClusterModel:  Add previous cluster -  "+err.Error(),
@@ -917,7 +917,7 @@ func GetPreviousEKSCluster(ctx utils.Context) (cluster EKSCluster, err error) {
 
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoGKEPreviousClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
 	err = c.Find(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company}).One(&cluster)
 	if err != nil {
 		ctx.SendLogs(
@@ -970,7 +970,7 @@ func DeletePreviousEKSCluster(ctx utils.Context) error {
 
 	defer session.Close()
 	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoGKEPreviousClusterCollection)
+	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
 	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
 	if err != nil {
 		ctx.SendLogs(
