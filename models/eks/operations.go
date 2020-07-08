@@ -1047,21 +1047,73 @@ func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 		ProjectId: projectId,
 	}
 }
-func (cloud *EKS) UpdateLogging(name string, logging Logging, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+func (cloud *EKS) UpdateLogging(name string, logging Logging, ctx utils.Context) types.CustomCPError {
 	clusterRequest := GenerateClusterUpdateLoggingRequest(name, logging)
-	result, err = cloud.Svc.UpdateClusterConfig(clusterRequest)
+	_, err := cloud.Svc.UpdateClusterConfig(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster logging update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+	return types.CustomCPError{}
 }
-func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx utils.Context) types.CustomCPError {
 	clusterRequest := GenerateClusterUpdateNetworkRequest(name, network)
-	result, err = cloud.Svc.UpdateClusterConfig(clusterRequest)
+	_, err := cloud.Svc.UpdateClusterConfig(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster network update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
+			Description: err.Error(),
+		}
+	}
+	return types.CustomCPError{}
 }
-func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig NodePoolScalingConfig, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig NodePoolScalingConfig, ctx utils.Context) types.CustomCPError {
 	clusterRequest := GeneratNodeConfigUpdateRequest(clusterName, poolName, scalingConfig)
-	result, err = cloud.Svc.UpdateNodegroupConfigRequest(clusterRequest)
+	_, err := cloud.Svc.UpdateNodegroupConfig(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster nodepool config update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster nodepool config update",
+			Description: err.Error(),
+		}
+	}
+	return types.CustomCPError{}
 }
-func (cloud *EKS) UpdateClusterVersion(clusterName, version string, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+func (cloud *EKS) UpdateClusterVersion(clusterName, version string, ctx utils.Context) types.CustomCPError {
 	clusterRequest := GenerateUpdateClusterVersionRequest(clusterName, version)
-	result, err = cloud.Svc.UpdateClusterVersion(clusterRequest)
+	_, err := cloud.Svc.UpdateClusterVersion(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster version update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster version update",
+			Description: err.Error(),
+		}
+	}
+	return types.CustomCPError{}
 }
 func (cloud *EKS) GetClusterStatus(name string, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
 	var response EKSClusterStatus

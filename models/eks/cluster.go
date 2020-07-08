@@ -753,23 +753,23 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 		}
 		if dif.Path[0] == "Logging" {
-			err := UpdateLogging(cluster, ctx, eks)
+			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
 		} else if dif.Path[0] == "ResourcesVpcConfig" {
-			err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
+			err := eks.UpdateNetworking(cluster.Name, cluster.ResourcesVpcConfig, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
 		} else if dif.Path[0] == "Version" {
-			err := UpdateVersion(cluster, ctx, gkeOps)
+			err := eks.UpdateClusterVersion(cluster.Name, *cluster.Version, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
 		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+			err := eks.UpdateNodeConfig(cluster.Name, cluster.NodePools[poolIndex].NodePoolName, *cluster.NodePools[poolIndex].ScalingConfig, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
