@@ -4,7 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/aws"
 	"antelope/models/eks"
-	"antelope/models/gke"
 	"antelope/models/iks"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
@@ -1349,7 +1348,7 @@ func (c *EKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	go gke.PatchRunningGKECluster(cluster, eksProfile.Profile, token, *ctx)
+	go eks.PatchRunningGKECluster(cluster, eksProfile.Profile, token, *ctx)
 
 	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

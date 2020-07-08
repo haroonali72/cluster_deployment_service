@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -712,4 +713,132 @@ func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Co
 		return nil, cpError
 	}
 	return clusters, types.CustomCPError{}
+}
+func PatchRunningGKECluster(cluster EKSCluster, credentials vault.AwsCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
+
+	publisher := utils.Notifier{}
+
+	errr := publisher.Init_notifier()
+	if errr != nil {
+
+		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := types.CustomCPError{StatusCode: int(models.CloudStatusCode), Error: "Error in deploying AWS Cluster", Description: errr.Error()}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return cpErr
+	}
+
+	eks := GetEKS(cluster.ProjectId, credentials)
+
+	eks.init()
+	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(ctx)
+	if err1 != nil {
+		if strings.Contains(err1.Error(), "Nothing to update") {
+			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+			return types.CustomCPError{}
+		}
+	}
+
+	for _, dif := range difCluster {
+		if len(dif.Path) > 2 {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			if poolIndex > (previousPoolCount - 1) {
+				break
+			}
+		}
+		if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
+			err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "NetworkPolicy" {
+			err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "AddonsConfig" {
+			err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "InitialClusterVersion" {
+			err := UpdateVersion(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "LoggingService" || dif.Path[0] == "MonitoringService" {
+			err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "LegacyAbac" {
+			err := UpdateLegacyAbac(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "MaintenancePolicy" {
+			err := UpdateMaintenancePolicy(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "ResourceUsageExportConfig" {
+			err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if previousPoolCount > newPoolCount && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "ImageType" {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if previousPoolCount > newPoolCount && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "InitialNodeCount" {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "Management" {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "Autoscaling" {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} /*else if dif.Path[0]=="EnableTpu"{
+			err := gkeOps.UpdateTpu(cluster,ctx)
+			if err != (types.CustomCPError{}) {
+				updationFailedError(cluster, ctx, err)
+				return err
+			}
+		}*/
+
+	}
+
+	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+	DeletePreviousGKECluster(ctx)
+
+	latestCluster, err2 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
+	if err2 != (types.CustomCPError{}) {
+		return err
+	}
+
+	for strings.ToLower(string(latestCluster.Status)) != strings.ToLower("running") {
+		time.Sleep(time.Second * 60)
+	}
+
+	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+
+	return types.CustomCPError{}
+
 }
