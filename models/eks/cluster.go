@@ -781,7 +781,11 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 	DeletePreviousEKSCluster(ctx)
 
-	latestCluster, err2 := eks.fetchStatus(cluster.Name, ctx, ctx.Data.Company)
+	cluster, err := GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	if err != nil {
+	}
+
+	latestCluster, err2 := eks.fetchStatus(&cluster, ctx, ctx.Data.Company)
 	if err2 != (types.CustomCPError{}) {
 		return err2
 	}
