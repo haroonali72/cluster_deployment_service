@@ -798,7 +798,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 	difCluster ,previousPoolCount,newPoolCount, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
-			publisher.Notify(ctx.Data.ProjectId, "Status Redeploy", ctx)
+			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 			return types.CustomCPError{}
 		}
 	}
@@ -927,7 +927,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		time.Sleep(time.Second * 60)
 	}
 
-	publisher.Notify(ctx.Data.ProjectId, "Status Redeploy", ctx)
+	publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 
 	return types.CustomCPError{}
 
