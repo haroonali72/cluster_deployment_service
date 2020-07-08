@@ -672,20 +672,22 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 
 	err = gkeOps.CreateCluster(cluster, token, ctx)
 	if err != (types.CustomCPError{}) {
+
 		cluster.CloudplexStatus = models.ClusterCreationFailed
+
+		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
 			PrintError(confError, cluster.Name, ctx)
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+
 		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-		utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
-
 		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}
@@ -696,8 +698,9 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	if confError != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 		PrintError(errors.New(confError.Error), cluster.Name, ctx)
-		_ = TerminateCluster(credentials, ctx)
 		PrintError(errors.New("Cleaning up resources"), cluster.Name, ctx)
+		_ = TerminateCluster(credentials, ctx)
+
 		_ = UpdateGKECluster(cluster, ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, confError)
 		if err != nil {

@@ -80,7 +80,7 @@ type NodePool struct {
 	RoleName      *string                `json:"-" bson:"role_name"`
 	NodePoolName  string                 `json:"node_pool_name" bson:"node_pool_name" validate:"required" description:"Node Pool Name [required]"`
 	RemoteAccess  *RemoteAccessConfig    `json:"remote_access,omitempty" bson:"remote_access,omitempty" description:"Access Levels (private of public)[optional]"`
-	ScalingConfig *NodePoolScalingConfig `json:"scaling_config,omitempty" bson:"scaling_config,omitempty" description:"Scaling Configurations for nodepool [optional]"`
+	ScalingConfig *NodePoolScalingConfig `json:"auto_scaling,omitempty" bson:"scaling_config,omitempty" description:"Scaling Configurations for nodepool [optional]"`
 	Subnets       []*string              `json:"-" bson:"subnets"`
 	Tags          map[string]*string     `json:"-" bson:"tags"`
 }
@@ -93,9 +93,9 @@ type RemoteAccessConfig struct {
 
 type NodePoolScalingConfig struct {
 	DesiredSize *int64 `json:"desired_size" bson:"desired_size"`
-	MaxSize     *int64 `json:"max_size" bson:"max_size"`
-	MinSize     *int64 `json:"min_size" bson:"min_size"`
-	IsEnabled   bool   `json:"is_enabled" bson:"is_enabled"`
+	MaxSize     *int64 `json:"max_scaling_group_size" bson:"max_scaling_group_size"`
+	MinSize     *int64 `json:"min_scaling_group_size" bson:"min_scaling_group_size"`
+	IsEnabled   bool   `json:"autoscale" bson:"autoscale"`
 }
 
 type EKSClusterStatus struct {

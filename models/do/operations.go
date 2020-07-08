@@ -159,11 +159,14 @@ func (cloud *DO) createCluster(cluster Cluster_Def, ctx utils.Context, companyId
 				return cluster, cpErr
 			}
 
-			sgId := cloud.getSgId(doNetwork, *pool.PoolSecurityGroups[0])
-			cpErr = cloud.assignSG(sgId, dropletsIds, ctx)
-			if cpErr != (types.CustomCPError{}) {
-				return cluster, cpErr
+			sgIds := cloud.getSgId(doNetwork, pool.PoolSecurityGroups)
+			for _, sgId := range sgIds {
+				cpErr = cloud.assignSG(sgId, dropletsIds, ctx)
+				if cpErr != (types.CustomCPError{}) {
+					return cluster, cpErr
+				}
 			}
+
 		}
 		cluster.NodePools[index].Nodes = nodes
 	}
@@ -552,15 +555,19 @@ func (cloud *DO) assignSG(firewallId string, dropletId []int, ctx utils.Context)
 
 	return types.CustomCPError{}
 }
-func (cloud *DO) getSgId(doNetwork types.DONetwork, sgName string) string {
+func (cloud *DO) getSgId(doNetwork types.DONetwork, sgName []*string) []string {
+	var sgs []string
 	for _, network := range doNetwork.Definition {
 		for _, sg := range network.SecurityGroups {
-			if sg.Name == sgName {
-				return sg.SecurityGroupId
+			for _, clusterSg := range sgName {
+				if sg.Name == *clusterSg {
+					sgs = append(sgs, sg.SecurityGroupId)
+					break
+				}
 			}
 		}
 	}
-	return ""
+	return sgs
 }
 func (cloud *DO) getVPCId(doNetwork types.DONetwork, vpcName string) string {
 	for _, network := range doNetwork.Definition {

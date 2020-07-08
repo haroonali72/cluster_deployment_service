@@ -544,11 +544,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return ApiError(err, "Error in terminating cluster")
 		}
-		confErr := ApiError(err, "Error in terminating cluster")
-		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AWS, ctx, confErr)
-		if err_ != nil {
-			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
 	}
