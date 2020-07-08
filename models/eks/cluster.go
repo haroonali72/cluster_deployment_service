@@ -763,44 +763,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				return err
 			}
 		} else if dif.Path[0] == "Version" {
-			err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "InitialClusterVersion" {
 			err := UpdateVersion(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "LoggingService" || dif.Path[0] == "MonitoringService" {
-			err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "LegacyAbac" {
-			err := UpdateLegacyAbac(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "MaintenancePolicy" {
-			err := UpdateMaintenancePolicy(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "ResourceUsageExportConfig" {
-			err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if previousPoolCount > newPoolCount && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "ImageType" {
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if previousPoolCount > newPoolCount && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "InitialNodeCount" {
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
@@ -810,13 +773,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			if err != (types.CustomCPError{}) {
 				return err
 			}
-		} /*else if dif.Path[0]=="EnableTpu"{
-			err := gkeOps.UpdateTpu(cluster,ctx)
-			if err != (types.CustomCPError{}) {
-				updationFailedError(cluster, ctx, err)
-				return err
-			}
-		}*/
+		}
 
 	}
 
@@ -824,12 +781,12 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 	DeletePreviousEKSCluster(ctx)
 
-	latestCluster, err2 := eks.fetchStatus(cluster.Name, ctx)
+	latestCluster, err2 := eks.fetchStatus(cluster.Name, ctx, ctx.Data.Company)
 	if err2 != (types.CustomCPError{}) {
-		return err
+		return err2
 	}
 
-	for strings.ToLower(string(latestCluster.Status)) != strings.ToLower("running") {
+	for strings.ToLower(string(*latestCluster.Status)) != strings.ToLower("running") {
 		time.Sleep(time.Second * 60)
 	}
 
