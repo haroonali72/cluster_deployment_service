@@ -528,7 +528,7 @@ func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils
 	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName,nodepoolRequest).Context(context.Background()).Do()
 	if err != nil && !strings.Contains(err.Error(), "Already exists") {
 		ctx.SendLogs(
-			"GKE nodepool creation of '"+nodepool[1].Name+"' failed: "+err.Error(),
+			"GKE nodepool creation of '"+clusterName+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
