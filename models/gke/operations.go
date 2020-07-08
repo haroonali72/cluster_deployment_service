@@ -107,38 +107,95 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 	return cloud.waitForCluster(gkeCluster.Name, ctx)
 }
 
-func (cloud *GKE) UpdateMasterVersion(clusterName, newVersion string, ctx utils.Context) types.CustomCPError {
-	if newVersion == "" {
+func (cloud *GKE) UpdateMasterVersion(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+	if cluster.InitialClusterVersion == "" {
 		return types.CustomCPError{}
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
 		cloud.ProjectId,
 		cloud.Region+"-"+cloud.Zone,
-		clusterName,
+		cluster.Name,
 		&gke.UpdateClusterRequest{
 			Update: &gke.ClusterUpdate{
-				DesiredMasterVersion: newVersion,
+				DesiredMasterVersion: cluster.InitialClusterVersion,
 			},
 		},
 	).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE cluster update of '"+clusterName+"' failed: "+err.Error(),
+			"GKE running cluster master version update request of '"+cluster.Name+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
 		return types.CustomCPError{
-			StatusCode:  500,
-			Error:       "Error in cluster creation",
+			StatusCode:  512,
+			Error:       "Error in running cluster version update",
 			Description: err.Error(),
 		}
 	}
 
-	return cloud.waitForCluster(clusterName, ctx)
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+func (cloud *GKE) UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+	if cluster.MaintenancePolicy == nil {
+		cluster.MaintenancePolicy=&MaintenancePolicy{}
+
+	}
+	request := SetMaintenancePolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster.Name,cluster.MaintenancePolicy)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.SetMaintenancePolicy(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		request,
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster maintenance policy update request of '"+cluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster maintenance policy update",
+			Description: err.Error(),
+		}
+	}
+
+	return cloud.waitForCluster(cluster.Name, ctx)
 }
 
-func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) UpdateLegacyAbac(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+	if cluster.LegacyAbac == nil {
+		cluster.LegacyAbac = &LegacyAbac{}
+		cluster.LegacyAbac.Enabled=false
+	}
+
+	request := SetLegacyAbacFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster.Name,cluster.LegacyAbac)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.LegacyAbac(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		request,
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster legacyAbac update request of '"+cluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster legacyAbac update",
+			Description: err.Error(),
+		}
+	}
+
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+func (cloud *GKE) UpdateNodePoolVersion(clusterName, nodeName, newVersion string, ctx utils.Context) types.CustomCPError {
 	if newVersion == "" {
 		return types.CustomCPError{}
 	}
@@ -154,22 +211,406 @@ func (cloud *GKE) UpdateNodeVersion(clusterName, nodeName, newVersion string, ct
 	).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE node update of cluster "+clusterName+" and node "+nodeName+" failed: "+err.Error(),
+			"GKE running cluster version update request of  "+clusterName+" / nodepool "+nodeName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return ApiErrors(err, "Error in running nodepool update request of version")
+	}
+
+	return cloud.waitForCluster(clusterName,  ctx)
+}
+
+func (cloud *GKE) UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+
+	if cluster.AddonsConfig.HttpLoadBalancing == nil {
+		cluster.AddonsConfig.HttpLoadBalancing = &HttpLoadBalancing{}
+		cluster.AddonsConfig.HttpLoadBalancing.Disabled=false
+	}
+
+	response :=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.Update(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		&gke.UpdateClusterRequest{
+			Update: &gke.ClusterUpdate{
+				DesiredAddonsConfig: response.Cluster.AddonsConfig,
+			},
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster ClusterAddsons (HttpLoadBalancing) request of "+cluster.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster resource usage export config update",
+			Description: err.Error(),
+		}
+	}
+
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+func (cloud *GKE) UpdateMonitoringAndLoggingService(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+	var alreadyDone bool
+	if alreadyDone ==true{
+		return types.CustomCPError{}
+	}else {
+		cluster.MonitoringService ="none"
+		cluster.LoggingService = "none"
+	}
+
+	response:=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.Update(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		&gke.UpdateClusterRequest{
+			Update: &gke.ClusterUpdate{
+					DesiredMonitoringService: response.Cluster.MonitoringService,
+					DesiredLoggingService: response.Cluster.LoggingService,
+			},
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster monitoring and logging service request of "+cluster.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster resource usage export config update",
+			Description: err.Error(),
+		}
+	}
+	alreadyDone=true
+
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+func (cloud *GKE) UpdateClusterZone(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+
+	if cluster.Zone == "" {
+		return types.CustomCPError {512,"Zone cant be empty","Zone cant be empty"}
+	}
+
+	response :=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.Update(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		&gke.UpdateClusterRequest{
+			Update: &gke.ClusterUpdate{
+				DesiredAddonsConfig: response.Cluster.AddonsConfig,
+					DesiredLocations:[]string{cluster.Zone},
+			},
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster zone update request of "+cluster.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster resource usage export config update",
+			Description: err.Error(),
+		}
+	}
+
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+func (cloud *GKE) UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+	if cluster.MasterAuthorizedNetworksConfig ==nil {
+		cluster.MasterAuthorizedNetworksConfig = &MasterAuthorizedNetworksConfig{}
+		cluster.MasterAuthorizedNetworksConfig.Enabled=false
+
+	}
+	response :=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.Update(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		&gke.UpdateClusterRequest{
+			Update: &gke.ClusterUpdate{
+				DesiredMasterAuthorizedNetworksConfig: response.Cluster.MasterAuthorizedNetworksConfig,
+			},
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster master authorized networks config update request of "+cluster.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster master authorized networks config update",
+			Description: err.Error(),
+		}
+	}
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+func (cloud *GKE) UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+	value := &gke.NetworkPolicyConfig{Disabled:false}
+
+	if cluster.NetworkPolicy ==nil{
+		cluster.NetworkPolicy = &NetworkPolicy{}
+		cluster.NetworkPolicy.Enabled=false
+		value = &gke.NetworkPolicyConfig{Disabled:true}
+	}
+
+	_, err := cloud.Client.Projects.Zones.Clusters.Update(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		&gke.UpdateClusterRequest{
+			Update: &gke.ClusterUpdate{
+				DesiredAddonsConfig: &gke.AddonsConfig{
+					NetworkPolicyConfig:     value,
+				},
+
+			},
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster resource usage export config update request of "+cluster.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster resource usage export config update",
+			Description: err.Error(),
+		}
+	}
+
+	err1 := cloud.waitForCluster(cluster.Name, ctx)
+	if err1 != (types.CustomCPError{}){
+		return err1
+	}
+
+	response :=  SetNetworkPolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster.Name,cluster.NetworkPolicy)
+
+	_, err = cloud.Client.Projects.Zones.Clusters.SetNetworkPolicy(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		response,
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster master authorized networks config update request of "+cluster.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster master authorized networks config update",
+			Description: err.Error(),
+		}
+	}
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+
+func (cloud *GKE) UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.Context) types.CustomCPError {
+	if *cluster.ResourceUsageExportConfig == (ResourceUsageExportConfig{}){
+		cluster.ResourceUsageExportConfig=&ResourceUsageExportConfig{}
+		cluster.ResourceUsageExportConfig.EnableNetworkEgressMetering=false
+		cluster.ResourceUsageExportConfig.ConsumptionMeteringConfig =&ConsumptionMeteringConfig{Enabled:false}
+		cluster.ResourceUsageExportConfig.BigqueryDestination=&BigQueryDestination{DatasetId:""}
+		return types.CustomCPError{}
+	}
+
+	response :=  GenerateResourceUsageExportConfigFromRequest(cluster.ResourceUsageExportConfig)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.Update(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		cluster.Name,
+		&gke.UpdateClusterRequest{
+			Update: &gke.ClusterUpdate{
+				DesiredResourceUsageExportConfig: &gke.ResourceUsageExportConfig{
+					BigqueryDestination:         response.BigqueryDestination,
+					ConsumptionMeteringConfig:  response.ConsumptionMeteringConfig,
+					EnableNetworkEgressMetering: response.EnableNetworkEgressMetering,
+				},
+			},
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster resource usage export config update request of "+cluster.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster resource usage export config update",
+			Description: err.Error(),
+		}
+	}
+
+	return cloud.waitForCluster(cluster.Name, ctx)
+}
+
+
+func (cloud *GKE) UpdateNodepoolManagement(clusterName string , nodepool NodePool, ctx utils.Context) types.CustomCPError{
+	if nodepool.Management ==nil{
+		nodepool.Management= &NodeManagement{}
+		nodepool.Management.AutoRepair = false
+		nodepool.Management.AutoUpgrade=false
+	}
+
+	request := GenerateNodePoolManagementFromRequest(cloud.ProjectId,cloud.Region,cloud.Zone,nodepool)
+
+	_,err := cloud.Client.Projects.Zones.Clusters.NodePools.SetManagement(cloud.ProjectId,cloud.Region + "-" +cloud.Zone,clusterName,nodepool.Name,request).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE running cluster nodepool count update request of "+clusterName+" nodepool "+nodepool.Name+" failed "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return ApiErrors(err, "Error in updating running cluster nodepool management")
+	}
+
+	return cloud.waitForCluster(clusterName, ctx)
+}
+func (cloud *GKE) UpdateNodepoolScaling( clusterName string, nodepool NodePool,ctx utils.Context )types.CustomCPError{
+	if *nodepool.Autoscaling == (NodePoolAutoscaling{}) {
+		nodepool.Autoscaling.Enabled=false
+	}else if nodepool.Autoscaling.MinNodeCount==0 || nodepool.Autoscaling.MaxNodeCount == 0 {
+		return types.CustomCPError{
+			StatusCode:512,
+			Error : "Error in running cluster autoscaling update",
+			Description :"Min/max node count cannot be zero.Select numerical value for node count.",
+		}
+	}
+
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Autoscaling(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		clusterName,
+		nodepool.Name,
+		&gke.SetNodePoolAutoscalingRequest{
+			Autoscaling:     &gke.NodePoolAutoscaling{
+				Enabled:        nodepool.Autoscaling.Enabled,
+				MaxNodeCount:    nodepool.Autoscaling.MaxNodeCount,
+				MinNodeCount:    nodepool.Autoscaling.MinNodeCount,
+			},
+			Name:            clusterName,
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE node update of cluster "+clusterName+" and node "+nodepool.Name+" failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
 		return ApiErrors(err, "Error in updating node version")
 	}
 
-	return cloud.waitForNodePool(clusterName, nodeName, ctx)
+	return cloud.waitForCluster(clusterName, ctx)
+}
+func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils.Context) types.CustomCPError{
+
+	nodepoolRequest := GenerateNodepoolCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,clusterName, nodepool)
+
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName,nodepoolRequest).Context(context.Background()).Do()
+	if err != nil && !strings.Contains(err.Error(), "Already exists") {
+		ctx.SendLogs(
+			"GKE nodepool creation of '"+clusterName+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in adding nodepool in running cluster.Nodepoll alreaady exist",
+			Description: err.Error(),
+		}
+	}else if err !=nil{
+		ctx.SendLogs(
+			"GKE nodepool creation of '"+nodepool[1].Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in adding nodepool in running cluster.",
+			Description: err.Error(),
+		}
+	}
+
+
+	requestJson, _ := json.Marshal(nodepoolRequest)
+	ctx.SendLogs(
+		"GKE cluster creation of "+clusterName+" submitted: "+string(requestJson),
+		models.LOGGING_LEVEL_INFO,
+		models.Backend_Logging,
+	)
+
+
+	return cloud.waitForCluster(clusterName, ctx)
+}
+func (cloud *GKE) DeleteNodePool(clusterName , nodepoolName string,ctx utils.Context) types.CustomCPError{
+
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone,clusterName, nodepoolName).Context(context.Background()).Do()
+	if err != nil   {
+		ctx.SendLogs(
+			"GKE nodepool deletion of '"+nodepoolName+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in deleting nodepool in running cluster.",
+			Description: err.Error(),
+		}
+	}
+
+	return cloud.waitForCluster(clusterName, ctx)
 }
 
-func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, ctx utils.Context) types.CustomCPError {
-	if newCount == 0 {
+func (cloud *GKE) UpdateNodePoolImageType(clusterName string,pool NodePool, ctx utils.Context) types.CustomCPError {
+	if pool.Config.ImageType == "" {
+		return types.CustomCPError{}
+	}
+
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Update(
+		cloud.ProjectId,
+		cloud.Region+"-"+cloud.Zone,
+		clusterName,
+		pool.Name,
+		&gke.UpdateNodePoolRequest{
+			ImageType: pool.Config.ImageType,
+		},
+	).Context(context.Background()).Do()
+	if err != nil {
+		ctx.SendLogs(
+			"GKE  running cluster image type update request of "+clusterName+" nodepool "+pool.Name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return ApiErrors(err, "Error in running cluster nodepool image type update")
+	}
+
+	return cloud.waitForCluster(clusterName,  ctx)
+}
+func (cloud *GKE) UpdateNodePoolCount(clusterName string,pool NodePool, ctx utils.Context) types.CustomCPError {
+	if pool.InitialNodeCount == 0 {
 		return types.CustomCPError{
 			StatusCode:  500,
 			Error:       "Error in updating node count",
-			Description: "Node Count Can't be zero.Select a numerical value for node count.",
+			Description: "Node Count can't be zero.Select a numerical value for node count.",
 		}
 	}
 
@@ -177,21 +618,21 @@ func (cloud *GKE) UpdateNodeCount(clusterName, nodeName string, newCount int64, 
 		cloud.ProjectId,
 		cloud.Region+"-"+cloud.Zone,
 		clusterName,
-		nodeName,
+		pool.Name,
 		&gke.SetNodePoolSizeRequest{
-			NodeCount: newCount,
+			NodeCount: pool.InitialNodeCount,
 		},
 	).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
-			"GKE node update request for cluster "+clusterName+" and node "+nodeName+" failed "+err.Error(),
+			"GKE running cluster nodepool count update request of "+clusterName+" nodepool "+pool.Name+" failed "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
 			models.Backend_Logging,
 		)
-		return ApiErrors(err, "Error in updating node count")
+		return ApiErrors(err, "Error in updating running cluster nodepool count")
 	}
 
-	return cloud.waitForNodePool(clusterName, nodeName, ctx)
+	return cloud.waitForCluster(clusterName, ctx)
 }
 
 func (cloud *GKE) DeleteCluster(clusterName string, ctx utils.Context) types.CustomCPError {
@@ -378,6 +819,7 @@ func (cloud *GKE) fetchClusterStatus(clusterName string, ctx utils.Context) (clu
 
 	return GenerateClusterFromResponse(*latestCluster), types.CustomCPError{}
 }
+
 func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, ctx utils.Context) types.CustomCPError {
 
 	if cloud.Client == nil {
