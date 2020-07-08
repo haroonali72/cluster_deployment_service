@@ -716,7 +716,7 @@ func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Co
 	}
 	return clusters, types.CustomCPError{}
 }
-func PatchRunningGKECluster(cluster EKSCluster, credentials vault.AwsCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
+func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
 
 	publisher := utils.Notifier{}
 
@@ -727,7 +727,7 @@ func PatchRunningGKECluster(cluster EKSCluster, credentials vault.AwsCredentials
 		cpErr := types.CustomCPError{StatusCode: int(models.CloudStatusCode), Error: "Error in deploying AWS Cluster", Description: errr.Error()}
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
-			ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 		return cpErr
 	}

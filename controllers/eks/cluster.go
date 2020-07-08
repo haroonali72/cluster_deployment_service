@@ -1362,7 +1362,7 @@ func (c *EKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	go eks.PatchRunningGKECluster(cluster, eksProfile.Profile, token, *ctx)
+	go eks.PatchRunningEKSCluster(cluster, eksProfile.Profile, token, *ctx)
 
 	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
