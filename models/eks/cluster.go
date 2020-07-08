@@ -752,17 +752,17 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				break
 			}
 		}
-		if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
+		if dif.Path[0] == "Logging" {
 			err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
-		} else if dif.Path[0] == "NetworkPolicy" {
+		} else if dif.Path[0] == "ResourcesVpcConfig" {
 			err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
-		} else if dif.Path[0] == "AddonsConfig" {
+		} else if dif.Path[0] == "Version" {
 			err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
 			if err != (types.CustomCPError{}) {
 				return err
@@ -804,13 +804,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			if err != (types.CustomCPError{}) {
 				return err
 			}
-		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "Management" {
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "Autoscaling" {
+		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
 			if err != (types.CustomCPError{}) {
@@ -828,9 +822,9 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	DeletePreviousGKECluster(ctx)
+	DeletePreviousEKSCluster(ctx)
 
-	latestCluster, err2 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
+	latestCluster, err2 := eks.fetchStatus(cluster.Name, ctx)
 	if err2 != (types.CustomCPError{}) {
 		return err
 	}
