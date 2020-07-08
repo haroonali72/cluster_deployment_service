@@ -737,7 +737,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	eks.init()
 	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(ctx)
+	difCluster, previousPoolCount, _, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
@@ -753,7 +753,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 		}
 		if dif.Path[0] == "Logging" {
-			err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
+			err := UpdateLogging(cluster, ctx, eks)
 			if err != (types.CustomCPError{}) {
 				return err
 			}

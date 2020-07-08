@@ -1047,6 +1047,22 @@ func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 		ProjectId: projectId,
 	}
 }
+func (cloud *EKS) UpdateLogging(name string, logging Logging, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+	clusterRequest := GenerateClusterUpdateLoggingRequest(name, logging)
+	result, err = cloud.Svc.UpdateClusterConfig(clusterRequest)
+}
+func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+	clusterRequest := GenerateClusterUpdateNetworkRequest(name, network)
+	result, err = cloud.Svc.UpdateClusterConfig(clusterRequest)
+}
+func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig NodePoolScalingConfig, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+	clusterRequest := GeneratNodeConfigUpdateRequest(clusterName, poolName, scalingConfig)
+	result, err = cloud.Svc.UpdateNodegroupConfigRequest(clusterRequest)
+}
+func (cloud *EKS) UpdateClusterVersion(clusterName, version string, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+	clusterRequest := GenerateUpdateClusterVersionRequest(clusterName, version)
+	result, err = cloud.Svc.UpdateClusterVersion(clusterRequest)
+}
 func (cloud *EKS) GetClusterStatus(name string, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
 	var response EKSClusterStatus
 	clusterInput := eks.DescribeClusterInput{Name: aws.String(name)}
