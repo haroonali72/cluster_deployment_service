@@ -80,12 +80,12 @@ type KubernetesCluster struct {
 	AutoUpgrade      bool                  `json:"auto_upgrade,omitempty" bson:"auto_upgrade" description:"Auto upgradation of cluster on new kubernetes version [optional]"`
 	IsAdvance        bool                  `json:"is_advance" bson:"is_advance"`
 	IsExpert         bool                  `json:"is_expert" bson:"is_expert"`
-	//NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
+	NetworkName           string       `json:"network_name" bson:"network_name" valid:"required"`
 	//ClusterSubnet 		string   	 `json:"cluster_subnet,omitempty" bson:"cluster_subnet"`
 	//ServiceSubnet 		string   	 `json:"service_subnet,omitempty" bson:"service_subnet"`
 	//IPv4          		string   	 `json:"ipv4,omitempty" bson:"ivp4"`
 	//Endpoint      		string   	 `json:"endpoint,omitempty" bson:"endpoint"`
-	//VPCUUID   			string       `json:"vpc_uuid" bson:"vpc_uuid"`
+	VPCUUID   			string       `json:"vpc_id" bson:"vpc_uuid"`
 	//MaintenancePolicy     *KubernetesMaintenancePolicy 		`json:"maintenance_policy,omitempty" bson:"maintenance_policy"`
 	//Status      *KubernetesClusterStatus `json:"kube_status,omitempty" bson:"kube_status"`
 }

@@ -994,13 +994,14 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 
 		return nil, ApiError(errors.New("Error in fetching instance"), "Nodes not found", 512)
 	}
-	for _, instance := range updated_instances.Reservations[0].Instances {
+	for _, instance := range updated_instances.Reservations {
 		var node EKSNodesStatus
-		node.Name = instance.InstanceId
-		node.ID = instance.InstanceId
-		node.State = instance.State.Name
-		node.PrivateIP = instance.PrivateIpAddress
-		node.PublicIP = instance.PublicIpAddress
+
+		node.Name = instance.Instances[0].InstanceId
+		node.ID = instance.Instances[0].InstanceId
+		node.State = instance.Instances[0].State.Name
+		node.PrivateIP = instance.Instances[0].PrivateIpAddress
+		node.PublicIP = instance.Instances[0].PublicIpAddress
 		nodes = append(nodes, node)
 	}
 	return nodes, types.CustomCPError{}
