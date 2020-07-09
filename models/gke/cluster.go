@@ -1667,12 +1667,12 @@ func UpdateNodePoolScaling(cluster GKECluster,ctx utils.Context,gkeOps GKE,pool 
 
 func AddNodepool(cluster GKECluster,ctx utils.Context,gkeOps GKE,pools []*NodePool,poolIndex int) types.CustomCPError{
 
-/*	err := gkeOps.AddNodePool(cluster.Name,pools,ctx)
+	err := gkeOps.AddNodePool(cluster.Name,pools,ctx)
 	if err != (types.CustomCPError{}){
 		updationFailedError(cluster,ctx,err)
 		return err
 	}
-*/
+
 	oldCluster,err1  :=GetPreviousGKECluster(ctx)
 	if err1 !=nil{
 		return updationFailedError(cluster,ctx,types.CustomCPError{
@@ -1693,12 +1693,12 @@ func AddNodepool(cluster GKECluster,ctx utils.Context,gkeOps GKE,pools []*NodePo
 
 func DeleteNodepool(cluster GKECluster,ctx utils.Context,gkeOps GKE,poolName string) types.CustomCPError{
 
-	/*err := gkeOps.DeleteNodePool(cluster.Name,poolName,ctx)
+	err := gkeOps.DeleteNodePool(cluster.Name,poolName,ctx)
 	if err != (types.CustomCPError{}){
 		updationFailedError(cluster,ctx,err)
 		return err
 	}
-*/
+
 	oldCluster,err1  :=GetPreviousGKECluster(ctx)
 	if err1 !=nil{
 		return updationFailedError(cluster,ctx,types.CustomCPError{
