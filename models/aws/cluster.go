@@ -341,13 +341,13 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 
-	pubSub := publisher.Subscribe(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 
 	createdPools, err := aws.createCluster(cluster, ctx, companyId, token)
 	if err != (types.CustomCPError{}) {
@@ -368,7 +368,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 			PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
 		}
 
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
@@ -391,17 +391,17 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 		return confErr
 	}
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 
-	notify := publisher.RecieveNotification(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx, pubSub)
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("AWSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("AWSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -414,7 +414,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AwsCredentials, ctx ut
 			if err != nil {
 				ctx.SendLogs("AWSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 		}
 	}
@@ -501,7 +501,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 	if cluster.Status == "" || cluster.Status == models.New {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AwsClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return ApiError(errors.New(text), "Error in terminating cluster")
 	}
 
@@ -527,7 +527,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err1
 	}
 
@@ -541,11 +541,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 			ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return ApiError(err, "Error in terminating cluster")
 		}
 
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
 	}
 
@@ -586,11 +586,11 @@ func TerminateCluster(cluster Cluster_Def, profile vault.AwsProfile, ctx utils.C
 		if err_ != nil {
 			ctx.SendLogs("AWSClusterModel:  terminate - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return confErr
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 	return types.CustomCPError{}
 }
 func updateNodePool(createdPools []CreatedPool, cluster Cluster_Def, ctx utils.Context) Cluster_Def {
