@@ -951,6 +951,7 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
 
 		poolResponse.Nodes = nodes
+		beego.Info("length of nodes === =" + string(len(nodes)))
 		response.NodePools = append(response.NodePools, poolResponse)
 
 	}
@@ -971,6 +972,7 @@ func (cloud *EKS) getEKSCluster(ctx utils.Context) ([]*string, types.CustomCPErr
 func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
 	var nodes []EKSNodesStatus
 
+	beego.Info("====nodepoolname === " + poolName)
 	var values []*string
 	values = append(values, &poolName)
 	var tags []*ec2.Filter
@@ -1001,6 +1003,7 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 		node.State = instance.State.Name
 		node.PrivateIP = instance.PrivateIpAddress
 		node.PublicIP = instance.PublicIpAddress
+		beego.Info("appending nooode==== " + *instance.InstanceId)
 		nodes = append(nodes, node)
 	}
 	return nodes, types.CustomCPError{}
