@@ -951,7 +951,6 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
 
 		poolResponse.Nodes = nodes
-		beego.Info("length of nodes === =" + string(len(nodes)))
 		response.NodePools = append(response.NodePools, poolResponse)
 
 	}
@@ -972,7 +971,6 @@ func (cloud *EKS) getEKSCluster(ctx utils.Context) ([]*string, types.CustomCPErr
 func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
 	var nodes []EKSNodesStatus
 
-	beego.Info("====nodepoolname === " + poolName)
 	var values []*string
 	values = append(values, &poolName)
 	var tags []*ec2.Filter
@@ -996,14 +994,14 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 
 		return nil, ApiError(errors.New("Error in fetching instance"), "Nodes not found", 512)
 	}
-	for _, instance := range updated_instances.Reservations[0].Instances {
+	for _, instance := range updated_instances.Reservations {
 		var node EKSNodesStatus
-		node.Name = instance.InstanceId
-		node.ID = instance.InstanceId
-		node.State = instance.State.Name
-		node.PrivateIP = instance.PrivateIpAddress
-		node.PublicIP = instance.PublicIpAddress
-		beego.Info("appending nooode==== " + *instance.InstanceId)
+
+		node.Name = instance.Instances[0].InstanceId
+		node.ID = instance.Instances[0].InstanceId
+		node.State = instance.Instances[0].State.Name
+		node.PrivateIP = instance.Instances[0].PrivateIpAddress
+		node.PublicIP = instance.Instances[0].PublicIpAddress
 		nodes = append(nodes, node)
 	}
 	return nodes, types.CustomCPError{}
