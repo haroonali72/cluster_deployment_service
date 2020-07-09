@@ -2,10 +2,12 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
+	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
 	"golang.org/x/oauth2"
@@ -72,6 +74,29 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 			return cluster, err
 		}
 	}
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != (types.CustomCPError{}) {
+			return cluster, err
+		}
+	}
+
+	var doNetwork types.DONetwork
+	url := getNetworkHost("do", cluster.ProjectId)
+
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil || network == nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
+		return cluster, cpErr
+	}
+
+	err = json.Unmarshal(network.([]byte), &doNetwork)
+	if err != nil {
+		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
+		return cluster, cpErr
+	}
+
 	ctx.SendLogs(
 		"DOKS cluster creation of "+cluster.Name+"' submitted ",
 		models.LOGGING_LEVEL_INFO,
@@ -107,6 +132,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		NodePools:   nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
+		VPCUUID: doNetwork.Definition[0].VPCs[0].VPCId,
 	}
 
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
