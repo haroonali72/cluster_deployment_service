@@ -652,7 +652,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}
 
@@ -666,7 +666,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 
@@ -688,11 +688,11 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err_ != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
 		return err
 	}
 
-	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+	pubSub := publisher.Subscribe(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx)
 
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != (types.CustomCPError{}) {
@@ -706,7 +706,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
@@ -717,7 +717,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		PrintError(err1, cluster.Name, ctx)
 		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in applying agent", Description: err1.Error()}
 
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -726,10 +726,10 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 	}
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	notify := publisher.RecieveNotification(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("GKEClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("GKEClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -743,7 +743,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		if err != nil {
 			ctx.SendLogs("GKEDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 	}
 
 	return types.CustomCPError{}
@@ -788,7 +788,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		if err_ != nil {
 			ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 		return err
 	}
 
@@ -803,7 +803,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			if confError_ != nil {
 				ctx.SendLogs("GKERunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+			publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 			return types.CustomCPError{}
 		}
 	}
@@ -932,7 +932,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	}
 
-	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+	publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 
 	return types.CustomCPError{}
 
