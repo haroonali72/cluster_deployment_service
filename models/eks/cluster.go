@@ -737,7 +737,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	eks.init()
 	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	difCluster, previousPoolCount, _, err1 := CompareClusters(ctx)
+	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
@@ -745,6 +745,33 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		}
 	}
 
+	if previousPoolCount < newPoolCount {
+		var pools []*NodePool
+		for i := previousPoolCount; i < newPoolCount; i++ {
+			pools = append(pools, cluster.NodePools[i])
+		}
+
+		err := eks.addNodePool(cluster, ctx, gkeOps, pools, previousPoolCount)
+		if err != (types.CustomCPError{}) {
+			return err
+		}
+	} else if previousPoolCount > newPoolCount {
+		delete := true
+		previousCluster, err := GetPreviousGKECluster(ctx)
+		if err != nil {
+			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+		}
+		for _, pool := range cluster.NodePools {
+			for _, oldpool := range previousCluster.NodePools {
+				if pool.Name == oldpool.Name {
+					delete = false
+				}
+			}
+			if delete == true {
+				DeleteNodepool(cluster, ctx, gkeOps, pool.Name)
+			}
+		}
+	}
 	for _, dif := range difCluster {
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
