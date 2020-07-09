@@ -313,13 +313,13 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 		if err != nil {
 			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 
-	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+	pubSub := publisher.Subscribe(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx)
 
 	cluster, confError = do.createCluster(cluster, ctx, companyId, token)
 	if confError != (types.CustomCPError{}) {
@@ -338,7 +338,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 		if err != nil {
 			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return confError
 	}
 
@@ -351,16 +351,16 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 		if err != nil {
 			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 
 	}
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, cluster.ProjectId)
 
-	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	notify := publisher.RecieveNotification(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("DOClusterModel:  Notification received from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("DOClusterModel:  Notification not received from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -373,7 +373,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.DOCredentials, ctx uti
 			if err != nil {
 				ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 
 		}
@@ -447,7 +447,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		if err != nil {
 			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 
@@ -459,7 +459,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		if err != nil {
 			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 
@@ -485,7 +485,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		if err != nil {
 			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return err_
 	}
 
@@ -505,7 +505,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		if err != nil {
 			ctx.SendLogs("DODeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return err_
 	}
 
@@ -520,7 +520,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		ctx.SendLogs("Cluster model: Deploy - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 		utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		cpErr := types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 		err = db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.DO, ctx, cpErr)
 		if err != nil {
@@ -529,7 +529,7 @@ func TerminateCluster(cluster Cluster_Def, profile vault.DOProfile, ctx utils.Co
 		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+	publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 	return types.CustomCPError{}
 }
 func GetAllSSHKeyPair(ctx utils.Context, token string) (keys interface{}, err error) {

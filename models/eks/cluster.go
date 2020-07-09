@@ -433,7 +433,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 
@@ -457,7 +457,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 			if err != nil {
 				ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+			publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 			return cpErr
 
 		}
@@ -467,13 +467,13 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpError
 	}
 	/**
 	  TODO : Add Agent Deployment Process.Due on @Ahmad.
 	*/
-	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
+	pubSub := publisher.Subscribe(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx)
 	confError = ApplyAgent(credentials, token, ctx, cluster.Name)
 	if confError != nil {
 		utils.SendLog(companyId, confError.Error(), "error", cluster.ProjectId)
@@ -492,7 +492,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("EKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 	cluster.Status = models.ClusterCreated
@@ -507,14 +507,14 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 	utils.SendLog(companyId, "Cluster Created Sccessfully "+cluster.Name, "info", cluster.ProjectId)
-	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
+	notify := publisher.RecieveNotification(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("EKSClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("EKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -528,7 +528,7 @@ func DeployEKSCluster(cluster EKSCluster, credentials vault.AwsProfile, companyI
 		if err != nil {
 			ctx.SendLogs("EKSDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 	}
 
 	return types.CustomCPError{}
@@ -552,7 +552,7 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, projectI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 	eksOps.init()
@@ -573,7 +573,7 @@ func TerminateCluster(cluster EKSCluster, credentials vault.AwsProfile, projectI
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Terminate Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
 		return cpErr
 	}
 

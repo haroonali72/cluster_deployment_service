@@ -81,10 +81,12 @@ func (notifier *Notifier) Init_notifier() error {
 
 	return nil
 }
+
 func (notifier *Notifier) Subscribe(channel string, ctx Context) *redis.PubSub {
 	pubsub := notifier.Client.Subscribe(ctx.Data.Company + "_" + channel)
 	return pubsub
 }
+
 func (notifier *Notifier) RecieveNotification(channel string, ctx Context, pubsub *redis.PubSub) bool {
 	start := time.Now()
 	defer pubsub.Close()
