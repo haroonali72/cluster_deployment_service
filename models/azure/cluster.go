@@ -395,13 +395,13 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 		if err1 != nil {
 			ctx.SendLogs("AzureClusterModel:  Deploy - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
 	utils.SendLog(companyId, "Creating Cluster : "+cluster.Name, "info", cluster.ProjectId)
 
-	pubSub := publisher.Subscribe(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx)
+	pubSub := publisher.Subscribe(ctx.Data.ProjectId, ctx)
 
 	cluster, err = azure.createCluster(cluster, ctx, companyId, token)
 	if err != (types.CustomCPError{}) {
@@ -424,7 +424,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 			ctx.SendLogs("AzureClusterModel:  Deploy - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err
 	}
 
@@ -433,7 +433,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 	confError = UpdateCluster(cluster, false, ctx)
 	if confError != nil {
 		PrintError(confError, cluster.Name, cluster.ProjectId, ctx, companyId)
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		customError := ApiError(confError, "Error in cluster creation", int(models.CloudStatusCode))
 		err1 := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.Azure, ctx, customError)
 		if err1 != nil {
@@ -444,10 +444,10 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 
 	utils.SendLog(companyId, "Cluster created successfully "+cluster.Name, "info", cluster.ProjectId)
 
-	notify := publisher.RecieveNotification(cluster.CompanyId+"_"+ctx.Data.ProjectId, ctx, pubSub)
+	notify := publisher.RecieveNotification(ctx.Data.ProjectId, ctx, pubSub)
 	if notify {
 		ctx.SendLogs("AzureClusterModel:  Notification recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-		publisher.Notify(cluster.CompanyId+"_"+ctx.Data.ProjectId, "Status Available", ctx)
+		publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
 	} else {
 		ctx.SendLogs("AzureClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
@@ -460,7 +460,7 @@ func DeployCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx util
 			if err != nil {
 				ctx.SendLogs("AzureDeployClusterModel:  Deploy Cluster - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
-			publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return types.CustomCPError{StatusCode: 500, Description: err.Error(), Error: "Error occurred in updating cluster status in database"}
 		}
 	}
@@ -528,7 +528,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 	if cluster.Status == "" || cluster.Status == "new" {
 		text := "Cannot terminate a new cluster"
 		ctx.SendLogs("AzureClusterModel : "+text+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return ApiError(errors.New("Error in cluster termination"), text, int(models.CloudStatusCode))
 	}
 
@@ -558,7 +558,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 		if err2 != nil {
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err2.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return err1
 	}
 
@@ -575,7 +575,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 
 			utils.SendLog(companyId, "Error in cluster updation in mongo: "+cluster.Name, "error", cluster.ProjectId)
 			utils.SendLog(companyId, err.Error(), "error", cluster.ProjectId)
-			publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+			publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 			return ApiError(err, "Error in cluster termination", int(models.CloudStatusCode))
 		}
 		err2 := db.CreateError(ctx.Data.ProjectId, ctx.Data.Company, models.Azure, ctx, err1)
@@ -583,7 +583,7 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err2.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 		return types.CustomCPError{}
 	}
@@ -606,11 +606,11 @@ func TerminateCluster(cluster Cluster_Def, credentials vault.AzureProfile, ctx u
 			ctx.SendLogs("AzureClusterModel:  Terminate Cluster - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
 
-		publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return customError
 	}
 	utils.SendLog(companyId, "Cluster terminated successfully "+cluster.Name, "info", cluster.ProjectId)
-	publisher.Notify(cluster.CompanyId+"_"+cluster.ProjectId, "Status Available", ctx)
+	publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 
 	return types.CustomCPError{}
 }
