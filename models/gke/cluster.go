@@ -792,9 +792,6 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		return err
 	}
 
-	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-
-
 	difCluster ,previousPoolCount,newPoolCount, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
@@ -807,7 +804,8 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			return types.CustomCPError{}
 		}
 	}
-	
+	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 	if previousPoolCount < newPoolCount{
 		var pools []*NodePool
 		for i :=previousPoolCount;i<newPoolCount ;i++{
@@ -826,8 +824,8 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		}
 		for _,pool :=range cluster.NodePools{
 			for _,oldpool := range previousCluster.NodePools {
-				if pool.Name == oldpool.Name{
-					delete = false
+				if pool.Name != oldpool.Name{
+					delete = true
 				}
 			}
 			if delete == true {
@@ -912,7 +910,6 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	}
 
-	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 	DeletePreviousGKECluster(ctx)
 
@@ -932,6 +929,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	}
 
+	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 
 	return types.CustomCPError{}
@@ -1325,7 +1323,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog,int,int,error){
 	newPoolCount := len(cluster.NodePools)
 
 	difCluster,err :=diff.Diff(oldCluster,cluster)
-	if len(difCluster)<2 {
+	if len(difCluster)<2 && previousPoolCount==newPoolCount{
 		return diff.Changelog{} ,0,0, errors.New("Nothing to update")
 	}else if err != nil{
 		return diff.Changelog{},0,0, errors.New("Error in comparing differences:"+err.Error())
