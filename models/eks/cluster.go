@@ -981,7 +981,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 	newPoolCount := len(cluster.NodePools)
 
 	difCluster, err := diff.Diff(oldCluster, cluster)
-	if len(difCluster) < 2 {
+	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
 		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
 	} else if err != nil {
 		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())
