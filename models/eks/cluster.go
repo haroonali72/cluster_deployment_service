@@ -113,9 +113,9 @@ type EKSPoolStatus struct {
 	AMI         *string `json:"ami_type"`
 	MachineType *string `json:"machine_type"`
 
-	Scaling AutoScaling      `json:"auto_scaling"`
-	MaxSize *int64           `json:"max_size"`
-	Nodes   []EKSNodesStatus `json:"nodes"`
+	Scaling AutoScaling `json:"auto_scaling"`
+	//MaxSize *int64           `json:"max_size"`
+	Nodes []EKSNodesStatus `json:"nodes"`
 }
 type EKSNodesStatus struct {
 	Name      *string `json:"name"`

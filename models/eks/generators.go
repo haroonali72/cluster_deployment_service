@@ -1,6 +1,7 @@
 package eks
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/google/uuid"
@@ -80,6 +81,7 @@ func generateResourcesVpcConfigFromRequest(v VpcConfigRequest) *eks.VpcConfigReq
 
 func GenerateNodePoolCreateRequest(n NodePool, clusterName string) *eks.CreateNodegroupInput {
 	id, _ := uuid.NewRandom()
+	fmt.Println("inside generator === " + string(*n.ScalingConfig.DesiredSize))
 	input := &eks.CreateNodegroupInput{
 		AmiType:            n.AmiType,
 		ClientRequestToken: aws.String(id.String()),
@@ -113,6 +115,7 @@ func generateRemoteAccessFromRequest(v *RemoteAccessConfig) *eks.RemoteAccessCon
 }
 
 func generateScalingConfigFromRequest(v *NodePoolScalingConfig) *eks.NodegroupScalingConfig {
+	fmt.Println("inside scaling generator == " + string(*v.DesiredSize))
 	if v == nil {
 		return nil
 	}

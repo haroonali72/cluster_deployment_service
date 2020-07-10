@@ -282,6 +282,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 	tags["name"] = &nodePool.NodePoolName
 	nodePool.Tags = tags
 	//generate cluster create request
+	beego.Info("printin==== eks desired size +" + string(*nodePool.ScalingConfig.DesiredSize))
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
 
