@@ -63,7 +63,7 @@ func (notifier *Notifier) Notify(channel, status string, ctx Context) {
 		}
 		if !published {
 			listName := "L=" +ctx.Data.Company+"_"+ channel
-			cmd = notifier.Client.LPush(listName, status)
+			cmd = notifier.Client.LPush(listName, string(b))
 		}
 		ctx.SendLogs(cmd.String(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	}
