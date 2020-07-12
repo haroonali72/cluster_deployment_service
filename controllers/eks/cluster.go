@@ -332,32 +332,6 @@ func (c *EKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) || cluster.Status == (models.ClusterUpdateFailed) {
-		err := eks.UpdatePreviousEKSCluster(cluster, *ctx)
-		if err != nil {
-			if strings.Contains(err.Error(), "not found") {
-				c.Ctx.Output.SetStatus(404)
-				c.Data["json"] = map[string]string{"error": err.Error()}
-				c.ServeJSON()
-				return
-			}
-			if strings.Contains(err.Error(), "does not exist") {
-				c.Ctx.Output.SetStatus(404)
-				c.Data["json"] = map[string]string{"error": err.Error()}
-				c.ServeJSON()
-				return
-			}
-			c.Ctx.Output.SetStatus(500)
-			c.Data["json"] = map[string]string{"error": err.Error()}
-			c.ServeJSON()
-			return
-		}
-
-		ctx.SendLogs("EKS running cluster "+cluster.Name+" in project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
-
-		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
-		c.ServeJSON()
-	}
 	validate := validator.New()
 	err = validate.Struct(cluster)
 	if err != nil {
@@ -409,6 +383,32 @@ func (c *EKSClusterController) Patch() {
 	}
 	ctx.SendLogs("EKSClusterController: Patch cluster with name: "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 	beego.Info("EKSClusterController: JSON Payload: ", cluster)
+	if cluster.Status == (models.ClusterCreated) || cluster.Status == (models.ClusterTerminationFailed) || cluster.Status == (models.ClusterUpdateFailed) {
+		err := eks.UpdatePreviousEKSCluster(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			if strings.Contains(err.Error(), "does not exist") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+		}
+
+		ctx.SendLogs("EKS running cluster "+cluster.Name+" in project Id: "+cluster.ProjectId+" updated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+
+		c.Data["json"] = map[string]string{"msg": "Running cluster updated successfully"}
+		c.ServeJSON()
+	}
 
 	cluster.CompanyId = userInfo.CompanyId
 	err = eks.UpdateEKSCluster(cluster, *ctx)
