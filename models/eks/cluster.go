@@ -763,12 +763,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			return err
 		}
 	} else if previousPoolCount > newPoolCount {
-		delete := true
+
 		previousCluster, err := GetPreviousEKSCluster(ctx)
 		if err != nil {
 			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
 		}
 		for _, pool := range cluster.NodePools {
+			delete := true
 			for _, oldpool := range previousCluster.NodePools {
 				if pool.NodePoolName == oldpool.NodePoolName {
 					delete = false
@@ -977,6 +978,8 @@ func DeletePreviousEKSCluster(ctx utils.Context) error {
 func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 	cluster, err := GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
 	if err != nil {
+
+		return diff.Changelog{}, 0, 0, errors.New("error in getting eks cluster")
 	}
 
 	oldCluster, err := GetPreviousEKSCluster(ctx)
