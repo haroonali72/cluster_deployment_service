@@ -729,8 +729,11 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, err1.Error()+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 		if !strings.Contains(err1.Error(), "Nothing to update") {
+			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 			cluster.Status = models.ClusterUpdateFailed
 			confError := UpdateEKSCluster(cluster, ctx)
 			if confError != nil {
