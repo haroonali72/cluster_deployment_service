@@ -142,7 +142,7 @@ func GetMongoConf() mongConf {
 	conf.MongoIKSCustomerTemplateCollection = "mongo_iks_customer_template_collection"
 	conf.MongoDOKSCustomerTemplateCollection = "mongo_doks_customer_template_collection"
 	conf.MongoClusterErrorCollection = "mongo_cluster_error_collection"
-	conf.MongoEKSPreviousClusterCollection = "gke_previous_cluster"
+	conf.MongoEKSPreviousClusterCollection = "eks_previous_cluster"
 	conf.MongoGKEPreviousClusterCollection = "gke_previous_cluster"
 	return conf
 
