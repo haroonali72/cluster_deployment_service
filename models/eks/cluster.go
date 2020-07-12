@@ -719,18 +719,7 @@ func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Co
 func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
 
 	publisher := utils.Notifier{}
-
-	errr := publisher.Init_notifier()
-	if errr != nil {
-
-		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := types.CustomCPError{StatusCode: int(models.CloudStatusCode), Error: "Error in deploying AWS Cluster", Description: errr.Error()}
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, cpErr)
-		if err != nil {
-			ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		}
-		return cpErr
-	}
+	publisher.Init_notifier()
 
 	eks := GetEKS(cluster.ProjectId, credentials)
 
@@ -739,10 +728,25 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(ctx)
 	if err1 != nil {
-		if strings.Contains(err1.Error(), "Nothing to update") {
-			publisher.Notify(ctx.Data.ProjectId, "Status Available", ctx)
-			return types.CustomCPError{}
+		ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		if !strings.Contains(err1.Error(), "Nothing to update") {
+			cluster.Status = models.ClusterUpdateFailed
+			confError := UpdateEKSCluster(cluster, ctx)
+			if confError != nil {
+				ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			err := ApiError(err1, "Error occured while apply cluster changes", 500)
+			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+			if err_ != nil {
+				ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+			return err
 		}
+
+		publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+		return types.CustomCPError{}
 	}
 
 	if previousPoolCount < newPoolCount {
@@ -919,19 +923,19 @@ func UpdatePreviousEKSCluster(cluster EKSCluster, ctx utils.Context) error {
 
 	err := AddPreviousEKSCluster(cluster, ctx, false)
 	if err != nil {
-		text := "GKEClusterModel:  Update  previous cluster -'" + cluster.Name + err.Error()
+		text := "EKSClusterModel:  Update  previous cluster - " + cluster.Name + " " + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return errors.New(text)
 	}
 
 	err = UpdateEKSCluster(cluster, ctx)
 	if err != nil {
-		text := "GKEClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
+		text := "EKSClusterModel:  Update previous cluster - " + cluster.Name + " " + err.Error()
 		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 		err = DeletePreviousEKSCluster(ctx)
 		if err != nil {
-			text := "GKEDeleteClusterModel:  Delete  previous cluster - '" + cluster.Name + err.Error()
+			text := "EKSDeleteClusterModel:  Delete  previous cluster - " + cluster.Name + " " + err.Error()
 			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return errors.New(text)
 		}
@@ -1010,7 +1014,7 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 		models.Backend_Logging,
 	)
 
-	for _, pool := range cluster.NodePools {
+	for _, pool := range pools {
 		err := eksOps.addNodePool(pool, cluster.Name, subnets, sgs, ctx)
 		if err != (types.CustomCPError{}) {
 			updationFailedError(cluster, ctx, err)
