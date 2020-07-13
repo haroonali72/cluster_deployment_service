@@ -86,6 +86,7 @@ type NodePool struct {
 	ScalingConfig *NodePoolScalingConfig `json:"auto_scaling,omitempty" bson:"scaling_config,omitempty" description:"Scaling Configurations for nodepool [optional]"`
 	Subnets       []*string              `json:"-" bson:"subnets"`
 	Tags          map[string]*string     `json:"-" bson:"tags"`
+	PoolStatus    bool                   `json:"pool_status,omitempty" bson:"pool_status,omitempty"`
 }
 
 type RemoteAccessConfig struct {
@@ -1133,7 +1134,9 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 	}
 
 	oldCluster.NodePools = cluster.NodePools
-
+	for _, pool := range cluster.NodePools {
+		pool.PoolStatus = true
+	}
 	err1 = AddPreviousEKSCluster(oldCluster, ctx, true)
 	if err1 != nil {
 		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
