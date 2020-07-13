@@ -1117,6 +1117,16 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 	for _, pool := range pools {
 		err := eksOps.addNodePool(pool, cluster.Name, subnets, sgs, ctx)
 		if err != (types.CustomCPError{}) {
+			if pool.NodeRole != nil && *pool.NodeRole != "" {
+				err := eksOps.deleteIAMRole(*pool.RoleName)
+				if err != nil {
+					ctx.SendLogs(
+						err.Error(),
+						models.LOGGING_LEVEL_ERROR,
+						models.Backend_Logging,
+					)
+				}
+			}
 			return err
 		}
 	}
