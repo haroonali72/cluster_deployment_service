@@ -26,12 +26,6 @@ const (
 	ClusterUpdateFailed      Type = "Cluster Update Failed"
 )
 
-type PoolStatus string
-
-const (
-	Deployed		PoolStatus ="Deployed"
-	NotDeployed 	PoolStatus = "NotDeployed"
-)
 type StatusCode int
 
 const (
