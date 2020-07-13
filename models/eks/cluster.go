@@ -770,7 +770,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			//err := ApiError(err, "Error occured while apply cluster changes", 500)
 			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
 			if err_ != nil {
-				ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 			return err
@@ -779,7 +779,8 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 		previousCluster, err := GetPreviousEKSCluster(ctx)
 		if err != nil {
-			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+			err_ := types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+			return updationFailedError(cluster, ctx, err_)
 		}
 		for _, pool := range cluster.NodePools {
 			delete := true
@@ -794,13 +795,15 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		}
 	}
 	for _, dif := range difCluster {
+		loggingChanges := false
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
 				break
 			}
 		}
-		if dif.Path[0] == "Logging" {
+		if dif.Path[0] == "Logging" && !loggingChanges {
+
 			utils.SendLog(ctx.Data.Company, "Applying Logging Changes "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
 			if err != (types.CustomCPError{}) {
@@ -821,6 +824,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
+			loggingChanges = true
 			utils.SendLog(ctx.Data.Company, "Changes Applied Successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 		} else if dif.Path[0] == "ResourcesVpcConfig" {
@@ -863,7 +867,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
-		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
+		} else if previousPoolCount < newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			err := eks.UpdateNodeConfig(cluster.Name, cluster.NodePools[poolIndex].NodePoolName, *cluster.NodePools[poolIndex].ScalingConfig, ctx)
 			if err != (types.CustomCPError{}) {
@@ -895,21 +899,21 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		beego.Info("***********")
 		beego.Info(err.Error())
 	}
-	cluster, err = GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	/*cluster, err = GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
 	if err != nil {
 		beego.Info("***********")
 		beego.Info(err.Error())
-	}
+	}*/
 
-	latestCluster, err2 := eks.GetClusterStatus(cluster.Name, ctx)
-	if err2 != (types.CustomCPError{}) {
-		return err2
-	}
+	/*	latestCluster, err2 := eks.GetClusterStatus(cluster.Name, ctx)
+		if err2 != (types.CustomCPError{}) {
+			return err2
+		}
 
-	beego.Info("*******" + *latestCluster.Status)
-	for strings.ToLower(string(*latestCluster.Status)) != strings.ToLower("running") {
-		time.Sleep(time.Second * 60)
-	}
+		beego.Info("*******" + *latestCluster.Status)
+		for strings.ToLower(string(*latestCluster.Status)) != strings.ToLower("running") {
+			time.Sleep(time.Second * 60)
+		}*/
 
 	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 
@@ -1134,8 +1138,8 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 }
 func PrintError(confError error, name string, ctx utils.Context) {
 	if confError != nil {
-		_, _ = utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-		_, _ = utils.SendLog(ctx.Data.Company, confError.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		utils.SendLog(ctx.Data.Company, confError.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
 	}
 }
 
