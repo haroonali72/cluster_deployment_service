@@ -788,10 +788,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 		}
 		if dif.Path[0] == "Logging" {
+			utils.SendLog(ctx.Data.Company, "Applying Logging Changes "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
+			utils.SendLog(ctx.Data.Company, "Changes Applied Successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 		} else if dif.Path[0] == "ResourcesVpcConfig" {
 			err := eks.UpdateNetworking(cluster.Name, cluster.ResourcesVpcConfig, ctx)
 			if err != (types.CustomCPError{}) {
@@ -811,13 +814,18 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		}
 
 	}
-
-	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-
-	DeletePreviousEKSCluster(ctx)
-
-	cluster, err := GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	beego.Info("***********")
+	utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	beego.Info("***********")
+	err := DeletePreviousEKSCluster(ctx)
 	if err != nil {
+		beego.Info("***********")
+		beego.Info(err.Error())
+	}
+	cluster, err = GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	if err != nil {
+		beego.Info("***********")
+		beego.Info(err.Error())
 	}
 
 	latestCluster, err2 := eks.GetClusterStatus(cluster.Name, ctx)
@@ -825,6 +833,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		return err2
 	}
 
+	beego.Info("*******" + *latestCluster.Status)
 	for strings.ToLower(string(*latestCluster.Status)) != strings.ToLower("running") {
 		time.Sleep(time.Second * 60)
 	}
