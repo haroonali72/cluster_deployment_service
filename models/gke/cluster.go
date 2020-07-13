@@ -204,6 +204,7 @@ type NodePool struct {
 	Status            string               `json:"status,omitempty" bson:"status,omitempty"`
 	StatusMessage     string               `json:"status_message,omitempty" bson:"status_message,omitempty"`
 	Version           string               `json:"version,omitempty" bson:"version,omitempty"`
+	PoolStatus        bool    				`json:"pool_status,omitempty" bson:"pool_status,omitempty"`
 }
 
 type NodePoolAutoscaling struct {
@@ -1677,7 +1678,9 @@ func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*Nod
 	}
 
 	oldCluster.NodePools = cluster.NodePools
-
+	for _,pool := range cluster.NodePools{
+		pool.PoolStatus = true
+	}
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
 		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in adding nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})

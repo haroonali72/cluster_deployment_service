@@ -2538,6 +2538,42 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/eks/update/{projectId}:
+    put:
+      tags:
+      - cluster/eks
+      description: Update a running kubernetes cluster
+      operationId: EKSClusterController.Update
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: Vault credentials profile id
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "201":
+          description: '{"msg": "Running cluster updated successfully"}'
+        "202":
+          description: '{"msg": "Running cluster updation initiated"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not found"}'
+        "409":
+          description: '{"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated
+            state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/gcp/:
     put:
       tags:
@@ -7132,40 +7168,40 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001b81ec0.false:
+  482.0xc001bdf8f0.false:
     title: "false"
     type: object
-  618.0xc0011eb080.false:
+  618.0xc0011f2810.false:
     title: "false"
     type: object
-  667.0xc001a8acf0.false:
+  667.0xc001af2720.false:
     title: "false"
     type: object
-  964.0xc00153f860.false:
+  964.0xc00154eff0.false:
     title: "false"
     type: object
-  5876.string:
+  7336.string:
     title: string
     type: object
-  8531.string:
+  9991.string:
     title: string
     type: object
-  9267.string:
+  10727.string:
     title: string
     type: object
   11771.string:
     title: string
     type: object
-  14391.0xc001bc7e30.false:
+  14391.0xc001c19860.false:
     title: "false"
     type: object
-  59615.0xc001b43140.false:
+  59615.0xc001ba2b70.false:
     title: "false"
     type: object
   64122.string:
     title: string
     type: object
-  68819.string:
+  87216.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7445,7 +7481,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0011eb080.false'
+        $ref: '#/definitions/618.0xc0011f2810.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7887,7 +7923,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00153f860.false'
+        $ref: '#/definitions/964.0xc00154eff0.false'
       name:
         type: string
       network_name:
@@ -8453,7 +8489,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/68819.string'
+        $ref: '#/definitions/87216.string'
       template_id:
         type: string
       version:
@@ -9444,6 +9480,8 @@ definitions:
       pod_ipv4_cidr_size:
         type: integer
         format: int64
+      pool_status:
+        type: boolean
       self_link:
         type: string
       status:
@@ -9717,7 +9755,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/59615.0xc001b43140.false'
+        $ref: '#/definitions/59615.0xc001ba2b70.false'
       kube_version:
         type: string
       name:
@@ -9991,7 +10029,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001bc7e30.false'
+        $ref: '#/definitions/14391.0xc001c19860.false'
       name:
         type: string
       node_pools:
