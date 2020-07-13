@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -282,6 +283,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 	tags["name"] = &nodePool.NodePoolName
 	nodePool.Tags = tags
 	//generate cluster create request
+	beego.Info("printin==== eks desired size +" + strconv.Itoa(int(*nodePool.ScalingConfig.DesiredSize)))
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
 
