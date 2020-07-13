@@ -754,6 +754,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	}
 
 	if previousPoolCount < newPoolCount {
+
 		var pools []*NodePool
 		for i := previousPoolCount; i < newPoolCount; i++ {
 			pools = append(pools, cluster.NodePools[i])
@@ -776,6 +777,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 			return err
 		}
+
 	} else if previousPoolCount > newPoolCount {
 
 		previousCluster, err := GetPreviousEKSCluster(ctx)
@@ -805,7 +807,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		}
 		if dif.Path[0] == "Logging" && !loggingChanges {
 
-			utils.SendLog(ctx.Data.Company, "Applying Logging Changes "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Applying logging changes on  cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
 
 			loggingChanges = true
@@ -827,9 +829,11 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
-			utils.SendLog(ctx.Data.Company, "Changes Applied Successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Logging changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 		} else if dif.Path[0] == "ResourcesVpcConfig" {
+			utils.SendLog(ctx.Data.Company, "Applying network changes on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 			err := eks.UpdateNetworking(cluster.Name, cluster.ResourcesVpcConfig, ctx)
 			if err != (types.CustomCPError{}) {
 
@@ -849,7 +853,11 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
+			utils.SendLog(ctx.Data.Company, "Network changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 		} else if dif.Path[0] == "Version" {
+			utils.SendLog(ctx.Data.Company, "Changing kubernetes version of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 			err := eks.UpdateClusterVersion(cluster.Name, *cluster.Version, ctx)
 			if err != (types.CustomCPError{}) {
 
@@ -869,8 +877,13 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
+			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 		} else if previousPoolCount < newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
+
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 			err := eks.UpdateNodeConfig(cluster.Name, cluster.NodePools[poolIndex].NodePoolName, *cluster.NodePools[poolIndex].ScalingConfig, ctx)
 			if err != (types.CustomCPError{}) {
 
@@ -890,6 +903,8 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
+			utils.SendLog(ctx.Data.Company, "Scaling config updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 		}
 
 	}
@@ -1115,6 +1130,8 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 	)
 
 	for _, pool := range pools {
+		utils.SendLog(ctx.Data.Company, "Adding nodepool "+pool.NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 		err := eksOps.addNodePool(pool, cluster.Name, subnets, sgs, ctx)
 		if err != (types.CustomCPError{}) {
 			if pool.NodeRole != nil && *pool.NodeRole != "" {
@@ -1129,6 +1146,8 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 			}
 			return err
 		}
+		utils.SendLog(ctx.Data.Company, pool.NodePoolName+" nodepool added successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 	}
 
 	oldCluster, err1 := GetPreviousEKSCluster(ctx)
@@ -1164,6 +1183,7 @@ func PrintError(confError error, name string, ctx utils.Context) {
 }
 
 func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName string) types.CustomCPError {
+	utils.SendLog(ctx.Data.Company, "Deleting nodePool "+poolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 	err := eksOps.deleteNodePool(cluster.Name, poolName)
 	if err != nil {
@@ -1172,6 +1192,7 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 		updationFailedError(cluster, ctx, err_)
 		return err_
 	}
+	utils.SendLog(ctx.Data.Company, " NodePool "+poolName+"deleted successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 	oldCluster, err1 := GetPreviousEKSCluster(ctx)
 	if err1 != nil {
