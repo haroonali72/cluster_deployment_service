@@ -1065,6 +1065,36 @@ func (cloud *EKS) UpdateLogging(name string, logging Logging, ctx utils.Context)
 			Description: err.Error(),
 		}
 	}
+
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster logging update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster.Logging = logging
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster logging update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
 	return types.CustomCPError{}
 }
 func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx utils.Context) types.CustomCPError {
@@ -1082,6 +1112,37 @@ func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx ut
 			Description: err.Error(),
 		}
 	}
+
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster network update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster.ResourcesVpcConfig = network
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster network update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
+			Description: err.Error(),
+		}
+	}
+
 	return types.CustomCPError{}
 }
 func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig NodePoolScalingConfig, ctx utils.Context) types.CustomCPError {
@@ -1099,6 +1160,38 @@ func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig N
 			Description: err.Error(),
 		}
 	}
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster nodepool config update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+	for ind, pools := range oldCluster.NodePools {
+		if pools.NodePoolName == poolName {
+			oldCluster.NodePools[ind].ScalingConfig = &scalingConfig
+		}
+	}
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster nodepool config update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
+			Description: err.Error(),
+		}
+	}
 	return types.CustomCPError{}
 }
 func (cloud *EKS) UpdateClusterVersion(clusterName, version string, ctx utils.Context) types.CustomCPError {
@@ -1113,6 +1206,35 @@ func (cloud *EKS) UpdateClusterVersion(clusterName, version string, ctx utils.Co
 		return types.CustomCPError{
 			StatusCode:  512,
 			Error:       "Error in running cluster version update",
+			Description: err.Error(),
+		}
+	}
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster version update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster.Version = &version
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster version update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
 			Description: err.Error(),
 		}
 	}

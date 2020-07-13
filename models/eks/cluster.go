@@ -893,9 +893,9 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		}
 
 	}
-	beego.Info("***********")
+
 	utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	beego.Info("***********")
+
 	err := DeletePreviousEKSCluster(ctx)
 	if err != nil {
 		beego.Info("***********")
