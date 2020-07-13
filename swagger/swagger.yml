@@ -2652,7 +2652,7 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
-  /cluster/gcp/getallmachines/{region}/{zone}:
+  /cluster/gcp/getallmachines/{zone}:
     get:
       tags:
       - cluster/gcp
@@ -2667,11 +2667,6 @@ paths:
       - in: header
         name: X-Auth-Token
         description: token
-        required: true
-        type: string
-      - in: path
-        name: region
-        description: region of GCP
         required: true
         type: string
       - in: path
@@ -7132,16 +7127,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001b65860.false:
+  482.0xc001bae9c0.false:
     title: "false"
     type: object
-  618.0xc0011d6d20.false:
+  618.0xc0011f5ec0.false:
     title: "false"
     type: object
-  667.0xc001a72690.false:
+  667.0xc001a9d7d0.false:
     title: "false"
     type: object
-  964.0xc00152b020.false:
+  964.0xc00156a6c0.false:
     title: "false"
     type: object
   5689.string:
@@ -7150,22 +7145,22 @@ definitions:
   8344.string:
     title: string
     type: object
-  9082.string:
+  9080.string:
     title: string
     type: object
   11771.string:
     title: string
     type: object
-  14391.0xc001bab7d0.false:
+  14391.0xc001be4930.false:
     title: "false"
     type: object
-  59615.0xc001b28ae0.false:
+  59615.0xc001b55c20.false:
     title: "false"
     type: object
   64122.string:
     title: string
     type: object
-  68418.string:
+  68523.string:
     title: string
     type: object
   X-Profile-Id:
@@ -7445,7 +7440,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0011d6d20.false'
+        $ref: '#/definitions/618.0xc0011f5ec0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7887,7 +7882,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00152b020.false'
+        $ref: '#/definitions/964.0xc00156a6c0.false'
       name:
         type: string
       network_name:
@@ -8172,6 +8167,8 @@ definitions:
       name:
         description: Cluster name [required]
         type: string
+      network_name:
+        type: string
       node_pools:
         type: array
         items:
@@ -8191,6 +8188,8 @@ definitions:
           type: string
       version:
         description: Kubernetes version to be provisioned [required]
+        type: string
+      vpc_id:
         type: string
   doks.KubernetesConfig:
     title: KubernetesConfig
@@ -8449,7 +8448,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/68418.string'
+        $ref: '#/definitions/68523.string'
       template_id:
         type: string
       version:
@@ -8526,6 +8525,9 @@ definitions:
       ami_type:
         description: AMI for nodepool [required]
         type: string
+      auto_scaling:
+        $ref: '#/definitions/eks.NodePoolScalingConfig'
+        description: Scaling Configurations for nodepool [optional]
       disk_size:
         description: Size of disk for nodes in nodepool [optional]
         type: integer
@@ -8539,22 +8541,19 @@ definitions:
       remote_access:
         $ref: '#/definitions/eks.RemoteAccessConfig'
         description: Access Levels (private of public)[optional]
-      scaling_config:
-        $ref: '#/definitions/eks.NodePoolScalingConfig'
-        description: Scaling Configurations for nodepool [optional]
   eks.NodePoolScalingConfig:
     title: NodePoolScalingConfig
     type: object
     properties:
+      autoscale:
+        type: boolean
       desired_size:
         type: integer
         format: int64
-      is_enabled:
-        type: boolean
-      max_size:
+      max_scaling_group_size:
         type: integer
         format: int64
-      min_size:
+      min_scaling_group_size:
         type: integer
         format: int64
   eks.Provider:
@@ -9716,7 +9715,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/59615.0xc001b28ae0.false'
+        $ref: '#/definitions/59615.0xc001b55c20.false'
       kube_version:
         type: string
       name:
@@ -9990,7 +9989,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001bab7d0.false'
+        $ref: '#/definitions/14391.0xc001be4930.false'
       name:
         type: string
       node_pools:

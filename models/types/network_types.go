@@ -42,6 +42,7 @@ type Subnet struct {
 	Name     string `json:"name" bson:"name"`
 	CIDR     string `json:"cidr" bson:"cidr"`
 	Link     string `json:"link" bson:"link"`
+	Zone     string `json:"availability_zone" bson:"availability_zone"`
 }
 
 type SecurityGroup struct {
