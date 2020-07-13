@@ -640,56 +640,54 @@ func GenerateNodePoolFromRequest(pools []*NodePool) []*gke.NodePool {
 	return nodePools
 }
 
-func GenerateNodePoolManagementFromRequest(project, region, zone string,nodepool NodePool) *gke.SetNodePoolManagementRequest{
+func GenerateNodePoolManagementFromRequest(project, region, zone string, nodepool NodePool) *gke.SetNodePoolManagementRequest {
 
-	if *nodepool.Management == (NodeManagement{}){
+	if *nodepool.Management == (NodeManagement{}) {
 		nodepool.Management = &NodeManagement{}
-		nodepool.Management.AutoUpgrade=false
-		nodepool.Management.AutoRepair=false
+		nodepool.Management.AutoUpgrade = false
+		nodepool.Management.AutoRepair = false
 	}
 
 	request := gke.SetNodePoolManagementRequest{
-		Management:      &gke.NodeManagement{
-			AutoRepair:     nodepool.Management.AutoRepair,
-			AutoUpgrade:   nodepool.Management.AutoUpgrade,
+		Management: &gke.NodeManagement{
+			AutoRepair:  nodepool.Management.AutoRepair,
+			AutoUpgrade: nodepool.Management.AutoUpgrade,
 			UpgradeOptions: &gke.AutoUpgradeOptions{
 				AutoUpgradeStartTime: nodepool.Management.UpgradeOptions.AutoUpgradeStartTime,
 				Description:          nodepool.Management.UpgradeOptions.Description,
 			},
 		},
-		Name:            "projects/" + project + "/locations/" + region + "-" + zone+ "/nodePools/"+nodepool.Name,
-
+		Name: "projects/" + project + "/locations/" + region + "-" + zone + "/nodePools/" + nodepool.Name,
 	}
 
 	return &request
 }
 
-func  GenerateNodepoolCreateRequest(project, region, zone,clusterName string,pool []*NodePool) *gke.CreateNodePoolRequest {
-//	if pool.InitialNodeCount == 0 {
-//		return &gke.CreateNodePoolRequest{}
-//	}
+func GenerateNodepoolCreateRequest(project, region, zone, clusterName string, pool []*NodePool) *gke.CreateNodePoolRequest {
+	//	if pool.InitialNodeCount == 0 {
+	//		return &gke.CreateNodePoolRequest{}
+	//	}
 	nPool := GenerateNodePoolFromRequest(pool)
-	for _,pool := range nPool {
+	for _, pool := range nPool {
 		return &gke.CreateNodePoolRequest{
 			NodePool: pool,
 			Parent:   "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
 		}
 	}
-return &gke.CreateNodePoolRequest{}
+	return &gke.CreateNodePoolRequest{}
 }
 
-func SetNetworkPolicyFromRequest(project, region, zone,clusterName string,policy *NetworkPolicy) *gke.SetNetworkPolicyRequest {
+func SetNetworkPolicyFromRequest(project, region, zone, clusterName string, policy *NetworkPolicy) *gke.SetNetworkPolicyRequest {
 	if policy == nil {
 		return nil
 	}
 
 	return &gke.SetNetworkPolicyRequest{
-		Name:             "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
-		NetworkPolicy:   &gke.NetworkPolicy{
-			Enabled:         policy.Enabled,
-			Provider:        policy.Provider,
+		Name: "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+		NetworkPolicy: &gke.NetworkPolicy{
+			Enabled:  policy.Enabled,
+			Provider: policy.Provider,
 		},
-
 	}
 }
 
@@ -699,17 +697,16 @@ func SetMaintenancePolicyFromRequest(project, region, zone, clusterName string, 
 	}
 
 	return &gke.SetMaintenancePolicyRequest{
-		ClusterId:         clusterName,
+		ClusterId: clusterName,
 		MaintenancePolicy: &gke.MaintenancePolicy{
-			Window:          &gke.MaintenanceWindow{
+			Window: &gke.MaintenanceWindow{
 				DailyMaintenanceWindow: &gke.DailyMaintenanceWindow{
-					Duration:        policy.Window.DailyMaintenanceWindow.Duration,
-					StartTime:       policy.Window.DailyMaintenanceWindow.StartTime,
+					Duration:  policy.Window.DailyMaintenanceWindow.Duration,
+					StartTime: policy.Window.DailyMaintenanceWindow.StartTime,
 				},
 			},
-
 		},
-		Name:               "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+		Name: "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
 	}
 
 }
@@ -720,9 +717,8 @@ func SetLegacyAbacFromRequest(project, region, zone, clusterName string, legacy 
 	}
 
 	return &gke.SetLegacyAbacRequest{
-		Enabled:         legacy.Enabled,
-		Name:            "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
+		Enabled: legacy.Enabled,
+		Name:    "projects/" + project + "/locations/" + region + "-" + zone + "/clusters/" + clusterName,
 	}
 
 }
-

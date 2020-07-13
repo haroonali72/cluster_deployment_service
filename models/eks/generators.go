@@ -8,6 +8,50 @@ import (
 	"strconv"
 )
 
+func GenerateClusterUpdateLoggingRequest(name string, logging Logging) *eks.UpdateClusterConfigInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateClusterConfigInput{
+		ClientRequestToken: aws.String(id.String()),
+		Name:               aws.String(name),
+		Logging:            generateLoggingFromRequest(logging),
+	}
+
+	return input
+
+}
+func GenerateClusterUpdateNetworkRequest(name string, vpcConfig VpcConfigRequest) *eks.UpdateClusterConfigInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateClusterConfigInput{
+		ClientRequestToken: aws.String(id.String()),
+		Name:               aws.String(name),
+		ResourcesVpcConfig: generateResourcesVpcConfigFromRequest(vpcConfig),
+	}
+
+	return input
+
+}
+func GeneratNodeConfigUpdateRequest(clusterName, poolName string, scalingConfig NodePoolScalingConfig) *eks.UpdateNodegroupConfigInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateNodegroupConfigInput{
+		ClientRequestToken: aws.String(id.String()),
+		ClusterName:        aws.String(clusterName),
+		NodegroupName:      aws.String(poolName),
+		ScalingConfig:      generateScalingConfigFromRequest(&scalingConfig),
+	}
+
+	return input
+
+}
+func GenerateUpdateClusterVersionRequest(clusterName, version string) *eks.UpdateClusterVersionInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateClusterVersionInput{
+		ClientRequestToken: aws.String(id.String()),
+		Version:            aws.String(version),
+	}
+	return input
+
+}
+
 func GenerateClusterCreateRequest(c EKSCluster) *eks.CreateClusterInput {
 	id, _ := uuid.NewRandom()
 	input := &eks.CreateClusterInput{
@@ -25,6 +69,7 @@ func GenerateClusterCreateRequest(c EKSCluster) *eks.CreateClusterInput {
 	}
 
 	return input
+
 }
 
 func generateEncryptionConfigFromRequest(v []*EncryptionConfig) []*eks.EncryptionConfig {
