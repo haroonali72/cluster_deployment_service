@@ -28,7 +28,7 @@ type EKSCluster struct {
 	ModificationDate   time.Time          `json:"-" bson:"modification_date"`
 	NodePools          []*NodePool        `json:"node_pools" bson:"node_pools" validate:"required,dive"`
 	IsAdvanced         bool               `json:"is_advance" bson:"is_advance" description:"Cluster advance level settings possible value 'true' or 'false'"`
-	Status             models.Type        `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
+	Status             models.Type        `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Update Failed|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
 	CompanyId          string             `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
 	OutputArn          *string            `json:"-" bson:"output_arn,omitempty"`
 	EncryptionConfig   *EncryptionConfig  `json:"encryption_config,omitempty" bson:"encryption_config,omitempty" description:"Encryption Configurations [optional]"`
@@ -915,6 +915,12 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		for strings.ToLower(string(*latestCluster.Status)) != strings.ToLower("running") {
 			time.Sleep(time.Second * 60)
 		}*/
+	cluster.Status = models.ClusterCreated
+	err_update := UpdateEKSCluster(cluster, ctx)
+	if err_update != nil {
+
+		ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+err_update.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
 
 	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 
