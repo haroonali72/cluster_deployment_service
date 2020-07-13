@@ -443,8 +443,8 @@ func (c *GKEClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
-	ctx.Data.Company=userInfo.CompanyId
-	ctx.Data.ProjectId=cluster.ProjectId
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.ProjectId = cluster.ProjectId
 
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 
@@ -471,7 +471,7 @@ func (c *GKEClusterController) Patch() {
 	ctx.SendLogs("GKEClusterController: Updating cluster "+cluster.Name+" of project id "+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	if cluster.CloudplexStatus == (models.ClusterCreated) || cluster.CloudplexStatus == (models.ClusterTerminationFailed) || cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
-		err :=gke.UpdatePreviousGKECluster(cluster,*ctx)
+		err := gke.UpdatePreviousGKECluster(cluster, *ctx)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
 				c.Ctx.Output.SetStatus(404)
@@ -1277,7 +1277,6 @@ func (c *GKEClusterController) PatchRunningCluster() {
 		c.ServeJSON()
 		return
 	}
-
 
 	region, zone, err := gcp.GetRegion(token, projectId, *ctx)
 	if err != nil {

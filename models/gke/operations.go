@@ -82,7 +82,7 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 			Error:       "Error in cluster creation",
 			Description: err.Error(),
 		}
-	}else if err !=nil{
+	} else if err != nil {
 		ctx.SendLogs(
 			"GKE cluster creation of '"+gkeCluster.Name+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
@@ -101,8 +101,6 @@ func (cloud *GKE) CreateCluster(gkeCluster GKECluster, token string, ctx utils.C
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
 	)
-
-
 
 	return cloud.waitForCluster(gkeCluster.Name, ctx)
 }
@@ -139,10 +137,10 @@ func (cloud *GKE) UpdateMasterVersion(cluster GKECluster, ctx utils.Context) typ
 }
 func (cloud *GKE) UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 	if cluster.MaintenancePolicy == nil {
-		cluster.MaintenancePolicy=&MaintenancePolicy{}
+		cluster.MaintenancePolicy = &MaintenancePolicy{}
 
 	}
-	request := SetMaintenancePolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster.Name,cluster.MaintenancePolicy)
+	request := SetMaintenancePolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster.Name, cluster.MaintenancePolicy)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.SetMaintenancePolicy(
 		cloud.ProjectId,
@@ -169,10 +167,10 @@ func (cloud *GKE) UpdateMaintenancePolicy(cluster GKECluster, ctx utils.Context)
 func (cloud *GKE) UpdateLegacyAbac(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 	if cluster.LegacyAbac == nil {
 		cluster.LegacyAbac = &LegacyAbac{}
-		cluster.LegacyAbac.Enabled=false
+		cluster.LegacyAbac.Enabled = false
 	}
 
-	request := SetLegacyAbacFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster.Name,cluster.LegacyAbac)
+	request := SetLegacyAbacFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster.Name, cluster.LegacyAbac)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.LegacyAbac(
 		cloud.ProjectId,
@@ -218,17 +216,17 @@ func (cloud *GKE) UpdateNodePoolVersion(clusterName, nodeName, newVersion string
 		return ApiErrors(err, "Error in running nodepool update request of version")
 	}
 
-	return cloud.waitForCluster(clusterName,  ctx)
+	return cloud.waitForCluster(clusterName, ctx)
 }
 
 func (cloud *GKE) UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 
 	if cluster.AddonsConfig.HttpLoadBalancing == nil {
 		cluster.AddonsConfig.HttpLoadBalancing = &HttpLoadBalancing{}
-		cluster.AddonsConfig.HttpLoadBalancing.Disabled=false
+		cluster.AddonsConfig.HttpLoadBalancing.Disabled = false
 	}
 
-	response :=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
 		cloud.ProjectId,
@@ -257,14 +255,14 @@ func (cloud *GKE) UpdateHttpLoadBalancing(cluster GKECluster, ctx utils.Context)
 }
 func (cloud *GKE) UpdateMonitoringAndLoggingService(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 	var alreadyDone bool
-	if alreadyDone ==true{
+	if alreadyDone == true {
 		return types.CustomCPError{}
-	}else {
-		cluster.MonitoringService ="none"
+	} else {
+		cluster.MonitoringService = "none"
 		cluster.LoggingService = "none"
 	}
 
-	response:=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
 		cloud.ProjectId,
@@ -272,8 +270,8 @@ func (cloud *GKE) UpdateMonitoringAndLoggingService(cluster GKECluster, ctx util
 		cluster.Name,
 		&gke.UpdateClusterRequest{
 			Update: &gke.ClusterUpdate{
-					DesiredMonitoringService: response.Cluster.MonitoringService,
-					DesiredLoggingService: response.Cluster.LoggingService,
+				DesiredMonitoringService: response.Cluster.MonitoringService,
+				DesiredLoggingService:    response.Cluster.LoggingService,
 			},
 		},
 	).Context(context.Background()).Do()
@@ -289,17 +287,17 @@ func (cloud *GKE) UpdateMonitoringAndLoggingService(cluster GKECluster, ctx util
 			Description: err.Error(),
 		}
 	}
-	alreadyDone=true
+	alreadyDone = true
 
 	return cloud.waitForCluster(cluster.Name, ctx)
 }
 func (cloud *GKE) UpdateClusterZone(cluster GKECluster, ctx utils.Context) types.CustomCPError {
 
 	if cluster.Zone == "" {
-		return types.CustomCPError {512,"Zone cant be empty","Zone cant be empty"}
+		return types.CustomCPError{512, "Zone cant be empty", "Zone cant be empty"}
 	}
 
-	response :=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
 		cloud.ProjectId,
@@ -308,7 +306,7 @@ func (cloud *GKE) UpdateClusterZone(cluster GKECluster, ctx utils.Context) types
 		&gke.UpdateClusterRequest{
 			Update: &gke.ClusterUpdate{
 				DesiredAddonsConfig: response.Cluster.AddonsConfig,
-					DesiredLocations:[]string{cluster.Zone},
+				DesiredLocations:    []string{cluster.Zone},
 			},
 		},
 	).Context(context.Background()).Do()
@@ -328,12 +326,12 @@ func (cloud *GKE) UpdateClusterZone(cluster GKECluster, ctx utils.Context) types
 	return cloud.waitForCluster(cluster.Name, ctx)
 }
 func (cloud *GKE) UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx utils.Context) types.CustomCPError {
-	if cluster.MasterAuthorizedNetworksConfig ==nil {
+	if cluster.MasterAuthorizedNetworksConfig == nil {
 		cluster.MasterAuthorizedNetworksConfig = &MasterAuthorizedNetworksConfig{}
-		cluster.MasterAuthorizedNetworksConfig.Enabled=false
+		cluster.MasterAuthorizedNetworksConfig.Enabled = false
 
 	}
-	response :=  GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster)
+	response := GenerateClusterCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
 		cloud.ProjectId,
@@ -360,12 +358,12 @@ func (cloud *GKE) UpdateMasterAuthorizedNetworksConfig(cluster GKECluster, ctx u
 	return cloud.waitForCluster(cluster.Name, ctx)
 }
 func (cloud *GKE) UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context) types.CustomCPError {
-	value := &gke.NetworkPolicyConfig{Disabled:false}
+	value := &gke.NetworkPolicyConfig{Disabled: false}
 
-	if cluster.NetworkPolicy ==nil{
+	if cluster.NetworkPolicy == nil {
 		cluster.NetworkPolicy = &NetworkPolicy{}
-		cluster.NetworkPolicy.Enabled=false
-		value = &gke.NetworkPolicyConfig{Disabled:true}
+		cluster.NetworkPolicy.Enabled = false
+		value = &gke.NetworkPolicyConfig{Disabled: true}
 	}
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
@@ -375,9 +373,8 @@ func (cloud *GKE) UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context) typ
 		&gke.UpdateClusterRequest{
 			Update: &gke.ClusterUpdate{
 				DesiredAddonsConfig: &gke.AddonsConfig{
-					NetworkPolicyConfig:     value,
+					NetworkPolicyConfig: value,
 				},
-
 			},
 		},
 	).Context(context.Background()).Do()
@@ -395,11 +392,11 @@ func (cloud *GKE) UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context) typ
 	}
 
 	err1 := cloud.waitForCluster(cluster.Name, ctx)
-	if err1 != (types.CustomCPError{}){
+	if err1 != (types.CustomCPError{}) {
 		return err1
 	}
 
-	response :=  SetNetworkPolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone,cluster.Name,cluster.NetworkPolicy)
+	response := SetNetworkPolicyFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, cluster.Name, cluster.NetworkPolicy)
 
 	_, err = cloud.Client.Projects.Zones.Clusters.SetNetworkPolicy(
 		cloud.ProjectId,
@@ -423,15 +420,15 @@ func (cloud *GKE) UpdateNetworkPolicy(cluster GKECluster, ctx utils.Context) typ
 }
 
 func (cloud *GKE) UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.Context) types.CustomCPError {
-	if *cluster.ResourceUsageExportConfig == (ResourceUsageExportConfig{}){
-		cluster.ResourceUsageExportConfig=&ResourceUsageExportConfig{}
-		cluster.ResourceUsageExportConfig.EnableNetworkEgressMetering=false
-		cluster.ResourceUsageExportConfig.ConsumptionMeteringConfig =&ConsumptionMeteringConfig{Enabled:false}
-		cluster.ResourceUsageExportConfig.BigqueryDestination=&BigQueryDestination{DatasetId:""}
+	if *cluster.ResourceUsageExportConfig == (ResourceUsageExportConfig{}) {
+		cluster.ResourceUsageExportConfig = &ResourceUsageExportConfig{}
+		cluster.ResourceUsageExportConfig.EnableNetworkEgressMetering = false
+		cluster.ResourceUsageExportConfig.ConsumptionMeteringConfig = &ConsumptionMeteringConfig{Enabled: false}
+		cluster.ResourceUsageExportConfig.BigqueryDestination = &BigQueryDestination{DatasetId: ""}
 		return types.CustomCPError{}
 	}
 
-	response :=  GenerateResourceUsageExportConfigFromRequest(cluster.ResourceUsageExportConfig)
+	response := GenerateResourceUsageExportConfigFromRequest(cluster.ResourceUsageExportConfig)
 
 	_, err := cloud.Client.Projects.Zones.Clusters.Update(
 		cloud.ProjectId,
@@ -441,7 +438,7 @@ func (cloud *GKE) UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.
 			Update: &gke.ClusterUpdate{
 				DesiredResourceUsageExportConfig: &gke.ResourceUsageExportConfig{
 					BigqueryDestination:         response.BigqueryDestination,
-					ConsumptionMeteringConfig:  response.ConsumptionMeteringConfig,
+					ConsumptionMeteringConfig:   response.ConsumptionMeteringConfig,
 					EnableNetworkEgressMetering: response.EnableNetworkEgressMetering,
 				},
 			},
@@ -463,17 +460,16 @@ func (cloud *GKE) UpdateResourceUsageExportConfig(cluster GKECluster, ctx utils.
 	return cloud.waitForCluster(cluster.Name, ctx)
 }
 
-
-func (cloud *GKE) UpdateNodepoolManagement(clusterName string , nodepool NodePool, ctx utils.Context) types.CustomCPError{
-	if nodepool.Management ==nil{
-		nodepool.Management= &NodeManagement{}
+func (cloud *GKE) UpdateNodepoolManagement(clusterName string, nodepool NodePool, ctx utils.Context) types.CustomCPError {
+	if nodepool.Management == nil {
+		nodepool.Management = &NodeManagement{}
 		nodepool.Management.AutoRepair = false
-		nodepool.Management.AutoUpgrade=false
+		nodepool.Management.AutoUpgrade = false
 	}
 
-	request := GenerateNodePoolManagementFromRequest(cloud.ProjectId,cloud.Region,cloud.Zone,nodepool)
+	request := GenerateNodePoolManagementFromRequest(cloud.ProjectId, cloud.Region, cloud.Zone, nodepool)
 
-	_,err := cloud.Client.Projects.Zones.Clusters.NodePools.SetManagement(cloud.ProjectId,cloud.Region + "-" +cloud.Zone,clusterName,nodepool.Name,request).Context(context.Background()).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.SetManagement(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName, nodepool.Name, request).Context(context.Background()).Do()
 	if err != nil {
 		ctx.SendLogs(
 			"GKE running cluster nodepool count update request of "+clusterName+" nodepool "+nodepool.Name+" failed "+err.Error(),
@@ -485,14 +481,14 @@ func (cloud *GKE) UpdateNodepoolManagement(clusterName string , nodepool NodePoo
 
 	return cloud.waitForCluster(clusterName, ctx)
 }
-func (cloud *GKE) UpdateNodepoolScaling( clusterName string, nodepool NodePool,ctx utils.Context )types.CustomCPError{
+func (cloud *GKE) UpdateNodepoolScaling(clusterName string, nodepool NodePool, ctx utils.Context) types.CustomCPError {
 	if *nodepool.Autoscaling == (NodePoolAutoscaling{}) {
-		nodepool.Autoscaling.Enabled=false
-	}else if nodepool.Autoscaling.MinNodeCount==0 || nodepool.Autoscaling.MaxNodeCount == 0 {
+		nodepool.Autoscaling.Enabled = false
+	} else if nodepool.Autoscaling.MinNodeCount == 0 || nodepool.Autoscaling.MaxNodeCount == 0 {
 		return types.CustomCPError{
-			StatusCode:512,
-			Error : "Error in running cluster autoscaling update",
-			Description :"Min/max node count cannot be zero.Select numerical value for node count.",
+			StatusCode:  512,
+			Error:       "Error in running cluster autoscaling update",
+			Description: "Min/max node count cannot be zero.Select numerical value for node count.",
 		}
 	}
 
@@ -502,12 +498,12 @@ func (cloud *GKE) UpdateNodepoolScaling( clusterName string, nodepool NodePool,c
 		clusterName,
 		nodepool.Name,
 		&gke.SetNodePoolAutoscalingRequest{
-			Autoscaling:     &gke.NodePoolAutoscaling{
-				Enabled:        nodepool.Autoscaling.Enabled,
-				MaxNodeCount:    nodepool.Autoscaling.MaxNodeCount,
-				MinNodeCount:    nodepool.Autoscaling.MinNodeCount,
+			Autoscaling: &gke.NodePoolAutoscaling{
+				Enabled:      nodepool.Autoscaling.Enabled,
+				MaxNodeCount: nodepool.Autoscaling.MaxNodeCount,
+				MinNodeCount: nodepool.Autoscaling.MinNodeCount,
 			},
-			Name:            clusterName,
+			Name: clusterName,
 		},
 	).Context(context.Background()).Do()
 	if err != nil {
@@ -521,11 +517,11 @@ func (cloud *GKE) UpdateNodepoolScaling( clusterName string, nodepool NodePool,c
 
 	return cloud.waitForCluster(clusterName, ctx)
 }
-func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils.Context) types.CustomCPError{
+func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool, ctx utils.Context) types.CustomCPError {
 
-	nodepoolRequest := GenerateNodepoolCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone,clusterName, nodepool)
+	nodepoolRequest := GenerateNodepoolCreateRequest(cloud.ProjectId, cloud.Region, cloud.Zone, clusterName, nodepool)
 
-	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName,nodepoolRequest).Context(context.Background()).Do()
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Create(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName, nodepoolRequest).Context(context.Background()).Do()
 	if err != nil && !strings.Contains(err.Error(), "Already exists") {
 		ctx.SendLogs(
 			"GKE nodepool creation of '"+clusterName+"' failed: "+err.Error(),
@@ -537,7 +533,7 @@ func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils
 			Error:       "Error in adding nodepool in running cluster.Nodepoll alreaady exist",
 			Description: err.Error(),
 		}
-	}else if err !=nil{
+	} else if err != nil {
 		ctx.SendLogs(
 			"GKE nodepool creation of '"+nodepool[1].Name+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
@@ -550,7 +546,6 @@ func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils
 		}
 	}
 
-
 	requestJson, _ := json.Marshal(nodepoolRequest)
 	ctx.SendLogs(
 		"GKE cluster creation of "+clusterName+" submitted: "+string(requestJson),
@@ -558,13 +553,12 @@ func (cloud *GKE) AddNodePool(clusterName string, nodepool []*NodePool,ctx utils
 		models.Backend_Logging,
 	)
 
-
 	return cloud.waitForCluster(clusterName, ctx)
 }
-func (cloud *GKE) DeleteNodePool(clusterName , nodepoolName string,ctx utils.Context) types.CustomCPError{
+func (cloud *GKE) DeleteNodePool(clusterName, nodepoolName string, ctx utils.Context) types.CustomCPError {
 
-	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone,clusterName, nodepoolName).Context(context.Background()).Do()
-	if err != nil   {
+	_, err := cloud.Client.Projects.Zones.Clusters.NodePools.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, clusterName, nodepoolName).Context(context.Background()).Do()
+	if err != nil {
 		ctx.SendLogs(
 			"GKE nodepool deletion of '"+nodepoolName+"' failed: "+err.Error(),
 			models.LOGGING_LEVEL_ERROR,
@@ -580,7 +574,7 @@ func (cloud *GKE) DeleteNodePool(clusterName , nodepoolName string,ctx utils.Con
 	return cloud.waitForCluster(clusterName, ctx)
 }
 
-func (cloud *GKE) UpdateNodePoolImageType(clusterName string,pool NodePool, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) UpdateNodePoolImageType(clusterName string, pool NodePool, ctx utils.Context) types.CustomCPError {
 	if pool.Config.ImageType == "" {
 		return types.CustomCPError{}
 	}
@@ -603,9 +597,9 @@ func (cloud *GKE) UpdateNodePoolImageType(clusterName string,pool NodePool, ctx 
 		return ApiErrors(err, "Error in running cluster nodepool image type update")
 	}
 
-	return cloud.waitForCluster(clusterName,  ctx)
+	return cloud.waitForCluster(clusterName, ctx)
 }
-func (cloud *GKE) UpdateNodePoolCount(clusterName string,pool NodePool, ctx utils.Context) types.CustomCPError {
+func (cloud *GKE) UpdateNodePoolCount(clusterName string, pool NodePool, ctx utils.Context) types.CustomCPError {
 	if pool.InitialNodeCount == 0 {
 		return types.CustomCPError{
 			StatusCode:  500,

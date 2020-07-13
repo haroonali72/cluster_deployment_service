@@ -3676,6 +3676,58 @@
                 }
             }
         },
+        "/cluster/eks/update/{projectId}": {
+            "put": {
+                "tags": [
+                    "cluster/eks"
+                ],
+                "description": "Update a running kubernetes cluster",
+                "operationId": "EKSClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "{\"msg\": \"Running cluster updated successfully\"}"
+                    },
+                    "202": {
+                        "description": "{\"msg\": \"Running cluster updation initiated\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed/Terminating/Terminated state\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/eks/{projectId}/": {
             "get": {
                 "tags": [
@@ -3894,7 +3946,7 @@
                 }
             }
         },
-        "/cluster/gcp/getallmachines/{zone}": {
+        "/cluster/gcp/getallmachines/{region}/{zone}": {
             "get": {
                 "tags": [
                     "cluster/gcp"
@@ -3913,6 +3965,13 @@
                         "in": "header",
                         "name": "X-Auth-Token",
                         "description": "token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "region",
+                        "description": "region of GCP",
                         "required": true,
                         "type": "string"
                     },
@@ -10643,27 +10702,27 @@
             "title": "*string",
             "type": "object"
         },
+        "10727.string": {
+            "title": "string",
+            "type": "object"
+        },
         "11771.string": {
             "title": "string",
             "type": "object"
         },
-        "14391.0xc001be4930.false": {
+        "14391.0xc001c19860.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001bae9c0.false": {
+        "482.0xc001bdf8f0.false": {
             "title": "false",
             "type": "object"
         },
-        "5689.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "59615.0xc001b55c20.false": {
+        "59615.0xc001ba2b70.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc0011f5ec0.false": {
+        "618.0xc0011f2810.false": {
             "title": "false",
             "type": "object"
         },
@@ -10671,24 +10730,24 @@
             "title": "string",
             "type": "object"
         },
-        "667.0xc001a9d7d0.false": {
+        "667.0xc001af2720.false": {
             "title": "false",
             "type": "object"
         },
-        "68523.string": {
+        "7336.string": {
             "title": "string",
             "type": "object"
         },
-        "8344.string": {
+        "87216.string": {
             "title": "string",
             "type": "object"
         },
-        "9080.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "964.0xc00156a6c0.false": {
+        "964.0xc00154eff0.false": {
             "title": "false",
+            "type": "object"
+        },
+        "9991.string": {
+            "title": "string",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -11067,7 +11126,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc0011f5ec0.false"
+                    "$ref": "#/definitions/618.0xc0011f2810.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11694,7 +11753,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00156a6c0.false"
+                    "$ref": "#/definitions/964.0xc00154eff0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12511,7 +12570,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/68523.string"
+                    "$ref": "#/definitions/87216.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -12558,10 +12617,6 @@
                 },
                 "machine_type": {
                     "type": "string"
-                },
-                "max_size": {
-                    "type": "integer",
-                    "format": "int64"
                 },
                 "name": {
                     "type": "string"
@@ -13933,6 +13988,9 @@
                     "type": "integer",
                     "format": "int64"
                 },
+                "pool_status": {
+                    "type": "boolean"
+                },
                 "self_link": {
                     "type": "string"
                 },
@@ -14324,7 +14382,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/59615.0xc001b55c20.false"
+                    "$ref": "#/definitions/59615.0xc001ba2b70.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14697,7 +14755,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001be4930.false"
+                    "$ref": "#/definitions/14391.0xc001c19860.false"
                 },
                 "name": {
                     "type": "string"

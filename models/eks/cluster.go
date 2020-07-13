@@ -12,7 +12,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/r3labs/diff"
 	"gopkg.in/mgo.v2/bson"
+	"strconv"
+
 	"strings"
 	"time"
 )
@@ -113,9 +116,9 @@ type EKSPoolStatus struct {
 	AMI         *string `json:"ami_type"`
 	MachineType *string `json:"machine_type"`
 
-	Scaling AutoScaling      `json:"auto_scaling"`
-	MaxSize *int64           `json:"max_size"`
-	Nodes   []EKSNodesStatus `json:"nodes"`
+	Scaling AutoScaling `json:"auto_scaling"`
+	//MaxSize *int64           `json:"max_size"`
+	Nodes []EKSNodesStatus `json:"nodes"`
 }
 type EKSNodesStatus struct {
 	Name      *string `json:"name"`
@@ -712,4 +715,407 @@ func GetEKSClusters(projectId string, credentials vault.AwsProfile, ctx utils.Co
 		return nil, cpError
 	}
 	return clusters, types.CustomCPError{}
+}
+func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials, token string, ctx utils.Context) (confError types.CustomCPError) {
+
+	publisher := utils.Notifier{}
+	publisher.Init_notifier()
+
+	eks := GetEKS(cluster.ProjectId, credentials)
+
+	eks.init()
+	utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(ctx)
+	if err1 != nil {
+		ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, err1.Error()+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+		if !strings.Contains(err1.Error(), "Nothing to update") {
+			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+			cluster.Status = models.ClusterUpdateFailed
+			confError := UpdateEKSCluster(cluster, ctx)
+			if confError != nil {
+				ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			err := ApiError(err1, "Error occured while apply cluster changes", 500)
+			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+			if err_ != nil {
+				ctx.SendLogs("GKEUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+			return err
+		}
+
+		publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+		return types.CustomCPError{}
+	}
+
+	if previousPoolCount < newPoolCount {
+		var pools []*NodePool
+		for i := previousPoolCount; i < newPoolCount; i++ {
+			pools = append(pools, cluster.NodePools[i])
+		}
+
+		err := AddNodepool(cluster, ctx, eks, pools, previousPoolCount, token)
+		if err != (types.CustomCPError{}) {
+			return err
+		}
+	} else if previousPoolCount > newPoolCount {
+
+		previousCluster, err := GetPreviousEKSCluster(ctx)
+		if err != nil {
+			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+		}
+		for _, pool := range cluster.NodePools {
+			delete := true
+			for _, oldpool := range previousCluster.NodePools {
+				if pool.NodePoolName == oldpool.NodePoolName {
+					delete = false
+				}
+			}
+			if delete == true {
+				DeleteNodepool(cluster, ctx, eks, pool.NodePoolName)
+			}
+		}
+	}
+	for _, dif := range difCluster {
+		if len(dif.Path) > 2 {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			if poolIndex > (previousPoolCount - 1) {
+				break
+			}
+		}
+		if dif.Path[0] == "Logging" {
+			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "ResourcesVpcConfig" {
+			err := eks.UpdateNetworking(cluster.Name, cluster.ResourcesVpcConfig, ctx)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "Version" {
+			err := eks.UpdateClusterVersion(cluster.Name, *cluster.Version, ctx)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		} else if dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			err := eks.UpdateNodeConfig(cluster.Name, cluster.NodePools[poolIndex].NodePoolName, *cluster.NodePools[poolIndex].ScalingConfig, ctx)
+			if err != (types.CustomCPError{}) {
+				return err
+			}
+		}
+
+	}
+
+	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+	DeletePreviousEKSCluster(ctx)
+
+	cluster, err := GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	if err != nil {
+	}
+
+	latestCluster, err2 := eks.GetClusterStatus(cluster.Name, ctx)
+	if err2 != (types.CustomCPError{}) {
+		return err2
+	}
+
+	for strings.ToLower(string(*latestCluster.Status)) != strings.ToLower("running") {
+		time.Sleep(time.Second * 60)
+	}
+
+	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+
+	return types.CustomCPError{}
+
+}
+
+func AddPreviousEKSCluster(cluster EKSCluster, ctx utils.Context, patch bool) error {
+	var oldCluster EKSCluster
+	_, err := GetPreviousEKSCluster(ctx)
+	if err == nil {
+		err := DeletePreviousEKSCluster(ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	}
+
+	if patch == false {
+		oldCluster, err = GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	} else {
+		oldCluster = cluster
+	}
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"GKEAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+
+	if cluster.CreationDate.IsZero() {
+		cluster.CreationDate = time.Now()
+		cluster.ModificationDate = time.Now()
+		cluster.Cloud = models.GKE
+		cluster.CompanyId = ctx.Data.Company
+	}
+
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoEKSPreviousClusterCollection, oldCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"GKEAddClusterModel:  Add previous cluster -  "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
+
+func GetPreviousEKSCluster(ctx utils.Context) (cluster EKSCluster, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs(
+			"GKEGetClusterModel:  Get previous cluster - Got error while connecting to the database: "+err1.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err1
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
+	err = c.Find(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company}).One(&cluster)
+	if err != nil {
+		ctx.SendLogs(
+			"GKEGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err
+	}
+
+	return cluster, nil
+}
+
+func UpdatePreviousEKSCluster(cluster EKSCluster, ctx utils.Context) error {
+
+	err := AddPreviousEKSCluster(cluster, ctx, false)
+	if err != nil {
+		text := "EKSClusterModel:  Update  previous cluster - " + cluster.Name + " " + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New(text)
+	}
+
+	err = UpdateEKSCluster(cluster, ctx)
+	if err != nil {
+		text := "EKSClusterModel:  Update previous cluster - " + cluster.Name + " " + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		err = DeletePreviousEKSCluster(ctx)
+		if err != nil {
+			text := "EKSDeleteClusterModel:  Delete  previous cluster - " + cluster.Name + " " + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func DeletePreviousEKSCluster(ctx utils.Context) error {
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"GKEDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoEKSPreviousClusterCollection)
+	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
+	if err != nil {
+		ctx.SendLogs(
+			"GKEDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
+func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
+	cluster, err := GetEKSCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+	if err != nil {
+
+		return diff.Changelog{}, 0, 0, errors.New("error in getting eks cluster")
+	}
+
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil && strings.Contains(err.Error(), "not found") {
+		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+	}
+
+	previousPoolCount := len(oldCluster.NodePools)
+	newPoolCount := len(cluster.NodePools)
+
+	difCluster, err := diff.Diff(oldCluster, cluster)
+	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
+		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+	} else if err != nil {
+		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())
+	}
+	return difCluster, previousPoolCount, newPoolCount, nil
+}
+func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*NodePool, poolIndex int, token string) types.CustomCPError {
+	/*/
+	  Fetching network
+	*/
+	subnets, sgs, err := eksOps.getAWSNetwork(token, ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS cluster creation request for '"+cluster.Name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		cpErr := ApiError(err, "unable to fetch network against this application", 500)
+		return cpErr
+	}
+	ctx.SendLogs(
+		"EKS cluster creation: Subnets chosen for '"+cluster.Name+"'",
+		models.LOGGING_LEVEL_INFO,
+		models.Backend_Logging,
+	)
+
+	for _, pool := range pools {
+		err := eksOps.addNodePool(pool, cluster.Name, subnets, sgs, ctx)
+		if err != (types.CustomCPError{}) {
+			updationFailedError(cluster, ctx, err)
+			return err
+		}
+	}
+
+	oldCluster, err1 := GetPreviousEKSCluster(ctx)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, types.CustomCPError{
+			StatusCode:  int(models.CloudStatusCode),
+			Error:       "Error in adding nodepool in running cluster",
+			Description: err1.Error(),
+		})
+	}
+
+	oldCluster.NodePools = cluster.NodePools
+
+	err1 = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in adding nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+	}
+	return types.CustomCPError{}
+}
+func PrintError(confError error, name string, ctx utils.Context) {
+	if confError != nil {
+		_, _ = utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+		_, _ = utils.SendLog(ctx.Data.Company, confError.Error(), models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+	}
+}
+
+func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName string) types.CustomCPError {
+
+	err := eksOps.deleteNodePool(cluster.Name, poolName)
+	if err != nil {
+		err_ := types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err.Error(), StatusCode: int(models.CloudStatusCode)}
+
+		updationFailedError(cluster, ctx, err_)
+		return err_
+	}
+
+	oldCluster, err1 := GetPreviousEKSCluster(ctx)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, types.CustomCPError{
+			StatusCode:  int(models.CloudStatusCode),
+			Error:       "Error in deleting nodepool in running cluster",
+			Description: err1.Error(),
+		})
+	}
+
+	for _, pool := range oldCluster.NodePools {
+		if pool.NodePoolName == poolName {
+			pool = nil
+		}
+	}
+	err1 = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx,
+			types.CustomCPError{Error: "Error in deleting nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+	}
+	return types.CustomCPError{}
+}
+
+func updationFailedError(cluster EKSCluster, ctx utils.Context, err types.CustomCPError) types.CustomCPError {
+	publisher := utils.Notifier{}
+
+	errr := publisher.Init_notifier()
+	if errr != nil {
+		PrintError(errr, cluster.Name, ctx)
+		ctx.SendLogs(errr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := types.CustomCPError{StatusCode: 500, Error: "Error in deploying EKS Cluster", Description: errr.Error()}
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, cpErr)
+		if err != nil {
+			ctx.SendLogs("EKSRunningClusterModel: Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		return cpErr
+	}
+
+	cluster.Status = models.ClusterUpdateFailed
+	confError := UpdateEKSCluster(cluster, ctx)
+	if confError != nil {
+		PrintError(confError, cluster.Name, ctx)
+		ctx.SendLogs("EKSRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
+
+	utils.SendLog(ctx.Data.Company, "Error in running cluster update : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+
+	err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, err)
+	if err_ != nil {
+		ctx.SendLogs("EKSRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
+
+	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+
+	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+	return err
 }
