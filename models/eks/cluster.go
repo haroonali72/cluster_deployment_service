@@ -806,6 +806,8 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 
 			utils.SendLog(ctx.Data.Company, "Applying Logging Changes "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
+
+			loggingChanges = true
 			if err != (types.CustomCPError{}) {
 
 				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -824,7 +826,6 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
-			loggingChanges = true
 			utils.SendLog(ctx.Data.Company, "Changes Applied Successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 		} else if dif.Path[0] == "ResourcesVpcConfig" {
