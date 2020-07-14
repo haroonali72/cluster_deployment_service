@@ -1187,13 +1187,12 @@ func (c *GcpClusterController) DeleteSSHKey() {
 // @Description return machines against a region and zone
 // @Param	X-Profile-Id	header	string	true "profileId"
 // @Param	X-Auth-Token	header	string	true "token"
-// @Param	region	path	string	true	"region of GCP"
 // @Param	zone	path	string	true	"zone of GCP"
 // @Success 200 []string
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /getallmachines/:region/:zone [get]
+// @router /getallmachines/:zone [get]
 func (c *GcpClusterController) GetAllMachines() {
 
 	ctx := new(utils.Context)
@@ -1226,13 +1225,6 @@ func (c *GcpClusterController) GetAllMachines() {
 	ctx.InitializeLogger(c.Ctx.Request.Host, "GET", c.Ctx.Request.RequestURI, "", userInfo.CompanyId, userInfo.UserId)
 	ctx.SendLogs("GcpClusterController: GetAllMachines.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	region := c.GetString(":region")
-	if region == "" {
-		c.Ctx.Output.SetStatus(404)
-		c.Data["json"] = map[string]string{"error": "region is empty"}
-		c.ServeJSON()
-		return
-	}
 
 	zone := c.GetString(":zone")
 	if zone == "" {
@@ -1241,7 +1233,8 @@ func (c *GcpClusterController) GetAllMachines() {
 		c.ServeJSON()
 		return
 	}
-	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region, token, zone, *ctx)
+	region:=strings.Split(zone, "-")
+	isValid, credentials := gcp.IsValidGcpCredentials(profileId, region[0]+"-"+region[1], token, region[2], *ctx)
 	if !isValid {
 		ctx.SendLogs("GcpClusterController : Gcp credentials not valid ", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(401)
