@@ -797,8 +797,9 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 		}
 	}
+	loggingChanges := false
 	for _, dif := range difCluster {
-		loggingChanges := false
+
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
