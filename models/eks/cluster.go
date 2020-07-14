@@ -1207,6 +1207,16 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 
 	for _, pool := range oldCluster.NodePools {
 		if pool.NodePoolName == poolName {
+			if pool.NodeRole != nil && *pool.NodeRole != "" {
+				err := eksOps.deleteIAMRole(*pool.RoleName)
+				if err != nil {
+					return updationFailedError(cluster, ctx, types.CustomCPError{
+						StatusCode:  int(models.CloudStatusCode),
+						Error:       "Error in deleting nodepool in running cluster",
+						Description: err1.Error(),
+					})
+				}
+			}
 			pool = nil
 		}
 	}
