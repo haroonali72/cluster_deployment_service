@@ -215,12 +215,13 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	}
 
 	//add node groups
-	for _, nodePool := range eksCluster.NodePools {
+	for in, nodePool := range eksCluster.NodePools {
 		if nodePool != nil {
 			err := cloud.addNodePool(nodePool, eksCluster.Name, subnets, sgs, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
+			eksCluster.NodePools[in].PoolStatus = true
 		}
 	}
 	/**/
@@ -912,48 +913,66 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 	response.ClusterArn = clusterOutput.Cluster.Arn
 
 	for _, pool := range cluster.NodePools {
+		if pool.PoolStatus {
 
-		//getting nodes
-		nodes, cpErr := cloud.getNodes(pool.NodePoolName, ctx)
-		if cpErr != (types.CustomCPError{}) {
-			return EKSClusterStatus{}, cpErr
+			//getting nodes
+			nodes, cpErr := cloud.getNodes(pool.NodePoolName, ctx)
+			if cpErr != (types.CustomCPError{}) {
+				return EKSClusterStatus{}, cpErr
+			}
+
+			//getting pool details
+			var poolResponse EKSPoolStatus
+			poolInput := eks.DescribeNodegroupInput{ClusterName: aws.String(cluster.Name),
+				NodegroupName: aws.String(pool.NodePoolName)}
+			poolOutput, err := cloud.Svc.DescribeNodegroup(&poolInput)
+			if err != nil {
+
+				ctx.SendLogs(
+					"EKS cluster state request for '"+cluster.Name+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.ProjectId)
+				cpErr := ApiError(err, "unable to fetch cluster status", 512)
+
+				return EKSClusterStatus{}, cpErr
+			}
+			poolResponse.NodePoolArn = poolOutput.Nodegroup.NodegroupArn
+			poolResponse.Name = poolOutput.Nodegroup.NodegroupName
+			poolResponse.Status = poolOutput.Nodegroup.Status
+			poolResponse.AMI = poolOutput.Nodegroup.AmiType
+
+			var scaling AutoScaling
+
+			scaling.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
+			scaling.MinCount = poolOutput.Nodegroup.ScalingConfig.MinSize
+			scaling.MaxCount = poolOutput.Nodegroup.ScalingConfig.MaxSize
+			scaling.AutoScale = true
+
+			poolResponse.Scaling = scaling
+			poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
+
+			poolResponse.Nodes = nodes
+			response.NodePools = append(response.NodePools, poolResponse)
+		} else {
+			var poolResponse EKSPoolStatus
+			poolResponse.Name = &pool.NodePoolName
+			poolResponse.Status = aws.String("new")
+			poolResponse.AMI = pool.AmiType
+			poolResponse.MachineType = pool.InstanceType
+
+			var scaling AutoScaling
+
+			scaling.DesiredSize = pool.ScalingConfig.DesiredSize
+			scaling.MinCount = pool.ScalingConfig.MinSize
+			scaling.MaxCount = pool.ScalingConfig.MaxSize
+			scaling.AutoScale = pool.ScalingConfig.IsEnabled
+			poolResponse.Scaling = scaling
+
+			response.NodePools = append(response.NodePools, poolResponse)
 		}
-
-		//getting pool details
-		var poolResponse EKSPoolStatus
-		poolInput := eks.DescribeNodegroupInput{ClusterName: aws.String(cluster.Name),
-			NodegroupName: aws.String(pool.NodePoolName)}
-		poolOutput, err := cloud.Svc.DescribeNodegroup(&poolInput)
-		if err != nil {
-
-			ctx.SendLogs(
-				"EKS cluster state request for '"+cluster.Name+"' failed: "+err.Error(),
-				models.LOGGING_LEVEL_ERROR,
-				models.Backend_Logging,
-			)
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.ProjectId)
-			cpErr := ApiError(err, "unable to fetch cluster status", 512)
-
-			return EKSClusterStatus{}, cpErr
-		}
-		poolResponse.NodePoolArn = poolOutput.Nodegroup.NodegroupArn
-		poolResponse.Name = poolOutput.Nodegroup.NodegroupName
-		poolResponse.Status = poolOutput.Nodegroup.Status
-		poolResponse.AMI = poolOutput.Nodegroup.AmiType
-
-		var scaling AutoScaling
-
-		scaling.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
-		scaling.MinCount = poolOutput.Nodegroup.ScalingConfig.MinSize
-		scaling.MaxCount = poolOutput.Nodegroup.ScalingConfig.MaxSize
-		scaling.AutoScale = true
-
-		poolResponse.Scaling = scaling
-		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
-
-		poolResponse.Nodes = nodes
-		response.NodePools = append(response.NodePools, poolResponse)
 
 	}
 	return response, types.CustomCPError{}
