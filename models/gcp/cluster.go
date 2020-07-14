@@ -584,7 +584,7 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 	}
 	err1 = gcp.init()
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
 	}
 
@@ -674,7 +674,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 
 	gcp, err1 := GetGCP(credentials)
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, err1)
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)

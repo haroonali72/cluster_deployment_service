@@ -1255,7 +1255,7 @@ func (c *AWSClusterController) PostSSHKey() {
 
 	keyMaterial, err1 := aws.CreateSSHkey(keyName, awsProfile.Profile, token, teams, region, *ctx)
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs("AWSClusterController :"+err1.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("AWSClusterController :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
 		c.ServeJSON()
@@ -1548,7 +1548,7 @@ func (c *AWSClusterController) ValidateProfile() {
 	for _, region := range regions {
 		err := aws.ValidateProfile(credentials.AccessKey, credentials.SecretKey, region.Location, *ctx)
 		if err != (types.CustomCPError{}) {
-			ctx.SendLogs("AWSClusterController: Profile not valid", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			ctx.SendLogs("AWSClusterController: Profile not valid "+err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			c.Ctx.Output.SetStatus(err.StatusCode)
 			c.Data["json"] = err
 			c.ServeJSON()
