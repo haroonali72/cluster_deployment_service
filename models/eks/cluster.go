@@ -785,20 +785,22 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			err_ := types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
 			return updationFailedError(cluster, ctx, err_)
 		}
-		for _, pool := range cluster.NodePools {
+		for _, oldpool := range previousCluster.NodePools {
 			delete := true
-			for _, oldpool := range previousCluster.NodePools {
+			for _, pool := range cluster.NodePools {
 				if pool.NodePoolName == oldpool.NodePoolName {
 					delete = false
+					break
 				}
 			}
 			if delete == true {
-				DeleteNodepool(cluster, ctx, eks, pool.NodePoolName)
+				DeleteNodepool(cluster, ctx, eks, oldpool.NodePoolName)
 			}
 		}
 	}
+	loggingChanges := false
 	for _, dif := range difCluster {
-		loggingChanges := false
+
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
@@ -879,7 +881,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-		} else if previousPoolCount < newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
+		} else if previousPoolCount <= newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" {
 
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
