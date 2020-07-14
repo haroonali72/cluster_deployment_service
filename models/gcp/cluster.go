@@ -571,6 +571,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 }
 
 func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, types.CustomCPError) {
+
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Deploy - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -588,7 +589,8 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 		return cluster, err1
 	}
 
-	err1 = gcp.fetchClusterStatus(&cluster, ctx)
+
+	err1 = gcp.fetchClusterStatus(&cluster,token, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel : Status - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
