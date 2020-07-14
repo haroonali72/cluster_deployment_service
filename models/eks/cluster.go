@@ -785,15 +785,16 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			err_ := types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
 			return updationFailedError(cluster, ctx, err_)
 		}
-		for _, pool := range cluster.NodePools {
+		for _, oldpool := range previousCluster.NodePools {
 			delete := true
-			for _, oldpool := range previousCluster.NodePools {
+			for _, pool := range cluster.NodePools {
 				if pool.NodePoolName == oldpool.NodePoolName {
 					delete = false
+					break
 				}
 			}
 			if delete == true {
-				DeleteNodepool(cluster, ctx, eks, pool.NodePoolName)
+				DeleteNodepool(cluster, ctx, eks, oldpool.NodePoolName)
 			}
 		}
 	}
