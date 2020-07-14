@@ -47,6 +47,7 @@ func GenerateUpdateClusterVersionRequest(clusterName, version string) *eks.Updat
 	input := &eks.UpdateClusterVersionInput{
 		ClientRequestToken: aws.String(id.String()),
 		Version:            aws.String(version),
+		Name:               aws.String(clusterName),
 	}
 	return input
 
