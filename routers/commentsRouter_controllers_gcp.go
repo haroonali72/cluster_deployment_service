@@ -55,7 +55,7 @@ func init() {
     beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/gcp:GcpClusterController"],
         beego.ControllerComments{
             Method: "GetAllMachines",
-            Router: `/getallmachines/:region/:zone`,
+            Router: `/getallmachines/:zone`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
