@@ -376,29 +376,31 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
-		err = cloud.deleteIAMRoleFromInstanceProfile(*nodePool.RoleName)
-		if err != nil {
-			ctx.SendLogs(
-				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
-				models.LOGGING_LEVEL_ERROR,
-				models.Backend_Logging,
-			)
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
-			cpErr := ApiError(err, "NodePool Deletion Failed", 512)
-			return cpErr
-		}
-		err = cloud.deleteIAMRole(*nodePool.RoleName)
-		if err != nil {
-			ctx.SendLogs(
-				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
-				models.LOGGING_LEVEL_ERROR,
-				models.Backend_Logging,
-			)
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
-			cpErr := ApiError(err, "NodePool Deletion Failed", 512)
-			return cpErr
+		if nodePool.RoleName != nil {
+			err = cloud.deleteIAMRoleFromInstanceProfile(*nodePool.RoleName)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
+			err = cloud.deleteIAMRole(*nodePool.RoleName)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
 		}
 		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
 			err = cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
