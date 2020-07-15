@@ -586,7 +586,7 @@ func (cloud *GCP) deletePool(pool *NodePool,zone string, ctx utils.Context) bool
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 			}
 		} else {
-			err1 := cloud.waitForZonalCompletion(result, cloud.Zone, ctx)
+			err1 := cloud.waitForZonalCompletion(result, zone, ctx)
 			if err1 != (types.CustomCPError{}) {
 				ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				error_occured = true
@@ -852,7 +852,7 @@ func (cloud *GCP) waitForZonalCompletion(op *compute.Operation, zone string, ctx
 
 	reqCtx := context.Background()
 	status := ""
-	for status != "DONE" {
+	for status != "DONE"  {
 		time.Sleep(5 * time.Second)
 		result, err := cloud.Client.ZoneOperations.Get(cloud.ProjectId, zone, op.Name).Context(reqCtx).Do()
 		if err != nil {
