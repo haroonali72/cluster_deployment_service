@@ -863,7 +863,7 @@ func (c *GcpClusterController) TerminateCluster() {
 	var cluster gcp.Cluster_Def
 
 	ctx.SendLogs("GcpClusterController: Getting Cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
-
+	cluster.ProjectId=projectId
 	cluster, err = gcp.GetCluster(projectId, userInfo.CompanyId, *ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -914,7 +914,7 @@ func (c *GcpClusterController) TerminateCluster() {
 		return
 	}
 
-	go gcp.TerminateCluster(cluster, credentials, userInfo.CompanyId, *ctx)
+	go gcp.TerminateCluster(cluster, credentials, token,userInfo.CompanyId, *ctx)
 
 	c.Ctx.Output.SetStatus(202)
 	ctx.SendLogs(" GCP cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+" terminated ", models.LOGGING_LEVEL_INFO, models.Audit_Trails)

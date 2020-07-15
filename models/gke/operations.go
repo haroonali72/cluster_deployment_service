@@ -825,15 +825,16 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 	}
 
 	for _, pool := range cluster.NodePools {
-		npool := pool.InstanceGroupUrls[0]
-		arr := strings.Split(npool, "/")
-		createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
-		if err != nil {
+		if pool.PoolStatus==true{
+			npool := pool.InstanceGroupUrls[0]
+			arr := strings.Split(npool, "/")
+			createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
+			if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return ApiErrors(err, "Error in fetching cluster status")
 		}
-		nodes := []KubeNodesStatus{}
-		for _, node := range createdNodes.ManagedInstances {
+			nodes := []KubeNodesStatus{}
+			for _, node := range createdNodes.ManagedInstances {
 
 			splits := strings.Split(node.Instance, "/")
 			nodeName := splits[len(splits)-1]
@@ -854,11 +855,12 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 			}
 			nodes = append(nodes, node)
 		}
-		for i, statuspool := range status.WorkerPools {
+			for i, statuspool := range status.WorkerPools {
 			if statuspool.Link == pool.InstanceGroupUrls[0] {
 
 				status.WorkerPools[i].Nodes = nodes
 			}
+		}
 		}
 	}
 
