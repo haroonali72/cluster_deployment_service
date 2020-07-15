@@ -847,7 +847,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 				break
 			}
 		}
-		if dif.Type != "update" {
+		if dif.Type == "update" {
 			if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
 				err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
 				if err != (types.CustomCPError{}) {
