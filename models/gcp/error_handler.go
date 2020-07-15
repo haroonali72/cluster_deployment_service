@@ -11,30 +11,32 @@ func ApiErrors(err error, message string) (cError types.CustomCPError) {
 	cError.StatusCode = int(models.CloudStatusCode)
 	cError.Description = err.Error()
 	cError.Error = message
-	if errr[2] == "304" {
-		cError.Error = NotModified(err.Error())
-	} else if errr[2] == "400" {
-		cError.Error = BadRequest(err.Error())
-	} else if errr[2] == "401" {
-		cError.Error = Unauthorized(err.Error())
-	} else if errr[2] == "402" {
-		cError.Error = QuotaReached(err.Error())
-	} else if errr[2] == "403" {
-		cError.Error = Forbidden(err.Error())
-	} else if errr[2] == "404" {
-		cError.Error = NotFound(err.Error())
-	} else if errr[2] == "409" {
-		cError.Error = Conflict(err.Error())
-	} else if errr[2] == "410" {
-		cError.Error = Gone(err.Error())
-	} else if errr[2] == "429" {
-		cError.Error = ResourceExhausted(err.Error())
-	} else if errr[2] == "500" {
-		cError.Error = InternalServerError(err.Error())
-	} else if errr[2] == "503" {
-		cError.Error = ServiceUnavailable(err.Error())
-	} else {
-		return cError
+	if len(errr)>3 {
+		if errr[2] == "304" {
+			cError.Error = NotModified(err.Error())
+		} else if errr[2] == "400" {
+			cError.Error = BadRequest(err.Error())
+		} else if errr[2] == "401" {
+			cError.Error = Unauthorized(err.Error())
+		} else if errr[2] == "402" {
+			cError.Error = QuotaReached(err.Error())
+		} else if errr[2] == "403" {
+			cError.Error = Forbidden(err.Error())
+		} else if errr[2] == "404" {
+			cError.Error = NotFound(err.Error())
+		} else if errr[2] == "409" {
+			cError.Error = Conflict(err.Error())
+		} else if errr[2] == "410" {
+			cError.Error = Gone(err.Error())
+		} else if errr[2] == "429" {
+			cError.Error = ResourceExhausted(err.Error())
+		} else if errr[2] == "500" {
+			cError.Error = InternalServerError(err.Error())
+		} else if errr[2] == "503" {
+			cError.Error = ServiceUnavailable(err.Error())
+		} else {
+			return cError
+		}
 	}
 	if cError.Error == "" {
 		cError.Error = message
