@@ -644,7 +644,7 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 	return serviceAccounts, err
 }
 
-func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) types.CustomCPError {
+func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials,token, companyId string, ctx utils.Context) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
@@ -707,7 +707,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		return ApiErrors(err, "Error in cluster termination")
 	}
 
-	err1 = gcp.deleteCluster(cluster, ctx)
+	err1 = gcp.deleteCluster(cluster, token, ctx)
 	if err1 != (types.CustomCPError{}) {
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 
