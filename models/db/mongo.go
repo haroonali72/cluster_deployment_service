@@ -144,7 +144,6 @@ func GetMongoConf() mongConf {
 	conf.MongoClusterErrorCollection = "mongo_cluster_error_collection"
 	conf.MongoEKSPreviousClusterCollection = "eks_previous_cluster"
 	conf.MongoGKEPreviousClusterCollection = "gke_previous_cluster"
-	conf.MongoGKEPreviousClusterCollection = "gke_previous_cluster"
 	conf.MongoAKSPreviousClusterCollection = "aks_previous_cluster"
 	return conf
 

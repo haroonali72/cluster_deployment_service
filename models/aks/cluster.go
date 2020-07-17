@@ -17,8 +17,10 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/ghodss/yaml"
 	"github.com/jasonlvhit/gocron"
+	"github.com/r3labs/diff"
 	"github.com/signalsciences/ipv4"
 	"gopkg.in/mgo.v2/bson"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -97,27 +99,27 @@ type KubeWorkerPoolStatus struct {
 	MinCount          *int32  `json:"min_count" bson:"min_count" description:"Min VM count"`
 	EnableAutoScaling *bool   `json:"auto_scaling" bson:"auto_scaling" description:"Autoscaling configuration"`
 }
-type AutoScaling struct{
-	MaxCount          *int32  `json:"max_scaling_group_size" bson:"max_count" description:"Max VM count, must be greater than min count"`
-	MinCount          *int32  `json:"min_scaling_group_size" bson:"min_count" description:"Min VM count"`
-	EnableAutoScaling *bool   `json:"autoscale" bson:"auto_scaling" description:"Autoscaling configuration"`
+type AutoScaling struct {
+	MaxCount          *int32 `json:"max_scaling_group_size" bson:"max_count" description:"Max VM count, must be greater than min count"`
+	MinCount          *int32 `json:"min_scaling_group_size" bson:"min_count" description:"Min VM count"`
+	EnableAutoScaling *bool  `json:"autoscale" bson:"auto_scaling" description:"Autoscaling configuration"`
 }
 type KubeNodesStatus struct {
 	Id        *string `json:"id" bson:"id,omitempty"`
 	NodeState *string `json:"state" bson:"state,omitempty"`
 	Name      *string `json:"name" bson:"name,omitempty"`
-	PrivateIP *string `json:"private_ip,omitempty"" bson:"private_ip,omitempty"`
-	PublicIP  *string `json:"public_ip,omitempty"" bson:"public_ip,omitempty"`
+	PrivateIP *string `json:"private_ip,omitempty" bson:"private_ip,omitempty"`
+	PublicIP  *string `json:"public_ip,omitempty" bson:"public_ip,omitempty"`
 }
 
 type ManagedClusterAgentPoolStatus struct {
-	Id                *string           `json:"id" bson:"id" description:"Cluster pool id"`
-	Name              *string           `json:"name,omitempty" bson:"name,omitempty"  description:"Cluster pool name "`
-	VnetSubnetID      *string           `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool is created"`
-	Count             *int64            `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
-	VMSize            *string           `json:"machine_type,omitempty" bson:"vm_size,omitempty" description:"Machine type for pool"`
-	AutoScaling 	  AutoScaling       `json:"autoscaling" bson:"auto_scaling" description:"Autoscaling configuration"`
-	KubeNodes         []KubeNodesStatus `json:"nodes" bson:"nodes" description:"Nodes "`
+	Id           *string           `json:"id" bson:"id" description:"Cluster pool id"`
+	Name         *string           `json:"name,omitempty" bson:"name,omitempty"  description:"Cluster pool name "`
+	VnetSubnetID *string           `json:"subnet_id" bson:"subnet_id" description:"ID of subnet in which pool is created"`
+	Count        *int64            `json:"node_count,omitempty" bson:"count,omitempty"  description:"Pool node count"`
+	VMSize       *string           `json:"machine_type,omitempty" bson:"vm_size,omitempty" description:"Machine type for pool"`
+	AutoScaling  AutoScaling       `json:"autoscaling" bson:"auto_scaling" description:"Autoscaling configuration"`
+	KubeNodes    []KubeNodesStatus `json:"nodes" bson:"nodes" description:"Nodes "`
 }
 
 // ManagedClusterAPIServerAccessProfile access profile for managed cluster API server.
@@ -149,9 +151,150 @@ type AzureRegion struct {
 }
 
 type Cluster struct {
-	Name      string      `json:"name,omitempty" bson:"name,omitempty" v description:"Cluster name"`
+	Name      string      `json:"name,omitempty" bson:"name,omitempty" description:"Cluster name"`
 	ProjectId string      `json:"project_id" bson:"project_id"  description:"ID of project"`
-	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" " description:"Status of cluster"`
+	Status    models.Type `json:"status,omitempty" bson:"status,omitempty" description:"Status of cluster"`
+}
+
+func AddPreviousAKSCluster(cluster AKSCluster, ctx utils.Context, patch bool) error {
+	var oldCluster AKSCluster
+	_, err := GetPreviousAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+	if err == nil {
+		err := DeletePreviousAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"AKSAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	}
+
+	if patch == false {
+		oldCluster, err = GetAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"AKSAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	} else {
+		oldCluster = cluster
+	}
+
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"AKSAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+
+	if cluster.CreationDate.IsZero() {
+		cluster.CreationDate = time.Now()
+		cluster.ModificationDate = time.Now()
+		cluster.Cloud = models.AKS
+	}
+
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoAKSPreviousClusterCollection, oldCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"AKSAddClusterModel:  Add previous cluster -  "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
+
+func GetPreviousAKSCluster(projectId, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs(
+			"AKSGetClusterModel:  Get previous cluster - Got error while connecting to the database: "+err1.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err1
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAKSPreviousClusterCollection)
+	err = c.Find(bson.M{"project_id": projectId, "company_id": companyId}).One(&cluster)
+	if err != nil {
+		ctx.SendLogs(
+			"AKSGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err
+	}
+
+	return cluster, nil
+}
+
+func UpdatePreviousAKSCluster(cluster AKSCluster, ctx utils.Context) error {
+
+	err := AddPreviousAKSCluster(cluster, ctx, false)
+	if err != nil {
+		text := "AKSClusterModel:  Update  previous cluster -'" + cluster.Name + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New(text)
+	}
+
+	err = UpdateAKSCluster(cluster, ctx)
+	if err != nil {
+		text := "AKSClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		err = DeletePreviousAKSCluster(cluster.ProjectId, cluster.CompanyId, ctx)
+		if err != nil {
+			text := "AKSDeleteClusterModel:  Delete  previous cluster - '" + cluster.Name + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func DeletePreviousAKSCluster(projectId, companyId string, ctx utils.Context) error {
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"AKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoAKSPreviousClusterCollection)
+	err = c.Remove(bson.M{"project_id": projectId, "company_id": companyId})
+	if err != nil {
+		ctx.SendLogs(
+			"AKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
 }
 
 func GetAKSCluster(projectId string, companyId string, ctx utils.Context) (cluster AKSCluster, err error) {
@@ -870,4 +1013,203 @@ func Task() {
 	}
 
 	aksOps.WriteAzureSkus()
+}
+
+func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, companyId, token string, ctx utils.Context) (confError types.CustomCPError) {
+
+	publisher := utils.Notifier{}
+	_ = publisher.Init_notifier()
+
+	aksOps, _ := GetAKS(credentials.Profile)
+	CpErr := aksOps.init()
+	if CpErr != (types.CustomCPError{}) {
+		ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+CpErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		cluster.Status = models.ClusterUpdateFailed
+		UpdationErr := UpdateAKSCluster(cluster, ctx)
+		if UpdationErr != nil {
+			_, _ = utils.SendLog(companyId, "Cluster creation failed : "+UpdationErr.Error(), "error", cluster.ProjectId)
+
+			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+UpdationErr.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+
+		err := db.CreateError(cluster.ProjectId, companyId, models.AKS, ctx, CpErr)
+		if err != nil {
+
+			ctx.SendLogs("AKSDeployClusterModel:  Deploy - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		}
+		publisher.Notify(cluster.ProjectId, "Redeploy Status Available", ctx)
+
+		return CpErr
+	}
+
+	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(cluster.ProjectId, companyId, ctx)
+	if err1 != nil {
+		if strings.Contains(err1.Error(), "Nothing to update") {
+			cluster.Status = models.ClusterCreated
+			confError_ := UpdateAKSCluster(cluster, ctx)
+			if confError_ != nil {
+				ctx.SendLogs("AKSRunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			}
+			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+			return types.CustomCPError{}
+		}
+	}
+
+	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
+	if previousPoolCount < newPoolCount {
+		var pools []*NodePool
+		for i := previousPoolCount; i < newPoolCount; i++ {
+			pools = append(pools, cluster.NodePools[i])
+		}
+
+		err := AddNodepool(cluster, ctx, gkeOps, pools, previousPoolCount)
+		if err != (types.CustomCPError{}) {
+			return err
+		}
+	} else if previousPoolCount > newPoolCount {
+
+		previousCluster, err := GetPreviousGKECluster(ctx)
+		if err != nil {
+			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+		}
+
+		for _, oldpool := range previousCluster.NodePools {
+			delete := true
+			for _, pool := range cluster.NodePools {
+
+				if pool.Name == oldpool.Name {
+					delete = false
+				}
+			}
+			if delete == true {
+				DeleteNodepool(cluster, ctx, gkeOps, oldpool.Name)
+			}
+		}
+	}
+
+	for _, dif := range difCluster {
+
+		if len(dif.Path) > 2 {
+			poolIndex, _ := strconv.Atoi(dif.Path[1])
+			if poolIndex > (previousPoolCount - 1) {
+				break
+			}
+		}
+		if dif.Type == "update" {
+			if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
+				err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "NetworkPolicy" {
+				err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "AddonsConfig" {
+				err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "InitialClusterVersion" {
+				err := UpdateVersion(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "LoggingService" || dif.Path[0] == "MonitoringService" {
+				err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "LegacyAbac" {
+				err := UpdateLegacyAbac(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "MaintenancePolicy" {
+				err := UpdateMaintenancePolicy(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "ResourceUsageExportConfig" {
+				err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) >= 4 && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "ImageType" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "InitialNodeCount" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Management" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) > 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Autoscaling" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			}
+		}
+	}
+
+	DeletePreviousGKECluster(ctx)
+
+	latestCluster, err2 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
+	if err2 != (types.CustomCPError{}) {
+		return err
+	}
+
+	for strings.ToLower(string(latestCluster.Status)) != strings.ToLower("running") {
+		time.Sleep(time.Second * 60)
+	}
+
+	cluster.CloudplexStatus = models.ClusterCreated
+	confError_ := UpdateGKECluster(cluster, ctx)
+	if confError_ != nil {
+		ctx.SendLogs("GKERunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+	}
+
+	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+
+	return types.CustomCPError{}
+
+}
+
+func CompareClusters(projectId, companyId string, ctx utils.Context) (diff.Changelog, int, int, error) {
+	cluster, err := GetAKSCluster(projectId, companyId, ctx)
+	if err != nil {
+		return diff.Changelog{}, 0, 0, err
+	}
+
+	oldCluster, err := GetPreviousAKSCluster(projectId, companyId, ctx)
+	if err != nil && strings.Contains(err.Error(), "not found") {
+		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+	}
+
+	previousPoolCount := len(oldCluster.AgentPoolProfiles)
+	newPoolCount := len(cluster.AgentPoolProfiles)
+
+	difCluster, err := diff.Diff(oldCluster, cluster)
+	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
+		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
+	} else if err != nil {
+		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())
+	}
+	return difCluster, previousPoolCount, newPoolCount, nil
 }
