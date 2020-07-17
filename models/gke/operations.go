@@ -825,7 +825,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 	}
 
 	for _, pool := range cluster.NodePools {
-		if pool.PoolStatus==true{
+
 			npool := pool.InstanceGroupUrls[0]
 			arr := strings.Split(npool, "/")
 			createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
@@ -862,7 +862,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 				}
 			}
 		}
-	}
+	
 
 	return types.CustomCPError{}
 }
