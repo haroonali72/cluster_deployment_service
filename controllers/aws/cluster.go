@@ -413,7 +413,7 @@ func (c *AWSClusterController) Patch() {
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}
 // @Failure 500 {"error": "Runtime Error"}
-// @router /delete/:projectId/:forceDelete [delete]
+// @router /:projectId/:forceDelete [delete]
 func (c *AWSClusterController) Delete() {
 	id := c.GetString(":projectId")
 	if id == "" {
