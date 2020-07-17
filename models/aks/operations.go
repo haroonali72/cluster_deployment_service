@@ -536,23 +536,58 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 	return &result, types.CustomCPError{}
 }
 
-func (cloud *AKS) CreatOrUpdateAgentPool(ctx utils.Context, agentPool ManagedClusterAgentPoolProfile) (*containerservice.OrchestratorVersionProfileListResult, types.CustomCPError) {
-	if cloud == nil {
-		err := cloud.init()
-		if err != (types.CustomCPError{}) {
-			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			return nil, err
+func (cloud *AKS) CreatOrUpdateAgentPool(ctx utils.Context, token, resourceGroup, clusterName string, agentPool ManagedClusterAgentPoolProfile) error {
+
+	reqObj := getAgentPoolReqObj(agentPool)
+
+	//Network will be added in every case BASIC, ADVANCE, EXPERT
+	networkInformation := cloud.getAzureNetwork(token, ctx)
+	if len(networkInformation.Definition) > 0 {
+		for _, subnet := range networkInformation.Definition[0].Subnets {
+			if subnet.Name == *reqObj.VnetSubnetID {
+				*reqObj.VnetSubnetID = subnet.SubnetId
+				break
+			}
 		}
 	}
+	//Network will be added in every case BASIC, ADVANCE, EXPERT
 
 	cloud.Context = context.Background()
-	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "Microsoft.ContainerService")
+	future, err := cloud.AgentPoolClient.CreateOrUpdate(cloud.Context, resourceGroup, clusterName, *agentPool.Name, reqObj)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return nil, ApiError(err, "Error while getting kubernetes version", 502)
+		return err
 	}
 
-	return &result, types.CustomCPError{}
+	err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool updation failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	nodePoolResp, err := future.Result(cloud.AgentPoolClient)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool updation failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+	if *nodePoolResp.ProvisioningState != "Succeeded" {
+		ctx.SendLogs(
+			"AKS agent node pool updation failed",
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return errors.New("AKS agent node pool updation failed")
+	}
+
+	return nil
 }
 
 //For AKS agent pool updation
