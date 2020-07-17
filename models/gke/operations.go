@@ -825,6 +825,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 	}
 
 	for _, pool := range cluster.NodePools {
+		if pool.PoolStatus==true{
 			npool := pool.InstanceGroupUrls[0]
 			arr := strings.Split(npool, "/")
 			createdNodes, err := cloud.Compute.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, arr[10]).Context(context.Background()).Do()
@@ -857,11 +858,11 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 			for i, statuspool := range status.WorkerPools {
 			if statuspool.Link == pool.InstanceGroupUrls[0] {
 
-				status.WorkerPools[i].Nodes = nodes
+					status.WorkerPools[i].Nodes = nodes
+				}
 			}
 		}
 	}
-
 
 	return types.CustomCPError{}
 }
