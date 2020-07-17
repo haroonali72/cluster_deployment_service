@@ -862,7 +862,7 @@ func (cloud *GKE) fetchNodePool(cluster GKECluster, status *KubeClusterStatus, c
 				}
 			}
 		}
-	
+
 
 	return types.CustomCPError{}
 }
