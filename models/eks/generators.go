@@ -1,10 +1,57 @@
 package eks
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/google/uuid"
+	"strconv"
 )
+
+func GenerateClusterUpdateLoggingRequest(name string, logging Logging) *eks.UpdateClusterConfigInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateClusterConfigInput{
+		ClientRequestToken: aws.String(id.String()),
+		Name:               aws.String(name),
+		Logging:            generateLoggingFromRequest(logging),
+	}
+
+	return input
+
+}
+func GenerateClusterUpdateNetworkRequest(name string, vpcConfig VpcConfigRequest) *eks.UpdateClusterConfigInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateClusterConfigInput{
+		ClientRequestToken: aws.String(id.String()),
+		Name:               aws.String(name),
+		ResourcesVpcConfig: generateResourcesVpcConfigFromRequest(vpcConfig),
+	}
+
+	return input
+
+}
+func GeneratNodeConfigUpdateRequest(clusterName, poolName string, scalingConfig NodePoolScalingConfig) *eks.UpdateNodegroupConfigInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateNodegroupConfigInput{
+		ClientRequestToken: aws.String(id.String()),
+		ClusterName:        aws.String(clusterName),
+		NodegroupName:      aws.String(poolName),
+		ScalingConfig:      generateScalingConfigFromRequest(&scalingConfig),
+	}
+
+	return input
+
+}
+func GenerateUpdateClusterVersionRequest(clusterName, version string) *eks.UpdateClusterVersionInput {
+	id, _ := uuid.NewRandom()
+	input := &eks.UpdateClusterVersionInput{
+		ClientRequestToken: aws.String(id.String()),
+		Version:            aws.String(version),
+		Name:               aws.String(clusterName),
+	}
+	return input
+
+}
 
 func GenerateClusterCreateRequest(c EKSCluster) *eks.CreateClusterInput {
 	id, _ := uuid.NewRandom()
@@ -23,6 +70,7 @@ func GenerateClusterCreateRequest(c EKSCluster) *eks.CreateClusterInput {
 	}
 
 	return input
+
 }
 
 func generateEncryptionConfigFromRequest(v []*EncryptionConfig) []*eks.EncryptionConfig {
@@ -80,6 +128,7 @@ func generateResourcesVpcConfigFromRequest(v VpcConfigRequest) *eks.VpcConfigReq
 
 func GenerateNodePoolCreateRequest(n NodePool, clusterName string) *eks.CreateNodegroupInput {
 	id, _ := uuid.NewRandom()
+	fmt.Println("inside generator === " + strconv.Itoa(int(*n.ScalingConfig.DesiredSize)))
 	input := &eks.CreateNodegroupInput{
 		AmiType:            n.AmiType,
 		ClientRequestToken: aws.String(id.String()),
@@ -113,6 +162,7 @@ func generateRemoteAccessFromRequest(v *RemoteAccessConfig) *eks.RemoteAccessCon
 }
 
 func generateScalingConfigFromRequest(v *NodePoolScalingConfig) *eks.NodegroupScalingConfig {
+	fmt.Println("inside scaling generator == " + strconv.Itoa(int(*v.DesiredSize)))
 	if v == nil {
 		return nil
 	}

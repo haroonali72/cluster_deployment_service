@@ -99,5 +99,6 @@ var DORegions = []byte(`[
   {"slug": "fra1","name": "Frankfurt 1"},
   {"slug": "tor1","name": "Toronto 1"},
   {"slug": "sfo2","name": "San Francisco 2"},
-  {"slug": "blr1","name": "Bangalore 1"}
+  {"slug": "blr1","name": "Bangalore 1"},
+ {"slug": "sfo3","name": "San Francisco 2"}
 ]`)

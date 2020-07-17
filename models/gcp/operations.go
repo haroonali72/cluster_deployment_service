@@ -114,10 +114,10 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 
 	pool.KeyInfo.PrivateKey = fetchedKey.PrivateKey
 	pool.KeyInfo.PublicKey = fetchedKey.PublicKey
-
+	zone :=getSubnetZone(pool.PoolSubnet, network.Definition[0].Subnets)
 	instance := compute.Instance{
 		Name:        strings.ToLower(pool.Name),
-		MachineType: "zones/" + cloud.Region + "-" + cloud.Zone + "/machineTypes/" + pool.MachineType,
+		MachineType: "zones/" + zone + "/machineTypes/" + pool.MachineType,
 		Tags: &compute.Tags{
 			Items: append(pool.Tags, projectId),
 		},
@@ -136,7 +136,7 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 				InitializeParams: &compute.AttachedDiskInitializeParams{
 					SourceImage: "projects/" + pool.Image.Project + "/global/images/family/" + pool.Image.Family,
 					DiskSizeGb:  pool.RootVolume.Size,
-					DiskType:    "projects/" + pool.Image.Project + "/zones/" + cloud.Region + "-" + cloud.Zone + "/diskTypes/" + string(pool.RootVolume.DiskType),
+					DiskType:    "projects/" + pool.Image.Project + "/zones/" + zone + "/diskTypes/" + string(pool.RootVolume.DiskType),
 				},
 			},
 		},
@@ -200,7 +200,7 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 			Boot:       false,
 			InitializeParams: &compute.AttachedDiskInitializeParams{
 				DiskSizeGb: pool.Volume.Size,
-				DiskType:   "projects/" + pool.Image.Project + "/zones/" + cloud.Region + "-" + cloud.Zone + "/diskTypes/" + string(pool.Volume.DiskType),
+				DiskType:   "projects/" + pool.Image.Project + "/zones/" + zone + "/diskTypes/" + string(pool.Volume.DiskType),
 			},
 		}
 
@@ -208,19 +208,19 @@ func (cloud *GCP) deployMaster(projectId string, pool *NodePool, network types.G
 	}
 
 	reqCtx := context.Background()
-	result, err := cloud.Client.Instances.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instance).Context(reqCtx).Do()
+	result, err := cloud.Client.Instances.Insert(cloud.ProjectId, zone, &instance).Context(reqCtx).Do()
 	if err != nil && !strings.Contains(err.Error(), "alreadyExists") {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return ApiErrors(err,"Error in deploying instance")
 	}
 
-	err1 = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+	err1 = cloud.waitForZonalCompletion(result, zone, ctx)
 	if err1 !=(types.CustomCPError{}) {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err1
 	}
 
-	newNode, err1 := cloud.fetchNodeInfo(instance.Name, ctx)
+	newNode, err1 := cloud.fetchNodeInfo(instance.Name,zone, ctx)
 	if err1 !=(types.CustomCPError{}) {
 		ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err1
@@ -275,15 +275,15 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 		TargetSize:       pool.NodeCount,
 		InstanceTemplate: instanceTemplateUrl,
 	}
-
+	zone := getSubnetZone(pool.PoolSubnet,network.Definition[0].Subnets)
 	reqCtx := context.Background()
-	result, err := cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, &instanceGroup).Context(reqCtx).Do()
+	result, err := cloud.Client.InstanceGroupManagers.Insert(cloud.ProjectId,zone, &instanceGroup).Context(reqCtx).Do()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return ApiErrors(err,"Error in deploying worker")
 	}
 
-	err1 = cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+	err1 = cloud.waitForZonalCompletion(result, zone, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return err1
@@ -293,12 +293,20 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 	allNodesDeployed := false
 	for !allNodesDeployed {
 		time.Sleep(5 * time.Second)
-		createdNodes, err = cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, instanceGroup.Name).Context(reqCtx).Do()
+		createdNodes, err = cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, zone, instanceGroup.Name).Context(reqCtx).Do()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return ApiErrors(err,"Error in deploying cluster")
 		}
-
+		for  _, nodes := range createdNodes.ManagedInstances {
+			if  nodes.LastAttempt.Errors != nil && nodes.LastAttempt.Errors.Errors[0].Message != "QUOTA_EXCEEDED" {
+				ctx.SendLogs(nodes.LastAttempt.Errors.Errors[0].Message, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return ApiErrors(errors.New(nodes.LastAttempt.Errors.Errors[0].Message),"Error in deploying cluster.Quota limit reached")
+			}else if nodes.LastAttempt.Errors != nil{
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				return ApiErrors(err,"Error in deploying cluster")
+			}
+		}
 		allNodesDeployed = true
 		for _, node := range createdNodes.ManagedInstances {
 			if node.InstanceStatus == "" {
@@ -313,7 +321,7 @@ func (cloud *GCP) deployWorkers(projectId string, pool *NodePool, network types.
 		splits := strings.Split(node.Instance, "/")
 		nodeName := splits[len(splits)-1]
 
-		newNode, err := cloud.fetchNodeInfo(nodeName, ctx)
+		newNode, err := cloud.fetchNodeInfo(nodeName,zone, ctx)
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -458,7 +466,7 @@ func (cloud *GCP) createInstanceTemplate(projectId string, pool *NodePool, netwo
 	return createdTemplate.SelfLink, types.CustomCPError{}
 }
 
-func (cloud *GCP) fetchNodeInfo(nodeName string, ctx utils.Context) (Node,types.CustomCPError) {
+func (cloud *GCP) fetchNodeInfo(nodeName ,zone string, ctx utils.Context) (Node,types.CustomCPError) {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err !=(types.CustomCPError{}) {
@@ -468,7 +476,7 @@ func (cloud *GCP) fetchNodeInfo(nodeName string, ctx utils.Context) (Node,types.
 	}
 
 	reqCtx := context.Background()
-	createdNode, err := cloud.Client.Instances.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, nodeName).Context(reqCtx).Do()
+	createdNode, err := cloud.Client.Instances.Get(cloud.ProjectId, zone, nodeName).Context(reqCtx).Do()
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Node{}, ApiErrors(err,"Erro in fetching node info")
@@ -491,7 +499,7 @@ func (cloud *GCP) fetchNodeInfo(nodeName string, ctx utils.Context) (Node,types.
 	return newNode, types.CustomCPError{}
 }
 
-func (cloud *GCP) deleteCluster(cluster Cluster_Def, ctx utils.Context) types.CustomCPError {
+func (cloud *GCP) deleteCluster(cluster Cluster_Def,token string, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
@@ -500,8 +508,27 @@ func (cloud *GCP) deleteCluster(cluster Cluster_Def, ctx utils.Context) types.Cu
 		}
 	}
 
+	var gcpNetwork types.GCPNetwork
+	url := getNetworkHost("gcp", cluster.ProjectId)
+
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return ApiErrors(err,"Error in cluster creation")
+	}
+
+	err = json.Unmarshal(network.([]byte), &gcpNetwork)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  ApiErrors(err,"Error in cluster creation")
+	}
+
+
+
 	for _, pool := range cluster.NodePools {
-		err := cloud.deletePool(pool, ctx)
+		availabilityZone := getSubnetZone(pool.PoolSubnet,gcpNetwork.Definition[0].Subnets)
+
+		err := cloud.deletePool(pool,availabilityZone, ctx)
 		if err {
 			return ApiErrors(errors.New("Error occured during termination"),"Error occured during termination")
 		}
@@ -510,7 +537,7 @@ func (cloud *GCP) deleteCluster(cluster Cluster_Def, ctx utils.Context) types.Cu
 	return types.CustomCPError{}
 }
 
-func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
+func (cloud *GCP) deletePool(pool *NodePool,zone string, ctx utils.Context) bool {
 	error_occured := false
 	if cloud.Client == nil {
 		err := cloud.init()
@@ -522,7 +549,7 @@ func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
 
 	if pool.PoolRole == "master" {
 		reqCtx := context.Background()
-		result, err := cloud.Client.Instances.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
+		result, err := cloud.Client.Instances.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
 			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -531,7 +558,7 @@ func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 			}
 		} else {
-			err1 := cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+			err1 := cloud.waitForZonalCompletion(result,zone, ctx)
 			if err1 != (types.CustomCPError{}){
 				ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				error_occured = true
@@ -550,7 +577,7 @@ func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
 	} else {
 		reqCtx := context.Background()
 
-		result, err := cloud.Client.InstanceGroupManagers.Delete(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
+		result, err := cloud.Client.InstanceGroupManagers.Delete(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
 			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -559,14 +586,14 @@ func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 			}
 		} else {
-			err1 := cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+			err1 := cloud.waitForZonalCompletion(result, zone, ctx)
 			if err1 != (types.CustomCPError{}) {
 				ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				error_occured = true
 			}
 		}
 
-		instanceGroupManager, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
+		instanceGroupManager, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
 
 		if err != nil {
 			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
@@ -588,7 +615,7 @@ func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
 						ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 					}
 				} else {
-					err1 := cloud.waitForZonalCompletion(result, cloud.Region+"-"+cloud.Zone, ctx)
+					err1 := cloud.waitForZonalCompletion(result, zone, ctx)
 					if err1 != (types.CustomCPError{}) {
 						ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 						error_occured = true
@@ -602,7 +629,7 @@ func (cloud *GCP) deletePool(pool *NodePool, ctx utils.Context) bool {
 	return error_occured
 }
 
-func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context) types.CustomCPError {
+func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def,token string, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
@@ -611,8 +638,25 @@ func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context) ty
 		}
 	}
 
+	var gcpNetwork types.GCPNetwork
+	url := getNetworkHost("gcp", cluster.ProjectId)
+
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return ApiErrors(err,"Error in cluster creation")
+	}
+
+	err = json.Unmarshal(network.([]byte), &gcpNetwork)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  ApiErrors(err,"Error in cluster creation")
+	}
+
 	for _, pool := range cluster.NodePools {
-		err := cloud.fetchPoolStatus(pool, ctx)
+		availabilityZone := getSubnetZone(pool.PoolSubnet,gcpNetwork.Definition[0].Subnets)
+		//zone:=strings.Split(availabilityZone , "-")
+		err := cloud.fetchPoolStatus(pool,availabilityZone, ctx)
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -622,7 +666,7 @@ func (cloud *GCP) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context) ty
 	return types.CustomCPError{}
 }
 
-func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) types.CustomCPError {
+func (cloud *GCP) fetchPoolStatus(pool *NodePool,zone string, ctx utils.Context) types.CustomCPError {
 	if cloud.Client == nil {
 		err := cloud.init()
 		if err != (types.CustomCPError{}) {
@@ -633,7 +677,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) types.Custo
 
 	reqCtx := context.Background()
 	if pool.PoolRole == "master" {
-		newNode, err := cloud.fetchNodeInfo(pool.Name, ctx)
+		newNode, err := cloud.fetchNodeInfo(pool.Name,zone, ctx)
 		if err != (types.CustomCPError{}) {
 			ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return err
@@ -642,13 +686,13 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) types.Custo
 		newNode.Username = pool.KeyInfo.Username
 		pool.Nodes = []*Node{&newNode}
 	} else {
-		managedGroup, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
+		managedGroup, err := cloud.Client.InstanceGroupManagers.Get(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return ApiErrors(err,"Erro in fechting pool status")
 		}
 		pool.PoolId = managedGroup.InstanceGroup
-		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, cloud.Region+"-"+cloud.Zone, pool.Name).Context(reqCtx).Do()
+		createdNodes, err := cloud.Client.InstanceGroupManagers.ListManagedInstances(cloud.ProjectId, zone, pool.Name).Context(reqCtx).Do()
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return ApiErrors(err,"Error in fetching nodepool status")
@@ -659,7 +703,7 @@ func (cloud *GCP) fetchPoolStatus(pool *NodePool, ctx utils.Context) types.Custo
 			splits := strings.Split(node.Instance, "/")
 			nodeName := splits[len(splits)-1]
 
-			newNode, err := cloud.fetchNodeInfo(nodeName, ctx)
+			newNode, err := cloud.fetchNodeInfo(nodeName,zone,ctx)
 			if err != (types.CustomCPError{}) {
 				ctx.SendLogs(err.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				return err
@@ -808,7 +852,7 @@ func (cloud *GCP) waitForZonalCompletion(op *compute.Operation, zone string, ctx
 
 	reqCtx := context.Background()
 	status := ""
-	for status != "DONE" {
+	for status != "DONE"  {
 		time.Sleep(5 * time.Second)
 		result, err := cloud.Client.ZoneOperations.Get(cloud.ProjectId, zone, op.Name).Context(reqCtx).Do()
 		if err != nil {
@@ -861,6 +905,15 @@ func getSubnet(subnetName string, subnets []*types.Subnet) string {
 		}
 	}
 	return ""
+}
+
+func getSubnetZone(subnetName string, subnets []*types.Subnet)  string {
+	for _, subnet := range subnets {
+		if subnet.Name == subnetName {
+			return subnet.Zone
+		}
+	}
+	return  ""
 }
 
 func mountVolume(privateKey, keyName, username, ipAddress string) error {

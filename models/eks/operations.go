@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -214,12 +215,13 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	}
 
 	//add node groups
-	for _, nodePool := range eksCluster.NodePools {
+	for in, nodePool := range eksCluster.NodePools {
 		if nodePool != nil {
 			err := cloud.addNodePool(nodePool, eksCluster.Name, subnets, sgs, ctx)
 			if err != (types.CustomCPError{}) {
 				return err
 			}
+			eksCluster.NodePools[in].PoolStatus = true
 		}
 	}
 	/**/
@@ -282,6 +284,7 @@ func (cloud *EKS) addNodePool(nodePool *NodePool, clusterName string, subnets []
 	tags["name"] = &nodePool.NodePoolName
 	nodePool.Tags = tags
 	//generate cluster create request
+	beego.Info("printin==== eks desired size +" + strconv.Itoa(int(*nodePool.ScalingConfig.DesiredSize)))
 	nodePoolRequest := GenerateNodePoolCreateRequest(*nodePool, clusterName)
 	/**/
 
@@ -373,29 +376,31 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 			return cpErr
 		}
 		//delete extra resources
-		err = cloud.deleteIAMRoleFromInstanceProfile(*nodePool.RoleName)
-		if err != nil {
-			ctx.SendLogs(
-				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
-				models.LOGGING_LEVEL_ERROR,
-				models.Backend_Logging,
-			)
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
-			cpErr := ApiError(err, "NodePool Deletion Failed", 512)
-			return cpErr
-		}
-		err = cloud.deleteIAMRole(*nodePool.RoleName)
-		if err != nil {
-			ctx.SendLogs(
-				"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
-				models.LOGGING_LEVEL_ERROR,
-				models.Backend_Logging,
-			)
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
-			cpErr := ApiError(err, "NodePool Deletion Failed", 512)
-			return cpErr
+		if nodePool.RoleName != nil {
+			err = cloud.deleteIAMRoleFromInstanceProfile(*nodePool.RoleName)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
+			err = cloud.deleteIAMRole(*nodePool.RoleName)
+			if err != nil {
+				ctx.SendLogs(
+					"EKS delete IAM role for cluster '"+eksCluster.Name+"', node group '"+nodePool.NodePoolName+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+nodePool.NodePoolName, "error", eksCluster.ProjectId)
+				cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+				return cpErr
+			}
 		}
 		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
 			err = cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
@@ -910,49 +915,66 @@ func (cloud *EKS) fetchStatus(cluster *EKSCluster, ctx utils.Context, companyId 
 	response.ClusterArn = clusterOutput.Cluster.Arn
 
 	for _, pool := range cluster.NodePools {
+		if pool.PoolStatus {
 
-		//getting nodes
-		nodes, cpErr := cloud.getNodes(pool.NodePoolName, ctx)
-		if cpErr != (types.CustomCPError{}) {
-			return EKSClusterStatus{}, cpErr
+			//getting nodes
+			nodes, cpErr := cloud.getNodes(pool.NodePoolName, ctx)
+			if cpErr != (types.CustomCPError{}) {
+				return EKSClusterStatus{}, cpErr
+			}
+
+			//getting pool details
+			var poolResponse EKSPoolStatus
+			poolInput := eks.DescribeNodegroupInput{ClusterName: aws.String(cluster.Name),
+				NodegroupName: aws.String(pool.NodePoolName)}
+			poolOutput, err := cloud.Svc.DescribeNodegroup(&poolInput)
+			if err != nil {
+
+				ctx.SendLogs(
+					"EKS cluster state request for '"+cluster.Name+"' failed: "+err.Error(),
+					models.LOGGING_LEVEL_ERROR,
+					models.Backend_Logging,
+				)
+				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.ProjectId)
+				cpErr := ApiError(err, "unable to fetch cluster status", 512)
+
+				return EKSClusterStatus{}, cpErr
+			}
+			poolResponse.NodePoolArn = poolOutput.Nodegroup.NodegroupArn
+			poolResponse.Name = poolOutput.Nodegroup.NodegroupName
+			poolResponse.Status = poolOutput.Nodegroup.Status
+			poolResponse.AMI = poolOutput.Nodegroup.AmiType
+
+			var scaling AutoScaling
+
+			scaling.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
+			scaling.MinCount = poolOutput.Nodegroup.ScalingConfig.MinSize
+			scaling.MaxCount = poolOutput.Nodegroup.ScalingConfig.MaxSize
+			scaling.AutoScale = true
+
+			poolResponse.Scaling = scaling
+			poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
+
+			poolResponse.Nodes = nodes
+			response.NodePools = append(response.NodePools, poolResponse)
+		} else {
+			var poolResponse EKSPoolStatus
+			poolResponse.Name = &pool.NodePoolName
+			poolResponse.Status = aws.String("new")
+			poolResponse.AMI = pool.AmiType
+			poolResponse.MachineType = pool.InstanceType
+
+			var scaling AutoScaling
+
+			scaling.DesiredSize = pool.ScalingConfig.DesiredSize
+			scaling.MinCount = pool.ScalingConfig.MinSize
+			scaling.MaxCount = pool.ScalingConfig.MaxSize
+			scaling.AutoScale = pool.ScalingConfig.IsEnabled
+			poolResponse.Scaling = scaling
+
+			response.NodePools = append(response.NodePools, poolResponse)
 		}
-
-		//getting pool details
-		var poolResponse EKSPoolStatus
-		poolInput := eks.DescribeNodegroupInput{ClusterName: aws.String(cluster.Name),
-			NodegroupName: aws.String(pool.NodePoolName)}
-		poolOutput, err := cloud.Svc.DescribeNodegroup(&poolInput)
-		if err != nil {
-
-			ctx.SendLogs(
-				"EKS cluster state request for '"+cluster.Name+"' failed: "+err.Error(),
-				models.LOGGING_LEVEL_ERROR,
-				models.Backend_Logging,
-			)
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", cluster.ProjectId)
-			cpErr := ApiError(err, "unable to fetch cluster status", 512)
-
-			return EKSClusterStatus{}, cpErr
-		}
-		poolResponse.NodePoolArn = poolOutput.Nodegroup.NodegroupArn
-		poolResponse.Name = poolOutput.Nodegroup.NodegroupName
-		poolResponse.Status = poolOutput.Nodegroup.Status
-		poolResponse.AMI = poolOutput.Nodegroup.AmiType
-
-		var scaling AutoScaling
-
-		scaling.DesiredSize = poolOutput.Nodegroup.ScalingConfig.DesiredSize
-		scaling.MinCount = poolOutput.Nodegroup.ScalingConfig.MinSize
-		scaling.MaxCount = poolOutput.Nodegroup.ScalingConfig.MaxSize
-		scaling.AutoScale = true
-
-		poolResponse.Scaling = scaling
-		poolResponse.Name = poolOutput.Nodegroup.InstanceTypes[0]
-
-		poolResponse.Nodes = nodes
-		beego.Info("length of nodes === =" + string(len(nodes)))
-		response.NodePools = append(response.NodePools, poolResponse)
 
 	}
 	return response, types.CustomCPError{}
@@ -972,7 +994,6 @@ func (cloud *EKS) getEKSCluster(ctx utils.Context) ([]*string, types.CustomCPErr
 func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus, types.CustomCPError) {
 	var nodes []EKSNodesStatus
 
-	beego.Info("====nodepoolname === " + poolName)
 	var values []*string
 	values = append(values, &poolName)
 	var tags []*ec2.Filter
@@ -996,14 +1017,14 @@ func (cloud *EKS) getNodes(poolName string, ctx utils.Context) ([]EKSNodesStatus
 
 		return nil, ApiError(errors.New("Error in fetching instance"), "Nodes not found", 512)
 	}
-	for _, instance := range updated_instances.Reservations[0].Instances {
+	for _, instance := range updated_instances.Reservations {
 		var node EKSNodesStatus
-		node.Name = instance.InstanceId
-		node.ID = instance.InstanceId
-		node.State = instance.State.Name
-		node.PrivateIP = instance.PrivateIpAddress
-		node.PublicIP = instance.PublicIpAddress
-		beego.Info("appending nooode==== " + *instance.InstanceId)
+
+		node.Name = instance.Instances[0].InstanceId
+		node.ID = instance.Instances[0].InstanceId
+		node.State = instance.Instances[0].State.Name
+		node.PrivateIP = instance.Instances[0].PrivateIpAddress
+		node.PublicIP = instance.Instances[0].PublicIpAddress
 		nodes = append(nodes, node)
 	}
 	return nodes, types.CustomCPError{}
@@ -1049,4 +1070,218 @@ func GetEKS(projectId string, credentials vault.AwsCredentials) EKS {
 		Region:    credentials.Region,
 		ProjectId: projectId,
 	}
+}
+func (cloud *EKS) UpdateLogging(name string, logging Logging, ctx utils.Context) types.CustomCPError {
+	clusterRequest := GenerateClusterUpdateLoggingRequest(name, logging)
+	_, err := cloud.Svc.UpdateClusterConfig(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster logging update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster logging update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster.Logging = logging
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster logging update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+	return types.CustomCPError{}
+}
+func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx utils.Context) types.CustomCPError {
+	clusterRequest := GenerateClusterUpdateNetworkRequest(name, network)
+	_, err := cloud.Svc.UpdateClusterConfig(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster network update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster network update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster.ResourcesVpcConfig = network
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster network update request of "+name+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
+			Description: err.Error(),
+		}
+	}
+
+	return types.CustomCPError{}
+}
+func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig NodePoolScalingConfig, ctx utils.Context) types.CustomCPError {
+	clusterRequest := GeneratNodeConfigUpdateRequest(clusterName, poolName, scalingConfig)
+	_, err := cloud.Svc.UpdateNodegroupConfig(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster nodepool config update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster nodepool config update",
+			Description: err.Error(),
+		}
+	}
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster nodepool config update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+	for ind, pools := range oldCluster.NodePools {
+		if pools.NodePoolName == poolName {
+			oldCluster.NodePools[ind].ScalingConfig = &scalingConfig
+		}
+	}
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster nodepool config update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
+			Description: err.Error(),
+		}
+	}
+	return types.CustomCPError{}
+}
+func (cloud *EKS) UpdateClusterVersion(clusterName, version string, ctx utils.Context) types.CustomCPError {
+	clusterRequest := GenerateUpdateClusterVersionRequest(clusterName, version)
+	_, err := cloud.Svc.UpdateClusterVersion(clusterRequest)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster version update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster version update",
+			Description: err.Error(),
+		}
+	}
+	oldCluster, err := GetPreviousEKSCluster(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster version update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster logging update",
+			Description: err.Error(),
+		}
+	}
+
+	oldCluster.Version = &version
+
+	err = AddPreviousEKSCluster(oldCluster, ctx, true)
+	if err != nil {
+		ctx.SendLogs(
+			"EKS running cluster version update request of "+clusterName+" failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return types.CustomCPError{
+			StatusCode:  512,
+			Error:       "Error in running cluster network update",
+			Description: err.Error(),
+		}
+	}
+	return types.CustomCPError{}
+}
+func (cloud *EKS) GetClusterStatus(name string, ctx utils.Context) (EKSClusterStatus, types.CustomCPError) {
+	var response EKSClusterStatus
+	clusterInput := eks.DescribeClusterInput{Name: aws.String(name)}
+	clusterOutput, err := cloud.Svc.DescribeCluster(&clusterInput)
+	if err != nil {
+
+		ctx.SendLogs(
+			"EKS cluster state request for '"+name+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "unable to fetch cluster"+err.Error(), "error", ctx.Data.ProjectId)
+		cpErr := ApiError(err, "unable to fetch cluster status", 512)
+
+		return EKSClusterStatus{}, cpErr
+	}
+	response.Name = clusterOutput.Cluster.Name
+	response.Status = clusterOutput.Cluster.Status
+	response.ClusterEndpoint = clusterOutput.Cluster.Endpoint
+	response.KubeVersion = clusterOutput.Cluster.Version
+	response.ClusterArn = clusterOutput.Cluster.Arn
+	return response, types.CustomCPError{}
 }

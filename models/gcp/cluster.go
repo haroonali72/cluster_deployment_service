@@ -571,6 +571,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 }
 
 func FetchStatus(credentials GcpCredentials, token, projectId, companyId string, ctx utils.Context) (Cluster_Def, types.CustomCPError) {
+
 	cluster, err := GetCluster(projectId, companyId, ctx)
 	if err != nil {
 		ctx.SendLogs("GcpClusterModel: Deploy - Got error while connecting to the database:"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -584,11 +585,12 @@ func FetchStatus(credentials GcpCredentials, token, projectId, companyId string,
 	}
 	err1 = gcp.init()
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
 	}
 
-	err1 = gcp.fetchClusterStatus(&cluster, ctx)
+
+	err1 = gcp.fetchClusterStatus(&cluster,token, ctx)
 	if err1 != (types.CustomCPError{}) {
 		ctx.SendLogs("GcpClusterModel : Status - Failed to get latest status "+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return cluster, err1
@@ -642,7 +644,7 @@ func GetAllServiceAccounts(credentials GcpCredentials, ctx utils.Context) (servi
 	return serviceAccounts, err
 }
 
-func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId string, ctx utils.Context) types.CustomCPError {
+func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials,token, companyId string, ctx utils.Context) types.CustomCPError {
 
 	publisher := utils.Notifier{}
 	pub_err := publisher.Init_notifier()
@@ -674,7 +676,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 
 	gcp, err1 := GetGCP(credentials)
 	if err1 != (types.CustomCPError{}) {
-		ctx.SendLogs("GcpClusterModel :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("GcpClusterModel :"+err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GCP, ctx, err1)
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -705,7 +707,7 @@ func TerminateCluster(cluster Cluster_Def, credentials GcpCredentials, companyId
 		return ApiErrors(err, "Error in cluster termination")
 	}
 
-	err1 = gcp.deleteCluster(cluster, ctx)
+	err1 = gcp.deleteCluster(cluster, token, ctx)
 	if err1 != (types.CustomCPError{}) {
 		utils.SendLog(companyId, "Cluster termination failed: "+cluster.Name, "error", cluster.ProjectId)
 

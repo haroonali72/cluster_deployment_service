@@ -2,16 +2,19 @@ package doks
 
 import (
 	"antelope/models"
+	"antelope/models/api_handler"
 	"antelope/models/types"
 	"antelope/models/utils"
 	"antelope/models/vault"
 	"context"
+	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -72,6 +75,34 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 			return cluster, err
 		}
 	}
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != (types.CustomCPError{}) {
+			return cluster, err
+		}
+	}
+
+	var doNetwork types.DONetwork
+	url := getNetworkHost("do", cluster.ProjectId)
+
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err !=nil && strings.Contains(err.Error(),"Not Found"){
+		ctx.SendLogs("No Network found for this network", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+	}else if err != nil || network == nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
+		return cluster, cpErr
+	}
+
+
+	if network != nil {
+	err = json.Unmarshal(network.([]byte), &doNetwork)
+	if err != nil {
+		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
+		return cluster, cpErr
+	}
+	}
+
 	ctx.SendLogs(
 		"DOKS cluster creation of "+cluster.Name+"' submitted ",
 		models.LOGGING_LEVEL_INFO,
@@ -85,6 +116,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 	var nodepool []*godo.KubernetesNodePoolCreateRequest
 
 	for _, node := range cluster.NodePools {
+
 		pool := godo.KubernetesNodePoolCreateRequest{
 
 			Name:      node.Name,
@@ -98,8 +130,22 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		}
 		nodepool = append(nodepool, &pool)
 	}
+	var input godo.KubernetesClusterCreateRequest
 
-	input := godo.KubernetesClusterCreateRequest{
+	if  network ==nil{
+		input = godo.KubernetesClusterCreateRequest{
+			Name:        cluster.Name,
+			RegionSlug:  cluster.Region,
+			VersionSlug: cluster.KubeVersion,
+			Tags:        cluster.Tags,
+			NodePools:   nodepool,
+			//MaintenancePolicy: cluster.MaintenancePolicy,
+			AutoUpgrade: cluster.AutoUpgrade,
+			//VPCUUID: doNetwork.Definition[0].VPCs[0].VPCId,
+		}
+	}else {
+
+		input = godo.KubernetesClusterCreateRequest{
 		Name:        cluster.Name,
 		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
@@ -107,6 +153,9 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		NodePools:   nodepool,
 		//MaintenancePolicy: cluster.MaintenancePolicy,
 		AutoUpgrade: cluster.AutoUpgrade,
+		VPCUUID: doNetwork.Definition[0].VPCs[0].VPCId,
+	}
+
 	}
 
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
