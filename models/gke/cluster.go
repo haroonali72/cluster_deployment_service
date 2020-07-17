@@ -677,7 +677,7 @@ func DeployGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, token 
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 
 		utils.SendLog(ctx.Data.Company, "Cluster creation failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-		utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+		utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 
 		confError := UpdateGKECluster(cluster, ctx)
 		if confError != nil {
@@ -805,6 +805,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			return types.CustomCPError{}
 		}
 	}
+
 	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 	if previousPoolCount < newPoolCount {
@@ -818,19 +819,22 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			return err
 		}
 	} else if previousPoolCount > newPoolCount {
-		delete := true
+
 		previousCluster, err := GetPreviousGKECluster(ctx)
 		if err != nil {
 			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
 		}
-		for _, pool := range cluster.NodePools {
-			for _, oldpool := range previousCluster.NodePools {
-				if pool.Name != oldpool.Name {
-					delete = true
+
+		for _, oldpool := range previousCluster.NodePools {
+			delete := true
+			for _, pool := range cluster.NodePools {
+
+				if pool.Name == oldpool.Name {
+					delete = false
 				}
 			}
 			if delete == true {
-				DeleteNodepool(cluster, ctx, gkeOps, pool.Name)
+				DeleteNodepool(cluster, ctx, gkeOps, oldpool.Name)
 			}
 		}
 	}
@@ -843,72 +847,73 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 				break
 			}
 		}
-		if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
-			err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "NetworkPolicy" {
-			err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "AddonsConfig" {
-			err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "InitialClusterVersion" {
-			err := UpdateVersion(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "LoggingService" || dif.Path[0] == "MonitoringService" {
-			err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "LegacyAbac" {
-			err := UpdateLegacyAbac(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "MaintenancePolicy" {
-			err := UpdateMaintenancePolicy(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if dif.Path[0] == "ResourceUsageExportConfig" {
-			err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if len(dif.Path) >= 4 && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "ImageType" {
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if previousPoolCount < newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "InitialNodeCount" {
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if previousPoolCount < newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Management" {
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-			if err != (types.CustomCPError{}) {
-				return err
-			}
-		} else if len(dif.Path) > 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Autoscaling" {
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-			if err != (types.CustomCPError{}) {
-				return err
+		if dif.Type == "update" {
+			if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
+				err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "NetworkPolicy" {
+				err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "AddonsConfig" {
+				err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "InitialClusterVersion" {
+				err := UpdateVersion(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "LoggingService" || dif.Path[0] == "MonitoringService" {
+				err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "LegacyAbac" {
+				err := UpdateLegacyAbac(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "MaintenancePolicy" {
+				err := UpdateMaintenancePolicy(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0] == "ResourceUsageExportConfig" {
+				err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) >= 4 && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "ImageType" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "InitialNodeCount" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Management" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if len(dif.Path) > 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Autoscaling" {
+				poolIndex, _ := strconv.Atoi(dif.Path[1])
+				err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
 			}
 		}
-
 	}
 
 	DeletePreviousGKECluster(ctx)
