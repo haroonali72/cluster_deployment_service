@@ -760,7 +760,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			pools = append(pools, cluster.NodePools[i])
 		}
 
-		err := AddNodepool(cluster, ctx, eks, pools, previousPoolCount, token)
+		err := AddNodepool(&cluster, ctx, eks, pools, previousPoolCount, token)
 		if err != (types.CustomCPError{}) {
 			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
@@ -1114,7 +1114,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 	}
 	return difCluster, previousPoolCount, newPoolCount, nil
 }
-func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*NodePool, poolIndex int, token string) types.CustomCPError {
+func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*NodePool, poolIndex int, token string) types.CustomCPError {
 	/*/
 	  Fetching network
 	*/
@@ -1170,9 +1170,16 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 	}
 
 	oldCluster.NodePools = cluster.NodePools
-	for _, pool := range cluster.NodePools {
-		pool.PoolStatus = true
+	for in, mainPool := range cluster.NodePools {
+		cluster.NodePools[in].PoolStatus = true
+		for _, pool := range pools {
+			if pool.NodePoolName == mainPool.NodePoolName {
+				cluster.NodePools[in].RoleName = pool.RoleName
+				cluster.NodePools[in].NodeRole = pool.NodeRole
+			}
+		}
 	}
+
 	err1 = AddPreviousEKSCluster(oldCluster, ctx, true)
 	if err1 != nil {
 		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
