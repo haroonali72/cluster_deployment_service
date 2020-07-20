@@ -527,7 +527,7 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 	}
 
 	cloud.Context = context.Background()
-	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "Microsoft.ContainerService")
+	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "managedClusters")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, ApiError(err, "Error while getting kubernetes version", 502)
@@ -585,6 +585,46 @@ func (cloud *AKS) CreatOrUpdateAgentPool(ctx utils.Context, token, resourceGroup
 			models.Backend_Logging,
 		)
 		return errors.New("AKS agent node pool updation failed")
+	}
+
+	return nil
+}
+
+func (cloud *AKS) DeleteAgentPool(ctx utils.Context, resourceGroup, clusterName string, agentPool ManagedClusterAgentPoolProfile) error {
+
+	cloud.Context = context.Background()
+	future, err := cloud.AgentPoolClient.Delete(cloud.Context, resourceGroup, clusterName, *agentPool.Name)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool deletion failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	nodePoolResp, err := future.Result(cloud.AgentPoolClient)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool deletion failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+	if nodePoolResp.Status != "Succeeded" {
+		ctx.SendLogs(
+			"AKS agent node pool deletion failed",
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return errors.New("AKS agent node pool deletion failed")
 	}
 
 	return nil
