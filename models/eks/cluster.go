@@ -801,7 +801,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	loggingChanges := false
 	poolIndex_ := -1
 	for _, dif := range difCluster {
-		if dif.Type != "update" {
+		if dif.Type != "update" || len(dif.Path)< 2{
 			continue
 		}
 		currentpoolIndex_, _ := strconv.Atoi(dif.Path[1])
