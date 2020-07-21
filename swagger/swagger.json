@@ -10695,52 +10695,52 @@
             "title": "*string",
             "type": "object"
         },
-        "10063.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "10799.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "11771.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "14391.0xc001c6ed20.false": {
+        "14087.0xc001930810.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001c3cdb0.false": {
+        "14149.0xc00100d7d0.false": {
             "title": "false",
             "type": "object"
         },
-        "59615.0xc001c0c030.false": {
+        "14239.0xc001363d70.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc00121cc60.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "64122.string": {
+        "1559.string": {
             "title": "string",
             "type": "object"
         },
-        "667.0xc001b39bc0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "7408.string": {
+        "19753.string": {
             "title": "string",
             "type": "object"
         },
-        "964.0xc00157b440.false": {
+        "22408.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "23144.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "26859.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "434.0xc0019ebda0.false": {
             "title": "false",
             "type": "object"
         },
-        "99398.string": {
+        "518.0xc0018f4ae0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "6553.string": {
             "title": "string",
+            "type": "object"
+        },
+        "6737.0xc001a0b5c0.false": {
+            "title": "false",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -10880,7 +10880,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/64122.string"
+                    "$ref": "#/definitions/1559.string"
                 },
                 "type": {
                     "type": "string"
@@ -11119,7 +11119,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc00121cc60.false"
+                    "$ref": "#/definitions/14149.0xc00100d7d0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11746,7 +11746,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc00157b440.false"
+                    "$ref": "#/definitions/14239.0xc001363d70.false"
                 },
                 "name": {
                     "type": "string"
@@ -12563,7 +12563,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/99398.string"
+                    "$ref": "#/definitions/6553.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14378,7 +14378,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/59615.0xc001c0c030.false"
+                    "$ref": "#/definitions/518.0xc0018f4ae0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14751,7 +14751,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001c6ed20.false"
+                    "$ref": "#/definitions/434.0xc0019ebda0.false"
                 },
                 "name": {
                     "type": "string"
