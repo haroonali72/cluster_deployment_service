@@ -760,7 +760,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			pools = append(pools, cluster.NodePools[i])
 		}
 
-		err := AddNodepool(cluster, ctx, eks, pools, previousPoolCount, token)
+		err := AddNodepool(&cluster, ctx, eks, pools, previousPoolCount, token)
 		if err != (types.CustomCPError{}) {
 			utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
@@ -799,10 +799,12 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 		}
 	}
 	loggingChanges := false
+	poolIndex_ := -1
 	for _, dif := range difCluster {
-		if dif.Type != "update" {
+		if dif.Type != "update" || len(dif.Path)< 2{
 			continue
 		}
+		currentpoolIndex_, _ := strconv.Atoi(dif.Path[1])
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
@@ -883,7 +885,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-		} else if previousPoolCount <= newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "ScalingConfig" && dif.Path[3] != "IsEnabled" {
+		} else if previousPoolCount <= newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && currentpoolIndex_ != poolIndex_ && dif.Path[2] == "ScalingConfig" && dif.Path[3] != "IsEnabled" {
 
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -909,6 +911,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 			utils.SendLog(ctx.Data.Company, "Scaling config updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
+			currentpoolIndex_ = poolIndex_
 		}
 
 	}
@@ -1111,7 +1114,7 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 	}
 	return difCluster, previousPoolCount, newPoolCount, nil
 }
-func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*NodePool, poolIndex int, token string) types.CustomCPError {
+func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*NodePool, poolIndex int, token string) types.CustomCPError {
 	/*/
 	  Fetching network
 	*/
@@ -1167,9 +1170,16 @@ func AddNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, pools []*Nod
 	}
 
 	oldCluster.NodePools = cluster.NodePools
-	for _, pool := range cluster.NodePools {
-		pool.PoolStatus = true
+	for in, mainPool := range cluster.NodePools {
+		cluster.NodePools[in].PoolStatus = true
+		for _, pool := range pools {
+			if pool.NodePoolName == mainPool.NodePoolName {
+				cluster.NodePools[in].RoleName = pool.RoleName
+				cluster.NodePools[in].NodeRole = pool.NodeRole
+			}
+		}
 	}
+
 	err1 = AddPreviousEKSCluster(oldCluster, ctx, true)
 	if err1 != nil {
 		ctx.SendLogs(err1.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
