@@ -10747,15 +10747,15 @@
             "title": "*string",
             "type": "object"
         },
-        "14087.0xc00196e5d0.false": {
+        "14087.0xc0019f18f0.false": {
             "title": "false",
             "type": "object"
         },
-        "14149.0xc00104b890.false": {
+        "14149.0xc0010d6bd0.false": {
             "title": "false",
             "type": "object"
         },
-        "14239.0xc0013a9e30.false": {
+        "14239.0xc001443170.false": {
             "title": "false",
             "type": "object"
         },
@@ -10779,11 +10779,11 @@
             "title": "string",
             "type": "object"
         },
-        "434.0xc001a29b60.false": {
+        "434.0xc001abcea0.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0019348a0.false": {
+        "518.0xc0019bbbc0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10791,7 +10791,7 @@
             "title": "string",
             "type": "object"
         },
-        "6737.0xc001a49380.false": {
+        "6737.0xc001ad86c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -11171,7 +11171,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14149.0xc00104b890.false"
+                    "$ref": "#/definitions/14149.0xc0010d6bd0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11798,7 +11798,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14239.0xc0013a9e30.false"
+                    "$ref": "#/definitions/14239.0xc001443170.false"
                 },
                 "name": {
                     "type": "string"
@@ -14430,7 +14430,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0019348a0.false"
+                    "$ref": "#/definitions/518.0xc0019bbbc0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14803,7 +14803,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc001a29b60.false"
+                    "$ref": "#/definitions/434.0xc001abcea0.false"
                 },
                 "name": {
                     "type": "string"

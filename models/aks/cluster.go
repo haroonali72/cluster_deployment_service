@@ -20,6 +20,7 @@ import (
 	"github.com/r3labs/diff"
 	"github.com/signalsciences/ipv4"
 	"gopkg.in/mgo.v2/bson"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -1043,7 +1044,6 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 	}
 
 	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(cluster.ProjectId, companyId, ctx)
-	//_, _, _, err1 := CompareClusters(cluster.ProjectId, companyId, ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			cluster.Status = models.ClusterCreated
@@ -1059,160 +1059,139 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 	if previousPoolCount < newPoolCount {
-		for _, nodePool := range cluster.AgentPoolProfiles {
+		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
 				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && diff.To == nodePool.Name {
-					aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
+					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+				} else if diff.Type == "update" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) {
+					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
 				}
 			}
 		}
-	}
-
-	if newPoolCount < previousPoolCount {
+	} else if newPoolCount < previousPoolCount {
 		previousCluster, err := GetPreviousAKSCluster(cluster.ProjectId, companyId, ctx)
 		if err != nil {
+			updationFailedError(cluster, ctx, types.CustomCPError{
+				StatusCode:  int(models.CloudStatusCode),
+				Error:       "AKS cluster updation failed",
+				Description: err.Error(),
+			})
+			ctx.SendLogs("Error in updating running cluster: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
 		}
 		for _, nodePool := range previousCluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
 				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && diff.From == nodePool.Name {
-					aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, nodePool)
+					err := aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, nodePool)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+				}
+			}
+		}
+	} else if newPoolCount == previousPoolCount {
+		isClusterUpdated := false
+		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
+			for _, diff := range difCluster {
+				if diff.Type == "update" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) {
+					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+				} else if (diff.Type == "update" || diff.Type == "create") && diff.Path[0] != "AgentPoolProfiles" && !isClusterUpdated {
+					err := aksOps.CreateCluster(cluster, token, ctx)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+					isClusterUpdated = true
 				}
 			}
 		}
 	}
 
-	//if previousPoolCount < newPoolCount {
-	//	var pools []*NodePool
-	//	for i := previousPoolCount; i < newPoolCount; i++ {
-	//		pools = append(pools, cluster.NodePools[i])
-	//	}
-	//
-	//	err := AddNodepool(cluster, ctx, gkeOps, pools, previousPoolCount)
-	//	if err != (types.CustomCPError{}) {
-	//		return err
-	//	}
-	//} else if previousPoolCount > newPoolCount {
-	//
-	//	previousCluster, err := GetPreviousGKECluster(ctx)
-	//	if err != nil {
-	//		return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
-	//	}
-	//
-	//	for _, oldpool := range previousCluster.NodePools {
-	//		delete := true
-	//		for _, pool := range cluster.NodePools {
-	//
-	//			if pool.Name == oldpool.Name {
-	//				delete = false
-	//			}
-	//		}
-	//		if delete == true {
-	//			DeleteNodepool(cluster, ctx, gkeOps, oldpool.Name)
-	//		}
-	//	}
-	//}
-	//
-	//for _, dif := range difCluster {
-	//
-	//	if len(dif.Path) > 2 {
-	//		poolIndex, _ := strconv.Atoi(dif.Path[1])
-	//		if poolIndex > (previousPoolCount - 1) {
-	//			break
-	//		}
-	//	}
-	//	if dif.Type == "update" {
-	//		if dif.Path[0] == "MasterAuthorizedNetworksConfig" {
-	//			err := UpdateMasterAuthorizedNetworksConfig(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if dif.Path[0] == "NetworkPolicy" {
-	//			err := UpdateNetworkPolicy(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if dif.Path[0] == "AddonsConfig" {
-	//			err := UpdateHttpLoadBalancing(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if dif.Path[0] == "InitialClusterVersion" {
-	//			err := UpdateVersion(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if dif.Path[0] == "LoggingService" || dif.Path[0] == "MonitoringService" {
-	//			err := UpdateMonitoringAndLoggingService(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if dif.Path[0] == "LegacyAbac" {
-	//			err := UpdateLegacyAbac(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if dif.Path[0] == "MaintenancePolicy" {
-	//			err := UpdateMaintenancePolicy(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if dif.Path[0] == "ResourceUsageExportConfig" {
-	//			err := UpdateResourceUsageExportConfig(cluster, ctx, gkeOps)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if len(dif.Path) >= 4 && dif.Path[0] == "NodePools" && dif.Path[2] == "Config" && dif.Path[3] == "ImageType" {
-	//			poolIndex, _ := strconv.Atoi(dif.Path[1])
-	//			err := UpdateNodeImage(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "InitialNodeCount" {
-	//			poolIndex, _ := strconv.Atoi(dif.Path[1])
-	//			err := UpdateNodeCount(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Management" {
-	//			poolIndex, _ := strconv.Atoi(dif.Path[1])
-	//			err := UpdateNodePoolManagement(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		} else if len(dif.Path) > 3 && dif.Path[0] == "NodePools" && dif.Path[2] == "Autoscaling" {
-	//			poolIndex, _ := strconv.Atoi(dif.Path[1])
-	//			err := UpdateNodePoolScaling(cluster, ctx, gkeOps, cluster.NodePools[poolIndex], poolIndex)
-	//			if err != (types.CustomCPError{}) {
-	//				return err
-	//			}
-	//		}
-	//	}
-	//}
-	//
-	//DeletePreviousGKECluster(ctx)
-	//
-	//latestCluster, err2 := gkeOps.fetchClusterStatus(cluster.Name, ctx)
+	_ = DeletePreviousAKSCluster(cluster.ProjectId, companyId, ctx)
+
+	//latestCluster, err2 := aksOps.fetchClusterStatus(credentials.Profile, &cluster, ctx)
 	//if err2 != (types.CustomCPError{}) {
-	//	return err
+	//	return
 	//}
 	//
 	//for strings.ToLower(string(latestCluster.Status)) != strings.ToLower("running") {
 	//	time.Sleep(time.Second * 60)
 	//}
-	//
-	//cluster.CloudplexStatus = models.ClusterCreated
-	//confError_ := UpdateGKECluster(cluster, ctx)
-	//if confError_ != nil {
-	//	ctx.SendLogs("GKERunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-	//
-	//}
-	//
-	//_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-	//publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+
+	cluster.Status = models.ClusterCreated
+	confError_ := UpdateAKSCluster(cluster, ctx)
+	if confError_ != nil {
+		ctx.SendLogs("AKSRunningClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+	}
+
+	_, _ = utils.SendLog(ctx.Data.Company, "Running Cluster updated successfully "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 
 	return types.CustomCPError{}
 
+}
+
+func updationFailedError(cluster AKSCluster, ctx utils.Context, err types.CustomCPError) types.CustomCPError {
+	publisher := utils.Notifier{}
+	_ = publisher.Init_notifier()
+
+	cluster.Status = models.ClusterUpdateFailed
+	confError := UpdateAKSCluster(cluster, ctx)
+	if confError != nil {
+		ctx.SendLogs("AKSRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
+
+	utils.SendLog(ctx.Data.Company, "Error in running cluster update : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+
+	err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.AKS, ctx, err)
+	if err_ != nil {
+		ctx.SendLogs("AKSRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+	}
+
+	utils.SendLog(ctx.Data.Company, "Deployed cluster update failed : "+cluster.Name, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
+	utils.SendLog(ctx.Data.Company, err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.Company)
+
+	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
+	return err
 }
 
 func CompareClusters(projectId, companyId string, ctx utils.Context) (diff.Changelog, int, int, error) {
