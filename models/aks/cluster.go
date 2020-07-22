@@ -29,7 +29,7 @@ import (
 type AKSCluster struct {
 	ID                     bson.ObjectId                        `json:"-" bson:"_id,omitempty"`
 	ProjectId              string                               `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
-	Cloud                  models.Cloud                         `json:"-" bson:"cloud"`
+	Cloud                  models.Cloud                         `json:"cloud" bson:"cloud"`
 	CreationDate           time.Time                            `json:"-" bson:"creation_date"`
 	ModificationDate       time.Time                            `json:"-" bson:"modification_date"`
 	CompanyId              string                               `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
@@ -1061,7 +1061,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 	if previousPoolCount < newPoolCount {
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
-				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && diff.To == nodePool.Name {
+				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.To.(*string) == *nodePool.Name {
 					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {
 						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1099,7 +1099,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		}
 		for _, nodePool := range previousCluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
-				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && diff.From == nodePool.Name {
+				if diff.Type == "delete" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.From.(*string) == *nodePool.Name {
 					err := aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {
 						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1145,7 +1145,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		}
 	}
 
-	_ = DeletePreviousAKSCluster(cluster.ProjectId, companyId, ctx)
+	//_ = DeletePreviousAKSCluster(cluster.ProjectId, companyId, ctx)
 
 	//latestCluster, err2 := aksOps.fetchClusterStatus(credentials.Profile, &cluster, ctx)
 	//if err2 != (types.CustomCPError{}) {
@@ -1209,7 +1209,7 @@ func CompareClusters(projectId, companyId string, ctx utils.Context) (diff.Chang
 	newPoolCount := len(cluster.AgentPoolProfiles)
 
 	difCluster, err := diff.Diff(oldCluster, cluster)
-	if len(difCluster) <= 3 && previousPoolCount == newPoolCount {
+	if len(difCluster) < 2 && previousPoolCount == newPoolCount {
 		return diff.Changelog{}, 0, 0, errors.New("Nothing to update")
 	} else if err != nil {
 		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())

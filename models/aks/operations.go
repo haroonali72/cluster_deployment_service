@@ -609,7 +609,7 @@ func (cloud *AKS) DeleteAgentPool(ctx utils.Context, resourceGroup, clusterName 
 		return err
 	}
 
-	nodePoolResp, err := future.Result(cloud.AgentPoolClient)
+	_, err = future.Result(cloud.AgentPoolClient)
 	if err != nil {
 		ctx.SendLogs(
 			"AKS agent node pool deletion failed: "+err.Error(),
@@ -617,14 +617,6 @@ func (cloud *AKS) DeleteAgentPool(ctx utils.Context, resourceGroup, clusterName 
 			models.Backend_Logging,
 		)
 		return err
-	}
-	if nodePoolResp.Status != "Succeeded" {
-		ctx.SendLogs(
-			"AKS agent node pool deletion failed",
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		return errors.New("AKS agent node pool deletion failed")
 	}
 
 	return nil
