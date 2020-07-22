@@ -103,6 +103,7 @@ type NodePoolScalingConfig struct {
 }
 
 type EKSClusterStatus struct {
+	ProjectId        string        `json:"project_id"`
 	ClusterEndpoint *string         `json:"endpoint"`
 	Name            *string         `json:"name"`
 	Status          *string         `json:"status"`
@@ -679,6 +680,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return EKSClusterStatus{}, e
 	}
+	response.ProjectId =projectId
 
 	return response, types.CustomCPError{}
 }
