@@ -197,7 +197,7 @@ type NodePool struct {
 	InitialNodeCount  int64                `json:"initial_node_count" bson:"initial_node_count" validate:"required,gte=1"`
 	InstanceGroupUrls []string             `json:"instance_group_urls,omitempty" bson:"instance_group_urls,omitempty"`
 	Management        *NodeManagement      `json:"management,omitempty" bson:"management,omitempty"`
-	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty" validate:"required,dive"`
+	MaxPodsConstraint *MaxPodsConstraint   `json:"max_pods_constraint,omitempty" bson:"max_pods_constraint,omitempty"`
 	Name              string               `json:"name" bson:"name" validate:"required"`
 	PodIpv4CidrSize   int64                `json:"pod_ipv4_cidr_size,omitempty" bson:"pod_ipv4_cidr_size,omitempty"`
 	SelfLink          string               `json:"self_link,omitempty" bson:"self_link,omitempty"`
