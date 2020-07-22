@@ -523,7 +523,7 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 	}
 
 	cloud.Context = context.Background()
-	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "Microsoft.ContainerService")
+	result, err := cloud.KubeVersionClient.ListOrchestrators(cloud.Context, cloud.Region, "managedClusters")
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return nil, ApiError(err, "Error while getting kubernetes version", 502)
@@ -587,7 +587,7 @@ func generateKubernetesVersion(c AKSCluster) *string {
 	if c.IsAdvanced {
 		return to.StringPtr(c.KubernetesVersion)
 	} else {
-		return to.StringPtr("1.15.10")
+		return to.StringPtr("1.16.10")
 	}
 }
 
