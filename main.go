@@ -77,6 +77,7 @@ func setEnv() {
 	os.Setenv("mongo_doks_template_collection", "doks_template")
 	os.Setenv("mongo_gke_template_collection", "gke_template")
 	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
+	os.Setenv("mongo_eks_cluster_collection", "eks_cluster")
 	os.Setenv("mongo_gke_running_cluster_collection", "gke_previous_cluster")
 	os.Setenv("mongo_aks_template_collection", "aks_template")
 	os.Setenv("mongo_aks_cluster_collection", "aks_cluster")

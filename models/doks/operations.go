@@ -196,6 +196,8 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) t
 		return ApiError(err, "Error in terminating kubernetes cluster", vault.DOCredentials{}, ctx)
 	}
 
+	time.Sleep(20 * time.Second)
+	
 	return types.CustomCPError{}
 }
 

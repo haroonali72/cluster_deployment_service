@@ -357,11 +357,11 @@ func DeployCluster(cluster Cluster_Def, credentials vault.IBMCredentials, ctx ut
 		ctx.SendLogs("IKSClusterModel:  Notification not recieved from agent", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		cluster.Status = models.ClusterCreationFailed
 		utils.SendLog(ctx.Data.Company, "Notification not recieved from agent", models.LOGGING_LEVEL_INFO, cluster.ProjectId)
-		confError_ := UpdateCluster(cluster, false,ctx)
+		confError_ := UpdateCluster(cluster, false, ctx)
 		if confError_ != nil {
 			ctx.SendLogs("IKSDeployClusterModel:"+confError_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
-		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, types.CustomCPError{Description:confError_.Error(),Error: confError_.Error(),StatusCode:512} )
+		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.GKE, ctx, types.CustomCPError{Description: confError_.Error(), Error: confError_.Error(), StatusCode: 512})
 		if err != nil {
 			ctx.SendLogs("IKSDeployClusterModel:  Agent  - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
@@ -426,14 +426,13 @@ func FetchStatus(credentials vault.IBMProfile, projectId string, ctx utils.Conte
 		pool1.Name = pool.Name
 		pool1.ID = pool.ID
 		pool1.Flavour = pool.Flavour
-		for _,pool :=range cluster.NodePools{
+		for _, pool := range cluster.NodePools {
 			if pool.Autoscaling.AutoScale != false || pool.Autoscaling != (Autoscaling{}) {
 				pool1.Autoscaling.AutoScale = pool.Autoscaling.AutoScale
 				pool1.Autoscaling.MaxNodes = pool.Autoscaling.MaxNodes
-				pool1.Autoscaling.MinNodes =pool.Autoscaling.MinNodes
+				pool1.Autoscaling.MinNodes = pool.Autoscaling.MinNodes
 			}
 		}
-
 
 		pool1.Count = pool.Count
 		pool1.SubnetId = pool.Nodes[0].NetworkInterfaces[0].SubnetId
@@ -628,6 +627,16 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, type
 		ctx.SendLogs(err.Error, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return Versions{}, err
 	}
+
+	var kubeVersions []Kubernetes
+	for _, kube := range versions.Kubernetes {
+		if kube.Major == 1 && kube.Minor == 15 && kube.Patch == 12 {
+			continue
+		} else {
+			kubeVersions = append(kubeVersions, kube)
+		}
+	}
+	versions.Kubernetes = kubeVersions
 
 	return versions, types.CustomCPError{}
 }
