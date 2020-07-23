@@ -30,13 +30,13 @@ type EKSCluster struct {
 	IsAdvanced         bool               `json:"is_advance" bson:"is_advance" description:"Cluster advance level settings possible value 'true' or 'false'"`
 	Status             models.Type        `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Update Failed|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created" description:"Status of cluster [required]"`
 	CompanyId          string             `json:"company_id" bson:"company_id" description:"ID of compnay [optional]"`
-	OutputArn          *string            `json:"-" bson:"output_arn,omitempty"`
+	OutputArn          *string            `json:"output_arn" bson:"output_arn,omitempty"`
 	EncryptionConfig   *EncryptionConfig  `json:"encryption_config,omitempty" bson:"encryption_config,omitempty" description:"Encryption Configurations [optional]"`
 	Logging            Logging            `json:"logging" bson:"logging" description:"Logging Configurations [optional]"`
 	Name               string             `json:"name" bson:"name" validate:"required" description:"Cluster name [required]"`
 	ResourcesVpcConfig VpcConfigRequest   `json:"resources_vpc_config" bson:"resources_vpc_config" description:"Access Level Details [optional]`
-	RoleArn            *string            `json:"-" bson:"role_arn"`
-	RoleName           *string            `json:"-" bson:"role_name"`
+	RoleArn            *string            `json:"role_arn" bson:"role_arn"`
+	RoleName           *string            `json:"role_name" bson:"role_name"`
 	Tags               map[string]*string `json:"-" bson:"tags,omitempty"`
 	Version            *string            `json:"version,omitempty" bson:"version,omitempty" description:"Kubernetes Version [required]`
 }
@@ -74,17 +74,17 @@ type VpcConfigRequest struct {
 }
 
 type NodePool struct {
-	OutputArn     *string                `json:"-" bson:"output_arn,omitempty"`
+	OutputArn     *string                `json:"output_arn" bson:"output_arn,omitempty"`
 	AmiType       *string                `json:"ami_type,omitempty" bson:"ami_type" validate:"required" description:"AMI for nodepool [required]"`
 	DiskSize      *int64                 `json:"disk_size,omitempty" bson:"disk_size,omitempty" description:"Size of disk for nodes in nodepool [optional]"`
 	InstanceType  *string                `json:"instance_type,omitempty" bson:"instance_type" validate:"required" description:"Instance type for nodes [required]"`
 	Labels        map[string]*string     `json:"-" bson:"labels,omitempty"`
-	NodeRole      *string                `json:"-" bson:"node_role"`
-	RoleName      *string                `json:"-" bson:"role_name"`
+	NodeRole      *string                `json:"node_role" bson:"node_role"`
+	RoleName      *string                `json:"role_name" bson:"role_name"`
 	NodePoolName  string                 `json:"node_pool_name" bson:"node_pool_name" validate:"required" description:"Node Pool Name [required]"`
 	RemoteAccess  *RemoteAccessConfig    `json:"remote_access,omitempty" bson:"remote_access,omitempty" description:"Access Levels (private of public)[optional]"`
 	ScalingConfig *NodePoolScalingConfig `json:"auto_scaling,omitempty" bson:"scaling_config,omitempty" description:"Scaling Configurations for nodepool [optional]"`
-	Subnets       []*string              `json:"-" bson:"subnets"`
+	Subnets       []*string              `json:"subnets" bson:"subnets"`
 	Tags          map[string]*string     `json:"-" bson:"tags"`
 	PoolStatus    bool                   `json:"pool_status,omitempty" bson:"pool_status,omitempty"`
 }
@@ -103,6 +103,7 @@ type NodePoolScalingConfig struct {
 }
 
 type EKSClusterStatus struct {
+	ProjectId        string        `json:"project_id"`
 	ClusterEndpoint *string         `json:"endpoint"`
 	Name            *string         `json:"name"`
 	Status          *string         `json:"status"`
@@ -679,6 +680,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return EKSClusterStatus{}, e
 	}
+	response.ProjectId =projectId
 
 	return response, types.CustomCPError{}
 }
