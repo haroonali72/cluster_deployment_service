@@ -169,20 +169,20 @@ func (cloud *AZURE) createCluster(cluster Cluster_Def, ctx utils.Context, compan
 			return cluster, err
 		}
 		beego.Info(private_key)
-		/*	if pool.EnableVolume {
-				err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
-				if err != nil {
-					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
-					return cluster, err
-				}
-			}
-			if pool.PoolRole == "master" {
-				err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
-				if err != nil {
-					utils.SendLog(companyId, "Error in volume mounting : "+err.Error(), "info", cluster.ProjectId)
-					return cluster, err
-				}
-			}*/
+		//if pool.EnableVolume {
+		//	err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), false)
+		//	if err != (types.CustomCPError{}) {
+		//		utils.SendLog(companyId, "Error in volume mounting : ", "info", cluster.ProjectId)
+		//		return cluster, err
+		//	}
+		//}
+		//if pool.PoolRole == "master" {
+		//	err = cloud.mountVolume(result, private_key, pool.KeyInfo.KeyName, cluster.ProjectId, pool.AdminUser, cluster.ResourceGroup, pool.Name, ctx, string(pool.PoolRole), true)
+		//	if err != (types.CustomCPError{}) {
+		//		utils.SendLog(companyId, "Error in volume mounting on master pool: ", "info", cluster.ProjectId)
+		//		return cluster, err
+		//	}
+		//}
 		cluster.NodePools[i].Nodes = result
 	}
 
