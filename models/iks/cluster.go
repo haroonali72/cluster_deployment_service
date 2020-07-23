@@ -783,3 +783,143 @@ func validateIKSZone(zone string, ctx utils.Context) (bool, error) {
 
 	return false, errors.New(errData)
 }
+func AddPreviousIKSCluster(cluster Cluster_Def, ctx utils.Context, patch bool) error {
+	var oldCluster Cluster_Def
+	_, err := GetPreviousIKSCluster(ctx)
+	if err == nil {
+		err := DeletePreviousIKSCluster(ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"IKSAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	}
+
+	if patch == false {
+		oldCluster, err = GetCluster(ctx.Data.ProjectId, ctx.Data.Company, ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"IKEAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	} else {
+		oldCluster = cluster
+	}
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"IKEAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+
+	if cluster.CreationDate.IsZero() {
+		cluster.CreationDate = time.Now()
+		cluster.ModificationDate = time.Now()
+		cluster.Cloud = models.EKS
+		cluster.CompanyId = ctx.Data.Company
+	}
+
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoIKSPreviousClusterCollection, oldCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"IKEAddClusterModel:  Add previous cluster -  "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
+
+func GetPreviousIKSCluster(ctx utils.Context) (cluster Cluster_Def, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs(
+			"IKSGetClusterModel:  Get previous cluster - Got error while connecting to the database: "+err1.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err1
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSPreviousClusterCollection)
+	err = c.Find(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company}).One(&cluster)
+	if err != nil {
+		ctx.SendLogs(
+			"IKSGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err
+	}
+
+	return cluster, nil
+}
+
+func UpdatePreviousIKSCluster(cluster Cluster_Def, ctx utils.Context) error {
+
+	err := AddPreviousIKSCluster(cluster, ctx, false)
+	if err != nil {
+		text := "EKSClusterModel:  Update  previous cluster - " + cluster.Name + " " + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New(text)
+	}
+
+	err = UpdateCluster(cluster, false, ctx)
+	if err != nil {
+		text := "IKSClusterModel:  Update previous cluster - " + cluster.Name + " " + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		err = DeletePreviousIKSCluster(ctx)
+		if err != nil {
+			text := "IKSDeleteClusterModel:  Delete  previous cluster - " + cluster.Name + " " + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func DeletePreviousIKSCluster(ctx utils.Context) error {
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"IKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoIKSPreviousClusterCollection)
+	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
+	if err != nil {
+		ctx.SendLogs(
+			"ISKDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
