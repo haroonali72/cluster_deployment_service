@@ -505,7 +505,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 
 	if confErr != (types.CustomCPError{}) {
 		ctx.SendLogs("gcpClusterModel :"+confErr.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		PrintError(confError, cluster.Name, cluster.ProjectId, companyId)
+		PrintError(errors.New(confErr.Description), cluster.Name, cluster.ProjectId, companyId)
 
 		cluster.Status = models.ClusterCreationFailed
 		confError = UpdateCluster(cluster, false, ctx)
@@ -518,6 +518,7 @@ func DeployCluster(cluster Cluster_Def, credentials GcpCredentials, companyId st
 		if err_ != nil {
 			ctx.SendLogs("GCPDeployClusterModel:  Deploy - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		}
+
 		publisher.Notify(cluster.ProjectId, "Status Available", ctx)
 		return types.CustomCPError{}
 
