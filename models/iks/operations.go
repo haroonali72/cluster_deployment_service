@@ -41,6 +41,10 @@ type Token struct {
 	Expiration   int    `json:"expiration"`
 	Scope        string `json:"scope"`
 }
+type RemoveWPool struct {
+	Cluster    string `json:"cluster"`
+	WorkerPool string `json:"worker"`
+}
 type KubeClusterInput struct {
 	PublicEndpoint bool                   `json:"disablePublicServiceEndpoint"`
 	KubeVersion    string                 `json:"kubeVersion"`
@@ -295,13 +299,14 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 		utils.SendLog(companyId, "Creating Worker Pools : "+cluster.Name, "info", cluster.ProjectId)
 
-		err := cloud.createWorkerPool(cluster.ResourceGroup, clusterId, vpcID, pool, ibmNetwork, ctx)
+		wId, err := cloud.createWorkerPool(cluster.ResourceGroup, clusterId, vpcID, pool, ibmNetwork, ctx)
 		if err != (types.CustomCPError{}) {
 
 			utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 		}
 		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
+		cluster.NodePools[index].PoolId = wId
 	}
 
 	return cluster, types.CustomCPError{}
@@ -393,12 +398,12 @@ func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types
 	}
 	return kubeResponse.ID, types.CustomCPError{}
 }
-func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, network types.IBMNetwork, ctx utils.Context) types.CustomCPError {
+func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, network types.IBMNetwork, ctx utils.Context) (string, types.CustomCPError) {
 	subnetId := cloud.GetSubnets(pool, network)
 	if subnetId == "" {
 		ctx.SendLogs(errors.New("subnet not found").Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(errors.New("subnet not found"), "error occurred while adding workepool: "+pool.Name, 500)
-		return cpErr
+		return "", cpErr
 	}
 	workerpool := WorkerPoolInput{
 		Cluster:     clusterID,
@@ -413,7 +418,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while creating workpool addition request", 500)
-		return cpErr
+		return "", cpErr
 	}
 
 	req, _ := utils.CreatePostRequest(bytes, models.IBM_WorkerPool_Endpoint)
@@ -435,43 +440,48 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while sending workpool  "+pool.Name+" creation request", 500)
-		return cpErr
+		return "", cpErr
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
+		return "", cpErr
 	}
 
 	if res.StatusCode != 201 {
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
-			return cpErr
-		}
-
 		if res.StatusCode == 409 {
-
 			var ibmResponse IBMResponse
 			err = json.Unmarshal(body, &ibmResponse)
 			if err != nil {
 				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
-				return cpErr
+				return "", cpErr
 			}
 			if !strings.Contains(ibmResponse.Description, "already exits") {
 				ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 512)
-				return cpErr
+				return "", cpErr
 			}
 		} else {
 			ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			cpErr := ApiError(errors.New(string(body)), "error occurred while adding workpool: "+pool.Name, 512)
-			return cpErr
+			return "", cpErr
 		}
 	}
-
+	var wId WorkerPoolResponse
+	err = json.Unmarshal(body, &wId)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
+		return "", cpErr
+	}
 	cpErr := cloud.AddZonesToPools(rg, pool.Name, subnetId, pool.AvailabilityZone, clusterID, ctx)
 	if cpErr != (types.CustomCPError{}) {
-		return cpErr
+		return "", cpErr
 	}
-	return types.CustomCPError{}
+	return wId.ID, types.CustomCPError{}
 }
 func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string, ctx utils.Context) types.CustomCPError {
 
@@ -695,7 +705,6 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 	}
 	return response, types.CustomCPError{}
 }
-
 func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId string) (KubeClusterStatus, types.CustomCPError) {
 
 	kubeCluster, cperr := cloud.fetchClusterStatus(cluster, ctx, companyId)
@@ -760,7 +769,6 @@ func (cloud *IBM) fetchStatus(cluster *Cluster_Def, ctx utils.Context, companyId
 	}
 	return kubeCluster, types.CustomCPError{}
 }
-
 func (cloud *IBM) GetAllInstances(ctx utils.Context) (AllInstancesResponse, types.CustomCPError) {
 	url := models.IBM_All_Instances_Endpoint + cloud.Region + "&provider=vpc-classic"
 
@@ -850,4 +858,91 @@ func (cloud *IBM) fetchNodes(cluster *Cluster_Def, poolId string, ctx utils.Cont
 		return []KubeWorkerNodesStatus{}, cpErr
 	}
 	return response, types.CustomCPError{}
+}
+func (cloud *IBM) getNetwork(cluster Cluster_Def, token string, ctx utils.Context) (types.IBMNetwork, string, types.CustomCPError) {
+	var ibmNetwork types.IBMNetwork
+
+	url := getNetworkHost("ibm", cluster.ProjectId)
+	network, err := api_handler.GetAPIStatus(token, url, ctx)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		cpErr := ApiError(err, "unable to fetch network against this application", 500)
+		return types.IBMNetwork{}, "", cpErr
+	}
+	if network == nil {
+		ctx.SendLogs("network not found of this application", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n", "error", cluster.ProjectId)
+		cpErr := ApiError(errors.New("network not found of this application"), "network not found of this application", 500)
+		return types.IBMNetwork{}, "", cpErr
+	}
+	err = json.Unmarshal(network.([]byte), &ibmNetwork)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "unable to fetch network against this application.\n"+err.Error(), "error", cluster.ProjectId)
+		cpErr := ApiError(err, "unable to fetch network against this application", 500)
+		return types.IBMNetwork{}, "", cpErr
+	}
+	vpcID := cloud.GetVPC(cluster.VPCId, ibmNetwork)
+	if vpcID == "" {
+		ctx.SendLogs("vpc not found", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.ProjectId, "vpc not found", "error", cluster.ProjectId)
+		cpErr := ApiError(errors.New("vpc not found"), "error while creating iks cluster", 500)
+		return types.IBMNetwork{}, "", cpErr
+	}
+
+	return ibmNetwork, vpcID, types.CustomCPError{}
+}
+func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Context) types.CustomCPError {
+
+	workerpool := WorkerPoolInput{
+		Cluster:    clusterID,
+		WorkerName: poolID,
+	}
+
+	bytes, err := json.Marshal(workerpool)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while creating workpool addition request", 500)
+		return cpErr
+	}
+
+	req, _ := utils.CreatePostRequest(bytes, models.IBM_Remove_WorkerPool)
+	req.Close = true
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Auth-Refresh-Token"] = cloud.RefreshToken
+	m["X-Auth-Resource-Group"] = rg //rg id
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while sending workpool  "+poolID+" deletion request", 500)
+		return cpErr
+	}
+
+	if res.StatusCode != 204 {
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "error occurred while adding workpool: "+poolID, 512)
+			return cpErr
+		}
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while deleting workpool: "+poolID, 512)
+		return cpErr
+
+	}
+
+	return types.CustomCPError{}
 }

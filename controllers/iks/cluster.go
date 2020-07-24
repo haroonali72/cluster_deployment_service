@@ -2,7 +2,6 @@ package iks
 
 import (
 	"antelope/models"
-	"antelope/models/eks"
 	"antelope/models/iks"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
@@ -1593,7 +1592,7 @@ func (c *IKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	go eks.PatchRunningIKSCluster(cluster, iksProfile.Profile, token, *ctx)
+	go iks.PatchRunningIKSCluster(cluster, iksProfile.Profile, token, *ctx)
 
 	ctx.SendLogs("GKEClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

@@ -517,6 +517,7 @@ const (
 	IBM_Kube_GetNodes_Endpoint       = "https://containers.cloud.ibm.com/global/v2/vpc/getWorkers"
 	IBM_Kube_GetCluster_Endpoint     = "https://containers.cloud.ibm.com/global/v2/getCluster"
 	IBM_Kube_Delete_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v1/clusters/"
+	IBM_Remove_WorkerPool            = "https://containers.cloud.ibm.com/global/v2/removeWorkerPool"
 	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
 	IBM_Zone                         = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
 	IBM_All_Instances_Endpoint       = "https://containers.cloud.ibm.com/global/v2/getFlavors?zone="
