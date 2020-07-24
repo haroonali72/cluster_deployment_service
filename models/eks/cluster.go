@@ -1180,8 +1180,13 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 			if pool.NodePoolName == mainPool.NodePoolName {
 				cluster.NodePools[in].RoleName = pool.RoleName
 				cluster.NodePools[in].NodeRole = pool.NodeRole
-				cluster.NodePools[in].RemoteAccess.Ec2SshKey = pool.RemoteAccess.Ec2SshKey
-				cluster.NodePools[in].RemoteAccess.SourceSecurityGroups = pool.RemoteAccess.SourceSecurityGroups
+				if pool.RemoteAccess != nil {
+					var remoteAccess RemoteAccessConfig
+					remoteAccess.SourceSecurityGroups = pool.RemoteAccess.SourceSecurityGroups
+					remoteAccess.Ec2SshKey = pool.RemoteAccess.Ec2SshKey
+					remoteAccess.EnableRemoteAccess = pool.RemoteAccess.EnableRemoteAccess
+					cluster.NodePools[in].RemoteAccess = &remoteAccess
+				}
 			}
 		}
 	}
