@@ -1042,33 +1042,6 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 			}
 			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-		} else if previousPoolCount <= newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && currentpoolIndex_ != poolIndex_ && dif.Path[2] == "Autoscaling" && dif.Path[3] != "IsEnabled" {
-
-			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-
-			err := eks.UpdateNodeConfig(cluster.Name, cluster.NodePools[poolIndex].NodePoolName, *cluster.NodePools[poolIndex].ScalingConfig, ctx)
-			if err != (types.CustomCPError{}) {
-
-				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-				utils.SendLog(ctx.Data.Company, "Cluster updation failed"+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-
-				cluster.Status = models.ClusterUpdateFailed
-				confError := UpdateCluster(cluster, false, ctx)
-				if confError != nil {
-					ctx.SendLogs("IKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				}
-				//err := ApiError(err, "Error occured while apply cluster changes", 500)
-				err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.IKS, ctx, err)
-				if err_ != nil {
-					ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-				}
-				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
-				return err
-			}
-			utils.SendLog(ctx.Data.Company, "Scaling config updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-
-			currentpoolIndex_ = poolIndex_
 		} else if previousPoolCount <= newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && currentpoolIndex_ != poolIndex_ && dif.Path[2] == "NodeCount" {
 
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
