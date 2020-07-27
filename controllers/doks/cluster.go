@@ -4,6 +4,7 @@ import (
 	"antelope/models"
 	"antelope/models/do"
 	"antelope/models/doks"
+	"antelope/models/gke"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
@@ -521,16 +522,6 @@ func (c *DOKSClusterController) Patch() {
 		c.Data["json"] = map[string]string{"error": "Cluster is in terminating state"}
 		c.ServeJSON()
 		return
-	} else if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("DOKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": " Cluster creation is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
-	if cluster.CloudplexStatus == (models.ClusterCreated) {
-		c.Data["json"] = map[string]string{"msg": "Cluster updated successfully"}
-		c.ServeJSON()
 	}
 	validate := validator.New()
 	err = validate.Struct(cluster)
@@ -548,7 +539,21 @@ func (c *DOKSClusterController) Patch() {
 		c.ServeJSON()
 		return
 	}
+	if cluster.CloudplexStatus == (models.ClusterCreated)  || cluster.CloudplexStatus == (models.ClusterTerminationFailed) || cluster.CloudplexStatus == (models.ClusterUpdateFailed) {
+		err := doks.UpdatePreviousDOKSCluster(cluster, *ctx)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = map[string]string{"error": err.Error()}
+				c.ServeJSON()
+				return
+			}
 
+			c.Ctx.Output.SetStatus(500)
+			c.Data["json"] = map[string]string{"error": err.Error()}
+			c.ServeJSON()
+			return
+	}
 	ctx.InitializeLogger(c.Ctx.Request.Host, "PUT", c.Ctx.Request.RequestURI, cluster.ProjectId, ctx.Data.Company, userInfo.UserId)
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", cluster.ProjectId, "Update", token, utils.Context{})
 	if err != nil {

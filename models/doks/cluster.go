@@ -234,7 +234,6 @@ func GetKubernetesCluster(ctx utils.Context) (cluster KubernetesCluster, err err
 
 	return cluster, nil
 }
-
 func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (dokscluster []DOKSCluster, err error) {
 	var clusters []KubernetesCluster
 	var copyData []string
@@ -262,7 +261,6 @@ func GetAllKubernetesCluster(data rbacAuthentication.List, ctx utils.Context) (d
 	}
 	return dokscluster, nil
 }
-
 func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 	_, err := GetKubernetesCluster(ctx)
 	if err == nil {
@@ -296,7 +294,24 @@ func AddKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 
 	return nil
 }
+func DeleteKubernetesCluster(ctx utils.Context) error {
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs("DOKSDeleteClusterModel:  Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
 
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
+	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
+	if err != nil {
+		ctx.SendLogs("DOKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	return nil
+}
 func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error {
 
 	oldCluster, err := GetKubernetesCluster(ctx)
@@ -325,24 +340,147 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 	return nil
 }
 
-func DeleteKubernetesCluster(ctx utils.Context) error {
-	session, err := db.GetMongoSession(ctx)
+func UpdatePreviousDOKSCluster(cluster KubernetesCluster, ctx utils.Context) error {
+
+	err := AddPreviousDOKSCluster(cluster, ctx, false)
 	if err != nil {
-		ctx.SendLogs("DOKSDeleteClusterModel:  Delete - Got error while connecting to the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return err
+		text := "DOKSClusterModel:  Update  previous cluster -'" + cluster.Name + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return errors.New(text)
 	}
 
-	defer session.Close()
-	mc := db.GetMongoConf()
-	c := session.DB(mc.MongoDb).C(mc.MongoDOKSClusterCollection)
-	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
+	err = UpdateDOKSCluster(cluster, ctx)
 	if err != nil {
-		ctx.SendLogs("DOKSDeleteClusterModel:  Delete - Got error while deleting from the database: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		text := "DOKSClusterModel:  Update previous cluster - '" + cluster.Name + err.Error()
+		ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
+		err = DeletePreviousDOKSCluster(ctx)
+		if err != nil {
+			text := "DOKSDeleteClusterModel:  Delete  previous cluster - '" + cluster.Name + err.Error()
+			ctx.SendLogs(text, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			return errors.New(text)
+		}
 		return err
 	}
 
 	return nil
 }
+func AddPreviousDOKSCluster(cluster KubernetesCluster, ctx utils.Context, patch bool) error {
+	var oldCluster DOKSCluster
+	_, err := GetPreviousDOKSCluster(ctx)
+	if err == nil {
+		err := DeletePreviousDOKSCluster(ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"DOKSAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	}
+
+	if patch == false {
+		oldCluster, err = GetDOKSCluster(ctx)
+		if err != nil {
+			ctx.SendLogs(
+				"DOKSAddClusterModel:  Add previous cluster - "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+	} else {
+		oldCluster = cluster
+	}
+
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSAddClusterModel:  Add previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+
+	if cluster.CreationDate.IsZero() {
+		cluster.CreationDate = time.Now()
+		cluster.ModificationDate = time.Now()
+		cluster.Cloud = models.DOKS
+		cluster.CompanyId = ctx.Data.Company
+	}
+
+	mc := db.GetMongoConf()
+	err = db.InsertInMongo(mc.MongoDOKSPreviousClusterCollection, oldCluster)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSAddClusterModel:  Add previous cluster -  "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
+func DeletePreviousDOKSCluster(ctx utils.Context) error {
+	session, err := db.GetMongoSession(ctx)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoDOKSPreviousClusterCollection)
+	err = c.Remove(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company})
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSDeleteClusterModel:  Delete  previous cluster - "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
+func GetPreviousDOKSCluster(ctx utils.Context) (cluster KubernetesCluster, err error) {
+	session, err1 := db.GetMongoSession(ctx)
+	if err1 != nil {
+		ctx.SendLogs(
+			"DOKSGetClusterModel:  Get previous cluster - Got error while connecting to the database: "+err1.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err1
+	}
+
+	defer session.Close()
+	mc := db.GetMongoConf()
+	c := session.DB(mc.MongoDb).C(mc.MongoDOKSPreviousClusterCollection)
+	err = c.Find(bson.M{"project_id": ctx.Data.ProjectId, "company_id": ctx.Data.Company}).One(&cluster)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKSGetClusterModel:  Get previous cluster- Got error while fetching from database: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return cluster, err
+	}
+
+	return cluster, nil
+}
+
+
+
 
 func PrintError(ctx utils.Context, confError, name string) {
 	if confError != "" {
