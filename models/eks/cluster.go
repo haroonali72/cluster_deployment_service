@@ -91,7 +91,7 @@ type NodePool struct {
 
 type RemoteAccessConfig struct {
 	EnableRemoteAccess   bool      `json:"enable_remote_access" bson:"enable_remote_access" description:"Enable Remote Access [optional]"`
-	Ec2SshKey            *string   `json:"-" bson:"ec2_ssh_key"`
+	Ec2SshKey            *string   `json:"ec2_ssh_key" bson:"ec2_ssh_key"`
 	SourceSecurityGroups []*string `json:"-" bson:"source_security_groups"`
 }
 
@@ -1180,6 +1180,13 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 			if pool.NodePoolName == mainPool.NodePoolName {
 				cluster.NodePools[in].RoleName = pool.RoleName
 				cluster.NodePools[in].NodeRole = pool.NodeRole
+				if pool.RemoteAccess != nil {
+					var remoteAccess RemoteAccessConfig
+					remoteAccess.SourceSecurityGroups = pool.RemoteAccess.SourceSecurityGroups
+					remoteAccess.Ec2SshKey = pool.RemoteAccess.Ec2SshKey
+					remoteAccess.EnableRemoteAccess = pool.RemoteAccess.EnableRemoteAccess
+					cluster.NodePools[in].RemoteAccess = &remoteAccess
+				}
 			}
 		}
 	}
@@ -1232,6 +1239,21 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 						Description: err1.Error(),
 					})
 				}
+			}
+			if pool.RemoteAccess != nil && pool.RemoteAccess.EnableRemoteAccess && pool.RemoteAccess.Ec2SshKey != nil && *pool.RemoteAccess.Ec2SshKey != "" {
+				err = eksOps.deleteSSHKey(pool.RemoteAccess.Ec2SshKey)
+				if err != nil {
+					ctx.SendLogs(
+						"EKS delete SSH key for cluster '"+cluster.Name+"', node group '"+pool.NodePoolName+"' failed: "+err.Error(),
+						models.LOGGING_LEVEL_ERROR,
+						models.Backend_Logging,
+					)
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+pool.NodePoolName, "error", cluster.ProjectId)
+					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+					return cpErr
+				}
+				pool.RemoteAccess.Ec2SshKey = nil
 			}
 			pool = nil
 		}
