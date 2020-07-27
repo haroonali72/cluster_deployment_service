@@ -107,7 +107,16 @@ type KubeClusterStatus1 struct {
 	PoolCount         int                     `json:"nodepool_count,omitempty"`
 	WorkerPools       []KubeWorkerPoolStatus1 `json:"node_pools"`
 }
-
+type UpdateMasterInput struct {
+	Cluster string `json:"cluster"`
+	Force   bool   `json:"force"`
+	Version string `json:"version"`
+}
+type ResizeNodePoolInput struct {
+	Cluster  string `json:"cluster"`
+	Size     int    `json:"size"`
+	PoolName string `json:"workerpool"`
+}
 type KubeWorkerPoolStatus struct {
 	ID          string                  `json:"id"`
 	Name        string                  `json:"poolName"`
@@ -940,6 +949,112 @@ func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Conte
 		}
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(errors.New(string(body)), "error occurred while deleting workpool: "+poolID, 512)
+		return cpErr
+
+	}
+
+	return types.CustomCPError{}
+}
+func (cloud *IBM) updateMasterVersion(rg, clusterID, version string, ctx utils.Context) types.CustomCPError {
+
+	workerpool := UpdateMasterInput{
+		Cluster: clusterID,
+		Force:   true,
+		Version: version,
+	}
+
+	bytes, err := json.Marshal(workerpool)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while creating workpool addition request", 500)
+		return cpErr
+	}
+
+	req, _ := utils.CreatePostRequest(bytes, models.IBM_Update_Version)
+	req.Close = true
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Auth-Refresh-Token"] = cloud.RefreshToken
+	m["X-Auth-Resource-Group"] = rg //rg id
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while update kubernetes version", 500)
+		return cpErr
+	}
+
+	if res.StatusCode != 204 {
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "error occurred while update kubernetes version", 512)
+			return cpErr
+		}
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while update kubernetes version", 512)
+		return cpErr
+
+	}
+
+	return types.CustomCPError{}
+}
+func (cloud *IBM) updatePoolSize(rg, clusterID, workerPoolName string, size int, ctx utils.Context) types.CustomCPError {
+
+	workerpool := ResizeNodePoolInput{
+		Cluster:  clusterID,
+		Size:     size,
+		PoolName: workerPoolName,
+	}
+
+	bytes, err := json.Marshal(workerpool)
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while creating workpool addition request", 500)
+		return cpErr
+	}
+
+	req, _ := utils.CreatePostRequest(bytes, models.IBM_Update_PoolSize)
+	req.Close = true
+	m := make(map[string]string)
+
+	m["Content-Type"] = "application/json"
+	m["Accept"] = "application/json"
+	m["Authorization"] = cloud.IAMToken
+	m["X-Auth-Refresh-Token"] = cloud.RefreshToken
+	m["X-Auth-Resource-Group"] = rg //rg id
+	utils.SetHeaders(req, m)
+
+	client := utils.InitReq()
+	res, err := client.SendRequest(req)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error occurred while update kubernetes version", 500)
+		return cpErr
+	}
+
+	if res.StatusCode != 202 {
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			cpErr := ApiError(err, "error occurred while update kubernetes version", 512)
+			return cpErr
+		}
+		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(errors.New(string(body)), "error occurred while update kubernetes version", 512)
 		return cpErr
 
 	}

@@ -4,7 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/api_handler"
 	"antelope/models/db"
-	"antelope/models/eks"
 	rbac_athentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
@@ -1021,7 +1020,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 		if dif.Path[0] == "KubeVersion" {
 			utils.SendLog(ctx.Data.Company, "Changing kubernetes version of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-			err := eks.UpdateClusterVersion(cluster.Name, cluster.KubeVersion, ctx)
+			err := iks.updateMasterVersion(cluster.ResourceGroup, cluster.ClusterId, cluster.KubeVersion, ctx)
 			if err != (types.CustomCPError{}) {
 
 				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -1047,7 +1046,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-			err := eks.UpdateNodeConfig(cluster.Name, cluster.NodePools[poolIndex].NodePoolName, *cluster.NodePools[poolIndex].ScalingConfig, ctx)
+			err := iks.updatePoolSize(cluster.ResourceGroup, cluster.ClusterId, cluster.NodePools[poolIndex].PoolId, cluster.NodePools[poolIndex].NodeCount, ctx)
 			if err != (types.CustomCPError{}) {
 
 				utils.SendLog(ctx.Data.Company, err.Description+" "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
@@ -1180,7 +1179,7 @@ func AddNodepool(cluster *Cluster_Def, ctx utils.Context, iksOps IBM, pools []*N
 		return err
 	}
 
-	for _, pool := range pools {
+	for in, pool := range pools {
 		utils.SendLog(ctx.Data.Company, "Adding nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 		wid, err := iksOps.createWorkerPool(cluster.ResourceGroup, cluster.ClusterId, vpcId, pool, network, ctx)
 		if err != (types.CustomCPError{}) {
@@ -1190,7 +1189,7 @@ func AddNodepool(cluster *Cluster_Def, ctx utils.Context, iksOps IBM, pools []*N
 			return err
 		}
 		utils.SendLog(ctx.Data.Company, pool.Name+" nodepool added successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
-
+		pools[in].PoolId = wid
 	}
 
 	oldCluster, err1 := GetPreviousIKSCluster(ctx)
@@ -1206,14 +1205,13 @@ func AddNodepool(cluster *Cluster_Def, ctx utils.Context, iksOps IBM, pools []*N
 	}
 
 	oldCluster.NodePools = cluster.NodePools
-	for in, _ := range cluster.NodePools {
+	for in, mainPool := range cluster.NodePools {
 		cluster.NodePools[in].PoolStatus = true
-		/*for _, pool := range pools {
+		for _, pool := range pools {
 			if pool.Name == mainPool.Name {
-				cluster.NodePools[in].RoleName = pool.RoleName
-				cluster.NodePools[in].NodeRole = pool.NodeRole
+				cluster.NodePools[in].PoolId = pool.PoolId
 			}
-		}*/
+		}
 	}
 
 	err1 = AddPreviousIKSCluster(oldCluster, ctx, true)

@@ -522,6 +522,8 @@ const (
 	IBM_Zone                         = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
 	IBM_All_Instances_Endpoint       = "https://containers.cloud.ibm.com/global/v2/getFlavors?zone="
 	IBM_ALL_Kube_Version_Endpoint    = "https://containers.cloud.ibm.com/global/v2/getVersions"
+	IBM_Update_Version               = "https://containers.cloud.ibm.com/global/v2/updateMaster"
+	IBM_Update_PoolSize              = "https://containers.cloud.ibm.com/global/v2/resizeWokerPool"
 	IBM_Version                      = "?version=2020-01-28&generation=1"
 )
 const (
