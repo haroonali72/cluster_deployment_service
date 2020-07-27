@@ -567,11 +567,11 @@ func (cloud *GCP) deletePool(pool *NodePool,zone string, ctx utils.Context) bool
 
 		err1 := cloud.releaseExternalIp(pool.Name, ctx)
 		if err1 != (types.CustomCPError{}) {
-			if !strings.Contains(strings.ToLower(err.Error()), "not found") {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+			if !strings.Contains(strings.ToLower(err1.Description), "not found") {
+				ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 				error_occured = true
 			} else {
-				ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+				ctx.SendLogs(err1.Description, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 			}
 		}
 	} else {
