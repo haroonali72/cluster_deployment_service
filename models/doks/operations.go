@@ -11,8 +11,6 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
 	"golang.org/x/oauth2"
-	"gopkg.in/yaml.v2"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -69,12 +67,6 @@ func (cloud *DOKS) init(ctx utils.Context) types.CustomCPError {
 
 func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, token string, credentials vault.DOCredentials) (KubernetesCluster, types.CustomCPError) {
 
-	if cloud.Client == nil {
-		err := cloud.init(ctx)
-		if err != (types.CustomCPError{}) {
-			return cluster, err
-		}
-	}
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
@@ -167,7 +159,49 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 
 	cluster.ID = clus.ID
 
-	time.Sleep(2 * 30 * time.Second)
+	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+
+	for status.Status.State != "running" {
+		time.Sleep(30 * time.Second)
+		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+	}
+
+	time.Sleep(15 * time.Second)
+
+	return cluster, types.CustomCPError{}
+}
+func (cloud *DOKS) createNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
+
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != (types.CustomCPError{}) {
+			return  err
+		}
+	}
+
+	input := godo.KubernetesNodePoolCreateRequest{
+
+		Name:      nodepool.Name,
+		Size:      nodepool.MachineType,
+		Count:     nodepool.NodeCount,
+		Tags:      nodepool.Tags,
+		Labels:    nodepool.Labels,
+		AutoScale: nodepool.AutoScale,
+		MinNodes:  nodepool.MinNodes,
+		MaxNodes:  nodepool.MaxNodes,
+	}
+
+
+
+	clus, _, err := cloud.Client.Kubernetes.CreateNodePool(context.Background(),clusterId, &input)
+	if err != nil {
+		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
+		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
+	}
+	
+
+
 
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
 
@@ -201,47 +235,89 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) t
 	return types.CustomCPError{}
 }
 
-func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (KubernetesConfig, types.CustomCPError) {
+
+func (cloud *DOKS) UpdateClusterAutoUpgrade(cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials) ( types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
-			return KubernetesConfig{}, err
+			return err
 		}
 	}
 
-	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(), cluster.ID)
-	if err != nil {
-		ctx.SendLogs(
-			"DOKS terminate cluster for "+cluster.ProjectId+"' failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		return KubernetesConfig{}, ApiError(err, "Error in getting kubernetes config file", vault.DOCredentials{}, ctx)
+	input := godo.KubernetesClusterUpdateRequest{
+		Name:              cluster.Name,
+		AutoUpgrade:       &cluster.AutoUpgrade,
 	}
 
-	var con KubernetesClusterConfig
-	con.KubeconfigYAML = config.KubeconfigYAML
-	kubeFile := KubernetesConfig{}
-
-	err = yaml.Unmarshal([]byte(config.KubeconfigYAML), &kubeFile)
+	clus, _, err := cloud.Client.Kubernetes.Update(context.Background(),cluster.ID, &input)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
+		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  ApiError(err, "Error in updating cluster autoupgrade", credentials, ctx)
 	}
 
-	return kubeFile, types.CustomCPError{}
+	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+	for status.Status.State != "running" {
+		time.Sleep(30 * time.Second)
+		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+	}
+	return  types.CustomCPError{}
 }
+func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
 
-func (cloud *DOKS) UpdateCluster(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool, types.CustomCPError) {
-	return KubernetesNodePool{}, types.CustomCPError{}
+	input := godo.KubernetesNodePoolUpdateRequest{
+		Name:      nodepool.ID,
+		Count:     &nodepool.NodeCount,
+		AutoScale: &nodepool.AutoScale,
+		MinNodes:  &nodepool.MinNodes,
+		MaxNodes:  &nodepool.MaxNodes,
+	}
+
+	clus, _, err := cloud.Client.Kubernetes.UpdateNodePool(context.Background(),clusterId,nodepool.ID,&input)
+	if err != nil {
+		utils.SendLog(ctx.Data.Company, "Error in updating nodepool : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
+		ctx.SendLogs("DOKS nodepool updating of '"+nodepool.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  ApiError(err, "Error in updating nodepool "+nodepool.ID, credentials, ctx)
+
+	}
+
+	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+	for status.Status.State != "running" {
+		time.Sleep(30 * time.Second)
+		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+	}
+	return  types.CustomCPError{}
+
 }
+func (cloud *DOKS) UpgradeVersion( cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials ) ( types.CustomCPError) {
 
-func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool, types.CustomCPError) {
-	return KubernetesNodePool{}, types.CustomCPError{}
-}
+	input := godo.KubernetesClusterUpgradeRequest{
+		VersionSlug : cluster.KubeVersion,
+	}
 
-func (cloud *DOKS) UpgradeVersion(nodepool *KubernetesNodePool, ctx utils.Context, clusterId, token string) (KubernetesNodePool, types.CustomCPError) {
-	return KubernetesNodePool{}, types.CustomCPError{}
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != (types.CustomCPError{}) {
+			return  err
+		}
+	}
+
+	_, err := cloud.Client.Kubernetes.Upgrade(context.Background(),cluster.ID, &input)
+	if err != nil {
+		utils.SendLog(ctx.Data.Company, "Error in upgrading cluster version  : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
+		ctx.SendLogs("DOKS cluster kubernetes version of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return  ApiError(err, "Error in cluster version upgrade ", credentials, ctx)
+	}
+
+	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), cluster.ID)
+	for status.Status.State != "running" {
+		time.Sleep(30 * time.Second)
+		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), cluster.ID)
+	}
+
+	return  types.CustomCPError{}
+
 }
 
 func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeClusterStatus, types.CustomCPError) {
@@ -319,4 +395,34 @@ func (cloud *DOKS) GetServerConfig(ctx utils.Context) (*godo.KubernetesOptions, 
 	}
 
 	return options, types.CustomCPError{}
+}
+func (cloud *DOKS) GetKubeConfig(ctx utils.Context, cluster KubernetesCluster) (KubernetesConfig, types.CustomCPError) {
+
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != (types.CustomCPError{}) {
+			return KubernetesConfig{}, err
+		}
+	}
+
+	config, _, err := cloud.Client.Kubernetes.GetKubeConfig(context.Background(), cluster.ID)
+	if err != nil {
+		ctx.SendLogs(
+			"DOKS terminate cluster for "+cluster.ProjectId+"' failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return KubernetesConfig{}, ApiError(err, "Error in getting kubernetes config file", vault.DOCredentials{}, ctx)
+	}
+
+	var con KubernetesClusterConfig
+	con.KubeconfigYAML = config.KubeconfigYAML
+	kubeFile := KubernetesConfig{}
+
+	err = yaml.Unmarshal([]byte(config.KubeconfigYAML), &kubeFile)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	return kubeFile, types.CustomCPError{}
 }
