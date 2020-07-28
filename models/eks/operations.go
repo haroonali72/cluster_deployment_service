@@ -1169,6 +1169,7 @@ func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx ut
 func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig NodePoolScalingConfig, ctx utils.Context) types.CustomCPError {
 	if scalingConfig.IsEnabled == false {
 		scalingConfig.MaxSize = scalingConfig.DesiredSize
+		scalingConfig.MinSize = scalingConfig.DesiredSize
 	}
 	clusterRequest := GeneratNodeConfigUpdateRequest(clusterName, poolName, scalingConfig)
 	_, err := cloud.Svc.UpdateNodegroupConfig(clusterRequest)
