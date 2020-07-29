@@ -4,8 +4,6 @@ import (
 	"antelope/models"
 	"antelope/models/do"
 	"antelope/models/doks"
-	"antelope/models/gcp"
-	"antelope/models/gke"
 	rbacAuthentication "antelope/models/rbac_authentication"
 	"antelope/models/types"
 	"antelope/models/utils"
@@ -1355,6 +1353,22 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 		return
 	}
 
+	region, err := do.GetRegion(token, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(500)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+	if err != nil {
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = map[string]string{"error": err.Error()}
+		c.ServeJSON()
+		return
+	}
+
 	ctx.InitializeLogger(c.Ctx.Request.Host, "POST", c.Ctx.Request.RequestURI, projectId, ctx.Data.Company, userInfo.UserId)
 
 	ctx.SendLogs("DOKSClusterController: Updating cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
@@ -1427,7 +1441,7 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	go doks.PatchRunningDOKSCluster(cluster, token, *ctx)
+	go doks.PatchRunningDOKSCluster(cluster,doProfile.Profile,  token, *ctx)
 
 	ctx.SendLogs("DOKSClusterController: Running cluster "+cluster.Name+" of project Id: "+cluster.ProjectId+"updated", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 

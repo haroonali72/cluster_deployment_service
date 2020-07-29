@@ -10,7 +10,9 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/digitalocean/godo"
+	"github.com/ghodss/yaml"
 	"golang.org/x/oauth2"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -100,10 +102,6 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		models.LOGGING_LEVEL_INFO,
 		models.Backend_Logging,
 	)
-	/*	list := godo.ListOptions{}
-		re,_,err :=cloud.Client.Kubernetes.List(context.Background(),&list)
-		fmt.Println(re)
-	*/
 
 	var nodepool []*godo.KubernetesNodePoolCreateRequest
 
@@ -122,22 +120,8 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		}
 		nodepool = append(nodepool, &pool)
 	}
-	var input godo.KubernetesClusterCreateRequest
 
-	if  network ==nil{
-		input = godo.KubernetesClusterCreateRequest{
-			Name:        cluster.Name,
-			RegionSlug:  cluster.Region,
-			VersionSlug: cluster.KubeVersion,
-			Tags:        cluster.Tags,
-			NodePools:   nodepool,
-			//MaintenancePolicy: cluster.MaintenancePolicy,
-			AutoUpgrade: cluster.AutoUpgrade,
-			//VPCUUID: doNetwork.Definition[0].VPCs[0].VPCId,
-		}
-	}else {
-
-		input = godo.KubernetesClusterCreateRequest{
+	input := godo.KubernetesClusterCreateRequest{
 		Name:        cluster.Name,
 		RegionSlug:  cluster.Region,
 		VersionSlug: cluster.KubeVersion,
@@ -148,7 +132,6 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 		VPCUUID: doNetwork.Definition[0].VPCs[0].VPCId,
 	}
 
-	}
 
 	clus, _, err := cloud.Client.Kubernetes.Create(context.Background(), &input)
 	if err != nil {
@@ -158,6 +141,9 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 	}
 
 	cluster.ID = clus.ID
+	for i, pool := range cluster.NodePools{
+		pool.ID= clus.NodePools[i].ID
+	}
 
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
 
@@ -170,7 +156,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 
 	return cluster, types.CustomCPError{}
 }
-func (cloud *DOKS) createNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
+func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -193,26 +179,52 @@ func (cloud *DOKS) createNodepool(nodepool KubernetesNodePool, ctx utils.Context
 
 
 
-	clus, _, err := cloud.Client.Kubernetes.CreateNodePool(context.Background(),clusterId, &input)
+	pool, _, err := cloud.Client.Kubernetes.CreateNodePool(context.Background(),clusterId, &input)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
-		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
+		utils.SendLog(ctx.Data.Company, "Error in cluster updating : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
+		ctx.SendLogs("DOKS ndepool creation of '"+nodepool.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return ApiError(err, "Error in updating cluster", credentials, ctx)
 	}
-	
 
+	_, res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,pool.ID)
 
-
-	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
-
-	for status.Status.State != "running" {
+	for res.Status != "running" {
 		time.Sleep(30 * time.Second)
-		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+		_,res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(),clusterId,pool.ID)
+	}
+
+	nodepool.ID= pool.ID
+	time.Sleep(15 * time.Second)
+
+	return types.CustomCPError{}
+
+}
+func (cloud *DOKS) deleteNodepool( ctx utils.Context,nodepoolId , clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
+
+	if cloud.Client == nil {
+		err := cloud.init(ctx)
+		if err != (types.CustomCPError{}) {
+			return  err
+		}
+	}
+
+	_, err := cloud.Client.Kubernetes.DeleteNodePool(context.Background(),clusterId,nodepoolId)
+	if err != nil {
+		utils.SendLog(ctx.Data.Company, "Error in cluster updating : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
+		ctx.SendLogs("DOKS ndepool deletion of '"+nodepoolId+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return ApiError(err, "Error in deleting nodepool during updating", credentials, ctx)
+	}
+
+	_, response, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepoolId)
+
+	for response.Status != "running" {
+		time.Sleep(30 * time.Second)
+		_, response, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepoolId)
 	}
 
 	time.Sleep(15 * time.Second)
 
-	return cluster, types.CustomCPError{}
+	return types.CustomCPError{}
 }
 
 func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) types.CustomCPError {
