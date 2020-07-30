@@ -732,7 +732,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 				break
 			}
 		}
-		if dif.Type == "update" {
+		if dif.Type == "update" || dif.Type == "create" {
 			if dif.Path[0]=="AutoUpgrade" || dif.Path[0]=="Tags"{
 				if !done {
 					err := UpdateCluster(cluster, ctx, doksOps, credentials)

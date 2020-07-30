@@ -280,7 +280,7 @@ func (cloud *DOKS) UpdateCluster(cluster *KubernetesCluster, ctx utils.Context, 
 func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
 
 	input := godo.KubernetesNodePoolUpdateRequest{
-		Name:      nodepool.ID,
+		Name:      nodepool.Name,
 		Count:     &nodepool.NodeCount,
 		AutoScale: &nodepool.AutoScale,
 		MinNodes:  &nodepool.MinNodes,
@@ -288,7 +288,7 @@ func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 		Tags:		nodepool.Tags,
 	}
 
-	clus, _, err := cloud.Client.Kubernetes.UpdateNodePool(context.Background(),clusterId,nodepool.ID,&input)
+	_, _, err := cloud.Client.Kubernetes.UpdateNodePool(context.Background(),clusterId,nodepool.ID,&input)
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in updating nodepool : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
 		ctx.SendLogs("DOKS nodepool updating of '"+nodepool.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -296,11 +296,12 @@ func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 
 	}
 
-	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
-	for status.Status.State != "running" {
+	_,res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepool.ID)
+	for res.Status != "running" {
 		time.Sleep(30 * time.Second)
-		status, _, err = cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
+		_, res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepool.ID)
 	}
+
 	return  types.CustomCPError{}
 
 }
