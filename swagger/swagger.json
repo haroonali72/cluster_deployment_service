@@ -3114,6 +3114,58 @@
                 }
             }
         },
+        "/cluster/doks/update/{projectId}": {
+            "put": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "Update a running kubernetes cluster",
+                "operationId": "DOKSClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "{\"msg\": \"Running cluster updated successfully\"}"
+                    },
+                    "202": {
+                        "description": "{\"msg\": \"Running cluster update initiated\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed/Terminating/Terminated state\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/doks/{projectId}/": {
             "get": {
                 "tags": [
@@ -10695,52 +10747,52 @@
             "title": "*string",
             "type": "object"
         },
-        "14087.0xc001930810.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "14149.0xc00100d7d0.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "14239.0xc001363d70.false": {
-            "title": "false",
-            "type": "object"
-        },
-        "1559.string": {
+        "10096.string": {
             "title": "string",
             "type": "object"
         },
-        "19753.string": {
+        "10854.string": {
             "title": "string",
             "type": "object"
         },
-        "22408.string": {
+        "11771.string": {
             "title": "string",
             "type": "object"
         },
-        "23144.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "26859.string": {
-            "title": "string",
-            "type": "object"
-        },
-        "434.0xc0019ebda0.false": {
+        "14391.0xc001cba2a0.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0018f4ae0.false": {
+        "482.0xc001c8c330.false": {
             "title": "false",
             "type": "object"
         },
-        "6553.string": {
+        "59872.0xc001c2f590.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "618.0xc00122e8d0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "64111.string": {
             "title": "string",
             "type": "object"
         },
-        "6737.0xc001a0b5c0.false": {
+        "667.0xc001b82ea0.false": {
             "title": "false",
+            "type": "object"
+        },
+        "7432.string": {
+            "title": "string",
+            "type": "object"
+        },
+        "964.0xc0015870b0.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "99670.string": {
+            "title": "string",
             "type": "object"
         },
         "X-Profile-Id": {
@@ -10880,7 +10932,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/1559.string"
+                    "$ref": "#/definitions/64111.string"
                 },
                 "type": {
                     "type": "string"
@@ -11119,7 +11171,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14149.0xc00100d7d0.false"
+                    "$ref": "#/definitions/618.0xc00122e8d0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11746,7 +11798,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14239.0xc001363d70.false"
+                    "$ref": "#/definitions/964.0xc0015870b0.false"
                 },
                 "name": {
                     "type": "string"
@@ -12284,6 +12336,9 @@
                         "$ref": "#/definitions/doks.KubernetesNode"
                     }
                 },
+                "pool_status": {
+                    "type": "boolean"
+                },
                 "tags": {
                     "description": "Node pool tags [optional]",
                     "type": "array",
@@ -12482,12 +12537,21 @@
                         "$ref": "#/definitions/eks.NodePool"
                     }
                 },
+                "output_arn": {
+                    "type": "string"
+                },
                 "project_id": {
                     "description": "ID of project [required]",
                     "type": "string"
                 },
                 "resources_vpc_config": {
                     "$ref": "#/definitions/eks.VpcConfigRequest"
+                },
+                "role_arn": {
+                    "type": "string"
+                },
+                "role_name": {
+                    "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/models.Type",
@@ -12519,6 +12583,9 @@
                     "items": {
                         "$ref": "#/definitions/eks.EKSPoolStatus"
                     }
+                },
+                "project_id": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -12563,7 +12630,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/6553.string"
+                    "$ref": "#/definitions/99670.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -12688,12 +12755,27 @@
                     "description": "Node Pool Name [required]",
                     "type": "string"
                 },
+                "node_role": {
+                    "type": "string"
+                },
+                "output_arn": {
+                    "type": "string"
+                },
                 "pool_status": {
                     "type": "boolean"
                 },
                 "remote_access": {
                     "$ref": "#/definitions/eks.RemoteAccessConfig",
                     "description": "Access Levels (private of public)[optional]"
+                },
+                "role_name": {
+                    "type": "string"
+                },
+                "subnets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/eks.string"
+                    }
                 }
             }
         },
@@ -14378,7 +14460,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0018f4ae0.false"
+                    "$ref": "#/definitions/59872.0xc001c2f590.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14751,7 +14833,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0019ebda0.false"
+                    "$ref": "#/definitions/14391.0xc001cba2a0.false"
                 },
                 "name": {
                     "type": "string"

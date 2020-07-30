@@ -248,7 +248,7 @@ func (cloud *DOKS) deleteCluster(cluster KubernetesCluster, ctx utils.Context) t
 }
 
 
-func (cloud *DOKS) UpdateClusterAutoUpgrade(cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials) ( types.CustomCPError) {
+func (cloud *DOKS) UpdateCluster(cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials) ( types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
@@ -260,6 +260,7 @@ func (cloud *DOKS) UpdateClusterAutoUpgrade(cluster *KubernetesCluster, ctx util
 	input := godo.KubernetesClusterUpdateRequest{
 		Name:              cluster.Name,
 		AutoUpgrade:       &cluster.AutoUpgrade,
+		Tags:              cluster.Tags,
 	}
 
 	clus, _, err := cloud.Client.Kubernetes.Update(context.Background(),cluster.ID, &input)
@@ -284,6 +285,7 @@ func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 		AutoScale: &nodepool.AutoScale,
 		MinNodes:  &nodepool.MinNodes,
 		MaxNodes:  &nodepool.MaxNodes,
+		Tags:		nodepool.Tags,
 	}
 
 	clus, _, err := cloud.Client.Kubernetes.UpdateNodePool(context.Background(),clusterId,nodepool.ID,&input)
@@ -302,7 +304,7 @@ func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 	return  types.CustomCPError{}
 
 }
-func (cloud *DOKS) UpgradeVersion( cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials ) ( types.CustomCPError) {
+func (cloud *DOKS) UpgradeKubernetesVersion( cluster *KubernetesCluster, ctx utils.Context, credentials vault.DOCredentials ) ( types.CustomCPError) {
 
 	input := godo.KubernetesClusterUpgradeRequest{
 		VersionSlug : cluster.KubeVersion,

@@ -16,7 +16,7 @@ func SecretAuth(username, password string) bool {
 }
 
 func main() {
-	//setEnv()
+	setEnv()
 	utils.InitFlags()
 	if !db.IsMongoAlive() {
 		os.Exit(1)
@@ -75,6 +75,7 @@ func setEnv() {
 	os.Setenv("mongo_gcp_template_collection", "gcp_template")
 	os.Setenv("mongo_gcp_cluster_collection", "gcp_cluster")
 	os.Setenv("mongo_doks_cluster_collection", "doks_cluster")
+	os.Setenv("mongo_doks_previous_cluster_collection", "doks_previous_cluster")
 	os.Setenv("mongo_doks_template_collection", "doks_template")
 	os.Setenv("mongo_gke_template_collection", "gke_template")
 	os.Setenv("mongo_gke_cluster_collection", "gke_cluster")
@@ -85,12 +86,12 @@ func setEnv() {
 	os.Setenv("mongo_iks_cluster_collection", "iks_cluster")
 	os.Setenv("mongo_default_template_collection", "default_template")
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
-	os.Setenv("redis_url", "redis:6379")
+	os.Setenv("redis_url", "localhost:6379")
 	os.Setenv("logger_url", "https://dapis.cloudplex.io")
 	os.Setenv("network_url", "https://dapis.cloudplex.io")
 	os.Setenv("vault_url", "https://dapis.cloudplex.io")
 	os.Setenv("raccoon_url", "https://dapis.cloudplex.io")
-	os.Setenv("rbac_url", "https://dapis.cloudplex.io")
+	os.Setenv("rbac_url", "http://localhost:7777")
 	os.Setenv("jump_host_ip", "52.220.196.92")
 	os.Setenv("jump_host_ssh_key", "/home/zunaira/Downloads/ahmad.txt")
 	os.Setenv("jump_host_ip", "52.220.196.92")

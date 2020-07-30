@@ -73,7 +73,7 @@ type KubernetesCluster struct {
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
 	CreationDate     time.Time             `json:"-" bson:"creation_date"`
 	ModificationDate time.Time             `json:"-" bson:"modification_date"`
-	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated" description:"Status of cluster [required]"`
+	CloudplexStatus  models.Type           `json:"status" bson:"status" validate:"eq=new|eq=New|eq=NEW|eq=Cluster Creation Failed|eq=Cluster Terminated|eq=Cluster Created|eq=Cluster Update Failed" description:"Status of cluster [required]"`
 	Name             string                `json:"name,omitempty" bson:"name" validate:"required" description:"Cluster name [required]"`
 	Region           string                `json:"region,omitempty" bson:"region" validate:"required" description:"Location for cluster provisioning [required]"`
 	KubeVersion      string                `json:"version,omitempty" bson:"version" validate:"required" description:"Kubernetes version to be provisioned [required]"`
@@ -653,7 +653,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 	doksOps, err := GetDOKS(credentials)
 	if err != nil {
 		ctx.SendLogs("DOKSUpdateRunningClusterModel: Update running cluster : "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		confError.StatusCode = 500
+		confError.StatusCode = int(models.CloudStatusCode)
 		confError.Description = err.Error()
 		err := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.DOKS, ctx, confError)
 		if err != nil {
@@ -725,7 +725,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 	}
 
 	for _, dif := range difCluster {
-
+		done:=false
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
@@ -733,7 +733,29 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			}
 		}
 		if dif.Type == "update" {
-
+			if dif.Path[0]=="AutoUpgrade" || dif.Path[0]=="Tags"{
+				if !done {
+					err := UpdateCluster(cluster, ctx, doksOps, credentials)
+					if err != (types.CustomCPError{}) {
+						return err
+					}
+				}
+				done =true
+			}else if dif.Path[0]=="KubeVersion"{
+				err := UpdateKubernetesVersion(cluster, ctx, doksOps,credentials)
+				if err != (types.CustomCPError{}) {
+					return err
+				}
+			} else if dif.Path[0]=="NodePools" {
+				if !done{
+					poolIndex, _ := strconv.Atoi(dif.Path[1])
+					err := UpdateNodePool(cluster,poolIndex, ctx, doksOps,credentials)
+					if err != (types.CustomCPError{}) {
+					return err
+				}
+				}
+				done=true
+			}
 		}
 	}
 
@@ -1136,6 +1158,7 @@ func validateDOKSRegion(region string) (bool, error) {
 
 	return false, errors.New(errData)
 }
+
 func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 	cluster, err := GetKubernetesCluster(ctx)
 	if err != nil {
@@ -1157,6 +1180,68 @@ func CompareClusters(ctx utils.Context) (diff.Changelog, int, int, error) {
 		return diff.Changelog{}, 0, 0, errors.New("Error in comparing differences:" + err.Error())
 	}
 	return difCluster, previousPoolCount, newPoolCount, nil
+}
+func UpdateCluster(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS,credentials vault.DOCredentials) types.CustomCPError {
+	err := doksOps.UpdateCluster(&cluster, ctx,credentials )
+	if err != (types.CustomCPError{}) {
+		updationFailedError(cluster, ctx, err)
+		return err
+	}
+
+	oldCluster, err1 := GetPreviousDOKSCluster(ctx)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, err)
+	}
+
+	oldCluster.AutoUpgrade = cluster.AutoUpgrade
+
+	err1 = AddPreviousDOKSCluster(oldCluster, ctx, true)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating running cluster autoupgrade", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+	}
+	return types.CustomCPError{}
+}
+func UpdateKubernetesVersion(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS,credentials vault.DOCredentials) types.CustomCPError {
+
+	err := doksOps.UpgradeKubernetesVersion(&cluster, ctx,credentials )
+	if err != (types.CustomCPError{}) {
+		updationFailedError(cluster, ctx, err)
+		return err
+	}
+
+	oldCluster, err1 := GetPreviousDOKSCluster(ctx)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, err)
+	}
+
+	oldCluster.KubeVersion = cluster.KubeVersion
+
+	err1 = AddPreviousDOKSCluster(oldCluster, ctx, true)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating running cluster kubernetes version", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+	}
+	return types.CustomCPError{}
+}
+func UpdateNodePool(cluster KubernetesCluster,poolIndex int, ctx utils.Context, doksOps DOKS,credentials vault.DOCredentials) types.CustomCPError {
+
+	err := doksOps.UpdateNodePool(cluster.NodePools[poolIndex],ctx,cluster.ID,cluster.ProjectId,credentials )
+	if err != (types.CustomCPError{}) {
+		updationFailedError(cluster, ctx, err)
+		return err
+	}
+
+	oldCluster, err1 := GetPreviousDOKSCluster(ctx)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, err)
+	}
+
+	oldCluster.NodePools = append(cluster.NodePools,cluster.NodePools[poolIndex])
+
+	err1 = AddPreviousDOKSCluster(oldCluster, ctx, true)
+	if err1 != nil {
+		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating nodepool "+cluster.NodePools[poolIndex].Name, Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
+	}
+	return types.CustomCPError{}
 }
 func AddNodepool(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS, pools []*KubernetesNodePool, credentials vault.DOCredentials) types.CustomCPError {
 
@@ -1190,7 +1275,6 @@ func AddNodepool(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS, poo
 
 	return types.CustomCPError{}
 }
-
 func DeleteNodepool(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS, poolId string,credentials vault.DOCredentials) types.CustomCPError {
 
 	err := doksOps.deleteNodepool(ctx, poolId,cluster.ID,cluster.ProjectId,credentials)
