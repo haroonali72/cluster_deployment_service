@@ -1349,15 +1349,16 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 		return
 	}
 
-	region, err := do.GetRegion(token, *ctx)
+/*	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
+		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(500)
 		c.Data["json"] = map[string]string{"error": err.Error()}
 		c.ServeJSON()
 		return
 	}
-
-	statusCode, doProfile, err := do.GetProfile(profileId, region, token, *ctx)
+*/
+	statusCode, doProfile, err := do.GetProfile(profileId, "sgp1", token, *ctx)
 	if err != nil {
 		c.Ctx.Output.SetStatus(statusCode)
 		c.Data["json"] = map[string]string{"error": err.Error()}

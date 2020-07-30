@@ -761,7 +761,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 
 	DeletePreviousDOKSCluster(ctx)
 
-	latestCluster, err1 := doksOps.fetchStatus( ctx,cluster.Name)
+	latestCluster, err1 := doksOps.fetchStatus( ctx,cluster.ID)
 	if err1 != (types.CustomCPError{}) {
 		return err1
 	}
