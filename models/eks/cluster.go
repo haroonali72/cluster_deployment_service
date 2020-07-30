@@ -91,7 +91,7 @@ type NodePool struct {
 
 type RemoteAccessConfig struct {
 	EnableRemoteAccess   bool      `json:"enable_remote_access" bson:"enable_remote_access" description:"Enable Remote Access [optional]"`
-	Ec2SshKey            *string   `json:"-" bson:"ec2_ssh_key"`
+	Ec2SshKey            *string   `json:"ec2_ssh_key" bson:"ec2_ssh_key"`
 	SourceSecurityGroups []*string `json:"-" bson:"source_security_groups"`
 }
 
@@ -103,7 +103,7 @@ type NodePoolScalingConfig struct {
 }
 
 type EKSClusterStatus struct {
-	ProjectId        string        `json:"project_id"`
+	ProjectId       string          `json:"project_id"`
 	ClusterEndpoint *string         `json:"endpoint"`
 	Name            *string         `json:"name"`
 	Status          *string         `json:"status"`
@@ -680,7 +680,7 @@ func FetchStatus(credentials vault.AwsProfile, projectId string, ctx utils.Conte
 		ctx.SendLogs("Cluster model: Status - Failed to get lastest status "+e.Description, models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return EKSClusterStatus{}, e
 	}
-	response.ProjectId =projectId
+	response.ProjectId = projectId
 
 	return response, types.CustomCPError{}
 }
@@ -803,7 +803,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 	loggingChanges := false
 	poolIndex_ := -1
 	for _, dif := range difCluster {
-		if dif.Type != "update" || len(dif.Path)< 2{
+		if dif.Type != "update" || len(dif.Path) < 2 {
 			continue
 		}
 		currentpoolIndex_, _ := strconv.Atoi(dif.Path[1])
@@ -814,7 +814,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			}
 		}
 		if dif.Path[0] == "Logging" && !loggingChanges {
-
+			time.Sleep(time.Second * 120)
 			utils.SendLog(ctx.Data.Company, "Applying logging changes on  cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 			err := eks.UpdateLogging(cluster.Name, cluster.Logging, ctx)
 
@@ -840,6 +840,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			utils.SendLog(ctx.Data.Company, "Logging changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 		} else if dif.Path[0] == "ResourcesVpcConfig" {
+			time.Sleep(time.Second * 120)
 			utils.SendLog(ctx.Data.Company, "Applying network changes on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 			err := eks.UpdateNetworking(cluster.Name, cluster.ResourcesVpcConfig, ctx)
@@ -864,6 +865,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			utils.SendLog(ctx.Data.Company, "Network changes applied successfully on cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 		} else if dif.Path[0] == "Version" {
+			time.Sleep(time.Second * 120)
 			utils.SendLog(ctx.Data.Company, "Changing kubernetes version of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 			err := eks.UpdateClusterVersion(cluster.Name, *cluster.Version, ctx)
@@ -888,7 +890,7 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 			utils.SendLog(ctx.Data.Company, "Kubernetes version updated of cluster "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 		} else if previousPoolCount <= newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && currentpoolIndex_ != poolIndex_ && dif.Path[2] == "ScalingConfig" && dif.Path[3] != "IsEnabled" {
-
+			time.Sleep(time.Second * 120)
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].NodePoolName, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
@@ -1178,6 +1180,13 @@ func AddNodepool(cluster *EKSCluster, ctx utils.Context, eksOps EKS, pools []*No
 			if pool.NodePoolName == mainPool.NodePoolName {
 				cluster.NodePools[in].RoleName = pool.RoleName
 				cluster.NodePools[in].NodeRole = pool.NodeRole
+				if pool.RemoteAccess != nil {
+					var remoteAccess RemoteAccessConfig
+					remoteAccess.SourceSecurityGroups = pool.RemoteAccess.SourceSecurityGroups
+					remoteAccess.Ec2SshKey = pool.RemoteAccess.Ec2SshKey
+					remoteAccess.EnableRemoteAccess = pool.RemoteAccess.EnableRemoteAccess
+					cluster.NodePools[in].RemoteAccess = &remoteAccess
+				}
 			}
 		}
 	}
@@ -1230,6 +1239,21 @@ func DeleteNodepool(cluster EKSCluster, ctx utils.Context, eksOps EKS, poolName 
 						Description: err1.Error(),
 					})
 				}
+			}
+			if pool.RemoteAccess != nil && pool.RemoteAccess.EnableRemoteAccess && pool.RemoteAccess.Ec2SshKey != nil && *pool.RemoteAccess.Ec2SshKey != "" {
+				err = eksOps.deleteSSHKey(pool.RemoteAccess.Ec2SshKey)
+				if err != nil {
+					ctx.SendLogs(
+						"EKS delete SSH key for cluster '"+cluster.Name+"', node group '"+pool.NodePoolName+"' failed: "+err.Error(),
+						models.LOGGING_LEVEL_ERROR,
+						models.Backend_Logging,
+					)
+					ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+					utils.SendLog(ctx.Data.Company, err.Error()+"\n Nodepool Deletion Failed - "+pool.NodePoolName, "error", cluster.ProjectId)
+					cpErr := ApiError(err, "NodePool Deletion Failed", 512)
+					return cpErr
+				}
+				pool.RemoteAccess.Ec2SshKey = nil
 			}
 			pool = nil
 		}

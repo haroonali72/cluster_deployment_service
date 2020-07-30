@@ -402,7 +402,7 @@ func (cloud *EKS) DeleteCluster(eksCluster *EKSCluster, ctx utils.Context) types
 				return cpErr
 			}
 		}
-		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess {
+		if nodePool.RemoteAccess != nil && nodePool.RemoteAccess.EnableRemoteAccess && nodePool.RemoteAccess.Ec2SshKey != nil && *nodePool.RemoteAccess.Ec2SshKey != "" {
 			err = cloud.deleteSSHKey(nodePool.RemoteAccess.Ec2SshKey)
 			if err != nil {
 				ctx.SendLogs(
@@ -1167,8 +1167,8 @@ func (cloud *EKS) UpdateNetworking(name string, network VpcConfigRequest, ctx ut
 	return types.CustomCPError{}
 }
 func (cloud *EKS) UpdateNodeConfig(clusterName, poolName string, scalingConfig NodePoolScalingConfig, ctx utils.Context) types.CustomCPError {
-	if scalingConfig.IsEnabled ==false {
-		scalingConfig.MaxSize =scalingConfig.DesiredSize
+	if scalingConfig.IsEnabled == false {
+		scalingConfig.MaxSize = scalingConfig.DesiredSize
 	}
 	clusterRequest := GeneratNodeConfigUpdateRequest(clusterName, poolName, scalingConfig)
 	_, err := cloud.Svc.UpdateNodegroupConfig(clusterRequest)

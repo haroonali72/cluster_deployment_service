@@ -30,6 +30,7 @@ type AKS struct {
 	Authorizer        *autorest.BearerAuthorizer
 	Location          subscriptions.Client
 	MCClient          containerservice.ManagedClustersClient
+	AgentPoolClient   containerservice.AgentPoolsClient
 	VMSSCLient        compute.VirtualMachineScaleSetsClient
 	VMSSVMClient      compute.VirtualMachineScaleSetVMsClient
 	AddressClient     network.PublicIPAddressesClient
@@ -79,6 +80,9 @@ func (cloud *AKS) init() types.CustomCPError {
 
 	cloud.MCClient = containerservice.NewManagedClustersClient(cloud.Subscription)
 	cloud.MCClient.Authorizer = cloud.Authorizer
+
+	cloud.AgentPoolClient = containerservice.NewAgentPoolsClient(cloud.Subscription)
+	cloud.AgentPoolClient.Authorizer = cloud.Authorizer
 
 	cloud.KubeVersionClient = containerservice.NewContainerServicesClient(cloud.Subscription)
 	cloud.KubeVersionClient.Authorizer = cloud.Authorizer
@@ -530,6 +534,132 @@ func (cloud *AKS) GetKubernetesVersions(ctx utils.Context) (*containerservice.Or
 	}
 
 	return &result, types.CustomCPError{}
+}
+
+func (cloud *AKS) CreatOrUpdateAgentPool(ctx utils.Context, token, resourceGroup, clusterName string, agentPool ManagedClusterAgentPoolProfile) error {
+
+	reqObj := getAgentPoolReqObj(agentPool)
+
+	//Network will be added in every case BASIC, ADVANCE, EXPERT
+	networkInformation := cloud.getAzureNetwork(token, ctx)
+	if len(networkInformation.Definition) > 0 {
+		for _, subnet := range networkInformation.Definition[0].Subnets {
+			if subnet.Name == *reqObj.VnetSubnetID {
+				*reqObj.VnetSubnetID = subnet.SubnetId
+				break
+			}
+		}
+	}
+	//Network will be added in every case BASIC, ADVANCE, EXPERT
+
+	cloud.Context = context.Background()
+	future, err := cloud.AgentPoolClient.CreateOrUpdate(cloud.Context, resourceGroup, clusterName, *agentPool.Name, reqObj)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool updation failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	nodePoolResp, err := future.Result(cloud.AgentPoolClient)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool updation failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+	if *nodePoolResp.ProvisioningState != "Succeeded" {
+		ctx.SendLogs(
+			"AKS agent node pool updation failed",
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return errors.New("AKS agent node pool updation failed")
+	}
+
+	return nil
+}
+
+func (cloud *AKS) DeleteAgentPool(ctx utils.Context, resourceGroup, clusterName string, agentPool ManagedClusterAgentPoolProfile) error {
+
+	cloud.Context = context.Background()
+	future, err := cloud.AgentPoolClient.Delete(cloud.Context, resourceGroup, clusterName, *agentPool.Name)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		return err
+	}
+
+	err = future.WaitForCompletionRef(context.Background(), cloud.AgentPoolClient.Client)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool deletion failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	_, err = future.Result(cloud.AgentPoolClient)
+	if err != nil {
+		ctx.SendLogs(
+			"AKS agent node pool deletion failed: "+err.Error(),
+			models.LOGGING_LEVEL_ERROR,
+			models.Backend_Logging,
+		)
+		return err
+	}
+
+	return nil
+}
+
+//For AKS agent pool updation
+func getAgentPoolReqObj(cpAgentPool ManagedClusterAgentPoolProfile) containerservice.AgentPool {
+	var AksAgentPool containerservice.ManagedClusterAgentPoolProfileProperties
+	AksAgentPool.Count = cpAgentPool.Count
+	AksAgentPool.OsType = "Linux"
+	AksAgentPool.VMSize = containerservice.VMSizeTypes(*cpAgentPool.VMSize)
+	AksAgentPool.OsDiskSizeGB = cpAgentPool.OsDiskSizeGB
+	AksAgentPool.MaxPods = cpAgentPool.MaxPods
+	AksAgentPool.VnetSubnetID = cpAgentPool.VnetSubnetID
+	AksAgentPool.Type = "VirtualMachineScaleSets"
+	AksAgentPool.EnableNodePublicIP = cpAgentPool.EnablePublicIp
+	nodelabels := make(map[string]*string)
+	for _, label := range cpAgentPool.NodeLabels {
+		nodelabels[label.Key] = &label.Value
+	}
+	AksAgentPool.NodeLabels = nodelabels
+
+	var nodeTaints []string
+	for key, value := range cpAgentPool.NodeTaints {
+		nodeTaints = append(nodeTaints, key+"="+*value)
+	}
+	AksAgentPool.NodeTaints = &nodeTaints
+
+	if cpAgentPool.EnableAutoScaling != nil && *cpAgentPool.EnableAutoScaling {
+		AksAgentPool.EnableAutoScaling = cpAgentPool.EnableAutoScaling
+		AksAgentPool.MinCount = cpAgentPool.MinCount
+		AksAgentPool.MaxCount = cpAgentPool.MaxCount
+	}
+
+	return containerservice.AgentPool{
+		ManagedClusterAgentPoolProfileProperties: &AksAgentPool,
+		Name:                                     cpAgentPool.Name,
+		Type:                                     strToPtr("Microsoft.ContainerService/managedClusters/agentPools"),
+	}
+}
+
+func strToPtr(val string) *string {
+	return &val
 }
 
 func generateNetworkProfile(c AKSCluster) *containerservice.NetworkProfileType {

@@ -447,6 +447,58 @@
                 }
             }
         },
+        "/cluster/aks/update/{projectId}": {
+            "put": {
+                "tags": [
+                    "cluster/aks"
+                ],
+                "description": "Update a running kubernetes cluster",
+                "operationId": "AKSClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "{\"msg\": \"Running cluster updated successfully\"}"
+                    },
+                    "202": {
+                        "description": "{\"msg\": \"Running cluster updation initiated\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed/Terminating/Terminated state\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/aks/{projectId}/": {
             "get": {
                 "tags": [
@@ -764,6 +816,52 @@
                 "responses": {
                     "200": {
                         "description": "{\"msg\": \"Agent Applied successfully\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not Found\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
+        "/cluster/aws/delete/{projectId}/{forceDelete}": {
+            "delete": {
+                "tags": [
+                    "cluster/aws"
+                ],
+                "description": "delete a cluster",
+                "operationId": "AWSClusterController.Delete",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "project id of the cluster",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "forceDelete",
+                        "description": "deleting cluster forcefully",
+                        "required": true,
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -1324,52 +1422,6 @@
                         "schema": {
                             "$ref": "#/definitions/aws.Cluster_Def"
                         }
-                    },
-                    "401": {
-                        "description": "{\"error\": \"Unauthorized\"}"
-                    },
-                    "404": {
-                        "description": "{\"error\": \"Not Found\"}"
-                    },
-                    "500": {
-                        "description": "{\"error\": \"Runtime Error\"}"
-                    }
-                }
-            }
-        },
-        "/cluster/aws/{projectId}/{forceDelete}": {
-            "delete": {
-                "tags": [
-                    "cluster/aws"
-                ],
-                "description": "delete a cluster",
-                "operationId": "AWSClusterController.Delete",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Auth-Token",
-                        "description": "token",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "projectId",
-                        "description": "project id of the cluster",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "path",
-                        "name": "forceDelete",
-                        "description": "deleting cluster forcefully",
-                        "required": true,
-                        "type": "boolean"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "{\"msg\": \"Cluster deleted successfully\"}"
                     },
                     "401": {
                         "description": "{\"error\": \"Unauthorized\"}"
@@ -10695,15 +10747,15 @@
             "title": "*string",
             "type": "object"
         },
-        "14087.0xc001930810.false": {
+        "14087.0xc0019f18f0.false": {
             "title": "false",
             "type": "object"
         },
-        "14149.0xc00100d7d0.false": {
+        "14149.0xc0010d6bd0.false": {
             "title": "false",
             "type": "object"
         },
-        "14239.0xc001363d70.false": {
+        "14239.0xc001443170.false": {
             "title": "false",
             "type": "object"
         },
@@ -10723,15 +10775,15 @@
             "title": "string",
             "type": "object"
         },
-        "26859.string": {
+        "26849.string": {
             "title": "string",
             "type": "object"
         },
-        "434.0xc0019ebda0.false": {
+        "434.0xc001abcea0.false": {
             "title": "false",
             "type": "object"
         },
-        "518.0xc0018f4ae0.false": {
+        "518.0xc0019bbbc0.false": {
             "title": "false",
             "type": "object"
         },
@@ -10739,7 +10791,7 @@
             "title": "string",
             "type": "object"
         },
-        "6737.0xc001a0b5c0.false": {
+        "6737.0xc001ad86c0.false": {
             "title": "false",
             "type": "object"
         },
@@ -11119,7 +11171,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14149.0xc00100d7d0.false"
+                    "$ref": "#/definitions/14149.0xc0010d6bd0.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11746,7 +11798,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14239.0xc001363d70.false"
+                    "$ref": "#/definitions/14239.0xc001443170.false"
                 },
                 "name": {
                     "type": "string"
@@ -14378,7 +14430,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/518.0xc0018f4ae0.false"
+                    "$ref": "#/definitions/518.0xc0019bbbc0.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14751,7 +14803,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/434.0xc0019ebda0.false"
+                    "$ref": "#/definitions/434.0xc001abcea0.false"
                 },
                 "name": {
                     "type": "string"
