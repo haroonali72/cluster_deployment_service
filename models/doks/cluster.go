@@ -327,7 +327,10 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 	cluster.CompanyId = oldCluster.CompanyId
-
+    cluster.ID =oldCluster.ID
+    for index,pool := range cluster.NodePools{
+    	pool.ID = oldCluster.NodePools[index].ID
+	}
 	err = AddKubernetesCluster(cluster, ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSUpdateClusterModel:  Update - Got error creating new cluster "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
