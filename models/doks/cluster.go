@@ -328,8 +328,11 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 	cluster.ModificationDate = time.Now()
 	cluster.CompanyId = oldCluster.CompanyId
     cluster.ID =oldCluster.ID
+
     for index,pool := range cluster.NodePools{
-    	pool.ID = oldCluster.NodePools[index].ID
+		if len(oldCluster.NodePools) >= len(cluster.NodePools){
+    			pool.ID = oldCluster.NodePools[index].ID
+			}
 	}
 	err = AddKubernetesCluster(cluster, ctx)
 	if err != nil {
@@ -546,7 +549,7 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return cpErr
 	}
 
-	cluster, errr := doksOps.createCluster(cluster, ctx, token, credentials)
+	cluster, errr := doksOps.createCluster(&cluster, ctx, token, credentials)
 	if errr != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 
@@ -1237,27 +1240,31 @@ func UpdateNodePool(cluster KubernetesCluster,poolIndex int, ctx utils.Context, 
 	if err1 != nil {
 		return updationFailedError(cluster, ctx, err)
 	}
-
-	oldCluster.NodePools = append(cluster.NodePools,cluster.NodePools[poolIndex])
+	for _,pool := range oldCluster.NodePools{
+		if pool.ID == cluster.NodePools[poolIndex].ID{
+			pool= cluster.NodePools[poolIndex]
+		}
+	}
 
 	err1 = AddPreviousDOKSCluster(oldCluster, ctx, true)
 	if err1 != nil {
 		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in updating nodepool "+cluster.NodePools[poolIndex].Name, Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
 	}
+
 	return types.CustomCPError{}
 }
 func AddNodepool(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS, pools []*KubernetesNodePool, credentials vault.DOCredentials) types.CustomCPError {
 
-	oldCluster, err1 := GetPreviousDOKSCluster(ctx)
-	if err1 != nil {
-		return updationFailedError(cluster, ctx, types.CustomCPError{
-			StatusCode:  int(models.CloudStatusCode),
-			Error:       "Error in adding nodepool in running cluster",
-			Description: err1.Error(),
-		})
-	}
-
 	for _,pool := range pools {
+
+		oldCluster, err1 := GetPreviousDOKSCluster(ctx)
+		if err1 != nil {
+			return updationFailedError(cluster, ctx, types.CustomCPError{
+				StatusCode:  int(models.CloudStatusCode),
+				Error:       "Error in adding nodepool in running cluster",
+				Description: err1.Error(),
+			})
+		}
 
 		err := doksOps.addNodepool(*pool,ctx,cluster.ID,cluster.ProjectId,credentials)
 		if err != (types.CustomCPError{}) {

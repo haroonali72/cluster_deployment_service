@@ -7271,16 +7271,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001d73da0.false:
+  482.0xc001d58360.false:
     title: "false"
     type: object
-  618.0xc0012bfda0.false:
+  618.0xc0012a8360.false:
     title: "false"
     type: object
-  713.0xc001c4a000.false:
+  713.0xc001c085a0.false:
     title: "false"
     type: object
-  964.0xc0016425a0.false:
+  964.0xc001606b40.false:
     title: "false"
     type: object
   7432.string:
@@ -7295,17 +7295,17 @@ definitions:
   11801.string:
     title: string
     type: object
-  14391.0xc001dadd10.false:
-    title: "false"
-    type: object
   80770.string:
     title: string
     type: object
-  85040.0xc001d33020.false:
+  85040.0xc001d015c0.false:
     title: "false"
     type: object
   101058.string:
     title: string
+    type: object
+  14391.0xc001d822d0.false:
+    title: "false"
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -7586,7 +7586,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0012bfda0.false'
+        $ref: '#/definitions/618.0xc0012a8360.false'
       name:
         description: Name of the project [required]
         type: string
@@ -8028,7 +8028,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0016425a0.false'
+        $ref: '#/definitions/964.0xc001606b40.false'
       name:
         type: string
       network_name:
@@ -9891,7 +9891,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/85040.0xc001d33020.false'
+        $ref: '#/definitions/85040.0xc001d015c0.false'
       kube_version:
         type: string
       name:
@@ -10165,7 +10165,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001dadd10.false'
+        $ref: '#/definitions/14391.0xc001d822d0.false'
       name:
         type: string
       node_pools:

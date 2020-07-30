@@ -67,12 +67,12 @@ func (cloud *DOKS) init(ctx utils.Context) types.CustomCPError {
 	return types.CustomCPError{}
 }
 
-func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, token string, credentials vault.DOCredentials) (KubernetesCluster, types.CustomCPError) {
+func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, token string, credentials vault.DOCredentials) (KubernetesCluster, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
-			return cluster, err
+			return *cluster, err
 		}
 	}
 
@@ -85,17 +85,15 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 	}else if err != nil || network == nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
-		return cluster, cpErr
+		return *cluster, cpErr
 	}
 
-
-	if network != nil {
 	err = json.Unmarshal(network.([]byte), &doNetwork)
 	if err != nil {
 		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
-		return cluster, cpErr
+		return *cluster, cpErr
 	}
-	}
+
 
 	ctx.SendLogs(
 		"DOKS cluster creation of "+cluster.Name+"' submitted ",
@@ -137,7 +135,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
+		return *cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
 	}
 
 	cluster.ID = clus.ID
@@ -154,7 +152,7 @@ func (cloud *DOKS) createCluster(cluster KubernetesCluster, ctx utils.Context, t
 
 	time.Sleep(15 * time.Second)
 
-	return cluster, types.CustomCPError{}
+	return *cluster, types.CustomCPError{}
 }
 func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
 
@@ -210,8 +208,8 @@ func (cloud *DOKS) deleteNodepool( ctx utils.Context,nodepoolId , clusterId,proj
 
 	_, err := cloud.Client.Kubernetes.DeleteNodePool(context.Background(),clusterId,nodepoolId)
 	if err != nil {
-		utils.SendLog(ctx.Data.Company, "Error in cluster updating : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
-		ctx.SendLogs("DOKS ndepool deletion of '"+nodepoolId+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		utils.SendLog(ctx.Data.Company, "Error in nodepool deletion : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
+		ctx.SendLogs("DOKS nodepool deletion of '"+nodepoolId+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return ApiError(err, "Error in deleting nodepool during updating", credentials, ctx)
 	}
 
