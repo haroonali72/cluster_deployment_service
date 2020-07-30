@@ -531,7 +531,7 @@ func (c *DOKSClusterController) Patch() {
 		return
 	}
 
-	if cluster.CloudplexStatus == models.New || cluster.CloudplexStatus == models.ClusterCreationFailed || cluster.CloudplexStatus == models.ClusterTerminated ||cluster.CloudplexStatus == (models.Deploying) || cluster.CloudplexStatus == (models.Terminating){
+	if  cluster.CloudplexStatus == (models.Deploying) || cluster.CloudplexStatus == (models.Terminating){
 		ctx.SendLogs("DOKSClusterController : Cluster is in "+string(cluster.CloudplexStatus)+" state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(409)
 		c.Data["json"] = map[string]string{"error": "Can't Update.Cluster is in " + string(cluster.CloudplexStatus) + " state"}
