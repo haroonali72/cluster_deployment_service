@@ -517,10 +517,13 @@ const (
 	IBM_Kube_GetNodes_Endpoint       = "https://containers.cloud.ibm.com/global/v2/vpc/getWorkers"
 	IBM_Kube_GetCluster_Endpoint     = "https://containers.cloud.ibm.com/global/v2/getCluster"
 	IBM_Kube_Delete_Cluster_Endpoint = "https://containers.cloud.ibm.com/global/v1/clusters/"
+	IBM_Remove_WorkerPool            = "https://containers.cloud.ibm.com/global/v2/removeWorkerPool"
 	IBM_WorkerPool_Endpoint          = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPool"
 	IBM_Zone                         = "https://containers.cloud.ibm.com/global/v2/vpc/createWorkerPoolZone"
 	IBM_All_Instances_Endpoint       = "https://containers.cloud.ibm.com/global/v2/getFlavors?zone="
 	IBM_ALL_Kube_Version_Endpoint    = "https://containers.cloud.ibm.com/global/v2/getVersions"
+	IBM_Update_Version               = "https://containers.cloud.ibm.com/global/v2/updateMaster"
+	IBM_Update_PoolSize              = "https://containers.cloud.ibm.com/global/v2/resizeWokerPool"
 	IBM_Version                      = "?version=2020-01-28&generation=1"
 )
 const (
