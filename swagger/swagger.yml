@@ -490,6 +490,37 @@ paths:
           description: '{"error": "Not Found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/aws/{projectId}/{forceDelete}:
+    delete:
+      tags:
+      - cluster/aws
+      description: delete a cluster
+      operationId: AWSClusterController.Delete
+      parameters:
+      - in: header
+        name: X-Auth-Token
+        description: token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: project id of the cluster
+        required: true
+        type: string
+      - in: path
+        name: forceDelete
+        description: deleting cluster forcefully
+        required: true
+        type: boolean
+      responses:
+        "204":
+          description: '{"msg": "Cluster deleted successfully"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/aws/all:
     get:
       tags:
@@ -583,37 +614,6 @@ paths:
       responses:
         "200":
           description: '{"msg": "Agent Applied successfully"}'
-        "401":
-          description: '{"error": "Unauthorized"}'
-        "404":
-          description: '{"error": "Not Found"}'
-        "500":
-          description: '{"error": "Runtime Error"}'
-  /cluster/aws/delete/{projectId}/{forceDelete}:
-    delete:
-      tags:
-      - cluster/aws
-      description: delete a cluster
-      operationId: AWSClusterController.Delete
-      parameters:
-      - in: header
-        name: X-Auth-Token
-        description: token
-        required: true
-        type: string
-      - in: path
-        name: projectId
-        description: project id of the cluster
-        required: true
-        type: string
-      - in: path
-        name: forceDelete
-        description: deleting cluster forcefully
-        required: true
-        type: boolean
-      responses:
-        "204":
-          description: '{"msg": "Cluster deleted successfully"}'
         "401":
           description: '{"error": "Unauthorized"}'
         "404":
@@ -3804,6 +3804,42 @@ paths:
           description: '{"error": "Not Found"}'
         "409":
           description: '{"error": "Cluster is in New/Creating/Creation Failed /Terminated/Terminating
+            state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
+  /cluster/iks/update/{projectId}:
+    put:
+      tags:
+      - cluster/iks
+      description: Update a running kubernetes cluster
+      operationId: IKSClusterController.Update
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: Vault credentials profile id
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "201":
+          description: '{"msg": "Running cluster updated successfully"}'
+        "202":
+          description: '{"msg": "Running cluster updation initiated"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not found"}'
+        "409":
+          description: '{"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
@@ -7199,41 +7235,41 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  434.0xc001abcea0.false:
+  482.0xc001cede90.false:
     title: "false"
     type: object
-  518.0xc0019bbbc0.false:
+  618.0xc00127eab0.false:
     title: "false"
     type: object
-  1559.string:
-    title: string
-    type: object
-  6553.string:
-    title: string
-    type: object
-  6737.0xc001ad86c0.false:
+  704.0xc001bc40f0.false:
     title: "false"
     type: object
-  14087.0xc0019f18f0.false:
+  964.0xc0015dd290.false:
     title: "false"
     type: object
-  14149.0xc0010d6bd0.false:
+  7432.string:
+    title: string
+    type: object
+  10096.string:
+    title: string
+    type: object
+  10854.string:
+    title: string
+    type: object
+  80732.string:
+    title: string
+    type: object
+  85052.0xc001ca7110.false:
     title: "false"
     type: object
-  14239.0xc001443170.false:
+  100891.string:
+    title: string
+    type: object
+  11801.string:
+    title: string
+    type: object
+  14391.0xc001d1de00.false:
     title: "false"
-    type: object
-  19753.string:
-    title: string
-    type: object
-  22408.string:
-    title: string
-    type: object
-  23144.string:
-    title: string
-    type: object
-  26849.string:
-    title: string
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -7248,6 +7284,8 @@ definitions:
         description: Client ID for service principal ['required' if service principal
           enabled]
         type: string
+      cloud:
+        $ref: '#/definitions/models.Cloud'
       company_id:
         description: ID of compnay [optional]
         type: string
@@ -7341,7 +7379,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/1559.string'
+        $ref: '#/definitions/80732.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -7512,7 +7550,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/14149.0xc0010d6bd0.false'
+        $ref: '#/definitions/618.0xc00127eab0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7954,7 +7992,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/14239.0xc001443170.false'
+        $ref: '#/definitions/964.0xc0015dd290.false'
       name:
         type: string
       network_name:
@@ -8465,11 +8503,17 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/eks.NodePool'
+      output_arn:
+        type: string
       project_id:
         description: ID of project [required]
         type: string
       resources_vpc_config:
         $ref: '#/definitions/eks.VpcConfigRequest'
+      role_arn:
+        type: string
+      role_name:
+        type: string
       status:
         $ref: '#/definitions/models.Type'
         description: Status of cluster [required]
@@ -8491,6 +8535,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/eks.EKSPoolStatus'
+      project_id:
+        type: string
       status:
         type: string
   eks.EKSClusterTemplate:
@@ -8520,7 +8566,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/6553.string'
+        $ref: '#/definitions/100891.string'
       template_id:
         type: string
       version:
@@ -8607,11 +8653,21 @@ definitions:
       node_pool_name:
         description: Node Pool Name [required]
         type: string
+      node_role:
+        type: string
+      output_arn:
+        type: string
       pool_status:
         type: boolean
       remote_access:
         $ref: '#/definitions/eks.RemoteAccessConfig'
         description: Access Levels (private of public)[optional]
+      role_name:
+        type: string
+      subnets:
+        type: array
+        items:
+          $ref: '#/definitions/eks.string'
   eks.NodePoolScalingConfig:
     title: NodePoolScalingConfig
     type: object
@@ -8634,6 +8690,8 @@ definitions:
     title: RemoteAccessConfig
     type: object
     properties:
+      ec2_ssh_key:
+        type: string
       enable_remote_access:
         description: Enable Remote Access [optional]
         type: boolean
@@ -9758,6 +9816,11 @@ definitions:
         description: Pool node count [required]
         type: integer
         format: int64
+      pool_status:
+        type: boolean
+      poolId:
+        description: Cluster pool name [required]
+        type: string
       subnet_id:
         description: ID of subnet in which pool will be created [required]
         type: string
@@ -9788,7 +9851,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0019bbbc0.false'
+        $ref: '#/definitions/85052.0xc001ca7110.false'
       kube_version:
         type: string
       name:
@@ -10062,7 +10125,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc001abcea0.false'
+        $ref: '#/definitions/14391.0xc001d1de00.false'
       name:
         type: string
       node_pools:
