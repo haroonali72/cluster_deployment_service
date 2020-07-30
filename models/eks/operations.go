@@ -143,9 +143,9 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 	//submit cluster creation request to AWS
 	time.Sleep(time.Second * 120)
 	beego.Info("waited for role activation")
-	var result *eks.CreateClusterOutput
+	//var result *eks.CreateClusterOutput
 	for {
-		result, err = cloud.Svc.CreateCluster(clusterRequest)
+		result, err := cloud.Svc.CreateCluster(clusterRequest)
 		if err != nil && strings.Contains(err.Error(), "AccessDeniedException: status code: 403") {
 			time.Sleep(time.Second * 60)
 			continue
@@ -160,6 +160,9 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 			cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 			return cpErr
 		} else {
+			if result != nil && result.Cluster != nil && result.Cluster.Arn != nil {
+				beego.Info(eksCluster.OutputArn)
+			}
 			break
 		}
 	}
@@ -209,8 +212,8 @@ func (cloud *EKS) CreateCluster(eksCluster *EKSCluster, token string, ctx utils.
 		cpErr := ApiError(err, "EKS Cluster Creation Failed", 512)
 		return cpErr
 	}
-	if result_ != nil && result_.Cluster != nil {
-		eksCluster.OutputArn = result.Cluster.Arn
+	if result_ != nil && result_.Cluster != nil && result_.Cluster.Arn != nil {
+		eksCluster.OutputArn = result_.Cluster.Arn
 		beego.Info(eksCluster.OutputArn)
 	}
 
