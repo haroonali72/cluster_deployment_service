@@ -48,7 +48,7 @@ type NodePool struct {
 	AvailabilityZone string        `json:"availability_zone" bson:"availability_zone" validate:"required"`
 	Autoscaling      Autoscaling   `json:"auto_scaling,omitempty"  bson:"autoscaling,omitempty" description:"Autoscaling configuration [optional]"`
 	PoolStatus       bool          `json:"pool_status,omitempty" bson:"pool_status,omitempty"`
-	PoolId           string        `json:"poolId" bson:"pooId"  description:"Cluster pool id [optional]"`
+	PoolId           string        `json:"pool_Id" bson:"pool_Id"  description:"Cluster pool id [optional]"`
 }
 
 type Project struct {
