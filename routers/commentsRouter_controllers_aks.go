@@ -106,6 +106,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/aks:AKSClusterController"],
+        beego.ControllerComments{
+            Method: "PatchRunningCluster",
+            Router: `/update/:projectId`,
+            AllowHTTPMethods: []string{"put"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["antelope/controllers/aks:AKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/aks:AKSTemplateController"],
         beego.ControllerComments{
             Method: "Post",
