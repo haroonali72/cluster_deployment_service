@@ -1349,6 +1349,9 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 		return
 	}
 
+	ctx.Data.Company = userInfo.CompanyId
+	ctx.Data.ProjectId = projectId
+
 	region, err := do.GetRegion(token, *ctx)
 	if err != nil {
 		ctx.SendLogs("DOKSClusterController :"+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1370,8 +1373,7 @@ func (c *DOKSClusterController) PatchRunningCluster() {
 
 	ctx.SendLogs("DOKSClusterController: Updating cluster of project. "+projectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	ctx.Data.Company = userInfo.CompanyId
-	ctx.Data.ProjectId = projectId
+
 
 	statusCode, allowed, err := rbacAuthentication.Authenticate(models.DOKS, "cluster", projectId, "Start", token, utils.Context{})
 	if err != nil {
