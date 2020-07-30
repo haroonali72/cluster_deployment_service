@@ -144,6 +144,8 @@ func GetMongoConf() mongConf {
 	conf.MongoClusterErrorCollection = "mongo_cluster_error_collection"
 	conf.MongoEKSPreviousClusterCollection = "eks_previous_cluster"
 	conf.MongoGKEPreviousClusterCollection = "gke_previous_cluster"
+	conf.MongoAKSPreviousClusterCollection = "aks_previous_cluster"
+	conf.MongoIKSPreviousClusterCollection = "iks_previous_cluster"
 	conf.MongoDOKSPreviousClusterCollection = "doks_previous_cluster"
 	return conf
 
@@ -169,6 +171,7 @@ type mongConf struct {
 	MongoGKEClusterCollection            string
 	MongoGKEPreviousClusterCollection    string
 	MongoDOKSPreviousClusterCollection   string
+	MongoAKSPreviousClusterCollection    string
 	MongoEKSTemplateCollection           string
 	MongoEKSCustomerTemplateCollection   string
 	MongoEKSClusterCollection            string
@@ -183,6 +186,7 @@ type mongConf struct {
 	MongoIKSClusterCollection            string
 	MongoIKSTemplateCollection           string
 	MongoIKSCustomerTemplateCollection   string
+	MongoIKSPreviousClusterCollection    string
 	MongoOPClusterCollection             string
 	MongoOPTemplateCollection            string
 	MongoDOKSClusterCollection           string
