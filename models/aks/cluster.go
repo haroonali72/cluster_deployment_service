@@ -1058,6 +1058,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
+	aksOps.ProjectId = cluster.ProjectId
 	if previousPoolCount < newPoolCount {
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
