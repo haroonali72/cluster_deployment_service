@@ -12,6 +12,7 @@ import (
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -318,10 +319,36 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 			utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 		}
-		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
 		cluster.NodePools[index].PoolId = wId
 	}
 
+	kubeCluster, cperr := cloud.fetchClusterStatus(&cluster, ctx, companyId)
+	if cperr != (types.CustomCPError{}) {
+
+		utils.SendLog(companyId, cperr.Error, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cperr.Description, "error", cluster.ProjectId)
+		return cluster, cperr
+
+	} else {
+		utils.SendLog(companyId, "Cluster id "+kubeCluster.ID, "info", cluster.ProjectId)
+		utils.SendLog(companyId, strconv.Itoa(len(kubeCluster.WorkerPools)), "info", cluster.ProjectId)
+		cluster.ClusterId = kubeCluster.ID
+		for _, pools := range kubeCluster.WorkerPools {
+			utils.SendLog(companyId, pools.Name, "info", cluster.ProjectId)
+			utils.SendLog(companyId, strconv.Itoa(len(cluster.NodePools)), "info", cluster.ProjectId)
+
+			for in, existingPools := range cluster.NodePools {
+				utils.SendLog(companyId, pools.ID+"   - "+pools.Name, "info", cluster.ProjectId)
+				utils.SendLog(companyId, existingPools.PoolId+"   - "+existingPools.Name, "info", cluster.ProjectId)
+
+				if pools.Name == existingPools.Name {
+					cluster.NodePools[in].PoolId = pools.ID
+				}
+			}
+
+		}
+	}
 	return cluster, types.CustomCPError{}
 }
 func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types.IBMNetwork, ctx utils.Context) (string, types.CustomCPError) {
@@ -462,7 +489,9 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 		return "", cpErr
 	}
-	beego.Info("*****  " + string(body))
+	//beego.Info("*****  " + string(body))
+	ctx.SendLogs("****"+string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 	if res.StatusCode != 201 {
 		if res.StatusCode == 409 {
 			var ibmResponse IBMResponse
@@ -490,10 +519,14 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 		return "", cpErr
 	}
+	utils.SendLog(ctx.Data.Company, "Assigning zone "+pool.AvailabilityZone+" to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 	cpErr := cloud.AddZonesToPools(rg, pool.Name, subnetId, pool.AvailabilityZone, clusterID, ctx)
 	if cpErr != (types.CustomCPError{}) {
 		return "", cpErr
 	}
+	utils.SendLog(ctx.Data.Company, "Zone assigned successfully to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 	return wId.ID, types.CustomCPError{}
 }
 func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string, ctx utils.Context) types.CustomCPError {
