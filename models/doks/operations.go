@@ -215,7 +215,7 @@ func (cloud *DOKS) deleteNodepool( ctx utils.Context,nodepoolId , clusterId,proj
 
 	_, response, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepoolId)
 
-	for response.Status != "running" {
+	for response.StatusCode != 200 {
 		time.Sleep(30 * time.Second)
 		_, response, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepoolId)
 	}
