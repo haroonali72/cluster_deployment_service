@@ -1047,7 +1047,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 		} else if previousPoolCount <= newPoolCount && len(dif.Path) >= 3 && dif.Path[0] == "NodePools" && currentpoolIndex_ != poolIndex_ && dif.Path[2] == "NodeCount" {
 
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
-			utils.SendLog(ctx.Data.Company, "Changing scaling config of nodepool "+cluster.NodePools[poolIndex].Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Changing nodepool size of nodepool "+cluster.NodePools[poolIndex].Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 			err := iks.updatePoolSize(cluster.ResourceGroup, cluster.ClusterId, cluster.NodePools[poolIndex].PoolId, cluster.NodePools[poolIndex].NodeCount, ctx)
 			if err != (types.CustomCPError{}) {
