@@ -7163,10 +7163,10 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  434.0xc0019ebda0.false:
+  434.0xc001a65410.false:
     title: "false"
     type: object
-  518.0xc0018f4ae0.false:
+  518.0xc001961e90.false:
     title: "false"
     type: object
   1559.string:
@@ -7175,25 +7175,25 @@ definitions:
   6553.string:
     title: string
     type: object
-  6737.0xc001a0b5c0.false:
+  6737.0xc001a82c30.false:
     title: "false"
     type: object
-  14087.0xc001930810.false:
+  14087.0xc001997bc0.false:
     title: "false"
     type: object
-  14149.0xc00100d7d0.false:
+  14149.0xc0010863c0.false:
     title: "false"
     type: object
-  14239.0xc001363d70.false:
+  14239.0xc0013e4960.false:
     title: "false"
     type: object
-  19753.string:
+  19777.string:
     title: string
     type: object
-  22408.string:
+  22441.string:
     title: string
     type: object
-  23144.string:
+  23199.string:
     title: string
     type: object
   26859.string:
@@ -7476,7 +7476,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/14149.0xc00100d7d0.false'
+        $ref: '#/definitions/14149.0xc0010863c0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7918,7 +7918,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/14239.0xc001363d70.false'
+        $ref: '#/definitions/14239.0xc0013e4960.false'
       name:
         type: string
       network_name:
@@ -8429,11 +8429,17 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/eks.NodePool'
+      output_arn:
+        type: string
       project_id:
         description: ID of project [required]
         type: string
       resources_vpc_config:
         $ref: '#/definitions/eks.VpcConfigRequest'
+      role_arn:
+        type: string
+      role_name:
+        type: string
       status:
         $ref: '#/definitions/models.Type'
         description: Status of cluster [required]
@@ -8455,6 +8461,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/eks.EKSPoolStatus'
+      project_id:
+        type: string
       status:
         type: string
   eks.EKSClusterTemplate:
@@ -8571,11 +8579,21 @@ definitions:
       node_pool_name:
         description: Node Pool Name [required]
         type: string
+      node_role:
+        type: string
+      output_arn:
+        type: string
       pool_status:
         type: boolean
       remote_access:
         $ref: '#/definitions/eks.RemoteAccessConfig'
         description: Access Levels (private of public)[optional]
+      role_name:
+        type: string
+      subnets:
+        type: array
+        items:
+          $ref: '#/definitions/eks.string'
   eks.NodePoolScalingConfig:
     title: NodePoolScalingConfig
     type: object
@@ -8598,6 +8616,8 @@ definitions:
     title: RemoteAccessConfig
     type: object
     properties:
+      ec2_ssh_key:
+        type: string
       enable_remote_access:
         description: Enable Remote Access [optional]
         type: boolean
@@ -9752,7 +9772,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/518.0xc0018f4ae0.false'
+        $ref: '#/definitions/518.0xc001961e90.false'
       kube_version:
         type: string
       name:
@@ -10026,7 +10046,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/434.0xc0019ebda0.false'
+        $ref: '#/definitions/434.0xc001a65410.false'
       name:
         type: string
       node_pools:
