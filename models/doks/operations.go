@@ -67,12 +67,12 @@ func (cloud *DOKS) init(ctx utils.Context) types.CustomCPError {
 	return types.CustomCPError{}
 }
 
-func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, token string, credentials vault.DOCredentials) (KubernetesCluster, types.CustomCPError) {
+func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, token string, credentials vault.DOCredentials) (*KubernetesCluster, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
-			return *cluster, err
+			return cluster, err
 		}
 	}
 
@@ -85,13 +85,13 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 	}else if err != nil || network == nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
-		return *cluster, cpErr
+		return cluster, cpErr
 	}
 
 	err = json.Unmarshal(network.([]byte), &doNetwork)
 	if err != nil {
 		cpErr := ApiError(err, "Error while fetching network",  credentials,ctx)
-		return *cluster, cpErr
+		return cluster, cpErr
 	}
 
 
@@ -135,7 +135,7 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in cluster creation : "+err.Error(), models.LOGGING_LEVEL_ERROR, cluster.ProjectId)
 		ctx.SendLogs("DOKS cluster creation of '"+cluster.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return *cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
+		return cluster, ApiError(err, "Error in Cluster Creation", credentials, ctx)
 	}
 
 	cluster.ID = clus.ID
@@ -152,7 +152,7 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 
 	time.Sleep(15 * time.Second)
 
-	return *cluster, types.CustomCPError{}
+	return cluster, types.CustomCPError{}
 }
 func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( string, types.CustomCPError) {
 
@@ -354,7 +354,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 	response.KubernetesVersion = status.VersionSlug
 	response.ClusterIp = status.IPv4
 	response.Endpoint = status.Endpoint
-	response.State = status.NodePools[0].Nodes[0].Status.State
+	response.State = string(status.Status.State)
 	for _, pool := range status.NodePools {
 		count++
 		var workerPool KubeWorkerPoolStatus
