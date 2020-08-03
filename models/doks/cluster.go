@@ -549,11 +549,11 @@ func DeployKubernetesCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return cpErr
 	}
 
-	cluster, errr := doksOps.createCluster(&cluster, ctx, token, credentials)
+	clus, errr := doksOps.createCluster(&cluster, ctx, token, credentials)
 	if errr != (types.CustomCPError{}) {
 		cluster.CloudplexStatus = models.ClusterCreationFailed
 
-		confError = UpdateKubernetesCluster(cluster, ctx)
+		confError = UpdateKubernetesCluster(clus, ctx)
 		if confError != nil {
 			PrintError(ctx, confError.Error(), cluster.Name)
 			ctx.SendLogs("DOKSDeployClusterModel:  Deploy - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
