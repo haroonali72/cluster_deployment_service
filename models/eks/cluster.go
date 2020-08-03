@@ -796,7 +796,10 @@ func PatchRunningEKSCluster(cluster EKSCluster, credentials vault.AwsCredentials
 				}
 			}
 			if delete == true {
-				DeleteNodepool(cluster, ctx, eks, oldpool.NodePoolName)
+				err_ := DeleteNodepool(cluster, ctx, eks, oldpool.NodePoolName)
+				if err_ != (types.CustomCPError{}) {
+					return err_
+				}
 			}
 		}
 	}

@@ -71,6 +71,10 @@ type WorkerPoolInput struct {
 	VPCId       string `json:"vpcID"`
 	Count       int    `json:"workerCount"`
 }
+type DeleteWorkerPoolInput struct {
+	Cluster    string `json:"cluster"`
+	WorkerName string `json:"workerpool"`
+}
 type ZoneInput struct {
 	Cluster    string `json:"cluster"`
 	Id         string `json:"id"`
@@ -905,7 +909,7 @@ func (cloud *IBM) getNetwork(cluster Cluster_Def, token string, ctx utils.Contex
 }
 func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Context) types.CustomCPError {
 
-	workerpool := WorkerPoolInput{
+	workerpool := DeleteWorkerPoolInput{
 		Cluster:    clusterID,
 		WorkerName: poolID,
 	}
@@ -914,7 +918,7 @@ func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Conte
 
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "error occurred while creating workpool addition request", 500)
+		cpErr := ApiError(err, "error occurred while creating workpool deletion request", 500)
 		return cpErr
 	}
 
@@ -944,7 +948,7 @@ func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Conte
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-			cpErr := ApiError(err, "error occurred while adding workpool: "+poolID, 512)
+			cpErr := ApiError(err, "error occurred while deleting workpool: "+poolID, 512)
 			return cpErr
 		}
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
