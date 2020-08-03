@@ -510,10 +510,14 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 		return "", cpErr
 	}
+	utils.SendLog(ctx.Data.Company, "Assigning zone "+pool.AvailabilityZone+" to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 	cpErr := cloud.AddZonesToPools(rg, pool.Name, subnetId, pool.AvailabilityZone, clusterID, ctx)
 	if cpErr != (types.CustomCPError{}) {
 		return "", cpErr
 	}
+	utils.SendLog(ctx.Data.Company, "Zone assigned successfully to nodepool "+pool.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+
 	return wId.ID, types.CustomCPError{}
 }
 func (cloud *IBM) AddZonesToPools(rg, poolName, subnetID, zone, clusterID string, ctx utils.Context) types.CustomCPError {
