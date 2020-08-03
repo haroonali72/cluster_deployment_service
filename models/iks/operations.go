@@ -463,6 +463,8 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		return "", cpErr
 	}
 	beego.Info("*****  " + string(body))
+	ctx.SendLogs("****"+string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+
 	if res.StatusCode != 201 {
 		if res.StatusCode == 409 {
 			var ibmResponse IBMResponse
