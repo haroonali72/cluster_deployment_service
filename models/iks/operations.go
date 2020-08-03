@@ -480,7 +480,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 		return "", cpErr
 	}
-	beego.Info("*****  " + string(body))
+	//beego.Info("*****  " + string(body))
 	ctx.SendLogs("****"+string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 
 	if res.StatusCode != 201 {
