@@ -12,6 +12,7 @@ import (
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -318,7 +319,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 			utils.SendLog(companyId, cpErr.Error, "error", cluster.ProjectId)
 			utils.SendLog(companyId, cpErr.Description, "error", cluster.ProjectId)
 		}
-		utils.SendLog(companyId, "Node Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
+		utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
 		cluster.NodePools[index].PoolId = wId
 	}
 
@@ -330,8 +331,13 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		return cluster, cperr
 
 	} else {
+		utils.SendLog(companyId, "Cluster id "+kubeCluster.ID, "info", cluster.ProjectId)
+		utils.SendLog(companyId, strconv.Itoa(len(kubeCluster.WorkerPools)), "info", cluster.ProjectId)
 		cluster.ClusterId = kubeCluster.ID
 		for _, pools := range kubeCluster.WorkerPools {
+			utils.SendLog(companyId, pools.Name, "info", cluster.ProjectId)
+			utils.SendLog(companyId, strconv.Itoa(len(cluster.NodePools)), "info", cluster.ProjectId)
+
 			for in, existingPools := range cluster.NodePools {
 				utils.SendLog(companyId, pools.ID+"   - "+pools.Name, "info", cluster.ProjectId)
 				utils.SendLog(companyId, existingPools.PoolId+"   - "+existingPools.Name, "info", cluster.ProjectId)
