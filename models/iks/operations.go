@@ -943,7 +943,7 @@ func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Conte
 		cpErr := ApiError(err, "error occurred while sending workpool  "+poolID+" deletion request", 500)
 		return cpErr
 	}
-
+	beego.Info(res.Status)
 	if res.StatusCode != 204 {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
@@ -951,7 +951,8 @@ func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Conte
 			cpErr := ApiError(err, "error occurred while deleting workpool: "+poolID, 512)
 			return cpErr
 		}
-		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		beego.Info(string(body))
+		ctx.SendLogs(string(body), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(errors.New(string(body)), "error occurred while deleting workpool: "+poolID, 512)
 		return cpErr
 
