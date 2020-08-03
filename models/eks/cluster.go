@@ -1292,7 +1292,7 @@ func updationFailedError(cluster EKSCluster, ctx utils.Context, err types.Custom
 	}
 
 	utils.SendLog(ctx.Data.Company, "Error in running cluster update : "+err.Description, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
-
+	utils.SendLog(ctx.Data.Company, err.Error, models.LOGGING_LEVEL_ERROR, ctx.Data.ProjectId)
 	err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err)
 	if err_ != nil {
 		ctx.SendLogs("EKSRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
