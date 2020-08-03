@@ -944,7 +944,7 @@ func (cloud *IBM) removeWorkerPool(rg, clusterID, poolID string, ctx utils.Conte
 		return cpErr
 	}
 	beego.Info(res.Status)
-	if res.StatusCode != 204 {
+	if res.StatusCode != 202 {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
