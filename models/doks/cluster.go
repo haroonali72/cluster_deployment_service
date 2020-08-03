@@ -330,9 +330,11 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
     cluster.ID =oldCluster.ID
 
     for index,pool := range cluster.NodePools{
-		if len(oldCluster.NodePools) >= len(cluster.NodePools){
-    			pool.ID = oldCluster.NodePools[index].ID
+		if  len(cluster.NodePools) >= len(oldCluster.NodePools) && index < len(oldCluster.NodePools){
+			if oldCluster.NodePools[index] != nil &&  oldCluster.NodePools[index].ID != ""{
+				pool.ID = oldCluster.NodePools[index].ID
 			}
+		}
 	}
 	err = AddKubernetesCluster(cluster, ctx)
 	if err != nil {
