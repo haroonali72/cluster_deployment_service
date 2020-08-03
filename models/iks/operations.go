@@ -322,6 +322,24 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		cluster.NodePools[index].PoolId = wId
 	}
 
+	kubeCluster, cperr := cloud.fetchClusterStatus(&cluster, ctx, companyId)
+	if cperr != (types.CustomCPError{}) {
+
+		utils.SendLog(companyId, cperr.Error, "error", cluster.ProjectId)
+		utils.SendLog(companyId, cperr.Description, "error", cluster.ProjectId)
+		return cluster, cperr
+
+	} else {
+		cluster.ClusterId = kubeCluster.ID
+		for _, pools := range kubeCluster.WorkerPools {
+			for in, existingPools := range cluster.NodePools {
+				if pools.Name == existingPools.Name {
+					cluster.NodePools[in].PoolId = pools.ID
+				}
+			}
+
+		}
+	}
 	return cluster, types.CustomCPError{}
 }
 func (cloud *IBM) createCluster(vpcId string, cluster Cluster_Def, network types.IBMNetwork, ctx utils.Context) (string, types.CustomCPError) {
