@@ -1001,7 +1001,10 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 				}
 			}
 			if delete == true {
-				DeleteNodepool(cluster, ctx, iks, oldpool.Name, oldpool.PoolId)
+				err_ := DeleteNodepool(cluster, ctx, iks, oldpool.Name, oldpool.PoolId)
+				if err_ != (types.CustomCPError{}) {
+					return err_
+				}
 			}
 		}
 	}
