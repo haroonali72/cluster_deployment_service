@@ -154,12 +154,12 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 
 	return *cluster, types.CustomCPError{}
 }
-func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
+func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, clusterId,projectId string, credentials vault.DOCredentials) ( string, types.CustomCPError) {
 
 	if cloud.Client == nil {
 		err := cloud.init(ctx)
 		if err != (types.CustomCPError{}) {
-			return  err
+			return  "",err
 		}
 	}
 
@@ -181,20 +181,20 @@ func (cloud *DOKS) addNodepool(nodepool KubernetesNodePool, ctx utils.Context, c
 	if err != nil {
 		utils.SendLog(ctx.Data.Company, "Error in cluster updating : "+err.Error(), models.LOGGING_LEVEL_ERROR, projectId)
 		ctx.SendLogs("DOKS ndepool creation of '"+nodepool.Name+"' failed: "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		return ApiError(err, "Error in updating cluster", credentials, ctx)
+		return "",ApiError(err, "Error in updating cluster", credentials, ctx)
 	}
 
 	_, res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,pool.ID)
 
-	for res.Status != "running" {
+	for res.StatusCode != 200 {
 		time.Sleep(30 * time.Second)
 		_,res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(),clusterId,pool.ID)
 	}
 
-	nodepool.ID= pool.ID
+
 	time.Sleep(15 * time.Second)
 
-	return types.CustomCPError{}
+	return pool.ID,types.CustomCPError{}
 
 }
 func (cloud *DOKS) deleteNodepool( ctx utils.Context,nodepoolId , clusterId,projectId string, credentials vault.DOCredentials) ( types.CustomCPError) {
@@ -295,7 +295,7 @@ func (cloud *DOKS) UpdateNodePool(nodepool *KubernetesNodePool, ctx utils.Contex
 	}
 
 	_,res, err := cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepool.ID)
-	for res.Status != "running" {
+	for res.StatusCode != 200 {
 		time.Sleep(30 * time.Second)
 		_, res, err = cloud.Client.Kubernetes.GetNodePool(context.Background(), clusterId,nodepool.ID)
 	}
@@ -389,6 +389,7 @@ func (cloud *DOKS) fetchStatus(ctx utils.Context, clusterId string) (KubeCluster
 		}
 		response.WorkerPools = append(response.WorkerPools, workerPool)
 	}
+
 	response.NodePoolCount = count
 	return response, types.CustomCPError{}
 }

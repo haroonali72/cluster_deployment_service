@@ -1266,12 +1266,12 @@ func AddNodepool(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS, poo
 			})
 		}
 
-		err := doksOps.addNodepool(*pool,ctx,cluster.ID,cluster.ProjectId,credentials)
+		poolId,err := doksOps.addNodepool(*pool,ctx,cluster.ID,cluster.ProjectId,credentials)
 		if err != (types.CustomCPError{}) {
 			updationFailedError(cluster, ctx, err)
 			return err
 		}
-
+		pool.ID = poolId
 		pool.PoolStatus=true
 		oldCluster.NodePools = append(oldCluster.NodePools,pool)
 
@@ -1279,6 +1279,7 @@ func AddNodepool(cluster KubernetesCluster, ctx utils.Context, doksOps DOKS, poo
 		if err1 != nil {
 			return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in adding nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})
 		}
+		err1 = AddKubernetesCluster(cluster,ctx)
 	}
 
 
