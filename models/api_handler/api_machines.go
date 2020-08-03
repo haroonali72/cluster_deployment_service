@@ -46,7 +46,8 @@ func GetAwsMachines() ([]string, error) {
 		if machineInfo[1] == "" || machineInfo[1] == "--- " || machineInfo[1] == "|" || machineInfo[1] == "Instance type " || machineInfo[1] == "Default vCPUs" || machineInfo[1] == "Memory(GiB)|" {
 			continue
 		}
-		mach = append(mach, machineInfo[1])
+		machineName := strings.TrimSpace(machineInfo[1])
+		mach = append(mach, machineName)
 
 		/*for _, machine := range machineInfo {
 			machine := strings.TrimSpace(machine)
