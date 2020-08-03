@@ -462,7 +462,7 @@ func (cloud *IBM) createWorkerPool(rg, clusterID, vpcID string, pool *NodePool, 
 		cpErr := ApiError(err, "error occurred while adding workpool: "+pool.Name, 512)
 		return "", cpErr
 	}
-
+	beego.Info("*****  " + string(body))
 	if res.StatusCode != 201 {
 		if res.StatusCode == 409 {
 			var ibmResponse IBMResponse
