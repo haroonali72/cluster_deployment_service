@@ -333,6 +333,9 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		cluster.ClusterId = kubeCluster.ID
 		for _, pools := range kubeCluster.WorkerPools {
 			for in, existingPools := range cluster.NodePools {
+				utils.SendLog(companyId, pools.ID+"   - "+pools.Name, "info", cluster.ProjectId)
+				utils.SendLog(companyId, existingPools.PoolId+"   - "+existingPools.Name, "info", cluster.ProjectId)
+
 				if pools.Name == existingPools.Name {
 					cluster.NodePools[in].PoolId = pools.ID
 				}

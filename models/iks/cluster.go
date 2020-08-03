@@ -1068,7 +1068,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 				publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 				return err
 			}
-			utils.SendLog(ctx.Data.Company, "Scaling config updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
+			utils.SendLog(ctx.Data.Company, "Nodepool size updated successfully", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
 			currentpoolIndex_ = poolIndex_
 		}
