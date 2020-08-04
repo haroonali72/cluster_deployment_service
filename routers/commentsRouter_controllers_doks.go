@@ -106,6 +106,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSClusterController"],
+        beego.ControllerComments{
+            Method: "PatchRunningCluster",
+            Router: `/update/:projectId`,
+            AllowHTTPMethods: []string{"put"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"] = append(beego.GlobalControllerRouter["antelope/controllers/doks:DOKSTemplateController"],
         beego.ControllerComments{
             Method: "Post",

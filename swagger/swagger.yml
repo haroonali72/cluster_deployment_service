@@ -2195,6 +2195,42 @@ paths:
             state"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/doks/update/{projectId}:
+    put:
+      tags:
+      - cluster/doks
+      description: Update a running kubernetes cluster
+      operationId: DOKSClusterController.Update
+      parameters:
+      - in: header
+        name: X-Profile-Id
+        description: Vault credentials profile id
+        required: true
+        type: string
+      - in: header
+        name: X-Auth-Token
+        description: Token
+        required: true
+        type: string
+      - in: path
+        name: projectId
+        description: Id of the project
+        required: true
+        type: string
+      responses:
+        "201":
+          description: '{"msg": "Running cluster updated successfully"}'
+        "202":
+          description: '{"msg": "Running cluster update initiated"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not found"}'
+        "409":
+          description: '{"error": "Cluster is in New/Creating/Creation Failed/Terminating/Terminated
+            state"}'
+        "500":
+          description: '{"error": "Runtime Error"}'
   /cluster/eks/:
     put:
       tags:
@@ -7235,16 +7271,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001cede90.false:
+  482.0xc001d6e7e0.false:
     title: "false"
     type: object
-  618.0xc00127eab0.false:
+  618.0xc0012a8660.false:
     title: "false"
     type: object
-  704.0xc001bc40f0.false:
+  713.0xc001c1ca20.false:
     title: "false"
     type: object
-  964.0xc0015dd290.false:
+  964.0xc00161ce40.false:
     title: "false"
     type: object
   7432.string:
@@ -7256,19 +7292,19 @@ definitions:
   10854.string:
     title: string
     type: object
-  80732.string:
-    title: string
-    type: object
-  85052.0xc001ca7110.false:
-    title: "false"
-    type: object
-  100891.string:
-    title: string
-    type: object
   11801.string:
     title: string
     type: object
-  14391.0xc001d1de00.false:
+  80770.string:
+    title: string
+    type: object
+  85040.0xc001d11a40.false:
+    title: "false"
+    type: object
+  101058.string:
+    title: string
+    type: object
+  14391.0xc001d9c750.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -7379,7 +7415,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/80732.string'
+        $ref: '#/definitions/80770.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -7550,7 +7586,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc00127eab0.false'
+        $ref: '#/definitions/618.0xc0012a8660.false'
       name:
         description: Name of the project [required]
         type: string
@@ -7992,7 +8028,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc0015dd290.false'
+        $ref: '#/definitions/964.0xc00161ce40.false'
       name:
         type: string
       network_name:
@@ -8366,6 +8402,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/doks.KubernetesNode'
+      pool_status:
+        type: boolean
       tags:
         description: Node pool tags [optional]
         type: array
@@ -8566,7 +8604,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/100891.string'
+        $ref: '#/definitions/101058.string'
       template_id:
         type: string
       version:
@@ -9682,6 +9720,8 @@ definitions:
     properties:
       cloud:
         $ref: '#/definitions/models.Cloud'
+      cluster_id:
+        type: string
       company_id:
         description: ID of compnay [optional]
         type: string
@@ -9819,7 +9859,7 @@ definitions:
       pool_status:
         type: boolean
       poolId:
-        description: Cluster pool name [required]
+        description: Cluster pool id [optional]
         type: string
       subnet_id:
         description: ID of subnet in which pool will be created [required]
@@ -9851,7 +9891,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/85052.0xc001ca7110.false'
+        $ref: '#/definitions/85040.0xc001d11a40.false'
       kube_version:
         type: string
       name:
@@ -10125,7 +10165,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001d1de00.false'
+        $ref: '#/definitions/14391.0xc001d9c750.false'
       name:
         type: string
       node_pools:

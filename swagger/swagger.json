@@ -3166,6 +3166,58 @@
                 }
             }
         },
+        "/cluster/doks/update/{projectId}": {
+            "put": {
+                "tags": [
+                    "cluster/doks"
+                ],
+                "description": "Update a running kubernetes cluster",
+                "operationId": "DOKSClusterController.Update",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Profile-Id",
+                        "description": "Vault credentials profile id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-Auth-Token",
+                        "description": "Token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "projectId",
+                        "description": "Id of the project",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "{\"msg\": \"Running cluster updated successfully\"}"
+                    },
+                    "202": {
+                        "description": "{\"msg\": \"Running cluster update initiated\"}"
+                    },
+                    "401": {
+                        "description": "{\"error\": \"Unauthorized\"}"
+                    },
+                    "404": {
+                        "description": "{\"error\": \"Not found\"}"
+                    },
+                    "409": {
+                        "description": "{\"error\": \"Cluster is in New/Creating/Creation Failed/Terminating/Terminated state\"}"
+                    },
+                    "500": {
+                        "description": "{\"error\": \"Runtime Error\"}"
+                    }
+                }
+            }
+        },
         "/cluster/doks/{projectId}/": {
             "get": {
                 "tags": [
@@ -10799,11 +10851,11 @@
             "title": "*string",
             "type": "object"
         },
-        "100891.string": {
+        "10096.string": {
             "title": "string",
             "type": "object"
         },
-        "10096.string": {
+        "101058.string": {
             "title": "string",
             "type": "object"
         },
@@ -10815,19 +10867,19 @@
             "title": "string",
             "type": "object"
         },
-        "14391.0xc001d1de00.false": {
+        "14391.0xc001d9c750.false": {
             "title": "false",
             "type": "object"
         },
-        "482.0xc001cede90.false": {
+        "482.0xc001d6e7e0.false": {
             "title": "false",
             "type": "object"
         },
-        "618.0xc00127eab0.false": {
+        "618.0xc0012a8660.false": {
             "title": "false",
             "type": "object"
         },
-        "704.0xc001bc40f0.false": {
+        "713.0xc001c1ca20.false": {
             "title": "false",
             "type": "object"
         },
@@ -10835,15 +10887,15 @@
             "title": "string",
             "type": "object"
         },
-        "80732.string": {
+        "80770.string": {
             "title": "string",
             "type": "object"
         },
-        "85052.0xc001ca7110.false": {
+        "85040.0xc001d11a40.false": {
             "title": "false",
             "type": "object"
         },
-        "964.0xc0015dd290.false": {
+        "964.0xc00161ce40.false": {
             "title": "false",
             "type": "object"
         },
@@ -10987,7 +11039,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/80732.string"
+                    "$ref": "#/definitions/80770.string"
                 },
                 "type": {
                     "type": "string"
@@ -11226,7 +11278,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/618.0xc00127eab0.false"
+                    "$ref": "#/definitions/618.0xc0012a8660.false"
                 },
                 "name": {
                     "description": "Name of the project [required]",
@@ -11853,7 +11905,7 @@
                     "$ref": "#/definitions/models.Cloud"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/964.0xc0015dd290.false"
+                    "$ref": "#/definitions/964.0xc00161ce40.false"
                 },
                 "name": {
                     "type": "string"
@@ -12391,6 +12443,9 @@
                         "$ref": "#/definitions/doks.KubernetesNode"
                     }
                 },
+                "pool_status": {
+                    "type": "boolean"
+                },
                 "tags": {
                     "description": "Node pool tags [optional]",
                     "type": "array",
@@ -12682,7 +12737,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "#/definitions/100891.string"
+                    "$ref": "#/definitions/101058.string"
                 },
                 "template_id": {
                     "type": "string"
@@ -14281,6 +14336,9 @@
                 "cloud": {
                     "$ref": "#/definitions/models.Cloud"
                 },
+                "cluster_id": {
+                    "type": "string"
+                },
                 "company_id": {
                     "description": "ID of compnay [optional]",
                     "type": "string"
@@ -14472,7 +14530,7 @@
                     "format": "int64"
                 },
                 "poolId": {
-                    "description": "Cluster pool name [required]",
+                    "description": "Cluster pool id [optional]",
                     "type": "string"
                 },
                 "pool_status": {
@@ -14522,7 +14580,7 @@
                     "type": "boolean"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/85052.0xc001ca7110.false"
+                    "$ref": "#/definitions/85040.0xc001d11a40.false"
                 },
                 "kube_version": {
                     "type": "string"
@@ -14895,7 +14953,7 @@
                     "type": "string"
                 },
                 "kube_credentials": {
-                    "$ref": "#/definitions/14391.0xc001d1de00.false"
+                    "$ref": "#/definitions/14391.0xc001d9c750.false"
                 },
                 "name": {
                     "type": "string"

@@ -533,7 +533,6 @@ func AddPreviousGKECluster(cluster GKECluster, ctx utils.Context, patch bool) er
 
 	return nil
 }
-
 func GetPreviousGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 	session, err1 := db.GetMongoSession(ctx)
 	if err1 != nil {
@@ -560,7 +559,6 @@ func GetPreviousGKECluster(ctx utils.Context) (cluster GKECluster, err error) {
 
 	return cluster, nil
 }
-
 func UpdatePreviousGKECluster(cluster GKECluster, ctx utils.Context) error {
 
 	err := AddPreviousGKECluster(cluster, ctx, false)
@@ -586,7 +584,6 @@ func UpdatePreviousGKECluster(cluster GKECluster, ctx utils.Context) error {
 
 	return nil
 }
-
 func DeletePreviousGKECluster(ctx utils.Context) error {
 	session, err := db.GetMongoSession(ctx)
 	if err != nil {
