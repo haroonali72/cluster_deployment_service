@@ -323,7 +323,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		cluster.NodePools[index].PoolId = wId
 	}
 
-	kubeCluster, cperr := cloud.fetchClusterStatus(&cluster, ctx, companyId)
+	kubeCluster, cperr := cloud.fetchStatus(&cluster, ctx, companyId)
 	if cperr != (types.CustomCPError{}) {
 
 		utils.SendLog(companyId, cperr.Error, "error", cluster.ProjectId)
