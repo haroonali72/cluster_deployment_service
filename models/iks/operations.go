@@ -12,7 +12,6 @@ import (
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -331,16 +330,15 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		return cluster, cperr
 
 	} else {
-		utils.SendLog(companyId, "Cluster id "+kubeCluster.ID, "info", cluster.ProjectId)
-		utils.SendLog(companyId, strconv.Itoa(len(kubeCluster.WorkerPools)), "info", cluster.ProjectId)
+		/*utils.SendLog(companyId, "Cluster id "+kubeCluster.ID, "info", cluster.ProjectId)
+		utils.SendLog(companyId, strconv.Itoa(len(kubeCluster.WorkerPools)), "info", cluster.ProjectId)*/
 		cluster.ClusterId = kubeCluster.ID
 		for _, pools := range kubeCluster.WorkerPools {
-			utils.SendLog(companyId, pools.Name, "info", cluster.ProjectId)
-			utils.SendLog(companyId, strconv.Itoa(len(cluster.NodePools)), "info", cluster.ProjectId)
-
+			/*utils.SendLog(companyId, pools.Name, "info", cluster.ProjectId)
+			utils.SendLog(companyId, strconv.Itoa(len(cluster.NodePools)), "info", cluster.ProjectId)*/
 			for in, existingPools := range cluster.NodePools {
-				utils.SendLog(companyId, pools.ID+"   - "+pools.Name, "info", cluster.ProjectId)
-				utils.SendLog(companyId, existingPools.PoolId+"   - "+existingPools.Name, "info", cluster.ProjectId)
+				/*utils.SendLog(companyId, pools.ID+"   - "+pools.Name, "info", cluster.ProjectId)
+				utils.SendLog(companyId, existingPools.PoolId+"   - "+existingPools.Name, "info", cluster.ProjectId)*/
 
 				if pools.Name == existingPools.Name {
 					cluster.NodePools[in].PoolId = pools.ID
@@ -686,13 +684,13 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 		return cpErr
 	}
 	for {
-		response, err := cloud.fetchClusterStatus(cluster, ctx, "")
+		_, err := cloud.fetchClusterStatus(cluster, ctx, "")
 		if err != (types.CustomCPError{}) {
 			break
 		}
-		if err == (types.CustomCPError{}) && response.State == "deleting" {
+		/*if err == (types.CustomCPError{}) && response.State == "deleting" {
 			break
-		}
+		}*/
 	}
 	return types.CustomCPError{}
 }
