@@ -22,7 +22,7 @@ require (
 	github.com/go-openapi/swag v0.19.8 // indirect
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/go-redis/redis v6.15.7+incompatible
-	github.com/google/go-cmp v0.4.0
+	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
