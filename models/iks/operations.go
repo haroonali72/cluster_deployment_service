@@ -670,9 +670,9 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 		cpErr := ApiError(err, "error occurred while sending cluster creation request"+cluster.Name+" termination request", 500)
 		return cpErr
 	}
-	body, _ := ioutil.ReadAll(res.Body)
-	beego.Info(string(body))
 
+	beego.Info(res.Status)
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(err, "error occurred while sending cluster creation request"+cluster.Name+" termination request", 500)
@@ -683,11 +683,22 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 		cpErr := ApiError(errors.New(string(body)), "error occurred while terminating cluster "+cluster.Name, 512)
 		return cpErr
 	}
+	beego.Info(string(body))
+
 	for {
-		_, err := cloud.fetchClusterStatus(cluster, ctx, "")
+		utils.SendLog(ctx.Data.Company, "fetching cluster status...", "error", cluster.ProjectId)
+		res, err := cloud.fetchClusterStatus(cluster, ctx, "")
+
 		if err != (types.CustomCPError{}) {
+			utils.SendLog(ctx.Data.Company, err.Error, "error", cluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, err.Description, "error", cluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, "error occured. breaking the loop", "error", cluster.ProjectId)
 			break
+		} else {
+			utils.SendLog(ctx.Data.Company, res.State, "error", cluster.ProjectId)
 		}
+		utils.SendLog(ctx.Data.Company, "waiting...before trying again", "error", cluster.ProjectId)
+		time.Sleep(time.Second * 100)
 		/*if err == (types.CustomCPError{}) && response.State == "deleting" {
 			break
 		}*/
@@ -725,17 +736,16 @@ func (cloud *IBM) fetchClusterStatus(cluster *Cluster_Def, ctx utils.Context, co
 
 	beego.Info(res.Status)
 	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		cpErr := ApiError(err, "error in fetching cluster", 500)
+		return KubeClusterStatus{}, cpErr
+	}
 	beego.Info(string(body))
 
 	if res.StatusCode != 200 {
 		ctx.SendLogs(errors.New(string(body)).Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		cpErr := ApiError(errors.New(res.Status), "error in fetching cluster", 512)
-		return KubeClusterStatus{}, cpErr
-	}
-
-	if err != nil {
-		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		cpErr := ApiError(err, "error in fetching cluster", 500)
 		return KubeClusterStatus{}, cpErr
 	}
 
