@@ -67,7 +67,7 @@ type User struct {
 }
 
 type KubernetesCluster struct {
-	ID               string                `json:"-" bson:"id"`
+	ID               string                `json:"id" bson:"id"`
 	ProjectId        string                `json:"project_id" bson:"project_id" validate:"required" description:"ID of project [required]"`
 	CompanyId        string                `json:"company_id" bson:"company_id" validate:"required" description:"ID of compnay [optional]"`
 	Cloud            models.Cloud          `json:"cloud" bson:"cloud" validate:"eq=DOKS|eq=doks|eq=Doks"`
@@ -87,7 +87,7 @@ type KubernetesCluster struct {
 }
 
 type KubernetesNodePool struct {
-	ID          string            `json:"-"  bson:"id"`
+	ID          string            `json:"id"  bson:"id"`
 	Name        string            `json:"name,omitempty"  bson:"name" validate:"required" description:"Cluster pool name [required]"`
 	MachineType string            `json:"machine_type,omitempty"  bson:"machine_type" validate:"required" description:"Machine type for pool [required]"` //machine size
 	NodeCount   int               `json:"node_count,omitempty"  bson:"node_count" validate:"required,gte=1" description:"Pool node count [required]"`
@@ -327,8 +327,9 @@ func UpdateKubernetesCluster(cluster KubernetesCluster, ctx utils.Context) error
 	cluster.CreationDate = oldCluster.CreationDate
 	cluster.ModificationDate = time.Now()
 	cluster.CompanyId = oldCluster.CompanyId
-    cluster.ID =oldCluster.ID
-
+	if oldCluster.ID != "" {
+		cluster.ID = oldCluster.ID
+	}
     for index,pool := range cluster.NodePools{
 		if  len(cluster.NodePools) >= len(oldCluster.NodePools) && index < len(oldCluster.NodePools){
 			if oldCluster.NodePools[index] != nil &&  oldCluster.NodePools[index].ID != ""{
@@ -764,6 +765,9 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			} else if dif.Path[0]=="NodePools" {
 				if !done{
 					poolIndex, _ := strconv.Atoi(dif.Path[1])
+					if dif.Path[2] == "PoolStatus" || dif.Path[2]==string(models.ClusterUpdateFailed){
+						continue
+					}
 					err := UpdateNodePool(cluster,poolIndex, ctx, doksOps,credentials)
 					if err != (types.CustomCPError{}) {
 					return err
