@@ -782,15 +782,15 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 
 	DeletePreviousDOKSCluster(ctx)
 
-	latestCluster, err1 := doksOps.fetchStatus( ctx,cluster.ID)
+	/*latestCluster, err1 := doksOps.fetchStatus( ctx,cluster.ID)
 	if err1 != (types.CustomCPError{}) {
 		return err1
 	}
 
-for strings.ToLower(string(latestCluster.State)) != strings.ToLower("running") {
+	for strings.ToLower(string(latestCluster.State)) != strings.ToLower("running") {
 		time.Sleep(time.Second * 60)
 	}
-
+*/
 	cluster.CloudplexStatus = models.ClusterCreated
 	confError_ := UpdateKubernetesCluster(cluster, ctx)
 	if confError_ != nil {
