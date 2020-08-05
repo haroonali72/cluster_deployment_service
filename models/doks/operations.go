@@ -141,6 +141,7 @@ func (cloud *DOKS) createCluster(cluster *KubernetesCluster, ctx utils.Context, 
 	cluster.ID = clus.ID
 	for i, pool := range cluster.NodePools{
 		pool.ID= clus.NodePools[i].ID
+		pool.PoolStatus =true
 	}
 
 	status, _, err := cloud.Client.Kubernetes.Get(context.Background(), clus.ID)
