@@ -959,6 +959,10 @@ func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (custo
 		return types.CustomCPError{}
 	}
 	cluster.ID = ""
+	for _,pool := range cluster.NodePools{
+		pool.PoolStatus =false
+		pool.ID =""
+	}
 	cluster.CloudplexStatus = models.ClusterTerminated
 
 	err = UpdateKubernetesCluster(cluster, ctx)
