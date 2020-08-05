@@ -880,7 +880,7 @@ func (c *DOKSClusterController) StartCluster() {
 		c.ServeJSON()
 		return
 	}
-	/*	cluster.CloudplexStatus = (models.Deploying)
+		cluster.CloudplexStatus = (models.Deploying)
 
 		err = doks.UpdateKubernetesCluster(cluster, *ctx)
 		if err != nil {
@@ -894,7 +894,7 @@ func (c *DOKSClusterController) StartCluster() {
 			c.Data["json"] = map[string]string{"error": err.Error()}
 			c.ServeJSON()
 			return
-		}*/
+		}
 
 	ctx.SendLogs("DOKSClusterController: Creating Cluster. "+cluster.Name, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
