@@ -629,14 +629,16 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 		cpErr := ApiError(errors.New(string(body)), "error occurred while terminating cluster "+cluster.Name, 512)
 		return cpErr
 	}
+
 	for {
-		response, err := cloud.fetchClusterStatus(cluster, ctx, "")
+		_, err := cloud.fetchClusterStatus(cluster, ctx, "")
+
 		if err != (types.CustomCPError{}) {
+
 			break
 		}
-		if err == (types.CustomCPError{}) && response.State == "deleting" {
-			break
-		}
+		time.Sleep(time.Second * 100)
+
 	}
 	return types.CustomCPError{}
 }
