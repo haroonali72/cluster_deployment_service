@@ -320,6 +320,8 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 		}
 		utils.SendLog(companyId, "Worker Pool Created Successfully : "+cluster.Name, "info", cluster.ProjectId)
 		cluster.NodePools[index].PoolId = wId
+		cluster.NodePools[index].PoolStatus = true
+
 	}
 
 	kubeCluster, cperr := cloud.fetchStatus(&cluster, ctx, companyId)
@@ -342,6 +344,7 @@ func (cloud *IBM) create(cluster Cluster_Def, ctx utils.Context, companyId strin
 
 				if pools.Name == existingPools.Name {
 					cluster.NodePools[in].PoolId = pools.ID
+					cluster.NodePools[in].PoolStatus = true
 				}
 			}
 
