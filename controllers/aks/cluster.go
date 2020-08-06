@@ -260,6 +260,7 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
+	cluster.DNSPrefix = cluster.Name + "-dns"
 	err = aks.AddAKSCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
