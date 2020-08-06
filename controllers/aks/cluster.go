@@ -244,7 +244,7 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	err = aks.ValidateAKSData(cluster, *ctx)
+	err = aks.ValidateAKSData(&cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
@@ -260,7 +260,6 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 	cluster.CompanyId = userInfo.CompanyId
-	cluster.DNSPrefix = cluster.Name + "-dns"
 	err = aks.AddAKSCluster(cluster, *ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
@@ -344,7 +343,7 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
-	err = aks.ValidateAKSData(cluster, *ctx)
+	err = aks.ValidateAKSData(&cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
