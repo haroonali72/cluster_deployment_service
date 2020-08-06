@@ -736,25 +736,29 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			}
 		}
 	}
-
+	done,done1,index:=false,false,-1
 	for _, dif := range difCluster {
-		done:=false
+
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
-				break
+				continue
+			}
+			if poolIndex > index {
+				index=poolIndex
+				done=false
 			}
 		}
-		if dif.Type == "update" || dif.Type == "create" {
+		if dif.Type == "update"  {
 			if dif.Path[0]=="AutoUpgrade" || dif.Path[0]=="Tags"{
-				if !done {
+				if !done1 {
 					err := UpdateCluster(cluster, ctx, doksOps, credentials)
 					if err != (types.CustomCPError{}) {
 						return err
 					}
 					utils.SendLog(ctx.Data.Company, "Cluster Tags/AutoUpgrade updated ", models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 				}
-				done =true
+				done1 =true
 			}else if dif.Path[0]=="KubeVersion"{
 				err := UpdateKubernetesVersion(cluster, ctx, doksOps,credentials)
 				if err != (types.CustomCPError{}) {
