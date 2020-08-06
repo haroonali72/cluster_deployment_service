@@ -749,7 +749,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 				done=false
 			}
 		}
-		if dif.Type == "update"  {
+		if dif.Type == "update"  || dif.Type == "create"{
 			if dif.Path[0]=="AutoUpgrade" || dif.Path[0]=="Tags"{
 				if !done1 {
 					err := UpdateCluster(cluster, ctx, doksOps, credentials)
@@ -769,7 +769,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			} else if dif.Path[0]=="NodePools" {
 				if !done{
 					poolIndex, _ := strconv.Atoi(dif.Path[1])
-					if dif.Path[2] == "PoolStatus" || dif.Path[2]==string(models.ClusterUpdateFailed){
+					if dif.Path[2] == "PoolStatus" || dif.Path[2]==string(models.ClusterUpdateFailed) || dif.Path[2]=="ID"{
 						continue
 					}
 					err := UpdateNodePool(cluster,poolIndex, ctx, doksOps,credentials)
