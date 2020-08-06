@@ -443,6 +443,8 @@ func generateClusterNodePools(c AKSCluster) *[]containerservice.ManagedClusterAg
 			AKSNodePools[i].VMSize = containerservice.VMSizeTypes(*nodepool.VMSize)
 			AKSNodePools[i].VnetSubnetID = nodepool.VnetSubnetID
 			AKSNodePools[i].Type = "VirtualMachineScaleSets"
+			AKSNodePools[i].OsDiskSizeGB = nodepool.OsDiskSizeGB
+			AKSNodePools[i].MaxPods = nodepool.MaxPods
 
 			nodelabels := make(map[string]*string)
 			nodelabels["AKS-Custer-Node-Pool"] = to.StringPtr(c.ProjectId)

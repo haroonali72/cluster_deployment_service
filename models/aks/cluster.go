@@ -823,7 +823,10 @@ func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]strin
 
 }
 
-func ValidateAKSData(cluster AKSCluster, ctx utils.Context) error {
+func ValidateAKSData(cluster *AKSCluster, ctx utils.Context) error {
+	if !cluster.IsAdvanced {
+		cluster.DNSPrefix = cluster.Name + "-dns"
+	}
 	if cluster.ProjectId == "" {
 
 		return errors.New("project ID is empty")
