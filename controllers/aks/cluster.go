@@ -244,7 +244,7 @@ func (c *AKSClusterController) Post() {
 		return
 	}
 
-	err = aks.ValidateAKSData(cluster, *ctx)
+	err = aks.ValidateAKSData(&cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
@@ -343,7 +343,7 @@ func (c *AKSClusterController) Patch() {
 		return
 	}
 
-	err = aks.ValidateAKSData(cluster, *ctx)
+	err = aks.ValidateAKSData(&cluster, *ctx)
 	if err != nil {
 		ctx.SendLogs("AKSClusterController: "+err.Error(), models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 		c.Ctx.Output.SetStatus(400)
