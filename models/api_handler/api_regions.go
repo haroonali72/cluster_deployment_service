@@ -9,6 +9,39 @@ import (
 	"io/ioutil"
 	"strings"
 )
+var AzureZoneNotSupportedRegions = []byte(
+	`[
+			{"region":"East Asia","location":"eastasia"},
+			{"region":"Central US","location": "centralus"},
+			{"region":"West US","location": "westus"},
+			{"region":"North Central US","location":"northcentralus"},
+			{"region":"Japan West","location":"japanwest"},
+			{"region":"Brazil South","location":"brazilsouth"},
+			{"region":"Australia Southeast","location":"austrlocationoutheast"},
+			{"region":"South India","location": "southindia"},
+			{"region":"Central India","location":"centralindia"},
+			{"region":"West India","location": "westindia"},
+			{"region":"West India","location": "westindia"},
+			{"region":"Canada Central","location":"canadacentral"},
+			{"region":"Canada East","location": "canadaeast"},
+			{"region":"UK West","location":"ukwest"},
+			{"region":"Korea Central","location":"koreacentral"},
+			{"region":"Korea South","location": "koreasouth"},
+			{"region":"Australia Central","location":"australiacentral"},
+			{"region":"UAE North","location":"uaenorth"},
+			{"region":"South Africa North","location":"southafricanorth"},
+			{"region":"Switzerland North","location":"switzerlandnorth"},
+			{"region":"Germany West Central","location":"germanywestcentral"},
+			{"region":"Norway East","location": "norwayeast"}
+
+]`)
+
+var AzureZone =[]byte(
+	`[
+	{ "label": "a" ,"value": "1"},
+	{"label" :"b" ,"value" : "2"},
+	{"label" :"c" ,"value" : "3"}
+]`)
 
 func GetAwsRegions() (reg []models.Region, err error) {
 	region := new(models.Region)
