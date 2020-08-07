@@ -11,6 +11,7 @@ import (
 )
 var AzureZoneNotSupportedRegions = []byte(
 	`[
+			{"region":"East Asia","location":"eastasia"},
 			{"region":"Central US","location": "centralus"},
 			{"region":"West US","location": "westus"},
 			{"region":"North Central US","location":"northcentralus"},
@@ -19,6 +20,7 @@ var AzureZoneNotSupportedRegions = []byte(
 			{"region":"Australia Southeast","location":"austrlocationoutheast"},
 			{"region":"South India","location": "southindia"},
 			{"region":"Central India","location":"centralindia"},
+			{"region":"West India","location": "westindia"},
 			{"region":"West India","location": "westindia"},
 			{"region":"Canada Central","location":"canadacentral"},
 			{"region":"Canada East","location": "canadaeast"},
@@ -30,16 +32,15 @@ var AzureZoneNotSupportedRegions = []byte(
 			{"region":"South Africa North","location":"southafricanorth"},
 			{"region":"Switzerland North","location":"switzerlandnorth"},
 			{"region":"Germany West Central","location":"germanywestcentral"},
-			{"region":"Norway West","location":"norwaywest"},
 			{"region":"Norway East","location": "norwayeast"}
 
 ]`)
 
 var AzureZone =[]byte(
 	`[
-	"zone1": 1,
-	"zone2" : 2,
-	"zone3" : 3
+	"zone": "1",
+	"zone" : "2",
+	"zone" : "3"
 ]`)
 
 func GetAwsRegions() (reg []models.Region, err error) {

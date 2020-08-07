@@ -2,7 +2,6 @@ package azure
 
 import (
 	"antelope/models"
-	"antelope/models/aws"
 	"antelope/models/azure"
 	"antelope/models/cores"
 	rbac_athentication "antelope/models/rbac_authentication"
@@ -1266,7 +1265,7 @@ func (c *AzureClusterController) GetRegions() {
 
 // @Title Get Availability Zone
 // @Description return zones against a region
-// @Param	X-Profile-Id	header	string	true "profileId"
+// @Param	region	 	path	string	true	"Azure region"
 // @Success 200 			[]*string
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
@@ -1286,13 +1285,14 @@ func (c *AzureClusterController) GetZones() {
 
 	ctx.SendLogs("AWSClusterController: fetch availability zones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
-	az, err1 := azure.GetZones( *ctx)
+	az, err1 := azure.GetZones( region )
 	if err1 != (types.CustomCPError{}) {
 		c.Ctx.Output.SetStatus(err1.StatusCode)
 		c.Data["json"] = err1
 		c.ServeJSON()
 		return
 	}
+
 	ctx.SendLogs("Zones fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
 	c.Data["json"] = az
 	c.ServeJSON()

@@ -595,7 +595,9 @@ type AzureRegion struct {
 	Region   string
 	Location string
 }
-
+type AzureZone struct {
+	Zone      string
+}
 type GcpRegion struct {
 	Name     string `json: "name" `
 	Zone     string `json: "zone" `

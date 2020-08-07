@@ -759,16 +759,35 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Reg
 	}
 	return regions, types.CustomCPError{}
 }
-func GetZones( ctx utils.Context, region string ) ([]*string, types.CustomCPError) {
+func GetZones(  region string ) ( []string, types.CustomCPError) {
 	bytes := api_handler.AzureZoneNotSupportedRegions
-
+	bytes1 := api_handler.AzureZone
 	var regionList []models.AzureRegion
+	var zoneList []models.AzureZone
+	var zones []string
 
 	err := json.Unmarshal(bytes, &regionList)
 	if err != nil {
-		return []*string{}, types.CustomCPError{StatusCode:512 ,Error:"Region not unmarshalled",Description:"Region not unmarshalled"}
+		return []string{}, types.CustomCPError{StatusCode:512 ,Error:"Region not unmarshalled",Description:"Region not unmarshalled"}
 	}
-	if region ==
+
+	err = json.Unmarshal(bytes1, &zoneList)
+	if err != nil {
+		return []string{}, types.CustomCPError{StatusCode:512 ,Error:"Zones not unmarshalled",Description:"Zones not unmarshalled"}
+	}
+
+	for _,notAllowedRegion := range regionList{
+		if region == notAllowedRegion.Location{
+			return nil,types.CustomCPError{
+				StatusCode:  512,
+				Error:       "No availability zones in this region",
+				Description: "No availability zones in this region",
+			}
+		}
+	}
+	for _,zone := range zoneList{
+		zones = append(zones,zone.Zone )
+	}
 	return zones, types.CustomCPError{}
 }
 
