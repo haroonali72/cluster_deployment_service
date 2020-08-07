@@ -19,6 +19,7 @@ import (
 	"time"
 )
 
+
 type SSHKeyPair struct {
 	Name        string `json:"name" bson:"name",omitempty"`
 	FingerPrint string `json:"fingerprint" bson:"fingerprint"`
@@ -758,6 +759,19 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Reg
 	}
 	return regions, types.CustomCPError{}
 }
+func GetZones( ctx utils.Context, region string ) ([]*string, types.CustomCPError) {
+	bytes := api_handler.AzureZoneNotSupportedRegions
+
+	var regionList []models.AzureRegion
+
+	err := json.Unmarshal(bytes, &regionList)
+	if err != nil {
+		return []*string{}, types.CustomCPError{StatusCode:512 ,Error:"Region not unmarshalled",Description:"Region not unmarshalled"}
+	}
+	if region ==
+	return zones, types.CustomCPError{}
+}
+
 func GetAllMachines() ([]string, types.CustomCPError) {
 
 	regions, err := getAllVMSizes()
