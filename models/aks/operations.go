@@ -719,7 +719,7 @@ func generateKubernetesVersion(c AKSCluster) *string {
 	if c.IsAdvanced {
 		return to.StringPtr(c.KubernetesVersion)
 	} else {
-		return to.StringPtr("1.16.10")
+		return to.StringPtr("1.15.11")
 	}
 }
 
