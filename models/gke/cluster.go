@@ -851,12 +851,13 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		for _ ,prePool :=range previousCluster.NodePools {
 			if pool.Name == prePool.Name {
 				existInPrevious = true
-				addincluster =true
+
 			}
 		}
 		if existInPrevious == false{
 			addpools = append(addpools,pool)
 			addedIndex = append(addedIndex,index)
+			addincluster =true
 		}
 	}
 	if addincluster ==true {
