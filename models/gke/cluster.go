@@ -845,11 +845,13 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	var addpools []*NodePool
 	var addedIndex []int
+	addincluster := false
 	for index, pool := range cluster.NodePools{
 		existInPrevious :=false
 		for _ ,prePool :=range previousCluster.NodePools {
 			if pool.Name == prePool.Name {
 				existInPrevious = true
+				addincluster =true
 			}
 		}
 		if existInPrevious == false{
@@ -857,12 +859,12 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			addedIndex = append(addedIndex,index)
 		}
 	}
-
-	err = AddNodepool(cluster, ctx, gkeOps, addpools)
-	if err != (types.CustomCPError{}) {
-		return err
+	if addincluster ==true {
+		err = AddNodepool(cluster, ctx, gkeOps, addpools)
+		if err != (types.CustomCPError{}) {
+			return err
+		}
 	}
-
 	for _ ,prePool :=range previousCluster.NodePools {
 		existInNew :=false
 		for _, pool := range cluster.NodePools{
