@@ -90,7 +90,7 @@ func setEnv() {
 	os.Setenv("logger_url", "https://dapis.cloudplex.io")
 	os.Setenv("network_url", "https://dapis.cloudplex.io")
 	os.Setenv("vault_url", "https://dapis.cloudplex.io")
-	os.Setenv("raccoon_url", "http://localhost:5000")
+	os.Setenv("raccoon_url", "https://dapis.cloudplex.io")
 	os.Setenv("rbac_url", "http://localhost:7777")
 	os.Setenv("jump_host_ip", "52.220.196.92")
 	os.Setenv("jump_host_ssh_key", "/home/zunaira/Downloads/ahmad.txt")
