@@ -689,18 +689,18 @@ func (cloud *IBM) terminateCluster(cluster *Cluster_Def, ctx utils.Context) type
 	beego.Info(string(body))
 
 	for {
-		utils.SendLog(ctx.Data.Company, "fetching cluster status...", "error", cluster.ProjectId)
-		res, err := cloud.fetchClusterStatus(cluster, ctx, "")
+		//	utils.SendLog(ctx.Data.Company, "fetching cluster status...", "error", cluster.ProjectId)
+		_, err := cloud.fetchClusterStatus(cluster, ctx, "")
 
 		if err != (types.CustomCPError{}) {
-			utils.SendLog(ctx.Data.Company, err.Error, "error", cluster.ProjectId)
+			/*utils.SendLog(ctx.Data.Company, err.Error, "error", cluster.ProjectId)
 			utils.SendLog(ctx.Data.Company, err.Description, "error", cluster.ProjectId)
-			utils.SendLog(ctx.Data.Company, "error occured. breaking the loop", "error", cluster.ProjectId)
+			utils.SendLog(ctx.Data.Company, "error occured. breaking the loop", "error", cluster.ProjectId)*/
 			break
-		} else {
-			utils.SendLog(ctx.Data.Company, res.State, "error", cluster.ProjectId)
-		}
-		utils.SendLog(ctx.Data.Company, "waiting...before trying again", "error", cluster.ProjectId)
+		} //else {
+		//	utils.SendLog(ctx.Data.Company, res.State, "error", cluster.ProjectId)
+		//}
+		//	utils.SendLog(ctx.Data.Company, "waiting...before trying again", "error", cluster.ProjectId)
 		time.Sleep(time.Second * 100)
 		/*if err == (types.CustomCPError{}) && response.State == "deleting" {
 			break
