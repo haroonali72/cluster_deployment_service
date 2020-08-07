@@ -38,9 +38,9 @@ var AzureZoneNotSupportedRegions = []byte(
 
 var AzureZone =[]byte(
 	`[
-	{ "name": "a" ,"zone": "1"},
-	{"name" :"b" ,"zone" : "2"},
-	{"name" :"c" ,"zone" : "3"}
+	{ "label": "a" ,"value": "1"},
+	{"label" :"b" ,"value" : "2"},
+	{"label" :"c" ,"value" : "3"}
 ]`)
 
 func GetAwsRegions() (reg []models.Region, err error) {
