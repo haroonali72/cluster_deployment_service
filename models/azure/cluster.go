@@ -759,21 +759,20 @@ func GetRegions(credentials vault.AzureProfile, ctx utils.Context) ([]models.Reg
 	}
 	return regions, types.CustomCPError{}
 }
-func GetZones(  region string ) ( []string, types.CustomCPError) {
+func GetZones(  region string ) ([]models.AzureZone, types.CustomCPError) {
 	bytes := api_handler.AzureZoneNotSupportedRegions
 	bytes1 := api_handler.AzureZone
 	var regionList []models.AzureRegion
 	var zoneList []models.AzureZone
-	var zones []string
 
 	err := json.Unmarshal(bytes, &regionList)
 	if err != nil {
-		return []string{}, types.CustomCPError{StatusCode:512 ,Error:"Region not unmarshalled",Description:"Region not unmarshalled"}
+		return []models.AzureZone{}, types.CustomCPError{StatusCode:512 ,Error:"Region not unmarshalled",Description:"Region not unmarshalled"}
 	}
 
 	err = json.Unmarshal(bytes1, &zoneList)
 	if err != nil {
-		return []string{}, types.CustomCPError{StatusCode:512 ,Error:"Zones not unmarshalled",Description:"Zones not unmarshalled"}
+		return []models.AzureZone{}, types.CustomCPError{StatusCode:512 ,Error:"Zones not unmarshalled",Description:"Zones not unmarshalled"}
 	}
 
 	for _,notAllowedRegion := range regionList{
@@ -785,10 +784,8 @@ func GetZones(  region string ) ( []string, types.CustomCPError) {
 			}
 		}
 	}
-	for _,zone := range zoneList{
-		zones = append(zones,zone.Zone )
-	}
-	return zones, types.CustomCPError{}
+
+	return zoneList, types.CustomCPError{}
 }
 
 func GetAllMachines() ([]string, types.CustomCPError) {
