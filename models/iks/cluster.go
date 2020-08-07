@@ -1064,14 +1064,14 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 
 	}
 
-	poolIndex_ := -1
+	poolIndex_, currentpoolIndex_ := -1, -1
 	for _, dif := range difCluster {
-		if dif.Type != "update" || len(dif.Path) < 2 {
+		if dif.Type != "update" || len(dif.Path) < 1 {
 			continue
 		}
-		currentpoolIndex_, _ := strconv.Atoi(dif.Path[1])
-		if len(dif.Path) > 2 {
 
+		if len(dif.Path) > 2 {
+			currentpoolIndex_, _ = strconv.Atoi(dif.Path[1])
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
 				break
