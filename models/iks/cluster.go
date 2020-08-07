@@ -1040,12 +1040,12 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 			cluster.Status = models.ClusterUpdateFailed
 			confError := UpdateCluster(cluster, false, ctx)
 			if confError != nil {
-				ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs("IKSpdateRunningClusterModel:  Update - "+confError.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			//err := ApiError(err, "Error occured while apply cluster changes", 500)
 			err_ := db.CreateError(cluster.ProjectId, ctx.Data.Company, models.EKS, ctx, err2)
 			if err_ != nil {
-				ctx.SendLogs("EKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+				ctx.SendLogs("IKSUpdateRunningClusterModel:  Update - "+err_.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 			}
 			publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
 			return err2
@@ -1066,7 +1066,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 
 	poolIndex_ := -1
 	for _, dif := range difCluster {
-		if dif.Type != "update" || len(dif.Path) < 1 {
+		if dif.Type != "update" || len(dif.Path) < 2 {
 			continue
 		}
 		currentpoolIndex_, _ := strconv.Atoi(dif.Path[1])
@@ -1163,7 +1163,7 @@ func PatchRunningIKSCluster(cluster Cluster_Def, credentials vault.IBMCredential
 	err_update := UpdateCluster(cluster, false, ctx)
 	if err_update != nil {
 
-		ctx.SendLogs("EKSpdateRunningClusterModel:  Update - "+err_update.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+		ctx.SendLogs("IKSpdateRunningClusterModel:  Update - "+err_update.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 	}
 
 	publisher.Notify(ctx.Data.ProjectId, "Redeploy Status Available", ctx)
