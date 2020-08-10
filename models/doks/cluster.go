@@ -687,7 +687,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 		return err1
 	}
 
-	difCluster, previousPoolCount, newPoolCount, err2 := CompareClusters(ctx)
+	difCluster, _, _, err2 := CompareClusters(ctx)
 	if err2 != nil {
 		if strings.Contains(err2.Error(), "Nothing to update") {
 			cluster.CloudplexStatus = models.ClusterCreated
@@ -702,7 +702,7 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	if previousPoolCount < newPoolCount {
+	/*if previousPoolCount < newPoolCount {
 		var pools []*KubernetesNodePool
 		for i := previousPoolCount; i < newPoolCount; i++ {
 			pools = append(pools, cluster.NodePools[i])
@@ -736,6 +736,60 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			}
 		}
 	}
+	*/
+	previousCluster, err := GetPreviousDOKSCluster(ctx)
+	if err != nil {
+		return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err.Error()}
+	}
+
+	previousPoolCount := len(previousCluster.NodePools)
+
+	var addpools []*KubernetesNodePool
+
+	var addedIndex []int
+
+	addincluster := false
+
+	for index, pool := range cluster.NodePools{
+
+		existInPrevious :=false
+
+		for _ ,prePool :=range previousCluster.NodePools {
+			if pool.Name == prePool.Name {
+				existInPrevious = true
+			}
+		}
+
+		if existInPrevious == false{
+			addpools = append(addpools,pool)
+			addedIndex = append(addedIndex,index)
+			addincluster =true
+
+		}
+
+	}
+
+	if addincluster ==true {
+
+		err := AddNodepool(cluster, ctx, doksOps, addpools, credentials)
+		if err != (types.CustomCPError{}) {
+			return err
+		}
+	}
+
+	for _ ,prePool :=range previousCluster.NodePools {
+		existInNew :=false
+		for _, pool := range cluster.NodePools{
+			if pool.ID == prePool.ID {
+				existInNew = true
+			}
+		}
+
+		if existInNew == false{
+			DeleteNodepool(cluster, ctx, doksOps, prePool.ID,credentials)
+		}
+	}
+
 	done,done1,index:=false,false,-1
 	for _, dif := range difCluster {
 
@@ -744,11 +798,19 @@ func PatchRunningDOKSCluster(cluster KubernetesCluster, credentials vault.DOCred
 			if poolIndex > (previousPoolCount - 1) {
 				continue
 			}
+
 			if poolIndex > index {
 				index=poolIndex
 				done=false
 			}
+
+			for _, in :=range addedIndex {
+				if in == poolIndex {
+					continue
+				}
+			}
 		}
+
 		if dif.Type == "update"  || dif.Type == "create"{
 			if dif.Path[0]=="AutoUpgrade" || dif.Path[0]=="Tags"{
 				if !done1 {
@@ -857,6 +919,7 @@ func FetchStatus(credentials vault.DOCredentials, ctx utils.Context) (KubeCluste
 
 	return status, errr
 }
+
 func TerminateCluster(credentials vault.DOCredentials, ctx utils.Context) (customError types.CustomCPError) {
 
 	publisher := utils.Notifier{}
