@@ -37,12 +37,20 @@ type Vpc struct {
 	Link  string `json:"link" bson:"link"`
 }
 
+type AzureSubnet struct {
+	SubnetId string 	`json:"subnet_id" bson:"subnet_id"`
+	Name     string 	`json:"name" bson:"name"`
+	CIDR     string 	`json:"cidr" bson:"cidr"`
+	Link     string 	`json:"link" bson:"link"`
+	Zone     []string 	`json:"availability_zone" bson:"availability_zone"`
+}
+
 type Subnet struct {
-	SubnetId string `json:"subnet_id" bson:"subnet_id"`
-	Name     string `json:"name" bson:"name"`
-	CIDR     string `json:"cidr" bson:"cidr"`
-	Link     string `json:"link" bson:"link"`
-	Zone     string `json:"availability_zone" bson:"availability_zone"`
+	SubnetId string 	`json:"subnet_id" bson:"subnet_id"`
+	Name     string 	`json:"name" bson:"name"`
+	CIDR     string 	`json:"cidr" bson:"cidr"`
+	Link     string 	`json:"link" bson:"link"`
+	Zone     string 	`json:"availability_zone" bson:"availability_zone"`
 }
 
 type SecurityGroup struct {
@@ -67,7 +75,7 @@ type AzureNetwork struct {
 
 type AzureDefinition struct {
 	Vnet           VNet             `json:"vpc" bson:"vpc"`
-	Subnets        []*Subnet        `json:"subnets" bson:"subnets"`
+	Subnets        []*AzureSubnet   `json:"subnets" bson:"subnets"`
 	SecurityGroups []*SecurityGroup `json:"security_groups" bson:"security_groups"`
 	ResourceGroup  string           `json:"resource_group" bson:"resource_group"`
 }

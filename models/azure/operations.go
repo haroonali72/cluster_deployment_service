@@ -225,18 +225,16 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 	var cpVms []*VM
 	subnetId := cloud.GetSubnets(pool, networkData)
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
+	zones := cloud.GetZones(pool,networkData)
 	vpcName := networkData.Definition[0].Vnet.Name
-	//subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/virtualNetworks/testsadaf-vnet/subnets/default"
-	//var sgIds []*string
-	//sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
-	//sgIds = append(sgIds, &sid)
+
 	if pool.PoolRole == "master" {
 		var publicIPaddress network.PublicIPAddress
 		var err types.CustomCPError
 		if pool.EnablePublicIP {
 			IPname := "pip-" + pool.Name
 			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
-			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
+			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx,zones[0])
 			if err != (types.CustomCPError{}) {
 				return nil, "", err
 			}
@@ -256,7 +254,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		cloud.Resources["Nic-"+projectId] = nicName
 
 		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", projectId)
-		vm, private_key, _, err1 := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, projectId, vpcName)
+		vm, private_key, _, err1 := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, projectId, vpcName,zones)
 		if err1 != (types.CustomCPError{}) {
 			return nil, "", err1
 		}
@@ -282,7 +280,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		return cpVms, private_key, types.CustomCPError{}
 
 	} else {
-		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token, vpcName)
+		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token, vpcName,zones)
 		if err != (types.CustomCPError{}) {
 			return nil, "", err
 		}
@@ -356,7 +354,16 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	}
 	return ""
 }
-
+func (cloud *AZURE) GetZones(pool *NodePool, network types.AzureNetwork) []string {
+	for _, definition := range network.Definition {
+		for _, subnet := range definition.Subnets {
+			if subnet.Name == pool.PoolSubnet {
+				return subnet.Zone
+			}
+		}
+	}
+	return []string{}
+}
 func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Context) (*Cluster_Def, types.CustomCPError) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
@@ -657,11 +664,14 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	return types.CustomCPError{}
 }
 
-func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context) (network.PublicIPAddress, types.CustomCPError) {
+func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context,zone string) (network.PublicIPAddress, types.CustomCPError) {
 
 	pipParameters := network.PublicIPAddress{
 		Location: &cloud.Region,
+		Sku:&network.PublicIPAddressSku{Name:"standard"},
+		Zones : &[]string{zone},
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+			PublicIPAllocationMethod: network.IPAllocationMethod("Static"),
 			DNSSettings: &network.PublicIPAddressDNSSettings{
 				DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
 			},
@@ -972,7 +982,13 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 func getWoodpecker() string {
 	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
 }
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, projectId, vpcName string) (compute.VirtualMachine, string, string, types.CustomCPError) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, projectId, vpcName string,zones []string) (compute.VirtualMachine, string, string, types.CustomCPError) {
+	var zone []string
+	if zones != nil{
+		zone = []string{zones[0]}
+	}else {
+		zone = zones
+	}
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -1032,6 +1048,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		Tags: map[string]*string{
 			"network": to.StringPtr(vpcName),
 		},
+		Zones: &zone,
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			HardwareProfile: &compute.HardwareProfile{
 				VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),
@@ -1072,7 +1089,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 		fileName = append(fileName, "azure-volume-mount.sh")
 	}
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+/*	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, "", "", ApiError(err, "Error in creating VM", int(models.CloudStatusCode))
@@ -1081,7 +1098,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
 		vm.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
-
+*/
 	vm.StorageProfile.DataDisks = &storage
 
 	private := ""
@@ -1826,7 +1843,7 @@ func deleteFile(keyName string, ctx utils.Context) types.CustomCPError {
 	}
 	return types.CustomCPError{}
 }
-func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token, vpcName string) (compute.VirtualMachineScaleSetVMListResultPage, types.CustomCPError, string) {
+func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token, vpcName string,zones []string) (compute.VirtualMachineScaleSetVMListResultPage, types.CustomCPError, string) {
 
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -1867,6 +1884,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	params := compute.VirtualMachineScaleSet{
 		Name:     to.StringPtr(pool.Name),
 		Location: to.StringPtr(cloud.Region),
+		Zones: to.StringSlicePtr(zones),
 		Identity: &compute.VirtualMachineScaleSetIdentity{
 			Type: compute.ResourceIdentityTypeSystemAssigned,
 		},
