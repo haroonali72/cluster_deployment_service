@@ -983,6 +983,12 @@ func getWoodpecker() string {
 	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
 }
 func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, projectId, vpcName string,zones []string) (compute.VirtualMachine, string, string, types.CustomCPError) {
+	var zone []string
+	if zones != nil{
+		zone = []string{zones[0]}
+	}else {
+		zone = zones
+	}
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -1042,7 +1048,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		Tags: map[string]*string{
 			"network": to.StringPtr(vpcName),
 		},
-		Zones: &zones,
+		Zones: &zone,
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			HardwareProfile: &compute.HardwareProfile{
 				VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),

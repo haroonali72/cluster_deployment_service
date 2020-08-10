@@ -7294,16 +7294,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001dc7cb0.false:
+  482.0xc001dc2b70.false:
     title: "false"
     type: object
-  618.0xc001310060.false:
+  618.0xc0012e4d50.false:
     title: "false"
     type: object
-  713.0xc001c798f0.false:
+  713.0xc001c6a7b0.false:
     title: "false"
     type: object
-  964.0xc001675320.false:
+  964.0xc0016801e0.false:
     title: "false"
     type: object
   7432.string:
@@ -7318,16 +7318,16 @@ definitions:
   11801.string:
     title: string
     type: object
-  80946.string:
-    title: string
-    type: object
-  89362.0xc001d8af30.false:
-    title: "false"
-    type: object
   103242.string:
     title: string
     type: object
-  14391.0xc001e03c20.false:
+  14391.0xc001df2ae0.false:
+    title: "false"
+    type: object
+  80946.string:
+    title: string
+    type: object
+  89362.0xc001d6bdd0.false:
     title: "false"
     type: object
   X-Profile-Id:
@@ -7609,7 +7609,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc001310060.false'
+        $ref: '#/definitions/618.0xc0012e4d50.false'
       name:
         description: Name of the project [required]
         type: string
@@ -8051,7 +8051,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc001675320.false'
+        $ref: '#/definitions/964.0xc0016801e0.false'
       name:
         type: string
       network_name:
@@ -9918,7 +9918,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/89362.0xc001d8af30.false'
+        $ref: '#/definitions/89362.0xc001d6bdd0.false'
       kube_version:
         type: string
       name:
@@ -10192,7 +10192,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001e03c20.false'
+        $ref: '#/definitions/14391.0xc001df2ae0.false'
       name:
         type: string
       node_pools:
