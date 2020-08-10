@@ -234,7 +234,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		if pool.EnablePublicIP {
 			IPname := "pip-" + pool.Name
 			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
-			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
+			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx,zones[0])
 			if err != (types.CustomCPError{}) {
 				return nil, "", err
 			}
@@ -664,11 +664,12 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	return types.CustomCPError{}
 }
 
-func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context) (network.PublicIPAddress, types.CustomCPError) {
+func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context,zone string) (network.PublicIPAddress, types.CustomCPError) {
 
 	pipParameters := network.PublicIPAddress{
 		Location: &cloud.Region,
-		Sku:&network.PublicIPAddressSku{Name:"standard"},
+	//	Sku:&network.PublicIPAddressSku{Name:"standard"},
+		Zones : &[]string{zone},
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 			DNSSettings: &network.PublicIPAddressDNSSettings{
 				DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
