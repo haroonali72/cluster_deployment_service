@@ -227,10 +227,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
 	zones := cloud.GetZones(pool,networkData)
 	vpcName := networkData.Definition[0].Vnet.Name
-	//subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/virtualNetworks/testsadaf-vnet/subnets/default"
-	//var sgIds []*string
-	//sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
-	//sgIds = append(sgIds, &sid)
+
 	if pool.PoolRole == "master" {
 		var publicIPaddress network.PublicIPAddress
 		var err types.CustomCPError
@@ -671,6 +668,7 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 
 	pipParameters := network.PublicIPAddress{
 		Location: &cloud.Region,
+		Sku:&network.PublicIPAddressSku{Name:"standard"},
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 			DNSSettings: &network.PublicIPAddressDNSSettings{
 				DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
@@ -1089,7 +1087,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 		fileName = append(fileName, "azure-volume-mount.sh")
 	}
-	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+/*	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, "", "", ApiError(err, "Error in creating VM", int(models.CloudStatusCode))
@@ -1098,7 +1096,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
 		vm.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
-
+*/
 	vm.StorageProfile.DataDisks = &storage
 
 	private := ""
