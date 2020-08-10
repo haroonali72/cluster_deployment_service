@@ -1089,7 +1089,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		cloud.Resources["ext-"+pool.Name] = "ext-" + pool.Name
 		fileName = append(fileName, "azure-volume-mount.sh")
 	}
-/*	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
+	userData, err := userData2.GetUserData(token, getWoodpecker()+"/"+projectId, fileName, pool.PoolRole, ctx)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
 		return compute.VirtualMachine{}, "", "", ApiError(err, "Error in creating VM", int(models.CloudStatusCode))
@@ -1098,7 +1098,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 		encodedData := b64.StdEncoding.EncodeToString([]byte(userData))
 		vm.OsProfile.CustomData = to.StringPtr(encodedData)
 	}
-*/
+
 	vm.StorageProfile.DataDisks = &storage
 
 	private := ""
