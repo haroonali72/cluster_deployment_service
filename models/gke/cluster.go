@@ -790,7 +790,7 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 		return err
 	}
 
-	difCluster, previousPoolCount, newPoolCount, err1 := CompareClusters(ctx)
+	difCluster, _, _, err1 := CompareClusters(ctx)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "Nothing to update") {
 			cluster.CloudplexStatus = models.ClusterCreated
@@ -805,7 +805,13 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 
 	_, _ = utils.SendLog(ctx.Data.Company, "Updating running cluster : "+cluster.Name, models.LOGGING_LEVEL_INFO, ctx.Data.ProjectId)
 
-	if previousPoolCount < newPoolCount {
+	previousCluster, err1 := GetPreviousGKECluster(ctx)
+	if err1 != nil {
+		return types.CustomCPError{Error: "Error in updating running cluster", StatusCode: 512, Description: err1.Error()}
+	}
+	previousPoolCount := len(previousCluster.NodePools)
+
+/*	if previousPoolCount < newPoolCount {
 		var pools []*NodePool
 		for i := previousPoolCount; i < newPoolCount; i++ {
 			pools = append(pools, cluster.NodePools[i])
@@ -835,13 +841,56 @@ func PatchRunningGKECluster(cluster GKECluster, credentials gcp.GcpCredentials, 
 			}
 		}
 	}
+*/
+
+	var addpools []*NodePool
+	var addedIndex []int
+	addincluster := false
+	for index, pool := range cluster.NodePools{
+		existInPrevious :=false
+		for _ ,prePool :=range previousCluster.NodePools {
+			if pool.Name == prePool.Name {
+				existInPrevious = true
+
+			}
+		}
+		if existInPrevious == false{
+			addpools = append(addpools,pool)
+			addedIndex = append(addedIndex,index)
+			addincluster =true
+		}
+	}
+	if addincluster ==true {
+		err = AddNodepool(cluster, ctx, gkeOps, addpools)
+		if err != (types.CustomCPError{}) {
+			return err
+		}
+	}
+	for _ ,prePool :=range previousCluster.NodePools {
+		existInNew :=false
+		for _, pool := range cluster.NodePools{
+			if pool.Name == prePool.Name {
+				existInNew = true
+			}
+		}
+		if existInNew == false{
+			DeleteNodepool(cluster, ctx, gkeOps, prePool.Name)
+		}
+
+	}
+
 
 	for _, dif := range difCluster {
 
 		if len(dif.Path) > 2 {
 			poolIndex, _ := strconv.Atoi(dif.Path[1])
 			if poolIndex > (previousPoolCount - 1) {
-				break
+				continue
+			}
+			for _, index :=range addedIndex{
+				if index == poolIndex{
+					continue
+				}
 			}
 		}
 		if dif.Type == "update" {
@@ -1662,7 +1711,7 @@ func UpdateNodePoolScaling(cluster GKECluster, ctx utils.Context, gkeOps GKE, po
 	return types.CustomCPError{}
 }
 
-func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*NodePool, poolIndex int) types.CustomCPError {
+func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*NodePool) types.CustomCPError {
 
 	err := gkeOps.AddNodePool(cluster.Name, pools, ctx)
 	if err != (types.CustomCPError{}) {
@@ -1679,10 +1728,12 @@ func AddNodepool(cluster GKECluster, ctx utils.Context, gkeOps GKE, pools []*Nod
 		})
 	}
 
-	oldCluster.NodePools = cluster.NodePools
-	for _,pool := range cluster.NodePools{
+
+	for _,pool := range pools{
 		pool.PoolStatus = true
+		oldCluster.NodePools =append(oldCluster.NodePools,pool)
 	}
+
 	err1 = AddPreviousGKECluster(oldCluster, ctx, true)
 	if err1 != nil {
 		return updationFailedError(cluster, ctx, types.CustomCPError{Error: "Error in adding nodepool in running cluster", Description: err1.Error(), StatusCode: int(models.CloudStatusCode)})

@@ -1067,8 +1067,14 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 
 	aksOps.ProjectId = cluster.ProjectId
 	if previousPoolCount < newPoolCount {
+		isClusterUpdated := false
+		isPoolUpdated := make(map[int]bool)
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
+			isPoolUpdated[poolIndex] = false
 			for _, diff := range difCluster {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+					continue
+				}
 				if diff.Type == "create" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.To.(*string) == *nodePool.Name {
 					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {
@@ -1080,7 +1086,7 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 						})
 						return
 					}
-				} else if diff.Type == "update" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) {
+				} else if (diff.Type == "update" || diff.Type == "delete" || diff.Type == "create") && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && !isPoolUpdated[poolIndex] {
 					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {
 						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -1091,6 +1097,19 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 						})
 						return
 					}
+					isPoolUpdated[poolIndex] = true
+				} else if (diff.Type == "update" || diff.Type == "create" || diff.Type == "delete") && diff.Path[0] != "AgentPoolProfiles" && !isClusterUpdated {
+					err := aksOps.CreateCluster(cluster, token, ctx)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+					isClusterUpdated = true
 				}
 			}
 		}
@@ -1107,6 +1126,9 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		}
 		for _, nodePool := range previousCluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+					continue
+				}
 				if diff.Type == "delete" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[2] == "Name" && *diff.From.(*string) == *nodePool.Name {
 					err := aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {
@@ -1125,6 +1147,9 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 		isClusterUpdated := false
 		for poolIndex, nodePool := range cluster.AgentPoolProfiles {
 			for _, diff := range difCluster {
+				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
+					continue
+				}
 				if diff.Type == "update" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) {
 					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {

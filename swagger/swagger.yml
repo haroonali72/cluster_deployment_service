@@ -1197,6 +1197,29 @@ paths:
           description: '{"error": "Not found"}'
         "500":
           description: '{"error": "Runtime Error"}'
+  /cluster/azure/getzones/{region}:
+    get:
+      tags:
+      - cluster/azure
+      description: return zones against a region
+      operationId: AzureClusterController.Get Availability Zone
+      parameters:
+      - in: path
+        name: region
+        description: Azure region
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '[]models.AzureZone'
+        "400":
+          description: '{"error": "Bad Request"}'
+        "401":
+          description: '{"error": "Unauthorized"}'
+        "404":
+          description: '{"error": "Not Found"}'
+        "500":
+          description: '{"error": "Bad Request"}'
   /cluster/azure/machine/info:
     get:
       tags:
@@ -7271,16 +7294,16 @@ definitions:
   '*string':
     title: '*string'
     type: object
-  482.0xc001d6e7e0.false:
+  482.0xc001daa510.false:
     title: "false"
     type: object
-  618.0xc0012a8660.false:
+  618.0xc0012d2cf0.false:
     title: "false"
     type: object
-  713.0xc001c1ca20.false:
+  713.0xc001c6a150.false:
     title: "false"
     type: object
-  964.0xc00161ce40.false:
+  964.0xc001639b60.false:
     title: "false"
     type: object
   7432.string:
@@ -7295,17 +7318,17 @@ definitions:
   11801.string:
     title: string
     type: object
-  80770.string:
-    title: string
-    type: object
-  85040.0xc001d11a40.false:
+  14391.0xc001dd4480.false:
     title: "false"
     type: object
-  101058.string:
+  80946.string:
     title: string
     type: object
-  14391.0xc001d9c750.false:
+  89362.0xc001d55770.false:
     title: "false"
+    type: object
+  103242.string:
+    title: string
     type: object
   X-Profile-Id:
     title: X-Profile-Id
@@ -7415,7 +7438,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/80770.string'
+        $ref: '#/definitions/80946.string'
       type:
         type: string
   aks.AKSClusterTemplateMetadata:
@@ -7586,7 +7609,7 @@ definitions:
         description: Company Id of the project [optional]
         type: string
       kube_credentials:
-        $ref: '#/definitions/618.0xc0012a8660.false'
+        $ref: '#/definitions/618.0xc0012d2cf0.false'
       name:
         description: Name of the project [required]
         type: string
@@ -8028,7 +8051,7 @@ definitions:
       cloud:
         $ref: '#/definitions/models.Cloud'
       kube_credentials:
-        $ref: '#/definitions/964.0xc00161ce40.false'
+        $ref: '#/definitions/964.0xc001639b60.false'
       name:
         type: string
       network_name:
@@ -8306,6 +8329,8 @@ definitions:
       company_id:
         description: ID of compnay [optional]
         type: string
+      id:
+        type: string
       is_advance:
         type: boolean
       is_expert:
@@ -8375,6 +8400,8 @@ definitions:
       auto_scale:
         description: Autoscaling configuration, possible value 'true' or 'false' [required]
         type: boolean
+      id:
+        type: string
       labels:
         description: Node pool labels, it would be key value pair [optional]
         additionalProperties:
@@ -8604,7 +8631,7 @@ definitions:
       status:
         type: string
       tags:
-        $ref: '#/definitions/101058.string'
+        $ref: '#/definitions/103242.string'
       template_id:
         type: string
       version:
@@ -9856,11 +9883,11 @@ definitions:
         description: Pool node count [required]
         type: integer
         format: int64
-      pool_status:
-        type: boolean
-      poolId:
+      pool_Id:
         description: Cluster pool id [optional]
         type: string
+      pool_status:
+        type: boolean
       subnet_id:
         description: ID of subnet in which pool will be created [required]
         type: string
@@ -9891,7 +9918,7 @@ definitions:
       is_cloudplex:
         type: boolean
       kube_credentials:
-        $ref: '#/definitions/85040.0xc001d11a40.false'
+        $ref: '#/definitions/89362.0xc001d55770.false'
       kube_version:
         type: string
       name:
@@ -10165,7 +10192,7 @@ definitions:
       company_id:
         type: string
       kube_credentials:
-        $ref: '#/definitions/14391.0xc001d9c750.false'
+        $ref: '#/definitions/14391.0xc001dd4480.false'
       name:
         type: string
       node_pools:

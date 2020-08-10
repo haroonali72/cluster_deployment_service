@@ -1263,6 +1263,41 @@ func (c *AzureClusterController) GetRegions() {
 	c.ServeJSON()
 }
 
+// @Title Get Availability Zone
+// @Description return zones against a region
+// @Param	region	 	path	string	true	"Azure region"
+// @Success 200 			[]models.AzureZone
+// @Failure 400 {"error": "Bad Request"}
+// @Failure 401 {"error": "Unauthorized"}
+// @Failure 404 {"error": "Not Found"}
+// @Failure 500 			{"error": "Bad Request"}
+// @router /getzones/:region [get]
+func (c *AzureClusterController) GetZones() {
+	ctx := new(utils.Context)
+
+	region := c.GetString(":region")
+	if region == "" {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = map[string]string{"error": "region is empty"}
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("AWSClusterController: fetch availability zones.", models.LOGGING_LEVEL_INFO, models.Backend_Logging)
+
+	az, err1 := azure.GetZones( region )
+	if err1 != (types.CustomCPError{}) {
+		c.Ctx.Output.SetStatus(err1.StatusCode)
+		c.Data["json"] = err1
+		c.ServeJSON()
+		return
+	}
+
+	ctx.SendLogs("Zones fetched", models.LOGGING_LEVEL_INFO, models.Audit_Trails)
+	c.Data["json"] = az
+	c.ServeJSON()
+}
+
 // @Title Get VM Sizes
 // @Description Get list of azure VM sizes
 // @Success 200 []string

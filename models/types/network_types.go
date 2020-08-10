@@ -62,6 +62,7 @@ type AzureNetwork struct {
 	ModificationDate time.Time          `json:"-" bson:"modification_date"`
 	Definition       []*AzureDefinition `json:"definition" bson:"definition"`
 	IsPrivate        bool               `json:"is_private" bson:"is_private"`
+
 }
 
 type AzureDefinition struct {
