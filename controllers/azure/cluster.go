@@ -1266,7 +1266,7 @@ func (c *AzureClusterController) GetRegions() {
 // @Title Get Availability Zone
 // @Description return zones against a region
 // @Param	region	 	path	string	true	"Azure region"
-// @Success 200 			[]models.AzureZone
+// @Success 200  []models.AzureZone
 // @Failure 400 {"error": "Bad Request"}
 // @Failure 401 {"error": "Unauthorized"}
 // @Failure 404 {"error": "Not Found"}

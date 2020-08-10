@@ -88,7 +88,7 @@ func setEnv() {
 	os.Setenv("mongo_ssh_keys_collection", "ssh_key")
 	os.Setenv("redis_url", "redis:6379")
 	os.Setenv("logger_url", "https://dapis.cloudplex.io")
-	os.Setenv("network_url", "https://dapis.cloudplex.io")
+	os.Setenv("network_url", "http://localhost:9080")
 	os.Setenv("vault_url", "https://dapis.cloudplex.io")
 	os.Setenv("raccoon_url", "https://dapis.cloudplex.io")
 	os.Setenv("rbac_url", "http://localhost:7777")

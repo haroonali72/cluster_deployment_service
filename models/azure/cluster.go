@@ -21,7 +21,7 @@ import (
 
 
 type SSHKeyPair struct {
-	Name        string `json:"name" bson:"name",omitempty"`
+	Name        string `json:"name" bson:"name,omitempty"`
 	FingerPrint string `json:"fingerprint" bson:"fingerprint"`
 }
 
