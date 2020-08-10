@@ -20,6 +20,7 @@ import (
 	"github.com/r3labs/diff"
 	"github.com/signalsciences/ipv4"
 	"gopkg.in/mgo.v2/bson"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -818,7 +819,10 @@ func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]strin
 			versions = append(versions, *versionProfile.OrchestratorVersion)
 		}
 	}
-
+	
+	sort.Slice(versions, func(i, j int) bool {
+		return versions[i]> versions[j]
+	})
 	return versions, types.CustomCPError{}
 
 }
