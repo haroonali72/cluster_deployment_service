@@ -668,9 +668,10 @@ func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname 
 
 	pipParameters := network.PublicIPAddress{
 		Location: &cloud.Region,
-	//	Sku:&network.PublicIPAddressSku{Name:"standard"},
+		Sku:&network.PublicIPAddressSku{Name:"standard"},
 		Zones : &[]string{zone},
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+			PublicIPAllocationMethod: network.IPAllocationMethod("Static"),
 			DNSSettings: &network.PublicIPAddressDNSSettings{
 				DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
 			},
