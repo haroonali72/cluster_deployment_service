@@ -138,9 +138,9 @@ type AutoScaling struct {
 
 func KubeVersions(ctx utils.Context) []string {
 	var kubeVersions []string
-	kubeVersions = append(kubeVersions, "1.14")
-	kubeVersions = append(kubeVersions, "1.15")
 	kubeVersions = append(kubeVersions, "1.16")
+	kubeVersions = append(kubeVersions, "1.15")
+	kubeVersions = append(kubeVersions, "1.14")
 	return kubeVersions
 }
 

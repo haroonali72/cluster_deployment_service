@@ -725,7 +725,7 @@ func generateKubernetesVersion(c AKSCluster) *string {
 
 func generateDnsPrefix(c AKSCluster) *string {
 	if c.IsAdvanced {
-		return to.StringPtr(c.DNSPrefix + "-dns")
+		return to.StringPtr(c.DNSPrefix)
 	} else {
 		return to.StringPtr(c.Name + "-dns")
 	}

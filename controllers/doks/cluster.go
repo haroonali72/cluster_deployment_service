@@ -721,13 +721,7 @@ func (c *DOKSClusterController) Delete() {
 		c.ServeJSON()
 		return
 	}
-	if cluster.CloudplexStatus == (models.ClusterTerminationFailed) {
-		ctx.SendLogs("DOKSClusterController: Cluster is in termination failed state", models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
-		c.Ctx.Output.SetStatus(409)
-		c.Data["json"] = map[string]string{"error": "cluster is in termination failed state"}
-		c.ServeJSON()
-		return
-	}
+
 	ctx.SendLogs("DOKSClusterController: Deleting cluster "+cluster.Name+" of the project"+cluster.ProjectId, models.LOGGING_LEVEL_INFO, models.Backend_Logging)
 
 	err = doks.DeleteKubernetesCluster(*ctx)

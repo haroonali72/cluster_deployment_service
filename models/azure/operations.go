@@ -225,18 +225,19 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 	var cpVms []*VM
 	subnetId := cloud.GetSubnets(pool, networkData)
 	sgIds := cloud.GetSecurityGroups(pool, networkData)
+	zones := cloud.GetZones(pool,networkData)
 	vpcName := networkData.Definition[0].Vnet.Name
-	//subnetId := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/virtualNetworks/testsadaf-vnet/subnets/default"
-	//var sgIds []*string
-	//sid := "/subscriptions/aa94b050-2c52-4b7b-9ce3-2ac18253e61e/resourceGroups/testsadaf/providers/Microsoft.Network/networkSecurityGroups/fgfdnsg"
-	//sgIds = append(sgIds, &sid)
+	if len(zones) == 0{
+		zones = []string{}
+		zones =append(zones,"")
+	}
 	if pool.PoolRole == "master" {
 		var publicIPaddress network.PublicIPAddress
 		var err types.CustomCPError
 		if pool.EnablePublicIP {
 			IPname := "pip-" + pool.Name
 			utils.SendLog(companyId, "Creating Public IP : "+projectId, "info", projectId)
-			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx)
+			publicIPaddress, err = cloud.createPublicIp(pool, resourceGroup, IPname, ctx,zones[0])
 			if err != (types.CustomCPError{}) {
 				return nil, "", err
 			}
@@ -256,7 +257,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		cloud.Resources["Nic-"+projectId] = nicName
 
 		utils.SendLog(companyId, "Creating node  : "+pool.Name, "info", projectId)
-		vm, private_key, _, err1 := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, projectId, vpcName)
+		vm, private_key, _, err1 := cloud.createVM(pool, poolIndex, nicParameters, resourceGroup, ctx, token, projectId, vpcName,zones)
 		if err1 != (types.CustomCPError{}) {
 			return nil, "", err1
 		}
@@ -282,7 +283,7 @@ func (cloud *AZURE) CreateInstance(pool *NodePool, networkData types.AzureNetwor
 		return cpVms, private_key, types.CustomCPError{}
 
 	} else {
-		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token, vpcName)
+		vms, err, private_key := cloud.createVMSS(resourceGroup, projectId, pool, poolIndex, subnetId, sgIds, ctx, token, vpcName,zones)
 		if err != (types.CustomCPError{}) {
 			return nil, "", err
 		}
@@ -356,7 +357,16 @@ func (cloud *AZURE) GetSubnets(pool *NodePool, network types.AzureNetwork) strin
 	}
 	return ""
 }
-
+func (cloud *AZURE) GetZones(pool *NodePool, network types.AzureNetwork) []string {
+	for _, definition := range network.Definition {
+		for _, subnet := range definition.Subnets {
+			if subnet.Name == pool.PoolSubnet {
+				return subnet.Zone
+			}
+		}
+	}
+	return []string{}
+}
 func (cloud *AZURE) fetchStatus(cluster *Cluster_Def, token string, ctx utils.Context) (*Cluster_Def, types.CustomCPError) {
 	if cloud.Authorizer == nil {
 		err := cloud.init()
@@ -657,17 +667,30 @@ func (cloud *AZURE) TerminateMasterNode(name, projectId, resourceGroup string, c
 	return types.CustomCPError{}
 }
 
-func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context) (network.PublicIPAddress, types.CustomCPError) {
-
-	pipParameters := network.PublicIPAddress{
-		Location: &cloud.Region,
-		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-			DNSSettings: &network.PublicIPAddressDNSSettings{
-				DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
+func (cloud *AZURE) createPublicIp(pool *NodePool, resourceGroup string, IPname string, ctx utils.Context,zone string) (network.PublicIPAddress, types.CustomCPError) {
+	var pipParameters network.PublicIPAddress
+	if len(zone) == 0{
+		pipParameters = network.PublicIPAddress{
+			Location: &cloud.Region,
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				DNSSettings: &network.PublicIPAddressDNSSettings{
+					DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
+				},
 			},
-		},
+		}
+	}else {
+		pipParameters = network.PublicIPAddress{
+			Location: &cloud.Region,
+			Sku:      &network.PublicIPAddressSku{Name: "standard"},
+			Zones:    &[]string{zone},
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.IPAllocationMethod("Static"),
+				DNSSettings: &network.PublicIPAddressDNSSettings{
+					DomainNameLabel: to.StringPtr(strings.ToLower(IPname)),
+				},
+			},
+		}
 	}
-
 	address, err := cloud.AddressClient.CreateOrUpdate(cloud.context, resourceGroup, IPname, pipParameters)
 	if err != nil {
 		ctx.SendLogs(err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
@@ -972,7 +995,15 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 func getWoodpecker() string {
 	return beego.AppConfig.String("woodpecker_url") + models.WoodpeckerEnpoint
 }
-func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, projectId, vpcName string) (compute.VirtualMachine, string, string, types.CustomCPError) {
+func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.Interface, resourceGroup string, ctx utils.Context, token, projectId, vpcName string,zones []string) (compute.VirtualMachine, string, string, types.CustomCPError) {
+
+	var zone []string
+	if zones != nil {
+		zone = []string{zones[0]}
+	} else {
+		zone = zones
+	}
+
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
 		satype = compute.StorageAccountTypesStandardSSDLRS
@@ -1023,48 +1054,96 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	cloud.Resources["ext-master-"+pool.Name] = "ext-master-" + pool.Name
 	storage = append(storage, staticVolume)
 	password := "Cloudplex1"
-	vm := compute.VirtualMachine{
-		Name:     to.StringPtr(pool.Name),
-		Location: to.StringPtr(cloud.Region),
-		Identity: &compute.VirtualMachineIdentity{
-			Type: compute.ResourceIdentityTypeSystemAssigned,
-		},
-		Tags: map[string]*string{
-			"network": to.StringPtr(vpcName),
-		},
-		VirtualMachineProperties: &compute.VirtualMachineProperties{
-			HardwareProfile: &compute.HardwareProfile{
-				VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),
+	var vm compute.VirtualMachine
+	if zone[0] != "" {
+		vm = compute.VirtualMachine{
+			Name:     to.StringPtr(pool.Name),
+			Location: to.StringPtr(cloud.Region),
+			Identity: &compute.VirtualMachineIdentity{
+				Type: compute.ResourceIdentityTypeSystemAssigned,
 			},
-			StorageProfile: &compute.StorageProfile{
-				ImageReference: &compute.ImageReference{
-					Offer:     to.StringPtr(pool.Image.Offer),
-					Sku:       to.StringPtr(pool.Image.Sku),
-					Publisher: to.StringPtr(pool.Image.Publisher),
-					Version:   to.StringPtr(pool.Image.Version),
+			Tags: map[string]*string{
+				"network": to.StringPtr(vpcName),
+			},
+			Zones: &zone,
+			VirtualMachineProperties: &compute.VirtualMachineProperties{
+				HardwareProfile: &compute.HardwareProfile{
+					VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),
 				},
-				OsDisk: osDisk,
-				//DataDisks: &storage,
-			},
+				StorageProfile: &compute.StorageProfile{
+					ImageReference: &compute.ImageReference{
+						Offer:     to.StringPtr(pool.Image.Offer),
+						Sku:       to.StringPtr(pool.Image.Sku),
+						Publisher: to.StringPtr(pool.Image.Publisher),
+						Version:   to.StringPtr(pool.Image.Version),
+					},
+					OsDisk: osDisk,
+					//DataDisks: &storage,
+				},
 
-			OsProfile: &compute.OSProfile{
-				ComputerName:  to.StringPtr(pool.Name),
-				AdminUsername: to.StringPtr(pool.AdminUser),
-				AdminPassword: to.StringPtr(password),
-			},
-			NetworkProfile: &compute.NetworkProfile{
+				OsProfile: &compute.OSProfile{
+					ComputerName:  to.StringPtr(pool.Name),
+					AdminUsername: to.StringPtr(pool.AdminUser),
+					AdminPassword: to.StringPtr(password),
+				},
+				NetworkProfile: &compute.NetworkProfile{
 
-				NetworkInterfaces: &[]compute.NetworkInterfaceReference{
-					{
-						ID: &(*nicParameters.ID),
-						NetworkInterfaceReferenceProperties: &compute.NetworkInterfaceReferenceProperties{
-							Primary: to.BoolPtr(true),
+					NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+						{
+							ID: &(*nicParameters.ID),
+							NetworkInterfaceReferenceProperties: &compute.NetworkInterfaceReferenceProperties{
+								Primary: to.BoolPtr(true),
+							},
 						},
 					},
 				},
 			},
-		},
+		}
+	}else{
+		vm = compute.VirtualMachine{
+			Name:     to.StringPtr(pool.Name),
+			Location: to.StringPtr(cloud.Region),
+			Identity: &compute.VirtualMachineIdentity{
+				Type: compute.ResourceIdentityTypeSystemAssigned,
+			},
+			Tags: map[string]*string{
+				"network": to.StringPtr(vpcName),
+			},
+			VirtualMachineProperties: &compute.VirtualMachineProperties{
+				HardwareProfile: &compute.HardwareProfile{
+					VMSize: compute.VirtualMachineSizeTypes(pool.MachineType),
+				},
+				StorageProfile: &compute.StorageProfile{
+					ImageReference: &compute.ImageReference{
+						Offer:     to.StringPtr(pool.Image.Offer),
+						Sku:       to.StringPtr(pool.Image.Sku),
+						Publisher: to.StringPtr(pool.Image.Publisher),
+						Version:   to.StringPtr(pool.Image.Version),
+					},
+					OsDisk: osDisk,
+					//DataDisks: &storage,
+				},
+
+				OsProfile: &compute.OSProfile{
+					ComputerName:  to.StringPtr(pool.Name),
+					AdminUsername: to.StringPtr(pool.AdminUser),
+					AdminPassword: to.StringPtr(password),
+				},
+				NetworkProfile: &compute.NetworkProfile{
+
+					NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+						{
+							ID: &(*nicParameters.ID),
+							NetworkInterfaceReferenceProperties: &compute.NetworkInterfaceReferenceProperties{
+								Primary: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+		}
 	}
+
 	var fileName []string
 	fileName = append(fileName, "static_volume.sh")
 	if pool.EnableVolume {
@@ -1826,7 +1905,7 @@ func deleteFile(keyName string, ctx utils.Context) types.CustomCPError {
 	}
 	return types.CustomCPError{}
 }
-func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token, vpcName string) (compute.VirtualMachineScaleSetVMListResultPage, types.CustomCPError, string) {
+func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *NodePool, poolIndex int, subnetId string, sgIds []*string, ctx utils.Context, token, vpcName string,zones []string) (compute.VirtualMachineScaleSetVMListResultPage, types.CustomCPError, string) {
 
 	var satype compute.StorageAccountTypes
 	if pool.OsDisk == models.StandardSSD {
@@ -1864,59 +1943,118 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 		},
 	}
 	storage := []compute.VirtualMachineScaleSetDataDisk{disk}
-	params := compute.VirtualMachineScaleSet{
-		Name:     to.StringPtr(pool.Name),
-		Location: to.StringPtr(cloud.Region),
-		Identity: &compute.VirtualMachineScaleSetIdentity{
-			Type: compute.ResourceIdentityTypeSystemAssigned,
-		},
-		Tags: map[string]*string{
-			"network": to.StringPtr(vpcName),
-		},
-		Sku: &compute.Sku{
-			Capacity: to.Int64Ptr(pool.NodeCount),
-			Name:     to.StringPtr(pool.MachineType),
-		},
-		VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
-			VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{
+	var params compute.VirtualMachineScaleSet
+	if zones[0] !="" {
+		params = compute.VirtualMachineScaleSet{
+			Name:     to.StringPtr(pool.Name),
+			Location: to.StringPtr(cloud.Region),
+			Zones: to.StringSlicePtr(zones),
+			Identity: &compute.VirtualMachineScaleSetIdentity{
+				Type: compute.ResourceIdentityTypeSystemAssigned,
+			},
+			Tags: map[string]*string{
+				"network": to.StringPtr(vpcName),
+			},
+			Sku: &compute.Sku{
+				Capacity: to.Int64Ptr(pool.NodeCount),
+				Name:     to.StringPtr(pool.MachineType),
+			},
+			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
+				VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{
 
-				StorageProfile: &compute.VirtualMachineScaleSetStorageProfile{
-					ImageReference: &compute.ImageReference{
-						Offer:     to.StringPtr(pool.Image.Offer),
-						Sku:       to.StringPtr(pool.Image.Sku),
-						Publisher: to.StringPtr(pool.Image.Publisher),
-						Version:   to.StringPtr(pool.Image.Version),
+					StorageProfile: &compute.VirtualMachineScaleSetStorageProfile{
+						ImageReference: &compute.ImageReference{
+							Offer:     to.StringPtr(pool.Image.Offer),
+							Sku:       to.StringPtr(pool.Image.Sku),
+							Publisher: to.StringPtr(pool.Image.Publisher),
+							Version:   to.StringPtr(pool.Image.Version),
+						},
+						OsDisk: osDisk,
 					},
-					OsDisk: osDisk,
-				},
-				OsProfile: &compute.VirtualMachineScaleSetOSProfile{
-					ComputerNamePrefix: to.StringPtr(pool.Name),
-					AdminUsername:      to.StringPtr(pool.AdminUser),
-				},
-				NetworkProfile: &compute.VirtualMachineScaleSetNetworkProfile{
+					OsProfile: &compute.VirtualMachineScaleSetOSProfile{
+						ComputerNamePrefix: to.StringPtr(pool.Name),
+						AdminUsername:      to.StringPtr(pool.AdminUser),
+					},
+					NetworkProfile: &compute.VirtualMachineScaleSetNetworkProfile{
 
-					NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
-						{
-							Name: to.StringPtr("nic-" + pool.Name),
-							VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
-								Primary: to.BoolPtr(true),
-								IPConfigurations: &[]compute.VirtualMachineScaleSetIPConfiguration{
-									{
-										Name: to.StringPtr(pool.Name),
-										VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
-											Subnet: &compute.APIEntityReference{ID: to.StringPtr(subnetId)},
+						NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
+							{
+								Name: to.StringPtr("nic-" + pool.Name),
+								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
+									Primary: to.BoolPtr(true),
+									IPConfigurations: &[]compute.VirtualMachineScaleSetIPConfiguration{
+										{
+											Name: to.StringPtr(pool.Name),
+											VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
+												Subnet: &compute.APIEntityReference{ID: to.StringPtr(subnetId)},
+											},
 										},
 									},
-								},
-								NetworkSecurityGroup: &compute.SubResource{
-									ID: to.StringPtr(*sgIds[0]),
+									NetworkSecurityGroup: &compute.SubResource{
+										ID: to.StringPtr(*sgIds[0]),
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-		},
+		}
+	}else {
+		params = compute.VirtualMachineScaleSet{
+			Name:     to.StringPtr(pool.Name),
+			Location: to.StringPtr(cloud.Region),
+			Identity: &compute.VirtualMachineScaleSetIdentity{
+				Type: compute.ResourceIdentityTypeSystemAssigned,
+			},
+			Tags: map[string]*string{
+				"network": to.StringPtr(vpcName),
+			},
+			Sku: &compute.Sku{
+				Capacity: to.Int64Ptr(pool.NodeCount),
+				Name:     to.StringPtr(pool.MachineType),
+			},
+			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
+				VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{
+
+					StorageProfile: &compute.VirtualMachineScaleSetStorageProfile{
+						ImageReference: &compute.ImageReference{
+							Offer:     to.StringPtr(pool.Image.Offer),
+							Sku:       to.StringPtr(pool.Image.Sku),
+							Publisher: to.StringPtr(pool.Image.Publisher),
+							Version:   to.StringPtr(pool.Image.Version),
+						},
+						OsDisk: osDisk,
+					},
+					OsProfile: &compute.VirtualMachineScaleSetOSProfile{
+						ComputerNamePrefix: to.StringPtr(pool.Name),
+						AdminUsername:      to.StringPtr(pool.AdminUser),
+					},
+					NetworkProfile: &compute.VirtualMachineScaleSetNetworkProfile{
+
+						NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
+							{
+								Name: to.StringPtr("nic-" + pool.Name),
+								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
+									Primary: to.BoolPtr(true),
+									IPConfigurations: &[]compute.VirtualMachineScaleSetIPConfiguration{
+										{
+											Name: to.StringPtr(pool.Name),
+											VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
+												Subnet: &compute.APIEntityReference{ID: to.StringPtr(subnetId)},
+											},
+										},
+									},
+									NetworkSecurityGroup: &compute.SubResource{
+										ID: to.StringPtr(*sgIds[0]),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
 	}
 	if pool.EnablePublicIP {
 		p := (*params.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations)[0].VirtualMachineScaleSetNetworkConfigurationProperties.IPConfigurations

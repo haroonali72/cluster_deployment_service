@@ -596,13 +596,13 @@ type AzureRegion struct {
 	Location string
 }
 type AzureZone struct {
-	Label      string `json: "label"`
-	Value      string `json: "value"`
+	Label      string 	`json:"label" bson:"label" description:"label of the zone"`
+	Value      string 	`json:"value" bson:"value" description:"value of the zone"`
 }
 type GcpRegion struct {
-	Name     string `json: "name" `
-	Zone     string `json: "zone" `
-	Location string `json: "location" `
+	Name     string `json: "name"`
+	Zone     string `json: "zone"`
+	Location string `json: "location"`
 }
 
 func RemoteRun(user string, addr string, privateKey string, cmd string) (string, error) {
