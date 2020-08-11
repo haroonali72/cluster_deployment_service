@@ -14,6 +14,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/r3labs/diff"
 	"gopkg.in/mgo.v2/bson"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -640,6 +641,13 @@ func GetAllVersions(profile vault.IBMProfile, ctx utils.Context) (Versions, type
 			kubeVersions = append(kubeVersions, kube)
 		}
 	}
+
+	sort.Slice(kubeVersions, func(i, j int) bool {
+
+		return kubeVersions[i].Minor> kubeVersions[j].Minor
+
+	})
+
 	versions.Kubernetes = kubeVersions
 
 	return versions, types.CustomCPError{}
