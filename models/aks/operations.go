@@ -235,14 +235,28 @@ func (cloud *AKS) CreateCluster(aksCluster AKSCluster, token string, ctx utils.C
 		)
 		return err
 	}
-	err = future.WaitForCompletionRef(context.Background(), cloud.MCClient.Client)
-	if err != nil {
-		ctx.SendLogs(
-			"AKS cluster creation for '"+aksCluster.Name+"' failed: "+err.Error(),
-			models.LOGGING_LEVEL_ERROR,
-			models.Backend_Logging,
-		)
-		return err
+
+	count := 0
+	for {
+		err = future.WaitForCompletionRef(context.Background(), cloud.MCClient.Client)
+		if err != nil && !strings.Contains(err.Error(), "context has been cancelled") {
+			ctx.SendLogs(
+				"AKS cluster creation for '"+aksCluster.Name+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		} else if err == nil {
+			break
+		} else if count == 5 {
+			ctx.SendLogs(
+				"AKS cluster creation for '"+aksCluster.Name+"' failed: "+err.Error(),
+				models.LOGGING_LEVEL_ERROR,
+				models.Backend_Logging,
+			)
+			return err
+		}
+		count++
 	}
 
 	AKSclusterResp, err := future.Result(cloud.MCClient)

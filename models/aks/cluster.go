@@ -821,9 +821,9 @@ func GetKubeVersions(credentials vault.AzureProfile, ctx utils.Context) ([]strin
 			versions = append(versions, *versionProfile.OrchestratorVersion)
 		}
 	}
-	
+
 	sort.Slice(versions, func(i, j int) bool {
-		return versions[i]> versions[j]
+		return versions[i] > versions[j]
 	})
 	return versions, types.CustomCPError{}
 
@@ -1165,6 +1165,33 @@ func PatchRunningAKSCluster(cluster AKSCluster, credentials vault.AzureProfile, 
 				if diff.Path[0] == "ID" || diff.Path[0] == "ModificationDate" || diff.Path[0] == "Status" || diff.Path[0] == "IsAdvanced" || diff.Path[0] == "IsExpert" {
 					continue
 				}
+
+				//If user delete existing nodepool and create again with same nodepool name
+				if diff.Type == "update" && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && (diff.Path[2] == "VMSize" || diff.Path[2] == "OsDiskSizeGB" || diff.Path[2] == "MaxPods") && !isPoolUpdated[poolIndex] {
+					err := aksOps.DeleteAgentPool(ctx, cluster.ResourceGoup, cluster.Name, nodePool)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+
+					err = aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
+					if err != nil {
+						ctx.SendLogs("AKSRunningClusterModel:  Update - "+err.Error(), models.LOGGING_LEVEL_ERROR, models.Backend_Logging)
+						updationFailedError(cluster, ctx, types.CustomCPError{
+							StatusCode:  int(models.CloudStatusCode),
+							Error:       "AKS cluster updation failed",
+							Description: err.Error(),
+						})
+						return
+					}
+					isPoolUpdated[poolIndex] = true
+				}
+
 				if (diff.Type == "update" || diff.Type == "create" || diff.Type == "delete") && diff.Path[0] == "AgentPoolProfiles" && diff.Path[1] == strconv.Itoa(poolIndex) && !isPoolUpdated[poolIndex] {
 					err := aksOps.CreatOrUpdateAgentPool(ctx, token, cluster.ResourceGoup, cluster.Name, nodePool)
 					if err != nil {
