@@ -1055,7 +1055,7 @@ func (cloud *AZURE) createVM(pool *NodePool, index int, nicParameters network.In
 	storage = append(storage, staticVolume)
 	password := "Cloudplex1"
 	var vm compute.VirtualMachine
-	if zone != nil {
+	if zone[0] != "" {
 		vm = compute.VirtualMachine{
 			Name:     to.StringPtr(pool.Name),
 			Location: to.StringPtr(cloud.Region),
@@ -1944,7 +1944,7 @@ func (cloud *AZURE) createVMSS(resourceGroup string, projectId string, pool *Nod
 	}
 	storage := []compute.VirtualMachineScaleSetDataDisk{disk}
 	var params compute.VirtualMachineScaleSet
-	if zones !=nil {
+	if zones[0] !="" {
 		params = compute.VirtualMachineScaleSet{
 			Name:     to.StringPtr(pool.Name),
 			Location: to.StringPtr(cloud.Region),
